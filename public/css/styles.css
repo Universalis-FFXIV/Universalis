@@ -10,19 +10,31 @@
     font-family: 'Hind', sans-serif;
 }
 
+p {
+    font-size: 12pt;
+}
+
 a {
     color: black;
     text-decoration: none;
 }
 
-p {
-    font-size: 12pt;
+img {
+    margin-right: 1%;
+    float: left;
 }
 
 /* Special */
 #info {
     margin-left: 20.4%;
     background-color: #292929;
+    overflow-x: hidden;
+}
+
+#navbar {
+    width: 100%;
+    text-align: center;
+    table-layout: fixed;
 }
 
 #search {
@@ -54,12 +66,6 @@ p {
     display: none;
 }
 
-.canvas {
-    position: fixed;
-    overflow: hidden;
-    z-index: -2;
-}
-
 .infobox {
     padding: 2%;
     margin: 1%;
@@ -69,21 +75,28 @@ p {
     background-color: rgba(255, 255, 255, 0.8);
 }
 
+.nav {
+    background-color: white;
+}
+
+.info-thumbnail {
+    height: 10%;
+    width: 10%;
+    float: left;
+}
+
 .search-result-infobox {
     padding: 0%;
     padding-right: 2%;
 }
 
-.search-result-infobox img {
-    margin-right: 1%;
-    float: left;
-}
-
 .search-result-icon {
+    height: 14%;
+    width: 14%;
     vertical-align: middle;
 }
 
 .subtext {
     margin-left: 11%;
-    font-size: 10.5pt;
+    font-size: 90%;
 }

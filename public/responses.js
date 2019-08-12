@@ -3,13 +3,14 @@
 //
 
 var lang = "en";
+var dataCenter = "Gaia";
 
 var asyncInitCount = 2; // The number of asynchronous initialization functions that need to finish before post-init
 
 // Item categories
 var itemCategories = [ null ];
-request(`https://www.garlandtools.org/db/doc/core/${lang}/3/data.json`, function(dataFile) {
-    dataFile = JSON.parse(dataFile);
+(async function() {
+    var dataFile = JSON.parse(await request(`https://www.garlandtools.org/db/doc/core/${lang}/3/data.json`));
 
     var categories = dataFile.item.categoryIndex;
     for (var category in categories) {
@@ -18,23 +19,18 @@ request(`https://www.garlandtools.org/db/doc/core/${lang}/3/data.json`, function
     }
 
     initDone();
-});
+})();
 
 // Worlds
-var worldList = {};
-request(`json/dc.json`, function(servers) {
+var worldList;
+(async function() {
     try {
-        worldList = JSON.parse(servers);
-
-        initDone();
+        worldList = JSON.parse(await request("json/dc.json"));
     } catch { // Second failsafe, in case the user connects before the file is downloaded and it doesn't already exist (edge case)
-        request("https://xivapi.com/servers/dc", function(servers) {
-            worldList = JSON.parse(servers);
-
-            initDone();
-        });
+        worldList = JSON.parse(await request("https://xivapi.com/servers/dc"));
     }
-});
+    initDone();
+})();
 
 //
 // Search
@@ -55,49 +51,71 @@ async function fetchSearchResults() {
     // Clear search results.
     searchResultArea.innerHTML = "";
 
-    // Get new search results.
-    request(`https://www.garlandtools.org/api/search.php?text=${searchBox.value}&lang=${lang}&type=item&tradeable=false`, async function(searchResults) {
-        searchResults = JSON.parse(searchResults);
+    // Get new search results and add them to the search result area.
+    search(searchBox.value, addSearchResult);
+}
 
-        for (var result of searchResults) {
-            // Readable variable names
-            var category = itemCategories[result.obj.t];
-            var icon = `https://www.garlandtools.org/files/icons/item/${result.obj.c}.png`;
-            var id = result.obj.i;
-            var ilvl = result.obj.l;
-            var name = result.obj.n;
+async function search(query, callback) {
+    var searchResults;
 
-            // Template element
-            var clickable = document.createElement("a");
-            clickable.setAttribute("href", `/#/market/${id}`);
-            var searchResultEntry = document.createElement("div");
-            searchResultEntry.setAttribute("class", "infobox search-result-infobox");
-            clickable.appendChild(searchResultEntry);
+    try { // Best, filters out irrelevant items
+        searchResults = JSON.parse(await request(`https://xivapi.com/search?string=${query}&string_algo=wildcard_plus&indexes=Item&columns=ID,IconID,ItemSearchCategory.Name,LevelItem,Name_${lang}&filters=IsUntradable=0`)).Results; // Will throw an error if ES is down
+    } catch { // Functional, doesn't filter out MB-restricted items such as raid drops
+        // TODO: Notification that ES is down
+        searchResults = JSON.parse(await request(`https://www.garlandtools.org/api/search.php?text=${query}&lang=${lang}&type=item`));
+        searchResults.map(function(el) {
+            el.ItemSearchCategory = {
+                Name: itemCategories[el.obj.t]
+            }
+            el.IconID = el.obj.c;
+            el.ID = el.obj.i;
+            el.LevelItem = el.obj.l;
+            el[`Name_${lang}`] = el.obj.n;
+        });
+    }
 
-            // Element properties
-            var inlineField = document.createElement("p"); // Create inline field
-            searchResultEntry.appendChild(inlineField);
+    for (var result of searchResults) {
+        // Readable variable names
+        category = result.ItemSearchCategory.Name;
+        icon = `https://www.garlandtools.org/files/icons/item/${result.IconID}.png`;
+        id = result.ID;
+        ilvl = result.LevelItem;
+        name = result[`Name_${lang}`];
 
-            var iconField = document.createElement("img"); // Icon first
-            iconField.setAttribute("class", "search-result-icon");
-            iconField.setAttribute("src", icon);
-            iconField.setAttribute("height", "14%");
-            iconField.setAttribute("width", "14%");
-            inlineField.appendChild(iconField);
+        if (category == null) continue; // For garbage like tomestones, that can't be filtered out through the query
 
-            var nameField = document.createElement("span"); // Name second
-            nameField.innerHTML = name;
-            inlineField.appendChild(nameField);
+        callback(category, icon, id, ilvl, name);
+    }
+}
 
-            var subtextField = document.createElement("p");  // iLvl/category third, new line
-            subtextField.setAttribute("class", "subtext");
-            subtextField.innerHTML = `iLvl ${ilvl} ${category}`;
-            inlineField.appendChild(subtextField);
+function addSearchResult(category, icon, id, ilvl, name) {
+    // Template element
+    var clickable = document.createElement("a");
+    clickable.setAttribute("href", `/#/market/${id}`);
+    var searchResultEntry = document.createElement("div");
+    searchResultEntry.setAttribute("class", "infobox search-result-infobox");
+    clickable.appendChild(searchResultEntry);
 
-            // Add element to DOM
-            searchResultArea.appendChild(clickable);
-        }
-    });
+    // Element properties
+    var inlineField = document.createElement("p"); // Create inline field
+    searchResultEntry.appendChild(inlineField);
+
+    var iconField = document.createElement("img"); // Icon first
+    iconField.setAttribute("class", "search-result-icon");
+    iconField.setAttribute("src", icon);
+    inlineField.appendChild(iconField);
+
+    var nameField = document.createElement("span"); // Name second
+    nameField.innerHTML = name;
+    inlineField.appendChild(nameField);
+
+    var subtextField = document.createElement("p");  // iLvl/category third, new line
+    subtextField.setAttribute("class", "subtext");
+    subtextField.innerHTML = `iLvl ${ilvl} ${category}`;
+    inlineField.appendChild(subtextField);
+
+    // Add element to DOM
+    searchResultArea.appendChild(clickable);
 }
 
 //
@@ -127,47 +145,106 @@ async function onHashChange() {
     var itemInfo = document.createElement("div");
     itemInfo.setAttribute("class", "infobox");
 
-    request(`https://www.garlandtools.org/db/doc/item/${lang}/3/${id}.json`, async function(itemData) {
-        itemData = JSON.parse(itemData);
+    var itemData = JSON.parse(await request(`https://www.garlandtools.org/db/doc/item/${lang}/3/${id}.json`));
 
-        // Rename/parse data
-        var category = itemCategories[itemData.item.category];
-        var description = itemData.item.description;
-        var equipLevel = itemData.item.elvl;
-        var icon = `https://www.garlandtools.org/files/icons/item/${itemData.item.icon}.png`;
-        var ilvl = itemData.item.ilvl;
-        var jobs = itemData.item.jobCategories;
-        var name = itemData.item.name;
-        var stackSize = itemData.item.stackSize;
+    // Rename/parse data
+    var category = itemCategories[itemData.item.category];
+    var description = itemData.item.description;
+    var equipLevel = itemData.item.elvl;
+    var icon = `https://www.garlandtools.org/files/icons/item/${itemData.item.icon}.png`;
+    var ilvl = itemData.item.ilvl;
+    var jobs = itemData.item.jobCategories;
+    var name = itemData.item.name;
+    var stackSize = itemData.item.stackSize;
 
-        // Create child elements
-        var itemThumbnail = document.createElement("img"); // Image
-        itemThumbnail.innerHTML = itemData.item.description;
-        itemThumbnail.setAttribute("src", icon);
-        itemThumbnail.setAttribute("height", "10%");
-        itemThumbnail.setAttribute("width", "10%");
-        itemInfo.appendChild(itemThumbnail);
+    // Create child elements
+    var container = document.createElement("div");
+    container.setAttribute("class", "info-header");
+    itemInfo.appendChild(container);
 
-        itemInfo.appendChild(document.createElement("br"));
+    var itemThumbnail = document.createElement("img"); // Image
+    itemThumbnail.setAttribute("class", "info-thumbnail");
+    itemThumbnail.setAttribute("src", icon);
+    container.appendChild(itemThumbnail);
 
-        if (description) {
-            var itemDescription = document.createElement("span");
-            itemDescription.innerHTML = description;
-            itemInfo.appendChild(itemDescription);
-        }
-    });
+    var basicInfo = document.createElement("h1"); // Name
+    basicInfo.innerHTML = name;
+    container.appendChild(basicInfo);
+
+    var subInfo = document.createElement("h3"); // Extra data
+    subInfo.innerHTML = `iLvl ${ilvl} ${category} - Stack: ${stackSize}${equipLevel ? ` - Level ${equipLevel} ${jobs}` : ""}`;
+    container.appendChild(subInfo);
+
+    itemInfo.appendChild(document.createElement("br"));
+
+    if (description) { // Description
+        var itemDescription = document.createElement("span");
+        itemDescription.innerHTML = description;
+        container.appendChild(itemDescription);
+    }
 
     infoArea.insertBefore(itemInfo, creditBox);
 
-    var worldNav = document.createElement("div");
-    worldNav.setAttribute("class", "infobox navbar");
-
     // World navbar
-    worldNav.innerHTML = worldList.Crystal.join();
+    var worldNav = document.createElement("div");
+    worldNav.setAttribute("class", "infobox nav");
+
+    var nav = document.createElement("table");
+    nav.setAttribute("id", "navbar");
+    worldNav.appendChild(nav);
+    nav = nav.appendChild(document.createElement("tr"));
+    for (var world of worldList[dataCenter]) {
+        var w = nav.appendChild(document.createElement("td"));
+        w.innerHTML = world;
+    }
 
     infoArea.insertBefore(worldNav, creditBox);
 
-    // Market info from server
+    // Graph
+    var graph = document.createElement("canvas");
+    graph.setAttribute("class", "infobox graph");
+    var graphCTX = graph.getContext("2d");
+
+    new Chart(graphCTX, {
+        type: 'bar',
+        data: {
+            labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+            datasets: [{
+                label: '# of Votes',
+                data: [12, 19, 3, 5, 2, 3],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+
+    infoArea.insertBefore(graph, creditBox);
+
+    // Market info from servers
     var marketData = document.createElement("div");
     marketData.setAttribute("class", "infobox market-data");
 
@@ -191,19 +268,20 @@ async function onHashChange() {
 //
 
 // https://www.kirupa.com/html5/making_http_requests_js.htm
-// More or less copied from here.
-async function request(url, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.send();
+async function request(url) {
+    return new Promise(function(resolve, reject) { // Polyfilled for IE
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.send();
 
-    async function processResponse(e) {
-        if (xhr.readyState == 4) {
-            callback(xhr.responseText);
+        function processResponse(e) {
+            if (xhr.readyState == 4) {
+                resolve(xhr.responseText);
+            }
         }
-    }
 
-    xhr.addEventListener("readystatechange", processResponse, false);
+        xhr.addEventListener("readystatechange", processResponse, false);
+    });
 }
 
 //
