@@ -1,0 +1,27 @@
+{
+  "name": "universalis",
+  "version": "1.0.0",
+  "description": "A crowdsourced market board website for FFXIV.",
+  "main": "build/universalis.js",
+  "scripts": {
+    "start": "tslint ./src/**/*.ts && tsc --build && node ."
+  },
+  "author": "karashiiro",
+  "license": "MIT",
+  "dependencies": {
+    "@types/koa": "^2.0.49",
+    "@types/koa-router": "^7.0.42",
+    "@types/koa-static": "^4.0.1",
+    "@types/koa-views": "^2.0.3",
+    "@types/request-promise": "^4.1.44",
+    "koa": "^2.7.0",
+    "koa-router": "^7.4.0",
+    "koa-static": "^5.0.0",
+    "koa-views": "^6.2.0",
+    "pug": "^2.0.4",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.3"
+  }
+}

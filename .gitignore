@@ -59,3 +59,28 @@ typings/
 
 # next.js build output
 .next
+
+# misc
+*.lock
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Mono auto generated files
+mono_crash.*
+
+# Build results
+build/
+
+# Market data
+data/
+
+# XIVAPI files
+public/json/dc.json
