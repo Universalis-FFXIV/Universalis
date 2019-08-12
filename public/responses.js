@@ -8,7 +8,7 @@ var dataCenter = "Gaia";
 var asyncInitCount = 2; // The number of asynchronous initialization functions that need to finish before post-init
 
 // Item categories
-var itemCategories = [ null ];
+var itemCategories = [null];
 (async function() {
     var dataFile = JSON.parse(await request(`https://www.garlandtools.org/db/doc/core/${lang}/3/data.json`));
 
@@ -46,7 +46,10 @@ searchBox.addEventListener("propertychange", fetchSearchResults);
 
 fetchSearchResults();
 
-// The bottom search result and the one above it get clipped because of my garbage CSS, TODO fix
+/**
+ * Get the search results from the text entry field.
+ * The bottom search result and the one above it get clipped because of my garbage CSS, TODO fix
+ */
 async function fetchSearchResults() {
     // Clear search results.
     searchResultArea.innerHTML = "";
@@ -55,6 +58,12 @@ async function fetchSearchResults() {
     search(searchBox.value, addSearchResult);
 }
 
+/**
+ * Pull search info from XIVAPI, or GT as a fallback.
+ *
+ * @param {string} query - Search query
+ * @param {function} callback - A function to be executed on each search result
+ */
 async function search(query, callback) {
     var searchResults;
 
@@ -65,8 +74,8 @@ async function search(query, callback) {
         searchResults = JSON.parse(await request(`https://www.garlandtools.org/api/search.php?text=${query}&lang=${lang}&type=item`));
         searchResults.map(function(el) {
             el.ItemSearchCategory = {
-                Name: itemCategories[el.obj.t]
-            }
+                Name: itemCategories[el.obj.t],
+            };
             el.IconID = el.obj.c;
             el.ID = el.obj.i;
             el.LevelItem = el.obj.l;
@@ -88,6 +97,15 @@ async function search(query, callback) {
     }
 }
 
+/**
+ * Append a search result to the page.
+ *
+ * @param {string} category
+ * @param {string} icon
+ * @param {string} id
+ * @param {string} ilvl
+ * @param {string} name
+ */
 function addSearchResult(category, icon, id, ilvl, name) {
     // Template element
     var clickable = document.createElement("a");
@@ -109,7 +127,7 @@ function addSearchResult(category, icon, id, ilvl, name) {
     nameField.innerHTML = name;
     inlineField.appendChild(nameField);
 
-    var subtextField = document.createElement("p");  // iLvl/category third, new line
+    var subtextField = document.createElement("p"); // iLvl/category third, new line
     subtextField.setAttribute("class", "subtext");
     subtextField.innerHTML = `iLvl ${ilvl} ${category}`;
     inlineField.appendChild(subtextField);
@@ -126,6 +144,9 @@ var creditBox = document.getElementById("credits");
 
 window.onhashchange = onHashChange;
 
+/**
+ * Fetch market board data from the server.
+ */
 async function onHashChange() {
     var infoArea = document.getElementById("info");
 
@@ -218,7 +239,7 @@ async function onHashChange() {
                     'rgba(255, 206, 86, 0.2)',
                     'rgba(75, 192, 192, 0.2)',
                     'rgba(153, 102, 255, 0.2)',
-                    'rgba(255, 159, 64, 0.2)'
+                    'rgba(255, 159, 64, 0.2)',
                 ],
                 borderColor: [
                     'rgba(255, 99, 132, 1)',
@@ -226,20 +247,20 @@ async function onHashChange() {
                     'rgba(255, 206, 86, 1)',
                     'rgba(75, 192, 192, 1)',
                     'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)'
+                    'rgba(255, 159, 64, 1)',
                 ],
-                borderWidth: 1
-            }]
+                borderWidth: 1,
+            }],
         },
         options: {
             scales: {
                 yAxes: [{
                     ticks: {
-                        beginAtZero: true
-                    }
-                }]
-            }
-        }
+                        beginAtZero: true,
+                    },
+                }],
+            },
+        },
     });
 
     infoArea.insertBefore(graph, creditBox);
@@ -267,14 +288,23 @@ async function onHashChange() {
 // Utility
 //
 
-// https://www.kirupa.com/html5/making_http_requests_js.htm
+/**
+ * https://www.kirupa.com/html5/making_http_requests_js.htm
+ * Make an HTTP request.
+ *
+ * @param {string} url - The URL to get.
+ * @return {Promise} The contents of the response body.
+ */
 async function request(url) {
-    return new Promise(function(resolve, reject) { // Polyfilled for IE
+    return new Promise(function(resolve, reject) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url, true);
         xhr.send();
 
-        function processResponse(e) {
+        /**
+         * Event handler for GET completion
+         */
+        function processResponse() {
             if (xhr.readyState == 4) {
                 resolve(xhr.responseText);
             }
@@ -288,7 +318,9 @@ async function request(url) {
 // Post-Initialization
 //
 
-// This makes the webpage respond correctly if it is initialized with a hash name.
+/**
+ * This makes the webpage respond correctly if it is initialized with a hash name such as /#/market/2234
+ */
 function initDone() {
     asyncInitCount--;
     if (asyncInitCount == 0 && window.location.href.indexOf("#") != -1) onHashChange();
