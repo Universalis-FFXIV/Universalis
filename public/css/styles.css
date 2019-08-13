@@ -23,10 +23,6 @@ table {
     border-collapse: collapse;
 }
 
-td {
-    border-left: 2px solid black;
-}
-
 /* Special */
 #info {
     margin-left: 20.4%;
@@ -42,6 +38,11 @@ td {
     width: 100%;
     text-align: center;
     table-layout: fixed;
+    overflow: hidden;
+}
+
+#navbar td {
+    border-left: 2px solid black;
 }
 
 #search {
@@ -76,6 +77,25 @@ td {
 
 #search-results::-webkit-scrollbar {
     display: none;
+}
+
+.col1 {
+    width: 50%;
+    float: left;
+}
+
+.col2 {
+    width: 50%;
+    float: right;
+}
+
+.market-listings {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.market-listings td {
+    border: 1px solid black; /* temp */
 }
 
 .infobox {
@@ -124,6 +144,7 @@ td {
     font-size: 90%;
 }
 
-.table-cell-link {
-    height: 65%;
+.table-cell-link p {
+    margin-top: 5%;
+    height: auto;
 }

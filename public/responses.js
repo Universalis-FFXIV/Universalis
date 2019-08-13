@@ -3,7 +3,7 @@
 //
 
 var lang = "en";
-var dataCenter = "Gaia";
+var dataCenter = "Aether";
 
 var asyncInitCount = 2; // The number of asynchronous initialization functions that need to finish before post-init
 
@@ -229,6 +229,7 @@ async function onHashChange() {
             w.setAttribute("href", `#/market/${id}?world=${world}`);
             w = w.appendChild(document.createElement("div"));
             w.setAttribute("class", "table-cell-link");
+            w = w.appendChild(document.createElement("p"));
 
             // Text
             w.innerHTML = world;
@@ -236,6 +237,8 @@ async function onHashChange() {
 
         infoArea.insertBefore(worldNav, creditBox);
     }
+
+    // TODO: Cheapest
 
     // Graph
     var graphContainer = document.createElement("div");
@@ -251,64 +254,44 @@ async function onHashChange() {
 
     var options = {
         title: {
-            text: '折线图堆叠'
+            text: 'Cross-World Purchase History (500 Sales)',
         },
         tooltip: {
-            trigger: 'axis'
+            trigger: 'axis',
         },
         legend: {
-            data:['邮件营销','联盟广告','视频广告','直接访问','搜索引擎']
+            data:['Series 1', 'Series 2'],
         },
         grid: {
             left: '3%',
             right: '4%',
             bottom: '3%',
-            containLabel: true
+            containLabel: true,
         },
         toolbox: {
             feature: {
-                saveAsImage: {}
-            }
+                saveAsImage: {},
+            },
         },
         xAxis: {
             type: 'category',
             boundaryGap: false,
-            data: ['周一','周二','周三','周四','周五','周六','周日']
+            data: ['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6','Day 7'],
         },
         yAxis: {
-            type: 'value'
+            type: 'value',
         },
         series: [
             {
-                name:'邮件营销',
+                name:'Series 1',
                 type:'line',
-                stack: '总量',
-                data:[120, 132, 101, 134, 90, 230, 210]
+                data:[120, 132, 101, 134, 90, 230, 210],
             },
             {
-                name:'联盟广告',
+                name:'Series 2',
                 type:'line',
-                stack: '总量',
-                data:[220, 182, 191, 234, 290, 330, 310]
+                data:[220, 182, 191, 234, 290, 330, 310],
             },
-            {
-                name:'视频广告',
-                type:'line',
-                stack: '总量',
-                data:[150, 232, 201, 154, 190, 330, 410]
-            },
-            {
-                name:'直接访问',
-                type:'line',
-                stack: '总量',
-                data:[320, 332, 301, 334, 390, 330, 320]
-            },
-            {
-                name:'搜索引擎',
-                type:'line',
-                stack: '总量',
-                data:[820, 932, 901, 934, 1290, 1330, 1320]
-            }
         ],
     };
 
@@ -317,25 +300,215 @@ async function onHashChange() {
     // Market info from servers
     var marketData = document.createElement("div");
     marketData.setAttribute("class", "infobox market-data");
-
-    var cheapestListings = document.createElement("div");
-    cheapestListings.innerHTML = "Cheapest High-Quality, Cheapest Normal-Quality";
-    marketData.appendChild(cheapestListings);
-
-    var graph = document.createElement("div");
-    graph.innerHTML = "Cross-world purchase history";
-    marketData.appendChild(graph);
-
-    var allListings = document.createElement("table");
-    allListings.innerHTML = "HQ Prices/HQ Purchase History, NQ Prices/NQ Purchase History, Avg Listed Price Per Unit HQ/NQ -> Avg Listed Total Price HQ/NQ <-> Avg Sale Price Per Unit HQ/NQ -> Avg Sale Total Price HQ/NQ";
-    marketData.appendChild(allListings);
-
     infoArea.insertBefore(marketData, creditBox);
+
+    // Columns
+    var col1 = marketData.appendChild(document.createElement("div"));
+    col1.setAttribute("class", "col1");
+    var col2 = marketData.appendChild(document.createElement("div"));
+    col2.setAttribute("class", "col2");
+
+    // HQ
+    col1.appendChild((() => {
+        let container = document.createElement("div");
+        let label = container.appendChild(document.createElement("h3"));
+        label.innerHTML = "HQ Prices";
+        container.appendChild(makeTable([
+            ["#", "Server", "HQ", "Materia", "Price", "Quantity", "Total", "%Diff", "Retainer", "Creator"],
+            ["1", "Adamantoise", "$hq", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"],
+            ["2", "Adamantoise", "$hq", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"]
+        ]));
+        return container;
+    })());
+    col2.appendChild((() => {
+        let container = document.createElement("div");
+        let label = container.appendChild(document.createElement("h3"));
+        label.innerHTML = "HQ Purchase History";
+        container.appendChild(makeTable([
+            ["#", "Server", "HQ", "Price", "Quantity", "Total", "%Diff", "Buyer", "Date"],
+            ["1", "Adamantoise", "$hq", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"],
+            ["2", "Adamantoise", "$hq", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"]
+        ]));
+        return container;
+    })());
+
+    // NQ
+    col1.appendChild((() => {
+        let container = document.createElement("div");
+        let label = container.appendChild(document.createElement("h3"));
+        label.innerHTML = "NQ Prices";
+        container.appendChild(makeTable([
+            ["#", "Server", "HQ", "Materia", "Price", "Quantity", "Total", "%Diff", "Retainer", "Creator"],
+            ["1", "Adamantoise", "", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"],
+            ["2", "Adamantoise", "", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"]
+        ]));
+        return container;
+    })());
+    col2.appendChild((() => {
+        let container = document.createElement("div");
+        let label = container.appendChild(document.createElement("h3"));
+        label.innerHTML = "NQ Purchase History";
+        container.appendChild(makeTable([
+            ["#", "Server", "HQ", "Price", "Quantity", "Total", "%Diff", "Buyer", "Date"],
+            ["1", "Adamantoise", "", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"],
+            ["2", "Adamantoise", "", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"]
+        ]));
+        return container;
+    })());
+
+    // Averages
+    col1.appendChild((() => {
+        let container = document.createElement("div");
+
+        let col1 = container.appendChild(document.createElement("div"));
+        col1.setAttribute("class", "col1");
+        let label1 = col1.appendChild(document.createElement("h3"));
+        label1.innerHTML = "Average Price Per Unit";
+
+        let subCol1 = col1.appendChild(document.createElement("div"));
+        subCol1.setAttribute("class", "col1");
+        let label1_1 = subCol1.appendChild(document.createElement("h3"));
+        label1_1.setAttribute("class", "col1");
+        label1_1.innerHTML = "HQ";
+        let label1_2 = subCol1.appendChild(document.createElement("h3"));
+        label1_2.setAttribute("class", "col1");
+        label1_2.innerHTML = "NQ";
+
+
+        let col2 = container.appendChild(document.createElement("div"));
+        col2.setAttribute("class", "col2");
+        let label2 = col2.appendChild(document.createElement("h3"));
+        label2.innerHTML = "Average Total Price";
+
+        let subCol2 = col2.appendChild(document.createElement("div"));
+        subCol2.setAttribute("class", "col2");
+        let label2_1 = subCol2.appendChild(document.createElement("h3"));
+        label2_1.setAttribute("class", "col1");
+        label2_1.innerHTML = "HQ";
+        let label2_2 = subCol2.appendChild(document.createElement("h3"));
+        label2_2.setAttribute("class", "col2");
+        label2_2.innerHTML = "NQ";
+
+        return container;
+    })());
+    col2.appendChild((() => {
+        let container = document.createElement("div");
+
+        let col1 = container.appendChild(document.createElement("div"));
+        col1.setAttribute("class", "col1");
+        let label1 = col1.appendChild(document.createElement("h3"));
+        label1.innerHTML = "Average Purchased Price Per Unit";
+
+        let subCol1 = col1.appendChild(document.createElement("div"));
+        subCol1.setAttribute("class", "col1");
+        let label1_1 = subCol1.appendChild(document.createElement("h3"));
+        label1_1.setAttribute("class", "col1");
+        label1_1.innerHTML = "HQ";
+        let label1_2 = subCol1.appendChild(document.createElement("h3"));
+        label1_2.setAttribute("class", "col1");
+        label1_2.innerHTML = "NQ";
+
+
+        let col2 = container.appendChild(document.createElement("div"));
+        col2.setAttribute("class", "col2");
+        let label2 = col2.appendChild(document.createElement("h3"));
+        label2.innerHTML = "Average Total Purchased Price";
+
+        let subCol2 = col2.appendChild(document.createElement("div"));
+        subCol2.setAttribute("class", "col2");
+        let label2_1 = subCol2.appendChild(document.createElement("h3"));
+        label2_1.setAttribute("class", "col1");
+        label2_1.innerHTML = "HQ";
+        let label2_2 = subCol2.appendChild(document.createElement("h3"));
+        label2_2.setAttribute("class", "col2");
+        label2_2.innerHTML = "NQ";
+
+        return container;
+    })());
+
+    /*var marketListings = document.createElement("table");
+    marketListings.setAttribute("class", "market-listings");
+    marketData.appendChild(marketListings);
+
+    var cheapestListings = marketListings.appendChild(document.createElement("tr"));
+    var ref = cheapestListings.appendChild(document.createElement("td"))
+    ref.setAttribute("colspan", "2");
+    ref.innerHTML = "Cheapest High-Quality";
+    ref = cheapestListings.appendChild(document.createElement("td"));
+    ref.setAttribute("colspan", "2");
+    ref.innerHTML = "Cheapest Normal Quality";
+
+    var allListings = marketListings.appendChild(document.createElement("tr"));
+    ref = allListings.appendChild(document.createElement("td"));
+    ref.setAttribute("colspan", "2");
+    ref.innerHTML = "HQ Prices";
+    ref.appendChild(makeTable([
+        ["#", "Server", "Materia", "Price", "Quantity", "Total", "%Diff", "Retainer", "Creator"],
+        ["1", "Adamantoise", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"],
+        ["2", "Adamantoise", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"]
+    ]));
+    ref = allListings.appendChild(document.createElement("td"));
+    ref.setAttribute("colspan", "2");
+    ref.innerHTML = "HQ Purchase History";
+
+    allListings = marketListings.appendChild(document.createElement("tr"));
+    ref = allListings.appendChild(document.createElement("td"));
+    ref.setAttribute("colspan", "2");
+    ref.innerHTML = "NQ Prices";
+    ref = allListings.appendChild(document.createElement("td"));
+    ref.setAttribute("colspan", "2");
+    ref.innerHTML = "NQ Purchase History";
+
+    allListings = marketListings.appendChild(document.createElement("tr"));
+    ref = allListings.appendChild(document.createElement("td"));
+    ref.innerHTML = "Average Listed Price Per Unit";
+    ref = allListings.appendChild(document.createElement("td"));
+    ref.innerHTML = "Average Total Price";
+    ref = allListings.appendChild(document.createElement("td"));
+    ref.innerHTML = "Average Listed Price Per Unit";
+    ref = allListings.appendChild(document.createElement("td"));
+    ref.innerHTML = "Average Total Price";
+
+    allListings = marketListings.appendChild(document.createElement("tr"));
+    ref = allListings.appendChild(document.createElement("td"));
+    ref.innerHTML = "HQ";
+    ref = allListings.appendChild(document.createElement("td"));
+    ref.innerHTML = "NQ";
+    ref = allListings.appendChild(document.createElement("td"));
+    ref.innerHTML = "HQ";
+    ref = allListings.appendChild(document.createElement("td"));
+    ref.innerHTML = "NQ";*/
 }
 
 //
 // Utility
 //
+
+/**
+ * Generate a table.
+ *
+ * @param {Object[][]} dataArray - A 2D data array with headers in the first row
+ * @return {Element} A table.
+ */
+function makeTable(dataArray) {
+    let table = document.createElement("table");
+
+    for (let i = 0; i < dataArray.length; i++) {
+        let row = table.appendChild(document.createElement("tr"));
+        for (let j = 0; j < dataArray[0].length; j++) {
+            let cell;
+            if (i === 0) {
+                cell = row.appendChild(document.createElement("th"));
+                cell.innerHTML = dataArray[0][j];
+            } else {
+                cell = row.appendChild(document.createElement("td"));
+                cell.innerHTML = dataArray[i][j];
+            }
+        }
+    }
+
+    return table;
+}
 
 /**
  * https://www.kirupa.com/html5/making_http_requests_js.htm
