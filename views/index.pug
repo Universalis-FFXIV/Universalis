@@ -3,8 +3,8 @@ html(lang="en")
     head
         title #{name}
         link(href="css/styles.css", rel="stylesheet")
-        script(src="https://cdn.jsdelivr.net/npm/chart.js@2/dist/Chart.min.js", type="text/javascript")
         script(src="https://unpkg.com/core-js-bundle@3.2.1/minified.js", type="text/javascript")
+        script(src="https://cdn.jsdelivr.net/npm/echarts@4/dist/echarts-en.common.min.js", type="text/javascript")
     body
         div(id="search")
             input(id="search-bar", type="search", name="query", placeholder="Search...")
@@ -26,7 +26,8 @@ html(lang="en")
 
                     Quisque elementum libero at tellus dignissim malesuada id ac sapien. Morbi posuere, turpis nec luctus faucibus, neque mauris gravida erat, ac efficitur libero nisi pretium leo. Pellentesque pharetra convallis quam eu luctus. Donec fermentum nunc velit, a mollis massa sollicitudin sed. Curabitur aliquet quis dolor vel fermentum. Aliquam pulvinar, nulla sit amet commodo fringilla, nisl odio tristique nunc, quis feugiat nisl nibh nec augue. Etiam nec ligula risus. Sed in diam nulla. Donec quis turpis aliquet, molestie est eu, ultrices risus. Ut ultrices mi non neque semper, in molestie lorem pharetra. Morbi erat turpis, tempor et massa id, dapibus tempor risus. Praesent bibendum libero eros, quis pretium sem fermentum sit amet. Cras a lacinia ligula, bibendum tincidunt nulla. Quisque in quam sodales, consectetur orci a, dapibus nibh. Integer dictum augue massa, ac auctor nulla bibendum ut. Morbi in rutrum neque.
             div(class="infobox", id="credits" style="text-align: center")
-                p Universalis v1.0.0 | Discord | Github | Twitter
+                p Universalis v1.0.0 | Discord | Github | Twitter | Graphs powered by!{" "}
+                    a(href="https://echarts.apache.org/en/index.html") ECharts
                 p FINAL FANTASY XIV © 2010 - 2019 SQUARE ENIX CO., LTD. All Rights Reserved.
     loadafter
         script(src="responses.js", type="text/javascript")
