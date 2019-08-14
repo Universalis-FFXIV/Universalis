@@ -13,11 +13,14 @@ function onHashChange_createWorldNav(id) {
     nav.setAttribute("id", "navbar");
     worldNav.appendChild(nav);
     nav = nav.appendChild(document.createElement("tr"));
-    for (var world of worldList[dataCenter]) { // Will exist at execution time
+
+    var trimmedWorldList = ["Cross-World"].concat(worldList[dataCenter]);
+
+    for (var world of trimmedWorldList) { // Will exist at execution time
         // Table cell
         var w = nav.appendChild(document.createElement("td"));
-        if (worldList[dataCenter].indexOf(world) == 0) {
-            w.setAttribute("id", "left-cell");
+        if (trimmedWorldList.indexOf(world) == 0) {
+            w.setAttribute("class", "left-cell");
         }
 
         // Link table cell
@@ -55,7 +58,7 @@ function onHashChange_drawGraph(graphContainer) {
             trigger: 'axis',
         },
         legend: {
-            data:['Series 1', 'Series 2'],
+            data: ['High-Quality Price Per Unit', 'Normal Quality Price Per Unit'],
         },
         grid: {
             left: '3%',
@@ -71,26 +74,62 @@ function onHashChange_drawGraph(graphContainer) {
         xAxis: {
             type: 'category',
             boundaryGap: false,
-            data: ['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6','Day 7'],
+            data: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
         },
         yAxis: {
             type: 'value',
         },
         series: [
             {
-                name:'Series 1',
-                type:'line',
-                data:[120, 132, 101, 134, 90, 230, 210],
+                name: 'High-Quality Price Per Unit',
+                type: 'line',
+                data: [120, 132, 101, 134, 90, 230, 210],
             },
             {
-                name:'Series 2',
-                type:'line',
-                data:[220, 182, 191, 234, 290, 330, 310],
+                name: 'Normal Quality Price Per Unit',
+                type: 'line',
+                data: [220, 182, 191, 234, 290, 330, 310],
             },
         ],
     };
 
     graph.setOption(options);
+}
+
+/**
+ * Generate infobox with cheapest listings NQ/HQ.
+ *
+ * @return {Element} An element of class infobox.
+ */
+function onHashChange_genCheapest() {
+    var cheapestListings = document.createElement("div");
+    cheapestListings.setAttribute("class", "infobox cheapest-listings");
+
+    let highQuality = cheapestListings.appendChild(document.createElement("div"));
+    highQuality.setAttribute("class", "col1");
+    let bigTextHQ = highQuality.appendChild(document.createElement("p"));
+    bigTextHQ.setAttribute("class", "col1 gen-cheapest");
+    bigTextHQ.innerHTML = "Cheapest High-Quality";
+    let priceHQ = bigTextHQ.appendChild(document.createElement("h1"));
+    priceHQ.innerHTML = "1 x 4,000,000";
+
+    let serverLabelHQ = highQuality.appendChild(document.createElement("p"));
+    serverLabelHQ.setAttribute("class", "col2 gen-cheapest");
+    serverLabelHQ.innerHTML = " Server: <b>Adamantoise</b> - Total: <b>4,000,000</b>";
+
+    let normalQuality = cheapestListings.appendChild(document.createElement("div"));
+    normalQuality.setAttribute("class", "col2");
+    let bigTestNQ = normalQuality.appendChild(document.createElement("p"));
+    bigTestNQ.setAttribute("class", "col1 gen-cheapest");
+    bigTestNQ.innerHTML = "Cheapest Normal Quality";
+    let priceNQ = bigTestNQ.appendChild(document.createElement("h1"));
+    priceNQ.innerHTML = "1 x 4,000,000";
+
+    let serverLabelNQ = normalQuality.appendChild(document.createElement("p"));
+    serverLabelNQ.setAttribute("class", "col2 gen-cheapest");
+    serverLabelNQ.innerHTML = " Server: <b>Adamantoise</b> - Total: <b>4,000,000</b>";
+
+    return cheapestListings;
 }
 
 
@@ -114,17 +153,29 @@ function onHashChange_genMarketTables() {
         let table = [
             ["#", "Server", "HQ", "Materia", "Price", "Quantity", "Total", "%Diff", "Retainer", "Creator"],
             ["1", "Adamantoise", "$hq", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"],
-            ["2", "Adamantoise", "$hq", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"]
+            ["2", "Adamantoise", "$hq", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"],
         ];
-        return onHashChange_genMarketTables_helper0(table, "HQ Prices");
+        let header = document.createElement("div");
+        let img = header.appendChild(document.createElement("img"));
+        img.setAttribute("src", "img/hq.png");
+        img.setAttribute("class", "prefix-hq-icon");
+        let label = header.appendChild(document.createElement("h3"));
+        label.innerHTML = "HQ Prices";
+        return onHashChange_genMarketTables_helper0(table, header);
     })());
     col2.appendChild((() => {
         let table = [
             ["#", "Server", "HQ", "Price", "Quantity", "Total", "%Diff", "Buyer", "Date"],
             ["1", "Adamantoise", "$hq", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"],
-            ["2", "Adamantoise", "$hq", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"]
+            ["2", "Adamantoise", "$hq", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"],
         ];
-        return onHashChange_genMarketTables_helper0(table, "HQ Purchase History");
+        let header = document.createElement("div");
+        let img = header.appendChild(document.createElement("img"));
+        img.setAttribute("src", "img/hq.png");
+        img.setAttribute("class", "prefix-hq-icon");
+        let label = header.appendChild(document.createElement("h3"));
+        label.innerHTML = "HQ Purchase History";
+        return onHashChange_genMarketTables_helper0(table, header);
     })());
 
     // NQ
@@ -132,17 +183,21 @@ function onHashChange_genMarketTables() {
         let table = [
             ["#", "Server", "HQ", "Materia", "Price", "Quantity", "Total", "%Diff", "Retainer", "Creator"],
             ["1", "Adamantoise", "", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"],
-            ["2", "Adamantoise", "", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"]
+            ["2", "Adamantoise", "", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"],
         ];
-        return onHashChange_genMarketTables_helper0(table, "NQ Prices");
+        let header = document.createElement("h3");
+        header.innerHTML = "NQ Prices";
+        return onHashChange_genMarketTables_helper0(table, header);
     })());
     col2.appendChild((() => {
         let table = [
             ["#", "Server", "HQ", "Price", "Quantity", "Total", "%Diff", "Buyer", "Date"],
             ["1", "Adamantoise", "", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"],
-            ["2", "Adamantoise", "", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"]
+            ["2", "Adamantoise", "", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"],
         ];
-        return onHashChange_genMarketTables_helper0(table, "NQ Purchase History");
+        let header = document.createElement("h3");
+        header.innerHTML = "NQ Purchase History";
+        return onHashChange_genMarketTables_helper0(table, header);
     })());
 
     // Averages
@@ -150,7 +205,7 @@ function onHashChange_genMarketTables() {
         return onHashChange_genMarketTables_helper1("Average Price Per Unit", "Average Total Price");
     })());
     col2.appendChild((() => {
-        return onHashChange_genMarketTables_helper1("Average Purchased Price Per Unit", "Average Total Purchased Price")
+        return onHashChange_genMarketTables_helper1("Average Purchased Price Per Unit", "Average Total Purchased Price");
     })());
 
     return marketData;
@@ -159,14 +214,15 @@ function onHashChange_genMarketTables() {
 /**
  * Actually generate the table, and replace $hq with a HQ icon.
  *
+ * @param {Object[]} table - A 2D array of objects.
+ * @param {Element} header - An element to use as the table title.
  * @return {Element} An element containing a table.
  */
 function onHashChange_genMarketTables_helper0(table, header) {
     let container = document.createElement("div");
-    let label = container.appendChild(document.createElement("h3"));
-    label.innerHTML = header;
+    let label = container.appendChild(header);
 
-    let tableElement = makeTable(table);
+    let tableElement = makeTable(table, "market-data-table");
     container.appendChild(tableElement);
 
     for (let i = 0; i < table.length; i++) {
@@ -176,7 +232,7 @@ function onHashChange_genMarketTables_helper0(table, header) {
             img.setAttribute("src", "img/hq.png");
             img.setAttribute("style", `
                 height: 16px;
-                width: 16px
+                width: 16px;
             `);
             cell.innerHTML = "";
             cell.appendChild(img);
@@ -194,29 +250,36 @@ function onHashChange_genMarketTables_helper0(table, header) {
  */
 function onHashChange_genMarketTables_helper1(header1, header2) {
     let container = document.createElement("div");
+    container.setAttribute("style", "text-align: center;");
 
     let col1 = container.appendChild(document.createElement("div"));
     col1.setAttribute("class", "col1");
-    let label1 = col1.appendChild(document.createElement("h3"));
+    let label1 = col1.appendChild(document.createElement("h4"));
     label1.innerHTML = header1;
 
-    let label1_1 = col1.appendChild(document.createElement("h3"));
+    let label1_1 = col1.appendChild(document.createElement("h4"));
     label1_1.setAttribute("class", "col1");
-    label1_1.innerHTML = "HQ";
-    let label1_2 = col1.appendChild(document.createElement("h3"));
+    let img1_1 = label1_1.appendChild(document.createElement("img"));
+    img1_1.setAttribute("src", "img/hq.png");
+    img1_1.setAttribute("class", "prefix-hq-icon_alt");
+    label1_1.innerHTML += "HQ";
+    let label1_2 = col1.appendChild(document.createElement("h4"));
     label1_2.setAttribute("class", "col1");
     label1_2.innerHTML = "NQ";
 
 
     let col2 = container.appendChild(document.createElement("div"));
     col2.setAttribute("class", "col2");
-    let label2 = col2.appendChild(document.createElement("h3"));
+    let label2 = col2.appendChild(document.createElement("h4"));
     label2.innerHTML = header2;
 
-    let label2_1 = col2.appendChild(document.createElement("h3"));
+    let label2_1 = col2.appendChild(document.createElement("h4"));
     label2_1.setAttribute("class", "col1");
-    label2_1.innerHTML = "HQ";
-    let label2_2 = col2.appendChild(document.createElement("h3"));
+    let img2_1 = label2_1.appendChild(document.createElement("img"));
+    img2_1.setAttribute("src", "img/hq.png");
+    img2_1.setAttribute("class", "prefix-hq-icon_alt");
+    label2_1.innerHTML += "HQ";
+    let label2_2 = col2.appendChild(document.createElement("h4"));
     label2_2.setAttribute("class", "col2");
     label2_2.innerHTML = "NQ";
 

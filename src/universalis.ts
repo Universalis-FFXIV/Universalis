@@ -22,6 +22,13 @@ const priceTracker = new PriceTracker();
 const universalis = new Koa();
 
 // Get local copies of certain remote files, should they not exist locally
+if (!fs.existsSync("./public/json/data.json")) {
+    (async () => {
+        let data = await request("https://www.garlandtools.org/db/doc/core/en/3/data.json");
+        fs.writeFileSync("./public/json/data.json", data);
+    })();
+}
+
 if (!fs.existsSync("./public/json/dc.json")) {
     (async () => {
         let data = await request("https://xivapi.com/servers/dc");

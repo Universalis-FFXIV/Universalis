@@ -14,10 +14,13 @@
         "ecmaVersion": 2019
     },
     "rules": {
+        "camelcase": "off",
         "indent": "off",
         "linebreak-style": "off",
         "max-len": "off",
+        "no-unused-vars": "off",
         "no-var": "off",
+        "prefer-const": "off",
         "quotes": ["error", "single"],
         "quotes": ["off", "double"]
     }

@@ -82,5 +82,6 @@ build/
 # Market data
 data/
 
-# XIVAPI files
+# API cached files
+public/json/data.json
 public/json/dc.json

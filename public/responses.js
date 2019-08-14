@@ -10,7 +10,12 @@ var asyncInitCount = 2; // The number of asynchronous initialization functions t
 // Item categories
 var itemCategories = [null];
 (async function() {
-    var dataFile = JSON.parse(await request(`https://www.garlandtools.org/db/doc/core/${lang}/3/data.json`));
+    var dataFile;
+    try {
+        dataFile = JSON.parse(await request("json/data.json"));
+    } catch { // Second failsafe, in case the user connects before the file is downloaded and it doesn't already exist (edge case)
+        dataFile = JSON.parse(await request(`https://www.garlandtools.org/db/doc/core/en/3/data.json`)); // All language options are English for this file (for some reason), so it doesn't matter
+    }
 
     var categories = dataFile.item.categoryIndex;
     for (var category in categories) {
@@ -26,7 +31,7 @@ var worldList;
 (async function() {
     try {
         worldList = JSON.parse(await request("json/dc.json"));
-    } catch { // Second failsafe, in case the user connects before the file is downloaded and it doesn't already exist (edge case)
+    } catch {
         worldList = JSON.parse(await request("https://xivapi.com/servers/dc"));
     }
     initDone();
@@ -168,7 +173,8 @@ async function onHashChange() {
         infoArea.insertBefore(onHashChange_createWorldNav(id), creditBox);
     }
 
-    // TODO: Cheapest
+    // Cheapest listing
+    infoArea.insertBefore(onHashChange_genCheapest(), creditBox);
 
     // Graph
     var graphContainer = document.createElement("div");
@@ -187,11 +193,13 @@ async function onHashChange() {
 /**
  * Generate a table.
  *
- * @param {Object[][]} dataArray - A 2D data array with headers in the first row
+ * @param {Object[]} dataArray - A 2D data array with headers in the first row
+ * @param {string} _class - A class to style the table
  * @return {Element} A table.
  */
-function makeTable(dataArray) {
+function makeTable(dataArray, _class) {
     let table = document.createElement("table");
+    if (_class) table.setAttribute("class", _class);
 
     for (let i = 0; i < dataArray.length; i++) {
         let row = table.appendChild(document.createElement("tr"));
