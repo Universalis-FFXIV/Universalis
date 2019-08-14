@@ -116,7 +116,7 @@ function onHashChange_genMarketTables() {
             ["1", "Adamantoise", "$hq", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"],
             ["2", "Adamantoise", "$hq", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"]
         ];
-        return onHashChange_genMarketTables_helper0(table);
+        return onHashChange_genMarketTables_helper0(table, "HQ Prices");
     })());
     col2.appendChild((() => {
         let table = [
@@ -124,7 +124,7 @@ function onHashChange_genMarketTables() {
             ["1", "Adamantoise", "$hq", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"],
             ["2", "Adamantoise", "$hq", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"]
         ];
-        return onHashChange_genMarketTables_helper0(table);
+        return onHashChange_genMarketTables_helper0(table, "HQ Purchase History");
     })());
 
     // NQ
@@ -134,7 +134,7 @@ function onHashChange_genMarketTables() {
             ["1", "Adamantoise", "", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"],
             ["2", "Adamantoise", "", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"]
         ];
-        return onHashChange_genMarketTables_helper0(table);
+        return onHashChange_genMarketTables_helper0(table, "NQ Prices");
     })());
     col2.appendChild((() => {
         let table = [
@@ -142,7 +142,7 @@ function onHashChange_genMarketTables() {
             ["1", "Adamantoise", "", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"],
             ["2", "Adamantoise", "", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"]
         ];
-        return onHashChange_genMarketTables_helper0(table);
+        return onHashChange_genMarketTables_helper0(table, "NQ Purchase History");
     })());
 
     // Averages
@@ -161,10 +161,10 @@ function onHashChange_genMarketTables() {
  *
  * @return {Element} An element containing a table.
  */
-function onHashChange_genMarketTables_helper0(table) {
+function onHashChange_genMarketTables_helper0(table, header) {
     let container = document.createElement("div");
     let label = container.appendChild(document.createElement("h3"));
-    label.innerHTML = "HQ Prices";
+    label.innerHTML = header;
 
     let tableElement = makeTable(table);
     container.appendChild(tableElement);
