@@ -156,7 +156,8 @@ async function onHashChange() {
     var infoArea = document.getElementById("info");
 
     var path = window.location.href;
-    var id = path.substr(path.lastIndexOf("/") + 1, path.length).replace(/[^0-9]/g, "");
+    var id = path.substr(path.lastIndexOf("/") + 1).replace(/[^0-9]/g, "");
+    var world = path.substr(path.lastIndexOf("=") + 1);
 
     // This has to be done backwards, because removing a child alters the array
     // of child nodes, which means some nodes would be skipped going forwards.
@@ -173,17 +174,20 @@ async function onHashChange() {
         infoArea.insertBefore(onHashChange_createWorldNav(id), creditBox);
     }
 
-    // Cheapest listing
-    infoArea.insertBefore(onHashChange_genCheapest(), creditBox);
+    // Cheapest listing if cross-world
+    if (!world || world === path || world === "Cross-World") {
+        world = undefined;
+        infoArea.insertBefore(onHashChange_genCheapest(), creditBox);
+    }
 
     // Graph
     var graphContainer = document.createElement("div");
     graphContainer.setAttribute("class", "infobox graph");
     infoArea.insertBefore(graphContainer, creditBox); // Needs to be inserted earlier for width
-    onHashChange_drawGraph(graphContainer);
+    onHashChange_drawGraph(graphContainer, world);
 
     // Market info from servers
-    infoArea.insertBefore(onHashChange_genMarketTables(), creditBox);
+    infoArea.insertBefore(onHashChange_genMarketTables(world), creditBox);
 }
 
 //

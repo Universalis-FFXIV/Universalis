@@ -41,8 +41,9 @@ function onHashChange_createWorldNav(id) {
  * Creates the history graph.
  *
  * @param {Element} graphContainer - A container to put the graph in.
+ * @param {string} world - The world to get data for.
  */
-function onHashChange_drawGraph(graphContainer) {
+function onHashChange_drawGraph(graphContainer, world) {
     var graph = graphContainer.appendChild(document.createElement("canvas"));
     graph.setAttribute("id", "echarts");
     graph.setAttribute("height", "300");
@@ -136,9 +137,10 @@ function onHashChange_genCheapest() {
 /**
  * Generate tables with market board data.
  *
+ * @param {string} world - The world to get data for.
  * @return {Element} An element of class infobox.
  */
-function onHashChange_genMarketTables() {
+function onHashChange_genMarketTables(world) {
     var marketData = document.createElement("div");
     marketData.setAttribute("class", "infobox market-data");
 
