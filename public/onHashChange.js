@@ -53,7 +53,7 @@ function onHashChange_drawGraph(graphContainer, world) {
 
     var options = {
         title: {
-            text: 'Cross-World Purchase History (500 Sales)',
+            text: `${world} Purchase History (500 Sales)`,
         },
         tooltip: {
             trigger: 'axis',

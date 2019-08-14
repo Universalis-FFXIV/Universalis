@@ -57,7 +57,7 @@ const router = new Router();
 router.get("/", async (ctx) => {
     await ctx.render("index.pug", {
         name: "Universalis - Crowdsourced Market Board Aggregator",
-        time: Date.now()
+        version: process.env.npm_package_version
     });
 });
 

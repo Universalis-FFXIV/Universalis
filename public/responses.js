@@ -3,7 +3,7 @@
 //
 
 var lang = "en";
-var dataCenter = "Aether";
+var dataCenter = "Crystal";
 
 var asyncInitCount = 2; // The number of asynchronous initialization functions that need to finish before post-init
 
@@ -176,7 +176,7 @@ async function onHashChange() {
 
     // Cheapest listing if cross-world
     if (!world || world === path || world === "Cross-World") {
-        world = undefined;
+        world = "Cross-World";
         infoArea.insertBefore(onHashChange_genCheapest(), creditBox);
     }
 
