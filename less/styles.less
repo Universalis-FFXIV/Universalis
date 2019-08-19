@@ -68,15 +68,14 @@ table {
 
 #search-results {
     scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 #search-results a {
     color: black;
     text-decoration: none;
-}
-
-#search-results::-webkit-scrollbar {
-    display: none;
 }
 
 .col1 {

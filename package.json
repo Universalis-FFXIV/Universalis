@@ -4,9 +4,9 @@
   "description": "A crowdsourced market board website for FFXIV.",
   "main": "build/universalis.js",
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc --build && lessc ./less/styles.less ./public/css/styles.css",
     "start": "node .",
-    "start-dev": "tslint ./src/**/*.ts && eslint ./public/**/*.js && tsc --build && node ."
+    "start-dev": "tslint ./src/**/*.ts && eslint ./public/**/*.js && npm run-script build && npm start"
   },
   "author": "karashiiro",
   "license": "MIT",
@@ -15,6 +15,7 @@
     "koa-router": "^7.4.0",
     "koa-static": "^5.0.0",
     "koa-views": "^6.2.0",
+    "lessc": "^1.0.2",
     "pug": "^2.0.4",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
