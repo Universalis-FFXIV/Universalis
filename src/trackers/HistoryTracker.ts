@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import util from "util";
 
 import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
@@ -8,33 +9,34 @@ const exists = util.promisify(fs.exists);
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
 
-export class HistoryTracker {
-    private entries: Map<number, MarketBoardHistoryEntry[]>;
+var entries: Map<number, MarketBoardHistoryEntry[]>;
 
+export class HistoryTracker {
     constructor() {
-        if (!fs.existsSync("../data")) {
-            fs.mkdirSync("../data");
+        if (!fs.existsSync("./data")) {
+            fs.mkdirSync("./data");
         }
 
-        this.entries = new Map();
+        entries = new Map();
     }
 
     public get(id: number) {
-        return this.entries.get(id);
+        return entries.get(id);
     }
 
     public async set(itemID: number, worldID: number, saleHistory: MarketBoardHistoryEntry[]) {
         // TODO data processing
-        this.entries.set(itemID, saleHistory);
+        entries.set(itemID, saleHistory);
 
         // Write to filesystem
-        let path = "../data/" + itemID + ".json";
+        let jsonPath = path.join(__dirname, "./data/" + itemID + ".json");
         // TODO fix race condition from concurrent updates
-        let localData: MarketInfoLocalData;
-        if (await exists(path)) { // Keep listings intact
-            localData = JSON.parse((await readFile(path)).toString());
+        let localData = {} as MarketInfoLocalData;
+        if (await exists(jsonPath)) { // Keep listings intact
+            localData = JSON.parse((await readFile(jsonPath)).toString());
         }
+        if (!localData[worldID]) localData[worldID] = {};
         localData[worldID].history = saleHistory;
-        await writeFile(path, JSON.stringify(localData));
+        await writeFile(jsonPath, JSON.stringify(localData));
     }
 }

@@ -1,6 +1,7 @@
 // Dependencies
 import fs from "fs";
 import Koa from "koa";
+import bodyParser from "koa-bodyparser";
 import Router from "koa-router";
 import serve from "koa-static";
 import views from "koa-views";
@@ -20,21 +21,23 @@ const historyTracker = new HistoryTracker();
 const priceTracker = new PriceTracker();
 
 const universalis = new Koa();
+universalis.use(bodyParser({
+    enableTypes: ["json"],
+    jsonLimit: "500kb"
+}));
 
 // Get local copies of certain remote files, should they not exist locally
-if (!fs.existsSync("./public/json/data.json")) {
-    (async () => {
-        let data = await request("https://www.garlandtools.org/db/doc/core/en/3/data.json");
-        fs.writeFileSync("./public/json/data.json", data);
-    })();
-}
-
-if (!fs.existsSync("./public/json/dc.json")) {
-    (async () => {
-        let data = await request("https://xivapi.com/servers/dc");
-        fs.writeFileSync("./public/json/dc.json", data);
-    })();
-}
+const remoteData = new Map();
+remoteData.set("./public/json/data.json", "https://www.garlandtools.org/db/doc/core/en/3/data.json");
+remoteData.set("./public/json/dc.json", "https://xivapi.com/servers/dc");
+remoteData.forEach((url, filePath) => {
+    if (!fs.existsSync(filePath)) {
+        (async () => {
+            let data = await request(url);
+            fs.writeFileSync(filePath, data);
+        })();
+    }
+});
 
 // Logger
 universalis.use(async (ctx, next) => {
@@ -67,33 +70,28 @@ router.post("/upload", async (ctx) => {
         return;
     }
 
-    let data = [];
-    ctx.on("data", (chunk: string) => {
-        data.push(chunk); // Concatenate the data stream
-    });
-    ctx.on("end", () => {
-        let input = data.join("");
-        // TODO sanitation
-        try {
-            let marketBoardData = <MarketBoardListingsUpload> JSON.parse(input);
-            let listingArray: MarketBoardItemListing[] = [];
-            for (let i = 1; i <= 10; i++) {
-                if (marketBoardData[`listing${i}`]) {
-                    listingArray.push(marketBoardData[`listing${i}`]);
-                }
+    let input = ctx.request.body;
+
+    // TODO sanitation
+    try {
+        let marketBoardData = <MarketBoardListingsUpload> input;
+        let listingArray: MarketBoardItemListing[] = [];
+        for (let i = 1; i <= 10; i++) {
+            if (marketBoardData[`listing${i}`]) {
+                listingArray.push(marketBoardData[`listing${i}`]);
             }
-            priceTracker.set(marketBoardData.itemID, marketBoardData.worldID, listingArray);
-        } catch {
-            let marketBoardData = <MarketBoardSaleHistoryUpload> JSON.parse(input);
-            let entryArray: MarketBoardHistoryEntry[] = [];
-            for (let i = 1; i <= 10; i++) {
-                if (marketBoardData[`entry${i}`]) {
-                    entryArray.push(marketBoardData[`entry${i}`]);
-                }
-            }
-            historyTracker.set(marketBoardData.itemID, marketBoardData.worldID, entryArray);
         }
-    });
+        priceTracker.set(marketBoardData.itemID, marketBoardData.worldID, listingArray);
+    } catch {
+        let marketBoardData = <MarketBoardSaleHistoryUpload> input;
+        let entryArray: MarketBoardHistoryEntry[] = [];
+        for (let i = 1; i <= 10; i++) {
+            if (marketBoardData[`entry${i}`]) {
+                entryArray.push(marketBoardData[`entry${i}`]);
+            }
+        }
+        historyTracker.set(marketBoardData.itemID, marketBoardData.worldID, entryArray);
+    }
 });
 
 universalis.use(router.routes());
