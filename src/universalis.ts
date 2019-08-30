@@ -72,9 +72,9 @@ router.post("/upload", async (ctx) => {
     try {
         let marketBoardData = <MarketBoardListingsUpload> input;
         let listingArray: MarketBoardItemListing[] = [];
-        for (let i = 1; i <= 10; i++) {
-            if (marketBoardData[`listing${i}`]) {
-                listingArray.push(marketBoardData[`listing${i}`]);
+        for (let i = 1; i <= marketBoardData.listings.length; i++) {
+            if (marketBoardData.listings[i]) {
+                listingArray.push(marketBoardData.listings[i]);
             }
         }
         priceTracker.set(marketBoardData.itemID, marketBoardData.worldID, listingArray);
