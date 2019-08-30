@@ -11,22 +11,14 @@ Listings upload format (JSON):
 {
     worldID: number;
     itemID: number;
-    listing1: {
+    listings: [{
         hq: 1 | 0;
         materia?: number[];
         pricePerUnit: number;
         quantity: number;
         retainerName: string;
         retainerCity: string;
-    };
-    listing2?: { // Optional properties through listing10
-        hq: 1 | 0;
-        materia?: number[];
-        pricePerUnit: number;
-        quantity: number;
-        retainerName: string;
-        retainerCity: string;
-    };
+    }];
 }
 ```
 
@@ -38,19 +30,12 @@ History upload format (JSON):
 {
     worldID: number;
     itemID: number;
-    entry1: {
+    entries: [{
         hq: 1 | 0;
         pricePerUnit: number;
         quantity: number;
         buyerName: string;
         timestamp: number;
-    };
-    entry2?: { // Optional properties through entry10
-        hq: 1 | 0;
-        pricePerUnit: number;
-        quantity: number;
-        buyerName: string;
-        timestamp: number;
-    };
+    }];
 }
 ```
