@@ -87,3 +87,6 @@ listings/
 # Cached files
 public/csv
 public/json
+
+# Misc
+run.bat

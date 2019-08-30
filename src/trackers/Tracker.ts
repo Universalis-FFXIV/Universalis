@@ -21,7 +21,7 @@ export abstract class Tracker {
         this.data = new Map();
         this.ext = ext;
         this.storageLocation = storageLocation;
-        this.scoringJob = new CronJob("* * * * */5", this.scoreAndUpdate, null, true);
+        // this.scoringJob = new CronJob("* * * * */5", this.scoreAndUpdate, null, true);
 
         if (!fs.existsSync(path.join(__dirname, storageLocation))) {
             fs.mkdirSync(path.join(__dirname, storageLocation));
