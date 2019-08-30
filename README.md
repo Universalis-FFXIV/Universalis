@@ -1,5 +1,5 @@
 # Universalis
-A crowdsourced market board aggregator. Not necessarily ever intended for widespread use, simply an experiment at this time.
+A crowdsourced market board aggregator. Not even nearly completed, though contributions are welcome.
 
 # Development
 Clone the repo, and then `npm install` to download the dependencies. Use `npm run-script start-dev` to test it on localhost.
