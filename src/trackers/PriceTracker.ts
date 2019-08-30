@@ -2,41 +2,46 @@ import fs from "fs";
 import path from "path";
 import util from "util";
 
-import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
-import { MarketInfoLocalData } from "../models/MarketInfoLocalData";
+import { Tracker } from "./Tracker";
 
-const exists = util.promisify(fs.exists);
-const readFile = util.promisify(fs.readFile);
+const readdir = util.promisify(fs.readdir);
 const writeFile = util.promisify(fs.writeFile);
 
-var listings: Map<number, MarketBoardItemListing[]>;
-
-export class PriceTracker {
+export class PriceTracker extends Tracker {
+    // The path structure is /listings/<worldID/<itemID>/<branchNumber>.json
     constructor() {
-        if (!fs.existsSync("./data")) {
-            fs.mkdirSync("./data");
-        }
+        super("../../listings", ".json");
 
-        listings = new Map();
+        const worlds = fs.readdirSync(path.join(__dirname, this.storageLocation));
+        for (let world of worlds) {
+            const items = fs.readdirSync(path.join(__dirname, this.storageLocation, world));
+            for (let item of items) {
+                let listings = JSON.parse(
+                    fs.readFileSync(
+                        path.join(__dirname, this.storageLocation, world, item, "0.json")
+                    ).toString()
+                );
+
+                this.data.set(parseInt(item), { worldID: listings.worldID, data: listings.listings });
+            }
+        }
     }
 
-    public get(id: number) {
-        return listings.get(id);
-    }
+    public async set(itemID: number, worldID: number, data: any[]) {
+        if (worldID === 0) return; // You can't upload crossworld market data because you can't scrape it.
 
-    public async set(itemID: number, worldID: number, itemListings: MarketBoardItemListing[]) {
-        // TODO data processing
-        listings.set(itemID, itemListings);
+        const filePath = path.join(__dirname, this.storageLocation, String(worldID), String(itemID));
+        const listings = await readdir(filePath);
+        const nextNumber = parseInt(
+            listings[listings.length - 1].substr(0, listings[listings.length - 1].indexOf("."))
+        ) + 1;
 
-        // Write to filesystem
-        let jsonPath = path.join(__dirname, "./data/" + itemID + ".json");
-        // TODO fix race condition from concurrent updates
-        let localData = {} as MarketInfoLocalData;
-        if (await exists(jsonPath)) { // Keep listings intact
-            localData = JSON.parse((await readFile(jsonPath)).toString());
+        if (!fs.existsSync(path.join(__dirname, this.storageLocation, String(worldID)))) {
+            fs.mkdirSync(path.join(__dirname, this.storageLocation, String(worldID)));
         }
-        if (!localData[worldID]) localData[worldID] = {};
-        localData[worldID].listings = itemListings;
-        await writeFile(jsonPath, JSON.stringify(localData));
+
+        await writeFile(path.join(filePath, `${nextNumber}.json`), JSON.stringify({
+            listings: data,
+        }));
     }
 }

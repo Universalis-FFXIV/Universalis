@@ -2,41 +2,39 @@ import fs from "fs";
 import path from "path";
 import util from "util";
 
-import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
-import { MarketInfoLocalData } from "../models/MarketInfoLocalData";
+import { Tracker } from "./Tracker";
 
-const exists = util.promisify(fs.exists);
-const readFile = util.promisify(fs.readFile);
+const readdir = util.promisify(fs.readdir);
 const writeFile = util.promisify(fs.writeFile);
 
-var entries: Map<number, MarketBoardHistoryEntry[]>;
-
-export class HistoryTracker {
+export class HistoryTracker extends Tracker {
+    // The path structure is /history/<worldID/<itemID>/<branchNumber>.json
     constructor() {
-        if (!fs.existsSync("./data")) {
-            fs.mkdirSync("./data");
-        }
+        super("../../history", ".json");
 
-        entries = new Map();
+        const worlds = fs.readdirSync(path.join(__dirname, this.storageLocation));
+        for (let world of worlds) {
+            const items = fs.readdirSync(path.join(__dirname, this.storageLocation, world));
+            for (let item of items) {
+                let listings = JSON.parse(
+                    fs.readFileSync(
+                        path.join(__dirname, this.storageLocation, world, item, "0.json")
+                    ).toString()
+                );
+
+                this.data.set(parseInt(item), { worldID: listings.worldID, data: listings.listings });
+            }
+        }
     }
 
-    public get(id: number) {
-        return entries.get(id);
-    }
-
-    public async set(itemID: number, worldID: number, saleHistory: MarketBoardHistoryEntry[]) {
-        // TODO data processing
-        entries.set(itemID, saleHistory);
-
-        // Write to filesystem
-        let jsonPath = path.join(__dirname, "./data/" + itemID + ".json");
-        // TODO fix race condition from concurrent updates
-        let localData = {} as MarketInfoLocalData;
-        if (await exists(jsonPath)) { // Keep listings intact
-            localData = JSON.parse((await readFile(jsonPath)).toString());
-        }
-        if (!localData[worldID]) localData[worldID] = {};
-        localData[worldID].history = saleHistory;
-        await writeFile(jsonPath, JSON.stringify(localData));
+    public async set(itemID: number, worldID: number, data: any[]) {
+        const filePath = path.join(__dirname, this.storageLocation, String(worldID), String(itemID));
+        const listings = await readdir(filePath);
+        const nextNumber = parseInt(
+            listings[listings.length - 1].substr(0, listings[listings.length - 1].indexOf("."))
+        ) + 1;
+        await writeFile(path.join(filePath, `${nextNumber}.json`), JSON.stringify({
+            listings: data,
+        }));
     }
 }

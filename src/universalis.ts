@@ -5,7 +5,9 @@ import bodyParser from "koa-bodyparser";
 import Router from "koa-router";
 import serve from "koa-static";
 import views from "koa-views";
-import request from "request-promise";
+import path from "path";
+
+import remoteDataManager from "./remoteDataManager";
 
 // Load models
 import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
@@ -17,7 +19,7 @@ import { HistoryTracker } from "./trackers/HistoryTracker";
 import { PriceTracker } from "./trackers/PriceTracker";
 
 // Define application and its internal resources
-const historyTracker = new HistoryTracker();
+const historyTracker = new HistoryTracker(); // TODO
 const priceTracker = new PriceTracker();
 
 const universalis = new Koa();
@@ -26,18 +28,12 @@ universalis.use(bodyParser({
     jsonLimit: "500kb"
 }));
 
-// Get local copies of certain remote files, should they not exist locally
-const remoteData = new Map();
-remoteData.set("./public/json/data.json", "https://www.garlandtools.org/db/doc/core/en/3/data.json");
-remoteData.set("./public/json/dc.json", "https://xivapi.com/servers/dc");
-remoteData.forEach((url, filePath) => {
-    if (!fs.existsSync(filePath)) {
-        (async () => {
-            let data = await request(url);
-            fs.writeFileSync(filePath, data);
-        })();
-    }
-});
+remoteDataManager.fetchAll();
+
+// Create directories
+if (!fs.existsSync(path.join(__dirname, "./branches"))) {
+    fs.mkdirSync(path.join(__dirname, "./branches"));
+}
 
 // Logger
 universalis.use(async (ctx, next) => {
@@ -83,14 +79,14 @@ router.post("/upload", async (ctx) => {
         }
         priceTracker.set(marketBoardData.itemID, marketBoardData.worldID, listingArray);
     } catch {
-        let marketBoardData = <MarketBoardSaleHistoryUpload> input;
+        /*let marketBoardData = <MarketBoardSaleHistoryUpload> input;
         let entryArray: MarketBoardHistoryEntry[] = [];
         for (let i = 1; i <= 10; i++) {
             if (marketBoardData[`entry${i}`]) {
                 entryArray.push(marketBoardData[`entry${i}`]);
             }
         }
-        historyTracker.set(marketBoardData.itemID, marketBoardData.worldID, entryArray);
+        historyTracker.set(marketBoardData.itemID, marketBoardData.worldID, entryArray);*/
     }
 });
 

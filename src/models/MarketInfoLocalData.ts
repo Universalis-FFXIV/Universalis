@@ -1,7 +1,7 @@
 import { MarketBoardHistoryEntry } from "./MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "./MarketBoardItemListing";
 
-export interface MarketInfoLocalData {
+export interface MarketInfoLocalWorldData {
     listings: MarketBoardItemListing[];
     history: MarketBoardHistoryEntry[];
 }

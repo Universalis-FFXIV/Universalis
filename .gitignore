@@ -81,8 +81,9 @@ build/
 public/css/
 
 # Market data
-data/
+history/
+listings/
 
-# API cached files
-public/json/data.json
-public/json/dc.json
+# Cached files
+public/csv
+public/json

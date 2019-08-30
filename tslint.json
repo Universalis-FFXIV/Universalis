@@ -5,6 +5,7 @@
     ],
     "jsRules": {},
     "rules": {
+        "curly": [ false ],
         "interface-name": [ false ],
         "no-angle-bracket-type-assertion": [ false ],
         "no-console": {
@@ -12,6 +13,7 @@
         },
         "no-var-keyword": [ false ],
         "prefer-const": [ false ],
+        "radix": [ false ],
         "trailing-comma": [ false ]
     },
     "rulesDirectory": []
