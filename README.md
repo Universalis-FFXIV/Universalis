@@ -18,6 +18,7 @@ Listings upload format (JSON):
         quantity: number;
         retainerName: string;
         retainerCity: string;
+        creator?: string;
     }];
 }
 ```
