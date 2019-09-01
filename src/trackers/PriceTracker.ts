@@ -59,7 +59,7 @@ export class PriceTracker extends Tracker {
         };
 
         if (await exists(filePath)) {
-            data.recentHistory = JSON.parse((await readFile(filePath)).toString());
+            data.recentHistory = JSON.parse((await readFile(filePath)).toString()).recentHistory;
         }
 
         await writeFile(filePath, JSON.stringify(data));

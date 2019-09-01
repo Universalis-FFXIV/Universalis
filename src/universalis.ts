@@ -74,6 +74,17 @@ router.get("/api/:world/:item", async (ctx) => {
     ctx.body = data;
 });
 
+router.get("/api/history/:world/:item", async (ctx) => {
+    let data = JSON.parse((await readFile(
+        path.join(__dirname, "../history", ctx.params.world, ctx.params.item, "0.json")
+    )).toString());
+    if (!data) {
+        ctx.throw(404);
+        return;
+    }
+    ctx.body = data;
+});
+
 router.post("/upload", async (ctx) => {
     if (!ctx.is("json")) {
         ctx.throw(415);
@@ -89,12 +100,12 @@ router.post("/upload", async (ctx) => {
 
     // TODO sanitation
     let dataArray: MarketBoardItemListing[] & MarketBoardHistoryEntry[] = [];
-    if (marketBoardData.listings[0]) {
+    if (marketBoardData.listings) {
         for (let listing of marketBoardData.listings) {
             dataArray.push(listing);
         }
         priceTracker.set(marketBoardData.itemID, marketBoardData.worldID, dataArray as MarketBoardItemListing[]);
-    } else if (marketBoardData.entries[0]) {
+    } else if (marketBoardData.entries) {
         for (let entry of marketBoardData.entries) {
             dataArray.push(entry);
         }

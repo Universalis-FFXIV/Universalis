@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc --build && lessc ./less/styles.less ./public/css/styles.css",
     "start": "node .",
-    "start-dev": "tslint ./src/**/*.ts && eslint ./public/**/*.js && npm run-script build && npm start"
+    "start-dev": "tslint ./src/**/*.ts && eslint ./public/**/*.js && npm run-script build && npm start",
+    "test": "mocha"
   },
   "author": "karashiiro",
   "license": "MIT",
@@ -36,6 +37,9 @@
     "@types/request-promise": "^4.1.44",
     "eslint": "^6.1.0",
     "eslint-config-google": "^0.13.0",
+    "lodash.isequal": "^4.5.0",
+    "mocha": "^6.2.0",
+    "should": "^13.2.3",
     "tslint": "^5.18.0"
   }
 }

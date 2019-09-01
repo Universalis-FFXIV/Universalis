@@ -40,7 +40,7 @@ export class HistoryTracker extends Tracker {
         }
     }
 
-    public async set(itemID: number, worldID: number, entries: MarketBoardHistoryEntry[]) {
+    public async set(itemID: number, worldID: number, recentHistory: MarketBoardHistoryEntry[]) {
         const worldDir = path.join(__dirname, this.storageLocation, String(worldID));
         const itemDir = path.join(worldDir, String(itemID));
         const filePath = path.join(itemDir, "0.json");
@@ -56,15 +56,17 @@ export class HistoryTracker extends Tracker {
 
         let data: MarketInfoLocalData = {
             itemID,
-            recentHistory: entries,
+            recentHistory,
             worldID
         };
 
         if (await exists(filePath)) {
-            data.listings = JSON.parse((await readFile(filePath)).toString());
+            data.listings = JSON.parse((await readFile(filePath)).toString()).listings;
         }
 
         await writeFile(filePath, JSON.stringify(data));
+
+        this.updateExtendedHistory(itemID, worldID, recentHistory);
 
         /*const nextNumber = parseInt(
             listings[listings.length - 1].substr(0, listings[listings.length - 1].indexOf("."))
@@ -75,7 +77,19 @@ export class HistoryTracker extends Tracker {
         }));*/
     }
 
-    public async updateExtendedHistory(entries: MarketBoardHistoryEntry[], worldID: number, itemID: number) {
+    public async updateExtendedHistory(itemID: number, worldID: number, entries: MarketBoardHistoryEntry[]) {
+        const worldDir = path.join(__dirname, "../../history", String(worldID));
+        const itemDir = path.join(worldDir, String(itemID));
+        const extendedHistoryPath = path.join(itemDir, "0.json");
+
+        if (!await exists(worldDir)) {
+            await mkdir(worldDir);
+        }
+
+        if (!await exists(itemDir)) {
+            await mkdir(itemDir);
+        }
+
         let minimizedEntries: MinimizedHistoryEntry[] = entries.map((entry) => {
             delete entry.buyerName;
             delete entry.quantity;
@@ -83,7 +97,6 @@ export class HistoryTracker extends Tracker {
         });
 
         let extendedHistory: ExtendedHistory;
-        let extendedHistoryPath = path.join(__dirname, "../../history", String(worldID), String(itemID), "0.json");
         if (await exists(extendedHistoryPath)) {
             extendedHistory = JSON.parse((await readFile(extendedHistoryPath)).toString());
         } else {
@@ -96,7 +109,7 @@ export class HistoryTracker extends Tracker {
         if (entrySum > 500) {
             extendedHistory.entries = extendedHistory.entries.slice(0, 500 - minimizedEntries.length);
         }
-        extendedHistory.entries = extendedHistory.entries.concat(minimizedEntries);
+        extendedHistory.entries = minimizedEntries.concat(extendedHistory.entries);
         return await writeFile(extendedHistoryPath, JSON.stringify(extendedHistory));
     }
 }
