@@ -82,6 +82,7 @@ public/css/
 
 # Market data
 data/
+history/
 
 # Cached files
 public/csv

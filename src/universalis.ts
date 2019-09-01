@@ -82,16 +82,21 @@ router.post("/upload", async (ctx) => {
 
     let marketBoardData: MarketBoardListingsUpload & MarketBoardSaleHistoryUpload = ctx.request.body;
 
+    // You can't upload data for these worlds because you can't scrape it.
+    // This does include Chinese and Korean worlds for the time being.
+    if (!marketBoardData.worldID || !marketBoardData.itemID) return ctx.throw(415);
+    if (marketBoardData.worldID <= 16 || marketBoardData.worldID >= 100) return ctx.throw(415);
+
     // TODO sanitation
     let dataArray: MarketBoardItemListing[] & MarketBoardHistoryEntry[] = [];
     if (marketBoardData.listings[0]) {
-        for (let i = 0; i < marketBoardData.listings.length; i++) {
-            dataArray.push(marketBoardData.listings[i]);
+        for (let listing of marketBoardData.listings) {
+            dataArray.push(listing);
         }
         priceTracker.set(marketBoardData.itemID, marketBoardData.worldID, dataArray as MarketBoardItemListing[]);
     } else if (marketBoardData.entries[0]) {
-        for (let i = 0; i < marketBoardData.entries.length; i++) {
-            dataArray.push(marketBoardData.entries[i]);
+        for (let entry of marketBoardData.entries) {
+            dataArray.push(entry);
         }
         historyTracker.set(marketBoardData.itemID, marketBoardData.worldID, dataArray as MarketBoardHistoryEntry[]);
     } else {

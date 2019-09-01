@@ -5,4 +5,5 @@ export interface MarketBoardItemListing {
     quantity: number;
     retainerName: string;
     retainerCity: string;
+    creatorName?: string;
 }

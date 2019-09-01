@@ -4,11 +4,14 @@ import util from "util";
 
 import { Tracker } from "./Tracker";
 
+import { ExtendedHistory } from "../models/ExtendedHistory";
 import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
+import { MarketInfoLocalData } from "../models/MarketInfoLocalData";
+import { MinimizedHistoryEntry } from "../models/MinimizedHistoryEntry";
 
 const exists = util.promisify(fs.exists);
 const mkdir = util.promisify(fs.mkdir);
-const readdir = util.promisify(fs.readdir);
+const readFile = util.promisify(fs.readFile);
 const unlink = util.promisify(fs.unlink);
 const writeFile = util.promisify(fs.writeFile);
 
@@ -21,7 +24,7 @@ export class HistoryTracker extends Tracker {
         for (let world of worlds) {
             const items = fs.readdirSync(path.join(__dirname, this.storageLocation, world));
             for (let item of items) {
-                let listings;
+                let listings: MarketInfoLocalData;
                 try {
                     listings = JSON.parse(
                         fs.readFileSync(
@@ -37,40 +40,63 @@ export class HistoryTracker extends Tracker {
         }
     }
 
-    public async set(itemID: number, worldID: number, data: MarketBoardHistoryEntry[]) {
-        if (worldID === 0) return; // You can't upload crossworld market data because you can't scrape it.
-
+    public async set(itemID: number, worldID: number, entries: MarketBoardHistoryEntry[]) {
         const worldDir = path.join(__dirname, this.storageLocation, String(worldID));
         const itemDir = path.join(worldDir, String(itemID));
         const filePath = path.join(itemDir, "0.json");
         // const listings = (await readdir(filePath)).filter((el) => el.endsWith(".json"));
 
-        if (!(await exists(worldDir))) {
+        if (!await exists(worldDir)) {
             await mkdir(worldDir);
         }
 
-        if (!(await exists(itemDir))) {
+        if (!await exists(itemDir)) {
             await mkdir(itemDir);
         }
 
+        let data: MarketInfoLocalData = {
+            itemID,
+            recentHistory: entries,
+            worldID
+        };
+
         if (await exists(filePath)) {
-            await unlink(filePath);
+            data.listings = JSON.parse((await readFile(filePath)).toString());
         }
 
-        await writeFile(filePath, JSON.stringify({
-            recentHistory: data,
-        }));
+        await writeFile(filePath, JSON.stringify(data));
 
         /*const nextNumber = parseInt(
             listings[listings.length - 1].substr(0, listings[listings.length - 1].indexOf("."))
         ) + 1;
 
-        if (!fs.existsSync(path.join(__dirname, this.storageLocation, String(worldID)))) {
-            fs.mkdirSync(path.join(__dirname, this.storageLocation, String(worldID)));
-        }
-
         await writeFile(path.join(filePath, `${nextNumber}.json`), JSON.stringify({
             listings: data,
         }));*/
+    }
+
+    public async updateExtendedHistory(entries: MarketBoardHistoryEntry[], worldID: number, itemID: number) {
+        let minimizedEntries: MinimizedHistoryEntry[] = entries.map((entry) => {
+            delete entry.buyerName;
+            delete entry.quantity;
+            return entry;
+        });
+
+        let extendedHistory: ExtendedHistory;
+        let extendedHistoryPath = path.join(__dirname, "../../history", String(worldID), String(itemID), "0.json");
+        if (await exists(extendedHistoryPath)) {
+            extendedHistory = JSON.parse((await readFile(extendedHistoryPath)).toString());
+        } else {
+            extendedHistory = {
+                entries: []
+            };
+        }
+
+        let entrySum = extendedHistory.entries.length + minimizedEntries.length;
+        if (entrySum > 500) {
+            extendedHistory.entries = extendedHistory.entries.slice(0, 500 - minimizedEntries.length);
+        }
+        extendedHistory.entries = extendedHistory.entries.concat(minimizedEntries);
+        return await writeFile(extendedHistoryPath, JSON.stringify(extendedHistory));
     }
 }
