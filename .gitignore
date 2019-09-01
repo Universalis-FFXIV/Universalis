@@ -81,8 +81,7 @@ build/
 public/css/
 
 # Market data
-history/
-listings/
+data/
 
 # Cached files
 public/csv

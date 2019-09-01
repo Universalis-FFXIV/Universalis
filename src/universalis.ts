@@ -65,7 +65,7 @@ router.get("/", async (ctx) => {
 
 router.get("/api/:world/:item", async (ctx) => {
     let data = JSON.parse((await readFile(
-        path.join(__dirname, "../listings", ctx.params.world, ctx.params.item, "0.json")
+        path.join(__dirname, "../data", ctx.params.world, ctx.params.item, "0.json")
     )).toString());
     if (!data) {
         ctx.throw(404);
@@ -80,27 +80,22 @@ router.post("/upload", async (ctx) => {
         return;
     }
 
-    let input = ctx.request.body;
+    let marketBoardData: MarketBoardListingsUpload & MarketBoardSaleHistoryUpload = ctx.request.body;
 
     // TODO sanitation
-    try {
-        let marketBoardData = <MarketBoardListingsUpload> input;
-        let listingArray: MarketBoardItemListing[] = [];
-        for (let i = 1; i <= marketBoardData.listings.length; i++) {
-            if (marketBoardData.listings[i]) {
-                listingArray.push(marketBoardData.listings[i]);
-            }
+    let dataArray: MarketBoardItemListing[] & MarketBoardHistoryEntry[] = [];
+    if (marketBoardData.listings[0]) {
+        for (let i = 0; i < marketBoardData.listings.length; i++) {
+            dataArray.push(marketBoardData.listings[i]);
         }
-        priceTracker.set(marketBoardData.itemID, marketBoardData.worldID, listingArray);
-    } catch {
-        /*let marketBoardData = <MarketBoardSaleHistoryUpload> input;
-        let entryArray: MarketBoardHistoryEntry[] = [];
-        for (let i = 1; i <= 10; i++) {
-            if (marketBoardData[`entry${i}`]) {
-                entryArray.push(marketBoardData[`entry${i}`]);
-            }
+        priceTracker.set(marketBoardData.itemID, marketBoardData.worldID, dataArray as MarketBoardItemListing[]);
+    } else if (marketBoardData.entries[0]) {
+        for (let i = 0; i < marketBoardData.entries.length; i++) {
+            dataArray.push(marketBoardData.entries[i]);
         }
-        historyTracker.set(marketBoardData.itemID, marketBoardData.worldID, entryArray);*/
+        historyTracker.set(marketBoardData.itemID, marketBoardData.worldID, dataArray as MarketBoardHistoryEntry[]);
+    } else {
+        ctx.throw(418);
     }
 });
 

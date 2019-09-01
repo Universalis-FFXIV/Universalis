@@ -15,7 +15,7 @@ const writeFile = util.promisify(fs.writeFile);
 export class PriceTracker extends Tracker {
     // The path structure is /listings/<worldID/<itemID>/<branchNumber>.json
     constructor() {
-        super("../../listings", ".json");
+        super("../../data", ".json");
 
         const worlds = fs.readdirSync(path.join(__dirname, this.storageLocation));
         for (let world of worlds) {
