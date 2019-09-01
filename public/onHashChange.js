@@ -383,7 +383,7 @@ function onHashChange_genMarketTables_helper2(table, i, listing, averagePricePer
 
                 let materiaElement = document.createElement("img");
                 materiaElement.setAttribute("src", `img/materia${materiaGrade}.png`);
-                materiaElement.setAttribute("title", materiaName)
+                materiaElement.setAttribute("title", materiaName);
 
                 materiaElements.appendChild(materiaElement);
             }
