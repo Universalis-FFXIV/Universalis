@@ -5,12 +5,12 @@
 var lang = "en";
 var dataCenter = "Crystal";
 
-var asyncInitCount = 2; // The number of asynchronous initialization functions that need to finish before post-init
+var asyncInitCount = 3; // The number of asynchronous initialization functions that need to finish before post-init
 
 // Item categories
 var itemCategories = [null];
 (async function() {
-    var dataFile;
+    let dataFile;
     try {
         dataFile = JSON.parse(await request("json/data.json"));
     } catch { // Second failsafe, in case the user connects before the file is downloaded and it doesn't already exist (edge case)
@@ -34,6 +34,25 @@ var worldList;
     } catch {
         worldList = JSON.parse(await request("https://xivapi.com/servers/dc"));
     }
+    initDone();
+})();
+
+// World IDs
+var worldMap = new Map();
+(async function() {
+    let dataFile;
+    try {
+        dataFile = await request("csv/World.csv");
+    } catch {
+        dataFile = await request("https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/World.csv");
+    }
+
+    let lines = dataFile.match(/[^\r\n]+/g).slice(3);
+    for (let line of lines) {
+        line = line.split(",");
+        worldMap.set(line[1].replace(/[^a-zA-Z]+/g, ""), line[0]);
+    }
+
     initDone();
 })();
 
@@ -187,7 +206,7 @@ async function onHashChange() {
     onHashChange_drawGraph(graphContainer, world);
 
     // Market info from servers
-    infoArea.insertBefore(onHashChange_genMarketTables(world), creditBox);
+    infoArea.insertBefore(await onHashChange_genMarketTables(world, id), creditBox);
 }
 
 //
@@ -246,6 +265,18 @@ async function request(url) {
 
         xhr.addEventListener("readystatechange", processResponse, false);
     });
+}
+
+/**
+ * Get market data from the Universalis API.
+ *
+ * @param {number} worldID - The world to query for.
+ * @param {number} itemID - The item to query for.
+ * @return {Object} The market data.
+ */
+async function getMarketData(worldID, itemID) {
+    let data = await request(`api/${worldID}/${itemID}`);
+    return JSON.parse(data);
 }
 
 //

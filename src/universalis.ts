@@ -6,6 +6,7 @@ import Router from "koa-router";
 import serve from "koa-static";
 import views from "koa-views";
 import path from "path";
+import util from "util";
 
 import remoteDataManager from "./remoteDataManager";
 
@@ -17,6 +18,8 @@ import { MarketBoardSaleHistoryUpload } from "./models/MarketBoardSaleHistoryUpl
 
 import { HistoryTracker } from "./trackers/HistoryTracker";
 import { PriceTracker } from "./trackers/PriceTracker";
+
+const readFile = util.promisify(fs.readFile);
 
 // Define application and its internal resources
 const historyTracker = new HistoryTracker(); // TODO
@@ -58,6 +61,17 @@ router.get("/", async (ctx) => {
         name: "Universalis - Crowdsourced Market Board Aggregator",
         version: process.env.npm_package_version
     });
+});
+
+router.get("/api/:world/:item", async (ctx) => {
+    let data = JSON.parse((await readFile(
+        path.join(__dirname, "../listings", ctx.params.world, ctx.params.item, "0.json")
+    )).toString());
+    if (!data) {
+        ctx.throw(404);
+        return;
+    }
+    ctx.body = data;
 });
 
 router.post("/upload", async (ctx) => {

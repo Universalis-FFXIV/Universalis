@@ -138,9 +138,23 @@ function onHashChange_genCheapest() {
  * Generate tables with market board data.
  *
  * @param {string} world - The world to get data for.
+ * @param {number} itemID
  * @return {Element} An element of class infobox.
  */
-function onHashChange_genMarketTables(world) {
+async function onHashChange_genMarketTables(world, itemID) {
+    let worldID = worldMap.get(world);
+    let marketBoardData;
+    try {
+        marketBoardData = await getMarketData(worldID, itemID);
+    } catch {
+        let noDataInfobox = document.createElement("div");
+        noDataInfobox.setAttribute("class", "infobox");
+        let ref = noDataInfobox.appendChild(document.createElement("h3"));
+        ref.setAttribute("class", "centered-text");
+        ref.innerText = "No market data has been uploaded for this item.";
+        return noDataInfobox;
+    }
+
     var marketData = document.createElement("div");
     marketData.setAttribute("class", "infobox market-data");
 
@@ -151,12 +165,26 @@ function onHashChange_genMarketTables(world) {
     col2.setAttribute("class", "col2");
 
     // HQ
+    let averagePricePerUnitHQ = average(
+        ...marketBoardData.listings.map((listing) => {
+            if (listing.hq === 0) return false;
+            return listing.pricePerUnit;
+        })
+    );
+
     col1.appendChild((() => {
         let table = [
             ["#", "Server", "HQ", "Materia", "Price", "Quantity", "Total", "%Diff", "Retainer", "Creator"],
-            ["1", "Adamantoise", "$hq", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"],
-            ["2", "Adamantoise", "$hq", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"],
         ];
+
+        for (let i = 0; i < marketBoardData.listings.length; i++) {
+            let listing = marketBoardData.listings[i];
+
+            if (listing.hq === 0) continue;
+
+            onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnitHQ, world);
+        }
+
         let header = document.createElement("div");
         let img = header.appendChild(document.createElement("img"));
         img.setAttribute("src", "img/hq.png");
@@ -181,12 +209,26 @@ function onHashChange_genMarketTables(world) {
     })());
 
     // NQ
+    let averagePricePerUnitNQ = average(
+        ...marketBoardData.listings.map((listing) => {
+            if (listing.hq === 1) return false;
+            return listing.pricePerUnit;
+        })
+    );
+
     col1.appendChild((() => {
         let table = [
             ["#", "Server", "HQ", "Materia", "Price", "Quantity", "Total", "%Diff", "Retainer", "Creator"],
-            ["1", "Adamantoise", "", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"],
-            ["2", "Adamantoise", "", "", "4,000,000", "1", "4,000,000", "0%", "Sample", "Sample Creator"],
         ];
+
+        for (let i = 0; i < marketBoardData.listings.length; i++) {
+            let listing = marketBoardData.listings[i];
+
+            if (listing.hq === 1) continue;
+
+            onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnitNQ, world);
+        }
+
         let header = document.createElement("h3");
         header.innerHTML = "NQ Prices";
         return onHashChange_genMarketTables_helper0(table, header);
@@ -204,10 +246,24 @@ function onHashChange_genMarketTables(world) {
 
     // Averages
     col1.appendChild((() => {
-        return onHashChange_genMarketTables_helper1("Average Price Per Unit", "Average Total Price");
+        return onHashChange_genMarketTables_helper1(
+            "Average Price Per Unit",
+            Math.floor(averagePricePerUnitHQ),
+            Math.floor(averagePricePerUnitNQ),
+            "Average Total Price",
+            0,
+            0
+        );
     })());
     col2.appendChild((() => {
-        return onHashChange_genMarketTables_helper1("Average Purchased Price Per Unit", "Average Total Purchased Price");
+        return onHashChange_genMarketTables_helper1(
+            "Average Purchased Price Per Unit",
+            0,
+            0,
+            "Average Total Purchased Price",
+            0,
+            0
+        );
     })());
 
     return marketData;
@@ -247,10 +303,19 @@ function onHashChange_genMarketTables_helper0(table, header) {
  * Generate the "average purchase" sections.
  *
  * @param {string} header1
+ * @param {number} ppuHQ
+ * @param {number} ppuNQ
  * @param {string} header2
+ * @param {number} tpHQ
+ * @param {number} tpNQ
  * @return {Element} An element containing the average prices.
  */
-function onHashChange_genMarketTables_helper1(header1, header2) {
+function onHashChange_genMarketTables_helper1(header1, ppuHQ, ppuNQ, header2, tpHQ, tpNQ) {
+    if (ppuHQ === 0) ppuHQ = "N/A";
+    if (ppuNQ === 0) ppuNQ = "N/A";
+    if (tpHQ === 0) tpHQ = "N/A";
+    if (tpNQ === 0) tpNQ = "N/A";
+
     let container = document.createElement("div");
     container.setAttribute("style", "text-align: center;");
 
@@ -264,10 +329,10 @@ function onHashChange_genMarketTables_helper1(header1, header2) {
     let img1_1 = label1_1.appendChild(document.createElement("img"));
     img1_1.setAttribute("src", "img/hq.png");
     img1_1.setAttribute("class", "prefix-hq-icon_alt");
-    label1_1.innerHTML += "HQ";
+    label1_1.innerHTML += formatNumberWithCommas(ppuHQ);
     let label1_2 = col1.appendChild(document.createElement("h4"));
     label1_2.setAttribute("class", "col1");
-    label1_2.innerHTML = "NQ";
+    label1_2.innerHTML = formatNumberWithCommas(ppuNQ);
 
 
     let col2 = container.appendChild(document.createElement("div"));
@@ -280,14 +345,58 @@ function onHashChange_genMarketTables_helper1(header1, header2) {
     let img2_1 = label2_1.appendChild(document.createElement("img"));
     img2_1.setAttribute("src", "img/hq.png");
     img2_1.setAttribute("class", "prefix-hq-icon_alt");
-    label2_1.innerHTML += "HQ";
+    label2_1.innerHTML += formatNumberWithCommas(tpHQ);
     let label2_2 = col2.appendChild(document.createElement("h4"));
     label2_2.setAttribute("class", "col2");
-    label2_2.innerHTML = "NQ";
+    label2_2.innerHTML = formatNumberWithCommas(tpNQ);
 
     return container;
 }
 
+/**
+ * Generate the "average purchase" sections.
+ *
+ * @param {Array[]} table
+ * @param {number} i
+ * @param {object} listing
+ * @param {number} averagePricePerUnit
+ * @param {string} world
+ */
+function onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnit, world) {
+    let percentDifference = formatNumberWithCommas(
+        Math.round(getPercentDifference(listing.pricePerUnit, averagePricePerUnit) * 100) / 100
+    );
+
+    if (percentDifference > 0) {
+        percentDifference = "+" + percentDifference;
+    }
+
+    table.push([
+        i + 1,
+        world,
+        "$hq",
+        (() => { // Materia
+            let materiaElements = document.createElement("div");
+            for (let materia of listing.materia) {
+                let materiaName = materiaIDToItemName(materia);
+                let materiaGrade = romanNumerals.indexOf(materiaName.split(" ")[materiaName.split(" ").length - 1]);
+
+                let materiaElement = document.createElement("img");
+                materiaElement.setAttribute("src", `img/materia${materiaGrade}.png`);
+                materiaElement.setAttribute("title", materiaName)
+
+                materiaElements.appendChild(materiaElement);
+            }
+            return materiaElements.outerHTML;
+        })(),
+        formatNumberWithCommas(listing.pricePerUnit),
+        formatNumberWithCommas(listing.quantity),
+        formatNumberWithCommas(listing.total),
+        percentDifference + "%",
+        listing.retainerName,
+        listing.creator ? listing.creator : "",
+    ]);
+}
 /**
  * Gets item data from Garlandtools.
  *
@@ -339,3 +448,63 @@ async function onHashChange_fetchItem(id) {
 
     return itemInfo;
 }
+
+/**
+ * Get the percent difference between two prices.
+ *
+ * @param {number} cheapestPrice
+ * @param {number} testPrice
+ * @return {number} The percent difference between the second number and the first.
+ */
+function getPercentDifference(cheapestPrice, testPrice) {
+    return (cheapestPrice - testPrice) / average(cheapestPrice, testPrice);
+}
+
+/**
+ * Get the average of some numbers.
+ *
+ * @param {...number} numbers
+ * @return {number} The average.
+ */
+function average(...numbers) {
+    let result = 0;
+    for (let i = 0; i < numbers.length; i++) {
+        result += numbers[i];
+    }
+    result /= numbers.length;
+    return result;
+}
+
+/**
+ * Insert commas every three digits in a number.
+ *
+ * @param {number} x
+ * @return {string} The formatted number.
+ */
+function formatNumberWithCommas(x) {
+    let output = "" + x;
+    let wholePart = output;
+    let decimalPart;
+
+    if (output.indexOf(".") !== -1) {
+        wholePart = output.substr(0, output.indexOf("."));
+        decimalPart = output.substr(output.indexOf(".") + 1);
+    }
+
+    let originalLength = wholePart.length;
+    for (let i = originalLength - 1; i > 0; i--) {
+        if ((originalLength - i) % 3 === 0) {
+            wholePart = wholePart.substr(0, i) + "," + wholePart.substr(i);
+        }
+    }
+
+    if (decimalPart) {
+        output = wholePart + "." + decimalPart;
+    } else {
+        output = wholePart;
+    }
+
+    return output;
+}
+
+const romanNumerals = [undefined, "I", "II", "III", "IV", "V", "VI", "VII", "VIII"];

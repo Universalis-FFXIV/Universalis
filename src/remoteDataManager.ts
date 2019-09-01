@@ -13,6 +13,7 @@ const remoteFileMap = new Map();
 
 const exts = ["csv", "json"];
 const urlDictionary = {
+    "Materia.csv": "https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/Materia.csv",
     "World.csv": "https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/World.csv",
     "data.json": "https://www.garlandtools.org/db/doc/core/en/3/data.json",
     "dc.json": "https://xivapi.com/servers/dc",
