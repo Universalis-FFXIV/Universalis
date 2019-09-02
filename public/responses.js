@@ -107,6 +107,8 @@ async function search(query, callback) {
     }
 
     for (var result of searchResults) {
+        if (searchBox.value !== query) return;
+
         // Readable variable names
         category = result.ItemSearchCategory[`Name_${lang}`];
         icon = `https://www.garlandtools.org/files/icons/item/${result.IconID}.png`;
