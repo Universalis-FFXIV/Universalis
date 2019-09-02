@@ -52,7 +52,10 @@ describe("The upload process:", function() {
 
                     setTimeout(async () => {
                         let savedData = JSON.parse(await request(`${universalis}/api/74/26465/`));
-
+                        savedData.listings = savedData.listings.map((listing) => {
+                            delete listing.total;
+                            return listing;
+                        });
                         resolve(isEqual(uploadData.listings, savedData.listings));
                     }, updateTimeout);
                 }).catch((err) => { if (err.statusCode !== 404) console.error(err); }); // This throws a 404 but continues correctly?
@@ -91,7 +94,10 @@ describe("The upload process:", function() {
 
                     setTimeout(async () => {
                         let savedData = JSON.parse(await request(`${universalis}/api/74/26465/`));
-
+                        savedData.recentHistory = savedData.recentHistory.map((entry) => {
+                            delete entry.total;
+                            return entry;
+                        });
                         resolve(isEqual(uploadData.entries, savedData.recentHistory))
                     }, updateTimeout);
                 }).catch((err) => { if (err.statusCode !== 404) console.error(err); });
@@ -129,9 +135,11 @@ describe("The upload process:", function() {
                         let savedData = JSON.parse(await request(`${universalis}/api/history/74/26465/`));
 
                         uploadData.entries = uploadData.entries.map((entry) => {
-                            delete entry.buyerName;
-                            delete entry.quantity;
-                            return entry;
+                            return {
+                                hq: entry.hq,
+                                pricePerUnit: entry.pricePerUnit,
+                                timestamp: entry.timestamp
+                            };
                         });
 
                         resolve(isEqual(uploadData.entries, savedData.entries.slice(0, uploadData.entries.length)))

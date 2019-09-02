@@ -102,11 +102,13 @@ router.post("/upload", async (ctx) => {
     let dataArray: MarketBoardItemListing[] & MarketBoardHistoryEntry[] = [];
     if (marketBoardData.listings) {
         for (let listing of marketBoardData.listings) {
+            listing.total = listing.pricePerUnit * listing.quantity;
             dataArray.push(listing);
         }
         priceTracker.set(marketBoardData.itemID, marketBoardData.worldID, dataArray as MarketBoardItemListing[]);
     } else if (marketBoardData.entries) {
         for (let entry of marketBoardData.entries) {
+            entry.total = entry.pricePerUnit * entry.quantity;
             dataArray.push(entry);
         }
         historyTracker.set(marketBoardData.itemID, marketBoardData.worldID, dataArray as MarketBoardHistoryEntry[]);

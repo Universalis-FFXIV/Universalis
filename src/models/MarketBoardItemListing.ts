@@ -3,6 +3,7 @@ export interface MarketBoardItemListing {
     materia?: number[];
     pricePerUnit: number;
     quantity: number;
+    total?: number;
     retainerName: string;
     retainerCity: string;
     creatorName?: string;

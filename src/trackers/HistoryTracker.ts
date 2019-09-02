@@ -91,9 +91,11 @@ export class HistoryTracker extends Tracker {
         }
 
         let minimizedEntries: MinimizedHistoryEntry[] = entries.map((entry) => {
-            delete entry.buyerName;
-            delete entry.quantity;
-            return entry;
+            return {
+                hq: entry.hq,
+                pricePerUnit: entry.pricePerUnit,
+                timestamp: entry.timestamp
+            };
         });
 
         let extendedHistory: ExtendedHistory;
