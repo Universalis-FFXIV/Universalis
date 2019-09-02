@@ -207,7 +207,7 @@ async function onHashChange() {
     var graphContainer = document.createElement("div");
     graphContainer.setAttribute("class", "infobox graph");
     infoArea.insertBefore(graphContainer, creditBox); // Needs to be inserted earlier for width
-    onHashChange_drawGraph(graphContainer, world);
+    onHashChange_drawGraph(graphContainer, world, id);
 
     // Market info from servers
     infoArea.insertBefore(await onHashChange_genMarketTables(world, id), creditBox);
@@ -281,6 +281,21 @@ async function request(url) {
 async function getMarketData(worldID, itemID) {
     let data = await request(`api/${worldID}/${itemID}`);
     return JSON.parse(data);
+}
+
+/**
+ * Format a timestamp into a date string.
+ *
+ * @param {number} timestamp
+ * @return {string}
+ */
+function parseDate(timestamp) {
+    const  dateObject = new Date(timestamp);
+    const result = dateObject.getDate() + " " +
+        months[dateObject.getMonth()] + " " +
+        dateObject.getHours() + ":" +
+        parseMinutes(dateObject.getMinutes());
+    return result;
 }
 
 /**

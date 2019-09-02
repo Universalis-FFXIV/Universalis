@@ -42,8 +42,42 @@ function onHashChange_createWorldNav(id) {
  *
  * @param {Element} graphContainer - A container to put the graph in.
  * @param {string} world - The world to get data for.
+ * @param {number} itemID - The item to get data for.
  */
-function onHashChange_drawGraph(graphContainer, world) {
+async function onHashChange_drawGraph(graphContainer, world, itemID) {
+    const worldID = worldMap.get(world);
+
+    const historyData = JSON.parse(await request(`api/history/${worldID}/${itemID}`));
+
+    const highQualitySales = historyData.entries.filter((entry) => entry.hq === 1);
+    const normalQualitySales = historyData.entries.filter((entry) => entry.hq === 0);
+
+    let xAxisLabels = [];
+    let yAxisDataHQ = [];
+    let yAxisDataNQ = [];
+
+    const interval = (historyData.entries[0].timestamp - historyData.entries[historyData.entries.length - 1].timestamp)
+        / historyData.entries.length;
+
+    for (let i = 0; i < historyData.entries.length; i++) {
+        const lastTimestamp = historyData.entries[0].timestamp + (i - 1) * interval;
+        const timestamp = historyData.entries[0].timestamp + i * interval;
+
+        xAxisLabels.push(parseDate(timestamp));
+        yAxisDataHQ.push(average(...highQualitySales
+            .filter((sale) => sale.timestamp <= timestamp && sale.timestamp > lastTimestamp)
+            .map((sale) => { sale = sale.pricePerUnit; return sale; })
+        ));
+        yAxisDataNQ.push(average(...normalQualitySales
+            .filter((sale) => sale.timestamp <= timestamp && sale.timestamp > lastTimestamp)
+            .map((sale) => { sale = sale.pricePerUnit; return sale; })
+        ));
+    }
+
+    console.log(xAxisLabels);
+    console.log(yAxisDataHQ);
+    console.log(yAxisDataNQ);
+
     var graph = graphContainer.appendChild(document.createElement("canvas"));
     graph.setAttribute("id", "echarts");
     graph.setAttribute("height", "300");
@@ -75,7 +109,7 @@ function onHashChange_drawGraph(graphContainer, world) {
         xAxis: {
             type: 'category',
             boundaryGap: false,
-            data: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+            data: xAxisLabels,
         },
         yAxis: {
             type: 'value',
@@ -84,12 +118,12 @@ function onHashChange_drawGraph(graphContainer, world) {
             {
                 name: 'High-Quality Price Per Unit',
                 type: 'line',
-                data: [120, 132, 101, 134, 90, 230, 210],
+                data: yAxisDataHQ,
             },
             {
                 name: 'Normal Quality Price Per Unit',
                 type: 'line',
-                data: [220, 182, 191, 234, 290, 330, 310],
+                data: yAxisDataNQ,
             },
         ],
     };
@@ -500,8 +534,6 @@ function onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUn
         percentDifference = "+" + percentDifference;
     }
 
-    let timestamp = new Date(entry.timestamp);
-
     table.push([
         i + 1,
         world,
@@ -511,10 +543,7 @@ function onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUn
         formatNumberWithCommas(entry.total),
         percentDifference + "%",
         entry.buyerName,
-        timestamp.getDate() + " " +
-            months[timestamp.getMonth()] + " " +
-            timestamp.getHours() + ":" +
-            parseMinutes(timestamp.getMinutes()),
+        parseDate(entry.timestamp),
     ]);
 }
 
