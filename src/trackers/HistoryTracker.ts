@@ -2,10 +2,14 @@ import fs from "fs";
 import path from "path";
 import util from "util";
 
+import remoteDataManager from "../remoteDataManager";
+
 import { Tracker } from "./Tracker";
 
 import { ExtendedHistory } from "../models/ExtendedHistory";
+import { MarketBoardDCHistoryEntry } from "../models/MarketBoardDCHistoryEntry";
 import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
+import { MarketInfoDCLocalData } from "../models/MarketInfoDCLocalData";
 import { MarketInfoLocalData } from "../models/MarketInfoLocalData";
 import { MinimizedHistoryEntry } from "../models/MinimizedHistoryEntry";
 
@@ -64,9 +68,10 @@ export class HistoryTracker extends Tracker {
             data.listings = JSON.parse((await readFile(filePath)).toString()).listings;
         }
 
-        await writeFile(filePath, JSON.stringify(data));
-
+        this.updateDataCenterHistory(itemID, worldID, recentHistory);
         this.updateExtendedHistory(itemID, worldID, recentHistory);
+
+        await writeFile(filePath, JSON.stringify(data));
 
         /*const nextNumber = parseInt(
             listings[listings.length - 1].substr(0, listings[listings.length - 1].indexOf("."))
@@ -77,7 +82,58 @@ export class HistoryTracker extends Tracker {
         }));*/
     }
 
-    public async updateExtendedHistory(itemID: number, worldID: number, entries: MarketBoardHistoryEntry[]) {
+    private async updateDataCenterHistory(itemID: number, worldID: number, entries: any[]) {
+        const dataCenterWorlds = JSON.parse((await remoteDataManager.fetchFile("dc.json")).toString());
+        const worldCSV = (await remoteDataManager.parseCSV("World.csv")).slice(3);
+        const world = worldCSV.find((line) => line[0] === String(worldID))[1];
+
+        (entries as MarketBoardDCHistoryEntry[]).forEach((entry) => entry.worldName = world);
+
+        let dataCenter: string;
+        for (let dc in dataCenterWorlds) {
+            if (dataCenterWorlds.hasOwnProperty(dc)) {
+                let foundWorld = dataCenterWorlds[dc].find((el) => el === world);
+                if (foundWorld) dataCenter = dc;
+            }
+        }
+
+        const dcDir = path.join(__dirname, "../../data", String(dataCenter));
+        const itemDir = path.join(dcDir, String(itemID));
+        const filePath = path.join(itemDir, "0.json");
+
+        if (!await exists(dcDir)) {
+            await mkdir(dcDir);
+        }
+
+        if (!await exists(itemDir)) {
+            await mkdir(itemDir);
+        }
+
+        let existingData: MarketInfoDCLocalData;
+        if (await exists(filePath)) existingData = JSON.parse((await readFile(filePath)).toString());
+        if (existingData && existingData.recentHistory) {
+            existingData.recentHistory = existingData.recentHistory.filter((listing) => listing.worldName !== world);
+
+            existingData.recentHistory = existingData.recentHistory.concat(entries);
+
+            existingData.recentHistory = existingData.recentHistory.sort((a, b) => {
+                if (a.pricePerUnit > b.pricePerUnit) return -1;
+                if (a.pricePerUnit < b.pricePerUnit) return 1;
+                return 0;
+            });
+        } else {
+            existingData = {
+                dcName: dataCenter,
+                itemID
+            };
+
+            existingData.recentHistory = entries;
+        }
+
+        return await writeFile(filePath, JSON.stringify(existingData));
+    }
+
+    private async updateExtendedHistory(itemID: number, worldID: number, entries: MarketBoardHistoryEntry[]) {
         const worldDir = path.join(__dirname, "../../history", String(worldID));
         const itemDir = path.join(worldDir, String(itemID));
         const extendedHistoryPath = path.join(itemDir, "0.json");

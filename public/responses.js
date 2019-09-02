@@ -290,7 +290,7 @@ async function getMarketData(worldID, itemID) {
  * @return {string}
  */
 function parseDate(timestamp) {
-    const  dateObject = new Date(timestamp);
+    const dateObject = new Date(timestamp);
     const result = dateObject.getDate() + " " +
         months[dateObject.getMonth()] + " " +
         dateObject.getHours() + ":" +

@@ -2,9 +2,13 @@ import fs from "fs";
 import path from "path";
 import util from "util";
 
+import remoteDataManager from "../remoteDataManager";
+
 import { Tracker } from "./Tracker";
 
+import { MarketBoardDCItemListing } from "../models/MarketBoardDCItemListing";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
+import { MarketInfoDCLocalData } from "../models/MarketInfoDCLocalData";
 import { MarketInfoLocalData } from "../models/MarketInfoLocalData";
 
 const exists = util.promisify(fs.exists);
@@ -62,6 +66,8 @@ export class PriceTracker extends Tracker {
             data.recentHistory = JSON.parse((await readFile(filePath)).toString()).recentHistory;
         }
 
+        this.updateDataCenterHistory(itemID, worldID, listings);
+
         await writeFile(filePath, JSON.stringify(data));
 
         /*const nextNumber = parseInt(
@@ -71,5 +77,56 @@ export class PriceTracker extends Tracker {
         await writeFile(path.join(filePath, `${nextNumber}.json`), JSON.stringify({
             listings: data,
         }));*/
+    }
+
+    private async updateDataCenterHistory(itemID: number, worldID: number, listings: any[]) {
+        const dataCenterWorlds = JSON.parse((await remoteDataManager.fetchFile("dc.json")).toString());
+        const worldCSV = (await remoteDataManager.parseCSV("World.csv")).slice(3);
+        const world = worldCSV.find((line) => line[0] === String(worldID))[1];
+
+        (listings as MarketBoardDCItemListing[]).forEach((listing) => listing.worldName = world);
+
+        let dataCenter: string;
+        for (let dc in dataCenterWorlds) {
+            if (dataCenterWorlds.hasOwnProperty(dc)) {
+                let foundWorld = dataCenterWorlds[dc].find((el) => el === world);
+                if (foundWorld) dataCenter = dc;
+            }
+        }
+
+        const dcDir = path.join(__dirname, "../../data", String(dataCenter));
+        const itemDir = path.join(dcDir, String(itemID));
+        const filePath = path.join(itemDir, "0.json");
+
+        if (!await exists(dcDir)) {
+            await mkdir(dcDir);
+        }
+
+        if (!await exists(itemDir)) {
+            await mkdir(itemDir);
+        }
+
+        let existingData: MarketInfoDCLocalData;
+        if (await exists(filePath)) existingData = JSON.parse((await readFile(filePath)).toString());
+        if (existingData && existingData.listings) {
+            existingData.listings = existingData.listings.filter((listing) => listing.worldName !== world);
+
+            existingData.listings = existingData.listings.concat(listings);
+
+            existingData.listings = existingData.listings.sort((a, b) => {
+                if (a.pricePerUnit > b.pricePerUnit) return -1;
+                if (a.pricePerUnit < b.pricePerUnit) return 1;
+                return 0;
+            });
+        } else {
+            existingData = {
+                dcName: dataCenter,
+                itemID
+            };
+
+            existingData.listings = listings;
+        }
+
+        return await writeFile(filePath, JSON.stringify(existingData));
     }
 }

@@ -66,11 +66,17 @@ async function onHashChange_drawGraph(graphContainer, world, itemID) {
         xAxisLabels.push(parseDate(timestamp));
         yAxisDataHQ.push(average(...highQualitySales
             .filter((sale) => sale.timestamp <= timestamp && sale.timestamp > lastTimestamp)
-            .map((sale) => { sale = sale.pricePerUnit; return sale; })
+            .map((sale) => {
+                sale = sale.pricePerUnit;
+                return sale;
+            })
         ));
         yAxisDataNQ.push(average(...normalQualitySales
             .filter((sale) => sale.timestamp <= timestamp && sale.timestamp > lastTimestamp)
-            .map((sale) => { sale = sale.pricePerUnit; return sale; })
+            .map((sale) => {
+                sale = sale.pricePerUnit;
+                return sale;
+            })
         ));
     }
 

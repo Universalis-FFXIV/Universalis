@@ -80,6 +80,42 @@ describe("The upload process:", function() {
                 }).catch((err) => { if (err.statusCode !== 404) console.error(err); }); // This throws a 404 but continues correctly?
             }).should.eventually.be.exactly(true);
         });
+        it("should correctly merge sources to create crossworld market listings per data center.", function() {
+            return new Promise(async (resolve, reject) => {
+                let existingData = JSON.parse(await request(`${universalis}/api/Crystal/26465/`));
+                if (existingData && existingData.listings)
+                    existingData.listings = existingData.listings.filter((entry) => entry.worldName !== "Coeurl");
+                else existingData = {
+                    listings: []
+                };
+
+                let uploadData1 = clone(listingUpload);
+
+                request.post(`${universalis}/upload`, {
+                    json: uploadData1
+                }, (err, res) => {
+                    if (err) throw err;
+
+                    setTimeout(async () => {
+                        let savedData = JSON.parse(await request(`${universalis}/api/Crystal/26465/`));
+
+                        savedData.listings = savedData.listings.map((listing) => {
+                            delete listing.worldName;
+                            delete listing.total;
+                            listing = JSON.stringify(listing);
+                            return listing;
+                        });
+
+                        let testArray = uploadData1.listings.concat(existingData.listings)
+                            .map((el) => { el = JSON.stringify(el); return el; });
+
+                        resolve(testArray.every((el) => {
+                            return savedData.listings.includes(el)
+                        }));
+                    }, updateTimeout);
+                }).catch((err) => { if (err.statusCode !== 404) console.error(err); });
+            }).should.eventually.be.exactly(true);
+        });
     });
 
     describe("A history entry upload:", function() {
@@ -98,7 +134,7 @@ describe("The upload process:", function() {
                             delete entry.total;
                             return entry;
                         });
-                        resolve(isEqual(uploadData.entries, savedData.recentHistory))
+                        resolve(isEqual(uploadData.entries, savedData.recentHistory));
                     }, updateTimeout);
                 }).catch((err) => { if (err.statusCode !== 404) console.error(err); });
             }).should.eventually.be.exactly(true);
@@ -142,14 +178,46 @@ describe("The upload process:", function() {
                             };
                         });
 
-                        resolve(isEqual(uploadData.entries, savedData.entries.slice(0, uploadData.entries.length)))
+                        resolve(isEqual(uploadData.entries, savedData.entries.slice(0, uploadData.entries.length)));
                     }, updateTimeout);
                 }).catch((err) => { if (err.statusCode !== 404) console.error(err); });
             }).should.eventually.be.exactly(true);
         });
-    });
+        it("should correctly merge sources to create crossworld market history per data center.", function() {
+            return new Promise(async (resolve, reject) => {
+                let existingData = JSON.parse(await request(`${universalis}/api/Crystal/26465/`));
+                if (existingData && existingData.recentHistory)
+                    existingData.recentHistory = existingData.recentHistory.filter((entry) => entry.worldName !== "Coeurl");
+                else existingData = {
+                    recentHistory: []
+                };
 
-    describe("All uploads:", function() {
-        it("should correctly merge sources to create crossworld market data per data center.");
+                let uploadData1 = clone(historyUpload);
+
+                request.post(`${universalis}/upload`, {
+                    json: uploadData1
+                }, (err, res) => {
+                    if (err) throw err;
+
+                    setTimeout(async () => {
+                        let savedData = JSON.parse(await request(`${universalis}/api/Crystal/26465/`));
+
+                        savedData.recentHistory = savedData.recentHistory.map((entry) => {
+                            delete entry.worldName;
+                            delete entry.total;
+                            entry = JSON.stringify(entry);
+                            return entry;
+                        });
+
+                        let testArray = uploadData1.entries.concat(existingData.recentHistory)
+                            .map((el) => { el = JSON.stringify(el); return el; });
+
+                        resolve(testArray.every((el) => {
+                            return savedData.recentHistory.includes(el)
+                        }));
+                    }, updateTimeout);
+                }).catch((err) => { if (err.statusCode !== 404) console.error(err); });
+            }).should.eventually.be.exactly(true);
+        });
     });
 });
