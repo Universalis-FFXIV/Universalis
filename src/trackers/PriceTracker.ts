@@ -66,7 +66,7 @@ export class PriceTracker extends Tracker {
             data.recentHistory = JSON.parse((await readFile(filePath)).toString()).recentHistory;
         }
 
-        this.updateDataCenterHistory(itemID, worldID, listings);
+        this.updateDataCenterListings(itemID, worldID, listings);
 
         await writeFile(filePath, JSON.stringify(data));
 
@@ -79,7 +79,7 @@ export class PriceTracker extends Tracker {
         }));*/
     }
 
-    private async updateDataCenterHistory(itemID: number, worldID: number, listings: any[]) {
+    private async updateDataCenterListings(itemID: number, worldID: number, listings: any[]) {
         const dataCenterWorlds = JSON.parse((await remoteDataManager.fetchFile("dc.json")).toString());
         const worldCSV = (await remoteDataManager.parseCSV("World.csv")).slice(3);
         const world = worldCSV.find((line) => line[0] === String(worldID))[1];
@@ -119,10 +119,12 @@ export class PriceTracker extends Tracker {
                 return 0;
             });
         } else {
-            existingData = {
-                dcName: dataCenter,
-                itemID
-            };
+            if (!existingData) {
+                existingData = {
+                    dcName: dataCenter,
+                    itemID
+                };
+            }
 
             existingData.listings = listings;
         }
