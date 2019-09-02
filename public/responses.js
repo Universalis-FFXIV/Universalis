@@ -7,6 +7,8 @@ var dataCenter = "Crystal";
 
 var asyncInitCount = 3; // The number of asynchronous initialization functions that need to finish before post-init
 
+var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 // Item categories
 var itemCategories = [null];
 (async function() {
@@ -279,6 +281,19 @@ async function request(url) {
 async function getMarketData(worldID, itemID) {
     let data = await request(`api/${worldID}/${itemID}`);
     return JSON.parse(data);
+}
+
+/**
+ * Ensure minutes have two digits
+ *
+ * @param {number} minutes
+ * @return {string} parsedMinutes
+ */
+function parseMinutes(minutes) {
+    if (minutes < 10) {
+        minutes = `0${minutes}`;
+    }
+    return "" + minutes;
 }
 
 //

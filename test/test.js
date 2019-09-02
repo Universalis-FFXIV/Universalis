@@ -19,7 +19,7 @@ const listingUpload = {
     listings: [{
         hq: 1,
         materia: [5666, 5666],
-        pricePerUnit: 9999,
+        pricePerUnit: 99999999,
         quantity: 1,
         retainerName: "Retainername",
         retainerCity: "Kugane",

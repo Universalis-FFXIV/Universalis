@@ -164,26 +164,96 @@ async function onHashChange_genMarketTables(world, itemID) {
     var col2 = marketData.appendChild(document.createElement("div"));
     col2.setAttribute("class", "col2");
 
+    // Averages
+    let averagePricePerUnitHQ;
+    let averageTotalPriceHQ;
+    let averagePurchasedPricePerUnitHQ;
+    let averageTotalPurchasedPriceHQ;
+    let averagePricePerUnitNQ;
+    let averageTotalPriceNQ;
+    let averagePurchasedPricePerUnitNQ;
+    let averageTotalPurchasedPriceNQ;
+
+    try {
+        averagePricePerUnitHQ = average(
+            ...marketBoardData.listings.map((listing) => {
+                if (listing.hq === 0) return false;
+                return listing.pricePerUnit;
+            })
+        );
+        averageTotalPriceHQ = average(
+            ...marketBoardData.listings.map((listing) => {
+                if (listing.hq === 0) return false;
+                return listing.total;
+            })
+        );
+        averagePricePerUnitNQ = average(
+            ...marketBoardData.listings.map((listing) => {
+                if (listing.hq === 1) return false;
+                return listing.pricePerUnit;
+            })
+        );
+        averageTotalPriceNQ = average(
+            ...marketBoardData.listings.map((listing) => {
+                if (listing.hq === 1) return false;
+                return listing.total;
+            })
+        );
+    } catch {
+        averagePricePerUnitHQ = 0;
+        averageTotalPriceHQ = 0;
+        averagePricePerUnitNQ = 0;
+        averageTotalPriceNQ = 0;
+    }
+
+    try {
+        averagePurchasedPricePerUnitHQ = average(
+            ...marketBoardData.recentHistory.map((entry) => {
+                if (entry.hq === 0) return false;
+                return entry.pricePerUnit;
+            })
+        );
+        averageTotalPurchasedPriceHQ = average(
+            ...marketBoardData.recentHistory.map((entry) => {
+                if (entry.hq === 0) return false;
+                return entry.total;
+            })
+        );
+        averagePurchasedPricePerUnitNQ = average(
+            ...marketBoardData.recentHistory.map((entry) => {
+                if (entry.hq === 1) return false;
+                return entry.pricePerUnit;
+            })
+        );
+        averageTotalPurchasedPriceNQ = average(
+            ...marketBoardData.recentHistory.map((entry) => {
+                if (entry.hq === 1) return false;
+                return entry.total;
+            })
+        );
+    } catch {
+        averagePurchasedPricePerUnitHQ = 0;
+        averageTotalPurchasedPriceHQ = 0;
+        averagePurchasedPricePerUnitNQ = 0;
+        averageTotalPurchasedPriceNQ = 0;
+    }
+
     // HQ
-    let averagePricePerUnitHQ = average(
-        ...marketBoardData.listings.map((listing) => {
-            if (listing.hq === 0) return false;
-            return listing.pricePerUnit;
-        })
-    );
 
     col1.appendChild((() => {
         let table = [
             ["#", "Server", "HQ", "Materia", "Price", "Quantity", "Total", "%Diff", "Retainer", "Creator"],
         ];
 
-        for (let i = 0; i < marketBoardData.listings.length; i++) {
-            let listing = marketBoardData.listings[i];
+        try {
+            for (let i = 0; i < marketBoardData.listings.length; i++) {
+                let listing = marketBoardData.listings[i];
 
-            if (listing.hq === 0) continue;
+                if (listing.hq === 0) continue;
 
-            onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnitHQ, world);
-        }
+                onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnitHQ, world);
+            }
+        } catch {}
 
         let header = document.createElement("div");
         let img = header.appendChild(document.createElement("img"));
@@ -196,9 +266,18 @@ async function onHashChange_genMarketTables(world, itemID) {
     col2.appendChild((() => {
         let table = [
             ["#", "Server", "HQ", "Price", "Quantity", "Total", "%Diff", "Buyer", "Date"],
-            ["1", "Adamantoise", "$hq", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"],
-            ["2", "Adamantoise", "$hq", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"],
         ];
+
+        try {
+            for (let i = 0; i < marketBoardData.recentHistory.length; i++) {
+                let entry = marketBoardData.recentHistory[i];
+
+                if (entry.hq === 0) continue;
+
+                onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUnitHQ, world);
+            }
+        } catch {}
+
         let header = document.createElement("div");
         let img = header.appendChild(document.createElement("img"));
         img.setAttribute("src", "img/hq.png");
@@ -209,25 +288,21 @@ async function onHashChange_genMarketTables(world, itemID) {
     })());
 
     // NQ
-    let averagePricePerUnitNQ = average(
-        ...marketBoardData.listings.map((listing) => {
-            if (listing.hq === 1) return false;
-            return listing.pricePerUnit;
-        })
-    );
 
     col1.appendChild((() => {
         let table = [
             ["#", "Server", "HQ", "Materia", "Price", "Quantity", "Total", "%Diff", "Retainer", "Creator"],
         ];
 
-        for (let i = 0; i < marketBoardData.listings.length; i++) {
-            let listing = marketBoardData.listings[i];
+        try {
+            for (let i = 0; i < marketBoardData.listings.length; i++) {
+                let listing = marketBoardData.listings[i];
 
-            if (listing.hq === 1) continue;
+                if (listing.hq === 1) continue;
 
-            onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnitNQ, world);
-        }
+                onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnitNQ, world);
+            }
+        } catch {}
 
         let header = document.createElement("h3");
         header.innerHTML = "NQ Prices";
@@ -236,9 +311,18 @@ async function onHashChange_genMarketTables(world, itemID) {
     col2.appendChild((() => {
         let table = [
             ["#", "Server", "HQ", "Price", "Quantity", "Total", "%Diff", "Buyer", "Date"],
-            ["1", "Adamantoise", "", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"],
-            ["2", "Adamantoise", "", "4,000,000", "1", "4,000,000", "0%", "Sample Buyer", "10 Aug 10:00"],
         ];
+
+        try {
+            for (let i = 0; i < marketBoardData.recentHistory.length; i++) {
+                let entry = marketBoardData.recentHistory[i];
+
+                if (entry.hq === 1) continue;
+
+                onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUnitHQ, world);
+            }
+        } catch {}
+
         let header = document.createElement("h3");
         header.innerHTML = "NQ Purchase History";
         return onHashChange_genMarketTables_helper0(table, header);
@@ -251,18 +335,18 @@ async function onHashChange_genMarketTables(world, itemID) {
             Math.floor(averagePricePerUnitHQ),
             Math.floor(averagePricePerUnitNQ),
             "Average Total Price",
-            0,
-            0
+            Math.floor(averageTotalPriceHQ),
+            Math.floor(averagePricePerUnitNQ)
         );
     })());
     col2.appendChild((() => {
         return onHashChange_genMarketTables_helper1(
             "Average Purchased Price Per Unit",
-            0,
-            0,
+            Math.floor(averagePurchasedPricePerUnitHQ),
+            Math.floor(averagePurchasedPricePerUnitNQ),
             "Average Total Purchased Price",
-            0,
-            0
+            Math.floor(averageTotalPurchasedPriceHQ),
+            Math.floor(averageTotalPurchasedPriceNQ)
         );
     })());
 
@@ -354,7 +438,7 @@ function onHashChange_genMarketTables_helper1(header1, ppuHQ, ppuNQ, header2, tp
 }
 
 /**
- * Generate the "average purchase" sections.
+ * Format listing table.
  *
  * @param {Array[]} table
  * @param {number} i
@@ -374,7 +458,7 @@ function onHashChange_genMarketTables_helper2(table, i, listing, averagePricePer
     table.push([
         i + 1,
         world,
-        "$hq",
+        listing.hq === 1 ? "$hq" : "",
         (() => { // Materia
             let materiaElements = document.createElement("div");
             for (let materia of listing.materia) {
@@ -397,6 +481,43 @@ function onHashChange_genMarketTables_helper2(table, i, listing, averagePricePer
         listing.creator ? listing.creator : "",
     ]);
 }
+
+/**
+ * Format history table.
+ *
+ * @param {Array[]} table
+ * @param {number} i
+ * @param {object} entry
+ * @param {number} averagePricePerUnit
+ * @param {string} world
+ */
+function onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUnit, world) {
+    let percentDifference = formatNumberWithCommas(
+        Math.round(getPercentDifference(entry.pricePerUnit, averagePricePerUnit) * 100) / 100
+    );
+
+    if (percentDifference > 0) {
+        percentDifference = "+" + percentDifference;
+    }
+
+    let timestamp = new Date(entry.timestamp);
+
+    table.push([
+        i + 1,
+        world,
+        entry.hq === 1 ? "$hq" : "",
+        formatNumberWithCommas(entry.pricePerUnit),
+        formatNumberWithCommas(entry.quantity),
+        formatNumberWithCommas(entry.total),
+        percentDifference + "%",
+        entry.buyerName,
+        timestamp.getDate() + " " +
+            months[timestamp.getMonth()] + " " +
+            timestamp.getHours() + ":" +
+            parseMinutes(timestamp.getMinutes()),
+    ]);
+}
+
 /**
  * Gets item data from Garlandtools.
  *
