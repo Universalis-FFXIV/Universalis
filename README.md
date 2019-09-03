@@ -2,7 +2,7 @@
 A crowdsourced market board aggregator. Not even nearly completed, though contributions are welcome.
 
 # Development
-Clone the repo, and then `npm install` to download the dependencies. Use `npm run-script start-dev` to test it on localhost.
+Clone the repo, and then `npm install` to download the dependencies, followed by `npm run-script build` to compile. Use `npm run-script start-dev` to test it on localhost.
 
 # Uploads
 Listings upload format (JSON):
