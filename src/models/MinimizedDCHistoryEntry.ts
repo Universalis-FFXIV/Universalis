@@ -1,6 +1,5 @@
-export interface MinimizedDCHistoryEntry {
+import { MinimizedHistoryEntry } from "./MinimizedHistoryEntry";
+
+export interface MinimizedDCHistoryEntry extends MinimizedHistoryEntry {
     worldName: string;
-    hq: 1 | 0;
-    pricePerUnit: number;
-    timestamp: number;
 }

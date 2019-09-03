@@ -4,21 +4,22 @@ import fs from "fs";
 import path from "path";
 import util from "util";
 
-import localUtil from "../util";
+import { ensurePathsExist, getWorldDC, getWorldName, levenshtein } from "../util";
 
+import { MarketInfoDCLocalData } from "../models/MarketInfoDCLocalData";
+
+const exists = util.promisify(fs.exists);
 const readdir = util.promisify(fs.readdir);
 const readFile = util.promisify(fs.readFile);
 const unlink = util.promisify(fs.unlink);
 const writeFile = util.promisify(fs.writeFile);
 
 export abstract class Tracker {
-    protected data: Map<number, { worldID: number, data: any[]}>;
     protected ext: string;
     protected storageLocation: string;
     private scoringJob: CronJob;
 
     constructor(storageLocation: string, ext: string) {
-        this.data = new Map();
         this.ext = ext;
         this.storageLocation = storageLocation;
         // this.scoringJob = new CronJob("* * * * */5", this.scoreAndUpdate, null, true);
@@ -26,10 +27,6 @@ export abstract class Tracker {
         if (!fs.existsSync(path.join(__dirname, storageLocation))) {
             fs.mkdirSync(path.join(__dirname, storageLocation));
         }
-    }
-
-    public get(id: number) {
-        return this.data.get(id);
     }
 
     public abstract set(...params);
@@ -50,7 +47,7 @@ export abstract class Tracker {
                     let fileContents = (await readFile(file)).toString();
                     // The most similar file to the live one will be considered most likely to be true
                     // (inaccurate, TODO)
-                    scores.push(localUtil.levenshtein(liveFileContents, fileContents));
+                    scores.push(levenshtein(liveFileContents, fileContents));
                 }
 
                 // Zip failed branches
@@ -75,6 +72,44 @@ export abstract class Tracker {
                 await writeFile(bestFile, bestFileData);
             }
         }
+    }
+
+    protected async updateDataCenterProperty(property: string, itemID: number, worldID: number, propertyData: any[]) {
+        const world = await getWorldName(worldID);
+        const dataCenter = await getWorldDC(world);
+
+        (propertyData).forEach((entry) => entry.worldName = world);
+
+        const dcDir = path.join(__dirname, "../../data", String(dataCenter));
+        const itemDir = path.join(dcDir, String(itemID));
+        const filePath = path.join(itemDir, "0.json");
+
+        await ensurePathsExist(dcDir, itemDir);
+
+        let existingData: MarketInfoDCLocalData;
+        if (await exists(filePath)) existingData = JSON.parse((await readFile(filePath)).toString());
+        if (existingData && existingData[property]) {
+            existingData[property] = existingData[property].filter((entry) => entry.worldName !== world);
+
+            existingData[property] = existingData[property].concat(propertyData);
+
+            existingData[property] = existingData[property].sort((a, b) => {
+                if (a.pricePerUnit > b.pricePerUnit) return -1;
+                if (a.pricePerUnit < b.pricePerUnit) return 1;
+                return 0;
+            });
+        } else {
+            if (!existingData) {
+                existingData = {
+                    dcName: dataCenter,
+                    itemID
+                };
+            }
+
+            existingData[property] = propertyData;
+        }
+
+        return await writeFile(filePath, JSON.stringify(existingData));
     }
 
     private async deepSearch(folderPath: string, content: object = {}) {
