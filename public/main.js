@@ -2,15 +2,7 @@
 // Initialization
 //
 
-var lang = "en";
-var dataCenter = "Crystal";
-
-var asyncInitCount = 3; // The number of asynchronous initialization functions that need to finish before post-init
-
-var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
 // Item categories
-var itemCategories = [null];
 (async function() {
     let dataFile;
     try {
@@ -29,7 +21,6 @@ var itemCategories = [null];
 })();
 
 // Worlds
-var worldList;
 (async function() {
     try {
         worldList = JSON.parse(await request("json/dc.json"));
@@ -40,7 +31,6 @@ var worldList;
 })();
 
 // World IDs
-var worldMap = new Map();
 (async function() {
     let dataFile;
     try {
@@ -57,6 +47,56 @@ var worldMap = new Map();
 
     initDone();
 })();
+
+//
+// Settings bar
+//
+
+var settingsBar = document.getElementById("settings-bar");
+
+/**
+ * Fill the settings bar. This is contingent on dc.json, so it's called after initialization.
+ */
+function populateSettings() {
+    settingsBar.addEventListener("change", assignDataCenter);
+
+    let dataCenterDropdown = settingsBar.appendChild(document.createElement("select"));
+    dataCenterDropdown.id = "data-center-dropdown";
+
+    for (let dc in worldList) {
+        if (worldList.hasOwnProperty(dc)) {
+            dataCenterDropdown.appendChild((() => {
+                let option = document.createElement("option");
+                option.setAttribute("value", dc);
+                option.innerText = dc;
+                return option;
+            })());
+        }
+    }
+}
+
+/**
+ * Assign the selected dropdown value to dataCenter.
+ */
+function assignDataCenter() {
+    const newDataCenter = document.getElementById("data-center-dropdown").value;
+
+    dataCenter = newDataCenter;
+    location.hash = location.hash.substr(0, location.hash.indexOf("=") + 1) + newDataCenter;
+}
+
+/**
+ * Move other elements below the settings bar so they don't clip.
+ *
+ * @param {string} className The name of the class used to ID elements to shift down.
+ */
+function moveBelowSettings(className) {
+    const elementsToMove = document.getElementsByClassName(className);
+    const distanceToMove = settingsBar.clientHeight;
+    for (let element of elementsToMove) {
+        element.style.paddingTop = distanceToMove + "px";
+    }
+}
 
 //
 // Search
@@ -179,136 +219,42 @@ async function onHashChange() {
     var infoArea = document.getElementById("info");
 
     var path = window.location.href;
-    var id = path.substr(path.lastIndexOf("/") + 1).replace(/[^0-9]/g, "");
-    var world = path.substr(path.lastIndexOf("=") + 1);
+    itemID = path.substr(path.lastIndexOf("/") + 1).replace(/[^0-9]/g, "");
+    world = path.substr(path.lastIndexOf("=") + 1);
+    if (world === "Cross-World") {
+        world = dataCenter;
+    }
 
     // This has to be done backwards, because removing a child alters the array
     // of child nodes, which means some nodes would be skipped going forwards.
     var existing = infoArea.children;
     for (var i = existing.length - 1; i >= 0; i--) {
         var elementToBeDeleted = existing[i];
-        if (!elementToBeDeleted.id || parseInt(elementToBeDeleted.id) && parseInt(elementToBeDeleted.id) != id) {
+        if (!elementToBeDeleted.id || parseInt(elementToBeDeleted.id) && parseInt(elementToBeDeleted.id) != itemID) {
             infoArea.removeChild(elementToBeDeleted);
         }
     }
 
-    if (!itemData || itemData.item.id != id) { // We don't want to re-render this if we don't need to
-        infoArea.insertBefore(await onHashChange_fetchItem(id), creditBox);
-        infoArea.insertBefore(onHashChange_createWorldNav(id), creditBox);
+    if (!itemData || itemData.item.id != itemID) { // We don't want to re-render this if we don't need to
+        infoArea.insertBefore(await onHashChange_fetchItem(), creditBox);
     }
 
+    infoArea.insertBefore(onHashChange_createWorldNav(), creditBox);
+
     // Cheapest listing if cross-world
-    if (!world || world === path || world === "Cross-World") {
+    if (!world || world === path || world === "Cross-World" || worldList[world]) {
         world = "Cross-World";
-        infoArea.insertBefore(onHashChange_genCheapest(), creditBox);
+        infoArea.insertBefore(await onHashChange_genCheapest(), creditBox);
     }
 
     // Graph
     var graphContainer = document.createElement("div");
     graphContainer.setAttribute("class", "infobox graph");
     infoArea.insertBefore(graphContainer, creditBox); // Needs to be inserted earlier for width
-    onHashChange_drawGraph(graphContainer, world, id);
+    onHashChange_drawGraph(graphContainer);
 
     // Market info from servers
-    infoArea.insertBefore(await onHashChange_genMarketTables(world, id), creditBox);
-}
-
-//
-// Utility
-//
-
-/**
- * Generate a table.
- *
- * @param {Object[]} dataArray - A 2D data array with headers in the first row
- * @param {string} _class - A class to style the table
- * @return {Element} A table.
- */
-function makeTable(dataArray, _class) {
-    let table = document.createElement("table");
-    if (_class) table.setAttribute("class", _class);
-
-    for (let i = 0; i < dataArray.length; i++) {
-        let row = table.appendChild(document.createElement("tr"));
-        for (let j = 0; j < dataArray[0].length; j++) {
-            let cell;
-            if (i === 0) {
-                cell = row.appendChild(document.createElement("th"));
-                cell.innerHTML = dataArray[0][j];
-            } else {
-                cell = row.appendChild(document.createElement("td"));
-                cell.innerHTML = dataArray[i][j];
-            }
-        }
-    }
-
-    return table;
-}
-
-/**
- * https://www.kirupa.com/html5/making_http_requests_js.htm
- * Make an HTTP request.
- *
- * @param {string} url - The URL to get.
- * @return {Promise} The contents of the response body.
- */
-async function request(url) {
-    return new Promise((resolve, reject) => {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", url, true);
-        xhr.send();
-
-        /**
-         * Event handler for GET completion
-         */
-        function processResponse() {
-            if (xhr.readyState == 4) {
-                resolve(xhr.responseText);
-            }
-        }
-
-        xhr.addEventListener("readystatechange", processResponse, false);
-    });
-}
-
-/**
- * Get market data from the Universalis API.
- *
- * @param {number} worldID - The world to query for.
- * @param {number} itemID - The item to query for.
- * @return {Object} The market data.
- */
-async function getMarketData(worldID, itemID) {
-    let data = await request(`api/${worldID}/${itemID}`);
-    return JSON.parse(data);
-}
-
-/**
- * Format a timestamp into a date string.
- *
- * @param {number} timestamp
- * @return {string}
- */
-function parseDate(timestamp) {
-    const dateObject = new Date(timestamp);
-    const result = dateObject.getDate() + " " +
-        months[dateObject.getMonth()] + " " +
-        dateObject.getHours() + ":" +
-        parseMinutes(dateObject.getMinutes());
-    return result;
-}
-
-/**
- * Ensure minutes have two digits
- *
- * @param {number} minutes
- * @return {string} parsedMinutes
- */
-function parseMinutes(minutes) {
-    if (minutes < 10) {
-        minutes = `0${minutes}`;
-    }
-    return "" + minutes;
+    infoArea.insertBefore(await onHashChange_genMarketTables(), creditBox);
 }
 
 //
@@ -316,9 +262,26 @@ function parseMinutes(minutes) {
 //
 
 /**
- * This makes the webpage respond correctly if it is initialized with a hash name such as /#/market/2234
+ * Actual main method.
  */
 function initDone() {
     asyncInitCount--;
-    if (asyncInitCount == 0 && window.location.href.indexOf("#") != -1) onHashChange();
+
+    if (asyncInitCount == 0) {
+        dataCenter = (() => {
+            let path = window.location.href;
+            world = path.substr(path.lastIndexOf("=") + 1);
+            if (!worldList[world]) return "Aether";
+            return world;
+        })();
+
+        if (window.location.href.indexOf("#") != -1) {
+            // Calling onHashChange manually here makes the webpage respond correctly
+            // if it is initialized with a hash name, such as /#/market/2234
+            onHashChange();
+        }
+
+        populateSettings();
+        moveBelowSettings("under-settings");
+    }
 }

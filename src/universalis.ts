@@ -59,7 +59,7 @@ const router = new Router();
 router.get("/", async (ctx) => {
     await ctx.render("index.pug", {
         name: "Universalis - Crowdsourced Market Board Aggregator",
-        version: require('root-require')('package.json').version
+        version: require("../package.json").version
     });
 });
 

@@ -12,7 +12,7 @@ export async function ensurePathsExist(...dirPaths: string[]) {
             await mkdir(dirPath);
         }
     }
-};
+}
 
 export async function getWorldDC(world: string) {
     const dataCenterWorlds = JSON.parse((await remoteDataManager.fetchFile("dc.json")).toString());
@@ -23,13 +23,13 @@ export async function getWorldDC(world: string) {
         }
     }
     return undefined;
-};
+}
 
 export async function getWorldName(worldID: number) {
     const worldCSV = (await remoteDataManager.parseCSV("World.csv")).slice(3);
     const world = worldCSV.find((line) => line[0] === String(worldID))[1];
     return world;
-};
+}
 
 export function levenshtein(input: string, test: string) {
     if (input.length === 0) return test.length; // Edge cases
@@ -61,4 +61,4 @@ export function levenshtein(input: string, test: string) {
     }
 
     return matrix[test.length][input.length]; // The total cost is described in the last element of the matrix
-};
+}

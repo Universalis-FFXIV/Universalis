@@ -1,13 +1,11 @@
 /**
  * Creates the per-data center navigation bar.
  *
- * @param {number} id - The item ID.
  * @return {Element} An element of class infobox.
  */
-function onHashChange_createWorldNav(id) {
+function onHashChange_createWorldNav() {
     var worldNav = document.createElement("div");
     worldNav.setAttribute("class", "infobox nav");
-    worldNav.setAttribute("id", id);
 
     var nav = document.createElement("table");
     nav.setAttribute("id", "navbar");
@@ -25,7 +23,7 @@ function onHashChange_createWorldNav(id) {
 
         // Link table cell
         w = w.appendChild(document.createElement("a"));
-        w.setAttribute("href", `#/market/${id}?world=${world}`);
+        w.setAttribute("href", `#/market/${itemID}?world=${world}`);
         w = w.appendChild(document.createElement("div"));
         w.setAttribute("class", "table-cell-link");
         w = w.appendChild(document.createElement("p"));
@@ -41,13 +39,18 @@ function onHashChange_createWorldNav(id) {
  * Creates the history graph.
  *
  * @param {Element} graphContainer - A container to put the graph in.
- * @param {string} world - The world to get data for.
- * @param {number} itemID - The item to get data for.
  */
-async function onHashChange_drawGraph(graphContainer, world, itemID) {
-    const worldID = worldMap.get(world);
+async function onHashChange_drawGraph(graphContainer) {
+    const worldID = getWorldID(world);
 
-    const historyData = JSON.parse(await request(`api/history/${worldID}/${itemID}`));
+    let historyData = await request(`api/history/${worldID}/${itemID}`);
+    try {
+        historyData = JSON.parse(historyData);
+    } catch {
+        let errorElement = document.createElement("div");
+        errorElement.classList.add("infobox");
+        return errorElement;
+    }
 
     const highQualitySales = historyData.entries.filter((entry) => entry.hq === 1);
     const normalQualitySales = historyData.entries.filter((entry) => entry.hq === 0);
@@ -79,10 +82,6 @@ async function onHashChange_drawGraph(graphContainer, world, itemID) {
             })
         ));
     }
-
-    console.log(xAxisLabels);
-    console.log(yAxisDataHQ);
-    console.log(yAxisDataNQ);
 
     var graph = graphContainer.appendChild(document.createElement("canvas"));
     graph.setAttribute("id", "echarts");
@@ -142,33 +141,61 @@ async function onHashChange_drawGraph(graphContainer, world, itemID) {
  *
  * @return {Element} An element of class infobox.
  */
-function onHashChange_genCheapest() {
+async function onHashChange_genCheapest() {
+    const worldID = getWorldID(world);
+
+    let marketData = await request(`api/${worldID}/${itemID}`);
+    try {
+        marketData = JSON.parse(marketData);
+    } catch {
+        let errorElement = document.createElement("div");
+        errorElement.classList.add("infobox");
+        return errorElement;
+    }
+
+    const highQualityListings = marketData.listings.filter((listing) => listing.hq === 1);
+    const normalQualityListings = marketData.listings.filter((listing) => listing.hq === 0);
+
     var cheapestListings = document.createElement("div");
     cheapestListings.setAttribute("class", "infobox cheapest-listings");
 
-    let highQuality = cheapestListings.appendChild(document.createElement("div"));
-    highQuality.setAttribute("class", "col1");
-    let bigTextHQ = highQuality.appendChild(document.createElement("p"));
-    bigTextHQ.setAttribute("class", "col1 gen-cheapest");
-    bigTextHQ.innerHTML = "Cheapest High-Quality";
-    let priceHQ = bigTextHQ.appendChild(document.createElement("h1"));
-    priceHQ.innerHTML = "1 x 4,000,000";
+    if (highQualityListings.length > 0) {
+        let highQuality = cheapestListings.appendChild(document.createElement("div"));
+        highQuality.setAttribute("class", "col1");
+        let bigTextHQ = highQuality.appendChild(document.createElement("p"));
+        bigTextHQ.setAttribute("class", "col1 gen-cheapest");
+        bigTextHQ.innerHTML = "Cheapest High-Quality";
+        let priceHQ = bigTextHQ.appendChild(document.createElement("h1"));
+        priceHQ.innerHTML = formatNumberWithCommas(highQualityListings[0].quantity) + " x " +
+            formatNumberWithCommas(highQualityListings[0].pricePerUnit);
 
-    let serverLabelHQ = highQuality.appendChild(document.createElement("p"));
-    serverLabelHQ.setAttribute("class", "col2 gen-cheapest");
-    serverLabelHQ.innerHTML = " Server: <b>Adamantoise</b> - Total: <b>4,000,000</b>";
+        let serverLabelHQ = highQuality.appendChild(document.createElement("p"));
+        serverLabelHQ.setAttribute("class", "col2 gen-cheapest");
+        serverLabelHQ.innerHTML = " Server: <b>" +
+            highQualityListings[0].worldName +
+            "</b> - Total: <b>" +
+            formatNumberWithCommas(highQualityListings[0].total) +
+            "</b>";
+    }
 
-    let normalQuality = cheapestListings.appendChild(document.createElement("div"));
-    normalQuality.setAttribute("class", "col2");
-    let bigTestNQ = normalQuality.appendChild(document.createElement("p"));
-    bigTestNQ.setAttribute("class", "col1 gen-cheapest");
-    bigTestNQ.innerHTML = "Cheapest Normal Quality";
-    let priceNQ = bigTestNQ.appendChild(document.createElement("h1"));
-    priceNQ.innerHTML = "1 x 4,000,000";
+    if (normalQualityListings.length > 0) {
+        let normalQuality = cheapestListings.appendChild(document.createElement("div"));
+        normalQuality.setAttribute("class", "col2");
+        let bigTestNQ = normalQuality.appendChild(document.createElement("p"));
+        bigTestNQ.setAttribute("class", "col1 gen-cheapest");
+        bigTestNQ.innerHTML = "Cheapest Normal Quality";
+        let priceNQ = bigTestNQ.appendChild(document.createElement("h1"));
+        priceNQ.innerHTML = formatNumberWithCommas(normalQualityListings[0].quantity) + " x " +
+            formatNumberWithCommas(normalQualityListings[0].pricePerUnit);
 
-    let serverLabelNQ = normalQuality.appendChild(document.createElement("p"));
-    serverLabelNQ.setAttribute("class", "col2 gen-cheapest");
-    serverLabelNQ.innerHTML = " Server: <b>Adamantoise</b> - Total: <b>4,000,000</b>";
+        let serverLabelNQ = normalQuality.appendChild(document.createElement("p"));
+        serverLabelNQ.setAttribute("class", "col2 gen-cheapest");
+        serverLabelNQ.innerHTML = " Server: <b>" +
+            normalQualityListings[0].worldName +
+            "</b> - Total: <b>" +
+            formatNumberWithCommas(normalQualityListings[0].total) +
+            "</b>";
+    }
 
     return cheapestListings;
 }
@@ -177,12 +204,10 @@ function onHashChange_genCheapest() {
 /**
  * Generate tables with market board data.
  *
- * @param {string} world - The world to get data for.
- * @param {number} itemID
  * @return {Element} An element of class infobox.
  */
-async function onHashChange_genMarketTables(world, itemID) {
-    let worldID = worldMap.get(world);
+async function onHashChange_genMarketTables() {
+    const worldID = getWorldID(world);
     let marketBoardData;
     try {
         marketBoardData = await getMarketData(worldID, itemID);
@@ -291,7 +316,7 @@ async function onHashChange_genMarketTables(world, itemID) {
 
                 if (listing.hq === 0) continue;
 
-                onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnitHQ, world);
+                onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnitHQ);
             }
         } catch {}
 
@@ -314,7 +339,7 @@ async function onHashChange_genMarketTables(world, itemID) {
 
                 if (entry.hq === 0) continue;
 
-                onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUnitHQ, world);
+                onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUnitHQ);
             }
         } catch {}
 
@@ -340,7 +365,7 @@ async function onHashChange_genMarketTables(world, itemID) {
 
                 if (listing.hq === 1) continue;
 
-                onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnitNQ, world);
+                onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnitNQ);
             }
         } catch {}
 
@@ -359,7 +384,7 @@ async function onHashChange_genMarketTables(world, itemID) {
 
                 if (entry.hq === 1) continue;
 
-                onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUnitHQ, world);
+                onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUnitHQ);
             }
         } catch {}
 
@@ -484,9 +509,8 @@ function onHashChange_genMarketTables_helper1(header1, ppuHQ, ppuNQ, header2, tp
  * @param {number} i
  * @param {object} listing
  * @param {number} averagePricePerUnit
- * @param {string} world
  */
-function onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnit, world) {
+function onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnit) {
     let percentDifference = formatNumberWithCommas(
         Math.round(getPercentDifference(listing.pricePerUnit, averagePricePerUnit) * 100) / 100
     );
@@ -497,7 +521,7 @@ function onHashChange_genMarketTables_helper2(table, i, listing, averagePricePer
 
     table.push([
         i + 1,
-        world,
+        world === dataCenter ? listing.worldName : world,
         listing.hq === 1 ? "$hq" : "",
         (() => { // Materia
             let materiaElements = document.createElement("div");
@@ -529,9 +553,8 @@ function onHashChange_genMarketTables_helper2(table, i, listing, averagePricePer
  * @param {number} i
  * @param {object} entry
  * @param {number} averagePricePerUnit
- * @param {string} world
  */
-function onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUnit, world) {
+function onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUnit) {
     let percentDifference = formatNumberWithCommas(
         Math.round(getPercentDifference(entry.pricePerUnit, averagePricePerUnit) * 100) / 100
     );
@@ -556,15 +579,14 @@ function onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUn
 /**
  * Gets item data from Garlandtools.
  *
- * @param {number} id - The item ID.
  * @return {Element} An element of class infobox.
  */
-async function onHashChange_fetchItem(id) {
+async function onHashChange_fetchItem() {
     var itemInfo = document.createElement("div");
     itemInfo.setAttribute("class", "infobox");
-    itemInfo.setAttribute("id", id);
+    itemInfo.setAttribute("id", itemID);
 
-    itemData = JSON.parse(await request(`https://www.garlandtools.org/db/doc/item/${lang}/3/${id}.json`));
+    itemData = JSON.parse(await request(`https://www.garlandtools.org/db/doc/item/${lang}/3/${itemID}.json`));
 
     // Rename/parse data
     var category = itemCategories[itemData.item.category]; // itemCategories will exist at execution time.
@@ -604,63 +626,3 @@ async function onHashChange_fetchItem(id) {
 
     return itemInfo;
 }
-
-/**
- * Get the percent difference between two prices.
- *
- * @param {number} cheapestPrice
- * @param {number} testPrice
- * @return {number} The percent difference between the second number and the first.
- */
-function getPercentDifference(cheapestPrice, testPrice) {
-    return (cheapestPrice - testPrice) / average(cheapestPrice, testPrice);
-}
-
-/**
- * Get the average of some numbers.
- *
- * @param {...number} numbers
- * @return {number} The average.
- */
-function average(...numbers) {
-    let result = 0;
-    for (let i = 0; i < numbers.length; i++) {
-        result += numbers[i];
-    }
-    result /= numbers.length;
-    return result;
-}
-
-/**
- * Insert commas every three digits in a number.
- *
- * @param {number} x
- * @return {string} The formatted number.
- */
-function formatNumberWithCommas(x) {
-    let output = "" + x;
-    let wholePart = output;
-    let decimalPart;
-
-    if (output.indexOf(".") !== -1) {
-        wholePart = output.substr(0, output.indexOf("."));
-        decimalPart = output.substr(output.indexOf(".") + 1);
-    }
-
-    let originalLength = wholePart.length;
-    for (let i = originalLength - 1; i > 0; i--) {
-        if ((originalLength - i) % 3 === 0) {
-            wholePart = wholePart.substr(0, i) + "," + wholePart.substr(i);
-        }
-    }
-
-    if (decimalPart) {
-        output = wholePart + "." + decimalPart;
-    } else {
-        output = wholePart;
-    }
-
-    return output;
-}
-
-const romanNumerals = [undefined, "I", "II", "III", "IV", "V", "VI", "VII", "VIII"];

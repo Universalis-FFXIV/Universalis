@@ -31,6 +31,44 @@ export abstract class Tracker {
 
     public abstract set(...params);
 
+    protected async updateDataCenterProperty(property: string, itemID: number, worldID: number, propertyData: any[]) {
+        const world = await getWorldName(worldID);
+        const dataCenter = await getWorldDC(world);
+
+        (propertyData).forEach((entry) => entry.worldName = world);
+
+        const dcDir = path.join(__dirname, "../../data", String(dataCenter));
+        const itemDir = path.join(dcDir, String(itemID));
+        const filePath = path.join(itemDir, "0.json");
+
+        await ensurePathsExist(dcDir, itemDir);
+
+        let existingData: MarketInfoDCLocalData;
+        if (await exists(filePath)) existingData = JSON.parse((await readFile(filePath)).toString());
+        if (existingData && existingData[property]) {
+            existingData[property] = existingData[property].filter((entry) => entry.worldName !== world);
+
+            existingData[property] = existingData[property].concat(propertyData);
+
+            existingData[property] = existingData[property].sort((a, b) => {
+                if (a.pricePerUnit > b.pricePerUnit) return -1;
+                if (a.pricePerUnit < b.pricePerUnit) return 1;
+                return 0;
+            });
+        } else {
+            if (!existingData) {
+                existingData = {
+                    dcName: dataCenter,
+                    itemID
+                };
+            }
+
+            existingData[property] = propertyData;
+        }
+
+        return await writeFile(filePath, JSON.stringify(existingData));
+    }
+
     private async scoreAndUpdate() {
         let directoryTree = await this.deepSearch(path.join(__dirname, this.storageLocation));
         for (let folder in directoryTree) {
@@ -72,44 +110,6 @@ export abstract class Tracker {
                 await writeFile(bestFile, bestFileData);
             }
         }
-    }
-
-    protected async updateDataCenterProperty(property: string, itemID: number, worldID: number, propertyData: any[]) {
-        const world = await getWorldName(worldID);
-        const dataCenter = await getWorldDC(world);
-
-        (propertyData).forEach((entry) => entry.worldName = world);
-
-        const dcDir = path.join(__dirname, "../../data", String(dataCenter));
-        const itemDir = path.join(dcDir, String(itemID));
-        const filePath = path.join(itemDir, "0.json");
-
-        await ensurePathsExist(dcDir, itemDir);
-
-        let existingData: MarketInfoDCLocalData;
-        if (await exists(filePath)) existingData = JSON.parse((await readFile(filePath)).toString());
-        if (existingData && existingData[property]) {
-            existingData[property] = existingData[property].filter((entry) => entry.worldName !== world);
-
-            existingData[property] = existingData[property].concat(propertyData);
-
-            existingData[property] = existingData[property].sort((a, b) => {
-                if (a.pricePerUnit > b.pricePerUnit) return -1;
-                if (a.pricePerUnit < b.pricePerUnit) return 1;
-                return 0;
-            });
-        } else {
-            if (!existingData) {
-                existingData = {
-                    dcName: dataCenter,
-                    itemID
-                };
-            }
-
-            existingData[property] = propertyData;
-        }
-
-        return await writeFile(filePath, JSON.stringify(existingData));
     }
 
     private async deepSearch(folderPath: string, content: object = {}) {

@@ -78,7 +78,9 @@ mono_crash.*
 
 # Build results
 build/
+jsx/
 public/css/
+public/js/react/
 
 # Market data
 data/
