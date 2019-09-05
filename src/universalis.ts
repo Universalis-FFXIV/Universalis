@@ -22,7 +22,7 @@ import { PriceTracker } from "./trackers/PriceTracker";
 const readFile = util.promisify(fs.readFile);
 
 // Define application and its internal resources
-const historyTracker = new HistoryTracker(); // TODO
+const historyTracker = new HistoryTracker();
 const priceTracker = new PriceTracker();
 
 const universalis = new Koa();
@@ -31,21 +31,21 @@ universalis.use(bodyParser({
     jsonLimit: "500kb"
 }));
 
-remoteDataManager.fetchAll();
+remoteDataManager.fetchAll(); // Fetch remote files asynchronously
 
 // Create directories
 if (!fs.existsSync(path.join(__dirname, "./branches"))) {
     fs.mkdirSync(path.join(__dirname, "./branches"));
 }
 
-// Logger
+// Logger TODO
 universalis.use(async (ctx, next) => {
     await next();
     const rt = ctx.response.get("X-Response-Time");
     console.log(`${ctx.method} ${ctx.url} - ${rt}`);
 });
 
-// Define views
+// Set up renderer
 universalis.use(views("./views", {
     extension: "pug"
 }));
@@ -53,20 +53,20 @@ universalis.use(views("./views", {
 // Publish public resources
 universalis.use(serve("./public"));
 
-// Define routes
+// Routing
 const router = new Router();
 
 router.get("/", async (ctx) => {
     await ctx.render("index.pug", {
         name: "Universalis - Crowdsourced Market Board Aggregator",
-        version: process.env.npm_package_version
+        version: require("../package.json").version
     });
 });
 
-router.get("/api/:world/:item", async (ctx) => {
+router.get("/api/:world/:item", async (ctx) => { // Normal data
     let data = JSON.parse((await readFile(
         path.join(__dirname, "../data", ctx.params.world, ctx.params.item, "0.json")
-    )).toString());
+    )).toString()); // Files are buffers
     if (!data) {
         ctx.throw(404);
         return;
@@ -74,7 +74,7 @@ router.get("/api/:world/:item", async (ctx) => {
     ctx.body = data;
 });
 
-router.get("/api/history/:world/:item", async (ctx) => {
+router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     let data = JSON.parse((await readFile(
         path.join(__dirname, "../history", ctx.params.world, ctx.params.item, "0.json")
     )).toString());

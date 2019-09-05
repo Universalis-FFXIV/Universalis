@@ -1,4 +1,37 @@
-module.exports.levenshtein = (input: string, test: string) => {
+import fs from "fs";
+import util from "util";
+
+import remoteDataManager from "./remoteDataManager";
+
+const exists = util.promisify(fs.exists);
+const mkdir = util.promisify(fs.mkdir);
+
+export async function ensurePathsExist(...dirPaths: string[]) {
+    for (let dirPath of dirPaths) {
+        if (!await exists(dirPath)) {
+            await mkdir(dirPath);
+        }
+    }
+}
+
+export async function getWorldDC(world: string) {
+    const dataCenterWorlds = JSON.parse((await remoteDataManager.fetchFile("dc.json")).toString());
+    for (let dc in dataCenterWorlds) {
+        if (dataCenterWorlds.hasOwnProperty(dc)) {
+            let foundWorld = dataCenterWorlds[dc].find((el) => el === world);
+            if (foundWorld) return dc;
+        }
+    }
+    return undefined;
+}
+
+export async function getWorldName(worldID: number) {
+    const worldCSV = (await remoteDataManager.parseCSV("World.csv")).slice(3);
+    const world = worldCSV.find((line) => line[0] === String(worldID))[1];
+    return world;
+}
+
+export function levenshtein(input: string, test: string) {
     if (input.length === 0) return test.length; // Edge cases
     if (test.length === 0) return input.length;
 
@@ -28,6 +61,4 @@ module.exports.levenshtein = (input: string, test: string) => {
     }
 
     return matrix[test.length][input.length]; // The total cost is described in the last element of the matrix
-};
-
-export default module.exports;
+}
