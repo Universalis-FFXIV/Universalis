@@ -591,7 +591,7 @@ function onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUn
 
     table.push([
         i + 1,
-        world,
+        entry.worldName ? entry.worldName : entry,
         entry.hq === 1 ? "$hq" : "",
         formatNumberWithCommas(entry.pricePerUnit),
         formatNumberWithCommas(entry.quantity),
