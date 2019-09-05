@@ -4,32 +4,32 @@
  * @return {Element} An element of class infobox.
  */
 function onHashChange_createWorldNav() {
-    var worldNav = document.createElement("div");
-    worldNav.setAttribute("class", "infobox nav");
+    var worldNav = createElement("div", {
+        "class": "infobox nav",
+    });
 
-    var nav = document.createElement("table");
-    nav.setAttribute("id", "navbar");
-    worldNav.appendChild(nav);
-    nav = nav.appendChild(document.createElement("tr"));
+    var nav = worldNav.appendChild(createElement("table", {
+        "id": "navbar",
+    }));
+    nav = nav.appendChild(createElement("tr"));
 
     var trimmedWorldList = ["Cross-World"].concat(worldList[dataCenter]);
 
     for (var world of trimmedWorldList) { // Will exist at execution time
         // Table cell
-        var w = nav.appendChild(document.createElement("td"));
+        var w = nav.appendChild(createElement("td"));
         if (trimmedWorldList.indexOf(world) == 0) {
             w.setAttribute("class", "left-cell");
         }
 
         // Link table cell
-        w = w.appendChild(document.createElement("a"));
-        w.setAttribute("href", `#/market/${itemID}?world=${world}`);
-        w = w.appendChild(document.createElement("div"));
-        w.setAttribute("class", "table-cell-link");
-        w = w.appendChild(document.createElement("p"));
-
-        // Text
-        w.innerHTML = world;
+        w = w.appendChild(createElement("a", {
+            "href": `#/market/${itemID}?world=${world}`,
+        }));
+        w = w.appendChild(createElement("div", {
+            "class": "table-cell-link",
+        }));
+        w = w.appendChild(createElement("p", null, world));
     }
 
     return worldNav;
@@ -47,8 +47,9 @@ async function onHashChange_drawGraph(graphContainer) {
     try {
         historyData = JSON.parse(historyData);
     } catch {
-        let errorElement = document.createElement("div");
-        errorElement.classList.add("infobox");
+        let errorElement = createElement("div", {
+            "class": "infobox",
+        });
         return errorElement;
     }
 
@@ -83,9 +84,10 @@ async function onHashChange_drawGraph(graphContainer) {
         ));
     }
 
-    var graph = graphContainer.appendChild(document.createElement("canvas"));
-    graph.setAttribute("id", "echarts");
-    graph.setAttribute("height", "300");
+    var graph = graphContainer.appendChild(createElement("canvas", {
+        "id": "echarts",
+        "height": "300",
+    }));
     var style = graphContainer.currentStyle || window.getComputedStyle(graphContainer);
     graph.setAttribute("width", graphContainer.clientWidth - parseInt(style.marginRight));
     graph = echarts.init(graph);
@@ -148,53 +150,60 @@ async function onHashChange_genCheapest() {
     try {
         marketData = JSON.parse(marketData);
     } catch {
-        let errorElement = document.createElement("div");
-        errorElement.classList.add("infobox");
+        let errorElement = createElement("div", {
+            "class": "infobox",
+        });
         return errorElement;
     }
 
     const highQualityListings = marketData.listings.filter((listing) => listing.hq === 1);
     const normalQualityListings = marketData.listings.filter((listing) => listing.hq === 0);
 
-    var cheapestListings = document.createElement("div");
+    var cheapestListings = createElement("div");
     cheapestListings.setAttribute("class", "infobox cheapest-listings");
 
     if (highQualityListings.length > 0) {
-        let highQuality = cheapestListings.appendChild(document.createElement("div"));
-        highQuality.setAttribute("class", "col1");
-        let bigTextHQ = highQuality.appendChild(document.createElement("p"));
-        bigTextHQ.setAttribute("class", "col1 gen-cheapest");
-        bigTextHQ.innerHTML = "Cheapest High-Quality";
-        let priceHQ = bigTextHQ.appendChild(document.createElement("h1"));
-        priceHQ.innerHTML = formatNumberWithCommas(highQualityListings[0].quantity) + " x " +
-            formatNumberWithCommas(highQualityListings[0].pricePerUnit);
+        let highQuality = cheapestListings.appendChild(createElement("div", {
+            "class": "col1",
+        }));
+        let bigTextHQ = highQuality.appendChild(createElement("p", {
+            "class": "col1 gen-cheapest",
+        }, "Cheapest High-Quality"));
+        let priceHQ = bigTextHQ.appendChild(createElement("h1", null,
+            formatNumberWithCommas(highQualityListings[0].quantity) + " x " +
+            formatNumberWithCommas(highQualityListings[0].pricePerUnit)
+        ));
 
-        let serverLabelHQ = highQuality.appendChild(document.createElement("p"));
-        serverLabelHQ.setAttribute("class", "col2 gen-cheapest");
-        serverLabelHQ.innerHTML = " Server: <b>" +
+        let serverLabelHQ = highQuality.appendChild(createElement("p", {
+            "class": "col2 gen-cheapest",
+        }, " Server: <b>" +
             highQualityListings[0].worldName +
             "</b> - Total: <b>" +
             formatNumberWithCommas(highQualityListings[0].total) +
-            "</b>";
+            "</b>"
+        ));
     }
 
     if (normalQualityListings.length > 0) {
-        let normalQuality = cheapestListings.appendChild(document.createElement("div"));
-        normalQuality.setAttribute("class", "col2");
-        let bigTestNQ = normalQuality.appendChild(document.createElement("p"));
-        bigTestNQ.setAttribute("class", "col1 gen-cheapest");
-        bigTestNQ.innerHTML = "Cheapest Normal Quality";
-        let priceNQ = bigTestNQ.appendChild(document.createElement("h1"));
-        priceNQ.innerHTML = formatNumberWithCommas(normalQualityListings[0].quantity) + " x " +
-            formatNumberWithCommas(normalQualityListings[0].pricePerUnit);
+        let normalQuality = cheapestListings.appendChild(createElement("div", {
+            "class": "col2",
+        }));
+        let bigTestNQ = normalQuality.appendChild(createElement("p", {
+            "class": "col1 gen-cheapest",
+        }, "Cheapest Normal Quality"));
+        let priceNQ = bigTestNQ.appendChild(createElement("h1", null,
+            formatNumberWithCommas(normalQualityListings[0].quantity) + " x " +
+            formatNumberWithCommas(normalQualityListings[0].pricePerUnit)
+        ));
 
-        let serverLabelNQ = normalQuality.appendChild(document.createElement("p"));
-        serverLabelNQ.setAttribute("class", "col2 gen-cheapest");
-        serverLabelNQ.innerHTML = " Server: <b>" +
+        let serverLabelNQ = normalQuality.appendChild(createElement("p", {
+            "class": "col2 gen-cheapest",
+        }, " Server: <b>" +
             normalQualityListings[0].worldName +
             "</b> - Total: <b>" +
             formatNumberWithCommas(normalQualityListings[0].total) +
-            "</b>";
+            "</b>"
+        ));
     }
 
     return cheapestListings;
@@ -212,22 +221,24 @@ async function onHashChange_genMarketTables() {
     try {
         marketBoardData = await getMarketData(worldID, itemID);
     } catch {
-        let noDataInfobox = document.createElement("div");
-        noDataInfobox.setAttribute("class", "infobox");
-        let ref = noDataInfobox.appendChild(document.createElement("h3"));
-        ref.setAttribute("class", "centered-text");
-        ref.innerText = "No market data has been uploaded for this item.";
-        return noDataInfobox;
+        return createElement("div", {
+            "class": "infobox",
+        }, createElement("h3", {
+            "class": "centered-text",
+        }, "No market data has been uploaded for this item.").outerHTML);
     }
 
-    var marketData = document.createElement("div");
-    marketData.setAttribute("class", "infobox market-data");
+    var marketData = createElement("div", {
+        "class": "infobox market-data",
+    });
 
     // Columns
-    var col1 = marketData.appendChild(document.createElement("div"));
-    col1.setAttribute("class", "col1");
-    var col2 = marketData.appendChild(document.createElement("div"));
-    col2.setAttribute("class", "col2");
+    var col1 = marketData.appendChild(createElement("div", {
+        "class": "col1",
+    }));
+    var col2 = marketData.appendChild(createElement("div", {
+        "class": "col2",
+    }));
 
     // Averages
     let averagePricePerUnitHQ;
@@ -320,12 +331,12 @@ async function onHashChange_genMarketTables() {
             }
         } catch {}
 
-        let header = document.createElement("div");
-        let img = header.appendChild(document.createElement("img"));
-        img.setAttribute("src", "img/hq.png");
-        img.setAttribute("class", "prefix-hq-icon");
-        let label = header.appendChild(document.createElement("h3"));
-        label.innerHTML = "HQ Prices";
+        let header = createElement("div");
+        header.appendChild(createElement("img", {
+            "src": "img/hq.png",
+            "class": "prefix-hq-icon",
+        }));
+        header.appendChild(createElement("h3", null, "HQ Prices"));
         return onHashChange_genMarketTables_helper0(table, header);
     })());
     col2.appendChild((() => {
@@ -343,12 +354,12 @@ async function onHashChange_genMarketTables() {
             }
         } catch {}
 
-        let header = document.createElement("div");
-        let img = header.appendChild(document.createElement("img"));
-        img.setAttribute("src", "img/hq.png");
-        img.setAttribute("class", "prefix-hq-icon");
-        let label = header.appendChild(document.createElement("h3"));
-        label.innerHTML = "HQ Purchase History";
+        let header = createElement("div");
+        header.appendChild(createElement("img", {
+            "src": "img/hq.png",
+            "class": "prefix-hq-icon",
+        }));
+        header.appendChild(createElement("h3", null, "HQ Purchase History"));
         return onHashChange_genMarketTables_helper0(table, header);
     })());
 
@@ -369,8 +380,7 @@ async function onHashChange_genMarketTables() {
             }
         } catch {}
 
-        let header = document.createElement("h3");
-        header.innerHTML = "NQ Prices";
+        let header = createElement("h3", null, "NQ Prices");
         return onHashChange_genMarketTables_helper0(table, header);
     })());
     col2.appendChild((() => {
@@ -388,8 +398,7 @@ async function onHashChange_genMarketTables() {
             }
         } catch {}
 
-        let header = document.createElement("h3");
-        header.innerHTML = "NQ Purchase History";
+        let header = createElement("h3", null, "NQ Purchase History");
         return onHashChange_genMarketTables_helper0(table, header);
     })());
 
@@ -426,7 +435,7 @@ async function onHashChange_genMarketTables() {
  * @return {Element} An element containing a table.
  */
 function onHashChange_genMarketTables_helper0(table, header) {
-    let container = document.createElement("div");
+    let container = createElement("div");
     let label = container.appendChild(header);
 
     let tableElement = makeTable(table, "market-data-table");
@@ -435,12 +444,10 @@ function onHashChange_genMarketTables_helper0(table, header) {
     for (let i = 0; i < table.length; i++) {
         let cell = tableElement.children[i].children[2];
         if (cell.innerHTML === "$hq") {
-            let img = document.createElement("img");
-            img.setAttribute("src", "img/hq.png");
-            img.setAttribute("style", `
-                height: 16px;
-                width: 16px;
-            `);
+            let img = createElement("img", {
+                "src": "img/hq.png",
+                "style": "height: 16px; width: 16px;",
+            });
             cell.innerHTML = "";
             cell.appendChild(img);
         }
@@ -465,39 +472,41 @@ function onHashChange_genMarketTables_helper1(header1, ppuHQ, ppuNQ, header2, tp
     if (tpHQ === 0) tpHQ = "N/A";
     if (tpNQ === 0) tpNQ = "N/A";
 
-    let container = document.createElement("div");
-    container.setAttribute("style", "text-align: center;");
+    let container = createElement("div", {
+        "style": "text-align: center;",
+    });
 
-    let col1 = container.appendChild(document.createElement("div"));
-    col1.setAttribute("class", "col1");
-    let label1 = col1.appendChild(document.createElement("h4"));
-    label1.innerHTML = header1;
+    let col1 = container.appendChild(createElement("div", {
+        "class": "col1",
+    }, createElement("h4", null, header1).outerHTML));
 
-    let label1_1 = col1.appendChild(document.createElement("h4"));
-    label1_1.setAttribute("class", "col1");
-    let img1_1 = label1_1.appendChild(document.createElement("img"));
-    img1_1.setAttribute("src", "img/hq.png");
-    img1_1.setAttribute("class", "prefix-hq-icon_alt");
+    let label1_1 = col1.appendChild(createElement("h4", {
+        "class": "col1",
+    }, createElement("img", {
+        "src": "img/hq.png",
+        "class": "prefix-hq-icon_alt",
+    }).outerHTML));
     label1_1.innerHTML += formatNumberWithCommas(ppuHQ);
-    let label1_2 = col1.appendChild(document.createElement("h4"));
-    label1_2.setAttribute("class", "col1");
-    label1_2.innerHTML = formatNumberWithCommas(ppuNQ);
 
+    let label1_2 = col1.appendChild(createElement("h4", {
+        "class": "col1",
+    }, formatNumberWithCommas(ppuNQ)));
 
-    let col2 = container.appendChild(document.createElement("div"));
-    col2.setAttribute("class", "col2");
-    let label2 = col2.appendChild(document.createElement("h4"));
-    label2.innerHTML = header2;
+    let col2 = container.appendChild(createElement("div", {
+        "class": "col2",
+    }, createElement("h4", null, header2).outerHTML));
 
-    let label2_1 = col2.appendChild(document.createElement("h4"));
-    label2_1.setAttribute("class", "col1");
-    let img2_1 = label2_1.appendChild(document.createElement("img"));
-    img2_1.setAttribute("src", "img/hq.png");
-    img2_1.setAttribute("class", "prefix-hq-icon_alt");
+    let label2_1 = col2.appendChild(createElement("h4", {
+        "class": "col1",
+    }, createElement("img", {
+        "src": "img/hq.png",
+        "class": "prefix-hq-icon_alt",
+    }).outerHTML));
     label2_1.innerHTML += formatNumberWithCommas(tpHQ);
-    let label2_2 = col2.appendChild(document.createElement("h4"));
-    label2_2.setAttribute("class", "col2");
-    label2_2.innerHTML = formatNumberWithCommas(tpNQ);
+
+    let label2_2 = col2.appendChild(createElement("h4", {
+        "class": "col2",
+    }, formatNumberWithCommas(tpNQ)));
 
     return container;
 }
@@ -524,14 +533,15 @@ function onHashChange_genMarketTables_helper2(table, i, listing, averagePricePer
         world === dataCenter ? listing.worldName : world,
         listing.hq === 1 ? "$hq" : "",
         (() => { // Materia
-            let materiaElements = document.createElement("div");
+            let materiaElements = createElement("div");
             for (let materia of listing.materia) {
                 let materiaName = materiaIDToItemName(materia);
                 let materiaGrade = romanNumerals.indexOf(materiaName.split(" ")[materiaName.split(" ").length - 1]);
 
-                let materiaElement = document.createElement("img");
-                materiaElement.setAttribute("src", `img/materia${materiaGrade}.png`);
-                materiaElement.setAttribute("title", materiaName);
+                let materiaElement = createElement("img", {
+                    "src": `img/materia${materiaGrade}.png`,
+                    "title": materiaName,
+                });
 
                 materiaElements.appendChild(materiaElement);
             }
@@ -582,9 +592,10 @@ function onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUn
  * @return {Element} An element of class infobox.
  */
 async function onHashChange_fetchItem() {
-    var itemInfo = document.createElement("div");
-    itemInfo.setAttribute("class", "infobox");
-    itemInfo.setAttribute("id", itemID);
+    var itemInfo = createElement("div", {
+        "class": "infobox",
+        "id": itemID,
+    });
 
     itemData = JSON.parse(await request(`https://www.garlandtools.org/db/doc/item/${lang}/3/${itemID}.json`));
 
@@ -599,29 +610,29 @@ async function onHashChange_fetchItem() {
     var stackSize = itemData.item.stackSize;
 
     // Create child elements
-    var container = document.createElement("div");
-    container.setAttribute("class", "info-header");
+    var container = createElement("div", {
+        "class": "info-header",
+    });
     itemInfo.appendChild(container);
 
-    var itemThumbnail = document.createElement("img"); // Image
-    itemThumbnail.setAttribute("class", "info-thumbnail");
-    itemThumbnail.setAttribute("src", icon);
+    var itemThumbnail = createElement("img", {
+        "class": "info-thumbnail",
+        "src": icon,
+    }); // Image
     container.appendChild(itemThumbnail);
 
-    var basicInfo = document.createElement("h1"); // Name
-    basicInfo.innerHTML = name;
+    var basicInfo = createElement("h1", null, name);
     container.appendChild(basicInfo);
 
-    var subInfo = document.createElement("h3"); // Extra data
-    subInfo.innerHTML = `iLvl ${ilvl} ${category} - Stack: ${stackSize}${equipLevel ? ` - Level ${equipLevel} ${jobs}` : ""}`;
+    var subInfo = createElement("h3", null,
+        `iLvl ${ilvl} ${category} - Stack: ${stackSize}${equipLevel ? ` - Level ${equipLevel} ${jobs}` : ""}`
+    );
     container.appendChild(subInfo);
 
-    itemInfo.appendChild(document.createElement("br"));
+    itemInfo.appendChild(createElement("br"));
 
     if (description) { // Description
-        var itemDescription = document.createElement("span");
-        itemDescription.innerHTML = description;
-        container.appendChild(itemDescription);
+        container.appendChild(createElement("span", null, description));
     }
 
     return itemInfo;

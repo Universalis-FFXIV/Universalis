@@ -9,6 +9,7 @@ const util    = require("util");
 const readFile = util.promisify(fs.readFile);
 
 const universalis = "http://localhost:3000";
+const debugKey = "PyrDFpV2mBCfOUtXFByRELx7SZbzxuEfrY6zTExX";
 
 const now = Date.now();
 const updateTimeout = 200; // The time allowed for the server to process data before the test checks the outcome
@@ -47,7 +48,7 @@ describe("The upload process:", function() {
 
                 let uploadData = clone(listingUpload);
 
-                request.post(`${universalis}/upload`, {
+                request.post(`${universalis}/upload/${debugKey}`, {
                     json: uploadData
                 }, (err, res) => {
                     if (err) throw err;
@@ -64,7 +65,7 @@ describe("The upload process:", function() {
             return new Promise(async (resolve, reject) => {
                 let uploadData = clone(listingUpload);
 
-                request.post(`${universalis}/upload`, {
+                request.post(`${universalis}/upload/${debugKey}`, {
                     json: uploadData
                 }, (err, res) => {
                     if (err) throw err;
@@ -91,7 +92,7 @@ describe("The upload process:", function() {
 
                 let uploadData1 = clone(listingUpload);
 
-                request.post(`${universalis}/upload`, {
+                request.post(`${universalis}/upload/${debugKey}`, {
                     json: uploadData1
                 }, (err, res) => {
                     if (err) throw err;
@@ -125,7 +126,7 @@ describe("The upload process:", function() {
 
                 let uploadData = clone(historyUpload);
 
-                request.post(`${universalis}/upload`, {
+                request.post(`${universalis}/upload/${debugKey}`, {
                     json: uploadData
                 }, (err, res) => {
                     if (err) throw err;
@@ -142,7 +143,7 @@ describe("The upload process:", function() {
             return new Promise(async (resolve, reject) => {
                 let uploadData = clone(historyUpload);
 
-                request.post(`${universalis}/upload`, {
+                request.post(`${universalis}/upload/${debugKey}`, {
                     json: uploadData
                 }, (err, res) => {
                     if (err) throw err;
@@ -162,7 +163,7 @@ describe("The upload process:", function() {
             return new Promise(async (resolve, reject) => {
                 let uploadData = clone(historyUpload);
 
-                request.post(`${universalis}/upload`, {
+                request.post(`${universalis}/upload/${debugKey}`, {
                     json: uploadData
                 }, (err, res) => {
                     if (err) throw err;
@@ -194,7 +195,7 @@ describe("The upload process:", function() {
 
                 let uploadData1 = clone(historyUpload);
 
-                request.post(`${universalis}/upload`, {
+                request.post(`${universalis}/upload/${debugKey}`, {
                     json: uploadData1
                 }, (err, res) => {
                     if (err) throw err;
@@ -223,7 +224,7 @@ describe("The upload process:", function() {
             return new Promise(async (resolve, reject) => {
                 let uploadData = clone(historyUpload);
 
-                request.post(`${universalis}/upload`, {
+                request.post(`${universalis}/upload/${debugKey}`, {
                     json: uploadData
                 }, (err, res) => {
                     if (err) throw err;
