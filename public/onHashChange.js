@@ -322,12 +322,16 @@ async function onHashChange_genMarketTables() {
         ];
 
         try {
+            let j = 0;
             for (let i = 0; i < marketBoardData.listings.length; i++) {
                 let listing = marketBoardData.listings[i];
 
-                if (listing.hq === 0) continue;
+                if (listing.hq === 0) {
+                    continue;
+                }
 
-                onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnitHQ);
+                onHashChange_genMarketTables_helper2(table, j, listing, averagePricePerUnitHQ);
+                j++;
             }
         } catch {}
 
@@ -345,12 +349,16 @@ async function onHashChange_genMarketTables() {
         ];
 
         try {
+            let j = 0;
             for (let i = 0; i < marketBoardData.recentHistory.length; i++) {
                 let entry = marketBoardData.recentHistory[i];
 
-                if (entry.hq === 0) continue;
+                if (entry.hq === 0) {
+                    continue;
+                }
 
-                onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUnitHQ);
+                onHashChange_genMarketTables_helper3(table, j, entry, averagePricePerUnitHQ);
+                j++;
             }
         } catch {}
 
@@ -371,12 +379,16 @@ async function onHashChange_genMarketTables() {
         ];
 
         try {
+            let j = 0;
             for (let i = 0; i < marketBoardData.listings.length; i++) {
                 let listing = marketBoardData.listings[i];
 
-                if (listing.hq === 1) continue;
+                if (listing.hq === 1) {
+                    continue;
+                }
 
-                onHashChange_genMarketTables_helper2(table, i, listing, averagePricePerUnitNQ);
+                onHashChange_genMarketTables_helper2(table, j, listing, averagePricePerUnitNQ);
+                j++;
             }
         } catch {}
 
@@ -389,12 +401,16 @@ async function onHashChange_genMarketTables() {
         ];
 
         try {
+            let j = 0;
             for (let i = 0; i < marketBoardData.recentHistory.length; i++) {
                 let entry = marketBoardData.recentHistory[i];
 
-                if (entry.hq === 1) continue;
+                if (entry.hq === 1) {
+                    continue;
+                }
 
-                onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUnitHQ);
+                onHashChange_genMarketTables_helper3(table, j, entry, averagePricePerUnitHQ);
+                j++;
             }
         } catch {}
 
@@ -530,7 +546,7 @@ function onHashChange_genMarketTables_helper2(table, i, listing, averagePricePer
 
     table.push([
         i + 1,
-        world === dataCenter ? listing.worldName : world,
+        listing.worldName ? listing.worldName : world,
         listing.hq === 1 ? "$hq" : "",
         (() => { // Materia
             let materiaElements = createElement("div");
@@ -552,7 +568,7 @@ function onHashChange_genMarketTables_helper2(table, i, listing, averagePricePer
         formatNumberWithCommas(listing.total),
         percentDifference + "%",
         listing.retainerName,
-        listing.creator ? listing.creator : "",
+        listing.creatorName ? listing.creatorName : "",
     ]);
 }
 
