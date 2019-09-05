@@ -1,15 +1,18 @@
 // Dependencies
+import Router from "@koa/router";
 import fs from "fs";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
-import Router from "koa-router";
 import serve from "koa-static";
 import views from "koa-views";
+import { MongoClient } from "mongodb";
 import path from "path";
+import sha from "sha.js";
 import util from "util";
 
+import script from "../scripts/createGarbageData.js";
 import remoteDataManager from "./remoteDataManager";
-
+script();
 // Load models
 import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
@@ -21,9 +24,11 @@ import { PriceTracker } from "./trackers/PriceTracker";
 
 const readFile = util.promisify(fs.readFile);
 
-// Define application and its internal resources
+// Define application and its resources
 const historyTracker = new HistoryTracker();
 const priceTracker = new PriceTracker();
+
+const db = MongoClient.connect(`mongodb://localhost:27017/`, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const universalis = new Koa();
 universalis.use(bodyParser({
@@ -85,12 +90,25 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     ctx.body = data;
 });
 
-router.post("/upload", async (ctx) => {
-    if (!ctx.is("json")) {
-        ctx.throw(415);
-        return;
+router.post("/upload/:apiKey", async (ctx) => {
+    if (!ctx.params.apiKey) {
+        return ctx.throw(401);
     }
 
+    if (!ctx.is("json")) {
+        return ctx.throw(415);
+    }
+
+    // Accept identity via API key.
+    const dbo = (await db).db("universalis");
+    const trustedSource = await dbo.collection("trustedSources").findOne({
+        apiKey: sha("sha512").update(ctx.params.apiKey).digest("hex")
+    });
+    if (!trustedSource) return ctx.throw(401);
+
+    const sourceName = trustedSource.sourceName;
+
+    // Data processing
     let marketBoardData: MarketBoardListingsUpload & MarketBoardSaleHistoryUpload = ctx.request.body;
 
     // You can't upload data for these worlds because you can't scrape it.

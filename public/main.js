@@ -60,13 +60,13 @@ var settingsBar = document.getElementById("settings-bar");
 function populateSettings() {
     settingsBar.addEventListener("change", assignDataCenter);
 
-    let dataCenterDropdown = settingsBar.appendChild(document.createElement("select"));
+    let dataCenterDropdown = settingsBar.appendChild(createElement("select"));
     dataCenterDropdown.id = "data-center-dropdown";
 
     for (let dc in worldList) {
         if (worldList.hasOwnProperty(dc)) {
             dataCenterDropdown.appendChild((() => {
-                let option = document.createElement("option");
+                let option = createElement("option");
                 option.setAttribute("value", dc);
                 option.innerText = dc;
                 return option;
@@ -175,29 +175,24 @@ async function search(query, callback) {
  */
 function addSearchResult(category, icon, id, ilvl, name) {
     // Template element
-    var clickable = document.createElement("a");
-    clickable.setAttribute("href", `/#/market/${id}`);
-    var searchResultEntry = document.createElement("div");
-    searchResultEntry.setAttribute("class", "infobox search-result");
-    clickable.appendChild(searchResultEntry);
+    let clickable = createElement("a", {
+        "href": `/#/market/${id}`,
+    });
 
-    // Element properties
-    var inlineField = document.createElement("p"); // Create inline field
-    searchResultEntry.appendChild(inlineField);
+    let inlineField = clickable.appendChild(createElement("div", {
+        "class": "infobox search-result",
+    }, createElement("p").outerHTML));
 
-    var iconField = document.createElement("img"); // Icon first
-    iconField.setAttribute("class", "search-result-icon");
-    iconField.setAttribute("src", icon);
-    inlineField.appendChild(iconField);
+    inlineField.appendChild(createElement("img", {
+        "class": "search-result-icon",
+        "src": icon,
+    }));
 
-    var nameField = document.createElement("span"); // Name second
-    nameField.innerHTML = name;
-    inlineField.appendChild(nameField);
+    inlineField.appendChild(createElement("span", null, name));
 
-    var subtextField = document.createElement("p"); // iLvl/category third, new line
-    subtextField.setAttribute("class", "subtext");
-    subtextField.innerHTML = `iLvl ${ilvl} ${category}`;
-    inlineField.appendChild(subtextField);
+    inlineField.appendChild(createElement("p", {
+        "class": "subtext",
+    }, `iLvl ${ilvl} ${category}`));
 
     // Add element to DOM
     searchResultArea.appendChild(clickable);
@@ -248,7 +243,7 @@ async function onHashChange() {
     }
 
     // Graph
-    var graphContainer = document.createElement("div");
+    var graphContainer = createElement("div");
     graphContainer.setAttribute("class", "infobox graph");
     infoArea.insertBefore(graphContainer, creditBox); // Needs to be inserted earlier for width
     onHashChange_drawGraph(graphContainer);

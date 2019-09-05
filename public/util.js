@@ -1,4 +1,30 @@
 /**
+ * Create an element with the specified properties.
+ *
+ * @param {string} tagName
+ * @param {Object} attributes An object keyed with attribute names and valued with attribute values.
+ * @param {string} innerValue The text within the tag.
+ * @return {Element}
+ */
+function createElement(tagName, attributes, innerValue = undefined) {
+    let element = document.createElement(tagName);
+
+    if (attributes) {
+        for (let attr in attributes) {
+            if (attributes.hasOwnProperty(attr)) {
+                element.setAttribute(attr, attributes[attr]);
+            }
+        }
+    }
+
+    if (innerValue) {
+        element.innerHTML = innerValue;
+    }
+
+    return element;
+}
+
+/**
  * Generate a table.
  *
  * @param {Object[]} dataArray - A 2D data array with headers in the first row
@@ -6,18 +32,18 @@
  * @return {Element} A table.
  */
 function makeTable(dataArray, _class) {
-    let table = document.createElement("table");
+    let table = createElement("table");
     if (_class) table.setAttribute("class", _class);
 
     for (let i = 0; i < dataArray.length; i++) {
-        let row = table.appendChild(document.createElement("tr"));
+        let row = table.appendChild(createElement("tr"));
         for (let j = 0; j < dataArray[0].length; j++) {
             let cell;
             if (i === 0) {
-                cell = row.appendChild(document.createElement("th"));
+                cell = row.appendChild(createElement("th"));
                 cell.innerHTML = dataArray[0][j];
             } else {
-                cell = row.appendChild(document.createElement("td"));
+                cell = row.appendChild(createElement("td"));
                 cell.innerHTML = dataArray[i][j];
             }
         }
