@@ -1,5 +1,6 @@
 var lang = "en";
-var dataCenter;
+let dataCenterCookie = getCookie("dataCenter");
+var dataCenter = dataCenterCookie ? dataCenterCookie : "Aether";
 var world = "";
 var itemID;
 

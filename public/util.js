@@ -189,3 +189,16 @@ function formatNumberWithCommas(x) {
 
     return output;
 }
+
+/**
+ * Get the value of a cookie.
+ *
+ * @param {string} cookieName
+ * @return {string} The value.
+ */
+function getCookie(cookieName) {
+    const cookies = document.cookie.split(";");
+    const cookie = cookies.find((c) => c.indexOf(cookieName) !== -1);
+    if (!cookie) return;
+    return cookie.substr(cookie.indexOf("=") + 1);
+}

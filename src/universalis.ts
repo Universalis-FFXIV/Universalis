@@ -10,9 +10,8 @@ import path from "path";
 import sha from "sha.js";
 import util from "util";
 
-import script from "../scripts/createGarbageData.js";
 import remoteDataManager from "./remoteDataManager";
-script();
+
 // Load models
 import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
