@@ -7,7 +7,7 @@
     let dataFile;
     try {
         dataFile = JSON.parse(await request("json/data.json"));
-    } catch { // Second failsafe, in case the user connects before the file is downloaded and it doesn't already exist (edge case)
+    } catch (err) { // Second failsafe, in case the user connects before the file is downloaded and it doesn't already exist (edge case)
         dataFile = JSON.parse(await request(`https://www.garlandtools.org/db/doc/core/en/3/data.json`)); // All language options are English for this file (for some reason), so it doesn't matter
     }
 
@@ -24,7 +24,7 @@
 (async function() {
     try {
         worldList = JSON.parse(await request("json/dc.json"));
-    } catch {
+    } catch (err) {
         worldList = JSON.parse(await request("https://xivapi.com/servers/dc"));
     }
     initDone();
@@ -35,7 +35,7 @@
     let dataFile;
     try {
         dataFile = await request("csv/World.csv");
-    } catch {
+    } catch (err) {
         dataFile = await request("https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/World.csv");
     }
 
@@ -58,21 +58,23 @@ var settingsBar = document.getElementById("settings-bar");
  * Fill the settings bar. This is contingent on dc.json, so it's called after initialization.
  */
 function populateSettings() {
-    settingsBar.addEventListener("change", assignDataCenter);
-
     let dataCenterDropdown = settingsBar.appendChild(createElement("select"));
+    let dcArray = [];
     dataCenterDropdown.id = "data-center-dropdown";
 
     for (let dc in worldList) {
         if (worldList.hasOwnProperty(dc)) {
+            dcArray.push(dc);
             dataCenterDropdown.appendChild((() => {
-                let option = createElement("option");
-                option.setAttribute("value", dc);
-                option.innerText = dc;
-                return option;
+                return createElement("option", {
+                    "value": dc,
+                }, dc);
             })());
         }
     }
+
+    if (dataCenter) dataCenterDropdown.selectedIndex = dcArray.indexOf(dataCenter);
+    settingsBar.addEventListener("change", assignDataCenter);
 }
 
 /**
@@ -82,7 +84,8 @@ function assignDataCenter() {
     const newDataCenter = document.getElementById("data-center-dropdown").value;
 
     dataCenter = newDataCenter;
-    location.hash = location.hash.substr(0, location.hash.indexOf("=") + 1) + newDataCenter;
+    document.cookie = `dataCenter=${dataCenter}`;
+    if (location.hash) location.hash = location.hash.substr(0, location.hash.indexOf("=") + 1) + newDataCenter;
 }
 
 /**
@@ -134,8 +137,9 @@ async function search(query, callback) {
     var searchResults;
 
     try { // Best, filters out irrelevant items
-        searchResults = JSON.parse(await request(`https://xivapi.com/search?string=${query}&string_algo=wildcard_plus&indexes=item&filters=ItemSearchCategory.ID%3E8&columns=ID,IconID,ItemSearchCategory.Name_${lang},LevelItem,Name_${lang}`)).Results; // Will throw an error if ES is down
-    } catch { // Functional, doesn't filter out MB-restricted items such as raid drops
+        if (query) searchResults = JSON.parse(await request(`https://xivapi.com/search?string=${query}&string_algo=wildcard_plus&indexes=item&filters=ItemSearchCategory.ID%3E8&columns=ID,IconID,ItemSearchCategory.Name_${lang},LevelItem,Name_${lang}`)).Results; // Will throw an error if ES is down
+        else searchResults = JSON.parse(await request(`/json/search_${lang}.json`)).Results;
+    } catch (err) { // Functional, doesn't filter out MB-restricted items such as raid drops
         // TODO: Notification that ES is down
         searchResults = JSON.parse(await request(`https://www.garlandtools.org/api/search.php?text=${query}&lang=${lang}&type=item`));
         searchResults.map((el) => {
@@ -176,7 +180,7 @@ async function search(query, callback) {
 function addSearchResult(category, icon, id, ilvl, name) {
     // Template element
     let clickable = createElement("a", {
-        "href": `/#/market/${id}`,
+        "href": `/#/market/${id}?world=Cross-World`,
     });
 
     let inlineField = clickable.appendChild(createElement("div", {
@@ -266,7 +270,7 @@ function initDone() {
         dataCenter = (() => {
             let path = window.location.href;
             world = path.substr(path.lastIndexOf("=") + 1);
-            if (!worldList[world]) return "Aether";
+            if (!worldList[world]) return dataCenter;
             return world;
         })();
 

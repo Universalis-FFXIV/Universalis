@@ -80,7 +80,7 @@ mono_crash.*
 build/
 jsx/
 public/css/
-public/js/react/
+public/*.min.js
 
 # Market data
 data/
