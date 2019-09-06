@@ -17,6 +17,18 @@ const urlDictionary = {
     "World.csv": "https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/World.csv",
     "data.json": "https://www.garlandtools.org/db/doc/core/en/3/data.json",
     "dc.json": "https://xivapi.com/servers/dc",
+    "search_de.json": "https://xivapi.com/search?string=" +
+                      "&string_algo=wildcard_plus&indexes=item&filters=ItemSearchCategory.ID%3E8" +
+                      "&columns=ID,IconID,ItemSearchCategory.Name_de,LevelItem,Name_de",
+    "search_en.json": "https://xivapi.com/search?string=" +
+                      "&string_algo=wildcard_plus&indexes=item&filters=ItemSearchCategory.ID%3E8" +
+                      "&columns=ID,IconID,ItemSearchCategory.Name_en,LevelItem,Name_en",
+    "search_fr.json": "https://xivapi.com/search?string=" +
+                      "&string_algo=wildcard_plus&indexes=item&filters=ItemSearchCategory.ID%3E8" +
+                      "&columns=ID,IconID,ItemSearchCategory.Name_fr,LevelItem,Name_fr",
+    "search_jp.json": "https://xivapi.com/search?string=" +
+                      "&string_algo=wildcard_plus&indexes=item&filters=ItemSearchCategory.ID%3E8" +
+                      "&columns=ID,IconID,ItemSearchCategory.Name_jp,LevelItem,Name_jp",
 };
 
 for (let ext of exts) {

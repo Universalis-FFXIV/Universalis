@@ -137,7 +137,8 @@ async function search(query, callback) {
     var searchResults;
 
     try { // Best, filters out irrelevant items
-        searchResults = JSON.parse(await request(`https://xivapi.com/search?string=${query}&string_algo=wildcard_plus&indexes=item&filters=ItemSearchCategory.ID%3E8&columns=ID,IconID,ItemSearchCategory.Name_${lang},LevelItem,Name_${lang}`)).Results; // Will throw an error if ES is down
+        if (query) searchResults = JSON.parse(await request(`https://xivapi.com/search?string=${query}&string_algo=wildcard_plus&indexes=item&filters=ItemSearchCategory.ID%3E8&columns=ID,IconID,ItemSearchCategory.Name_${lang},LevelItem,Name_${lang}`)).Results; // Will throw an error if ES is down
+        else searchResults = JSON.parse(await request(`/json/search_${lang}.json`)).Results;
     } catch (err) { // Functional, doesn't filter out MB-restricted items such as raid drops
         // TODO: Notification that ES is down
         searchResults = JSON.parse(await request(`https://www.garlandtools.org/api/search.php?text=${query}&lang=${lang}&type=item`));
