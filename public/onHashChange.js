@@ -46,7 +46,7 @@ async function onHashChange_drawGraph(graphContainer) {
     let historyData = await request(`api/history/${worldID}/${itemID}`);
     try {
         historyData = JSON.parse(historyData);
-    } catch {
+    } catch (err) {
         let errorElement = createElement("div", {
             "class": "infobox",
         });
@@ -149,7 +149,7 @@ async function onHashChange_genCheapest() {
     let marketData = await request(`api/${worldID}/${itemID}`);
     try {
         marketData = JSON.parse(marketData);
-    } catch {
+    } catch (err) {
         let errorElement = createElement("div", {
             "class": "infobox",
         });
@@ -220,7 +220,7 @@ async function onHashChange_genMarketTables() {
     let marketBoardData;
     try {
         marketBoardData = await getMarketData(worldID, itemID);
-    } catch {
+    } catch (err) {
         return createElement("div", {
             "class": "infobox",
         }, createElement("h3", {
@@ -275,7 +275,7 @@ async function onHashChange_genMarketTables() {
                 return listing.total;
             })
         );
-    } catch {
+    } catch (err) {
         averagePricePerUnitHQ = 0;
         averageTotalPriceHQ = 0;
         averagePricePerUnitNQ = 0;
@@ -307,7 +307,7 @@ async function onHashChange_genMarketTables() {
                 return entry.total;
             })
         );
-    } catch {
+    } catch (err) {
         averagePurchasedPricePerUnitHQ = 0;
         averageTotalPurchasedPriceHQ = 0;
         averagePurchasedPricePerUnitNQ = 0;
@@ -333,7 +333,7 @@ async function onHashChange_genMarketTables() {
                 onHashChange_genMarketTables_helper2(table, j, listing, averagePricePerUnitHQ);
                 j++;
             }
-        } catch {}
+        } catch (err) {}
 
         let header = createElement("div");
         header.appendChild(createElement("img", {
@@ -360,7 +360,7 @@ async function onHashChange_genMarketTables() {
                 onHashChange_genMarketTables_helper3(table, j, entry, averagePricePerUnitHQ);
                 j++;
             }
-        } catch {}
+        } catch (err) {}
 
         let header = createElement("div");
         header.appendChild(createElement("img", {
@@ -390,7 +390,7 @@ async function onHashChange_genMarketTables() {
                 onHashChange_genMarketTables_helper2(table, j, listing, averagePricePerUnitNQ);
                 j++;
             }
-        } catch {}
+        } catch (err) {}
 
         let header = createElement("h3", null, "NQ Prices");
         return onHashChange_genMarketTables_helper0(table, header);
@@ -412,7 +412,7 @@ async function onHashChange_genMarketTables() {
                 onHashChange_genMarketTables_helper3(table, j, entry, averagePricePerUnitHQ);
                 j++;
             }
-        } catch {}
+        } catch (err) {}
 
         let header = createElement("h3", null, "NQ Purchase History");
         return onHashChange_genMarketTables_helper0(table, header);

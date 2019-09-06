@@ -45,8 +45,7 @@ if (!fs.existsSync(path.join(__dirname, "./branches"))) {
 // Logger TODO
 universalis.use(async (ctx, next) => {
     await next();
-    const rt = ctx.response.get("X-Response-Time");
-    console.log(`${ctx.method} ${ctx.url} - ${rt}`);
+    console.log(`${ctx.method} ${ctx.url}`);
 });
 
 // Set up renderer
@@ -118,12 +117,34 @@ router.post("/upload/:apiKey", async (ctx) => {
     // TODO sanitation
     let dataArray: MarketBoardItemListing[] & MarketBoardHistoryEntry[] = [];
     if (marketBoardData.listings) {
+        marketBoardData.listings.map((listing) => {
+            return {
+                creatorName: listing.creatorName ? listing.creatorName : undefined,
+                hq: listing.hq,
+                materia: listing.materia ? listing.materia : undefined,
+                pricePerUnit: listing.pricePerUnit,
+                quantity: listing.quantity,
+                retainerCity: listing.retainerCity,
+                retainerName: listing.retainerName
+            };
+        });
+
         for (let listing of marketBoardData.listings) {
             listing.total = listing.pricePerUnit * listing.quantity;
             dataArray.push(listing);
         }
         priceTracker.set(marketBoardData.itemID, marketBoardData.worldID, dataArray as MarketBoardItemListing[]);
     } else if (marketBoardData.entries) {
+        marketBoardData.entries.map((entry) => {
+            return {
+                buyerName: entry.buyerName,
+                hq: entry.hq,
+                pricePerUnit: entry.pricePerUnit,
+                quantity: entry.quantity,
+                timestamp: entry.timestamp
+            };
+        });
+
         for (let entry of marketBoardData.entries) {
             entry.total = entry.pricePerUnit * entry.quantity;
             dataArray.push(entry);
