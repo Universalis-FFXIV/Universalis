@@ -9,6 +9,10 @@ import sha from "sha.js";
 
 import remoteDataManager from "./remoteDataManager";
 
+// Scripts
+import createGarbageData from "../scripts/createGarbageData";
+createGarbageData();
+
 // Load models
 import { Collection } from "mongodb";
 
@@ -102,6 +106,8 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 });
 
 router.get("/api/history/:world/:item", async (ctx) => { // Extended history
+    await init;
+
     let query = { itemID: parseInt(ctx.params.item) };
     if (!parseInt(ctx.params.world)) {
         query["dcName"] = ctx.params.world;
