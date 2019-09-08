@@ -141,7 +141,8 @@ async function generateListingData(nameObject = undefined, lastPrice) {
         })(),
         creatorName: makeid(10) + " " + makeid(10),
         sellerID: Math.floor((Math.random() + 1) * 9999999999),
-        creatorID: Math.floor((Math.random() + 1) * 9999999999)
+        creatorID: Math.floor((Math.random() + 1) * 9999999999),
+        dyeID: Math.floor(Math.random() * 30)
     };
     returnable["total"] = returnable.pricePerUnit * returnable.quantity;
     if (nameObject && dcList[nameObject.value]) {

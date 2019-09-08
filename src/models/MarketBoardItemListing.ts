@@ -10,4 +10,8 @@ export interface MarketBoardItemListing {
     onMannequin?: boolean;
     sellerID: number;
     creatorID?: number;
+    lastReviewTime: number;
+    dyeID?: number;
+    uploaderID?: string;
+    // todo tax
 }

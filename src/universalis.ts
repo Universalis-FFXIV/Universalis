@@ -156,19 +156,22 @@ router.post("/upload/:apiKey", async (ctx) => {
     if (marketBoardData.worldID <= 16 || marketBoardData.worldID >= 100) return ctx.throw(415);
 
     // TODO sanitation
-    let dataArray: MarketBoardItemListing[] & MarketBoardHistoryEntry[] = [];
     if (marketBoardData.listings) {
+        let dataArray: MarketBoardItemListing[] = [];
         marketBoardData.listings.map((listing) => {
             return {
                 creatorID: listing.creatorID,
                 creatorName: listing.creatorName,
                 hq: listing.hq,
+                lastReviewTime: listing.lastReviewTime,
                 materia: listing.materia ? listing.materia : [],
                 pricePerUnit: listing.pricePerUnit,
                 quantity: listing.quantity,
                 retainerCity: listing.retainerCity,
                 retainerName: listing.retainerName,
-                sellerID: listing.sellerID
+                sellerID: listing.sellerID,
+                dyeID: listing.dyeID,
+                uploaderID: sha("sha512").update(listing.uploaderID).digest("hex")
             };
         });
 
@@ -177,12 +180,15 @@ router.post("/upload/:apiKey", async (ctx) => {
             dataArray.push(listing);
         }
 
-        priceTracker.set(
+        await priceTracker.set(
             marketBoardData.itemID,
             marketBoardData.worldID,
             dataArray as MarketBoardItemListing[]
         );
-    } else if (marketBoardData.entries) {
+    }
+
+    if (marketBoardData.entries) {
+        let dataArray: MarketBoardHistoryEntry[] = [];
         marketBoardData.entries.map((entry) => {
             return {
                 buyerID: entry.buyerID,
@@ -191,7 +197,7 @@ router.post("/upload/:apiKey", async (ctx) => {
                 pricePerUnit: entry.pricePerUnit,
                 quantity: entry.quantity,
                 sellerID: entry.sellerID,
-                timestamp: entry.timestamp,
+                timestamp: entry.timestamp
             };
         });
 
@@ -200,14 +206,13 @@ router.post("/upload/:apiKey", async (ctx) => {
             dataArray.push(entry);
         }
 
-        historyTracker.set(
+        await historyTracker.set(
             marketBoardData.itemID,
             marketBoardData.worldID,
             dataArray as MarketBoardHistoryEntry[]
         );
-    } else {
-        ctx.throw(418);
     }
+    if (!marketBoardData.listings && !marketBoardData.entries) ctx.throw(418);
 });
 
 universalis.use(router.routes());

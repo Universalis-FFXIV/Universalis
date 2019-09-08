@@ -23,6 +23,8 @@ Listings upload format (JSON):
         creatorName?: string;
         sellerID: number;
         creatorID?: number;
+        lastReviewTime: number;
+        dyeID: number;
     }];
 }
 ```
