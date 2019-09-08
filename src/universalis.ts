@@ -9,8 +9,6 @@ import sha from "sha.js";
 
 import remoteDataManager from "./remoteDataManager";
 
-import script from "../scripts/createGarbageData"; script();
-
 // Load models
 import { Collection } from "mongodb";
 
