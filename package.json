@@ -5,6 +5,7 @@
   "main": "build/universalis.js",
   "scripts": {
     "build": "tsc --build && lessc ./less/styles.less ./public/css/styles.css && npm run build:minify",
+    "build:node-only": "tsc --build",
     "build:minify": "npm run build:minify:1 && npm run build:minify:2 && npm run build:minify:3 && npm run build:minify:4 && npm run build:minify:5 && npm run build:minify:css",
     "build:minify:1": "node-minify --compressor uglify-es --input ./public/globals.js --output ./public/globals.min.js",
     "build:minify:2": "node-minify --compressor uglify-es --input ./public/idConversions.js --output ./public/idConversions.min.js",
@@ -15,7 +16,7 @@
     "start": "node .",
     "start-dev": "tslint ./src/**/*.ts && eslint ./public/**/*.js && npm run build && npm start",
     "test": "mocha",
-    "update": "git pull && npm run build"
+    "update": "git pull && npm install && npm run build"
   },
   "author": "karashiiro",
   "license": "MIT",

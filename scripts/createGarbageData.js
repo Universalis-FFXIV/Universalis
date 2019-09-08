@@ -1,22 +1,19 @@
-const fs = require("fs");
-const path = require("path");
+const { MongoClient } = require("mongodb");
 const request = require("request-promise");
-const util = require("util");
 
 const remoteDataManager = require("../build/remoteDataManager.js");
 
-const exists = util.promisify(fs.exists);
-const mkdir = util.promisify(fs.mkdir);
-const writeFile = util.promisify(fs.writeFile);
+const db = MongoClient.connect(`mongodb://localhost:27017/`, { useNewUrlParser: true, useUnifiedTopology: true });
 
 var dcList;
 
 module.exports = async () => {
     // Setup
-    console.log("Downloading data...");
-    const extendedHistoryFolder = path.join(__dirname, "../history");
-    const listingFolder = path.join(__dirname, "../data");
+    const universalisDB = (await db).db("universalis");
+    const recentData = universalisDB.collection("recentData");
+    const extendedHistory = universalisDB.collection("extendedHistory");
 
+    console.log("Downloading data...");
     let itemTable = [];
     const dataFile = await request("https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/Item.csv");
 
@@ -44,48 +41,42 @@ module.exports = async () => {
     }
 
     // Define functions to create folders
-    async function createAllFoldersAndData(folderPath) {
+    async function createAllFoldersAndData() {
+        let promises = [];
         worldMap.forEach(async (value, key, map) => {
-            let worldDirPath = path.join(folderPath, value);
-            if (!await exists(worldDirPath)) await mkdir(worldDirPath);
-            for (let item of itemTable) {
-                if (!parseInt(item[0])) continue;
-                let itemDirPath = path.join(worldDirPath, item[0]);
-                if (!await exists(itemDirPath)) await mkdir(itemDirPath);
-                let dataFilePath = path.join(itemDirPath, "0.json");
-                await writeFile(dataFilePath,
-                    JSON.stringify(await generateData({
+            promises.push((async () => {
+                for (item of itemTable) {
+                    const contents = await generateData({
                         propertyName: typeof value === 'number' ? "worldID" : "dcName",
                         value: key
-                    }, item[0]))
-                );
-            }
+                    }, item[0]);
+                    await recentData.insertOne(contents);
+                }
+            })());
         });
+        await Promise.all(promises);
     }
 
-    async function createAllFoldersAndExtendedData(folderPath) {
+    async function createAllFoldersAndExtendedData() {
+        let promises = [];
         worldMap.forEach(async (value, key, map) => {
-            let worldDirPath = path.join(folderPath, value);
-            if (!await exists(worldDirPath)) await mkdir(worldDirPath);
-            for (let item of itemTable) {
-                if (!parseInt(item[0])) continue;
-                let itemDirPath = path.join(worldDirPath, item[0]);
-                if (!await exists(itemDirPath)) await mkdir(itemDirPath);
-                let dataFilePath = path.join(itemDirPath, "0.json");
-                await writeFile(dataFilePath,
-                    JSON.stringify(await generateExtendedData({
+            promises.push((async () => {
+                for (let item of itemTable) {
+                    const contents = await generateExtendedData({
                         propertyName: typeof value === 'number' ? "worldID" : "dcName",
                         value: key
-                    }, item[0]))
-                );
-            }
+                    }, item[0]);
+                    await extendedHistory.insertOne(contents);
+                }
+            })());
         });
+        await Promise.all(promises);
     }
 
     console.log("Generating data...");
     let promises = [];
-    promises.push(createAllFoldersAndExtendedData(extendedHistoryFolder));
-    promises.push(createAllFoldersAndData(listingFolder));
+    promises.push(createAllFoldersAndExtendedData());
+    promises.push(createAllFoldersAndData());
     await Promise.all(promises);
     console.log("Done.");
 };
@@ -148,7 +139,10 @@ async function generateListingData(nameObject = undefined, lastPrice) {
                 default: return undefined;
             }
         })(),
-        creatorName: makeid(10) + " " + makeid(10)
+        creatorName: makeid(10) + " " + makeid(10),
+        sellerID: Math.floor((Math.random() + 1) * 9999999999),
+        creatorID: Math.floor((Math.random() + 1) * 9999999999),
+        dyeID: Math.floor(Math.random() * 30)
     };
     returnable["total"] = returnable.pricePerUnit * returnable.quantity;
     if (nameObject && dcList[nameObject.value]) {
@@ -165,7 +159,9 @@ async function generateHistoryData(nameObject = undefined) {
         pricePerUnit: generatePrice(),
         quantity: Math.floor(Math.random() * 9) + 1,
         buyerName: makeid(10) + " " + makeid(10),
-        timestamp: 1562090093 + Math.floor(Math.random() * (1567704760 - 1562090093))
+        timestamp: 1562090093 + Math.floor(Math.random() * (1567704760 - 1562090093)),
+        sellerID: Math.floor((Math.random() + 1) * 9999999999),
+        buyerID: Math.floor((Math.random() + 1) * 9999999999)
     };
     returnable["total"] = returnable.pricePerUnit * returnable.quantity;
     if (nameObject && dcList[nameObject.value]) {

@@ -21,6 +21,10 @@ Listings upload format (JSON):
         retainerName: string;
         retainerCity: string;
         creatorName?: string;
+        sellerID: number;
+        creatorID?: number;
+        lastReviewTime: number;
+        dyeID: number;
     }];
 }
 ```
@@ -37,6 +41,8 @@ History upload format (JSON):
         quantity: number;
         buyerName: string;
         timestamp: number;
+        buyerID: number;
+        sellerID: number;
     }];
 }
 ```

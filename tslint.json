@@ -11,6 +11,7 @@
         "no-console": {
             "severity": "warning"
         },
+        "no-string-literal": [ false ],
         "no-var-keyword": [ false ],
         "prefer-const": [ false ],
         "radix": [ false ],

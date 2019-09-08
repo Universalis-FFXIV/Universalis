@@ -7,4 +7,11 @@ export interface MarketBoardItemListing {
     retainerName: string;
     retainerCity: string;
     creatorName?: string;
+    onMannequin?: boolean;
+    sellerID: number;
+    creatorID?: number;
+    lastReviewTime: number;
+    dyeID?: number;
+    uploaderID?: string;
+    // todo tax
 }
