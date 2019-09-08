@@ -1,14 +1,11 @@
 // Dependencies
 import Router from "@koa/router";
-import fs from "fs";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import serve from "koa-static";
 import views from "koa-views";
 import { MongoClient } from "mongodb";
-import path from "path";
 import sha from "sha.js";
-import util from "util";
 
 import remoteDataManager from "./remoteDataManager";
 
@@ -21,26 +18,30 @@ import { MarketBoardSaleHistoryUpload } from "./models/MarketBoardSaleHistoryUpl
 import { HistoryTracker } from "./trackers/HistoryTracker";
 import { PriceTracker } from "./trackers/PriceTracker";
 
-const readFile = util.promisify(fs.readFile);
-
 // Define application and its resources
-const historyTracker = new HistoryTracker();
-const priceTracker = new PriceTracker();
-
 const db = MongoClient.connect(`mongodb://localhost:27017/`, { useNewUrlParser: true, useUnifiedTopology: true });
+
+var historyTracker: HistoryTracker;
+var priceTracker: PriceTracker;
+const trackerInit = (async () => {
+    const universalisDB = (await db).db("universalis");
+
+    historyTracker = new HistoryTracker(
+        universalisDB.collection("recentData"),
+        universalisDB.collection("extendedHistory")
+    );
+    priceTracker = new PriceTracker(
+        universalisDB.collection("recentData")
+    );
+})();
 
 const universalis = new Koa();
 universalis.use(bodyParser({
     enableTypes: ["json"],
-    jsonLimit: "500kb"
+    jsonLimit: "1mb"
 }));
 
 remoteDataManager.fetchAll(); // Fetch remote files asynchronously
-
-// Create directories
-if (!fs.existsSync(path.join(__dirname, "./branches"))) {
-    fs.mkdirSync(path.join(__dirname, "./branches"));
-}
 
 // Logger TODO
 universalis.use(async (ctx, next) => {
@@ -67,24 +68,42 @@ router.get("/", async (ctx) => {
 });
 
 router.get("/api/:world/:item", async (ctx) => { // Normal data
-    let data = JSON.parse((await readFile(
-        path.join(__dirname, "../data", ctx.params.world, ctx.params.item, "0.json")
-    )).toString()); // Files are buffers
+    const collection = (await db).db("universalis").collection("recentData");
+
+    let query = { itemID: parseInt(ctx.params.item) };
+    if (typeof ctx.params.world === "string") {
+        query["dcName"] = ctx.params.world;
+    } else {
+        query["worldID"] = ctx.params.world;
+    }
+
+    let data = await collection.findOne(query);
+
     if (!data) {
         ctx.throw(404);
         return;
     }
+
     ctx.body = data;
 });
 
 router.get("/api/history/:world/:item", async (ctx) => { // Extended history
-    let data = JSON.parse((await readFile(
-        path.join(__dirname, "../history", ctx.params.world, ctx.params.item, "0.json")
-    )).toString());
+    const collection = (await db).db("universalis").collection("extendedHistory");
+
+    let query = { itemID: parseInt(ctx.params.item) };
+    if (typeof ctx.params.world === "string") {
+        query["dcName"] = ctx.params.world;
+    } else {
+        query["worldID"] = ctx.params.world;
+    }
+
+    let data = await collection.findOne(query);
+
     if (!data) {
         ctx.throw(404);
         return;
     }
+
     ctx.body = data;
 });
 
@@ -96,6 +115,8 @@ router.post("/upload/:apiKey", async (ctx) => {
     if (!ctx.is("json")) {
         return ctx.throw(415);
     }
+
+    await trackerInit;
 
     // Accept identity via API key.
     const dbo = (await db).db("universalis");
@@ -133,7 +154,12 @@ router.post("/upload/:apiKey", async (ctx) => {
             listing.total = listing.pricePerUnit * listing.quantity;
             dataArray.push(listing);
         }
-        priceTracker.set(marketBoardData.itemID, marketBoardData.worldID, dataArray as MarketBoardItemListing[]);
+
+        priceTracker.set(
+            marketBoardData.itemID,
+            marketBoardData.worldID,
+            dataArray as MarketBoardItemListing[]
+        );
     } else if (marketBoardData.entries) {
         marketBoardData.entries.map((entry) => {
             return {
@@ -149,7 +175,12 @@ router.post("/upload/:apiKey", async (ctx) => {
             entry.total = entry.pricePerUnit * entry.quantity;
             dataArray.push(entry);
         }
-        historyTracker.set(marketBoardData.itemID, marketBoardData.worldID, dataArray as MarketBoardHistoryEntry[]);
+
+        historyTracker.set(
+            marketBoardData.itemID,
+            marketBoardData.worldID,
+            dataArray as MarketBoardHistoryEntry[]
+        );
     } else {
         ctx.throw(418);
     }

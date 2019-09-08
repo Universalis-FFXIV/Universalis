@@ -15,7 +15,7 @@
     "start": "node .",
     "start-dev": "tslint ./src/**/*.ts && eslint ./public/**/*.js && npm run build && npm start",
     "test": "mocha",
-    "update": "git pull && npm run build"
+    "update": "git pull && npm install && npm run build"
   },
   "author": "karashiiro",
   "license": "MIT",

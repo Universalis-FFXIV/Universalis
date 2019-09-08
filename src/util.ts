@@ -1,24 +1,10 @@
-import fs from "fs";
-import util from "util";
-
 import remoteDataManager from "./remoteDataManager";
-
-const exists = util.promisify(fs.exists);
-const mkdir = util.promisify(fs.mkdir);
-
-export async function ensurePathsExist(...dirPaths: string[]) {
-    for (let dirPath of dirPaths) {
-        if (!await exists(dirPath)) {
-            await mkdir(dirPath);
-        }
-    }
-}
 
 export async function getWorldDC(world: string) {
     const dataCenterWorlds = JSON.parse((await remoteDataManager.fetchFile("dc.json")).toString());
     for (let dc in dataCenterWorlds) {
         if (dataCenterWorlds.hasOwnProperty(dc)) {
-            let foundWorld = dataCenterWorlds[dc].find((el) => el === world);
+            let foundWorld = dataCenterWorlds[dc].find((el: string) => el === world);
             if (foundWorld) return dc;
         }
     }
@@ -27,7 +13,7 @@ export async function getWorldDC(world: string) {
 
 export async function getWorldName(worldID: number) {
     const worldCSV = (await remoteDataManager.parseCSV("World.csv")).slice(3);
-    const world = worldCSV.find((line) => line[0] === String(worldID))[1];
+    const world = worldCSV.find((line: string[]) => line[0] === String(worldID))[1];
     return world;
 }
 
@@ -61,4 +47,31 @@ export function levenshtein(input: string, test: string) {
     }
 
     return matrix[test.length][input.length]; // The total cost is described in the last element of the matrix
+}
+
+export function stringifyContentIDs(jsonString: string) {
+    const parameters = ["sellerID", "buyerID", "creatorID"];
+
+    parameters.forEach((parameter) => {
+        let paramIndex = jsonString.indexOf(parameter);
+
+        if (paramIndex === -1) return;
+
+        paramIndex += parameter.length + 2;
+        while (jsonString.charAt(paramIndex) === " ") paramIndex++;
+
+        let endIndex = jsonString.substr(paramIndex).indexOf(",");
+        if (endIndex === -1) {
+            endIndex = jsonString.substr(paramIndex).indexOf(" ");
+        }
+        if (endIndex === -1) {
+            endIndex = jsonString.substr(paramIndex).indexOf("}");
+        }
+
+        jsonString = jsonString.substr(0, paramIndex) + "\"" +
+                     jsonString.substr(paramIndex, endIndex).trim() + "\"" +
+                     jsonString.substr(endIndex);
+    });
+
+    return jsonString;
 }

@@ -78,13 +78,8 @@ mono_crash.*
 
 # Build results
 build/
-jsx/
 public/css/
 public/*.min.js
-
-# Market data
-data/
-history/
 
 # Cached files
 public/csv

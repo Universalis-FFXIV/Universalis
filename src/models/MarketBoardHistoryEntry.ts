@@ -5,4 +5,7 @@ export interface MarketBoardHistoryEntry {
     total?: number;
     buyerName: string;
     timestamp: number;
+    onMannequin?: boolean;
+    buyerID: string;
+    sellerID: string;
 }

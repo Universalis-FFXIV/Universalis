@@ -24,7 +24,8 @@ const listingUpload = {
         quantity: 1,
         retainerName: "Retainername",
         retainerCity: "Kugane",
-        creatorName: "Creator Name"
+        creatorName: "Creator Name",
+        sellerID: 18446744073709551614
     }]
 };
 
@@ -36,7 +37,9 @@ const historyUpload = {
         pricePerUnit: 9999,
         quantity: 1,
         buyerName: "Buyer Name",
-        timestamp: now
+        timestamp: now,
+        buyerID: 18446744073709551614,
+        sellerID: 18446744073709551614
     }]
 };
 
