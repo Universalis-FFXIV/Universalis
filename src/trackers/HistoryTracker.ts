@@ -38,7 +38,11 @@ export class HistoryTracker extends Tracker {
         this.updateExtendedDCHistory(itemID, worldID, recentHistory);
         this.updateExtendedHistory(itemID, worldID, recentHistory);
 
-        await this.collection.updateOne(query, data);
+        if (existing) {
+            await this.collection.updateOne(query, { $set: data });
+        } else {
+            await this.collection.insertOne(data);
+        }
     }
 
     private async updateExtendedHistory(itemID: number, worldID: number, entries: MarketBoardHistoryEntry[]) {
@@ -60,9 +64,9 @@ export class HistoryTracker extends Tracker {
             extendedHistory = existing;
         } else {
             extendedHistory = {
-                worldID,
+                entries: [],
                 itemID,
-                entries: []
+                worldID
             };
         }
 
@@ -73,7 +77,11 @@ export class HistoryTracker extends Tracker {
         }
         extendedHistory.entries = minimizedEntries.concat(extendedHistory.entries);
 
-        return await this.extendedHistory.updateOne(query, extendedHistory);
+        if (existing) {
+            return await this.extendedHistory.updateOne(query, { $set: extendedHistory });
+        } else {
+            return await this.extendedHistory.insertOne(extendedHistory);
+        }
     }
 
     private async updateExtendedDCHistory(itemID: number, worldID: number, entries: MarketBoardHistoryEntry[]) {
@@ -105,8 +113,8 @@ export class HistoryTracker extends Tracker {
         } else {
             extendedHistory = {
                 dcName,
+                entries: [],
                 itemID,
-                entries: []
             };
         }
 
@@ -115,6 +123,10 @@ export class HistoryTracker extends Tracker {
             extendedHistory.entries = extendedHistory.entries.slice(0, 500 - minimizedEntries.length);
         }
 
-        return await this.extendedHistory.updateOne(query, extendedHistory);
+        if (existing) {
+            return await this.extendedHistory.updateOne(query, { $set: extendedHistory });
+        } else {
+            return await this.extendedHistory.insertOne(extendedHistory);
+        }
     }
 }

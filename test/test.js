@@ -12,7 +12,7 @@ const universalis = "http://localhost:3000";
 const debugKey = "PyrDFpV2mBCfOUtXFByRELx7SZbzxuEfrY6zTExX";
 
 const now = Date.now();
-const updateTimeout = 200; // The time allowed for the server to process data before the test checks the outcome
+const updateTimeout = 500; // The time allowed for the server to process data before the test checks the outcome
 
 const listingUpload = {
     worldID: 74,
@@ -20,7 +20,7 @@ const listingUpload = {
     listings: [{
         hq: 1,
         materia: [5666, 5666],
-        pricePerUnit: 99999999,
+        pricePerUnit: 999999999,
         quantity: 1,
         retainerName: "Retainername",
         retainerCity: "Kugane",
@@ -34,7 +34,7 @@ const historyUpload = {
     itemID: 26465,
     entries: [{
         hq: 1,
-        pricePerUnit: 9999,
+        pricePerUnit: 99999,
         quantity: 1,
         buyerName: "Buyer Name",
         timestamp: now,

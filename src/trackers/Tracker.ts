@@ -24,7 +24,7 @@ export abstract class Tracker {
 
         (propertyData).forEach((entry) => entry.worldName = world);
 
-        const query = { worldID, itemID };
+        const query = { dcName, itemID };
 
         const existing = await this.collection.findOne(query);
 
@@ -51,6 +51,10 @@ export abstract class Tracker {
             data[property] = propertyData;
         }
 
-        return await this.collection.updateOne(query, data);
+        if (existing) {
+            return await this.collection.updateOne(query, { $set: data });
+        } else {
+            return await this.collection.insertOne(data);
+        }
     }
 }

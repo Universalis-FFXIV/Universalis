@@ -26,6 +26,10 @@ export class PriceTracker extends Tracker {
 
         this.updateDataCenterProperty("listings", itemID, worldID, listings);
 
-        await this.collection.updateOne(query, data);
+        if (existing) {
+            await this.collection.updateOne(query, { $set: data });
+        } else {
+            await this.collection.insertOne(data);
+        }
     }
 }

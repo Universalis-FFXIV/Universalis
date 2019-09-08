@@ -20,10 +20,12 @@ import { PriceTracker } from "./trackers/PriceTracker";
 
 // Define application and its resources
 const db = MongoClient.connect(`mongodb://localhost:27017/`, { useNewUrlParser: true, useUnifiedTopology: true });
+var recentData;
+var extendedHistory;
 
 var historyTracker: HistoryTracker;
 var priceTracker: PriceTracker;
-const trackerInit = (async () => {
+const init = (async () => {
     const universalisDB = (await db).db("universalis");
 
     historyTracker = new HistoryTracker(
@@ -33,6 +35,9 @@ const trackerInit = (async () => {
     priceTracker = new PriceTracker(
         universalisDB.collection("recentData")
     );
+
+    recentData = (await db).db("universalis").collection("recentData");
+    extendedHistory = (await db).db("universalis").collection("extendedHistory");
 })();
 
 const universalis = new Koa();
@@ -68,40 +73,51 @@ router.get("/", async (ctx) => {
 });
 
 router.get("/api/:world/:item", async (ctx) => { // Normal data
-    const collection = (await db).db("universalis").collection("recentData");
+    await init;
 
     let query = { itemID: parseInt(ctx.params.item) };
-    if (typeof ctx.params.world === "string") {
+    if (!parseInt(ctx.params.world)) {
         query["dcName"] = ctx.params.world;
     } else {
-        query["worldID"] = ctx.params.world;
+        query["worldID"] = parseInt(ctx.params.world);
     }
 
-    let data = await collection.findOne(query);
+    let data = await recentData.findOne(query);
 
     if (!data) {
-        ctx.throw(404);
+        ctx.body = {
+            itemID: ctx.params.item,
+            listings: [],
+            recentHistory: [],
+            worldID: ctx.params.world
+        };
         return;
+    } else {
+        delete data["_id"];
     }
 
     ctx.body = data;
 });
 
 router.get("/api/history/:world/:item", async (ctx) => { // Extended history
-    const collection = (await db).db("universalis").collection("extendedHistory");
-
     let query = { itemID: parseInt(ctx.params.item) };
-    if (typeof ctx.params.world === "string") {
+    if (!parseInt(ctx.params.world)) {
         query["dcName"] = ctx.params.world;
     } else {
-        query["worldID"] = ctx.params.world;
+        query["worldID"] = parseInt(ctx.params.world);
     }
 
-    let data = await collection.findOne(query);
+    let data = await extendedHistory.findOne(query);
 
     if (!data) {
-        ctx.throw(404);
+        ctx.body = {
+            entries: [],
+            itemID: ctx.params.item,
+            worldID: ctx.params.world
+        };
         return;
+    } else {
+        delete data["_id"];
     }
 
     ctx.body = data;
@@ -116,7 +132,7 @@ router.post("/upload/:apiKey", async (ctx) => {
         return ctx.throw(415);
     }
 
-    await trackerInit;
+    await init;
 
     // Accept identity via API key.
     const dbo = (await db).db("universalis");
@@ -140,13 +156,15 @@ router.post("/upload/:apiKey", async (ctx) => {
     if (marketBoardData.listings) {
         marketBoardData.listings.map((listing) => {
             return {
-                creatorName: listing.creatorName ? listing.creatorName : undefined,
+                creatorID: listing.creatorID,
+                creatorName: listing.creatorName,
                 hq: listing.hq,
-                materia: listing.materia ? listing.materia : undefined,
+                materia: listing.materia ? listing.materia : [],
                 pricePerUnit: listing.pricePerUnit,
                 quantity: listing.quantity,
                 retainerCity: listing.retainerCity,
-                retainerName: listing.retainerName
+                retainerName: listing.retainerName,
+                sellerID: listing.sellerID
             };
         });
 
@@ -163,11 +181,13 @@ router.post("/upload/:apiKey", async (ctx) => {
     } else if (marketBoardData.entries) {
         marketBoardData.entries.map((entry) => {
             return {
+                buyerID: entry.buyerID,
                 buyerName: entry.buyerName,
                 hq: entry.hq,
                 pricePerUnit: entry.pricePerUnit,
                 quantity: entry.quantity,
-                timestamp: entry.timestamp
+                sellerID: entry.sellerID,
+                timestamp: entry.timestamp,
             };
         });
 
