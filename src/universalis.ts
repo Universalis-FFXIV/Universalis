@@ -10,8 +10,8 @@ import sha from "sha.js";
 import remoteDataManager from "./remoteDataManager";
 
 // Scripts
-import createGarbageData from "../scripts/createGarbageData";
-createGarbageData();
+// import createGarbageData from "../scripts/createGarbageData";
+// createGarbageData();
 
 // Load models
 import { Collection } from "mongodb";
