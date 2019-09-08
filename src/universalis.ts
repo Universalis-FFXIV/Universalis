@@ -9,7 +9,11 @@ import sha from "sha.js";
 
 import remoteDataManager from "./remoteDataManager";
 
+import script from "../scripts/createGarbageData"; script();
+
 // Load models
+import { Collection } from "mongodb";
+
 import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
 import { MarketBoardListingsUpload } from "./models/MarketBoardListingsUpload";
@@ -20,24 +24,24 @@ import { PriceTracker } from "./trackers/PriceTracker";
 
 // Define application and its resources
 const db = MongoClient.connect(`mongodb://localhost:27017/`, { useNewUrlParser: true, useUnifiedTopology: true });
-var recentData;
-var extendedHistory;
+var recentData: Collection;
+var extendedHistory: Collection;
 
 var historyTracker: HistoryTracker;
 var priceTracker: PriceTracker;
 const init = (async () => {
     const universalisDB = (await db).db("universalis");
 
+    recentData = universalisDB.collection("recentData");
+    extendedHistory = universalisDB.collection("extendedHistory");
+
     historyTracker = new HistoryTracker(
-        universalisDB.collection("recentData"),
-        universalisDB.collection("extendedHistory")
+        recentData,
+        extendedHistory
     );
     priceTracker = new PriceTracker(
-        universalisDB.collection("recentData")
+        recentData
     );
-
-    recentData = (await db).db("universalis").collection("recentData");
-    extendedHistory = (await db).db("universalis").collection("extendedHistory");
 })();
 
 const universalis = new Koa();
