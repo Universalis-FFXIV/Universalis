@@ -8,6 +8,6 @@ export interface MarketBoardItemListing {
     retainerCity: string;
     creatorName?: string;
     onMannequin?: boolean;
-    sellerID: string;
-    creatorID?: string;
+    sellerID: number;
+    creatorID?: number;
 }
