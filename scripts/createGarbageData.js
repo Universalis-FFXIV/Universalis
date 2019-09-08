@@ -47,8 +47,8 @@ module.exports = async () => {
             promises.push((async () => {
                 for (item of itemTable) {
                     const contents = await generateData({
-                        propertyName: typeof value === 'number' ? "worldID" : "dcName",
-                        value: key
+                        propertyName: parseInt(value) ? "worldID" : "dcName",
+                        value: value
                     }, item[0]);
                     await recentData.insertOne(contents);
                 }
@@ -63,8 +63,8 @@ module.exports = async () => {
             promises.push((async () => {
                 for (let item of itemTable) {
                     const contents = await generateExtendedData({
-                        propertyName: typeof value === 'number' ? "worldID" : "dcName",
-                        value: key
+                        propertyName: parseInt(value) ? "worldID" : "dcName",
+                        value: value
                     }, item[0]);
                     await extendedHistory.insertOne(contents);
                 }
