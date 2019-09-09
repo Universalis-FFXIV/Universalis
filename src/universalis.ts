@@ -81,11 +81,11 @@ router.get("/", async (ctx) => {
 router.get("/api/:world/:item", async (ctx) => { // Normal data
     await init;
 
-    let query = { itemID: parseInt(ctx.params.item) };
+    let query = { itemID: ctx.params.item };
     if (!parseInt(ctx.params.world)) {
         query["dcName"] = ctx.params.world;
     } else {
-        query["worldID"] = parseInt(ctx.params.world);
+        query["worldID"] = ctx.params.world;
     }
 
     let data = await recentData.findOne(query);
@@ -108,11 +108,11 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     await init;
 
-    let query = { itemID: parseInt(ctx.params.item) };
+    let query = { itemID: ctx.params.item };
     if (!parseInt(ctx.params.world)) {
         query["dcName"] = ctx.params.world;
     } else {
-        query["worldID"] = parseInt(ctx.params.world);
+        query["worldID"] = ctx.params.world;
     }
 
     let data = await extendedHistory.findOne(query);
