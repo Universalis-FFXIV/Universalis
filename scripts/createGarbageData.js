@@ -46,10 +46,13 @@ module.exports = async () => {
         worldMap.forEach(async (value, key, map) => {
             promises.push((async () => {
                 for (item of itemTable) {
-                    const contents = await generateData({
+                    let contents = await generateData({
                         propertyName: parseInt(value) ? "worldID" : "dcName",
                         value: parseInt(value) ? parseInt(value) : value
                     }, item[0]);
+                    if (parseInt(value)) {
+                        contents.uploaderID = makeid(32);
+                    }
                     await recentData.insertOne(contents);
                 }
             })());
@@ -62,10 +65,13 @@ module.exports = async () => {
         worldMap.forEach(async (value, key, map) => {
             promises.push((async () => {
                 for (let item of itemTable) {
-                    const contents = await generateExtendedData({
+                    let contents = await generateExtendedData({
                         propertyName: parseInt(value) ? "worldID" : "dcName",
                         value: parseInt(value) ? parseInt(value) : value
                     }, item[0]);
+                    if (parseInt(value)) {
+                        contents.uploaderID = makeid(32);
+                    }
                     await extendedHistory.insertOne(contents);
                 }
             })());
@@ -148,6 +154,7 @@ async function generateListingData(nameObject = undefined, lastPrice) {
     if (nameObject && dcList[nameObject.value]) {
         let worldList = dcList[nameObject.value];
         returnable.worldName = worldList[Math.floor(Math.random() * worldList.length)];
+        returnable.uploaderID = makeid(32);
     }
     lastPrice = returnable.pricePerUnit;
     return returnable;
@@ -167,6 +174,7 @@ async function generateHistoryData(nameObject = undefined) {
     if (nameObject && dcList[nameObject.value]) {
         let worldList = dcList[nameObject.value];
         returnable.worldName = worldList[Math.floor(Math.random() * worldList.length)];
+        returnable.uploaderID = makeid(32);
     }
     return returnable;
 }

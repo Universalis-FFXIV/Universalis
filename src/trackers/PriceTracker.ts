@@ -10,10 +10,11 @@ export class PriceTracker extends Tracker {
         super(collection);
     }
 
-    public async set(itemID: number, worldID: number, listings: MarketBoardItemListing[]) {
+    public async set(uploaderID: string, itemID: number, worldID: number, listings: MarketBoardItemListing[]) {
         let data: MarketInfoLocalData = {
             itemID,
             listings,
+            uploaderID,
             worldID
         };
 
@@ -24,7 +25,7 @@ export class PriceTracker extends Tracker {
             data.recentHistory = existing.recentHistory;
         }
 
-        this.updateDataCenterProperty("listings", itemID, worldID, listings);
+        this.updateDataCenterProperty(uploaderID, "listings", itemID, worldID, listings);
 
         if (existing) {
             await this.collection.updateOne(query, { $set: data });

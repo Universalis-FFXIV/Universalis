@@ -8,5 +8,4 @@ export interface MarketBoardHistoryEntry {
     onMannequin?: boolean;
     buyerID: number;
     sellerID: number;
-    uploaderID?: string;
 }

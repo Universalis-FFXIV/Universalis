@@ -1,7 +1,8 @@
-import { MarketBoardItemListing } from "./MarketBoardItemListing";
+import { MarketBoardItemListingUpload } from "./MarketBoardItemListingUpload";
 
 export interface MarketBoardListingsUpload {
     worldID: number;
     itemID: number;
-    listings: MarketBoardItemListing[];
+    listings: MarketBoardItemListingUpload[];
+    uploaderID: number | string;
 }

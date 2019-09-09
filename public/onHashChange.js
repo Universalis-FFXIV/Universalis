@@ -551,6 +551,7 @@ function onHashChange_genMarketTables_helper2(table, i, listing, averagePricePer
         (() => { // Materia
             let materiaElements = createElement("div");
             for (let materia of listing.materia) {
+                materia = materia.itemID;
                 let materiaName = materiaIDToItemName(materia);
                 let materiaGrade = romanNumerals.indexOf(materiaName.split(" ")[materiaName.split(" ").length - 1]);
 
@@ -591,7 +592,7 @@ function onHashChange_genMarketTables_helper3(table, i, entry, averagePricePerUn
 
     table.push([
         i + 1,
-        entry.worldName ? entry.worldName : entry,
+        entry.worldName ? entry.worldName : world,
         entry.hq === 1 ? "$hq" : "",
         formatNumberWithCommas(entry.pricePerUnit),
         formatNumberWithCommas(entry.quantity),

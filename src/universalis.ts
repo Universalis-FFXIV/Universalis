@@ -16,6 +16,7 @@ import remoteDataManager from "./remoteDataManager";
 // Load models
 import { Collection } from "mongodb";
 
+import { City } from "./models/City";
 import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
 import { MarketBoardListingsUpload } from "./models/MarketBoardListingsUpload";
@@ -152,6 +153,7 @@ router.post("/upload/:apiKey", async (ctx) => {
     const sourceName = trustedSource.sourceName;
 
     // Data processing
+    ctx.request.body.retainerCity = City[ctx.request.body.retainerCity];
     let marketBoardData: MarketBoardListingsUpload & MarketBoardSaleHistoryUpload = ctx.request.body;
 
     // You can't upload data for these worlds because you can't scrape it.
@@ -169,29 +171,30 @@ router.post("/upload/:apiKey", async (ctx) => {
                 hq: listing.hq,
                 lastReviewTime: listing.lastReviewTime,
                 materia: listing.materia ? listing.materia : [],
+                onMannequin: listing.onMannequin,
                 pricePerUnit: listing.pricePerUnit,
                 quantity: listing.quantity,
                 retainerCity: listing.retainerCity,
                 retainerName: listing.retainerName,
                 sellerID: listing.sellerID,
-                dyeID: listing.dyeID,
-                uploaderID: sha("sha512").update(listing.uploaderID).digest("hex")
+                stainID: listing.stainID
             };
         });
 
+        marketBoardData.uploaderID = sha("sha256").update(marketBoardData.uploaderID + "").digest("hex");
+
         for (let listing of marketBoardData.listings) {
             listing.total = listing.pricePerUnit * listing.quantity;
-            dataArray.push(listing);
+            dataArray.push(listing as any);
         }
 
         await priceTracker.set(
+            marketBoardData.uploaderID,
             marketBoardData.itemID,
             marketBoardData.worldID,
             dataArray as MarketBoardItemListing[]
         );
-    }
-
-    if (marketBoardData.entries) {
+    } else if (marketBoardData.entries) {
         let dataArray: MarketBoardHistoryEntry[] = [];
         marketBoardData.entries.map((entry) => {
             return {
@@ -205,18 +208,22 @@ router.post("/upload/:apiKey", async (ctx) => {
             };
         });
 
+        marketBoardData.uploaderID = sha("sha256").update(marketBoardData.uploaderID + "").digest("hex");
+
         for (let entry of marketBoardData.entries) {
             entry.total = entry.pricePerUnit * entry.quantity;
             dataArray.push(entry);
         }
 
         await historyTracker.set(
+            marketBoardData.uploaderID,
             marketBoardData.itemID,
             marketBoardData.worldID,
             dataArray as MarketBoardHistoryEntry[]
         );
+    } else {
+        ctx.throw(418);
     }
-    if (!marketBoardData.listings && !marketBoardData.entries) ctx.throw(418);
 });
 
 universalis.use(router.routes());

@@ -20,10 +20,11 @@ export class HistoryTracker extends Tracker {
         this.extendedHistory = extendedHistory;
     }
 
-    public async set(itemID: number, worldID: number, recentHistory: MarketBoardHistoryEntry[]) {
+    public async set(uploaderID: string, itemID: number, worldID: number, recentHistory: MarketBoardHistoryEntry[]) {
         let data: MarketInfoLocalData = {
             itemID,
             recentHistory,
+            uploaderID,
             worldID
         };
 
@@ -34,9 +35,9 @@ export class HistoryTracker extends Tracker {
             data.listings = existing.listings;
         }
 
-        this.updateDataCenterProperty("recentHistory", itemID, worldID, recentHistory);
-        this.updateExtendedDCHistory(itemID, worldID, recentHistory);
-        this.updateExtendedHistory(itemID, worldID, recentHistory);
+        this.updateDataCenterProperty(uploaderID, "recentHistory", itemID, worldID, recentHistory);
+        this.updateExtendedDCHistory(uploaderID, itemID, worldID, recentHistory);
+        this.updateExtendedHistory(uploaderID, itemID, worldID, recentHistory);
 
         if (existing) {
             await this.collection.updateOne(query, { $set: data });
@@ -45,7 +46,7 @@ export class HistoryTracker extends Tracker {
         }
     }
 
-    private async updateExtendedHistory(itemID: number, worldID: number, entries: MarketBoardHistoryEntry[]) {
+    private async updateExtendedHistory(uploaderID: string, itemID: number, worldID: number, entries: MarketBoardHistoryEntry[]) {
         // Cut out any properties we don't need
         let minimizedEntries: MinimizedHistoryEntry[] = entries.map((entry) => {
             return {
@@ -66,6 +67,7 @@ export class HistoryTracker extends Tracker {
             extendedHistory = {
                 entries: [],
                 itemID,
+                uploaderID,
                 worldID
             };
         }
@@ -84,7 +86,7 @@ export class HistoryTracker extends Tracker {
         }
     }
 
-    private async updateExtendedDCHistory(itemID: number, worldID: number, entries: MarketBoardHistoryEntry[]) {
+    private async updateExtendedDCHistory(uploaderID: string, itemID: number, worldID: number, entries: MarketBoardHistoryEntry[]) {
         const world = await getWorldName(worldID);
         const dcName = await getWorldDC(world);
 
@@ -96,6 +98,7 @@ export class HistoryTracker extends Tracker {
                 hq: entry.hq,
                 pricePerUnit: entry.pricePerUnit,
                 timestamp: entry.timestamp,
+                uploaderID,
                 worldName: world
             };
         });

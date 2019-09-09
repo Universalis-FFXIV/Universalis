@@ -6,4 +6,5 @@ export interface MarketInfoLocalData {
     itemID: number;
     listings?: MarketBoardItemListing[];
     recentHistory?: MarketBoardHistoryEntry[];
+    uploaderID: string;
 }

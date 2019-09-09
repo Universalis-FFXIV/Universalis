@@ -13,9 +13,13 @@ Listings upload format (JSON):
 {
     worldID: number;
     itemID: number;
+    uploaderID: string | number;
     listings: [{
         hq: 1 | 0;
-        materia?: number[];
+        materia?: [{
+            slotID: number;
+            itemID: number;
+        }];
         pricePerUnit: number;
         quantity: number;
         retainerName: string;
@@ -35,6 +39,7 @@ History upload format (JSON):
 {
     worldID: number;
     itemID: number;
+    uploaderID: string | number;
     entries: [{
         hq: 1 | 0;
         pricePerUnit: number;
