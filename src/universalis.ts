@@ -9,7 +9,8 @@ import sha from "sha.js";
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
-import remoteDataManager from "./remoteDataManager";
+import { CronJobManager } from "./CronJobManager"
+import { RemoteDataManager } from "./RemoteDataManager";
 
 // Scripts
 // import createGarbageData from "../scripts/createGarbageData";
@@ -72,6 +73,9 @@ universalis.use(bodyParser({
     jsonLimit: "1mb"
 }));
 
+const cronManager = new CronJobManager({ logger });
+cronManager.startAll();
+const remoteDataManager = new RemoteDataManager({ logger });
 remoteDataManager.fetchAll(); // Fetch remote files asynchronously
 
 // Logger TODO
