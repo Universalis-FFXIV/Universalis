@@ -19,7 +19,10 @@ const listingUpload = {
     itemID: 26465,
     listings: [{
         hq: 1,
-        materia: [5666, 5666],
+        materia: [
+            {slotID: 0, itemID: 5666},
+            {slotID: 1, itemID: 5666}
+        ],
         pricePerUnit: 999999999,
         quantity: 1,
         retainerName: "Retainername",
@@ -108,6 +111,7 @@ describe("The upload process:", function() {
                         savedData.listings = savedData.listings.map((listing) => {
                             delete listing.worldName;
                             delete listing.total;
+                            delete listing.uploaderID;
                             listing = JSON.stringify(listing);
                             return listing;
                         });
@@ -211,6 +215,7 @@ describe("The upload process:", function() {
                         savedData.recentHistory = savedData.recentHistory.map((entry) => {
                             delete entry.worldName;
                             delete entry.total;
+                            delete entry.uploaderID;
                             entry = JSON.stringify(entry);
                             return entry;
                         });
