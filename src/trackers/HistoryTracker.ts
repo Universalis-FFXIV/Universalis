@@ -21,7 +21,7 @@ export class HistoryTracker extends Tracker {
     }
 
     public async set(uploaderID: string, itemID: number, worldID: number, recentHistory: MarketBoardHistoryEntry[]) {
-        let data: MarketInfoLocalData = {
+        const data: MarketInfoLocalData = {
             itemID,
             recentHistory,
             uploaderID,
@@ -30,7 +30,7 @@ export class HistoryTracker extends Tracker {
 
         const query = { worldID, itemID };
 
-        const existing = await this.collection.findOne(query) as MarketInfoLocalData;
+        const existing = await this.collection.findOne(query, { projection: { _id: 0 } }) as MarketInfoLocalData;
         if (existing && existing.listings) {
             data.listings = existing.listings;
         }
@@ -46,9 +46,10 @@ export class HistoryTracker extends Tracker {
         }
     }
 
-    private async updateExtendedHistory(uploaderID: string, itemID: number, worldID: number, entries: MarketBoardHistoryEntry[]) {
+    private async updateExtendedHistory(uploaderID: string, itemID: number, worldID: number,
+                                        entries: MarketBoardHistoryEntry[]) {
         // Cut out any properties we don't need
-        let minimizedEntries: MinimizedHistoryEntry[] = entries.map((entry) => {
+        const minimizedEntries: MinimizedHistoryEntry[] = entries.map((entry) => {
             return {
                 hq: entry.hq,
                 pricePerUnit: entry.pricePerUnit,
@@ -58,7 +59,7 @@ export class HistoryTracker extends Tracker {
 
         const query = { worldID, itemID };
 
-        const existing = await this.extendedHistory.findOne(query) as ExtendedHistory;
+        const existing = await this.extendedHistory.findOne(query, { projection: { _id: 0 } }) as ExtendedHistory;
 
         let extendedHistory: ExtendedHistory;
         if (existing) {
@@ -73,7 +74,7 @@ export class HistoryTracker extends Tracker {
         }
 
         // Limit to 500 entries
-        let entrySum = extendedHistory.entries.length + minimizedEntries.length;
+        const entrySum = extendedHistory.entries.length + minimizedEntries.length;
         if (entrySum > 500) {
             extendedHistory.entries = extendedHistory.entries.slice(0, 500 - minimizedEntries.length);
         }
@@ -86,14 +87,15 @@ export class HistoryTracker extends Tracker {
         }
     }
 
-    private async updateExtendedDCHistory(uploaderID: string, itemID: number, worldID: number, entries: MarketBoardHistoryEntry[]) {
+    private async updateExtendedDCHistory(uploaderID: string, itemID: number, worldID: number,
+                                          entries: MarketBoardHistoryEntry[]) {
         const world = await getWorldName(worldID);
         const dcName = await getWorldDC(world);
 
         // Append world name to each entry
         (entries as MarketBoardDCHistoryEntry[]).forEach((entry) => entry.worldName = world);
 
-        let minimizedEntries: MinimizedDCHistoryEntry[] = entries.map((entry) => {
+        const minimizedEntries: MinimizedDCHistoryEntry[] = entries.map((entry) => {
             return {
                 hq: entry.hq,
                 pricePerUnit: entry.pricePerUnit,
@@ -105,7 +107,7 @@ export class HistoryTracker extends Tracker {
 
         const query = { dcName, itemID };
 
-        const existing = await this.extendedHistory.findOne(query) as ExtendedDCHistory;
+        const existing = await this.extendedHistory.findOne(query, { projection: { _id: 0 } }) as ExtendedDCHistory;
 
         let extendedHistory: ExtendedDCHistory;
         if (existing) extendedHistory = existing;
@@ -121,7 +123,7 @@ export class HistoryTracker extends Tracker {
             };
         }
 
-        let entrySum = extendedHistory.entries.length + minimizedEntries.length;
+        const entrySum = extendedHistory.entries.length + minimizedEntries.length;
         if (entrySum > 500) {
             extendedHistory.entries = extendedHistory.entries.slice(0, 500 - minimizedEntries.length);
         }

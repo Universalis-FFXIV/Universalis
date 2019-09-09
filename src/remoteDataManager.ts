@@ -4,6 +4,8 @@ import path from "path";
 import request from "request-promise";
 import util from "util";
 
+import { Logger } from "winston";
+
 const exists = util.promisify(fs.exists);
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
@@ -31,7 +33,7 @@ const urlDictionary = {
                       "&columns=ID,IconID,ItemSearchCategory.Name_jp,LevelItem,Name_jp",
 };
 
-for (let ext of exts) {
+for (const ext of exts) {
     if (!fs.existsSync(path.join(__dirname, `../public/${ext}`))) {
         fs.mkdirSync(path.join(__dirname, `../public/${ext}`));
     }
@@ -40,7 +42,7 @@ for (let ext of exts) {
 const remoteFileDirectory = "../public";
 
 module.exports.fetchAll = () => {
-    for (let fileName in urlDictionary) {
+    for (const fileName in urlDictionary) {
         if (urlDictionary.hasOwnProperty(fileName)) {
             this.fetchFile(fileName);
         }
@@ -49,8 +51,8 @@ module.exports.fetchAll = () => {
 
 // Get local copies of certain remote files, should they not exist locally
 module.exports.fetchFile = async (fileName: string) => {
-    let ext = fileName.substr(fileName.indexOf(".") + 1);
-    let file = await exists(path.join(__dirname, remoteFileDirectory, ext, fileName));
+    const ext = fileName.substr(fileName.indexOf(".") + 1);
+    const file = await exists(path.join(__dirname, remoteFileDirectory, ext, fileName));
 
     if (!file) {
         let remoteData: any;
@@ -70,19 +72,19 @@ module.exports.fetchFile = async (fileName: string) => {
     }
 };
 
-module.exports.parseCSV = async (fileName: string) => {
+module.exports.parseCSV = async (fileName: string, logger: Logger) => {
     if (csvMap.get(fileName)) {
         return csvMap.get(fileName);
     }
 
-    let table = await this.fetchFile(fileName);
+    const table = await this.fetchFile(fileName);
 
-    let parser = csvParser({
+    const parser = csvParser({
         delimiter: ","
     });
 
-    let data = await new Promise((resolve, reject) => {
-        let output = [];
+    const data = await new Promise((resolve, reject) => {
+        const output = [];
 
         parser.write(table);
 
@@ -95,7 +97,7 @@ module.exports.parseCSV = async (fileName: string) => {
         });
 
         parser.on("error", (err) => {
-            console.error(err.message);
+            logger.error(err.message);
         });
 
         parser.once("end", () => {

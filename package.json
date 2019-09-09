@@ -13,8 +13,9 @@
     "build:minify:4": "node-minify --compressor uglify-es --input ./public/onHashChange.js --output ./public/onHashChange.min.js",
     "build:minify:5": "node-minify --compressor uglify-es --input ./public/util.js --output ./public/util.min.js",
     "build:minify:css": "node-minify --compressor clean-css --input ./public/css/styles.css --output ./public/css/styles.min.css",
+    "lint": "tslint ./src/**/*.ts && eslint ./public/**/*.js",
     "start": "node .",
-    "start-dev": "tslint ./src/**/*.ts && eslint ./public/**/*.js && npm run build && npm start",
+    "start-dev": "npm run lint && npm run build && npm start",
     "test": "mocha",
     "update": "git pull && npm install && npm run build"
   },

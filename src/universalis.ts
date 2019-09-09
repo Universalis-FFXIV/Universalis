@@ -31,8 +31,8 @@ import { PriceTracker } from "./trackers/PriceTracker";
 const logger = winston.createLogger({
     transports: [
         new (DailyRotateFile)({
-            filename: "logs/universalis-%DATE%.log",
             datePattern: "YYYY-MM-DD-HH",
+            filename: "logs/universalis-%DATE%.log",
             maxSize: "20m"
         }),
         new winston.transports.File({
@@ -101,14 +101,14 @@ router.get("/", async (ctx) => {
 router.get("/api/:world/:item", async (ctx) => { // Normal data
     await init;
 
-    let query = { itemID: parseInt(ctx.params.item) };
+    const query = { itemID: parseInt(ctx.params.item) };
     if (!parseInt(ctx.params.world)) {
         query["dcName"] = ctx.params.world;
     } else {
         query["worldID"] = parseInt(ctx.params.world);
     }
 
-    let data = await recentData.findOne(query);
+    const data = await recentData.findOne(query, { projection: { _id: 0 } });
 
     if (!data) {
         ctx.body = {
@@ -118,8 +118,6 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
             worldID: ctx.params.world
         };
         return;
-    } else {
-        delete data["_id"];
     }
 
     ctx.body = data;
@@ -128,14 +126,14 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     await init;
 
-    let query = { itemID: parseInt(ctx.params.item) };
+    const query = { itemID: parseInt(ctx.params.item) };
     if (!parseInt(ctx.params.world)) {
         query["dcName"] = ctx.params.world;
     } else {
         query["worldID"] = parseInt(ctx.params.world);
     }
 
-    let data = await extendedHistory.findOne(query);
+    const data = await extendedHistory.findOne(query, { projection: { _id: 0 } });
 
     if (!data) {
         ctx.body = {
@@ -144,8 +142,6 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
             worldID: ctx.params.world
         };
         return;
-    } else {
-        delete data["_id"];
     }
 
     ctx.body = data;
@@ -175,7 +171,7 @@ router.post("/upload/:apiKey", async (ctx) => {
 
     // Data processing
     ctx.request.body.retainerCity = City[ctx.request.body.retainerCity];
-    let marketBoardData: MarketBoardListingsUpload & MarketBoardSaleHistoryUpload = ctx.request.body;
+    const marketBoardData: MarketBoardListingsUpload & MarketBoardSaleHistoryUpload = ctx.request.body;
 
     // You can't upload data for these worlds because you can't scrape it.
     // This does include Chinese and Korean worlds for the time being.
@@ -184,7 +180,7 @@ router.post("/upload/:apiKey", async (ctx) => {
 
     // TODO sanitation
     if (marketBoardData.listings) {
-        let dataArray: MarketBoardItemListing[] = [];
+        const dataArray: MarketBoardItemListing[] = [];
         marketBoardData.listings.map((listing) => {
             return {
                 creatorID: listing.creatorID,
@@ -204,7 +200,7 @@ router.post("/upload/:apiKey", async (ctx) => {
 
         marketBoardData.uploaderID = sha("sha256").update(marketBoardData.uploaderID + "").digest("hex");
 
-        for (let listing of marketBoardData.listings) {
+        for (const listing of marketBoardData.listings) {
             listing.total = listing.pricePerUnit * listing.quantity;
             dataArray.push(listing as any);
         }
@@ -216,7 +212,7 @@ router.post("/upload/:apiKey", async (ctx) => {
             dataArray as MarketBoardItemListing[]
         );
     } else if (marketBoardData.entries) {
-        let dataArray: MarketBoardHistoryEntry[] = [];
+        const dataArray: MarketBoardHistoryEntry[] = [];
         marketBoardData.entries.map((entry) => {
             return {
                 buyerID: entry.buyerID,
@@ -231,7 +227,7 @@ router.post("/upload/:apiKey", async (ctx) => {
 
         marketBoardData.uploaderID = sha("sha256").update(marketBoardData.uploaderID + "").digest("hex");
 
-        for (let entry of marketBoardData.entries) {
+        for (const entry of marketBoardData.entries) {
             entry.total = entry.pricePerUnit * entry.quantity;
             dataArray.push(entry);
         }
