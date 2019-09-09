@@ -35,7 +35,7 @@ export class HistoryTracker extends Tracker {
             data.listings = existing.listings;
         }
 
-        this.updateDataCenterProperty("recentHistory", itemID, worldID, recentHistory);
+        this.updateDataCenterProperty(uploaderID, "recentHistory", itemID, worldID, recentHistory);
         this.updateExtendedDCHistory(uploaderID, itemID, worldID, recentHistory);
         this.updateExtendedHistory(uploaderID, itemID, worldID, recentHistory);
 
