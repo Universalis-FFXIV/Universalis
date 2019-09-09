@@ -48,7 +48,7 @@ module.exports = async () => {
                 for (item of itemTable) {
                     const contents = await generateData({
                         propertyName: parseInt(value) ? "worldID" : "dcName",
-                        value: value
+                        value: parseInt(value) ? parseInt(value) : value
                     }, item[0]);
                     await recentData.insertOne(contents);
                 }
@@ -64,7 +64,7 @@ module.exports = async () => {
                 for (let item of itemTable) {
                     const contents = await generateExtendedData({
                         propertyName: parseInt(value) ? "worldID" : "dcName",
-                        value: value
+                        value: parseInt(value) ? parseInt(value) : value
                     }, item[0]);
                     await extendedHistory.insertOne(contents);
                 }
