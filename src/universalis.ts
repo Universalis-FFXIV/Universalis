@@ -6,6 +6,8 @@ import serve from "koa-static";
 import views from "koa-views";
 import { MongoClient } from "mongodb";
 import sha from "sha.js";
+import winston from "winston";
+import DailyRotateFile from "winston-daily-rotate-file";
 
 import remoteDataManager from "./remoteDataManager";
 
@@ -26,6 +28,21 @@ import { HistoryTracker } from "./trackers/HistoryTracker";
 import { PriceTracker } from "./trackers/PriceTracker";
 
 // Define application and its resources
+const logger = winston.createLogger({
+    transports: [
+        new (DailyRotateFile)({
+            filename: "logs/universalis-%DATE%.log",
+            datePattern: "YYYY-MM-DD-HH",
+            maxSize: "20m"
+        }),
+        new winston.transports.File({
+            filename: "logs/error.log",
+            level: "error"
+        })
+    ]
+});
+logger.info("Process started.");
+
 const db = MongoClient.connect(`mongodb://localhost:27017/`, { useNewUrlParser: true, useUnifiedTopology: true });
 var recentData: Collection;
 var extendedHistory: Collection;
@@ -45,6 +62,8 @@ const init = (async () => {
     priceTracker = new PriceTracker(
         recentData
     );
+
+    logger.info("Connected to database and started trackers.");
 })();
 
 const universalis = new Koa();
@@ -152,6 +171,8 @@ router.post("/upload/:apiKey", async (ctx) => {
 
     const sourceName = trustedSource.sourceName;
 
+    logger.info("Received upload from " + sourceName + ":\n" + ctx.request.body);
+
     // Data processing
     ctx.request.body.retainerCity = City[ctx.request.body.retainerCity];
     let marketBoardData: MarketBoardListingsUpload & MarketBoardSaleHistoryUpload = ctx.request.body;
@@ -230,3 +251,4 @@ universalis.use(router.routes());
 
 // Start server
 universalis.listen(3000);
+logger.info("Server started on port 3000.");
