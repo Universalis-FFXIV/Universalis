@@ -26,7 +26,8 @@ const listingUpload = {
         retainerCity: "Kugane",
         creatorName: "Creator Name",
         sellerID: 18446744073709551614
-    }]
+    }],
+    uploaderID: 456158163
 };
 
 const historyUpload = {
@@ -40,7 +41,8 @@ const historyUpload = {
         timestamp: now,
         buyerID: 18446744073709551614,
         sellerID: 18446744073709551614
-    }]
+    }],
+    uploaderID: 456158163
 };
 
 describe("The upload process:", function() {

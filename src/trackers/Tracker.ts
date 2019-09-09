@@ -18,11 +18,14 @@ export abstract class Tracker {
 
     public abstract set(...params);
 
-    protected async updateDataCenterProperty(property: string, itemID: number, worldID: number, propertyData: any[]) {
+    protected async updateDataCenterProperty(uploaderID: string, property: string, itemID: number, worldID: number, propertyData: any[]) {
         const world = await getWorldName(worldID);
         const dcName = await getWorldDC(world);
 
-        (propertyData).forEach((entry) => entry.worldName = world);
+        propertyData.forEach((entry) => {
+            entry.uploaderID = uploaderID;
+            entry.worldName = world;
+        });
 
         const query = { dcName, itemID };
 

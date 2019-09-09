@@ -551,6 +551,7 @@ function onHashChange_genMarketTables_helper2(table, i, listing, averagePricePer
         (() => { // Materia
             let materiaElements = createElement("div");
             for (let materia of listing.materia) {
+                materia = materia.itemID;
                 let materiaName = materiaIDToItemName(materia);
                 let materiaGrade = romanNumerals.indexOf(materiaName.split(" ")[materiaName.split(" ").length - 1]);
 
