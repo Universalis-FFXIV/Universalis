@@ -4,10 +4,11 @@ A crowdsourced market board aggregator. Not even nearly completed, though contri
 # Development
 Requires [Node.js](https://nodejs.org/) v10 or higher, [PHP](https://www.php.net/downloads.php), [MariaDB](https://mariadb.org/download/), [Red](https://redis.io/download)[is](https://github.com/microsoftarchive/redis/releases), [Composer](https://getcomposer.org/), and [MongoDB Community Edition](https://docs.mongodb.com/manual/administration/install-community/) v4.2 or higher.
 
-Uncomment in php.ini:
+Uncomment/add in php.ini:
 ```
 ;extension=pdo_mysql
 ;extension=sockets
+extension=redis.so
 ```
 
 MariaDB commands:
@@ -25,7 +26,9 @@ cd mogboard
 git submodule init
 git submodule update
 composer install
+npm install
 php bin/console doctrine:schema:create
+php bin/console PopulateGameDataCommand -vvv
 cd ..
 npm run build
 npm start

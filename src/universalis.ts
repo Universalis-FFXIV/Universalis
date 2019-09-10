@@ -278,6 +278,8 @@ router.post("/upload/:apiKey", async (ctx) => {
     } else {
         ctx.throw(418);
     }
+
+    ctx.body = "Success";
 });
 
 universalis.use(router.routes());

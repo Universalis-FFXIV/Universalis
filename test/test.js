@@ -66,7 +66,7 @@ describe("The upload process:", function() {
 
                         resolve(isEqual(existingHistoryEntries, savedData.recentHistory));
                     }, updateTimeout);
-                }).catch((err) => { if (err.statusCode !== 404) console.error(err); }); // This throws a 404 but continues correctly?
+                })
             }).should.eventually.be.exactly(true);
         });
         it("should save the listing properties to a file.", function() {
@@ -86,7 +86,7 @@ describe("The upload process:", function() {
                         });
                         resolve(isEqual(uploadData.listings, savedData.listings));
                     }, updateTimeout);
-                }).catch((err) => { if (err.statusCode !== 404) console.error(err); }); // This throws a 404 but continues correctly?
+                })
             }).should.eventually.be.exactly(true);
         });
         it("should correctly merge sources to create crossworld market listings per data center.", function() {
@@ -123,7 +123,7 @@ describe("The upload process:", function() {
                             return savedData.listings.includes(el)
                         }));
                     }, updateTimeout);
-                }).catch((err) => { if (err.statusCode !== 404) console.error(err); });
+                })
             }).should.eventually.be.exactly(true);
         });
     });
@@ -145,7 +145,7 @@ describe("The upload process:", function() {
 
                         resolve(isEqual(existingMarketListings, savedData.listings));
                     }, updateTimeout);
-                }).catch((err) => { if (err.statusCode !== 404) console.error(err); }); // This throws a 404 but continues correctly?
+                })
             }).should.eventually.be.exactly(true);
         });
         it("should save the entry properties to a file.", function() {
@@ -165,7 +165,7 @@ describe("The upload process:", function() {
                         });
                         resolve(isEqual(uploadData.entries, savedData.recentHistory));
                     }, updateTimeout);
-                }).catch((err) => { if (err.statusCode !== 404) console.error(err); });
+                })
             }).should.eventually.be.exactly(true);
         });
         it("should save minimized entries to an extended history file.", function() {
@@ -190,7 +190,7 @@ describe("The upload process:", function() {
 
                         resolve(isEqual(uploadData.entries, savedData.entries.slice(0, uploadData.entries.length)));
                     }, updateTimeout);
-                }).catch((err) => { if (err.statusCode !== 404) console.error(err); });
+                })
             }).should.eventually.be.exactly(true);
         });
         it("should correctly merge sources to create crossworld market history per data center.", function() {
@@ -227,7 +227,7 @@ describe("The upload process:", function() {
                             return savedData.recentHistory.includes(el)
                         }));
                     }, updateTimeout);
-                }).catch((err) => { if (err.statusCode !== 404) console.error(err); });
+                })
             }).should.eventually.be.exactly(true);
         });
         it("should merge crossworld minimized entries into an extended history file.", function() {
@@ -260,7 +260,7 @@ describe("The upload process:", function() {
 
                         resolve(isEqual(uploadData.entries, savedData.entries.slice(0, uploadData.entries.length)));
                     }, updateTimeout);
-                }).catch((err) => { if (err.statusCode !== 404) console.error(err); });
+                })
             }).should.eventually.be.exactly(true);
         });
     });
