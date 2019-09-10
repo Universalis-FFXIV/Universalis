@@ -19,6 +19,7 @@ CREATE USER 'dalamud'@localhost IDENTIFIED BY 'dalamud';
 
 Setup script:
 ```
+npm install -g yarn
 npm install
 git submodule init
 git submodule update
@@ -26,9 +27,10 @@ cd mogboard
 git submodule init
 git submodule update
 composer install
-npm install
 php bin/console doctrine:schema:create
 php bin/console PopulateGameDataCommand -vvv
+yarn
+yarn dev
 cd ..
 npm run build
 npm start

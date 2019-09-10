@@ -37,7 +37,7 @@ const remoteFileMap = new Map();
 const remoteFileDirectory = "../public";
 
 export class RemoteDataManager {
-    private csvMap: Map<string, any[]>;
+    private csvMap: Map<string, any>;
     private remoteFileMap: Map<string, Buffer>;
 
     private exts: string[];
@@ -60,7 +60,7 @@ export class RemoteDataManager {
     }
 
     /** Parse a CSV, retrieving it if it does not already exist. */
-    async parseCSV(fileName: string): Promise<any[]> {
+    public async parseCSV(fileName: string): Promise<any> {
         if (this.csvMap.get(fileName)) {
             return this.csvMap.get(fileName);
         }
@@ -102,8 +102,8 @@ export class RemoteDataManager {
     }
 
     /** Get all files. */
-    async fetchAll(): Promise<void> {
-        const promises: Promise<Buffer>[] = [];
+    public async fetchAll(): Promise<void> {
+        const promises: Array<Promise<Buffer>> = [];
         for (const fileName in urlDictionary) {
             if (urlDictionary.hasOwnProperty(fileName)) {
                 promises.push(this.fetchFile(fileName));
@@ -113,7 +113,7 @@ export class RemoteDataManager {
     }
 
     /** Get local copies of certain remote files, should they not exist locally. */
-    async fetchFile(fileName: string): Promise<Buffer> {
+    public async fetchFile(fileName: string): Promise<Buffer> {
         const ext = fileName.substr(fileName.indexOf(".") + 1);
         const file = await exists(path.join(__dirname, this.remoteFileDirectory, ext, fileName));
 
@@ -128,7 +128,10 @@ export class RemoteDataManager {
             return remoteData;
         } else {
             if (!this.remoteFileMap.get(fileName)) {
-                this.remoteFileMap.set(fileName, await readFile(path.join(__dirname, this.remoteFileDirectory, ext, fileName)));
+                this.remoteFileMap.set(
+                    fileName,
+                    await readFile(path.join(__dirname, this.remoteFileDirectory, ext, fileName))
+                );
             }
 
             return this.remoteFileMap.get(fileName);
@@ -136,7 +139,7 @@ export class RemoteDataManager {
     }
 }
 
-module.exports.parseCSV = async (fileName: string): Promise<any[]> => {
+module.exports.parseCSV = async (fileName: string): Promise<any> => {
     if (csvMap.get(fileName)) {
         return csvMap.get(fileName);
     }
@@ -147,7 +150,7 @@ module.exports.parseCSV = async (fileName: string): Promise<any[]> => {
         delimiter: ","
     });
 
-    const data: Promise<any[]> = new Promise((resolve) => {
+    const data: Promise<any> = new Promise((resolve) => {
         const output = [];
 
         parser.write(table);

@@ -3,7 +3,6 @@ import Router from "@koa/router";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import serve from "koa-static";
-import views from "koa-views";
 import { MongoClient } from "mongodb";
 import sha from "sha.js";
 import winston from "winston";
@@ -83,8 +82,8 @@ universalis.use(bodyParser({
     jsonLimit: "1mb"
 }));
 
-const cronManager = new CronJobManager({ logger });
-cronManager.startAll();
+/*const cronManager = new CronJobManager({ logger });
+cronManager.startAll();*/
 const remoteDataManager = new RemoteDataManager({ logger });
 remoteDataManager.fetchAll();
 
@@ -93,23 +92,11 @@ universalis.use(async (ctx, next) => {
     await next();
 });
 
-// Set up renderer
-universalis.use(views("./views", {
-    extension: "pug"
-}));
-
 // Publish public resources
 universalis.use(serve("./public"));
 
 // Routing
 const router = new Router();
-
-router.get("/", async (ctx) => {
-    await ctx.render("index.pug", {
-        name: "Universalis - Crowdsourced Market Board Aggregator",
-        version: require("../package.json").version
-    });
-});
 
 router.get("/api/:world/:item", async (ctx) => { // Normal data
     await init;
@@ -212,7 +199,7 @@ router.post("/upload/:apiKey", async (ctx) => {
     if (uploadData.listings) {
         const dataArray: MarketBoardItemListing[] = [];
         uploadData.listings.map((listing) => {
-            return {
+            const newListing = {
                 creatorID: sha("sha256").update(listing.creatorID + "").digest("hex"),
                 creatorName: listing.creatorName,
                 hq: listing.hq,
@@ -228,6 +215,20 @@ router.post("/upload/:apiKey", async (ctx) => {
                 sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
                 stainID: listing.stainID
             };
+
+            if (listing.creatorID && listing.creatorName) {
+                contentIDCollection.set(newListing.creatorID, "player", {
+                    characterName: newListing.creatorName
+                });
+            }
+
+            if (listing.retainerID && listing.retainerName) {
+                contentIDCollection.set(newListing.retainerID, "retainer", {
+                    characterName: newListing.retainerName
+                });
+            }
+
+            return newListing;
         });
 
         uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
@@ -285,5 +286,6 @@ router.post("/upload/:apiKey", async (ctx) => {
 universalis.use(router.routes());
 
 // Start server
-universalis.listen(3000);
-logger.info("Server started on port 3000.");
+const port = 3000;
+universalis.listen(port);
+logger.info(`Server started on port ${port}.`);
