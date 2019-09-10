@@ -15,13 +15,15 @@ Listings upload format (JSON):
     itemID: number;
     uploaderID: string | number;
     listings: [{
-        hq: 1 | 0;
+        listingID: number;
+        hq: boolean;
         materia?: [{
             slotID: number;
-            itemID: number;
+            materiaID: number;
         }];
         pricePerUnit: number;
         quantity: number;
+        retainerID: number;
         retainerName: string;
         retainerCity: string;
         creatorName?: string;
@@ -41,13 +43,21 @@ History upload format (JSON):
     itemID: number;
     uploaderID: string | number;
     entries: [{
-        hq: 1 | 0;
+        hq: boolean;
         pricePerUnit: number;
         quantity: number;
         buyerName: string;
         timestamp: number;
-        buyerID: number;
         sellerID: number;
     }];
+}
+```
+
+Crafter upload format (JSON):
+
+```
+{
+    contentID: number;
+    characterName: string;
 }
 ```

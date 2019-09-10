@@ -9,7 +9,8 @@ import sha from "sha.js";
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
-import { CronJobManager } from "./CronJobManager"
+import { ContentIDCollection } from "./ContentIDCollection";
+import { CronJobManager } from "./CronJobManager";
 import { RemoteDataManager } from "./RemoteDataManager";
 
 // Scripts
@@ -19,6 +20,7 @@ import { RemoteDataManager } from "./RemoteDataManager";
 // Load models
 import { Collection } from "mongodb";
 
+import { CharacterContentIDUpload } from "./models/CharacterContentIDUpload";
 import { City } from "./models/City";
 import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
@@ -44,17 +46,25 @@ const logger = winston.createLogger({
 });
 logger.info("Process started.");
 
-const db = MongoClient.connect(`mongodb://localhost:27017/`, { useNewUrlParser: true, useUnifiedTopology: true });
+const db = MongoClient.connect("mongodb://localhost:27017/", { useNewUrlParser: true, useUnifiedTopology: true });
 var recentData: Collection;
 var extendedHistory: Collection;
+
+var contentIDCollection: ContentIDCollection;
 
 var historyTracker: HistoryTracker;
 var priceTracker: PriceTracker;
 const init = (async () => {
     const universalisDB = (await db).db("universalis");
 
+    const contentCollection = universalisDB.collection("content");
+
     recentData = universalisDB.collection("recentData");
     extendedHistory = universalisDB.collection("extendedHistory");
+
+    contentIDCollection = new ContentIDCollection(
+        contentCollection
+    );
 
     historyTracker = new HistoryTracker(
         recentData,
@@ -76,9 +86,8 @@ universalis.use(bodyParser({
 const cronManager = new CronJobManager({ logger });
 cronManager.startAll();
 const remoteDataManager = new RemoteDataManager({ logger });
-remoteDataManager.fetchAll(); // Fetch remote files asynchronously
+remoteDataManager.fetchAll();
 
-// Logger TODO
 universalis.use(async (ctx, next) => {
     await next();
     console.log(`${ctx.method} ${ctx.url}`);
@@ -151,6 +160,21 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     ctx.body = data;
 });
 
+router.get("/api/content/:contentID", async (ctx) => { // Normal data
+    await init;
+
+    const content = contentIDCollection.get(parseInt(ctx.params.contentID));
+
+    if (!content) {
+        ctx.body = {
+            contentID: parseInt(ctx.params.contentID)
+        };
+        return;
+    }
+
+    ctx.body = content;
+});
+
 router.post("/upload/:apiKey", async (ctx) => {
     if (!ctx.params.apiKey) {
         return ctx.throw(401);
@@ -175,51 +199,56 @@ router.post("/upload/:apiKey", async (ctx) => {
 
     // Data processing
     ctx.request.body.retainerCity = City[ctx.request.body.retainerCity];
-    const marketBoardData: MarketBoardListingsUpload & MarketBoardSaleHistoryUpload = ctx.request.body;
+    const uploadData:
+        CharacterContentIDUpload &
+        MarketBoardListingsUpload &
+        MarketBoardSaleHistoryUpload
+    = ctx.request.body;
 
     // You can't upload data for these worlds because you can't scrape it.
     // This does include Chinese and Korean worlds for the time being.
-    if (!marketBoardData.worldID || !marketBoardData.itemID) return ctx.throw(415);
-    if (marketBoardData.worldID <= 16 || marketBoardData.worldID >= 100) return ctx.throw(415);
+    if (!uploadData.worldID || !uploadData.itemID) return ctx.throw(415);
+    if (uploadData.worldID <= 16 || uploadData.worldID >= 100) return ctx.throw(415);
 
     // TODO sanitation
-    if (marketBoardData.listings) {
+    if (uploadData.listings) {
         const dataArray: MarketBoardItemListing[] = [];
-        marketBoardData.listings.map((listing) => {
+        uploadData.listings.map((listing) => {
             return {
                 creatorID: listing.creatorID,
                 creatorName: listing.creatorName,
                 hq: listing.hq,
                 lastReviewTime: listing.lastReviewTime,
+                listingID: listing.listingID,
                 materia: listing.materia ? listing.materia : [],
                 onMannequin: listing.onMannequin,
                 pricePerUnit: listing.pricePerUnit,
                 quantity: listing.quantity,
                 retainerCity: listing.retainerCity,
+                retainerID: listing.retainerID,
                 retainerName: listing.retainerName,
                 sellerID: listing.sellerID,
                 stainID: listing.stainID
             };
         });
 
-        marketBoardData.uploaderID = sha("sha256").update(marketBoardData.uploaderID + "").digest("hex");
+        uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
 
-        for (const listing of marketBoardData.listings) {
+        for (const listing of uploadData.listings) {
             listing.total = listing.pricePerUnit * listing.quantity;
             dataArray.push(listing as any);
         }
 
         await priceTracker.set(
-            marketBoardData.uploaderID,
-            marketBoardData.itemID,
-            marketBoardData.worldID,
+            uploadData.uploaderID,
+            uploadData.itemID,
+            uploadData.worldID,
             dataArray as MarketBoardItemListing[]
         );
-    } else if (marketBoardData.entries) {
+    } else if (uploadData.entries) {
         const dataArray: MarketBoardHistoryEntry[] = [];
-        marketBoardData.entries.map((entry) => {
+        uploadData.entries.map((entry) => {
             return {
-                buyerID: entry.buyerID,
                 buyerName: entry.buyerName,
                 hq: entry.hq,
                 pricePerUnit: entry.pricePerUnit,
@@ -229,19 +258,23 @@ router.post("/upload/:apiKey", async (ctx) => {
             };
         });
 
-        marketBoardData.uploaderID = sha("sha256").update(marketBoardData.uploaderID + "").digest("hex");
+        uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
 
-        for (const entry of marketBoardData.entries) {
+        for (const entry of uploadData.entries) {
             entry.total = entry.pricePerUnit * entry.quantity;
             dataArray.push(entry);
         }
 
         await historyTracker.set(
-            marketBoardData.uploaderID,
-            marketBoardData.itemID,
-            marketBoardData.worldID,
+            uploadData.uploaderID,
+            uploadData.itemID,
+            uploadData.worldID,
             dataArray as MarketBoardHistoryEntry[]
         );
+    } else if (uploadData.contentID && uploadData.characterName) {
+        await contentIDCollection.set(uploadData.contentID, "player", {
+            characterName: uploadData.characterName
+        });
     } else {
         ctx.throw(418);
     }
