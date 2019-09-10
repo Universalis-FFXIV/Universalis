@@ -1,4 +1,4 @@
-import remoteDataManager from "./remoteDataManager";
+import remoteDataManager from "./RemoteDataManager";
 
 export async function getWorldDC(world: string) {
     const dataCenterWorlds = JSON.parse((await remoteDataManager.fetchFile("dc.json")).toString());
