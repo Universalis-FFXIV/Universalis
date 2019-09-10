@@ -34,7 +34,6 @@
     "koa-bodyparser": "^4.2.1",
     "koa-static": "^5.0.0",
     "mongodb": "^3.3.2",
-    "node-php": "0.0.1",
     "pug": "^2.0.4",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
