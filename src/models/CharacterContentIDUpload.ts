@@ -1,4 +1,4 @@
 export interface CharacterContentIDUpload {
-    contentID: number;
+    contentID: string | number;
     characterName: string;
 }

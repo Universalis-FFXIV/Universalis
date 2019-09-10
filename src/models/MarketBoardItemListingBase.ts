@@ -1,18 +1,18 @@
 import { ItemMateria } from "./ItemMateria";
 
 export interface MarketBoardItemListingBase {
-    listingID: number;
+    listingID: string;
     hq: boolean;
     materia?: ItemMateria[];
     pricePerUnit: number;
     quantity: number;
     total?: number;
-    retainerID: number;
+    retainerID: string;
     retainerName: string;
     creatorName?: string;
     onMannequin?: boolean;
-    sellerID: number;
-    creatorID?: number;
+    sellerID: string;
+    creatorID?: string;
     lastReviewTime: number;
     stainID?: number;
     // todo tax

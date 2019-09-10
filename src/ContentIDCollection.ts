@@ -8,7 +8,7 @@ export class ContentIDCollection {
     }
 
     /** Get an object from the database. */
-    async get(contentID: number): Promise<any> {
+    async get(contentID: string): Promise<any> {
         const query = { contentID };
 
         const content = await this.contentIDCollection.findOne(query, { projection: { _id: 0 } });
@@ -17,7 +17,7 @@ export class ContentIDCollection {
     }
 
     /** Add content to the database. */
-    async set(contentID: number, contentType: string, content: any): Promise<any> {
+    async set(contentID: string, contentType: string, content: any): Promise<any> {
         content.contentID = contentID;
         content.contentType = contentType;
 

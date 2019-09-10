@@ -215,19 +215,19 @@ router.post("/upload/:apiKey", async (ctx) => {
         const dataArray: MarketBoardItemListing[] = [];
         uploadData.listings.map((listing) => {
             return {
-                creatorID: listing.creatorID,
+                creatorID: sha("sha256").update(listing.creatorID + "").digest("hex"),
                 creatorName: listing.creatorName,
                 hq: listing.hq,
                 lastReviewTime: listing.lastReviewTime,
-                listingID: listing.listingID,
+                listingID: sha("sha256").update(listing.listingID + "").digest("hex"),
                 materia: listing.materia ? listing.materia : [],
                 onMannequin: listing.onMannequin,
                 pricePerUnit: listing.pricePerUnit,
                 quantity: listing.quantity,
                 retainerCity: listing.retainerCity,
-                retainerID: listing.retainerID,
+                retainerID: sha("sha256").update(listing.retainerID + "").digest("hex"),
                 retainerName: listing.retainerName,
-                sellerID: listing.sellerID,
+                sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
                 stainID: listing.stainID
             };
         });
@@ -253,7 +253,7 @@ router.post("/upload/:apiKey", async (ctx) => {
                 hq: entry.hq,
                 pricePerUnit: entry.pricePerUnit,
                 quantity: entry.quantity,
-                sellerID: entry.sellerID,
+                sellerID: sha("sha256").update(entry.sellerID + "").digest("hex"),
                 timestamp: entry.timestamp
             };
         });
@@ -272,6 +272,8 @@ router.post("/upload/:apiKey", async (ctx) => {
             dataArray as MarketBoardHistoryEntry[]
         );
     } else if (uploadData.contentID && uploadData.characterName) {
+        uploadData.contentID = sha("sha256").update(uploadData.contentID + "").digest("hex");
+
         await contentIDCollection.set(uploadData.contentID, "player", {
             characterName: uploadData.characterName
         });
