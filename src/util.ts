@@ -1,4 +1,10 @@
-import remoteDataManager from "./RemoteDataManager";
+import winston = require("winston");
+
+import { RemoteDataManager } from "./RemoteDataManager";
+
+const logger = winston.createLogger();
+
+const remoteDataManager = new RemoteDataManager({ logger });
 
 export async function getWorldDC(world: string) {
     const dataCenterWorlds = JSON.parse((await remoteDataManager.fetchFile("dc.json")).toString());
