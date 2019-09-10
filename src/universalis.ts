@@ -163,12 +163,10 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
 router.get("/api/content/:contentID", async (ctx) => { // Normal data
     await init;
 
-    const content = contentIDCollection.get(parseInt(ctx.params.contentID));
+    const content = contentIDCollection.get(sha("sha256").update(ctx.params.contentID + "").digest("hex"));
 
     if (!content) {
-        ctx.body = {
-            contentID: parseInt(ctx.params.contentID)
-        };
+        ctx.body = {};
         return;
     }
 
