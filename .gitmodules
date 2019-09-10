@@ -1,0 +1,3 @@
+[submodule "mogboard"]
+	path = mogboard
+	url = https://github.com/goaaats/mogboard

@@ -89,8 +89,8 @@ const remoteDataManager = new RemoteDataManager({ logger });
 remoteDataManager.fetchAll();
 
 universalis.use(async (ctx, next) => {
-    await next();
     console.log(`${ctx.method} ${ctx.url}`);
+    await next();
 });
 
 // Set up renderer
