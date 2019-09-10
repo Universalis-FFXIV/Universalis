@@ -1,5 +1,5 @@
 export interface MinimizedHistoryEntry {
-    hq: 1 | 0;
+    hq: boolean;
     pricePerUnit: number;
     timestamp: number;
     uploaderID?: string;

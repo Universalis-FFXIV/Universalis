@@ -14,6 +14,7 @@ export class CronJobManager {
     private logger: Logger;
 
     constructor(options: CronJobManagerOptions) {
+        this.cronJobs = new Map();
         this.logger = options.logger;
         for (const namespace in cronJobObjects) {
             if (cronJobObjects.hasOwnProperty(namespace)) {
