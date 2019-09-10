@@ -2,9 +2,34 @@
 A crowdsourced market board aggregator. Not even nearly completed, though contributions are welcome.
 
 # Development
-Requires Node.js v10 or higher, and MongoDB Community Edition v4.2 or higher.
+Requires [Node.js](https://nodejs.org/) v10 or higher, [PHP](https://www.php.net/downloads.php), [MariaDB](https://mariadb.org/download/), [Red](https://redis.io/download)[is](https://github.com/microsoftarchive/redis/releases), [Composer](https://getcomposer.org/), and [MongoDB Community Edition](https://docs.mongodb.com/manual/administration/install-community/) v4.2 or higher.
 
-Clone the repo, and then `npm install` to download the dependencies, followed by `npm run build` to compile. Use `npm run start-dev` to test it on localhost.
+Uncomment in php.ini:
+```
+;extension=pdo_mysql
+;extension=sockets
+```
+
+MariaDB commands:
+```
+CREATE DATABASE `dalamud`;
+CREATE USER 'dalamud'@localhost IDENTIFIED BY 'dalamud';
+```
+
+Setup script:
+```
+npm install
+git submodule init
+git submodule update
+cd mogboard
+git submodule init
+git submodule update
+composer install
+php bin/console doctrine:schema:create
+cd ..
+npm run build
+npm start
+```
 
 # Uploads
 Listings upload format (JSON):
@@ -15,13 +40,15 @@ Listings upload format (JSON):
     itemID: number;
     uploaderID: string | number;
     listings: [{
-        hq: 1 | 0;
+        listingID: number;
+        hq: boolean;
         materia?: [{
             slotID: number;
-            itemID: number;
+            materiaID: number;
         }];
         pricePerUnit: number;
         quantity: number;
+        retainerID: number;
         retainerName: string;
         retainerCity: string;
         creatorName?: string;
@@ -41,13 +68,21 @@ History upload format (JSON):
     itemID: number;
     uploaderID: string | number;
     entries: [{
-        hq: 1 | 0;
+        hq: boolean;
         pricePerUnit: number;
         quantity: number;
         buyerName: string;
         timestamp: number;
-        buyerID: number;
         sellerID: number;
     }];
+}
+```
+
+Crafter upload format (JSON):
+
+```
+{
+    contentID: number;
+    characterName: string;
 }
 ```

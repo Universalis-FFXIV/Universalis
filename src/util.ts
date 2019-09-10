@@ -2,9 +2,9 @@ import remoteDataManager from "./remoteDataManager";
 
 export async function getWorldDC(world: string) {
     const dataCenterWorlds = JSON.parse((await remoteDataManager.fetchFile("dc.json")).toString());
-    for (let dc in dataCenterWorlds) {
+    for (const dc in dataCenterWorlds) {
         if (dataCenterWorlds.hasOwnProperty(dc)) {
-            let foundWorld = dataCenterWorlds[dc].find((el: string) => el === world);
+            const foundWorld = dataCenterWorlds[dc].find((el: string) => el === world);
             if (foundWorld) return dc;
         }
     }
@@ -23,7 +23,7 @@ export function levenshtein(input: string, test: string) {
 
     if (input === test) return 0; // Easy case
 
-    let matrix: number[][] = []; // Setting up matrix
+    const matrix: number[][] = []; // Setting up matrix
 
     for (var n = 0; n <= test.length; n++) { // y-axis
         matrix[n] = [];

@@ -11,7 +11,7 @@ export class PriceTracker extends Tracker {
     }
 
     public async set(uploaderID: string, itemID: number, worldID: number, listings: MarketBoardItemListing[]) {
-        let data: MarketInfoLocalData = {
+        const data: MarketInfoLocalData = {
             itemID,
             listings,
             uploaderID,
@@ -20,7 +20,7 @@ export class PriceTracker extends Tracker {
 
         const query = { worldID, itemID };
 
-        const existing = await this.collection.findOne(query) as MarketInfoLocalData;
+        const existing = await this.collection.findOne(query, { projection: { _id: 0 } }) as MarketInfoLocalData;
         if (existing && existing.recentHistory) {
             data.recentHistory = existing.recentHistory;
         }

@@ -1,7 +1,6 @@
-import archiver from "archiver";
 import { CronJob } from "cron";
 
-import { getWorldDC, getWorldName, levenshtein } from "../util";
+import { getWorldDC, getWorldName } from "../util";
 
 import { Collection } from "mongodb";
 
@@ -18,7 +17,8 @@ export abstract class Tracker {
 
     public abstract set(...params);
 
-    protected async updateDataCenterProperty(uploaderID: string, property: string, itemID: number, worldID: number, propertyData: any[]) {
+    protected async updateDataCenterProperty(uploaderID: string, property: string, itemID: number,
+                                             worldID: number, propertyData: any[]) {
         const world = await getWorldName(worldID);
         const dcName = await getWorldDC(world);
 
@@ -29,7 +29,7 @@ export abstract class Tracker {
 
         const query = { dcName, itemID };
 
-        const existing = await this.collection.findOne(query);
+        const existing = await this.collection.findOne(query, { projection: { _id: 0 } });
 
         let data: MarketInfoDCLocalData;
         if (existing) data = existing;

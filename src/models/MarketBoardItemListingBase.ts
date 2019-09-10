@@ -1,11 +1,13 @@
 import { ItemMateria } from "./ItemMateria";
 
 export interface MarketBoardItemListingBase {
-    hq: 1 | 0;
+    listingID: number;
+    hq: boolean;
     materia?: ItemMateria[];
     pricePerUnit: number;
     quantity: number;
     total?: number;
+    retainerID: number;
     retainerName: string;
     creatorName?: string;
     onMannequin?: boolean;

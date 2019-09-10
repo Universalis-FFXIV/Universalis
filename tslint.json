@@ -13,7 +13,9 @@
         },
         "no-string-literal": [ false ],
         "no-var-keyword": [ false ],
-        "prefer-const": [ false ],
+        "prefer-const": {
+            "severity": "warning"
+        },
         "radix": [ false ],
         "trailing-comma": [ false ]
     },
