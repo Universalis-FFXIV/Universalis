@@ -25,6 +25,7 @@ export class HistoryTracker extends Tracker {
     public async set(uploaderID: string, itemID: number, worldID: number, recentHistory: MarketBoardHistoryEntry[]) {
         const data: MarketInfoLocalData = {
             itemID,
+            lastUploadTime: Date.now(),
             recentHistory,
             uploaderID,
             worldID
@@ -84,6 +85,7 @@ export class HistoryTracker extends Tracker {
             extendedHistory = {
                 entries: [],
                 itemID,
+                lastUploadTime: Date.now(),
                 worldID
             };
         }
@@ -150,6 +152,7 @@ export class HistoryTracker extends Tracker {
                 dcName,
                 entries: [],
                 itemID,
+                lastUploadTime: Date.now()
             };
         }
 

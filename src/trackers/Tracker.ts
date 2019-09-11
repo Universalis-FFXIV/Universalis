@@ -47,7 +47,8 @@ export abstract class Tracker {
             if (!data) {
                 data = {
                     dcName,
-                    itemID
+                    itemID,
+                    lastUploadTime: Date.now()
                 };
             }
 
