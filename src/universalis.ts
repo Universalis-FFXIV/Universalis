@@ -135,8 +135,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     const queryParameters: string[] = ctx.params.item.split(/[?&]+/g);
 
     const itemID = parseInt(queryParameters[0]);
-    const entriesToReturn = parseInt(queryParameters.find((param) => param.startsWith("entries")));
-    console.log(queryParameters);
+    const entriesToReturn = parseInt(queryParameters.find((param) => param.startsWith("entries")).replace(/[^0-9]/g, ""));
 
     const query = { itemID: itemID };
     if (!parseInt(ctx.params.world)) {
