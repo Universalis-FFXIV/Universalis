@@ -25,6 +25,7 @@ import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
 import { MarketBoardListingsUpload } from "./models/MarketBoardListingsUpload";
 import { MarketBoardSaleHistoryUpload } from "./models/MarketBoardSaleHistoryUpload";
+import { TrustedSource } from "./models/TrustedSource";
 
 import { HistoryTracker } from "./trackers/HistoryTracker";
 import { PriceTracker } from "./trackers/PriceTracker";
@@ -173,14 +174,24 @@ router.post("/upload/:apiKey", async (ctx) => {
 
     // Accept identity via API key.
     const dbo = (await db).db("universalis");
-    const trustedSource = await dbo.collection("trustedSources").findOne({
-        apiKey: sha("sha512").update(ctx.params.apiKey).digest("hex")
-    });
+    const apiKey = sha("sha512").update(ctx.params.apiKey).digest("hex");
+    const trustedSource: TrustedSource = await dbo.collection("trustedSources").findOne({ apiKey });
     if (!trustedSource) return ctx.throw(401);
 
     const sourceName = trustedSource.sourceName;
 
-    logger.info("Received upload from " + sourceName + ":\n" + ctx.request.body);
+    if (trustedSource.uploadCount) await dbo.collection("trustedSources").updateOne({ apiKey }, {
+        $inc: {
+            uploadCount: 1
+        }
+    });
+    else await dbo.collection("trustedSources").updateOne({ apiKey }, {
+        $set: {
+            uploadCount: 1
+        }
+    });
+
+    logger.info("Received upload from " + sourceName + ":\n" + JSON.stringify(ctx.request.body));
 
     // Data processing
     ctx.request.body.retainerCity = City[ctx.request.body.retainerCity];
