@@ -153,9 +153,9 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
             itemID: itemID
         };
         if (!parseInt(ctx.params.world)) {
-            query["dcName"] = ctx.params.world;
+            ctx.body["dcName"] = ctx.params.world;
         } else {
-            query["worldID"] = parseInt(ctx.params.world);
+            ctx.body["worldID"] = parseInt(ctx.params.world);
         }
         return;
     }
