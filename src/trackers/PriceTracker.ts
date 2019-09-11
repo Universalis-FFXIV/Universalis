@@ -13,6 +13,7 @@ export class PriceTracker extends Tracker {
     public async set(uploaderID: string, itemID: number, worldID: number, listings: MarketBoardItemListing[]) {
         const data: MarketInfoLocalData = {
             itemID,
+            lastUploadTime: Date.now(),
             listings,
             uploaderID,
             worldID

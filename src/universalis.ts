@@ -21,6 +21,7 @@ import { Collection } from "mongodb";
 
 import { CharacterContentIDUpload } from "./models/CharacterContentIDUpload";
 import { City } from "./models/City";
+import { ExtendedHistory } from "./models/ExtendedHistory";
 import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
 import { MarketBoardListingsUpload } from "./models/MarketBoardListingsUpload";
@@ -127,23 +128,30 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     await init;
 
-    const query = { itemID: parseInt(ctx.params.item) };
+    const queryParameters: string[] = ctx.params.item.split(/[?&]+/g);
+
+    const itemID = parseInt(queryParameters[0]);
+    const entriesToReturn = parseInt(queryParameters.find((param) => param.startsWith("entries")));
+
+    const query = { itemID: itemID };
     if (!parseInt(ctx.params.world)) {
         query["dcName"] = ctx.params.world;
     } else {
         query["worldID"] = parseInt(ctx.params.world);
     }
 
-    const data = await extendedHistory.findOne(query, { projection: { _id: 0 } });
+    const data: ExtendedHistory = await extendedHistory.findOne(query, { projection: { _id: 0 } });
 
     if (!data) {
         ctx.body = {
             entries: [],
-            itemID: ctx.params.item,
+            itemID: itemID,
             worldID: ctx.params.world
         };
         return;
     }
+
+    data.entries = data.entries.slice(0, Math.min(500, entriesToReturn));
 
     ctx.body = data;
 });
