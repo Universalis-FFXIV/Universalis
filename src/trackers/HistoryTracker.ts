@@ -1,3 +1,5 @@
+import isEqual from "lodash.isequal";
+
 import { getWorldDC, getWorldName } from "../util";
 
 import { Tracker } from "./Tracker";
@@ -49,11 +51,12 @@ export class HistoryTracker extends Tracker {
     private async updateExtendedHistory(uploaderID: string, itemID: number, worldID: number,
                                         entries: MarketBoardHistoryEntry[]) {
         // Cut out any properties we don't need
-        const minimizedEntries: MinimizedHistoryEntry[] = entries.map((entry) => {
+        let minimizedEntries: MinimizedHistoryEntry[] = entries.map((entry) => {
             return {
                 hq: entry.hq,
                 pricePerUnit: entry.pricePerUnit,
-                timestamp: entry.timestamp
+                timestamp: entry.timestamp,
+                uploaderID
             };
         });
 
@@ -64,11 +67,23 @@ export class HistoryTracker extends Tracker {
         let extendedHistory: ExtendedHistory;
         if (existing) {
             extendedHistory = existing;
+
+            minimizedEntries = minimizedEntries.map((entry) => {
+                if (extendedHistory.entries.some((ex) => {
+                    return isEqual({
+                        hq: ex.hq,
+                        pricePerUnit: ex.pricePerUnit,
+                        timestamp: ex.timestamp
+                    }, entry);
+                })) {
+                    return;
+                }
+                return entry;
+            });
         } else {
             extendedHistory = {
                 entries: [],
                 itemID,
-                uploaderID,
                 worldID
             };
         }
@@ -78,6 +93,7 @@ export class HistoryTracker extends Tracker {
         if (entrySum > 500) {
             extendedHistory.entries = extendedHistory.entries.slice(0, 500 - minimizedEntries.length);
         }
+
         extendedHistory.entries = minimizedEntries.concat(extendedHistory.entries);
 
         if (existing) {
@@ -95,7 +111,7 @@ export class HistoryTracker extends Tracker {
         // Append world name to each entry
         (entries as MarketBoardDCHistoryEntry[]).forEach((entry) => entry.worldName = world);
 
-        const minimizedEntries: MinimizedDCHistoryEntry[] = entries.map((entry) => {
+        let minimizedEntries: MinimizedDCHistoryEntry[] = entries.map((entry) => {
             return {
                 hq: entry.hq,
                 pricePerUnit: entry.pricePerUnit,
@@ -113,6 +129,20 @@ export class HistoryTracker extends Tracker {
         if (existing) extendedHistory = existing;
         if (extendedHistory && extendedHistory.entries) { // Delete entries from the upload world
             extendedHistory.entries = extendedHistory.entries.filter((entry) => entry.worldName !== world);
+
+            minimizedEntries = minimizedEntries.map((entry) => {
+                if (extendedHistory.entries.some((ex) => {
+                    return isEqual({
+                        hq: ex.hq,
+                        pricePerUnit: ex.pricePerUnit,
+                        timestamp: ex.timestamp,
+                        worldName: world
+                    }, entry);
+                })) {
+                    return;
+                }
+                return entry;
+            });
 
             extendedHistory.entries = extendedHistory.entries.concat(minimizedEntries);
         } else {
