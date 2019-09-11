@@ -151,7 +151,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
         return;
     }
 
-    data.entries = data.entries.slice(0, Math.min(500, entriesToReturn));
+    if (entriesToReturn) data.entries = data.entries.slice(0, Math.min(500, entriesToReturn));
 
     ctx.body = data;
 });
@@ -311,6 +311,6 @@ router.post("/upload/:apiKey", async (ctx) => {
 universalis.use(router.routes());
 
 // Start server
-const port = 3000;
+const port = 4000;
 universalis.listen(port);
 logger.info(`Server started on port ${port}.`);
