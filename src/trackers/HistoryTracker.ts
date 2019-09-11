@@ -1,5 +1,3 @@
-import isEqual from "lodash.isequal";
-
 import { getWorldDC, getWorldName } from "../util";
 
 import { Tracker } from "./Tracker";
@@ -71,15 +69,9 @@ export class HistoryTracker extends Tracker {
 
             minimizedEntries = minimizedEntries.map((entry) => {
                 if (extendedHistory.entries.some((ex) => {
-                    return isEqual({
-                        hq: ex.hq,
-                        pricePerUnit: ex.pricePerUnit,
-                        timestamp: ex.timestamp
-                    }, {
-                        hq: entry.hq,
-                        pricePerUnit: entry.pricePerUnit,
-                        timestamp: entry.timestamp
-                    });
+                    return ex.hq === entry.hq &&
+                           ex.pricePerUnit === entry.pricePerUnit &&
+                           ex.timestamp === entry.timestamp;
                 })) {
                     return;
                 }
@@ -138,17 +130,9 @@ export class HistoryTracker extends Tracker {
 
             minimizedEntries = minimizedEntries.map((entry) => {
                 if (extendedHistory.entries.some((ex) => {
-                    return isEqual({
-                        hq: ex.hq,
-                        pricePerUnit: ex.pricePerUnit,
-                        timestamp: ex.timestamp,
-                        worldName: world
-                    }, {
-                        hq: entry.hq,
-                        pricePerUnit: entry.pricePerUnit,
-                        timestamp: entry.timestamp,
-                        worldName: entry.worldName
-                    });
+                    return ex.hq === entry.hq &&
+                           ex.pricePerUnit === entry.pricePerUnit &&
+                           ex.timestamp === entry.timestamp;
                 })) {
                     return;
                 }
