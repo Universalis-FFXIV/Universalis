@@ -209,7 +209,7 @@ router.post("/upload/:apiKey", async (ctx) => {
     // TODO sanitation
     if (uploadData.listings) {
         const dataArray: MarketBoardItemListing[] = [];
-        uploadData.listings.map((listing) => {
+        uploadData.listings = uploadData.listings.map((listing) => {
             const newListing = {
                 creatorID: sha("sha256").update(listing.creatorID + "").digest("hex"),
                 creatorName: listing.creatorName,
@@ -255,9 +255,11 @@ router.post("/upload/:apiKey", async (ctx) => {
             uploadData.worldID,
             dataArray as MarketBoardItemListing[]
         );
-    } else if (uploadData.entries) {
+    }
+
+    if (uploadData.entries) {
         const dataArray: MarketBoardHistoryEntry[] = [];
-        uploadData.entries.map((entry) => {
+        uploadData.entries = uploadData.entries.map((entry) => {
             return {
                 buyerName: entry.buyerName,
                 hq: entry.hq,
@@ -281,13 +283,17 @@ router.post("/upload/:apiKey", async (ctx) => {
             uploadData.worldID,
             dataArray as MarketBoardHistoryEntry[]
         );
-    } else if (uploadData.contentID && uploadData.characterName) {
+    }
+
+    if (uploadData.contentID && uploadData.characterName) {
         uploadData.contentID = sha("sha256").update(uploadData.contentID + "").digest("hex");
 
         await contentIDCollection.set(uploadData.contentID, "player", {
             characterName: uploadData.characterName
         });
-    } else {
+    }
+
+    if (!uploadData.listings && !uploadData.entries && !uploadData.contentID && !uploadData.characterName) {
         ctx.throw(418);
     }
 
