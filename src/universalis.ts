@@ -180,8 +180,13 @@ router.post("/upload/:apiKey", async (ctx) => {
 
     const sourceName = trustedSource.sourceName;
 
-    await dbo.collection("trustedSources").updateOne({ apiKey }, {
+    if (trustedSource.uploadCount) await dbo.collection("trustedSources").updateOne({ apiKey }, {
         $inc: {
+            uploadCount: 1
+        }
+    });
+    else await dbo.collection("trustedSources").updateOne({ apiKey }, {
+        $set: {
             uploadCount: 1
         }
     });
