@@ -1,3 +1,5 @@
+import compact from "lodash.compact";
+
 import { getWorldDC, getWorldName } from "../util";
 
 import { Tracker } from "./Tracker";
@@ -67,7 +69,7 @@ export class HistoryTracker extends Tracker {
         if (existing) {
             extendedHistory = existing;
 
-            minimizedEntries = minimizedEntries.map((entry) => {
+            minimizedEntries = compact(minimizedEntries.map((entry) => {
                 if (extendedHistory.entries.some((ex) => {
                     return ex.hq === entry.hq &&
                            ex.pricePerUnit === entry.pricePerUnit &&
@@ -76,7 +78,7 @@ export class HistoryTracker extends Tracker {
                     return;
                 }
                 return entry;
-            });
+            }));
         } else {
             extendedHistory = {
                 entries: [],
@@ -128,7 +130,7 @@ export class HistoryTracker extends Tracker {
         if (extendedHistory && extendedHistory.entries) { // Delete entries from the upload world
             extendedHistory.entries = extendedHistory.entries.filter((entry) => entry.worldName !== world);
 
-            minimizedEntries = minimizedEntries.map((entry) => {
+            minimizedEntries = compact(minimizedEntries.map((entry) => {
                 if (extendedHistory.entries.some((ex) => {
                     return ex.hq === entry.hq &&
                            ex.pricePerUnit === entry.pricePerUnit &&
@@ -137,7 +139,7 @@ export class HistoryTracker extends Tracker {
                     return;
                 }
                 return entry;
-            });
+            }));
 
             extendedHistory.entries = extendedHistory.entries.concat(minimizedEntries);
         } else {
