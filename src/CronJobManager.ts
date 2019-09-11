@@ -6,7 +6,7 @@ import { CronJobManagerOptions } from "./models/CronJobManagerOptions";
 import ArchiveLogs from "./cron/ArchiveLogs";
 
 const cronJobObjects = {
-    "ArchiveLogs": ArchiveLogs
+    ArchiveLogs
 };
 
 export class CronJobManager {
@@ -18,14 +18,14 @@ export class CronJobManager {
         this.logger = options.logger;
         for (const namespace in cronJobObjects) {
             if (cronJobObjects.hasOwnProperty(namespace)) {
-                let objectBody = cronJobObjects[namespace];
+                const objectBody = cronJobObjects[namespace];
                 this.cronJobs.set(namespace, new CronJob(objectBody.cronString, objectBody.execute));
             }
         }
     }
 
     /** Start all cron jobs. */
-    startAll(): void {
+    public startAll(): void {
         this.cronJobs.forEach((cronJob) => {
             cronJob.start();
         });
@@ -33,7 +33,7 @@ export class CronJobManager {
     }
 
     /** Start a specified cron job. */
-    start(namespace: string): void {
+    public start(namespace: string): void {
         const cronJob = this.cronJobs.get(namespace);
         if (!cronJob) {
             this.logger.error("No cron job exists with name " + namespace + ".");
@@ -44,7 +44,7 @@ export class CronJobManager {
     }
 
     /** Stop a specified cron job. */
-    stop(namespace: string): void {
+    public stop(namespace: string): void {
         const cronJob = this.cronJobs.get(namespace);
         if (!cronJob) {
             this.logger.error("No cron job exists with name " + namespace + ".");

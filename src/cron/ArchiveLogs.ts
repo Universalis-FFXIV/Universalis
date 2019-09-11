@@ -1,10 +1,10 @@
 import archiver from "archiver";
 import fs from "fs";
 
-export namespace ArchiveLogs {
-    export const cronString = "0 0 0 0 0";
+export class ArchiveLogs {
+    public cronString = "0 0 0 0 0";
 
-    export async function execute() {
+    public async execute() {
         // Fetch old logs
         // Compress logs
         // Write out archive
