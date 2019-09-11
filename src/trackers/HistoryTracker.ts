@@ -75,7 +75,11 @@ export class HistoryTracker extends Tracker {
                         hq: ex.hq,
                         pricePerUnit: ex.pricePerUnit,
                         timestamp: ex.timestamp
-                    }, entry);
+                    }, {
+                        hq: entry.hq,
+                        pricePerUnit: entry.pricePerUnit,
+                        timestamp: entry.timestamp
+                    });
                 })) {
                     return;
                 }
@@ -139,7 +143,12 @@ export class HistoryTracker extends Tracker {
                         pricePerUnit: ex.pricePerUnit,
                         timestamp: ex.timestamp,
                         worldName: world
-                    }, entry);
+                    }, {
+                        hq: entry.hq,
+                        pricePerUnit: entry.pricePerUnit,
+                        timestamp: entry.timestamp,
+                        worldName: entry.worldName
+                    });
                 })) {
                     return;
                 }

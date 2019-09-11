@@ -114,11 +114,15 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 
     if (!data) {
         ctx.body = {
-            itemID: ctx.params.item,
+            itemID: parseInt(ctx.params.item),
             listings: [],
-            recentHistory: [],
-            worldID: ctx.params.world
+            recentHistory: []
         };
+        if (!parseInt(ctx.params.world)) {
+            ctx.body["dcName"] = ctx.params.world;
+        } else {
+            ctx.body["worldID"] = parseInt(ctx.params.world);
+        }
         return;
     }
 
@@ -132,6 +136,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
 
     const itemID = parseInt(queryParameters[0]);
     const entriesToReturn = parseInt(queryParameters.find((param) => param.startsWith("entries")));
+    console.log(entriesToReturn);
 
     const query = { itemID: itemID };
     if (!parseInt(ctx.params.world)) {
@@ -145,9 +150,13 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     if (!data) {
         ctx.body = {
             entries: [],
-            itemID: itemID,
-            worldID: ctx.params.world
+            itemID: itemID
         };
+        if (!parseInt(ctx.params.world)) {
+            query["dcName"] = ctx.params.world;
+        } else {
+            query["worldID"] = parseInt(ctx.params.world);
+        }
         return;
     }
 
