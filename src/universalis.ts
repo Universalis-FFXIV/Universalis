@@ -45,7 +45,9 @@ const logger = winston.createLogger({
             filename: "logs/error.log",
             level: "error"
         }),
-        new winston.transports.Console()
+        new winston.transports.Console({
+            format: winston.format.simple()
+        })
     ]
 });
 logger.info("Process started.");
