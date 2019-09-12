@@ -22,6 +22,7 @@ import { Collection } from "mongodb";
 
 import { CharacterContentIDUpload } from "./models/CharacterContentIDUpload";
 import { City } from "./models/City";
+import { DailyUploadStatistics } from "./models/DailyUploadStatistics";
 import { ExtendedHistory } from "./models/ExtendedHistory";
 import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
@@ -188,6 +189,22 @@ router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
     ctx.body = content;
 });
 
+router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
+    await init;
+
+    const data: DailyUploadStatistics = await extraDataManager.getDailyUploads();
+
+    if (!data) {
+        ctx.body =  {
+            setName: "uploadCountHistory",
+            uploadCountByDay: []
+        } as DailyUploadStatistics;
+        return;
+    }
+
+    ctx.body = data;
+});
+
 router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently updated items
     await init;
 
@@ -195,6 +212,7 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
 
     if (!data) {
         ctx.body =  {
+            setName: "recentlyUpdated",
             items: []
         } as RecentlyUpdated;
         return;
@@ -203,7 +221,7 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
     ctx.body = data;
 });
 
-router.post("/upload/:apiKey", async (ctx) => {
+router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     if (!ctx.params.apiKey) {
         return ctx.throw(401);
     }
@@ -214,6 +232,8 @@ router.post("/upload/:apiKey", async (ctx) => {
 
     await init;
 
+    const promises: Array<Promise<any>> = []; // Sort of like a thread list.
+
     // Accept identity via API key.
     const dbo = (await db).db("universalis");
     const apiKey = sha("sha512").update(ctx.params.apiKey).digest("hex");
@@ -222,18 +242,20 @@ router.post("/upload/:apiKey", async (ctx) => {
 
     const sourceName = trustedSource.sourceName;
 
-    if (trustedSource.uploadCount) await dbo.collection("trustedSources").updateOne({ apiKey }, {
+    if (trustedSource.uploadCount) promises.push(dbo.collection("trustedSources").updateOne({ apiKey }, {
         $inc: {
             uploadCount: 1
         }
-    });
-    else await dbo.collection("trustedSources").updateOne({ apiKey }, {
+    }));
+    else promises.push(dbo.collection("trustedSources").updateOne({ apiKey }, {
         $set: {
             uploadCount: 1
         }
-    });
+    }));
 
     logger.info("Received upload from " + sourceName + ":\n" + JSON.stringify(ctx.request.body));
+
+    promises.push(extraDataManager.incrementDailyUploads());
 
     // Data processing
     ctx.request.body.retainerCity = City[ctx.request.body.retainerCity];
@@ -291,12 +313,12 @@ router.post("/upload/:apiKey", async (ctx) => {
             dataArray.push(listing as any);
         }
 
-        await priceTracker.set(
+        promises.push(priceTracker.set(
             uploadData.uploaderID,
             uploadData.itemID,
             uploadData.worldID,
             dataArray as MarketBoardItemListing[]
-        );
+        ));
     }
 
     if (uploadData.entries) {
@@ -319,29 +341,31 @@ router.post("/upload/:apiKey", async (ctx) => {
             dataArray.push(entry);
         }
 
-        await historyTracker.set(
+        promises.push(historyTracker.set(
             uploadData.uploaderID,
             uploadData.itemID,
             uploadData.worldID,
             dataArray as MarketBoardHistoryEntry[]
-        );
+        ));
     }
 
     if (uploadData.itemID) {
-        await extraDataManager.addRecentlyUpdatedItem(uploadData.itemID);
+        promises.push(extraDataManager.addRecentlyUpdatedItem(uploadData.itemID));
     }
 
     if (uploadData.contentID && uploadData.characterName) {
         uploadData.contentID = sha("sha256").update(uploadData.contentID + "").digest("hex");
 
-        await contentIDCollection.set(uploadData.contentID, "player", {
+        promises.push(contentIDCollection.set(uploadData.contentID, "player", {
             characterName: uploadData.characterName
-        });
+        }));
     }
 
     if (!uploadData.listings && !uploadData.entries && !uploadData.contentID && !uploadData.characterName) {
         ctx.throw(418);
     }
+
+    await Promise.all(promises);
 
     ctx.body = "Success";
 });
