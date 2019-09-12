@@ -7,11 +7,15 @@ import { RecentlyUpdated } from "./models/RecentlyUpdated";
 export class ExtraDataManager {
     private extraDataCollection: Collection;
 
+    private shiftDailyUploadDayJob: CronJob;
+
     private dailyUploadTrackingLimit: number;
     private recentlyUpdatedItemsCap: number;
 
     constructor(extraDataCollection: Collection) {
         this.extraDataCollection = extraDataCollection;
+
+        this.shiftDailyUploadDayJob = new CronJob("* * * 0 0", this.shiftDailyUploadDay, null, true);
 
         this.dailyUploadTrackingLimit = 30;
         this.recentlyUpdatedItemsCap = 20;
@@ -50,8 +54,9 @@ export class ExtraDataManager {
             }
 
             await this.extraDataCollection.updateOne(query, {
-                setName: "recentlyUpdated",
-                items: data.items
+                $set: {
+                    items: data.items
+                }
             });
         } else {
             await this.extraDataCollection.insertOne({
@@ -91,6 +96,33 @@ export class ExtraDataManager {
             await this.extraDataCollection.insertOne({
                 setName: "uploadCountHistory",
                 uploadCountByDay: [1]
+            });
+        }
+    }
+
+    /** Drop a day, push today back, add a new today. */
+    private async shiftDailyUploadDay(): Promise<void> {
+        const query = { setName: "uploadCountHistory" };
+
+        const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query);
+
+        if (data) {
+            if (data.uploadCountByDay.length === this.dailyUploadTrackingLimit) {
+                data.uploadCountByDay.pop();
+                data.uploadCountByDay.push(0);
+            } else {
+                data.uploadCountByDay.push(0);
+            }
+
+            await this.extraDataCollection.updateOne(query, {
+                $set: {
+                    uploadCountByDay: data.uploadCountByDay
+                }
+            });
+        } else {
+            await this.extraDataCollection.insertOne({
+                setName: "uploadCountHistory",
+                uploadCountByDay: [0]
             });
         }
     }
