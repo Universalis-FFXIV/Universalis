@@ -196,6 +196,7 @@ router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
 
     if (!data) {
         ctx.body =  {
+            setName: "uploadCountHistory",
             uploadCountByDay: []
         } as DailyUploadStatistics;
         return;
@@ -211,6 +212,7 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
 
     if (!data) {
         ctx.body =  {
+            setName: "recentlyUpdated",
             items: []
         } as RecentlyUpdated;
         return;
