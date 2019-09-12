@@ -1,4 +1,4 @@
 export interface RecentlyUpdated {
-    set: string;
+    setName: string;
     items: Array<number>;
 }

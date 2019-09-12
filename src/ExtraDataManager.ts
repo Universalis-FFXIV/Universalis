@@ -1,25 +1,25 @@
 import { Collection } from "mongodb";
+import { CronJob } from "cron";
 
+import { DailyUploadStatistics } from "./models/DailyUploadStatistics";
 import { RecentlyUpdated } from "./models/RecentlyUpdated";
 
 export class ExtraDataManager {
-    public recentlyUpdatedItemsCap: number;
-
     private extraDataCollection: Collection;
 
-    constructor(extraDataCollection: Collection, recentlyUpdatedItemsCap?: number) {
+    private dailyUploadTrackingLimit: number;
+    private recentlyUpdatedItemsCap: number;
+
+    constructor(extraDataCollection: Collection) {
         this.extraDataCollection = extraDataCollection;
 
-        if (recentlyUpdatedItemsCap) {
-            this.recentlyUpdatedItemsCap = recentlyUpdatedItemsCap;
-        } else {
-            this.recentlyUpdatedItemsCap = Math.min(recentlyUpdatedItemsCap, 20);
-        }
+        this.dailyUploadTrackingLimit = 30;
+        this.recentlyUpdatedItemsCap = 20;
     }
 
     /** Return the list of the most recently updated items, or a subset of them. */
-    async getRecentlyUpdatedItems(count?: number): Promise<RecentlyUpdated> {
-        const query = { set: "recentlyUpdated" };
+    public async getRecentlyUpdatedItems(count?: number): Promise<RecentlyUpdated> {
+        const query = { setName: "recentlyUpdated" };
 
         const data: RecentlyUpdated = await this.extraDataCollection.findOne(query, { projection: { _id: 0 } });
 
@@ -29,10 +29,10 @@ export class ExtraDataManager {
     }
 
     /** Add to the list of the most recently updated items. */
-    async addRecentlyUpdatedItem(itemID: number): Promise<void> {
-        const query = { set: "recentlyUpdated" };
+    public async addRecentlyUpdatedItem(itemID: number): Promise<void> {
+        const query = { setName: "recentlyUpdated" };
 
-        const data: RecentlyUpdated = await this.extraDataCollection.findOne(query, { projection: { set: 1 } });
+        const data: RecentlyUpdated = await this.extraDataCollection.findOne(query);
 
         if (data) {
             if (data.items.indexOf(itemID) === -1) {
@@ -45,16 +45,52 @@ export class ExtraDataManager {
             }
 
             // Limit size
-            if (data.items.length > 20) data.items = data.items.slice(0, 20);
+            if (data.items.length > this.recentlyUpdatedItemsCap) {
+                data.items = data.items.slice(0, this.recentlyUpdatedItemsCap);
+            }
 
             await this.extraDataCollection.updateOne(query, {
-                set: "recentlyUpdated",
+                setName: "recentlyUpdated",
                 items: data.items
             });
         } else {
             await this.extraDataCollection.insertOne({
-                set: "recentlyUpdated",
+                setName: "recentlyUpdated",
                 items: [itemID]
+            });
+        }
+    }
+
+    /** Get the daily upload statistics for the past 30 days, or a specified shorter period. */
+    public async getDailyUploads(count?: number): Promise<DailyUploadStatistics> {
+        const query = { setName: "uploadCountHistory" };
+
+        const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query);
+
+        if (count) {
+            data.uploadCountByDay = data.uploadCountByDay.slice(0, Math.min(count, data.uploadCountByDay.length));
+        }
+
+        return data;
+    }
+
+    /** Increment the recorded uploads for today. */
+    public async incrementDailyUploads(): Promise<void> {
+        const query = { setName: "uploadCountHistory" };
+
+        const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query);
+
+        if (data) {
+            data.uploadCountByDay[data.uploadCountByDay.length - 1]++;
+            await this.extraDataCollection.updateOne(query, {
+                $set: {
+                    uploadCountByDay: data.uploadCountByDay
+                }
+            });
+        } else {
+            await this.extraDataCollection.insertOne({
+                setName: "uploadCountHistory",
+                uploadCountByDay: [1]
             });
         }
     }
