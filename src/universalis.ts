@@ -188,7 +188,7 @@ router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
     ctx.body = content;
 });
 
-router.get("/api/extra/1/recently-updated", async (ctx) => { // Recently updated items
+router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently updated items
     await init;
 
     const data: RecentlyUpdated = await extraDataManager.getRecentlyUpdatedItems();
