@@ -70,6 +70,13 @@ export class ExtraDataManager {
 
         const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query, { projection: { _id: 0 } });
 
+        if (data.uploadCountByDay.length < this.dailyUploadTrackingLimit) {
+            data.uploadCountByDay = data.uploadCountByDay.concat(
+                (new Array(this.dailyUploadTrackingLimit - data.uploadCountByDay.length))
+                .fill(0)
+            );
+        }
+
         if (count) {
             data.uploadCountByDay = data.uploadCountByDay.slice(0, Math.min(count, data.uploadCountByDay.length));
         }
