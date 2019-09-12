@@ -175,7 +175,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     ctx.body = data;
 });
 
-router.get("/api/content/:contentID", async (ctx) => { // Normal data
+router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
     await init;
 
     const content = contentIDCollection.get(sha("sha256").update(ctx.params.contentID + "").digest("hex"));
@@ -188,7 +188,7 @@ router.get("/api/content/:contentID", async (ctx) => { // Normal data
     ctx.body = content;
 });
 
-router.get("/api/extra/recently-updated", async (ctx) => { // Normal data
+router.get("/api/extra/1/recently-updated", async (ctx) => { // Recently updated items
     await init;
 
     const data: RecentlyUpdated = await extraDataManager.getRecentlyUpdatedItems();
