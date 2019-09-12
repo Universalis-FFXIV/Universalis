@@ -39,14 +39,12 @@ export class ExtraDataManager {
         const data: RecentlyUpdated = await this.extraDataCollection.findOne(query);
 
         if (data) {
-            if (data.items.indexOf(itemID) === -1) {
-                // If the existing array does not contain the item ID, concat the item with the rest of the array.
-                data.items = [itemID].concat(data.items.slice(1, data.items.length));
-            } else {
-                // If the existing array does contain the item ID, splice it out and move it to the front.
+            if (data.items.indexOf(itemID) !== -1) {
+                // Shift the item ID to the front if it's already in the "most recent" list
                 data.items.splice(data.items.indexOf(itemID), 1);
-                data.items = [itemID].concat(data.items);
             }
+
+            data.items = [itemID].concat(data.items);
 
             // Limit size
             if (data.items.length > this.recentlyUpdatedItemsCap) {
