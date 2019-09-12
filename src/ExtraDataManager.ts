@@ -68,7 +68,7 @@ export class ExtraDataManager {
     public async getDailyUploads(count?: number): Promise<DailyUploadStatistics> {
         const query = { setName: "uploadCountHistory" };
 
-        const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query);
+        const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query, { projection: { _id: 0 } });
 
         if (count) {
             data.uploadCountByDay = data.uploadCountByDay.slice(0, Math.min(count, data.uploadCountByDay.length));
