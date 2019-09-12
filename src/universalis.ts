@@ -42,7 +42,8 @@ const logger = winston.createLogger({
         new winston.transports.File({
             filename: "logs/error.log",
             level: "error"
-        })
+        }),
+        new winston.transports.Console()
     ]
 });
 logger.info("Process started.");
@@ -115,6 +116,7 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
     if (!data) {
         ctx.body = {
             itemID: parseInt(ctx.params.item),
+            lastUploadTime: 0,
             listings: [],
             recentHistory: []
         };
@@ -125,6 +127,8 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
         }
         return;
     }
+
+    if (!data.lastUploadTime) data.lastUploadTime = 0;
 
     ctx.body = data;
 });
@@ -150,7 +154,8 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     if (!data) {
         ctx.body = {
             entries: [],
-            itemID: itemID
+            itemID: itemID,
+            lastUploadTime: 0,
         };
         if (!parseInt(ctx.params.world)) {
             ctx.body["dcName"] = ctx.params.world;
@@ -160,6 +165,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
         return;
     }
 
+    if (!data.lastUploadTime) data.lastUploadTime = 0;
     if (entriesToReturn) data.entries = data.entries.slice(0, Math.min(500, entriesToReturn));
 
     ctx.body = data;
