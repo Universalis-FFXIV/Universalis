@@ -291,8 +291,6 @@ router.post("/upload/:apiKey", async (ctx) => {
             dataArray.push(listing as any);
         }
 
-        await extraDataManager.addRecentlyUpdatedItem(uploadData.itemID);
-
         await priceTracker.set(
             uploadData.uploaderID,
             uploadData.itemID,
@@ -321,14 +319,16 @@ router.post("/upload/:apiKey", async (ctx) => {
             dataArray.push(entry);
         }
 
-        await extraDataManager.addRecentlyUpdatedItem(uploadData.itemID);
-
         await historyTracker.set(
             uploadData.uploaderID,
             uploadData.itemID,
             uploadData.worldID,
             dataArray as MarketBoardHistoryEntry[]
         );
+    }
+
+    if (uploadData.itemID) {
+        await extraDataManager.addRecentlyUpdatedItem(uploadData.itemID);
     }
 
     if (uploadData.contentID && uploadData.characterName) {
