@@ -10,6 +10,7 @@ import DailyRotateFile from "winston-daily-rotate-file";
 
 import { ContentIDCollection } from "./ContentIDCollection";
 import { CronJobManager } from "./CronJobManager";
+import { ExtraDataManager } from "./ExtraDataManager";
 import { RemoteDataManager } from "./RemoteDataManager";
 
 // Scripts
@@ -26,6 +27,7 @@ import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
 import { MarketBoardListingsUpload } from "./models/MarketBoardListingsUpload";
 import { MarketBoardSaleHistoryUpload } from "./models/MarketBoardSaleHistoryUpload";
+import { RecentlyUpdated } from "./models/RecentlyUpdated";
 import { TrustedSource } from "./models/TrustedSource";
 
 import { HistoryTracker } from "./trackers/HistoryTracker";
@@ -52,6 +54,9 @@ const db = MongoClient.connect("mongodb://localhost:27017/", { useNewUrlParser: 
 var recentData: Collection;
 var extendedHistory: Collection;
 
+var extraData: Collection;
+var extraDataManager: ExtraDataManager;
+
 var contentIDCollection: ContentIDCollection;
 
 var historyTracker: HistoryTracker;
@@ -64,17 +69,14 @@ const init = (async () => {
     recentData = universalisDB.collection("recentData");
     extendedHistory = universalisDB.collection("extendedHistory");
 
-    contentIDCollection = new ContentIDCollection(
-        contentCollection
-    );
+    extraData = universalisDB.collection("extraData");
 
-    historyTracker = new HistoryTracker(
-        recentData,
-        extendedHistory
-    );
-    priceTracker = new PriceTracker(
-        recentData
-    );
+    contentIDCollection = new ContentIDCollection(contentCollection);
+
+    historyTracker = new HistoryTracker(recentData, extendedHistory);
+    priceTracker = new PriceTracker(recentData);
+
+    extraDataManager = new ExtraDataManager(extraData);
 
     logger.info("Connected to database and started trackers.");
 })();
@@ -184,6 +186,21 @@ router.get("/api/content/:contentID", async (ctx) => { // Normal data
     ctx.body = content;
 });
 
+router.get("/api/extra/recently-updated", async (ctx) => { // Normal data
+    await init;
+
+    const data: RecentlyUpdated = await extraDataManager.getRecentlyUpdatedItems();
+
+    if (!data) {
+        ctx.body =  {
+            items: []
+        } as RecentlyUpdated;
+        return;
+    }
+
+    ctx.body = data;
+});
+
 router.post("/upload/:apiKey", async (ctx) => {
     if (!ctx.params.apiKey) {
         return ctx.throw(401);
@@ -272,6 +289,8 @@ router.post("/upload/:apiKey", async (ctx) => {
             dataArray.push(listing as any);
         }
 
+        await extraDataManager.addRecentlyUpdatedItem(uploadData.itemID);
+
         await priceTracker.set(
             uploadData.uploaderID,
             uploadData.itemID,
@@ -299,6 +318,8 @@ router.post("/upload/:apiKey", async (ctx) => {
             entry.total = entry.pricePerUnit * entry.quantity;
             dataArray.push(entry);
         }
+
+        await extraDataManager.addRecentlyUpdatedItem(uploadData.itemID);
 
         await historyTracker.set(
             uploadData.uploaderID,
