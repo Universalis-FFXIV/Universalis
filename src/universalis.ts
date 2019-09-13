@@ -134,6 +134,7 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
     }
 
     if (!data.lastUploadTime) data.lastUploadTime = 0;
+    delete data.uploaderID;
 
     ctx.body = data;
 });
@@ -172,6 +173,10 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
 
     if (!data.lastUploadTime) data.lastUploadTime = 0;
     if (entriesToReturn) data.entries = data.entries.slice(0, Math.min(500, entriesToReturn));
+    data.entries = data.entries.map((entry) => {
+        delete entry.uploaderID;
+        return entry;
+    });
 
     ctx.body = data;
 });
