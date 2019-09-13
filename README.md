@@ -9,7 +9,7 @@ A crowdsourced market board aggregator.
 * /api/extra/stats/recently-updated
 * /upload/:apiKey
 
-# Client-side Development
+# Client-app Development
 Please see goat's [ACT plugin](https://github.com/goaaats/universalis_act_plugin) for an example of how to collect and upload market board data.
 
 # Development
