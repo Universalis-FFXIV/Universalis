@@ -78,8 +78,7 @@ mono_crash.*
 
 # Build results
 build/
-public/css/
-public/*.min.js
+cli/build/
 
 # Cached files
 public/csv
