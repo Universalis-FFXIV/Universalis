@@ -36,11 +36,6 @@ module.exports = {
 
 		const allListings = JSON.parse(await request(`https://universalis.app/api/${worldID}/${itemID}`)).listings;
 
-		logger.info(itemName);
-		logger.info(worldName);
-		logger.info(itemID);
-		logger.info(worldID);
-
 		const trimmedListings = allListings.map((listing) => {
 			return {
 				hq: listing.hq,
