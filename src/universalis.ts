@@ -8,6 +8,7 @@ import sha from "sha.js";
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
+import { BlacklistManager } from "./BlacklistManager";
 import { ContentIDCollection } from "./ContentIDCollection";
 import { CronJobManager } from "./CronJobManager";
 import { ExtraDataManager } from "./ExtraDataManager";
@@ -57,6 +58,9 @@ const db = MongoClient.connect("mongodb://localhost:27017/", { useNewUrlParser: 
 var recentData: Collection;
 var extendedHistory: Collection;
 
+var blacklist: Collection;
+var blacklistManager: BlacklistManager;
+
 var extraData: Collection;
 var extraDataManager: ExtraDataManager;
 
@@ -72,12 +76,16 @@ const init = (async () => {
     recentData = universalisDB.collection("recentData");
     extendedHistory = universalisDB.collection("extendedHistory");
 
+    blacklist = universalisDB.collection("blacklist");
+
     extraData = universalisDB.collection("extraData");
 
     contentIDCollection = new ContentIDCollection(contentCollection);
 
     historyTracker = new HistoryTracker(recentData, extendedHistory);
     priceTracker = new PriceTracker(recentData);
+
+    blacklistManager = new BlacklistManager(blacklist);
 
     extraDataManager = new ExtraDataManager(extraData);
 
@@ -275,7 +283,11 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     if (!uploadData.worldID || !uploadData.itemID) return ctx.throw(415);
     if (uploadData.worldID <= 16 || uploadData.worldID >= 100) return ctx.throw(415);
 
-    // TODO sanitation
+    // Check blacklisted uploaders (people who upload fake data)
+    uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
+    if (await blacklistManager.has(uploadData.uploaderID)) return ctx.throw(403);
+
+    // Hashing and passing data
     if (uploadData.listings) {
         const dataArray: MarketBoardItemListing[] = [];
         uploadData.listings = uploadData.listings.map((listing) => {
@@ -311,8 +323,6 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
             return newListing;
         });
 
-        uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
-
         for (const listing of uploadData.listings) {
             listing.total = listing.pricePerUnit * listing.quantity;
             dataArray.push(listing as any);
@@ -338,8 +348,6 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
                 timestamp: entry.timestamp
             };
         });
-
-        uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
 
         for (const entry of uploadData.entries) {
             entry.total = entry.pricePerUnit * entry.quantity;
