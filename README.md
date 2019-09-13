@@ -1,5 +1,5 @@
 # Universalis
-A crowdsourced market board aggregator. Not even nearly completed, though contributions are welcome.
+A crowdsourced market board aggregator.
 
 # Endpoint Reference
 * /api/:world/:item
@@ -8,6 +8,9 @@ A crowdsourced market board aggregator. Not even nearly completed, though contri
 * /api/extra/stats/upload-history
 * /api/extra/stats/recently-updated
 * /upload/:apiKey
+
+# Client-side Development
+Please see goat's [ACT plugin](https://github.com/goaaats/universalis_act_plugin) for an example of how to collect and upload market board data.
 
 # Development
 Requires [Node.js](https://nodejs.org/) v10 or higher, [PHP](https://www.php.net/downloads.php), [MariaDB](https://mariadb.org/download/), [Redis](https://redis.io/download), [Composer](https://getcomposer.org/), and [MongoDB Community Edition](https://docs.mongodb.com/manual/administration/install-community/) v4.2 or higher.
