@@ -1,4 +1,5 @@
 // Dependencies
+import cors from "@koa/cors";
 import Router from "@koa/router";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
@@ -105,6 +106,7 @@ const init = (async () => {
 })();
 
 const universalis = new Koa();
+universalis.use(cors());
 universalis.use(bodyParser({
     enableTypes: ["json"],
     jsonLimit: "1mb"
