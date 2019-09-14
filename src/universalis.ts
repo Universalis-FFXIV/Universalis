@@ -225,7 +225,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
 router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
     await init;
 
-    const content = contentIDCollection.get(sha("sha256").update(ctx.params.contentID + "").digest("hex"));
+    const content = contentIDCollection.get(ctx.params.contentID);
 
     if (!content) {
         ctx.body = {};
