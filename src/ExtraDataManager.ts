@@ -88,7 +88,7 @@ export class ExtraDataManager {
         if (data) {
             if (Date.now() - data.lastPush > 86400000) {
                 data.lastPush = Date.now();
-                data.uploadCountByDay = [0].concat(data.uploadCountByDay.slice(1, data.uploadCountByDay.length - 1));
+                data.uploadCountByDay = [0].concat(data.uploadCountByDay.slice(0, data.uploadCountByDay.length - 1));
             }
 
             data.uploadCountByDay[data.uploadCountByDay.length - 1]++;
