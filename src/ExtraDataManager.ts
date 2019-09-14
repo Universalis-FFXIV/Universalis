@@ -1,5 +1,4 @@
 import { Collection } from "mongodb";
-import { CronJob } from "cron";
 
 import { DailyUploadStatistics } from "./models/DailyUploadStatistics";
 import { RecentlyUpdated } from "./models/RecentlyUpdated";
@@ -7,15 +6,11 @@ import { RecentlyUpdated } from "./models/RecentlyUpdated";
 export class ExtraDataManager {
     private extraDataCollection: Collection;
 
-    private shiftDailyUploadDayJob: CronJob;
-
     private dailyUploadTrackingLimit: number;
     private recentlyUpdatedItemsCap: number;
 
     constructor(extraDataCollection: Collection) {
         this.extraDataCollection = extraDataCollection;
-
-        this.shiftDailyUploadDayJob = new CronJob("* * * 0 0", this.shiftDailyUploadDay, null, true);
 
         this.dailyUploadTrackingLimit = 30;
         this.recentlyUpdatedItemsCap = 20;
@@ -91,43 +86,23 @@ export class ExtraDataManager {
         const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query);
 
         if (data) {
+            if (Date.now() - data.lastPush > 86400000) {
+                data.lastPush = Date.now();
+                data.uploadCountByDay = [0].concat(data.uploadCountByDay.slice(1, data.uploadCountByDay.length - 1));
+            }
+
             data.uploadCountByDay[data.uploadCountByDay.length - 1]++;
             await this.extraDataCollection.updateOne(query, {
                 $set: {
+                    lastPush: data.lastPush,
                     uploadCountByDay: data.uploadCountByDay
                 }
             });
         } else {
             await this.extraDataCollection.insertOne({
                 setName: "uploadCountHistory",
+                lastPush: Date.now(),
                 uploadCountByDay: [1]
-            });
-        }
-    }
-
-    /** Drop a day, push today back, add a new today. */
-    private async shiftDailyUploadDay(): Promise<void> {
-        const query = { setName: "uploadCountHistory" };
-
-        const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query);
-
-        if (data) {
-            if (data.uploadCountByDay.length === this.dailyUploadTrackingLimit) {
-                data.uploadCountByDay.pop();
-                data.uploadCountByDay.push(0);
-            } else {
-                data.uploadCountByDay.push(0);
-            }
-
-            await this.extraDataCollection.updateOne(query, {
-                $set: {
-                    uploadCountByDay: data.uploadCountByDay
-                }
-            });
-        } else {
-            await this.extraDataCollection.insertOne({
-                setName: "uploadCountHistory",
-                uploadCountByDay: [0]
             });
         }
     }
