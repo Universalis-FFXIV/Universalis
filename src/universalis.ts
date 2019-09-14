@@ -98,7 +98,7 @@ const init = (async () => {
 	let lines = dataFile.match(/[^\r\n]+/g).slice(3);
 	for (let line of lines) {
 	    line = line.split(",");
-	    worldMap.set(line[1].replace(/[^a-zA-Z]+/g, ""), line[0]);
+	    worldMap.set(line[1].replace(/[^a-zA-Z]+/g, ""), parseInt(line[0]));
 	}
 	["Chaos", "Light", "Elemental", "Gaia", "Mana", "Aether", "Crystal", "Primal"].forEach((dc) => {
 		worldMap.set(dc, dc);
@@ -136,7 +136,7 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 
     const worldName = ctx.params.world.charAt(0) + ctx.params.world.substr(1);
 
-    if (!parseInt(ctx.params.world) || !worldMap.get(worldName)) {
+    if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
         query["dcName"] = ctx.params.world;
     } else {
         if (parseInt(ctx.params.world)) {
@@ -155,10 +155,14 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
             listings: [],
             recentHistory: []
         };
-        if (!parseInt(ctx.params.world)) {
+        if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
             ctx.body["dcName"] = ctx.params.world;
         } else {
-            ctx.body["worldID"] = parseInt(ctx.params.world);
+            if (parseInt(ctx.params.world)) {
+                ctx.body["worldID"] = parseInt(ctx.params.world);
+            } else {
+                ctx.body["worldID"] = worldMap.get(worldName);
+            }
         }
         return;
     }
@@ -179,10 +183,10 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
     const query = { itemID: itemID };
-    
+
     const worldName = ctx.params.world.charAt(0) + ctx.params.world.substr(1);
 
-    if (!parseInt(ctx.params.world) || !worldMap.get(worldName)) {
+    if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
         query["dcName"] = ctx.params.world;
     } else {
         if (parseInt(ctx.params.world)) {
@@ -200,10 +204,14 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
             itemID: itemID,
             lastUploadTime: 0,
         };
-        if (!parseInt(ctx.params.world)) {
+        if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
             ctx.body["dcName"] = ctx.params.world;
         } else {
-            ctx.body["worldID"] = parseInt(ctx.params.world);
+            if (parseInt(ctx.params.world)) {
+                ctx.body["worldID"] = parseInt(ctx.params.world);
+            } else {
+                ctx.body["worldID"] = worldMap.get(worldName);
+            }
         }
         return;
     }
