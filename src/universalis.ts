@@ -70,6 +70,8 @@ var contentIDCollection: ContentIDCollection;
 var historyTracker: HistoryTracker;
 var priceTracker: PriceTracker;
 
+var remoteDataManager: RemoteDataManager;
+
 const worldMap = new Map();
 
 const init = (async () => {
@@ -93,12 +95,13 @@ const init = (async () => {
 
     extraDataManager = new ExtraDataManager(extraData);
 
+    remoteDataManager = new RemoteDataManager({ logger });
+    remoteDataManager.fetchAll();
+
     // World-ID conversions
-    const dataFile = await request("https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/World.csv");
-	let lines = dataFile.match(/[^\r\n]+/g).slice(3);
-	for (let line of lines) {
-	    line = line.split(",");
-	    worldMap.set(line[1].replace(/[^a-zA-Z]+/g, ""), parseInt(line[0]));
+    const worldList = await remoteDataManager.parseCSV("World.csv");
+	for (let worldEntry of worldList) {
+	    worldMap.set(worldEntry[1], parseInt(worldEntry[0]));
 	}
 
     logger.info("Connected to database and started data managers.");
@@ -109,11 +112,6 @@ universalis.use(bodyParser({
     enableTypes: ["json"],
     jsonLimit: "1mb"
 }));
-
-/*const cronManager = new CronJobManager({ logger });
-cronManager.startAll();*/
-const remoteDataManager = new RemoteDataManager({ logger });
-remoteDataManager.fetchAll();
 
 universalis.use(async (ctx, next) => {
     console.log(`${ctx.method} ${ctx.url}`);
