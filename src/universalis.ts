@@ -134,7 +134,7 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 
     const query = { itemID: parseInt(ctx.params.item) };
 
-    const worldName = ctx.params.world.charAt(0) + ctx.params.world.substr(1);
+    const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
 
     if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
         query["dcName"] = ctx.params.world;
@@ -184,7 +184,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
 
     const query = { itemID: itemID };
 
-    const worldName = ctx.params.world.charAt(0) + ctx.params.world.substr(1);
+    const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
 
     if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
         query["dcName"] = ctx.params.world;
