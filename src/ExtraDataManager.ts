@@ -91,7 +91,7 @@ export class ExtraDataManager {
                 data.uploadCountByDay = [0].concat(data.uploadCountByDay.slice(0, data.uploadCountByDay.length - 1));
             }
 
-            data.uploadCountByDay[data.uploadCountByDay.length - 1]++;
+            data.uploadCountByDay[0]++;
             await this.extraDataCollection.updateOne(query, {
                 $set: {
                     lastPush: data.lastPush,
