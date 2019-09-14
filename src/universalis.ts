@@ -5,7 +5,6 @@ import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import serve from "koa-static";
 import { MongoClient } from "mongodb";
-import request from "request-promise";
 import sha from "sha.js";
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
