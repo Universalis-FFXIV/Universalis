@@ -20,7 +20,7 @@ export class ExtraDataManager {
     public async getRecentlyUpdatedItems(count?: number): Promise<RecentlyUpdated> {
         const query = { setName: "recentlyUpdated" };
 
-        const data: RecentlyUpdated = await this.extraDataCollection.findOne(query, { projection: { _id: 0 } });
+        const data: RecentlyUpdated = await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0 } });
 
         if (count) data.items = data.items.slice(0, Math.min(count, data.items.length));
 
@@ -63,7 +63,7 @@ export class ExtraDataManager {
     public async getDailyUploads(count?: number): Promise<DailyUploadStatistics> {
         const query = { setName: "uploadCountHistory" };
 
-        const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query, { projection: { _id: 0 } });
+        const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0 } });
 
         if (data.uploadCountByDay.length < this.dailyUploadTrackingLimit) {
             data.uploadCountByDay = data.uploadCountByDay.concat(

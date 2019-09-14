@@ -4,6 +4,7 @@ import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import serve from "koa-static";
 import { MongoClient } from "mongodb";
+import request from "request-promise";
 import sha from "sha.js";
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
@@ -68,6 +69,9 @@ var contentIDCollection: ContentIDCollection;
 
 var historyTracker: HistoryTracker;
 var priceTracker: PriceTracker;
+
+const worldMap = new Map();
+
 const init = (async () => {
     const universalisDB = (await db).db("universalis");
 
@@ -89,7 +93,18 @@ const init = (async () => {
 
     extraDataManager = new ExtraDataManager(extraData);
 
-    logger.info("Connected to database and started trackers.");
+    // World-ID conversions
+    const dataFile = await request("https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/World.csv");
+	let lines = dataFile.match(/[^\r\n]+/g).slice(3);
+	for (let line of lines) {
+	    line = line.split(",");
+	    worldMap.set(line[1].replace(/[^a-zA-Z]+/g, ""), parseInt(line[0]));
+	}
+	["Chaos", "Light", "Elemental", "Gaia", "Mana", "Aether", "Crystal", "Primal"].forEach((dc) => {
+		worldMap.set(dc, dc);
+	});
+
+    logger.info("Connected to database and started data managers.");
 })();
 
 const universalis = new Koa();
@@ -118,10 +133,17 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
     await init;
 
     const query = { itemID: parseInt(ctx.params.item) };
-    if (!parseInt(ctx.params.world)) {
+
+    const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
+
+    if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
         query["dcName"] = ctx.params.world;
     } else {
-        query["worldID"] = parseInt(ctx.params.world);
+        if (parseInt(ctx.params.world)) {
+            query["worldID"] = parseInt(ctx.params.world);
+        } else {
+            query["worldID"] = worldMap.get(worldName);
+        }
     }
 
     const data = await recentData.findOne(query, { projection: { _id: 0 } });
@@ -133,10 +155,14 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
             listings: [],
             recentHistory: []
         };
-        if (!parseInt(ctx.params.world)) {
+        if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
             ctx.body["dcName"] = ctx.params.world;
         } else {
-            ctx.body["worldID"] = parseInt(ctx.params.world);
+            if (parseInt(ctx.params.world)) {
+                ctx.body["worldID"] = parseInt(ctx.params.world);
+            } else {
+                ctx.body["worldID"] = worldMap.get(worldName);
+            }
         }
         return;
     }
@@ -157,10 +183,17 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
     const query = { itemID: itemID };
-    if (!parseInt(ctx.params.world)) {
+
+    const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
+
+    if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
         query["dcName"] = ctx.params.world;
     } else {
-        query["worldID"] = parseInt(ctx.params.world);
+        if (parseInt(ctx.params.world)) {
+            query["worldID"] = parseInt(ctx.params.world);
+        } else {
+            query["worldID"] = worldMap.get(worldName);
+        }
     }
 
     const data: ExtendedHistory = await extendedHistory.findOne(query, { projection: { _id: 0 } });
@@ -171,10 +204,14 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
             itemID: itemID,
             lastUploadTime: 0,
         };
-        if (!parseInt(ctx.params.world)) {
+        if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
             ctx.body["dcName"] = ctx.params.world;
         } else {
-            ctx.body["worldID"] = parseInt(ctx.params.world);
+            if (parseInt(ctx.params.world)) {
+                ctx.body["worldID"] = parseInt(ctx.params.world);
+            } else {
+                ctx.body["worldID"] = worldMap.get(worldName);
+            }
         }
         return;
     }
