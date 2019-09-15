@@ -254,6 +254,21 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
     ctx.body = data;
 });
 
+router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recently updated items
+    await init;
+
+    const data: WorldItemPairList = await extraDataManager.getLeastRecentlyUpdatedItems();
+
+    if (!data) {
+        ctx.body =  {
+            items: []
+        } as WorldItemPairList;
+        return;
+    }
+
+    ctx.body = data;
+});
+
 router.get("/api/extra/stats/never-updated", async (ctx) => { // Never updated items
     await init;
 

@@ -3,6 +3,7 @@ import { Collection } from "mongodb";
 import { DailyUploadStatistics } from "./models/DailyUploadStatistics";
 import { RecentlyUpdated } from "./models/RecentlyUpdated";
 import { WorldItemPair } from "./models/WorldItemPair";
+import { WorldItemPairList } from "./models/WorldItemPairList";
 
 export class ExtraDataManager {
     private extraDataCollection: Collection;
@@ -33,28 +34,27 @@ export class ExtraDataManager {
     }
 
     /** Return the list of the least recently updated items, or a subset of them. */
-    public async getLeastRecentlyUpdatedItems(count?: number): Promise<RecentlyUpdated> {
+    public async getLeastRecentlyUpdatedItems(count?: number): Promise<WorldItemPairList> {
         if (count) count = Math.max(count, 0);
         else count = Number.MAX_VALUE;
 
-        const query = { setName: "recentlyUpdated" };
+        const sortQuery = { timestamp: 1 };
 
-        const data: RecentlyUpdated = await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0 } });
+        let items: Array<WorldItemPair> = await this.recentData.find({}, { projection: { worldID: 1, itemID: 1 } })
+            .sort(sortQuery).limit(Math.min(count, this.recentlyUpdatedItemsCap)).toArray();
 
-        if (count) data.items = data.items.slice(0, Math.min(count, data.items.length));
-
-        return data;
+        return { items };
     }
 
-    /** Return the list of 20 items never uploaded, or a subset of them. */
-    public async getNeverUpdatedItems(count?: number): Promise<Array<WorldItemPair>> {
+    /** Return the list of items never uploaded, or a subset of them. */
+    public async getNeverUpdatedItems(count?: number): Promise<WorldItemPairList> {
         if (count) count = Math.max(count, 0);
         else count = Number.MAX_VALUE;
 
         const items: Array<WorldItemPair> = [];
 
         for (let i = 0; i < this.maxUnsafeLoopCount; i++) {
-            if (items.length === Math.min(count, this.neverUpdatedItemsCap)) return items;
+            if (items.length === Math.min(count, this.neverUpdatedItemsCap)) return { items };
 
             const worldID = (() => {
                 let number = Math.floor(Math.random() * 87) + 13;
@@ -73,7 +73,7 @@ export class ExtraDataManager {
             if (!randomData) items.push({ worldID, itemID });
         }
 
-        return items;
+        return { items };
     }
 
     /** Add to the list of the most recently updated items. */
