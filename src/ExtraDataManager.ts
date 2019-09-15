@@ -2,27 +2,55 @@ import { Collection } from "mongodb";
 
 import { DailyUploadStatistics } from "./models/DailyUploadStatistics";
 import { RecentlyUpdated } from "./models/RecentlyUpdated";
+import { WorldItemPair } from "./models/WorldItemPair";
 
 export class ExtraDataManager {
     private extraDataCollection: Collection;
+    private recentData: Collection;
 
-    private dailyUploadTrackingLimit: number;
-    private recentlyUpdatedItemsCap: number;
+    private dailyUploadTrackingLimit = 30;
+    private maxUnsafeLoopCount = 50;
+    private neverUpdatedItemsCap = 20;
+    private recentlyUpdatedItemsCap = 20;
 
-    constructor(extraDataCollection: Collection) {
+    constructor(extraDataCollection: Collection, recentData: Collection) {
         this.extraDataCollection = extraDataCollection;
-
-        this.dailyUploadTrackingLimit = 30;
-        this.recentlyUpdatedItemsCap = 20;
+        this.recentData = recentData;
     }
 
     /** Return the list of the most recently updated items, or a subset of them. */
     public async getRecentlyUpdatedItems(count?: number): Promise<RecentlyUpdated> {
+        if (count) count = Math.max(count, 0);
+
         const query = { setName: "recentlyUpdated" };
 
         const data: RecentlyUpdated = await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0 } });
 
         if (count) data.items = data.items.slice(0, Math.min(count, data.items.length));
+
+        return data;
+    }
+
+    /** Return the list of 20 items never uploaded, or a subset of them. */
+    public async getNeverUpdatedItems(count?: number): Promise<any> {
+        if (count) count = Math.max(count, 0);
+
+        const items: Array<WorldItemPair> = [];
+
+        for (let i = 0; i < this.maxUnsafeLoopCount; i++) {
+            if (items.length === this.neverUpdatedItemsCap) return;
+
+            const worldID = 0;
+
+            const randomData = this.recentData.findOne({ worldID: Math.floor(Math.random()) },
+                { projection: { _id: 0, listings: 0, recentHistory: 0 } });
+        }
+
+        const query = { timestamp: "0" };
+
+        const data = await this.recentData.findOne(query, { projection: { _id: 0 } });
+
+        if (count) data.items = data.items.slice(0, Math.min(count, this.neverUpdatedItemsCap));
 
         return data;
     }
@@ -61,6 +89,8 @@ export class ExtraDataManager {
 
     /** Get the daily upload statistics for the past 30 days, or a specified shorter period. */
     public async getDailyUploads(count?: number): Promise<DailyUploadStatistics> {
+        if (count) count = Math.max(count, 0);
+
         const query = { setName: "uploadCountHistory" };
 
         const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0, lastPush: 0 } });
