@@ -21,6 +21,7 @@ export class ExtraDataManager {
     /** Return the list of the most recently updated items, or a subset of them. */
     public async getRecentlyUpdatedItems(count?: number): Promise<RecentlyUpdated> {
         if (count) count = Math.max(count, 0);
+        else count = Number.MAX_VALUE;
 
         const query = { setName: "recentlyUpdated" };
 
@@ -32,27 +33,33 @@ export class ExtraDataManager {
     }
 
     /** Return the list of 20 items never uploaded, or a subset of them. */
-    public async getNeverUpdatedItems(count?: number): Promise<any> {
+    public async getNeverUpdatedItems(count?: number): Promise<Array<WorldItemPair>> {
         if (count) count = Math.max(count, 0);
+        else count = Number.MAX_VALUE;
 
         const items: Array<WorldItemPair> = [];
 
         for (let i = 0; i < this.maxUnsafeLoopCount; i++) {
-            if (items.length === this.neverUpdatedItemsCap) return;
+            if (items.length === Math.min(count, this.neverUpdatedItemsCap)) return items;
 
-            const worldID = 0;
+            const worldID = (() => {
+                let number = Math.floor(Math.random() * 87) + 13;
+                if (number === 26) number--;
+                if (number === 27) number--;
+                if (number === 38) number--;
+                if (number === 84) number--;
+                return number;
+            })();
 
-            const randomData = this.recentData.findOne({ worldID: Math.floor(Math.random()) },
+            const itemID = Math.floor(Math.random() * 28099) + 1;
+
+            const randomData = await this.recentData.findOne({ worldID, itemID },
                 { projection: { _id: 0, listings: 0, recentHistory: 0 } });
+
+            if (!randomData) items.push({ worldID, itemID });
         }
 
-        const query = { timestamp: "0" };
-
-        const data = await this.recentData.findOne(query, { projection: { _id: 0 } });
-
-        if (count) data.items = data.items.slice(0, Math.min(count, this.neverUpdatedItemsCap));
-
-        return data;
+        return items;
     }
 
     /** Add to the list of the most recently updated items. */
@@ -90,6 +97,7 @@ export class ExtraDataManager {
     /** Get the daily upload statistics for the past 30 days, or a specified shorter period. */
     public async getDailyUploads(count?: number): Promise<DailyUploadStatistics> {
         if (count) count = Math.max(count, 0);
+        else count = Number.MAX_VALUE;
 
         const query = { setName: "uploadCountHistory" };
 
