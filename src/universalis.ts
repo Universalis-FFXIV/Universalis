@@ -32,6 +32,7 @@ import { MarketBoardListingsUpload } from "./models/MarketBoardListingsUpload";
 import { MarketBoardSaleHistoryUpload } from "./models/MarketBoardSaleHistoryUpload";
 import { RecentlyUpdated } from "./models/RecentlyUpdated";
 import { TrustedSource } from "./models/TrustedSource";
+import { WorldItemPairList } from "./models/WorldItemPairList";
 
 import { HistoryTracker } from "./trackers/HistoryTracker";
 import { PriceTracker } from "./trackers/PriceTracker";
@@ -56,45 +57,33 @@ const logger = winston.createLogger({
 logger.info("Process started.");
 
 const db = MongoClient.connect("mongodb://localhost:27017/", { useNewUrlParser: true, useUnifiedTopology: true });
-var recentData: Collection;
-var extendedHistory: Collection;
 
-var blacklist: Collection;
 var blacklistManager: BlacklistManager;
-
-var extraData: Collection;
-var extraDataManager: ExtraDataManager;
-
 var contentIDCollection: ContentIDCollection;
-
+var extendedHistory: Collection;
+var extraDataManager: ExtraDataManager;
 var historyTracker: HistoryTracker;
 var priceTracker: PriceTracker;
-
+var recentData: Collection;
 var remoteDataManager: RemoteDataManager;
 
 const worldMap = new Map();
 
 const init = (async () => {
+    // DB Data Managers
     const universalisDB = (await db).db("universalis");
 
+    const blacklist = universalisDB.collection("blacklist");
     const contentCollection = universalisDB.collection("content");
-
-    recentData = universalisDB.collection("recentData");
     extendedHistory = universalisDB.collection("extendedHistory");
-
-    blacklist = universalisDB.collection("blacklist");
-
-    extraData = universalisDB.collection("extraData");
-
-    contentIDCollection = new ContentIDCollection(contentCollection);
-
-    historyTracker = new HistoryTracker(recentData, extendedHistory);
-    priceTracker = new PriceTracker(recentData);
+    const extraData = universalisDB.collection("extraData");
+    recentData = universalisDB.collection("recentData");
 
     blacklistManager = new BlacklistManager(blacklist);
-
-    extraDataManager = new ExtraDataManager(extraData);
-
+    contentIDCollection = new ContentIDCollection(contentCollection);
+    extraDataManager = new ExtraDataManager(extraData, recentData);
+    historyTracker = new HistoryTracker(recentData, extendedHistory);
+    priceTracker = new PriceTracker(recentData);
     remoteDataManager = new RemoteDataManager({ logger });
     remoteDataManager.fetchAll();
 
@@ -114,8 +103,22 @@ universalis.use(bodyParser({
     jsonLimit: "1mb"
 }));
 
+// Logging
 universalis.use(async (ctx, next) => {
     console.log(`${ctx.method} ${ctx.url}`);
+    await next();
+});
+
+// Get query parameters
+universalis.use(async (ctx, next) => {
+    const queryParameters: string[] = ctx.url.substr(ctx.url.indexOf("?")).split(/[?&]+/g).slice(1);
+    ctx.queryParameters = {};
+    if (queryParameters) {
+        for (let param of queryParameters) {
+            const keyValuePair = param.split(/[^a-zA-Z0-9]+/g);
+            ctx.queryParameters[keyValuePair[0]] = keyValuePair[1];
+        }
+    }
     await next();
 });
 
@@ -172,10 +175,8 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     await init;
 
-    const queryParameters: string[] = ctx.params.item.split(/[?&]+/g);
-
-    const itemID = parseInt(queryParameters[0]);
-    let entriesToReturn: any = queryParameters.find((param) => param.startsWith("entries"));
+    const itemID = parseInt(ctx.params.item);
+    let entriesToReturn: any = ctx.queryParameters.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
     const query = { itemID: itemID };
@@ -238,11 +239,13 @@ router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
 router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
     await init;
 
-    const data: DailyUploadStatistics = await extraDataManager.getDailyUploads();
+    let daysToReturn: any = ctx.queryParameters.entries;
+    if (daysToReturn) daysToReturn = parseInt(daysToReturn.replace(/[^0-9]/g, ""));
+
+    const data: DailyUploadStatistics = await extraDataManager.getDailyUploads(daysToReturn);
 
     if (!data) {
         ctx.body =  {
-            setName: "uploadCountHistory",
             uploadCountByDay: []
         } as DailyUploadStatistics;
         return;
@@ -254,13 +257,33 @@ router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
 router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently updated items
     await init;
 
-    const data: RecentlyUpdated = await extraDataManager.getRecentlyUpdatedItems();
+    let entriesToReturn: any = ctx.queryParameters.entries;
+    if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
+
+    const data: RecentlyUpdated = await extraDataManager.getRecentlyUpdatedItems(entriesToReturn);
 
     if (!data) {
         ctx.body =  {
-            setName: "recentlyUpdated",
             items: []
         } as RecentlyUpdated;
+        return;
+    }
+
+    ctx.body = data;
+});
+
+router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recently updated items
+    await init;
+
+    let entriesToReturn: any = ctx.queryParameters.entries;
+    if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
+
+    const data: WorldItemPairList = await extraDataManager.getLeastRecentlyUpdatedItems(entriesToReturn);
+
+    if (!data) {
+        ctx.body =  {
+            items: []
+        } as WorldItemPairList;
         return;
     }
 
@@ -273,6 +296,7 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     }
 
     if (!ctx.is("json")) {
+        ctx.body = "Unsupported content type";
         return ctx.throw(415);
     }
 
@@ -311,14 +335,25 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
         MarketBoardSaleHistoryUpload
     = ctx.request.body;
 
-    // You can't upload data for these worlds because you can't scrape it.
-    // This does include Chinese and Korean worlds for the time being.
-    if (!uploadData.worldID || !uploadData.itemID) return ctx.throw(415);
-    if (uploadData.worldID <= 16 || uploadData.worldID >= 100) return ctx.throw(415);
-
     // Check blacklisted uploaders (people who upload fake data)
     uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
     if (await blacklistManager.has(uploadData.uploaderID)) return ctx.throw(403);
+
+    // You can't upload data for these worlds because you can't scrape it.
+    // This does include Chinese and Korean worlds for the time being.
+    if (!uploadData.worldID || !uploadData.itemID) {
+        ctx.body = "Unsupported World";
+        return ctx.throw(404);
+    }
+    if (uploadData.worldID <= 16 ||
+            uploadData.worldID >= 100 ||
+            uploadData.worldID === 26 ||
+            uploadData.worldID === 27 ||
+            uploadData.worldID === 38 ||
+            uploadData.worldID === 84) {
+        ctx.body = "Unsupported World";
+        return ctx.throw(404);
+    }
 
     // Hashing and passing data
     if (uploadData.listings) {
