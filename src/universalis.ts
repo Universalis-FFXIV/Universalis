@@ -70,12 +70,6 @@ var remoteDataManager: RemoteDataManager;
 const worldMap = new Map();
 
 const init = (async () => {
-    // World-ID conversions
-    const worldList = await remoteDataManager.parseCSV("World.csv");
-	for (let worldEntry of worldList) {
-	    worldMap.set(worldEntry[1], parseInt(worldEntry[0]));
-	}
-
     // DB Data Managers
     const universalisDB = (await db).db("universalis");
 
@@ -92,6 +86,12 @@ const init = (async () => {
     priceTracker = new PriceTracker(recentData);
     remoteDataManager = new RemoteDataManager({ logger });
     remoteDataManager.fetchAll();
+
+    // World-ID conversions
+    const worldList = await remoteDataManager.parseCSV("World.csv");
+	for (let worldEntry of worldList) {
+	    worldMap.set(worldEntry[1], parseInt(worldEntry[0]));
+	}
 
     logger.info("Connected to database and started data managers.");
 })();
@@ -227,7 +227,12 @@ router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
 router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
     await init;
 
-    const data: DailyUploadStatistics = await extraDataManager.getDailyUploads();
+    const queryParameters: string[] = ctx.url.substr(ctx.url.indexOf("?")).split(/[?&]+/g).slice(1);
+
+    let daysToReturn: any = queryParameters.find((param) => param.startsWith("entries"));
+    if (daysToReturn) daysToReturn = parseInt(daysToReturn.replace(/[^0-9]/g, ""));
+
+    const data: DailyUploadStatistics = await extraDataManager.getDailyUploads(daysToReturn);
 
     if (!data) {
         ctx.body =  {
@@ -242,7 +247,12 @@ router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
 router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently updated items
     await init;
 
-    const data: RecentlyUpdated = await extraDataManager.getRecentlyUpdatedItems();
+    const queryParameters: string[] = ctx.url.substr(ctx.url.indexOf("?")).split(/[?&]+/g).slice(1);
+
+    let entriesToReturn: any = queryParameters.find((param) => param.startsWith("entries"));
+    if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
+
+    const data: RecentlyUpdated = await extraDataManager.getRecentlyUpdatedItems(entriesToReturn);
 
     if (!data) {
         ctx.body =  {
@@ -257,7 +267,12 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
 router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recently updated items
     await init;
 
-    const data: WorldItemPairList = await extraDataManager.getLeastRecentlyUpdatedItems();
+    const queryParameters: string[] = ctx.url.substr(ctx.url.indexOf("?")).split(/[?&]+/g).slice(1);
+
+    let entriesToReturn: any = queryParameters.find((param) => param.startsWith("entries"));
+    if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
+
+    const data: WorldItemPairList = await extraDataManager.getLeastRecentlyUpdatedItems(entriesToReturn);
 
     if (!data) {
         ctx.body =  {

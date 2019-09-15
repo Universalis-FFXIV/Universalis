@@ -28,14 +28,14 @@ export class ExtraDataManager {
 
         const data: RecentlyUpdated = await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0 } });
 
-        if (count) data.items = data.items.slice(0, Math.min(count, data.items.length));
+        if (count && data) data.items = data.items.slice(0, Math.min(count, data.items.length));
 
         return data;
     }
 
     /** Return the list of the least recently updated items, or a subset of them. */
     public async getLeastRecentlyUpdatedItems(count?: number): Promise<WorldItemPairList> {
-        let items = (await this.getNeverUpdatedItems()).items;
+        let items = (await this.getNeverUpdatedItems(count)).items;
 
         if (count) count = Math.max(count, 0);
         else count = Number.MAX_VALUE;
@@ -122,14 +122,14 @@ export class ExtraDataManager {
 
         const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0, lastPush: 0 } });
 
-        if (data.uploadCountByDay.length < this.dailyUploadTrackingLimit) {
+        if (data && data.uploadCountByDay.length < this.dailyUploadTrackingLimit) {
             data.uploadCountByDay = data.uploadCountByDay.concat(
                 (new Array(this.dailyUploadTrackingLimit - data.uploadCountByDay.length))
                 .fill(0)
             );
         }
 
-        if (count) {
+        if (count && data) {
             data.uploadCountByDay = data.uploadCountByDay.slice(0, Math.min(count, data.uploadCountByDay.length));
         }
 
