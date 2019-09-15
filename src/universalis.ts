@@ -269,21 +269,6 @@ router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recent
     ctx.body = data;
 });
 
-router.get("/api/extra/stats/never-updated", async (ctx) => { // Never updated items
-    await init;
-
-    const data = null; // : WorldItemPairList = await extraDataManager.getNeverUpdatedItems();
-
-    if (!data) {
-        ctx.body =  {
-            items: []
-        } as WorldItemPairList;
-        return;
-    }
-
-    ctx.body = data;
-});
-
 router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     if (!ctx.params.apiKey) {
         return ctx.throw(401);

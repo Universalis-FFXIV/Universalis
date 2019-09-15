@@ -35,19 +35,24 @@ export class ExtraDataManager {
 
     /** Return the list of the least recently updated items, or a subset of them. */
     public async getLeastRecentlyUpdatedItems(count?: number): Promise<WorldItemPairList> {
+        let items = (await this.getNeverUpdatedItems()).items;
+
         if (count) count = Math.max(count, 0);
         else count = Number.MAX_VALUE;
 
         const sortQuery = { timestamp: 1 };
 
-        let items: Array<WorldItemPair> = await this.recentData.find({}, { projection: { worldID: 1, itemID: 1 } })
-            .sort(sortQuery).limit(Math.min(count, this.recentlyUpdatedItemsCap)).toArray();
+        items.concat(await this.recentData.find({}, { projection: { worldID: 1, itemID: 1 } })
+            .sort(sortQuery)
+            .limit(Math.min(count, Math.max(0, this.recentlyUpdatedItemsCap - items.length)))
+            .toArray()
+        );
 
         return { items };
     }
 
     /** Return the list of items never uploaded, or a subset of them. */
-    public async getNeverUpdatedItems(count?: number): Promise<WorldItemPairList> {
+    private async getNeverUpdatedItems(count?: number): Promise<WorldItemPairList> {
         if (count) count = Math.max(count, 0);
         else count = Number.MAX_VALUE;
 
