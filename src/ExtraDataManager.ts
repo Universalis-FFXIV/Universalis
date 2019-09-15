@@ -32,6 +32,20 @@ export class ExtraDataManager {
         return data;
     }
 
+    /** Return the list of the least recently updated items, or a subset of them. */
+    public async getLeastRecentlyUpdatedItems(count?: number): Promise<RecentlyUpdated> {
+        if (count) count = Math.max(count, 0);
+        else count = Number.MAX_VALUE;
+
+        const query = { setName: "recentlyUpdated" };
+
+        const data: RecentlyUpdated = await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0 } });
+
+        if (count) data.items = data.items.slice(0, Math.min(count, data.items.length));
+
+        return data;
+    }
+
     /** Return the list of 20 items never uploaded, or a subset of them. */
     public async getNeverUpdatedItems(count?: number): Promise<Array<WorldItemPair>> {
         if (count) count = Math.max(count, 0);
