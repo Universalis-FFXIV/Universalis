@@ -7,7 +7,7 @@ A crowdsourced market board aggregator.
 * /api/extra/content/:contentID
 * /api/extra/stats/upload-history
 * /api/extra/stats/recently-updated
-* /api/extra/stats/never-updated
+* /api/extra/stats/least-recently-updated
 * /upload/:apiKey
 
 # Client-app Development
