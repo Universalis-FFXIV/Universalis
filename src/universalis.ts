@@ -175,10 +175,8 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     await init;
 
-    const queryParameters: string[] = ctx.params.item.split(/[?&]+/g);
-
-    const itemID = parseInt(queryParameters[0]);
-    let entriesToReturn: any = queryParameters.find((param) => param.startsWith("entries"));
+    const itemID = parseInt(ctx.params.item);
+    let entriesToReturn: any = ctx.queryParameters.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
     const query = { itemID: itemID };
