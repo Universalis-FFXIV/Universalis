@@ -103,8 +103,22 @@ universalis.use(bodyParser({
     jsonLimit: "1mb"
 }));
 
+// Logging
 universalis.use(async (ctx, next) => {
     console.log(`${ctx.method} ${ctx.url}`);
+    await next();
+});
+
+// Get query parameters
+universalis.use(async (ctx, next) => {
+    const queryParameters: string[] = ctx.url.substr(ctx.url.indexOf("?")).split(/[?&]+/g).slice(1);
+    ctx.queryParameters = {};
+    if (queryParameters) {
+        for (let param of queryParameters) {
+            const keyValuePair = param.split(/[^a-zA-Z0-9]+/g);
+            ctx.queryParameters[keyValuePair[0]] = keyValuePair[1];
+        }
+    }
     await next();
 });
 
@@ -227,9 +241,7 @@ router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
 router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
     await init;
 
-    const queryParameters: string[] = ctx.url.substr(ctx.url.indexOf("?")).split(/[?&]+/g).slice(1);
-
-    let daysToReturn: any = queryParameters.find((param) => param.startsWith("entries"));
+    let daysToReturn: any = ctx.queryParameters.entries;
     if (daysToReturn) daysToReturn = parseInt(daysToReturn.replace(/[^0-9]/g, ""));
 
     const data: DailyUploadStatistics = await extraDataManager.getDailyUploads(daysToReturn);
@@ -247,9 +259,7 @@ router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
 router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently updated items
     await init;
 
-    const queryParameters: string[] = ctx.url.substr(ctx.url.indexOf("?")).split(/[?&]+/g).slice(1);
-
-    let entriesToReturn: any = queryParameters.find((param) => param.startsWith("entries"));
+    let entriesToReturn: any = ctx.queryParameters.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
     const data: RecentlyUpdated = await extraDataManager.getRecentlyUpdatedItems(entriesToReturn);
@@ -267,9 +277,7 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
 router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recently updated items
     await init;
 
-    const queryParameters: string[] = ctx.url.substr(ctx.url.indexOf("?")).split(/[?&]+/g).slice(1);
-
-    let entriesToReturn: any = queryParameters.find((param) => param.startsWith("entries"));
+    let entriesToReturn: any = ctx.queryParameters.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
     const data: WorldItemPairList = await extraDataManager.getLeastRecentlyUpdatedItems(entriesToReturn);
