@@ -341,11 +341,7 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
 
     // You can't upload data for these worlds because you can't scrape it.
     // This does include Chinese and Korean worlds for the time being.
-    if (!uploadData.worldID || !uploadData.itemID) {
-        ctx.body = "Unsupported World";
-        return ctx.throw(404);
-    }
-    if (uploadData.worldID <= 16 ||
+    if (uploadData.worldID && uploadData.worldID <= 16 ||
             uploadData.worldID >= 100 ||
             uploadData.worldID === 26 ||
             uploadData.worldID === 27 ||
@@ -353,6 +349,12 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
             uploadData.worldID === 84) {
         ctx.body = "Unsupported World";
         return ctx.throw(404);
+    }
+
+    // Other filters
+    if (!uploadData.worldID && !uploadData.itemID && !uploadData.contentID) {
+        ctx.body = "Unsupported content type";
+        return ctx.throw(415);
     }
 
     // Hashing and passing data
