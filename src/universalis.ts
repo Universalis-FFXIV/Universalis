@@ -14,6 +14,7 @@ import { ContentIDCollection } from "./ContentIDCollection";
 import { CronJobManager } from "./CronJobManager";
 import { ExtraDataManager } from "./ExtraDataManager";
 import { RemoteDataManager } from "./RemoteDataManager";
+import validation from "./validate";
 
 // Scripts
 // import createGarbageData from "../scripts/createGarbageData";
@@ -328,34 +329,16 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     promises.push(extraDataManager.incrementDailyUploads());
 
     // Data processing
-    ctx.request.body.retainerCity = City[ctx.request.body.retainerCity];
+    if (ctx.request.body.retainerCity) ctx.request.body.retainerCity = City[ctx.request.body.retainerCity];
     const uploadData:
         CharacterContentIDUpload &
         MarketBoardListingsUpload &
         MarketBoardSaleHistoryUpload
     = ctx.request.body;
 
-    // Check blacklisted uploaders (people who upload fake data)
     uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
-    if (await blacklistManager.has(uploadData.uploaderID)) return ctx.throw(403);
 
-    // You can't upload data for these worlds because you can't scrape it.
-    // This does include Chinese and Korean worlds for the time being.
-    if (uploadData.worldID && uploadData.worldID <= 16 ||
-            uploadData.worldID >= 100 ||
-            uploadData.worldID === 26 ||
-            uploadData.worldID === 27 ||
-            uploadData.worldID === 38 ||
-            uploadData.worldID === 84) {
-        ctx.body = "Unsupported World";
-        return ctx.throw(404);
-    }
-
-    // Other filters
-    if (!uploadData.worldID && !uploadData.itemID && !uploadData.contentID) {
-        ctx.body = "Unsupported content type";
-        return ctx.throw(415);
-    }
+    await validation.validateUploadData(ctx, uploadData, blacklistManager);
 
     // Hashing and passing data
     if (uploadData.listings) {
@@ -442,10 +425,6 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
         promises.push(contentIDCollection.set(uploadData.contentID, "player", {
             characterName: uploadData.characterName
         }));
-    }
-
-    if (!uploadData.listings && !uploadData.entries && !uploadData.contentID && !uploadData.characterName) {
-        ctx.throw(418);
     }
 
     await Promise.all(promises);
