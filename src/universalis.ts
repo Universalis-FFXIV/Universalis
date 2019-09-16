@@ -292,14 +292,7 @@ router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recent
 });
 
 router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
-    if (!ctx.params.apiKey) {
-        return ctx.throw(401);
-    }
-
-    if (!ctx.is("json")) {
-        ctx.body = "Unsupported content type";
-        return ctx.throw(415);
-    }
+    validation.validateUploadDataPreCast(ctx);
 
     await init;
 

@@ -7,6 +7,17 @@ import { MarketBoardListingsUpload } from "./models/MarketBoardListingsUpload";
 import { MarketBoardSaleHistoryUpload } from "./models/MarketBoardSaleHistoryUpload";
 
 export default {
+    validateUploadDataPreCast: (ctx: Context) => {
+        if (!ctx.params.apiKey) {
+            return ctx.throw(401);
+        }
+    
+        if (!ctx.is("json")) {
+            ctx.body = "Unsupported content type";
+            return ctx.throw(415);
+        }
+    },
+
     validateUploadData: async (ctx: Context, uploadData: CharacterContentIDUpload & MarketBoardListingsUpload &
                          MarketBoardSaleHistoryUpload, blacklistManager: BlacklistManager) => {
         // Check blacklisted uploaders (people who upload fake data)
