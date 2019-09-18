@@ -39,8 +39,8 @@ export class HistoryTracker extends Tracker {
         }
 
         this.updateDataCenterProperty(uploaderID, "recentHistory", itemID, worldID, recentHistory);
-        this.updateExtendedDCHistory(uploaderID, itemID, worldID, recentHistory);
-        this.updateExtendedHistory(uploaderID, itemID, worldID, recentHistory);
+        const existingExtendedHistory = await this.updateExtendedHistory(uploaderID, itemID, worldID, recentHistory);
+        this.updateExtendedDCHistory(uploaderID, itemID, worldID, existingExtendedHistory);
 
         if (existing) {
             await this.collection.updateOne(query, { $set: data });
@@ -97,14 +97,16 @@ export class HistoryTracker extends Tracker {
         extendedHistory.entries = minimizedEntries.concat(extendedHistory.entries);
 
         if (existing) {
-            return await this.extendedHistory.updateOne(query, { $set: extendedHistory });
+            await this.extendedHistory.updateOne(query, { $set: extendedHistory });
         } else {
-            return await this.extendedHistory.insertOne(extendedHistory);
+            await this.extendedHistory.insertOne(extendedHistory);
         }
+
+        return extendedHistory;
     }
 
     private async updateExtendedDCHistory(uploaderID: string, itemID: number, worldID: number,
-                                          entries: MarketBoardHistoryEntry[]) {
+                                          entries: MinimizedHistoryEntry[]) {
         const world = await getWorldName(worldID);
         const dcName = await getWorldDC(world);
 
