@@ -40,7 +40,7 @@ export class HistoryTracker extends Tracker {
 
         this.updateDataCenterProperty(uploaderID, "recentHistory", itemID, worldID, recentHistory);
         const existingExtendedHistory = await this.updateExtendedHistory(uploaderID, itemID, worldID, recentHistory);
-        this.updateExtendedDCHistory(uploaderID, itemID, worldID, existingExtendedHistory);
+        this.updateExtendedDCHistory(uploaderID, itemID, worldID, existingExtendedHistory.entries);
 
         if (existing) {
             await this.collection.updateOne(query, { $set: data });

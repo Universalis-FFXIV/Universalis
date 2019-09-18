@@ -11,10 +11,10 @@ export default {
         if (!ctx.params.apiKey) {
             return ctx.throw(401);
         }
-    
+
         if (!ctx.is("json")) {
             ctx.body = "Unsupported content type";
-            return ctx.throw(415);
+            return ctx.throw(422, "Unprocessable Entity");
         }
     },
 
@@ -35,10 +35,35 @@ export default {
             return ctx.throw(404);
         }
 
+        // Listings
+        if (uploadData.listings) uploadData.listings.forEach((listing) => {
+            if (!listing.listingID ||
+                    typeof(listing.hq) === "undefined" ||
+                    !listing.pricePerUnit ||
+                    !listing.quantity ||
+                    !listing.retainerID ||
+                    !listing.retainerName ||
+                    !listing.sellerID ||
+                    !listing.lastReviewTime) {
+                ctx.throw(422, "Unprocessable Entity");
+            }
+        });
+
+        // History entries
+        if (uploadData.entries) uploadData.entries.forEach((entry) => {
+            if (typeof(entry.hq) === "undefined" ||
+                    !entry.pricePerUnit ||
+                    !entry.quantity ||
+                    !entry.buyerName ||
+                    !entry.timestamp ||
+                    !entry.sellerID) {
+                ctx.throw(422, "Unprocessable Entity");
+            }
+        });
+
         // General filters
         if (!uploadData.worldID && !uploadData.itemID && !uploadData.contentID) {
-            ctx.body = "Unsupported content type";
-            return ctx.throw(415);
+            return ctx.throw(422, "Unprocessable Entity");
         }
 
         if (!uploadData.listings && !uploadData.entries && !uploadData.contentID) {
