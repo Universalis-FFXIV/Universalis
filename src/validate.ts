@@ -45,7 +45,7 @@ export default {
                     !listing.retainerName ||
                     !listing.sellerID ||
                     !listing.lastReviewTime) {
-                ctx.throw(422);
+                return ctx.throw(422);
             }
         });
 
@@ -57,9 +57,13 @@ export default {
                     !entry.buyerName ||
                     !entry.timestamp ||
                     !entry.sellerID) {
-                ctx.throw(422);
+                return ctx.throw(422);
             }
         });
+
+        // Crafter data
+        if (uploadData.contentID) if (!uploadData.characterName) return ctx.throw(422);
+        if (uploadData.characterName) if (!uploadData.contentID) return ctx.throw(422);
 
         // General filters
         if (!uploadData.worldID && !uploadData.itemID && !uploadData.contentID) {
