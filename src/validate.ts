@@ -14,7 +14,7 @@ export default {
 
         if (!ctx.is("json")) {
             ctx.body = "Unsupported content type";
-            return ctx.throw(422, "Unprocessable Entity");
+            return ctx.throw(422);
         }
     },
 
@@ -45,7 +45,7 @@ export default {
                     !listing.retainerName ||
                     !listing.sellerID ||
                     !listing.lastReviewTime) {
-                ctx.throw(422, "Unprocessable Entity");
+                ctx.throw(422);
             }
         });
 
@@ -57,13 +57,13 @@ export default {
                     !entry.buyerName ||
                     !entry.timestamp ||
                     !entry.sellerID) {
-                ctx.throw(422, "Unprocessable Entity");
+                ctx.throw(422);
             }
         });
 
         // General filters
         if (!uploadData.worldID && !uploadData.itemID && !uploadData.contentID) {
-            return ctx.throw(422, "Unprocessable Entity");
+            return ctx.throw(422);
         }
 
         if (!uploadData.listings && !uploadData.entries && !uploadData.contentID) {
