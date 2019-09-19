@@ -8,7 +8,7 @@ const util    = require("util");
 
 const readFile = util.promisify(fs.readFile);
 
-const universalis = "http://localhost:3000";
+const universalis = "http://localhost:4000";
 const debugKey = "PyrDFpV2mBCfOUtXFByRELx7SZbzxuEfrY6zTExX";
 
 const now = Date.now();
@@ -19,12 +19,15 @@ const listingUpload = {
     itemID: 26465,
     listings: [{
         hq: 1,
+        lastReviewTime: 453,
         materia: [
-            {slotID: 0, itemID: 5666},
-            {slotID: 1, itemID: 5666}
+            {slotID: 2, materiaID: 25},
+            {slotID: 2, materiaID: 25}
         ],
+        listingID: 6544789198,
         pricePerUnit: 999999999,
         quantity: 1,
+        retainerID: 56418681861,
         retainerName: "Retainername",
         retainerCity: "Kugane",
         creatorName: "Creator Name",

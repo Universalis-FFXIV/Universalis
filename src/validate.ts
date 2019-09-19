@@ -14,14 +14,15 @@ export default {
 
         if (!ctx.is("json")) {
             ctx.body = "Unsupported content type";
-            return ctx.throw(422);
+            return ctx.throw(415);
         }
     },
 
     validateUploadData: async (ctx: Context, uploadData: CharacterContentIDUpload & MarketBoardListingsUpload &
                          MarketBoardSaleHistoryUpload, blacklistManager: BlacklistManager) => {
         // Check blacklisted uploaders (people who upload fake data)
-        if (await blacklistManager.has(uploadData.uploaderID as string)) return ctx.throw(403);
+        if (!uploadData.uploaderID ||
+            await blacklistManager.has(uploadData.uploaderID as string)) return ctx.throw(403);
 
         // You can't upload data for these worlds because you can't scrape it.
         // This does include Chinese and Korean worlds for the time being.
@@ -37,15 +38,16 @@ export default {
 
         // Listings
         if (uploadData.listings) uploadData.listings.forEach((listing) => {
-            if (!listing.listingID ||
-                    typeof(listing.hq) === "undefined" ||
+            if (typeof(listing.hq) === "undefined" ||
+                    typeof(listing.lastReviewTime) === "undefined" ||
+                    !listing.listingID ||
                     !listing.pricePerUnit ||
                     !listing.quantity ||
                     !listing.retainerID ||
+                    !listing.retainerCity ||
                     !listing.retainerName ||
-                    !listing.sellerID ||
-                    !listing.lastReviewTime) {
-                return ctx.throw(422);
+                    !listing.sellerID) {
+                return ctx.throw(422, "Bad Listing Data");
             }
         });
 
@@ -57,7 +59,7 @@ export default {
                     !entry.buyerName ||
                     !entry.timestamp ||
                     !entry.sellerID) {
-                return ctx.throw(422);
+                return ctx.throw(422, "Bad History Data");
             }
         });
 

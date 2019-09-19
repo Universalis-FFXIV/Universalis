@@ -101,7 +101,7 @@ const universalis = new Koa();
 universalis.use(cors());
 universalis.use(bodyParser({
     enableTypes: ["json"],
-    jsonLimit: "1mb"
+    jsonLimit: "3mb"
 }));
 
 // Logging
@@ -292,7 +292,11 @@ router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recent
 });
 
 router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
-    validation.validateUploadDataPreCast(ctx);
+    let err = validation.validateUploadDataPreCast(ctx);
+    if (err) {
+        logger.error(err);
+        return err;
+    }
 
     await init;
 
@@ -331,7 +335,11 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
 
     uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
 
-    await validation.validateUploadData(ctx, uploadData, blacklistManager);
+    err = await validation.validateUploadData(ctx, uploadData, blacklistManager);
+    if (err) {
+        logger.error(err);
+        return err;
+    }
 
     // Hashing and passing data
     if (uploadData.listings) {
