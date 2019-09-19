@@ -20,6 +20,20 @@ export class HistoryTracker extends Tracker {
     constructor(recentData: Collection, extendedHistory: Collection) {
         super(recentData);
         this.extendedHistory = extendedHistory;
+        (async () => {
+            const indices = [
+                { dcName: 1 },
+                { itemID: 1 },
+                { worldID: 1 }
+            ];
+            const indexNames = indices.map(Object.keys);
+            for (let i = 0; i < indices.length; i++) {
+                // We check each individually to ensure we don't duplicate indices on failure.
+                if (!await this.extendedHistory.indexExists(indexNames[i])) {
+                    await this.extendedHistory.createIndex(indices[i]);
+                }
+            }
+        })();
     }
 
     public async set(uploaderID: string, itemID: number, worldID: number, recentHistory: MarketBoardHistoryEntry[]) {
@@ -39,8 +53,8 @@ export class HistoryTracker extends Tracker {
         }
 
         this.updateDataCenterProperty(uploaderID, "recentHistory", itemID, worldID, recentHistory);
-        this.updateExtendedDCHistory(uploaderID, itemID, worldID, recentHistory);
-        this.updateExtendedHistory(uploaderID, itemID, worldID, recentHistory);
+        const existingExtendedHistory = await this.updateExtendedHistory(uploaderID, itemID, worldID, recentHistory);
+        this.updateExtendedDCHistory(uploaderID, itemID, worldID, existingExtendedHistory.entries);
 
         if (existing) {
             await this.collection.updateOne(query, { $set: data });
@@ -97,14 +111,16 @@ export class HistoryTracker extends Tracker {
         extendedHistory.entries = minimizedEntries.concat(extendedHistory.entries);
 
         if (existing) {
-            return await this.extendedHistory.updateOne(query, { $set: extendedHistory });
+            await this.extendedHistory.updateOne(query, { $set: extendedHistory });
         } else {
-            return await this.extendedHistory.insertOne(extendedHistory);
+            await this.extendedHistory.insertOne(extendedHistory);
         }
+
+        return extendedHistory;
     }
 
     private async updateExtendedDCHistory(uploaderID: string, itemID: number, worldID: number,
-                                          entries: MarketBoardHistoryEntry[]) {
+                                          entries: MinimizedHistoryEntry[]) {
         const world = await getWorldName(worldID);
         const dcName = await getWorldDC(world);
 
