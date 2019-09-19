@@ -56,7 +56,7 @@ export default {
                 ctx.throw(422, "Bad Listing Data");
                 return true;
             }
-        });
+        });*/
 
         // History entries
         if (uploadData.entries) uploadData.entries.forEach((entry) => {
@@ -68,7 +68,7 @@ export default {
                 ctx.throw(422, "Bad History Data");
                 return true;
             }
-        });*/
+        });
 
         // Crafter data
         if (uploadData.contentID) if (!uploadData.characterName) return ctx.throw(422);
