@@ -43,7 +43,7 @@ export default {
         }
 
         // Listings
-        if (uploadData.listings) uploadData.listings.forEach((listing) => {
+        /*if (uploadData.listings) uploadData.listings.forEach((listing) => {
             if (typeof(listing.hq) === "undefined" ||
                     typeof(listing.lastReviewTime) === "undefined" ||
                     !listing.pricePerUnit ||
@@ -55,7 +55,7 @@ export default {
                 ctx.throw(422, "Bad Listing Data");
                 return true;
             }
-        });
+        });*/
 
         // History entries
         if (uploadData.entries) uploadData.entries.forEach((entry) => {
@@ -70,14 +70,20 @@ export default {
         });
 
         // Crafter data
-        /*if (uploadData.contentID) if (!uploadData.characterName) return ctx.throw(422);
-        if (uploadData.characterName) if (!uploadData.contentID) return ctx.throw(422);*/
-
-        // General filters
-        /*if (!uploadData.worldID && !uploadData.itemID && !uploadData.contentID) {
+        if (uploadData.contentID && !uploadData.characterName) {
             ctx.throw(422);
             return true;
-        }*/
+        }
+        if (uploadData.characterName && !uploadData.contentID) {
+            ctx.throw(422);
+            return true;
+        }
+
+        // General filters
+        if (!uploadData.worldID && !uploadData.itemID && !uploadData.contentID) {
+            ctx.throw(422);
+            return true;
+        }
 
         if (!uploadData.listings && !uploadData.entries && !uploadData.contentID) {
             ctx.throw(418);
