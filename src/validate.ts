@@ -9,12 +9,14 @@ import { MarketBoardSaleHistoryUpload } from "./models/MarketBoardSaleHistoryUpl
 export default {
     validateUploadDataPreCast: (ctx: Context) => {
         if (!ctx.params.apiKey) {
-            return ctx.throw(401);
+            ctx.throw(401);
+            return true;
         }
 
         if (!ctx.is("json")) {
             ctx.body = "Unsupported content type";
-            return ctx.throw(415);
+            ctx.throw(415);
+            return true;
         }
     },
 
@@ -22,7 +24,10 @@ export default {
                          MarketBoardSaleHistoryUpload, blacklistManager: BlacklistManager) => {
         // Check blacklisted uploaders (people who upload fake data)
         if (!uploadData.uploaderID ||
-            await blacklistManager.has(uploadData.uploaderID as string)) return ctx.throw(403);
+            await blacklistManager.has(uploadData.uploaderID as string)) {
+                ctx.throw(403);
+                return true;
+        }
 
         // You can't upload data for these worlds because you can't scrape it.
         // This does include Chinese and Korean worlds for the time being.
@@ -33,7 +38,8 @@ export default {
                 uploadData.worldID === 38 ||
                 uploadData.worldID === 84) {
             ctx.body = "Unsupported World";
-            return ctx.throw(404);
+            ctx.throw(404);
+            return true;
         }
 
         // Listings
@@ -47,7 +53,8 @@ export default {
                     !listing.retainerCity ||
                     !listing.retainerName ||
                     !listing.sellerID) {
-                return ctx.throw(422, "Bad Listing Data");
+                ctx.throw(422, "Bad Listing Data");
+                return true;
             }
         });
 
@@ -58,7 +65,8 @@ export default {
                     !entry.quantity ||
                     !entry.buyerName ||
                     !entry.sellerID) {
-                return ctx.throw(422, "Bad History Data");
+                ctx.throw(422, "Bad History Data");
+                return true;
             }
         });
 
@@ -68,11 +76,15 @@ export default {
 
         // General filters
         if (!uploadData.worldID && !uploadData.itemID && !uploadData.contentID) {
-            return ctx.throw(422);
+            ctx.throw(422);
+            return true;
         }
 
         if (!uploadData.listings && !uploadData.entries && !uploadData.contentID) {
-            return ctx.throw(418);
+            ctx.throw(418);
+            return true;
         }
+
+        return false;
     }
 }
