@@ -58,7 +58,7 @@ export default {
         });*/
 
         // History entries
-        if (uploadData.entries) uploadData.entries.forEach((entry) => {
+        /*if (uploadData.entries) uploadData.entries.forEach((entry) => {
             if (typeof(entry.hq) === "undefined" ||
                     !entry.pricePerUnit ||
                     !entry.quantity ||
@@ -83,7 +83,7 @@ export default {
         if (!uploadData.worldID && !uploadData.itemID && !uploadData.contentID) {
             ctx.throw(422);
             return true;
-        }
+        }*/
 
         if (!uploadData.listings && !uploadData.entries && !uploadData.contentID) {
             ctx.throw(418);
