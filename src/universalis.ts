@@ -294,7 +294,6 @@ router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recent
 router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     let err = validation.validateUploadDataPreCast(ctx);
     if (err) {
-        logger.error(err);
         return err;
     }
 
@@ -337,7 +336,6 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
 
     err = await validation.validateUploadData(ctx, uploadData, blacklistManager);
     if (err) {
-        logger.error(err);
         return err;
     }
 
