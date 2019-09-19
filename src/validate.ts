@@ -43,20 +43,20 @@ export default {
         }
 
         // Listings
-        /*if (uploadData.listings) uploadData.listings.forEach((listing) => {
+        if (uploadData.listings) uploadData.listings.forEach((listing) => {
             if (typeof(listing.hq) === "undefined" ||
-                    typeof(listing.lastReviewTime) === "undefined" ||
+                    typeof(listing.lastReviewTime) === "undefined" /*||
                     !listing.listingID ||
                     !listing.pricePerUnit ||
                     !listing.quantity ||
                     !listing.retainerID ||
                     !listing.retainerCity ||
                     !listing.retainerName ||
-                    !listing.sellerID) {
+                    !listing.sellerID*/) {
                 ctx.throw(422, "Bad Listing Data");
                 return true;
             }
-        });*/
+        });
 
         // History entries
         if (uploadData.entries) uploadData.entries.forEach((entry) => {
