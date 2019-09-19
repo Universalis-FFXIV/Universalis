@@ -43,7 +43,7 @@ export default {
         }
 
         // Listings
-        if (uploadData.listings) uploadData.listings.forEach((listing) => {
+        /*if (uploadData.listings) uploadData.listings.forEach((listing) => {
             if (typeof(listing.hq) === "undefined" ||
                     typeof(listing.lastReviewTime) === "undefined" ||
                     !listing.listingID ||
@@ -68,7 +68,7 @@ export default {
                 ctx.throw(422, "Bad History Data");
                 return true;
             }
-        });
+        });*/
 
         // Crafter data
         if (uploadData.contentID) if (!uploadData.characterName) return ctx.throw(422);
