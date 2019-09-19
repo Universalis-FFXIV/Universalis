@@ -57,7 +57,6 @@ export default {
                     !entry.pricePerUnit ||
                     !entry.quantity ||
                     !entry.buyerName ||
-                    !entry.timestamp ||
                     !entry.sellerID) {
                 return ctx.throw(422, "Bad History Data");
             }
