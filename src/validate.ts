@@ -70,8 +70,8 @@ export default {
         });
 
         // Crafter data
-        if (uploadData.contentID) if (!uploadData.characterName) return ctx.throw(422);
-        if (uploadData.characterName) if (!uploadData.contentID) return ctx.throw(422);
+        /*if (uploadData.contentID) if (!uploadData.characterName) return ctx.throw(422);
+        if (uploadData.characterName) if (!uploadData.contentID) return ctx.throw(422);*/
 
         // General filters
         if (!uploadData.worldID && !uploadData.itemID && !uploadData.contentID) {
