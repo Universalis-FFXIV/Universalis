@@ -45,9 +45,9 @@ export default {
         // Listings
         if (uploadData.listings) uploadData.listings.forEach((listing) => {
             if (typeof(listing.hq) === "undefined" ||
-                    typeof(listing.lastReviewTime) === "undefined" /*||
+                    typeof(listing.lastReviewTime) === "undefined" ||
                     !listing.listingID ||
-                    !listing.pricePerUnit ||
+                    !listing.pricePerUnit/*||
                     !listing.quantity ||
                     !listing.retainerID ||
                     !listing.retainerCity ||
