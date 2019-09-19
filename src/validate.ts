@@ -74,10 +74,10 @@ export default {
         if (uploadData.characterName) if (!uploadData.contentID) return ctx.throw(422);*/
 
         // General filters
-        if (!uploadData.worldID && !uploadData.itemID && !uploadData.contentID) {
+        /*if (!uploadData.worldID && !uploadData.itemID && !uploadData.contentID) {
             ctx.throw(422);
             return true;
-        }
+        }*/
 
         if (!uploadData.listings && !uploadData.entries && !uploadData.contentID) {
             ctx.throw(418);
