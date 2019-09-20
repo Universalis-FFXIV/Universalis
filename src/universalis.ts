@@ -91,7 +91,7 @@ const init = (async () => {
     // World-ID conversions
     const worldList = await remoteDataManager.parseCSV("World.csv");
 	for (let worldEntry of worldList) {
-        if (worldEntry[0] == 25) continue; 
+        if (worldEntry[0] == 25) continue;
 	    worldMap.set(worldEntry[1], parseInt(worldEntry[0]));
 	}
 
@@ -347,14 +347,14 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
             const newListing = {
                 creatorID: sha("sha256").update(listing.creatorID + "").digest("hex"),
                 creatorName: listing.creatorName,
-                hq: listing.hq,
+                hq: typeof listing.hq === "undefined" ? false : listing.hq,
                 lastReviewTime: listing.lastReviewTime,
                 listingID: sha("sha256").update(listing.listingID + "").digest("hex"),
-                materia: listing.materia ? listing.materia : [],
-                onMannequin: listing.onMannequin,
+                materia: typeof listing.materia === "undefined" ? [] : listing.materia,
+                onMannequin: typeof listing.onMannequin === "undefined" ? false : listing.onMannequin,
                 pricePerUnit: listing.pricePerUnit,
                 quantity: listing.quantity,
-                retainerCity: listing.retainerCity,
+                retainerCity: typeof listing.retainerCity === "number" ? listing.retainerCity : City[listing.retainerCity],
                 retainerID: sha("sha256").update(listing.retainerID + "").digest("hex"),
                 retainerName: listing.retainerName,
                 sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
