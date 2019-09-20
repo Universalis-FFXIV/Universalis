@@ -5,13 +5,18 @@ export interface BlacklistEntry {
 }
 
 export class BlacklistManager {
-    private collection: Collection<BlacklistEntry>;
-
-    constructor(db: Db) {
-        this.collection = db.collection("blacklist");
-        this.collection.createIndexes([
+    public static async create(db: Db): Promise<BlacklistManager> {
+        const collection = db.collection("blacklist");
+        await collection.createIndexes([
             { key: { uploaderID: 1 }, unique: true }
         ]);
+        return new BlacklistManager(collection);
+    }
+
+    private collection: Collection<BlacklistEntry>;
+
+    private constructor(collection: Collection<BlacklistEntry>) {
+        this.collection = collection;
     }
 
     /** Add an uploader to the blacklist, preventing their data from being processed. */

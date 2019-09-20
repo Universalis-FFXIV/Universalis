@@ -3,13 +3,18 @@ import { sha512 } from "sha.js";
 import { TrustedSource } from "./models/TrustedSource";
 
 export class TrustedSourceManager {
-    private collection: Collection<TrustedSource>;
-
-    constructor(db: Db) {
-        this.collection = db.collection("trustedSources");
-        this.collection.createIndexes([
+    public static async create(db: Db): Promise<TrustedSourceManager> {
+        const collection = db.collection("trustedSources");
+        await collection.createIndexes([
             { key: { apiKey: 1 }, unique: true }
         ]);
+        return new TrustedSourceManager(collection);
+    }
+
+    private collection: Collection<TrustedSource>;
+
+    private constructor(collection: Collection<TrustedSource>) {
+        this.collection = collection;
     }
 
     public async addToTrusted(apiKey: string, sourceName: string): Promise<void> {
