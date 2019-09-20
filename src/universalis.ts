@@ -130,6 +130,34 @@ universalis.use(serve("./public"));
 // Routing
 const router = new Router();
 
+router.get("/api/test/item-multi/:world/:item", async (ctx) => {
+    await init;
+
+    const itemIDs: number[] = ctx.params.item.split(",").map((id) => {
+        return parseInt(id);
+    });
+
+    const query = { itemID: { $in: itemIDs } };
+
+    const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
+    if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
+        query["dcName"] = ctx.params.world;
+    } else {
+        if (parseInt(ctx.params.world)) {
+            query["worldID"] = parseInt(ctx.params.world);
+        } else {
+            query["worldID"] = worldMap.get(worldName);
+        }
+    }
+
+    const data = {
+        itemIDs,
+        items: await recentData.find(query, { projection: { _id: 0, uploaderID: 0 } }).toArray()
+    };
+
+    ctx.body = data;
+});
+
 router.get("/api/:world/:item", async (ctx) => { // Normal data
     await init;
 
@@ -147,7 +175,7 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
         }
     }
 
-    const data = await recentData.findOne(query, { projection: { _id: 0 } });
+    const data = await recentData.findOne(query, { projection: { _id: 0, uploaderID: 0 } });
 
     if (!data) {
         ctx.body = {
@@ -169,7 +197,6 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
     }
 
     if (!data.lastUploadTime) data.lastUploadTime = 0;
-    delete data.uploaderID;
 
     ctx.body = data;
 });
