@@ -45,7 +45,7 @@ export class RemoteDataManager {
         this.remoteFileDirectory = options.remoteFileDirectory ? options.remoteFileDirectory : "../public";
 
         for (const ext of this.exts) {
-            const extPath = path.join(__dirname, this.remoteFileDirectory, ext)
+            const extPath = path.join(__dirname, this.remoteFileDirectory, ext);
             if (!fs.existsSync(extPath)) {
                 fs.mkdirSync(extPath, { recursive: true });
             }
@@ -111,7 +111,7 @@ export class RemoteDataManager {
         const filePath = path.join(__dirname, this.remoteFileDirectory, ext, fileName);
 
         if (!await exists(filePath)) {
-            let remoteData = await request(urlDictionary[fileName]);
+            const remoteData = await request(urlDictionary[fileName]);
             await writeFile(filePath, remoteData);
 
             remoteFileMap.set(fileName, remoteData);

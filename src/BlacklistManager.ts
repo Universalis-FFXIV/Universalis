@@ -1,7 +1,7 @@
 import { Collection, Db } from "mongodb";
 
 export interface BlacklistEntry {
-    uploaderID: string
+    uploaderID: string;
 }
 
 export class BlacklistManager {
@@ -11,7 +11,7 @@ export class BlacklistManager {
         this.collection = db.collection("blacklist");
         this.collection.createIndexes([
             { key: { uploaderID: 1 }, unique: true }
-        ])
+        ]);
     }
 
     /** Add an uploader to the blacklist, preventing their data from being processed. */
