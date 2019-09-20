@@ -37,6 +37,7 @@ import { WorldItemPairList } from "./models/WorldItemPairList";
 
 import { HistoryTracker } from "./trackers/HistoryTracker";
 import { PriceTracker } from "./trackers/PriceTracker";
+import { TrustedSourceManager } from "./TrustedSourceManager";
 
 // Define application and its resources
 const logger = winston.createLogger({
@@ -67,6 +68,7 @@ var historyTracker: HistoryTracker;
 var priceTracker: PriceTracker;
 var recentData: Collection;
 var remoteDataManager: RemoteDataManager;
+var trustedSourceManager: TrustedSourceManager;
 
 const worldMap = new Map();
 
@@ -87,6 +89,7 @@ const init = (async () => {
     priceTracker = new PriceTracker(recentData);
     remoteDataManager = new RemoteDataManager({ logger });
     remoteDataManager.fetchAll();
+    trustedSourceManager = new TrustedSourceManager(universalisDB);
 
     // World-ID conversions
     const worldList = await remoteDataManager.parseCSV("World.csv");
@@ -364,21 +367,12 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     const promises: Array<Promise<any>> = []; // Sort of like a thread list.
 
     // Accept identity via API key.
-    const trustedSources = (await db).db("universalis").collection("trustedSources");
-    const apiKey = sha("sha512").update(ctx.params.apiKey).digest("hex");
-    const trustedSource: TrustedSource = await trustedSources.findOne({ apiKey });
+    const trustedSource: TrustedSource = await trustedSourceManager.get(ctx.params.apiKey);
     if (!trustedSource) return ctx.throw(401);
 
-    const sourceName = trustedSource.sourceName;
+    logger.info("Received upload from " + trustedSource.sourceName + ":\n" + JSON.stringify(ctx.request.body));
 
-    promises.push(trustedSources.updateOne({ apiKey }, {
-        $inc: {
-            uploadCount: 1
-        }
-    }));
-
-    logger.info("Received upload from " + sourceName + ":\n" + JSON.stringify(ctx.request.body));
-
+    promises.push(trustedSourceManager.increaseUploadCount(ctx.params.apiKey));
     promises.push(extraDataManager.incrementDailyUploads());
 
     // Data processing
