@@ -1,4 +1,4 @@
-import { Collection, Db } from "mongodb";
+import { Collection, Db, MongoError } from "mongodb";
 import { sha512 } from "sha.js";
 import { TrustedSource } from "./models/TrustedSource";
 
@@ -18,11 +18,15 @@ export class TrustedSourceManager {
     }
 
     public async addToTrusted(apiKey: string, sourceName: string): Promise<void> {
-        await this.collection.insertOne({
-            apiKey: this.apiKeyHash(apiKey),
-            sourceName,
-            uploadCount: 0,
-        });
+        try {
+            await this.collection.insertOne({
+                apiKey: this.apiKeyHash(apiKey),
+                sourceName,
+                uploadCount: 0,
+            });
+        } catch (e) {
+            if ((e as MongoError).code !== 11000) throw e;
+        }
     }
 
     public async get(apiKey: string): Promise<TrustedSource> {

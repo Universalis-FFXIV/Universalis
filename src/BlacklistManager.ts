@@ -1,4 +1,4 @@
-import { Collection, Db } from "mongodb";
+import { Collection, Db, MongoError } from "mongodb";
 
 export interface BlacklistEntry {
     uploaderID: string;
@@ -21,7 +21,11 @@ export class BlacklistManager {
 
     /** Add an uploader to the blacklist, preventing their data from being processed. */
     public async add(uploaderID: string): Promise<void> {
-        await this.collection.insertOne({ uploaderID });
+        try {
+            await this.collection.insertOne({ uploaderID });
+        } catch (e) {
+            if ((e as MongoError).code !== 11000) throw e;
+        }
     }
 
     /** Check if the blacklist has an uploader. */

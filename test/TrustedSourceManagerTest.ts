@@ -1,29 +1,28 @@
 import { MongoClient } from "mongodb";
 import should from "should";
 import { TrustedSourceManager } from "../src/TrustedSourceManager";
+import { MongoFixture } from "./MongoFixture";
 
-const dummyKey = "dummyKey";
+const dummyKey: string = "dummyKey";
 
 describe("TrustedSourceManager", () => {
-    var client: MongoClient;
+    const mongo = new MongoFixture();
+
     var manager: TrustedSourceManager;
 
     before(async () => {
-        client = await MongoClient.connect("mongodb://localhost", { useNewUrlParser: true, useUnifiedTopology: true });
-        const db = client.db("universalis-test");
-        await db.dropDatabase();
-        manager = await TrustedSourceManager.create(db);
+        await mongo.before();
+        manager = await TrustedSourceManager.create(mongo.db);
     });
 
-    after(async () => {
-        await client.close();
-    });
+    after(async () => await mongo.after());
 
     it("should report unkown keys as not trusted", async () => {
         should.not.exist(await manager.get(dummyKey));
     });
 
-    it("should store new api keys properly", async () => {
+    it("should store new api keys properly, even when added multiple times", async () => {
+        await manager.addToTrusted(dummyKey, "tests");
         await manager.addToTrusted(dummyKey, "tests");
     });
 
