@@ -91,7 +91,7 @@ const init = (async () => {
     // World-ID conversions
     const worldList = await remoteDataManager.parseCSV("World.csv");
 	for (let worldEntry of worldList) {
-        if (worldEntry[0] == 25) continue;
+        if (worldEntry[0] == "25") continue;
 	    worldMap.set(worldEntry[1], parseInt(worldEntry[0]));
 	}
 
@@ -308,7 +308,7 @@ router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
     const data: DailyUploadStatistics = await extraDataManager.getDailyUploads(daysToReturn);
 
     if (!data) {
-        ctx.body =  {
+        ctx.body = {
             uploadCountByDay: []
         } as DailyUploadStatistics;
         return;
@@ -326,7 +326,7 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
     const data: RecentlyUpdated = await extraDataManager.getRecentlyUpdatedItems(entriesToReturn);
 
     if (!data) {
-        ctx.body =  {
+        ctx.body = {
             items: []
         } as RecentlyUpdated;
         return;
@@ -344,7 +344,7 @@ router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recent
     const data: WorldItemPairList = await extraDataManager.getLeastRecentlyUpdatedItems(entriesToReturn);
 
     if (!data) {
-        ctx.body =  {
+        ctx.body = {
             items: []
         } as WorldItemPairList;
         return;
@@ -364,20 +364,15 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     const promises: Array<Promise<any>> = []; // Sort of like a thread list.
 
     // Accept identity via API key.
-    const dbo = (await db).db("universalis");
+    const trustedSources = (await db).db("universalis").collection("trustedSources");
     const apiKey = sha("sha512").update(ctx.params.apiKey).digest("hex");
-    const trustedSource: TrustedSource = await dbo.collection("trustedSources").findOne({ apiKey });
+    const trustedSource: TrustedSource = await trustedSources.findOne({ apiKey });
     if (!trustedSource) return ctx.throw(401);
 
     const sourceName = trustedSource.sourceName;
 
-    if (trustedSource.uploadCount) promises.push(dbo.collection("trustedSources").updateOne({ apiKey }, {
+    promises.push(trustedSources.updateOne({ apiKey }, {
         $inc: {
-            uploadCount: 1
-        }
-    }));
-    else promises.push(dbo.collection("trustedSources").updateOne({ apiKey }, {
-        $set: {
             uploadCount: 1
         }
     }));
@@ -392,7 +387,7 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
         CharacterContentIDUpload &
         MarketBoardListingsUpload &
         MarketBoardSaleHistoryUpload
-    = ctx.request.body;
+        = ctx.request.body;
 
     uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
 
