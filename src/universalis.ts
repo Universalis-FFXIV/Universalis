@@ -76,13 +76,12 @@ const init = (async () => {
     // DB Data Managers
     const universalisDB = (await db).db("universalis");
 
-    const blacklist = universalisDB.collection("blacklist");
     const contentCollection = universalisDB.collection("content");
     extendedHistory = universalisDB.collection("extendedHistory");
     const extraData = universalisDB.collection("extraData");
     recentData = universalisDB.collection("recentData");
 
-    blacklistManager = new BlacklistManager(blacklist);
+    blacklistManager = new BlacklistManager(universalisDB);
     contentIDCollection = new ContentIDCollection(contentCollection);
     extraDataManager = new ExtraDataManager(extraData, recentData);
     historyTracker = new HistoryTracker(recentData, extendedHistory);
