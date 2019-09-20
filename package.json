@@ -8,7 +8,7 @@
     "lint": "tslint ./src/**/*.ts",
     "start": "node .",
     "start-dev": "npm run lint && npm run build && npm start",
-    "test": "mocha",
+    "test": "mocha --require ts-node/register \"test/**/*.{js,ts,tsx}\"",
     "unic": "node build/cli/unic.js",
     "update": "git pull && npm install && npm run build"
   },
@@ -50,7 +50,9 @@
     "@types/sha.js": "^2.4.0",
     "lodash.clonedeep": "^4.5.0",
     "lodash.isequal": "^4.5.0",
+    "ts-node": "8.4.1",
     "mocha": "^6.2.0",
+    "@types/mocha": "5.2.7",
     "should": "^13.2.3",
     "tslint": "^5.18.0"
   }
