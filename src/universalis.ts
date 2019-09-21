@@ -27,7 +27,6 @@ import { Collection } from "mongodb";
 import { CharacterContentIDUpload } from "./models/CharacterContentIDUpload";
 import { City } from "./models/City";
 import { DailyUploadStatistics } from "./models/DailyUploadStatistics";
-import { ExtendedHistory } from "./models/ExtendedHistory";
 import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
 import { MarketBoardListingsUpload } from "./models/MarketBoardListingsUpload";
@@ -227,7 +226,9 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     // Request database info
     let data = {
         itemIDs,
-        items: await extendedHistory.find(query, { projection: { _id: 0, uploaderID: 0 } }).toArray()
+        items: await extendedHistory.find(query, {
+            projection: { _id: 0, uploaderID: 0 }
+        }).toArray()
     };
 
     if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
@@ -240,8 +241,14 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
         }
     }
 
-    if (entriesToReturn) data.items.map((item) => {
-        item.entries.slice(0, Math.min(500, entriesToReturn));
+    // Data filtering
+    data.items = data.items.map((item) => {
+        if (entriesToReturn) item.entries.slice(0, Math.min(500, entriesToReturn));
+        item.entries = item.entries.map((entry) => {
+            delete entry.uploaderID;
+            return entry;
+        });
+        return item;
     });
 
     // Fill in unresolved items
