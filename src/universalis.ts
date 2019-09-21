@@ -243,7 +243,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
 
     // Data filtering
     data.items = data.items.map((item) => {
-        if (entriesToReturn) item.entries.slice(0, Math.min(500, entriesToReturn));
+        if (entriesToReturn) item.entries = item.entries.slice(0, Math.min(500, entriesToReturn));
         item.entries = item.entries.map((entry) => {
             delete entry.uploaderID;
             return entry;
