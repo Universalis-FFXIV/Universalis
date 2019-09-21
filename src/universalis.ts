@@ -248,6 +248,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
             delete entry.uploaderID;
             return entry;
         });
+        if (!item.lastUploadTime) item.lastUploadTime = 0;
         return item;
     });
 
