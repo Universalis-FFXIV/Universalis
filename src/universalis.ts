@@ -1,6 +1,7 @@
 // Dependencies
 import cors from "@koa/cors";
 import Router from "@koa/router";
+import difference from "lodash.difference";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import serve from "koa-static";
@@ -130,15 +131,15 @@ universalis.use(serve("./public"));
 // Routing
 const router = new Router();
 
-router.get("/api/test/item-multi/:world/:item", async (ctx) => {
+router.get("/api/:world/:item", async (ctx) => { // Normal data
     await init;
 
     const itemIDs: number[] = ctx.params.item.split(",").map((id) => {
         return parseInt(id);
     });
 
+    // Query construction
     const query = { itemID: { $in: itemIDs } };
-
     const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
     if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
         query["dcName"] = ctx.params.world;
@@ -150,53 +151,52 @@ router.get("/api/test/item-multi/:world/:item", async (ctx) => {
         }
     }
 
-    const data = {
+    // Request database info
+    let data = {
         itemIDs,
         items: await recentData.find(query, { projection: { _id: 0, uploaderID: 0 } }).toArray()
     };
 
-    ctx.body = data;
-});
-
-router.get("/api/:world/:item", async (ctx) => { // Normal data
-    await init;
-
-    const query = { itemID: parseInt(ctx.params.item) };
-
-    const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
-
     if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-        query["dcName"] = ctx.params.world;
+        data["dcName"] = ctx.params.world;
     } else {
         if (parseInt(ctx.params.world)) {
-            query["worldID"] = parseInt(ctx.params.world);
+            data["worldID"] = parseInt(ctx.params.world);
         } else {
-            query["worldID"] = worldMap.get(worldName);
+            data["worldID"] = worldMap.get(worldName);
         }
     }
 
-    const data = await recentData.findOne(query, { projection: { _id: 0, uploaderID: 0 } });
+    // Fill in unresolved items
+    const resolvedItems: number[] = data.items.map((item) => item.itemID);
+    const unresolvedItems: number[] = difference(itemIDs, resolvedItems);
+    data["unresolvedItems"] = unresolvedItems;
 
-    if (!data) {
-        ctx.body = {
-            itemID: parseInt(ctx.params.item),
+    for (const item of unresolvedItems) {
+        const unresolvedItemData = {
+            itemID: item,
             lastUploadTime: 0,
             listings: [],
             recentHistory: []
         };
         if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-            ctx.body["dcName"] = ctx.params.world;
+            unresolvedItemData["dcName"] = ctx.params.world;
         } else {
             if (parseInt(ctx.params.world)) {
-                ctx.body["worldID"] = parseInt(ctx.params.world);
+                unresolvedItemData["worldID"] = parseInt(ctx.params.world);
             } else {
-                ctx.body["worldID"] = worldMap.get(worldName);
+                unresolvedItemData["worldID"] = worldMap.get(worldName);
             }
         }
-        return;
+        data.items.push(unresolvedItemData);
     }
 
-    if (!data.lastUploadTime) data.lastUploadTime = 0;
+    // If only one item is requested we just turn the whole thing into the one item.
+    if (data.itemIDs.length === 1) {
+        data = data.items[0];
+    } else if (!unresolvedItems) {
+        delete data["unresolvedItems"];
+    }
 
     ctx.body = data;
 });
@@ -204,14 +204,16 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     await init;
 
-    const itemID = parseInt(ctx.params.item);
     let entriesToReturn: any = ctx.queryParameters.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
-    const query = { itemID: itemID };
+    const itemIDs: number[] = ctx.params.item.split(",").map((id) => {
+        return parseInt(id);
+    });
 
+    // Query construction
+    const query = { itemID: { $in: itemIDs } };
     const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
-
     if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
         query["dcName"] = ctx.params.world;
     } else {
@@ -222,32 +224,56 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
         }
     }
 
-    const data: ExtendedHistory = await extendedHistory.findOne(query, { projection: { _id: 0 } });
+    // Request database info
+    let data = {
+        itemIDs,
+        items: await extendedHistory.find(query, { projection: { _id: 0, uploaderID: 0 } }).toArray()
+    };
 
-    if (!data) {
-        ctx.body = {
-            entries: [],
-            itemID: itemID,
-            lastUploadTime: 0,
-        };
-        if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-            ctx.body["dcName"] = ctx.params.world;
+    if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
+        data["dcName"] = ctx.params.world;
+    } else {
+        if (parseInt(ctx.params.world)) {
+            data["worldID"] = parseInt(ctx.params.world);
         } else {
-            if (parseInt(ctx.params.world)) {
-                ctx.body["worldID"] = parseInt(ctx.params.world);
-            } else {
-                ctx.body["worldID"] = worldMap.get(worldName);
-            }
+            data["worldID"] = worldMap.get(worldName);
         }
-        return;
     }
 
-    if (!data.lastUploadTime) data.lastUploadTime = 0;
-    if (entriesToReturn) data.entries = data.entries.slice(0, Math.min(500, entriesToReturn));
-    data.entries = data.entries.map((entry) => {
-        delete entry.uploaderID;
-        return entry;
+    if (entriesToReturn) data.items.map((item) => {
+        item.entries.slice(0, Math.min(500, entriesToReturn));
     });
+
+    // Fill in unresolved items
+    const resolvedItems: number[] = data.items.map((item) => item.itemID);
+    const unresolvedItems: number[] = difference(itemIDs, resolvedItems);
+    data["unresolvedItems"] = unresolvedItems;
+
+    for (const item of unresolvedItems) {
+        const unresolvedItemData = {
+            entries: [],
+            itemID: item,
+            lastUploadTime: 0
+        };
+        if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
+            unresolvedItemData["dcName"] = ctx.params.world;
+        } else {
+            if (parseInt(ctx.params.world)) {
+                unresolvedItemData["worldID"] = parseInt(ctx.params.world);
+            } else {
+                unresolvedItemData["worldID"] = worldMap.get(worldName);
+            }
+        }
+
+        data.items.push(unresolvedItemData);
+    }
+
+    // If only one item is requested we just turn the whole thing into the one item.
+    if (data.itemIDs.length === 1) {
+        data = data.items[0];
+    } else if (!unresolvedItems) {
+        delete data["unresolvedItems"];
+    }
 
     ctx.body = data;
 });
