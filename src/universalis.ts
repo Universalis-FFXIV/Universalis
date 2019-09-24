@@ -37,6 +37,7 @@ import { WorldItemPairList } from "./models/WorldItemPairList";
 
 import { HistoryTracker } from "./trackers/HistoryTracker";
 import { PriceTracker } from "./trackers/PriceTracker";
+import { TrustedSourceManager } from "./TrustedSourceManager";
 
 // Define application and its resources
 const logger = winston.createLogger({
@@ -67,6 +68,7 @@ var historyTracker: HistoryTracker;
 var priceTracker: PriceTracker;
 var recentData: Collection;
 var remoteDataManager: RemoteDataManager;
+var trustedSourceManager: TrustedSourceManager;
 
 const worldMap = new Map();
 
@@ -74,24 +76,24 @@ const init = (async () => {
     // DB Data Managers
     const universalisDB = (await db).db("universalis");
 
-    const blacklist = universalisDB.collection("blacklist");
     const contentCollection = universalisDB.collection("content");
     extendedHistory = universalisDB.collection("extendedHistory");
     const extraData = universalisDB.collection("extraData");
     recentData = universalisDB.collection("recentData");
 
-    blacklistManager = new BlacklistManager(blacklist);
+    blacklistManager = await BlacklistManager.create(universalisDB);
     contentIDCollection = new ContentIDCollection(contentCollection);
     extraDataManager = new ExtraDataManager(extraData, recentData);
     historyTracker = new HistoryTracker(recentData, extendedHistory);
     priceTracker = new PriceTracker(recentData);
     remoteDataManager = new RemoteDataManager({ logger });
     remoteDataManager.fetchAll();
+    trustedSourceManager = await TrustedSourceManager.create(universalisDB);
 
     // World-ID conversions
     const worldList = await remoteDataManager.parseCSV("World.csv");
 	for (let worldEntry of worldList) {
-        if (worldEntry[0] == 25) continue;
+        if (worldEntry[0] == "25") continue;
 	    worldMap.set(worldEntry[1], parseInt(worldEntry[0]));
 	}
 
@@ -308,7 +310,7 @@ router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
     const data: DailyUploadStatistics = await extraDataManager.getDailyUploads(daysToReturn);
 
     if (!data) {
-        ctx.body =  {
+        ctx.body = {
             uploadCountByDay: []
         } as DailyUploadStatistics;
         return;
@@ -326,7 +328,7 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
     const data: RecentlyUpdated = await extraDataManager.getRecentlyUpdatedItems(entriesToReturn);
 
     if (!data) {
-        ctx.body =  {
+        ctx.body = {
             items: []
         } as RecentlyUpdated;
         return;
@@ -344,7 +346,7 @@ router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recent
     const data: WorldItemPairList = await extraDataManager.getLeastRecentlyUpdatedItems(entriesToReturn);
 
     if (!data) {
-        ctx.body =  {
+        ctx.body = {
             items: []
         } as WorldItemPairList;
         return;
@@ -364,26 +366,12 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     const promises: Array<Promise<any>> = []; // Sort of like a thread list.
 
     // Accept identity via API key.
-    const dbo = (await db).db("universalis");
-    const apiKey = sha("sha512").update(ctx.params.apiKey).digest("hex");
-    const trustedSource: TrustedSource = await dbo.collection("trustedSources").findOne({ apiKey });
+    const trustedSource: TrustedSource = await trustedSourceManager.get(ctx.params.apiKey);
     if (!trustedSource) return ctx.throw(401);
 
-    const sourceName = trustedSource.sourceName;
+    logger.info("Received upload from " + trustedSource.sourceName + ":\n" + JSON.stringify(ctx.request.body));
 
-    if (trustedSource.uploadCount) promises.push(dbo.collection("trustedSources").updateOne({ apiKey }, {
-        $inc: {
-            uploadCount: 1
-        }
-    }));
-    else promises.push(dbo.collection("trustedSources").updateOne({ apiKey }, {
-        $set: {
-            uploadCount: 1
-        }
-    }));
-
-    logger.info("Received upload from " + sourceName + ":\n" + JSON.stringify(ctx.request.body));
-
+    promises.push(trustedSourceManager.increaseUploadCount(ctx.params.apiKey));
     promises.push(extraDataManager.incrementDailyUploads());
 
     // Data processing
@@ -392,7 +380,7 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
         CharacterContentIDUpload &
         MarketBoardListingsUpload &
         MarketBoardSaleHistoryUpload
-    = ctx.request.body;
+        = ctx.request.body;
 
     uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
 
