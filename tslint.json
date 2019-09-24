@@ -5,19 +5,26 @@
     ],
     "jsRules": {},
     "rules": {
-        "curly": [ false ],
-        "interface-name": [ false ],
-        "no-angle-bracket-type-assertion": [ false ],
+        "curly": false,
+        "interface-name": false,
+        "no-angle-bracket-type-assertion": false,
         "no-console": {
             "severity": "warning"
         },
-        "no-string-literal": [ false ],
-        "no-var-keyword": [ false ],
+        "no-string-literal": false,
+        "no-var-keyword": false,
         "prefer-const": {
             "severity": "warning"
         },
-        "radix": [ false ],
-        "trailing-comma": [ false ]
+        "radix": false,
+        "trailing-comma": false,
+        "variable-name": {
+            "options": [
+                "ban-keywords",
+                "check-format",
+                "allow-leading-underscore"
+            ]
+        }
     },
     "rulesDirectory": []
 }

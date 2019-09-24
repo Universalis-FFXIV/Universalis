@@ -1,20 +1,35 @@
-import { Collection } from "mongodb";
+import { Collection, Db, MongoError } from "mongodb";
+
+export interface BlacklistEntry {
+    uploaderID: string;
+}
 
 export class BlacklistManager {
-    private blacklist: Collection;
+    public static async create(db: Db): Promise<BlacklistManager> {
+        const collection = db.collection("blacklist");
+        await collection.createIndexes([
+            { key: { uploaderID: 1 }, unique: true }
+        ]);
+        return new BlacklistManager(collection);
+    }
 
-    constructor(blacklist: Collection) {
-        this.blacklist = blacklist;
+    private collection: Collection<BlacklistEntry>;
+
+    private constructor(collection: Collection<BlacklistEntry>) {
+        this.collection = collection;
     }
 
     /** Add an uploader to the blacklist, preventing their data from being processed. */
     public async add(uploaderID: string): Promise<void> {
-        await this.blacklist.insertOne({ uploaderID });
+        try {
+            await this.collection.insertOne({ uploaderID });
+        } catch (e) {
+            if ((e as MongoError).code !== 11000) throw e;
+        }
     }
 
     /** Check if the blacklist has an uploader. */
     public async has(uploaderID: string): Promise<boolean> {
-        const exists = await this.blacklist.findOne({ uploaderID });
-        return exists ? true : false;
+        return await this.collection.findOne({ uploaderID }) != null;
     }
 }
