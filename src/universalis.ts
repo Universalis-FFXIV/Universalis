@@ -87,7 +87,7 @@ const init = (async () => {
     // World-ID conversions
     const worldList = await remoteDataManager.parseCSV("World.csv");
 	for (let worldEntry of worldList) {
-        if (worldEntry[0] == 25) continue;
+        if (worldEntry[0] === "25") continue;
 	    worldMap.set(worldEntry[1], parseInt(worldEntry[0]));
 	}
 
