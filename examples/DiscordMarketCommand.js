@@ -43,6 +43,7 @@ module.exports = {
 				quantity: listing.quantity,
 				retainerName: listing.retainerName,
 				total: listing.total,
+				worldName: listing.worldName ? listing.worldName : undefined
 			};
 		}).slice(0, Math.min(10, allListings.length));
 
@@ -50,7 +51,8 @@ module.exports = {
 			__${allListings.length} results for ${worldName} (Showing up to 10):__
 			${trimmedListings.map((listing) => {
 				let output = listing.quantity + " **" + itemName + "** for " +
-					listing.pricePerUnit + " Gil by " + listing.retainerName;
+					listing.pricePerUnit + " Gil " + (listing.worldName ? "on " +
+					listing.worldName + " " : "") + "by " + listing.retainerName;
 				if (listing.quantity > 1)  {
 					output += " (For a total of " + listing.total + " Gil)";
 				}
