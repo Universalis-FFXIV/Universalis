@@ -61,6 +61,7 @@ export class RemoteDataManager {
         const table = await this.fetchFile(fileName);
 
         const parser = csvParser({
+            bom: true,
             delimiter: ","
         });
 
