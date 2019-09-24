@@ -15,7 +15,7 @@ export class BlacklistManager {
 
     private collection: Collection<BlacklistEntry>;
 
-    private constructor(collection: Collection<BlacklistEntry>) {
+    public constructor(collection: Collection<BlacklistEntry>) {
         this.collection = collection;
     }
 
