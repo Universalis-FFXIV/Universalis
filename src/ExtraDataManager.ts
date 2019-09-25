@@ -24,12 +24,10 @@ export class ExtraDataManager {
         return new ExtraDataManager(extraDataCollection, recentData);
     }
 
-    private constructor(extraDataCollection: Collection, recentData: Collection) {
+    public constructor(extraDataCollection?: Collection, recentData?: Collection) {
         this.extraDataCollection = extraDataCollection;
         this.recentData = recentData;
     }
-
-    public constructor();
 
     /** Return the list of the most recently updated items, or a subset of them. */
     public async getRecentlyUpdatedItems(count?: number): Promise<RecentlyUpdated> {
