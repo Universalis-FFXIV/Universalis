@@ -78,7 +78,7 @@ const init = (async () => {
 
     blacklistManager = new BlacklistManager(blacklist);
     contentIDCollection = new ContentIDCollection(contentCollection);
-    extraDataManager = new ExtraDataManager(extraData, recentData);
+    extraDataManager = await new ExtraDataManager().create(extraData, recentData);
     historyTracker = new HistoryTracker(recentData, extendedHistory);
     priceTracker = new PriceTracker(recentData);
     remoteDataManager = new RemoteDataManager({ logger });

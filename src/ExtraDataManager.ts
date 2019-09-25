@@ -14,10 +14,22 @@ export class ExtraDataManager {
     private neverUpdatedItemsCap = 20;
     private recentlyUpdatedItemsCap = 20;
 
-    constructor(extraDataCollection: Collection, recentData: Collection) {
+    public async create(extraDataCollection: Collection, recentData: Collection): Promise<ExtraDataManager> {
+        await extraDataCollection.createIndexes([
+            { key: { setName: 1 }, unique: true }
+        ]);
+
+        // recentData indices are created in the recent data manager
+
+        return new ExtraDataManager(extraDataCollection, recentData);
+    }
+
+    private constructor(extraDataCollection: Collection, recentData: Collection) {
         this.extraDataCollection = extraDataCollection;
         this.recentData = recentData;
     }
+
+    public constructor();
 
     /** Return the list of the most recently updated items, or a subset of them. */
     public async getRecentlyUpdatedItems(count?: number): Promise<RecentlyUpdated> {
