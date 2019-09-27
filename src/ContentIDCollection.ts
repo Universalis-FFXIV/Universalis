@@ -3,7 +3,16 @@ import { Collection } from "mongodb";
 export class ContentIDCollection {
     private contentIDCollection: Collection;
 
-    constructor(contentIDCollection: Collection) {
+    public static async create(contentIDCollection: Collection): Promise<ContentIDCollection> {
+        await contentIDCollection.createIndexes([
+            { key: { contentID: 1 }, unique: true },
+            { key: { contentType: 1 }, unique: true }
+        ]);
+
+        return new ContentIDCollection(contentIDCollection);
+    }
+
+    private constructor(contentIDCollection: Collection) {
         this.contentIDCollection = contentIDCollection;
     }
 

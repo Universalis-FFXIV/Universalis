@@ -76,9 +76,9 @@ const init = (async () => {
     const extraData = universalisDB.collection("extraData");
     recentData = universalisDB.collection("recentData");
 
-    blacklistManager = new BlacklistManager(blacklist);
-    contentIDCollection = new ContentIDCollection(contentCollection);
-    extraDataManager = await new ExtraDataManager().create(extraData, recentData);
+    blacklistManager = await BlacklistManager.create(blacklist);
+    contentIDCollection = await ContentIDCollection.create(contentCollection);
+    extraDataManager = await ExtraDataManager.create(extraData, recentData);
     historyTracker = new HistoryTracker(recentData, extendedHistory);
     priceTracker = new PriceTracker(recentData);
     remoteDataManager = new RemoteDataManager({ logger });

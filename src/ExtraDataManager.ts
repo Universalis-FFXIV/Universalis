@@ -14,7 +14,7 @@ export class ExtraDataManager {
     private neverUpdatedItemsCap = 20;
     private recentlyUpdatedItemsCap = 20;
 
-    public async create(extraDataCollection: Collection, recentData: Collection): Promise<ExtraDataManager> {
+    public static async create(extraDataCollection: Collection, recentData: Collection): Promise<ExtraDataManager> {
         await extraDataCollection.createIndexes([
             { key: { setName: 1 }, unique: true }
         ]);
@@ -24,7 +24,7 @@ export class ExtraDataManager {
         return new ExtraDataManager(extraDataCollection, recentData);
     }
 
-    public constructor(extraDataCollection?: Collection, recentData?: Collection) {
+    private constructor(extraDataCollection: Collection, recentData: Collection) {
         this.extraDataCollection = extraDataCollection;
         this.recentData = recentData;
     }
