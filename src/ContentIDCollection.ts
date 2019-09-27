@@ -1,9 +1,27 @@
-import { Collection } from "mongodb";
+import { Collection, Db } from "mongodb";
 
 export class ContentIDCollection {
     private contentIDCollection: Collection;
 
-    constructor(contentIDCollection: Collection) {
+    public static async create(db: Db): Promise<ContentIDCollection> {
+        const contentIDCollection = db.collection("content");
+
+        const indices = [
+            { contentID: 1 },
+            { contentTypeitemID: 1 }
+        ];
+        const indexNames = indices.map(Object.keys);
+        for (let i = 0; i < indices.length; i++) {
+            // We check each individually to ensure we don't duplicate indices on failure.
+            if (!await contentIDCollection.indexExists(indexNames[i]).catch(console.error)) {
+                await contentIDCollection.createIndex(indices[i]).catch(console.error);
+            }
+        }
+
+        return new ContentIDCollection(contentIDCollection);
+    }
+
+    private constructor(contentIDCollection: Collection) {
         this.contentIDCollection = contentIDCollection;
     }
 

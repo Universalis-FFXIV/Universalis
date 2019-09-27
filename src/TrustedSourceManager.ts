@@ -5,9 +5,18 @@ import { TrustedSource } from "./models/TrustedSource";
 export class TrustedSourceManager {
     public static async create(db: Db): Promise<TrustedSourceManager> {
         const collection = db.collection("trustedSources");
-        await collection.createIndexes([
-            { key: { apiKey: 1 }, unique: true }
-        ]);
+
+        const indices = [
+            { apiKey: 1 },
+        ];
+        const indexNames = indices.map(Object.keys);
+        for (let i = 0; i < indices.length; i++) {
+            // We check each individually to ensure we don't duplicate indices on failure.
+            if (!await collection.indexExists(indexNames[i])) {
+                await collection.createIndex(indices[i]);
+            }
+        }
+
         return new TrustedSourceManager(collection);
     }
 
