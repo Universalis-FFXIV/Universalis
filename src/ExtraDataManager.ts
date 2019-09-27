@@ -1,4 +1,4 @@
-import { Collection } from "mongodb";
+import { Collection, Db } from "mongodb";
 
 import { DailyUploadStatistics } from "./models/DailyUploadStatistics";
 import { RecentlyUpdated } from "./models/RecentlyUpdated";
@@ -14,12 +14,14 @@ export class ExtraDataManager {
     private neverUpdatedItemsCap = 20;
     private recentlyUpdatedItemsCap = 20;
 
-    public static async create(extraDataCollection: Collection, recentData: Collection): Promise<ExtraDataManager> {
+    public static async create(db: Db): Promise<ExtraDataManager> {
+        const extraDataCollection = db.collection("extraData");
         await extraDataCollection.createIndexes([
             { key: { setName: 1 }, unique: true }
         ]);
 
         // recentData indices are created in the recent data manager
+        const recentData = db.collection("recentData");
 
         return new ExtraDataManager(extraDataCollection, recentData);
     }

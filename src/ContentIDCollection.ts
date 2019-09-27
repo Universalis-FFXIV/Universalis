@@ -1,9 +1,10 @@
-import { Collection } from "mongodb";
+import { Collection, Db } from "mongodb";
 
 export class ContentIDCollection {
     private contentIDCollection: Collection;
 
-    public static async create(contentIDCollection: Collection): Promise<ContentIDCollection> {
+    public static async create(db: Db): Promise<ContentIDCollection> {
+        const contentIDCollection = db.collection("content");
         await contentIDCollection.createIndexes([
             { key: { contentID: 1 }, unique: true },
             { key: { contentType: 1 }, unique: true }

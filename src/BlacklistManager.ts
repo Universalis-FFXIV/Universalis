@@ -1,11 +1,12 @@
-import { Collection, MongoError } from "mongodb";
+import { Collection, Db, MongoError } from "mongodb";
 
 export interface BlacklistEntry {
     uploaderID: string;
 }
 
 export class BlacklistManager {
-    public static async create(collection: Collection): Promise<BlacklistManager> {
+    public static async create(db: Db): Promise<BlacklistManager> {
+        const collection = db.collection("blacklist");
         await collection.createIndexes([
             { key: { uploaderID: 1 }, unique: true }
         ]);
