@@ -16,9 +16,17 @@ export class ExtraDataManager {
 
     public static async create(db: Db): Promise<ExtraDataManager> {
         const extraDataCollection = db.collection("extraData");
-        await extraDataCollection.createIndexes([
-            { key: { setName: 1 }, unique: true }
-        ]);
+
+        const indices = [
+            { setName: 1 }
+        ];
+        const indexNames = indices.map(Object.keys);
+        for (let i = 0; i < indices.length; i++) {
+            // We check each individually to ensure we don't duplicate indices on failure.
+            if (!await extraDataCollection.indexExists(indexNames[i])) {
+                await extraDataCollection.createIndex(indices[i]);
+            }
+        }
 
         // recentData indices are created in the recent data manager
         const recentData = db.collection("recentData");

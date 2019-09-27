@@ -6,11 +6,20 @@ export interface BlacklistEntry {
 
 export class BlacklistManager {
     public static async create(db: Db): Promise<BlacklistManager> {
-        const collection = db.collection("blacklist");
-        await collection.createIndexes([
-            { key: { uploaderID: 1 }, unique: true }
-        ]);
-        return new BlacklistManager(collection);
+        const blacklist = db.collection("blacklist");
+
+        const indices = [
+            { uploaderID: 1 }
+        ];
+        const indexNames = indices.map(Object.keys);
+        for (let i = 0; i < indices.length; i++) {
+            // We check each individually to ensure we don't duplicate indices on failure.
+            if (!await blacklist.indexExists(indexNames[i]).catch(console.error)) {
+                await blacklist.createIndex(indices[i]).catch(console.error);
+            }
+        }
+
+        return new BlacklistManager(blacklist);
     }
 
     private collection: Collection<BlacklistEntry>;
