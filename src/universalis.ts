@@ -76,8 +76,8 @@ const init = (async () => {
     blacklistManager = await BlacklistManager.create(universalisDB);
     contentIDCollection = await ContentIDCollection.create(universalisDB);
     extraDataManager = await ExtraDataManager.create(universalisDB);
-    historyTracker = new HistoryTracker(recentData, extendedHistory);
-    priceTracker = new PriceTracker(recentData);
+    historyTracker = await HistoryTracker.create(universalisDB);
+    priceTracker = await PriceTracker.create(universalisDB);
     remoteDataManager = new RemoteDataManager({ logger });
     remoteDataManager.fetchAll();
 

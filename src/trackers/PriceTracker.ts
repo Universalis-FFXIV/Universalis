@@ -1,27 +1,32 @@
 import { Tracker } from "./Tracker";
 
-import { Collection } from "mongodb";
+import { Collection, Db } from "mongodb";
 
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
 import { MarketInfoLocalData } from "../models/MarketInfoLocalData";
 
 export class PriceTracker extends Tracker {
-    constructor(collection: Collection) {
-        super(collection);
-        (async () => {
-            const indices = [
-                { dcName: 1 },
-                { itemID: 1 },
-                { worldID: 1 }
-            ];
-            const indexNames = indices.map(Object.keys);
-            for (let i = 0; i < indices.length; i++) {
-                // We check each individually to ensure we don't duplicate indices on failure.
-                if (!await this.collection.indexExists(indexNames[i])) {
-                    await this.collection.createIndex(indices[i]);
-                }
+    public static async create(db: Db): Promise<PriceTracker> {
+        const collection = db.collection("recentData");
+
+        const indices = [
+            { dcName: 1 },
+            { itemID: 1 },
+            { worldID: 1 }
+        ];
+        const indexNames = indices.map(Object.keys);
+        for (let i = 0; i < indices.length; i++) {
+            // We check each individually to ensure we don't duplicate indices on failure.
+            if (!await collection.indexExists(indexNames[i])) {
+                await collection.createIndex(indices[i]);
             }
-        })();
+        }
+
+        return new PriceTracker(collection);
+    }
+
+    private constructor(collection: Collection) {
+        super(collection);
     }
 
     public async set(uploaderID: string, itemID: number, worldID: number, listings: MarketBoardItemListing[]) {
