@@ -26,7 +26,7 @@ export class TrustedSourceManager {
         this.collection = collection;
     }
 
-    public async addToTrusted(apiKey: string, sourceName: string): Promise<void> {
+    public async add(apiKey: string, sourceName: string): Promise<void> {
         try {
             await this.collection.insertOne({
                 apiKey: this.apiKeyHash(apiKey),
