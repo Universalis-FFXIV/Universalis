@@ -38,6 +38,10 @@ export class TrustedSourceManager {
         }
     }
 
+    public async remove(apiKey: string): Promise<void> {
+        await this.collection.deleteOne({ apiKey: this.apiKeyHash(apiKey) });
+    }
+
     public async get(apiKey: string): Promise<TrustedSource> {
         return await this.collection.findOne({ apiKey: this.apiKeyHash(apiKey) });
     }

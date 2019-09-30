@@ -33,15 +33,23 @@ stdin.on("line", async (line) => {
     const command = args.pop();
 
     if (command === "addkey") {
-        if (args.length !== 2) {
+        if (args.length < 2) {
             return console.log(chalk.bgRedBright.black("Missing argument apiKey or sourceName."));
         }
-        await trustedSources.add.apply(null, args).then(() => {
+        await trustedSources.add(args[0], args[1]).then(() => {
             console.log(chalk.bgGreenBright.black("Success."));
         }).catch((err) => {
             console.error(chalk.red(err));
         });
-        return;
+    } else if (command === "rmkey") {
+        if (args.length < 1) {
+            return console.log(chalk.bgRedBright.black("Missing argument apiKey."));
+        }
+        await trustedSources.remove(args[0]).then(() => {
+            console.log(chalk.bgGreenBright.black("Success."));
+        }).catch((err) => {
+            console.error(chalk.red(err));
+        });
     } else {
         console.log(chalk.bgYellow.black(`'${command}' is not a valid command.`));
     }
