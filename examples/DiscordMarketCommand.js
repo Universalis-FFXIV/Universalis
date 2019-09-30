@@ -28,7 +28,7 @@ module.exports = {
 		worldName = worldName.charAt(0).toUpperCase() + worldName.substr(1);
 
 		const searchResults = JSON.parse(await request(`https://xivapi.com/search?string=${itemName}`));
-		if (!searchResults.Results) {
+		if (!searchResults.Results.length) {
 			return message.reply("no results found for \"" + itemName + "\", are you sure you spelled the item name correctly?");
 		}
 		const searchData = searchResults.Results[0];
