@@ -4,7 +4,7 @@ import { MongoError } from "mongodb";
 
 import { CLIResources } from "../../models/CLIResources";
 
-export default async function drop(resources: CLIResources, args: string[]) {
+async function drop(resources: CLIResources, args: string[]) {
     if (args.length < 2) {
         return console.log(chalk.bgRedBright.black("Missing argument worldID/dcName or itemID."));
     }
@@ -23,3 +23,5 @@ export default async function drop(resources: CLIResources, args: string[]) {
     }
     console.log(chalk.bgGreenBright.black("Success."));
 }
+
+module.exports = drop;

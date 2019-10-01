@@ -2,7 +2,7 @@ import chalk from "chalk";
 
 import { CLIResources } from "../../models/CLIResources";
 
-export default async function addkey(resources: CLIResources, args: string[]) {
+async function addkey(resources: CLIResources, args: string[]) {
     if (args.length < 2) {
         return console.log(chalk.bgRedBright.black("Missing argument apiKey or sourceName."));
     }
@@ -12,3 +12,5 @@ export default async function addkey(resources: CLIResources, args: string[]) {
         console.error(chalk.red(err));
     });
 }
+
+module.exports = addkey;

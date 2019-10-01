@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import fs from "fs";
 import { Collection, MongoClient } from "mongodb";
+import path from "path";
 import readline from "readline";
 import util from "util";
 
@@ -29,10 +30,13 @@ const init = (async () => {
 
     trustedSources = await TrustedSourceManager.create(universalisDB);
 
-    const commandFiles = await readdir("./commands");
-    commandFiles.forEach((fileName) => {
-        commands.set(fileName.substr(0, fileName.indexOf(".")), require(`./commands/${fileName}`));
-    });
+    const commandFiles = (await readdir(path.join(__dirname, "./commands")))
+        .filter((fileName) => fileName.endsWith(".js"));
+
+    for (const fileName of commandFiles) {
+        commands.set(fileName.substr(0, fileName.indexOf(".")),
+            require(path.join(__dirname, `./commands/${fileName}`)));
+    }
 
     resources = {
         extendedHistory,
@@ -56,12 +60,15 @@ stdin.prompt();
 stdin.on("line", async (line) => {
     await init;
 
-    const args = line.split(/\s+/g);
-    const command = args.pop();
+    let args = line.split(/\s+/g);
+    const command = args[0];
+    args = args.slice(1);
 
     const commandF = commands.get(command);
     if (commandF) {
         await commandF(resources, args);
+    } else if (command === "exit") {
+        stdin.close();
     } else {
         console.log(chalk.bgYellow.black(`'${command}' is not a valid command.`));
     }
@@ -74,6 +81,6 @@ stdin.on("line", async (line) => {
 
 function autocomplete(line: string) {
     const completions = ["addkey", "rmkey", "upstats", "drop", "dropex"];
-    const hits = completions.filter((command) => line.startsWith(command));
+    const hits = completions.filter((command) => command.startsWith(line));
     return [hits.length ? hits : completions, line];
 }
