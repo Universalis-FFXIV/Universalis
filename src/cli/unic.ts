@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import fs from "fs";
-import { MongoClient } from "mongodb";
+import { Collection, MongoClient } from "mongodb";
 import readline from "readline";
 import util from "util";
 
@@ -12,6 +12,9 @@ const readdir = util.promisify(fs.readdir);
 
 // Load resources
 const db = MongoClient.connect("mongodb://localhost:27017/", { useNewUrlParser: true, useUnifiedTopology: true });
+var extendedHistory: Collection;
+var recentData: Collection;
+
 var trustedSources: TrustedSourceManager;
 
 const commands: Map<string, Function> = new Map();
@@ -21,6 +24,9 @@ var resources: CLIResources;
 const init = (async () => {
     const universalisDB = (await db).db("universalis");
 
+    extendedHistory = universalisDB.collection("extendedHistory");
+    recentData = universalisDB.collection("recentData");
+
     trustedSources = await TrustedSourceManager.create(universalisDB);
 
     const commandFiles = await readdir("./commands");
@@ -29,6 +35,8 @@ const init = (async () => {
     });
 
     resources = {
+        extendedHistory,
+        recentData,
         trustedSources
     };
 })();
@@ -53,7 +61,7 @@ stdin.on("line", async (line) => {
 
     const commandF = commands.get(command);
     if (commandF) {
-        commandF(resources, args);
+        await commandF(resources, args);
     } else {
         console.log(chalk.bgYellow.black(`'${command}' is not a valid command.`));
     }
@@ -65,7 +73,7 @@ stdin.on("line", async (line) => {
 });
 
 function autocomplete(line: string) {
-    const completions = ["addkey"];
+    const completions = ["addkey", "rmkey", "upstats", "drop", "dropex"];
     const hits = completions.filter((command) => line.startsWith(command));
     return [hits.length ? hits : completions, line];
 }
