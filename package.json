@@ -1,6 +1,7 @@
 {
   "name": "universalis",
   "version": "1.0.0",
+  "unicVersion": "0.1.0",
   "description": "A crowdsourced market board website for FFXIV.",
   "main": "build/universalis.js",
   "scripts": {

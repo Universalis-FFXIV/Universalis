@@ -64,7 +64,7 @@ var priceTracker: PriceTracker;
 var recentData: Collection;
 var remoteDataManager: RemoteDataManager;
 
-const worldMap = new Map();
+const worldMap: Map<string, number> = new Map();
 
 const init = (async () => {
     // DB Data Managers
@@ -76,8 +76,8 @@ const init = (async () => {
     blacklistManager = await BlacklistManager.create(universalisDB);
     contentIDCollection = await ContentIDCollection.create(universalisDB);
     extraDataManager = await ExtraDataManager.create(universalisDB);
-    historyTracker = new HistoryTracker(recentData, extendedHistory);
-    priceTracker = new PriceTracker(recentData);
+    historyTracker = await HistoryTracker.create(universalisDB);
+    priceTracker = await PriceTracker.create(universalisDB);
     remoteDataManager = new RemoteDataManager({ logger });
     remoteDataManager.fetchAll();
 
@@ -213,7 +213,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
 
     // Query construction
     const query = { itemID: { $in: itemIDs } };
-    const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
+    const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1).toLowerCase();
     if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
         query["dcName"] = ctx.params.world;
     } else {
@@ -339,10 +339,24 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
 router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recently updated items
     await init;
 
+    let worldID = ctx.queryParameters.world.charAt(0).toUpperCase() +
+        ctx.queryParameters.world.substr(1).toLowerCase();
+    let dcName = ctx.queryParameters.dcName;
+
+    if (worldID && !parseInt(worldID)) {
+        worldID = worldMap.get(worldID);
+    } else if (parseInt(worldID)) {
+        worldID = parseInt(worldID);
+    }
+
+    if (worldID && dcName) {
+        dcName = null;
+    }
+
     let entriesToReturn: any = ctx.queryParameters.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
-    const data: WorldItemPairList = await extraDataManager.getLeastRecentlyUpdatedItems(entriesToReturn);
+    const data: WorldItemPairList = await extraDataManager.getLeastRecentlyUpdatedItems(worldID || dcName, entriesToReturn);
 
     if (!data) {
         ctx.body =  {

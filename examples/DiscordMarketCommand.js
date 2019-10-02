@@ -27,7 +27,11 @@ module.exports = {
 		let worldName = args[args.length - 1];
 		worldName = worldName.charAt(0).toUpperCase() + worldName.substr(1);
 
-		const searchData = JSON.parse(await request(`https://xivapi.com/search?string=${itemName}`)).Results[0];
+		const searchResults = JSON.parse(await request(`https://xivapi.com/search?string=${itemName}`));
+		if (!searchResults.Results.length) {
+			return message.reply("no results found for \"" + itemName + "\", are you sure you spelled the item name correctly?");
+		}
+		const searchData = searchResults.Results[0];
 		const itemID = searchData.ID;
 		itemName = searchData.Name;
 		const worldID = worldMap.get(worldName);

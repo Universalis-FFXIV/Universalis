@@ -4,7 +4,7 @@ import { getWorldDC, getWorldName } from "../util";
 
 import { Tracker } from "./Tracker";
 
-import { Collection } from "mongodb";
+import { Collection, Db } from "mongodb";
 
 import { ExtendedDCHistory } from "../models/ExtendedDCHistory";
 import { ExtendedHistory } from "../models/ExtendedHistory";
@@ -17,23 +17,29 @@ import { MinimizedHistoryEntry } from "../models/MinimizedHistoryEntry";
 export class HistoryTracker extends Tracker {
     private extendedHistory: Collection;
 
-    constructor(recentData: Collection, extendedHistory: Collection) {
+    public static async create(db: Db): Promise<HistoryTracker> {
+        const recentData = db.collection("recentData");
+        const extendedHistory = db.collection("extendedHistory");
+
+        const indices = [
+            { dcName: 1 },
+            { itemID: 1 },
+            { worldID: 1 }
+        ];
+        const indexNames = indices.map(Object.keys);
+        for (let i = 0; i < indices.length; i++) {
+            // We check each individually to ensure we don't duplicate indices on failure.
+            if (!await extendedHistory.indexExists(indexNames[i])) {
+                await extendedHistory.createIndex(indices[i]);
+            }
+        }
+
+        return new HistoryTracker(recentData, extendedHistory);
+    }
+
+    private constructor(recentData: Collection, extendedHistory: Collection) {
         super(recentData);
         this.extendedHistory = extendedHistory;
-        (async () => {
-            const indices = [
-                { dcName: 1 },
-                { itemID: 1 },
-                { worldID: 1 }
-            ];
-            const indexNames = indices.map(Object.keys);
-            for (let i = 0; i < indices.length; i++) {
-                // We check each individually to ensure we don't duplicate indices on failure.
-                if (!await this.extendedHistory.indexExists(indexNames[i])) {
-                    await this.extendedHistory.createIndex(indices[i]);
-                }
-            }
-        })();
     }
 
     public async set(uploaderID: string, itemID: number, worldID: number, recentHistory: MarketBoardHistoryEntry[]) {

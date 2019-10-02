@@ -1,5 +1,6 @@
 import { Collection, Db, MongoError } from "mongodb";
 import { sha512 } from "sha.js";
+
 import { TrustedSource } from "./models/TrustedSource";
 
 export class TrustedSourceManager {
@@ -26,7 +27,7 @@ export class TrustedSourceManager {
         this.collection = collection;
     }
 
-    public async addToTrusted(apiKey: string, sourceName: string): Promise<void> {
+    public async add(apiKey: string, sourceName: string): Promise<void> {
         try {
             await this.collection.insertOne({
                 apiKey: this.apiKeyHash(apiKey),
@@ -38,8 +39,16 @@ export class TrustedSourceManager {
         }
     }
 
+    public async remove(apiKey: string): Promise<void> {
+        await this.collection.deleteOne({ apiKey: this.apiKeyHash(apiKey) });
+    }
+
     public async get(apiKey: string): Promise<TrustedSource> {
         return await this.collection.findOne({ apiKey: this.apiKeyHash(apiKey) });
+    }
+
+    public async getUploadersCount(): Promise<TrustedSource[]> {
+        return await this.collection.find(null, { projection: { _id: 0, apiKey: 0 } }).toArray();
     }
 
     public async increaseUploadCount(apiKey: string, increase: number = 1) {
