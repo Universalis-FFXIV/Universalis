@@ -64,7 +64,7 @@ var priceTracker: PriceTracker;
 var recentData: Collection;
 var remoteDataManager: RemoteDataManager;
 
-const worldMap = new Map();
+const worldMap: Map<string, number> = new Map();
 
 const init = (async () => {
     // DB Data Managers
@@ -339,10 +339,21 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
 router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recently updated items
     await init;
 
+    let worldID = ctx.queryParameters.world;
+    let dcName = ctx.queryParameters.dcName;
+
+    if (worldID && typeof worldID === "string") {
+        worldID = worldMap.get(worldID);
+    }
+
+    if (worldID && dcName) {
+        dcName = null;
+    }
+
     let entriesToReturn: any = ctx.queryParameters.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
-    const data: WorldItemPairList = await extraDataManager.getLeastRecentlyUpdatedItems(entriesToReturn);
+    const data: WorldItemPairList = await extraDataManager.getLeastRecentlyUpdatedItems(worldID || dcName, entriesToReturn);
 
     if (!data) {
         ctx.body =  {

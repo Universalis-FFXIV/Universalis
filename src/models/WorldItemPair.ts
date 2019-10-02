@@ -1,4 +1,4 @@
 export interface WorldItemPair {
-    worldID: number;
+    worldID: string | number;
     itemID: number;
 }

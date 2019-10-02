@@ -54,7 +54,7 @@ export class ExtraDataManager {
     }
 
     /** Return the list of the least recently updated items, or a subset of them. */
-    public async getLeastRecentlyUpdatedItems(count?: number): Promise<WorldItemPairList> {
+    public async getLeastRecentlyUpdatedItems(worldDC?: string | number, count?: number): Promise<WorldItemPairList> {
         let items = (await this.getNeverUpdatedItems(count)).items;
 
         if (count) count = Math.max(count, 0);
@@ -62,7 +62,12 @@ export class ExtraDataManager {
 
         const sortQuery = { timestamp: 1 };
 
-        items.concat(await this.recentData.find({}, { projection: { worldID: 1, itemID: 1 } })
+        const query: any = {};
+
+        if (typeof worldDC === "number") query.worldID = worldDC;
+        else if (typeof worldDC === "string") query.dcName = worldDC;
+
+        items.concat(await this.recentData.find(query, { projection: { worldID: 1, itemID: 1 } })
             .sort(sortQuery)
             .limit(Math.min(count, Math.max(0, this.recentlyUpdatedItemsCap - items.length)))
             .toArray()
@@ -72,7 +77,7 @@ export class ExtraDataManager {
     }
 
     /** Return the list of items never uploaded, or a subset of them. */
-    private async getNeverUpdatedItems(count?: number): Promise<WorldItemPairList> {
+    private async getNeverUpdatedItems(worldDC?: string | number, count?: number): Promise<WorldItemPairList> {
         if (count) count = Math.max(count, 0);
         else count = Number.MAX_VALUE;
 
@@ -92,7 +97,13 @@ export class ExtraDataManager {
 
             const itemID = Math.floor(Math.random() * 28099) + 1;
 
-            const randomData = await this.recentData.findOne({ worldID, itemID },
+            const query: any = { itemID };
+
+            if (typeof worldDC === "number") query.worldID = worldDC;
+            else if (typeof worldDC === "string") query.dcName = worldDC;
+            else query.worldID = worldID;
+
+            const randomData = await this.recentData.findOne(query,
                 { projection: { _id: 0, listings: 0, recentHistory: 0 } });
 
             if (!randomData) items.push({ worldID, itemID });
