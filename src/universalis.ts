@@ -213,7 +213,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
 
     // Query construction
     const query = { itemID: { $in: itemIDs } };
-    const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
+    const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1).toLowerCase();
     if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
         query["dcName"] = ctx.params.world;
     } else {
@@ -339,11 +339,14 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
 router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recently updated items
     await init;
 
-    let worldID = ctx.queryParameters.world;
+    let worldID = ctx.queryParameters.world.charAt(0).toUpperCase() +
+        ctx.queryParameters.world.substr(1).toLowerCase();
     let dcName = ctx.queryParameters.dcName;
 
-    if (worldID && typeof worldID === "string") {
+    if (worldID && !parseInt(worldID)) {
         worldID = worldMap.get(worldID);
+    } else if (parseInt(worldID)) {
+        worldID = parseInt(worldID);
     }
 
     if (worldID && dcName) {

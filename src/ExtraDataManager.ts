@@ -55,7 +55,7 @@ export class ExtraDataManager {
 
     /** Return the list of the least recently updated items, or a subset of them. */
     public async getLeastRecentlyUpdatedItems(worldDC?: string | number, count?: number): Promise<WorldItemPairList> {
-        let items = (await this.getNeverUpdatedItems(count)).items;
+        let items = (await this.getNeverUpdatedItems(worldDC, count)).items;
 
         if (count) count = Math.max(count, 0);
         else count = Number.MAX_VALUE;
@@ -106,7 +106,7 @@ export class ExtraDataManager {
             const randomData = await this.recentData.findOne(query,
                 { projection: { _id: 0, listings: 0, recentHistory: 0 } });
 
-            if (!randomData) items.push({ worldID, itemID });
+            if (!randomData) items.push(query);
         }
 
         return { items };
