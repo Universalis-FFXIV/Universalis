@@ -87,12 +87,12 @@ export class ExtraDataManager {
             if (items.length === Math.min(count, this.neverUpdatedItemsCap)) return { items };
 
             const worldID = (() => {
-                let number = Math.floor(Math.random() * 87) + 13;
-                if (number === 26) number--;
-                if (number === 27) number--;
-                if (number === 38) number--;
-                if (number === 84) number--;
-                return number;
+                let num = Math.floor(Math.random() * 87) + 13;
+                if (num === 26) num--;
+                if (num === 27) num--;
+                if (num === 38) num--;
+                if (num === 84) num--;
+                return num;
             })();
 
             const itemID = Math.floor(Math.random() * 28099) + 1;
