@@ -339,9 +339,10 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
 router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recently updated items
     await init;
 
-    let worldID = ctx.queryParameters.world.charAt(0).toUpperCase() +
-        ctx.queryParameters.world.substr(1).toLowerCase();
-    let dcName = ctx.queryParameters.dcName;
+    let worldID = ctx.queryParameters.world ? ctx.queryParameters.world.charAt(0).toUpperCase() +
+        ctx.queryParameters.world.substr(1).toLowerCase() : null;
+    let dcName = ctx.queryParameters.dcName ? ctx.queryParameters.dcName.charAt(0).toUpperCase() +
+        ctx.queryParameters.dcName.substr(1).toLowerCase() : null;
 
     if (worldID && !parseInt(worldID)) {
         worldID = worldMap.get(worldID);
