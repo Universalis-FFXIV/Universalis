@@ -20,7 +20,7 @@ var recentData: Collection;
 
 var trustedSources: TrustedSourceManager;
 
-const commands: Map<string, () => Promise<void>> = new Map();
+const commands: Map<string, (resources: CLIResources, args: string[]) => Promise<void>> = new Map();
 
 var resources: CLIResources;
 
