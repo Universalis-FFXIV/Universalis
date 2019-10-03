@@ -67,7 +67,8 @@ export class ExtraDataManager {
         if (typeof worldDC === "number") query.worldID = worldDC;
         else if (typeof worldDC === "string") query.dcName = worldDC;
 
-        items.concat(await this.recentData.find(query, { projection: { worldID: 1, itemID: 1 } })
+        if (items.length < 20) items.concat(await this.recentData
+            .find(query, { projection: { _id: 0, listings: 0, recentHistory: 0 } })
             .limit(Math.min(count, Math.max(0, this.recentlyUpdatedItemsCap - items.length)))
             .sort(sortQuery)
             .toArray()
