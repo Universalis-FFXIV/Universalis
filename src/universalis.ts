@@ -83,7 +83,7 @@ const init = (async () => {
 
     // World-ID conversions
     const worldList = await remoteDataManager.parseCSV("World.csv");
-	for (let worldEntry of worldList) {
+	for (const worldEntry of worldList) {
         if (worldEntry[0] === "25") continue;
 	    worldMap.set(worldEntry[1], parseInt(worldEntry[0]));
 	}
@@ -109,7 +109,7 @@ universalis.use(async (ctx, next) => {
     const queryParameters: string[] = ctx.url.substr(ctx.url.indexOf("?")).split(/[?&]+/g).slice(1);
     ctx.queryParameters = {};
     if (queryParameters) {
-        for (let param of queryParameters) {
+        for (const param of queryParameters) {
             const keyValuePair = param.split(/[^a-zA-Z0-9]+/g);
             ctx.queryParameters[keyValuePair[0]] = keyValuePair[1];
         }

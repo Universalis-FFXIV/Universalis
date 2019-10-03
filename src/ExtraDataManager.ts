@@ -6,14 +6,6 @@ import { WorldItemPair } from "./models/WorldItemPair";
 import { WorldItemPairList } from "./models/WorldItemPairList";
 
 export class ExtraDataManager {
-    private extraDataCollection: Collection;
-    private recentData: Collection;
-
-    private dailyUploadTrackingLimit = 30;
-    private maxUnsafeLoopCount = 50;
-    private neverUpdatedItemsCap = 20;
-    private recentlyUpdatedItemsCap = 20;
-
     public static async create(db: Db): Promise<ExtraDataManager> {
         const extraDataCollection = db.collection("extraData");
 
@@ -33,6 +25,14 @@ export class ExtraDataManager {
 
         return new ExtraDataManager(extraDataCollection, recentData);
     }
+
+    private extraDataCollection: Collection;
+    private recentData: Collection;
+
+    private dailyUploadTrackingLimit = 30;
+    private maxUnsafeLoopCount = 50;
+    private neverUpdatedItemsCap = 20;
+    private recentlyUpdatedItemsCap = 20;
 
     private constructor(extraDataCollection: Collection, recentData: Collection) {
         this.extraDataCollection = extraDataCollection;
@@ -68,47 +68,19 @@ export class ExtraDataManager {
         else if (typeof worldDC === "string") query.dcName = worldDC;
 
         if (items.length < 20) items.concat(await this.recentData
-            .find(query, { projection: { _id: 0, listings: 0, recentHistory: 0 } })
+            .find(query, { projection: { _id: 0, listings: 0, recentHistory: 0, timestamp: 1 } })
             .limit(Math.min(count, Math.max(0, this.recentlyUpdatedItemsCap - items.length)))
             .sort(sortQuery)
             .toArray()
         );
 
-        return { items };
-    }
-
-    /** Return the list of items never uploaded, or a subset of them. */
-    private async getNeverUpdatedItems(worldDC?: string | number, count?: number): Promise<WorldItemPairList> {
-        if (count) count = Math.max(count, 0);
-        else count = Number.MAX_VALUE;
-
-        const items: Array<WorldItemPair> = [];
-
-        for (let i = 0; i < this.maxUnsafeLoopCount; i++) {
-            if (items.length === Math.min(count, this.neverUpdatedItemsCap)) return { items };
-
-            const worldID = (() => {
-                let num = Math.floor(Math.random() * 87) + 13;
-                if (num === 26) num--;
-                if (num === 27) num--;
-                if (num === 38) num--;
-                if (num === 84) num--;
-                return num;
-            })();
-
-            const itemID = Math.floor(Math.random() * 28099) + 1;
-
-            const query: any = { itemID };
-
-            if (typeof worldDC === "number") query.worldID = worldDC;
-            else if (typeof worldDC === "string") query.dcName = worldDC;
-            else query.worldID = worldID;
-
-            const randomData = await this.recentData.findOne(query,
-                { projection: { _id: 0, listings: 0, recentHistory: 0 } });
-
-            if (!randomData) items.push(query);
-        }
+        // Uninitialized items won't have a timestamp in the first place.
+        items = items.map((item) => {
+            if (!item.timestamp) {
+                item.timestamp = 0;
+            }
+            return item;
+        });
 
         return { items };
     }
@@ -139,8 +111,8 @@ export class ExtraDataManager {
             });
         } else {
             await this.extraDataCollection.insertOne({
-                setName: "recentlyUpdated",
-                items: [itemID]
+                items: [itemID],
+                setName: "recentlyUpdated"
             });
         }
     }
@@ -189,10 +161,46 @@ export class ExtraDataManager {
             });
         } else {
             await this.extraDataCollection.insertOne({
-                setName: "uploadCountHistory",
                 lastPush: Date.now(),
+                setName: "uploadCountHistory",
                 uploadCountByDay: [1]
             });
         }
+    }
+
+    /** Return the list of items never uploaded, or a subset of them. */
+    private async getNeverUpdatedItems(worldDC?: string | number, count?: number): Promise<WorldItemPairList> {
+        if (count) count = Math.max(count, 0);
+        else count = Number.MAX_VALUE;
+
+        const items: Array<WorldItemPair> = [];
+
+        for (let i = 0; i < this.maxUnsafeLoopCount; i++) {
+            if (items.length === Math.min(count, this.neverUpdatedItemsCap)) return { items };
+
+            const worldID = (() => {
+                let num = Math.floor(Math.random() * 87) + 13;
+                if (num === 26) num--;
+                if (num === 27) num--;
+                if (num === 38) num--;
+                if (num === 84) num--;
+                return num;
+            })();
+
+            const itemID = Math.floor(Math.random() * 28099) + 1;
+
+            const query: any = { itemID };
+
+            if (typeof worldDC === "number") query.worldID = worldDC;
+            else if (typeof worldDC === "string") query.dcName = worldDC;
+            else query.worldID = worldID;
+
+            const randomData = await this.recentData.findOne(query,
+                { projection: { _id: 0, listings: 0, recentHistory: 0 } });
+
+            if (!randomData) items.push(query);
+        }
+
+        return { items };
     }
 }

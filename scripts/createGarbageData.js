@@ -135,7 +135,7 @@ async function generateListingData(nameObject = undefined, lastPrice) {
         retainerName: makeid(10),
         retainerCity: (() => {
             let n = Math.floor(Math.random() * 6);
-            switch(n){
+            switch (n){
                 case 0: return "Gridania";
                 case 1: return "Ul'dah";
                 case 2: return "Limsa Lominsa";

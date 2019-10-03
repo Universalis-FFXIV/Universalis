@@ -1,8 +1,6 @@
 import { Collection, Db } from "mongodb";
 
 export class ContentIDCollection {
-    private contentIDCollection: Collection;
-
     public static async create(db: Db): Promise<ContentIDCollection> {
         const contentIDCollection = db.collection("content");
 
@@ -20,6 +18,8 @@ export class ContentIDCollection {
 
         return new ContentIDCollection(contentIDCollection);
     }
+
+    private contentIDCollection: Collection;
 
     private constructor(contentIDCollection: Collection) {
         this.contentIDCollection = contentIDCollection;

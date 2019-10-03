@@ -9,6 +9,8 @@ import { TrustedSourceManager } from "../TrustedSourceManager";
 
 import { CLIResources } from "../models/CLIResources";
 
+import { unicVersion } from "../../package.json";
+
 const readdir = util.promisify(fs.readdir);
 
 // Load resources
@@ -18,7 +20,7 @@ var recentData: Collection;
 
 var trustedSources: TrustedSourceManager;
 
-const commands: Map<string, Function> = new Map();
+const commands: Map<string, (resources: CLIResources, args: string[]) => Promise<void>> = new Map();
 
 var resources: CLIResources;
 
@@ -46,7 +48,7 @@ const init = (async () => {
 })();
 
 // Console application
-console.log(chalk.cyan(`Universalis Console Tool v${require("../../package.json").unicVersion}`));
+console.log(chalk.cyan(`Universalis Console Tool v${unicVersion}`));
 
 const stdin = readline.createInterface({
     completer: autocomplete,
