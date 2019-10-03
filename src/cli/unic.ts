@@ -9,7 +9,7 @@ import { TrustedSourceManager } from "../TrustedSourceManager";
 
 import { CLIResources } from "../models/CLIResources";
 
-const { unicVersion } = require("../../package.json");
+import { unicVersion } from "../../package.json";
 
 const readdir = util.promisify(fs.readdir);
 

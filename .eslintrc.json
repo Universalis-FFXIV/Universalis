@@ -18,6 +18,7 @@
         "indent": "off",
         "linebreak-style": "off",
         "max-len": "off",
+        "no-console": "off",
         "no-unused-vars": "off",
         "no-var": "off",
         "prefer-const": "off",
