@@ -55,7 +55,7 @@ export class ExtraDataManager {
 
     /** Return the list of the least recently updated items, or a subset of them. */
     public async getLeastRecentlyUpdatedItems(worldDC?: string | number, count?: number): Promise<WorldItemPairList> {
-        const items = (await this.getNeverUpdatedItems(worldDC, count)).items;
+        let items = (await this.getNeverUpdatedItems(worldDC, count)).items;
 
         if (count) count = Math.max(count, 0);
         else count = Number.MAX_VALUE;
@@ -68,11 +68,19 @@ export class ExtraDataManager {
         else if (typeof worldDC === "string") query.dcName = worldDC;
 
         if (items.length < 20) items.concat(await this.recentData
-            .find(query, { projection: { _id: 0, listings: 0, recentHistory: 0 } })
+            .find(query, { projection: { _id: 0, listings: 0, recentHistory: 0, timestamp: 1 } })
             .limit(Math.min(count, Math.max(0, this.recentlyUpdatedItemsCap - items.length)))
             .sort(sortQuery)
             .toArray()
         );
+
+        // Uninitialized items won't have a timestamp in the first place.
+        items = items.map((item) => {
+            if (!item.timestamp) {
+                item.timestamp = 0;
+            }
+            return item;
+        });
 
         return { items };
     }
