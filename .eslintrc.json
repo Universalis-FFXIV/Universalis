@@ -21,7 +21,6 @@
         "no-unused-vars": "off",
         "no-var": "off",
         "prefer-const": "off",
-        "quotes": ["error", "single"],
         "quotes": ["off", "double"]
     }
 }
