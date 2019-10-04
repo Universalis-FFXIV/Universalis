@@ -42,11 +42,11 @@ export class RemoteDataManager {
     /** Get all marketable item IDs from XIVAPI. It is accessible while it is being populated. */
     public async getMarketableItemIDs(): Promise<number[]> {
         const url = "https://xivapi.com/search?indexes=item&filters=ItemSearchCategory.ID%3E8&columns=ID";
-        const existingFile = path.join(this.remoteFileDirectory, "json/item.json");
+        const existingFile = path.join(__dirname, this.remoteFileDirectory, "json/item.json");
 
         let storageFile: any = {};
         if (await exists(existingFile)) {
-            storageFile = JSON.parse((await readFile(storageFile).toString()));
+            storageFile = JSON.parse((await readFile(existingFile).toString()));
             if (storageFile && storageFile.itemID) {
                 return storageFile.itemID;
             }
