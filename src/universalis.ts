@@ -74,7 +74,8 @@ const init = (async () => {
     recentData = universalisDB.collection("recentData");
 
     remoteDataManager = new RemoteDataManager({ logger });
-    remoteDataManager.fetchAll();
+    await remoteDataManager.fetchAll();
+    logger.info("Loaded all remote resources.");
 
     blacklistManager = await BlacklistManager.create(universalisDB);
     contentIDCollection = await ContentIDCollection.create(universalisDB);

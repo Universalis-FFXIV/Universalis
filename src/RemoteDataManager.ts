@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import csvParser from "csv-parse";
 import fs from "fs";
 import path from "path";
@@ -41,28 +42,42 @@ export class RemoteDataManager {
     /** Get all marketable item IDs from XIVAPI. It is accessible while it is being populated. */
     public async getMarketableItemIDs(): Promise<number[]> {
         const url = "https://xivapi.com/search?indexes=item&filters=ItemSearchCategory.ID%3E8&columns=ID";
+        const existingFile = path.join(this.remoteFileDirectory, "json/item.json");
 
-        let storageFile = JSON.parse((await readFile(path.join(this.remoteFileDirectory, "item.json"))).toString());
-        if (storageFile && storageFile.itemID) {
-            return storageFile.itemID;
+        let storageFile: any = {};
+        if (await exists(existingFile)) {
+            storageFile = JSON.parse((await readFile(storageFile).toString()));
+            if (storageFile && storageFile.itemID) {
+                return storageFile.itemID;
+            }
         }
 
-        storageFile = [];
+        storageFile.itemID = [];
 
-        (async () => { // This floats around and runs after the array is returned.
+        // This fills the array after it's returned, since this is roughly an 8-minute job.
+        (async () => {
             const firstPage = JSON.parse(await request(url));
             const pageCount = firstPage.Pagination.PageTotal;
-            storageFile.push(firstPage.Results.map((item: { ID: number }) => item.ID));
+            const firstLine = firstPage.Results.map((item: { ID: number }) => item.ID);
+            storageFile.itemID.push(firstLine);
+            this.logger.info("(Marketable Item ID Catalog) Pushed " +
+                `${chalk.greenBright(firstLine.toString())} from page 1.`);
+
             for (let i = 2; i < pageCount; i++) {
-                await new Promise((resolve) => { setTimeout(resolve, 100) });
+                await new Promise((resolve) => { setTimeout(resolve, 250) });
                 const nextPage = JSON.parse(await request(url + `&page=${i}`));
-                storageFile.push(nextPage.Results.map((item: { ID: number }) => item.ID));
+                const nextLine = nextPage.Results.map((item: { ID: number }) => item.ID);
+                storageFile.itemID.push(nextLine);
+                this.logger.info("(Marketable Item ID Catalog) Pushed " +
+                    `${chalk.greenBright(nextLine.toString())} from page ${i}.`);
             }
 
-            await writeFile(path.join(this.remoteFileDirectory, "item.json"), JSON.stringify({ storageFile }));
+            await writeFile(existingFile, JSON.stringify({ storageFile }));
+            this.logger.info("(Marketable Item ID Catalog) Wrote list out to " +
+                `${chalk.greenBright(existingFile)}.`);
         })();
 
-        return storageFile;
+        return storageFile.itemID;
     }
 
     /** Parse a CSV, retrieving it if it does not already exist. */
@@ -110,12 +125,13 @@ export class RemoteDataManager {
 
     /** Get all files. */
     public async fetchAll(): Promise<void> {
-        const promises: Array<Promise<Buffer>> = [];
+        const promises: Array<Promise<any>> = [];
         for (const fileName in urlDictionary) {
             if (urlDictionary.hasOwnProperty(fileName)) {
                 promises.push(this.fetchFile(fileName));
             }
         }
+        promises.push(this.getMarketableItemIDs());
         await Promise.all(promises);
     }
 
