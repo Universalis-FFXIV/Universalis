@@ -204,7 +204,6 @@ export class ExtraDataManager {
 
             const randomData = await this.recentData.findOne(query,
                 { projection: { _id: 0, listings: 0, recentHistory: 0 } });
-
             if (!randomData) items.push(query);
         }
 

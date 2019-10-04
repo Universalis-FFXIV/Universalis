@@ -19,7 +19,7 @@ const urlDictionary = {
 };
 
 const csvMap = new Map<string, string[][]>();
-const remoteFileMap = new Map<string, Buffer>();
+const remoteFileMap = new Map<string, any>();
 
 export class RemoteDataManager {
     private exts: string[];
@@ -45,9 +45,12 @@ export class RemoteDataManager {
         const existingFile = path.join(__dirname, this.remoteFileDirectory, "json/item.json");
 
         let storageFile: any = {};
-        if (await exists(existingFile)) {
-            storageFile = JSON.parse((await readFile(existingFile).toString()));
+        if (remoteFileMap.get("item.json")) {
+            return remoteFileMap.get("item.json").itemID;
+        } else if (await exists(existingFile)) {
+            storageFile = JSON.parse((await readFile(existingFile)).toString());
             if (storageFile && storageFile.itemID) {
+                remoteFileMap.set("item.json", storageFile);
                 return storageFile.itemID;
             }
         }
@@ -59,20 +62,24 @@ export class RemoteDataManager {
             const firstPage = JSON.parse(await request(url));
             const pageCount = firstPage.Pagination.PageTotal;
             const firstLine = firstPage.Results.map((item: { ID: number }) => item.ID);
-            storageFile.itemID.push(firstLine);
+
+            storageFile.itemID.push.apply(storageFile.itemID, firstLine);
             this.logger.info("(Marketable Item ID Catalog) Pushed " +
                 `${chalk.greenBright(firstLine.toString())} from page 1.`);
 
             for (let i = 2; i < pageCount; i++) {
                 await new Promise((resolve) => { setTimeout(resolve, 250) });
+
                 const nextPage = JSON.parse(await request(url + `&page=${i}`));
                 const nextLine = nextPage.Results.map((item: { ID: number }) => item.ID);
-                storageFile.itemID.push(nextLine);
+
+                storageFile.itemID.push.apply(storageFile.itemID, nextLine);
                 this.logger.info("(Marketable Item ID Catalog) Pushed " +
                     `${chalk.greenBright(nextLine.toString())} from page ${i}.`);
             }
 
-            await writeFile(existingFile, JSON.stringify({ storageFile }));
+            remoteFileMap.set("item.json", storageFile);
+            await writeFile(existingFile, JSON.stringify(storageFile));
             this.logger.info("(Marketable Item ID Catalog) Wrote list out to " +
                 `${chalk.greenBright(existingFile)}.`);
         })();
