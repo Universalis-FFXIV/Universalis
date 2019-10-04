@@ -1,4 +1,4 @@
-import request from "request-promise";
+import { RemoteDataManager } from "./RemoteDataManager";
 
 import { Collection, Db } from "mongodb";
 
@@ -8,9 +8,7 @@ import { WorldItemPair } from "./models/WorldItemPair";
 import { WorldItemPairList } from "./models/WorldItemPairList";
 
 export class ExtraDataManager {
-        public static readonly itemCount = 28100;
-
-        public static async create(db: Db): Promise<ExtraDataManager> {
+    public static async create(rdm: RemoteDataManager, db: Db): Promise<ExtraDataManager> {
         const extraDataCollection = db.collection("extraData");
 
         const indices = [
@@ -27,20 +25,24 @@ export class ExtraDataManager {
         // recentData indices are created in the recent data manager
         const recentData = db.collection("recentData");
 
-        return new ExtraDataManager(extraDataCollection, recentData);
+        return new ExtraDataManager(rdm, extraDataCollection, recentData);
     }
 
     private extraDataCollection: Collection;
     private recentData: Collection;
+
+    private rdm: RemoteDataManager;
 
     private dailyUploadTrackingLimit = 30;
     private maxUnsafeLoopCount = 50;
     private neverUpdatedItemsCap = 20;
     private recentlyUpdatedItemsCap = 20;
 
-    private constructor(extraDataCollection: Collection, recentData: Collection) {
+    private constructor(rdm: RemoteDataManager, extraDataCollection: Collection, recentData: Collection) {
         this.extraDataCollection = extraDataCollection;
         this.recentData = recentData;
+
+        this.rdm = rdm;
     }
 
     /** Return the list of the most recently updated items, or a subset of them. */
@@ -191,32 +193,19 @@ export class ExtraDataManager {
             })();
 
             // Item ID
-            let itemID: number;
-            let binarySearchLikeFilter = ExtraDataManager.itemCount;
-            let url = "https://xivapi.com/search?indexes=item&filters=ItemSearchCategory.ID>8&columns=ID";
-            for (let j = 0; j < this.maxUnsafeLoopCount && !itemID; j++) {
-                const searchResult = await request(url);
-                if (searchResult.Results.length === 0) {
-                    binarySearchLikeFilter = Math.floor(binarySearchLikeFilter / 2);
-                    url = "https://xivapi.com/search?indexes=item&filters=ItemSearchCategory.ID>8,ID>" +
-                        binarySearchLikeFilter +
-                        "&columns=ID";
-                } else {
-                    itemID = searchResult.Results[Math.floor(Math.random() * searchResult.Results.length)];
-                }
+            const itemIDs = await this.rdm.getMarketableItemIDs();
+            const itemID = itemIDs[Math.floor(Math.random() * itemIDs.length)];
 
-                // DB query
-                const query: any = { itemID };
+            // DB query
+            const query: any = { itemID };
+            if (typeof worldDC === "number") query.worldID = worldDC;
+            else if (typeof worldDC === "string") query.dcName = worldDC;
+            else query.worldID = worldID;
 
-                if (typeof worldDC === "number") query.worldID = worldDC;
-                else if (typeof worldDC === "string") query.dcName = worldDC;
-                else query.worldID = worldID;
+            const randomData = await this.recentData.findOne(query,
+                { projection: { _id: 0, listings: 0, recentHistory: 0 } });
 
-                const randomData = await this.recentData.findOne(query,
-                    { projection: { _id: 0, listings: 0, recentHistory: 0 } });
-
-                if (!randomData) items.push(query);
-            }
+            if (!randomData) items.push(query);
         }
 
         return { items };

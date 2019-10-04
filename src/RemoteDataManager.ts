@@ -38,6 +38,33 @@ export class RemoteDataManager {
         }
     }
 
+    /** Get all marketable item IDs from XIVAPI. It is accessible while it is being populated. */
+    public async getMarketableItemIDs(): Promise<number[]> {
+        const url = "https://xivapi.com/search?indexes=item&filters=ItemSearchCategory.ID%3E8&columns=ID";
+
+        let storageFile = JSON.parse((await readFile(path.join(this.remoteFileDirectory, "item.json"))).toString());
+        if (storageFile && storageFile.itemID) {
+            return storageFile.itemID;
+        }
+
+        storageFile = [];
+
+        (async () => { // This floats around and runs after the array is returned.
+            const firstPage = JSON.parse(await request(url));
+            const pageCount = firstPage.Pagination.PageTotal;
+            storageFile.push(firstPage.Results.map((item: { ID: number }) => item.ID));
+            for (let i = 2; i < pageCount; i++) {
+                await new Promise((resolve) => { setTimeout(resolve, 100) });
+                const nextPage = JSON.parse(await request(url + `&page=${i}`));
+                storageFile.push(nextPage.Results.map((item: { ID: number }) => item.ID));
+            }
+
+            await writeFile(path.join(this.remoteFileDirectory, "item.json"), JSON.stringify({ storageFile }));
+        })();
+
+        return storageFile;
+    }
+
     /** Parse a CSV, retrieving it if it does not already exist. */
     public async parseCSV(fileName: string): Promise<string[][]> {
         if (csvMap.get(fileName)) {
