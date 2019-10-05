@@ -73,13 +73,15 @@ const init = (async () => {
     extendedHistory = universalisDB.collection("extendedHistory");
     recentData = universalisDB.collection("recentData");
 
+    remoteDataManager = new RemoteDataManager({ logger });
+    await remoteDataManager.fetchAll();
+    logger.info("Loaded all remote resources.");
+
     blacklistManager = await BlacklistManager.create(universalisDB);
     contentIDCollection = await ContentIDCollection.create(universalisDB);
-    extraDataManager = await ExtraDataManager.create(universalisDB);
+    extraDataManager = await ExtraDataManager.create(remoteDataManager, universalisDB);
     historyTracker = await HistoryTracker.create(universalisDB);
     priceTracker = await PriceTracker.create(universalisDB);
-    remoteDataManager = new RemoteDataManager({ logger });
-    remoteDataManager.fetchAll();
 
     // World-ID conversions
     const worldList = await remoteDataManager.parseCSV("World.csv");

@@ -9,8 +9,6 @@ import { TrustedSourceManager } from "../TrustedSourceManager";
 
 import { CLIResources } from "../models/CLIResources";
 
-import { unicVersion } from "../../package.json";
-
 const readdir = util.promisify(fs.readdir);
 
 // Load resources
@@ -48,7 +46,7 @@ const init = (async () => {
 })();
 
 // Console application
-console.log(chalk.cyan(`Universalis Console Tool v${unicVersion}`));
+console.log(chalk.cyan(`Universalis Console Tool v${require("../../package.json").unicVersion}`));
 
 const stdin = readline.createInterface({
     completer: autocomplete,

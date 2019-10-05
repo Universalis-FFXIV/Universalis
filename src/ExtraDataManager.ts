@@ -1,3 +1,5 @@
+import { RemoteDataManager } from "./RemoteDataManager";
+
 import { Collection, Db } from "mongodb";
 
 import { DailyUploadStatistics } from "./models/DailyUploadStatistics";
@@ -6,7 +8,7 @@ import { WorldItemPair } from "./models/WorldItemPair";
 import { WorldItemPairList } from "./models/WorldItemPairList";
 
 export class ExtraDataManager {
-    public static async create(db: Db): Promise<ExtraDataManager> {
+    public static async create(rdm: RemoteDataManager, db: Db): Promise<ExtraDataManager> {
         const extraDataCollection = db.collection("extraData");
 
         const indices = [
@@ -23,20 +25,24 @@ export class ExtraDataManager {
         // recentData indices are created in the recent data manager
         const recentData = db.collection("recentData");
 
-        return new ExtraDataManager(extraDataCollection, recentData);
+        return new ExtraDataManager(rdm, extraDataCollection, recentData);
     }
 
     private extraDataCollection: Collection;
     private recentData: Collection;
+
+    private rdm: RemoteDataManager;
 
     private dailyUploadTrackingLimit = 30;
     private maxUnsafeLoopCount = 50;
     private neverUpdatedItemsCap = 20;
     private recentlyUpdatedItemsCap = 20;
 
-    private constructor(extraDataCollection: Collection, recentData: Collection) {
+    private constructor(rdm: RemoteDataManager, extraDataCollection: Collection, recentData: Collection) {
         this.extraDataCollection = extraDataCollection;
         this.recentData = recentData;
+
+        this.rdm = rdm;
     }
 
     /** Return the list of the most recently updated items, or a subset of them. */
@@ -60,8 +66,6 @@ export class ExtraDataManager {
         if (count) count = Math.max(count, 0);
         else count = Number.MAX_VALUE;
 
-        const sortQuery = { timestamp: 1 };
-
         const query: any = {};
 
         if (typeof worldDC === "number") query.worldID = worldDC;
@@ -70,7 +74,7 @@ export class ExtraDataManager {
         if (items.length < 20) items.concat(await this.recentData
             .find(query, { projection: { _id: 0, listings: 0, recentHistory: 0, timestamp: 1 } })
             .limit(Math.min(count, Math.max(0, this.recentlyUpdatedItemsCap - items.length)))
-            .sort(sortQuery)
+            .sort({ timestamp: 1 })
             .toArray()
         );
 
@@ -178,6 +182,7 @@ export class ExtraDataManager {
         for (let i = 0; i < this.maxUnsafeLoopCount; i++) {
             if (items.length === Math.min(count, this.neverUpdatedItemsCap)) return { items };
 
+            // Random world ID
             const worldID = (() => {
                 let num = Math.floor(Math.random() * 87) + 13;
                 if (num === 26) num--;
@@ -187,17 +192,18 @@ export class ExtraDataManager {
                 return num;
             })();
 
-            const itemID = Math.floor(Math.random() * 28099) + 1;
+            // Item ID
+            const itemIDs = await this.rdm.getMarketableItemIDs();
+            const itemID = itemIDs[Math.floor(Math.random() * itemIDs.length)];
 
+            // DB query
             const query: any = { itemID };
-
             if (typeof worldDC === "number") query.worldID = worldDC;
             else if (typeof worldDC === "string") query.dcName = worldDC;
             else query.worldID = worldID;
 
             const randomData = await this.recentData.findOne(query,
                 { projection: { _id: 0, listings: 0, recentHistory: 0 } });
-
             if (!randomData) items.push(query);
         }
 

@@ -15,12 +15,15 @@
     },
     "rules": {
         "camelcase": "off",
+        "comma-dangle": "off",
         "indent": "off",
         "linebreak-style": "off",
         "max-len": "off",
         "no-console": "off",
+        "no-multi-spaces": "off",
         "no-unused-vars": "off",
         "no-var": "off",
+        "object-curly-spacing": "off",
         "prefer-const": "off",
         "quotes": ["off", "double"]
     }

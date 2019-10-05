@@ -4,13 +4,13 @@
 A crowdsourced market board aggregator.
 
 ## Endpoint Reference
-  * /api/:world/:item
-  * /api/history/:world/:item
-  * /api/extra/content/:contentID
-  * /api/extra/stats/upload-history
-  * /api/extra/stats/recently-updated
-  * /api/extra/stats/least-recently-updated
-  * /upload/:apiKey
+*   /api/:world/:item
+*   /api/history/:world/:item
+*   /api/extra/content/:contentID
+*   /api/extra/stats/upload-history
+*   /api/extra/stats/recently-updated
+*   /api/extra/stats/least-recently-updated
+*   /upload/:apiKey
 
 ## Client-app Development
 Please see goat's [ACT plugin](https://github.com/goaaats/universalis_act_plugin) for an example of how to collect and upload market board data.

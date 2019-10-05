@@ -15,8 +15,6 @@ import { MinimizedDCHistoryEntry } from "../models/MinimizedDCHistoryEntry";
 import { MinimizedHistoryEntry } from "../models/MinimizedHistoryEntry";
 
 export class HistoryTracker extends Tracker {
-    private extendedHistory: Collection;
-
     public static async create(db: Db): Promise<HistoryTracker> {
         const recentData = db.collection("recentData");
         const extendedHistory = db.collection("extendedHistory");
@@ -36,6 +34,8 @@ export class HistoryTracker extends Tracker {
 
         return new HistoryTracker(recentData, extendedHistory);
     }
+
+    private extendedHistory: Collection;
 
     private constructor(recentData: Collection, extendedHistory: Collection) {
         super(recentData);
