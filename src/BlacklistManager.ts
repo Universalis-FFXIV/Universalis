@@ -1,11 +1,12 @@
 import { Collection, Db, MongoError } from "mongodb";
+import { Logger } from "winston";
 
 export interface BlacklistEntry {
     uploaderID: string;
 }
 
 export class BlacklistManager {
-    public static async create(db: Db): Promise<BlacklistManager> {
+    public static async create(logger: Logger, db: Db): Promise<BlacklistManager> {
         const blacklist = db.collection("blacklist");
 
         const indices = [
@@ -14,8 +15,8 @@ export class BlacklistManager {
         const indexNames = indices.map(Object.keys);
         for (let i = 0; i < indices.length; i++) {
             // We check each individually to ensure we don't duplicate indices on failure.
-            if (!await blacklist.indexExists(indexNames[i]).catch(console.error)) {
-                await blacklist.createIndex(indices[i]).catch(console.error);
+            if (!await blacklist.indexExists(indexNames[i]).catch(logger.error)) {
+                await blacklist.createIndex(indices[i]).catch(logger.error);
             }
         }
 

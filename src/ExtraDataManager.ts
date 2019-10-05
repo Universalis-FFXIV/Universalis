@@ -52,7 +52,8 @@ export class ExtraDataManager {
 
         const query = { setName: "recentlyUpdated" };
 
-        const data: RecentlyUpdated = await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0 } });
+        const data: RecentlyUpdated =
+            await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0 } });
 
         if (count && data) data.items = data.items.slice(0, Math.min(count, data.items.length));
 
@@ -177,7 +178,7 @@ export class ExtraDataManager {
         if (count) count = Math.max(count, 0);
         else count = Number.MAX_VALUE;
 
-        const items: Array<WorldItemPair> = [];
+        const items: WorldItemPair[] = [];
 
         for (let i = 0; i < this.maxUnsafeLoopCount; i++) {
             if (items.length === Math.min(count, this.neverUpdatedItemsCap)) return { items };

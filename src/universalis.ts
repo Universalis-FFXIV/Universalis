@@ -77,8 +77,8 @@ const init = (async () => {
     await remoteDataManager.fetchAll();
     logger.info("Loaded all remote resources.");
 
-    blacklistManager = await BlacklistManager.create(universalisDB);
-    contentIDCollection = await ContentIDCollection.create(universalisDB);
+    blacklistManager = await BlacklistManager.create(logger, universalisDB);
+    contentIDCollection = await ContentIDCollection.create(logger, universalisDB);
     extraDataManager = await ExtraDataManager.create(remoteDataManager, universalisDB);
     historyTracker = await HistoryTracker.create(universalisDB);
     priceTracker = await PriceTracker.create(universalisDB);
@@ -87,7 +87,7 @@ const init = (async () => {
     const worldList = await remoteDataManager.parseCSV("World.csv");
 	for (const worldEntry of worldList) {
         if (worldEntry[0] === "25") continue;
-	    worldMap.set(worldEntry[1], parseInt(worldEntry[0]));
+        worldMap.set(worldEntry[1], parseInt(worldEntry[0]));
 	}
 
     logger.info("Connected to database and started data managers.");
@@ -352,14 +352,17 @@ router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recent
         worldID = parseInt(worldID);
     }
 
-    if (worldID && dcName) {
+    if (worldID && dcName && worldID !== 0) {
         dcName = null;
+    } else if (worldID && dcName && worldID === 0) {
+        worldID = null;
     }
 
     let entriesToReturn: any = ctx.queryParameters.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
-    const data: WorldItemPairList = await extraDataManager.getLeastRecentlyUpdatedItems(worldID || dcName, entriesToReturn);
+    const data: WorldItemPairList =
+        await extraDataManager.getLeastRecentlyUpdatedItems(worldID || dcName, entriesToReturn);
 
     if (!data) {
         ctx.body =  {
@@ -433,7 +436,8 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
                 onMannequin: typeof listing.onMannequin === "undefined" ? false : listing.onMannequin,
                 pricePerUnit: listing.pricePerUnit,
                 quantity: listing.quantity,
-                retainerCity: typeof listing.retainerCity === "number" ? listing.retainerCity : City[listing.retainerCity],
+                retainerCity: typeof listing.retainerCity === "number" ?
+                    listing.retainerCity : City[listing.retainerCity],
                 retainerID: sha("sha256").update(listing.retainerID + "").digest("hex"),
                 retainerName: listing.retainerName,
                 sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),

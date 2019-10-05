@@ -1,7 +1,8 @@
 import { Collection, Db } from "mongodb";
+import { Logger } from "winston";
 
 export class ContentIDCollection {
-    public static async create(db: Db): Promise<ContentIDCollection> {
+    public static async create(logger: Logger, db: Db): Promise<ContentIDCollection> {
         const contentIDCollection = db.collection("content");
 
         const indices = [
@@ -11,8 +12,8 @@ export class ContentIDCollection {
         const indexNames = indices.map(Object.keys);
         for (let i = 0; i < indices.length; i++) {
             // We check each individually to ensure we don't duplicate indices on failure.
-            if (!await contentIDCollection.indexExists(indexNames[i]).catch(console.error)) {
-                await contentIDCollection.createIndex(indices[i]).catch(console.error);
+            if (!await contentIDCollection.indexExists(indexNames[i]).catch(logger.error)) {
+                await contentIDCollection.createIndex(indices[i]).catch(logger.error);
             }
         }
 
