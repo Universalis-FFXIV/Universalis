@@ -46,15 +46,15 @@
     "@types/lodash.compact": "^3.0.6",
     "@types/lodash.difference": "^4.5.6",
     "@types/lodash.isequal": "^4.5.5",
+    "@types/mocha": "^5.2.7",
     "@types/mongodb": "^3.3.1",
     "@types/request-promise": "^4.1.44",
     "@types/sha.js": "^2.4.0",
     "lodash.clonedeep": "^4.5.0",
     "lodash.isequal": "^4.5.0",
-    "ts-node": "8.4.1",
     "mocha": "^6.2.0",
-    "@types/mocha": "5.2.7",
     "should": "^13.2.3",
+    "ts-node": "8.4.1",
     "tslint": "^5.18.0"
   }
 }

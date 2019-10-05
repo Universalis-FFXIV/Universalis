@@ -169,7 +169,7 @@ describe("The upload process:", function() {
                 setTimeout(async () => {
                     resolve(!err);
                 }, updateTimeout);
-            })
+            });
         }).should.eventually.be.exactly(true);
     });
 });
