@@ -31,7 +31,8 @@ module.exports = {
 		if (!searchResults.Results.length) {
 			return message.reply("no results found for \"" + itemName + "\", are you sure you spelled the item name correctly?");
 		}
-		const searchData = searchResults.Results.find((result) => result.Name === itemName) || searchResults.Results[0];
+		let searchData = searchResults.Results.find((result) => result.Name.toLowerCase() === itemName.toLowerCase());
+		if (!searchData) searchData = searchResults.Results[0];
 		const itemID = searchData.ID;
 		itemName = searchData.Name;
 		const worldID = worldMap.get(worldName);
