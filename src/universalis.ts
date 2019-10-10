@@ -163,6 +163,13 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 
     // Do some post-processing on resolved item listings.
     for (const item of data.items) {
+        if (item.listings.length > 0) {
+            item.listings = item.listings.sort((a: MarketBoardItemListing, b: MarketBoardItemListing) => {
+                if (a.pricePerUnit > b.pricePerUnit) return 1;
+                if (a.pricePerUnit < b.pricePerUnit) return -1;
+                return 0;
+            });
+        }
         for (const listing of item.listings) {
             listing.isCrafted =
                 listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9";
