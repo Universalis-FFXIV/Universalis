@@ -34,6 +34,8 @@ import { WorldItemPairList } from "./models/WorldItemPairList";
 import { HistoryTracker } from "./trackers/HistoryTracker";
 import { PriceTracker } from "./trackers/PriceTracker";
 
+import { appendWorldDC } from "./util";
+
 // Define application and its resources
 const logger = winston.createLogger({
     transports: [
@@ -100,6 +102,12 @@ universalis.use(bodyParser({
     jsonLimit: "3mb"
 }));
 
+// Use single init await
+universalis.use(async (ctx, next) => {
+    await init;
+    await next();
+});
+
 // Logging
 universalis.use(async (ctx, next) => {
     console.log(`${ctx.method} ${ctx.url}`);
@@ -109,6 +117,7 @@ universalis.use(async (ctx, next) => {
 // Get query parameters
 universalis.use(async (ctx, next) => {
     const queryParameters: string[] = ctx.url.substr(ctx.url.indexOf("?")).split(/[?&]+/g).slice(1);
+    
     ctx.queryParameters = {};
     if (queryParameters) {
         for (const param of queryParameters) {
@@ -116,6 +125,25 @@ universalis.use(async (ctx, next) => {
             ctx.queryParameters[keyValuePair[0]] = keyValuePair[1];
         }
     }
+
+    await next();
+});
+
+// Convert worldDC strings (numbers or names) to world IDs or DC names
+universalis.use(async (ctx, next) => {
+    if (ctx.params.world) {
+        const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
+        if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
+            ctx.params.dcName = ctx.params.world;
+        } else {
+            if (parseInt(ctx.params.world)) {
+                ctx.params.worldID = parseInt(ctx.params.world);
+            } else {
+                ctx.params.worldID = worldMap.get(worldName);
+            }
+        }
+    }
+
     await next();
 });
 
@@ -126,40 +154,20 @@ universalis.use(serve("./public"));
 const router = new Router();
 
 router.get("/api/:world/:item", async (ctx) => { // Normal data
-    await init;
-
     const itemIDs: number[] = ctx.params.item.split(",").map((id) => {
         return parseInt(id);
     });
 
     // Query construction
     const query = { itemID: { $in: itemIDs } };
-    const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
-    if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-        query["dcName"] = ctx.params.world;
-    } else {
-        if (parseInt(ctx.params.world)) {
-            query["worldID"] = parseInt(ctx.params.world);
-        } else {
-            query["worldID"] = worldMap.get(worldName);
-        }
-    }
+    appendWorldDC(query, ctx);
 
     // Request database info
     let data = {
         itemIDs,
         items: await recentData.find(query, { projection: { _id: 0, uploaderID: 0 } }).toArray()
     };
-
-    if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-        data["dcName"] = ctx.params.world;
-    } else {
-        if (parseInt(ctx.params.world)) {
-            data["worldID"] = parseInt(ctx.params.world);
-        } else {
-            data["worldID"] = worldMap.get(worldName);
-        }
-    }
+    appendWorldDC(data, ctx);
 
     // Do some post-processing on resolved item listings.
     for (const item of data.items) {
@@ -188,15 +196,7 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
             listings: [],
             recentHistory: []
         };
-        if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-            unresolvedItemData["dcName"] = ctx.params.world;
-        } else {
-            if (parseInt(ctx.params.world)) {
-                unresolvedItemData["worldID"] = parseInt(ctx.params.world);
-            } else {
-                unresolvedItemData["worldID"] = worldMap.get(worldName);
-            }
-        }
+        appendWorldDC(unresolvedItemData, ctx);
         data.items.push(unresolvedItemData);
     }
 
@@ -211,8 +211,6 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 });
 
 router.get("/api/history/:world/:item", async (ctx) => { // Extended history
-    await init;
-
     let entriesToReturn: any = ctx.queryParameters.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
@@ -222,16 +220,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
 
     // Query construction
     const query = { itemID: { $in: itemIDs } };
-    const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1).toLowerCase();
-    if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-        query["dcName"] = ctx.params.world;
-    } else {
-        if (parseInt(ctx.params.world)) {
-            query["worldID"] = parseInt(ctx.params.world);
-        } else {
-            query["worldID"] = worldMap.get(worldName);
-        }
-    }
+    appendWorldDC(query, ctx);
 
     // Request database info
     let data = {
@@ -240,16 +229,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
             projection: { _id: 0, uploaderID: 0 }
         }).toArray()
     };
-
-    if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-        data["dcName"] = ctx.params.world;
-    } else {
-        if (parseInt(ctx.params.world)) {
-            data["worldID"] = parseInt(ctx.params.world);
-        } else {
-            data["worldID"] = worldMap.get(worldName);
-        }
-    }
+    appendWorldDC(data, ctx);
 
     // Data filtering
     data.items = data.items.map((item) => {
@@ -273,15 +253,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
             itemID: item,
             lastUploadTime: 0
         };
-        if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-            unresolvedItemData["dcName"] = ctx.params.world;
-        } else {
-            if (parseInt(ctx.params.world)) {
-                unresolvedItemData["worldID"] = parseInt(ctx.params.world);
-            } else {
-                unresolvedItemData["worldID"] = worldMap.get(worldName);
-            }
-        }
+        appendWorldDC(unresolvedItemData, ctx);
 
         data.items.push(unresolvedItemData);
     }
@@ -297,8 +269,6 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
 });
 
 router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
-    await init;
-
     const content = contentIDCollection.get(ctx.params.contentID);
 
     if (!content) {
@@ -310,8 +280,6 @@ router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
 });
 
 router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
-    await init;
-
     let daysToReturn: any = ctx.queryParameters.entries;
     if (daysToReturn) daysToReturn = parseInt(daysToReturn.replace(/[^0-9]/g, ""));
 
@@ -328,8 +296,6 @@ router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
 });
 
 router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently updated items
-    await init;
-
     let entriesToReturn: any = ctx.queryParameters.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
@@ -346,8 +312,6 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
 });
 
 router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recently updated items
-    await init;
-
     let worldID = ctx.queryParameters.world ? ctx.queryParameters.world.charAt(0).toUpperCase() +
         ctx.queryParameters.world.substr(1).toLowerCase() : null;
     let dcName = ctx.queryParameters.dcName ? ctx.queryParameters.dcName.charAt(0).toUpperCase() +
@@ -386,8 +350,6 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     if (err) {
         return err;
     }
-
-    await init;
 
     const promises: Array<Promise<any>> = []; // Sort of like a thread list.
 

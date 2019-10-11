@@ -1,12 +1,22 @@
 import winston = require("winston");
 
+import { ParameterizedContext } from "koa";
+
 import { RemoteDataManager } from "./RemoteDataManager";
 
 const logger = winston.createLogger();
 
 const remoteDataManager = new RemoteDataManager({ logger });
 
-export async function getWorldDC(world: string) {
+export function appendWorldDC(obj: any, ctx: ParameterizedContext): void {
+    if (ctx.params.worldID) {
+        obj["worldID"] = ctx.params.worldID;
+    } else {
+        obj["dcName"] = ctx.params.dcName;
+    }
+}
+
+export async function getWorldDC(world: string): Promise<string> {
     const dataCenterWorlds = JSON.parse((await remoteDataManager.fetchFile("dc.json")).toString());
     for (const dc in dataCenterWorlds) {
         if (dataCenterWorlds.hasOwnProperty(dc)) {
@@ -17,13 +27,13 @@ export async function getWorldDC(world: string) {
     return undefined;
 }
 
-export async function getWorldName(worldID: number) {
+export async function getWorldName(worldID: number): Promise<string> {
     const worldCSV = (await remoteDataManager.parseCSV("World.csv")).slice(3);
     const world = worldCSV.find((line: string[]) => line[0] === String(worldID))[1];
     return world;
 }
 
-export function levenshtein(input: string, test: string) {
+export function levenshtein(input: string, test: string): number {
     if (input.length === 0) return test.length; // Edge cases
     if (test.length === 0) return input.length;
 
