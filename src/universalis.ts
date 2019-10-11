@@ -141,8 +141,15 @@ universalis.use(serve("./public"));
 // Routing
 const router = new Router();
 
+// Documentation page (temporary)
+router.get("/docs", async (ctx) => {
+    ctx.redirect("/docs/index.html");
+});
+
+// REST API
 router.get("/api/:world/:item", async (ctx) => { // Normal data
-    const itemIDs: number[] = ctx.params.item.split(",").map((id) => {
+    const itemIDs: number[] = (ctx.params.item as string).split(",").map((id, index) => {
+        if (index > 20) return;
         return parseInt(id);
     });
 
@@ -169,6 +176,9 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
         for (const listing of item.listings) {
             listing.isCrafted =
                 listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9";
+        }
+        for (const entry of item.recentHistory) {
+            if (entry.uploaderID) delete entry.uploaderID;
         }
     }
 
@@ -202,7 +212,8 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     let entriesToReturn: any = ctx.queryParams.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
-    const itemIDs: number[] = ctx.params.item.split(",").map((id) => {
+    const itemIDs: number[] = (ctx.params.item as string).split(",").map((id, index) => {
+        if (index > 20) return;
         return parseInt(id);
     });
 
@@ -260,7 +271,10 @@ router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
     const content = contentIDCollection.get(ctx.params.contentID);
 
     if (!content) {
-        ctx.body = {};
+        ctx.body = {
+            contentID: null,
+            contentType: null
+        };
         return;
     }
 

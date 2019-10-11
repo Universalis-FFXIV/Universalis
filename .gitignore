@@ -81,7 +81,8 @@ build/
 cli/build/
 
 # Cached files
-/public/
+/public/csv
+/public/json
 /public-test/
 
 # Misc
