@@ -272,8 +272,8 @@ router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
 
     if (!content) {
         ctx.body = {
-            contentID: null,
-            contentType: null
+            contentID: "",
+            contentType: ""
         };
         return;
     }
