@@ -11,11 +11,14 @@ import sha from "sha.js";
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
-import { BlacklistManager } from "./BlacklistManager";
-import { ContentIDCollection } from "./ContentIDCollection";
-import { CronJobManager } from "./CronJobManager";
-import { ExtraDataManager } from "./ExtraDataManager";
-import { RemoteDataManager } from "./RemoteDataManager";
+import { CronJobManager } from "./cron/CronJobManager";
+import { BlacklistManager } from "./db/BlacklistManager";
+import { ContentIDCollection } from "./db/ContentIDCollection";
+import { ExtraDataManager } from "./db/ExtraDataManager";
+import { RemoteDataManager } from "./remote/RemoteDataManager";
+import { HistoryTracker } from "./trackers/HistoryTracker";
+import { PriceTracker } from "./trackers/PriceTracker";
+import { appendWorldDC } from "./util";
 import validation from "./validate";
 
 // Load models
@@ -31,11 +34,6 @@ import { MarketBoardSaleHistoryUpload } from "./models/MarketBoardSaleHistoryUpl
 import { RecentlyUpdated } from "./models/RecentlyUpdated";
 import { TrustedSource } from "./models/TrustedSource";
 import { WorldItemPairList } from "./models/WorldItemPairList";
-
-import { HistoryTracker } from "./trackers/HistoryTracker";
-import { PriceTracker } from "./trackers/PriceTracker";
-
-import { appendWorldDC } from "./util";
 
 // Define application and its resources
 const logger = winston.createLogger({
@@ -97,17 +95,15 @@ const init = (async () => {
 })();
 
 const universalis = new Koa();
+// CORS support
 universalis.use(cors());
+// POST endpoint enabling
 universalis.use(bodyParser({
     enableTypes: ["json"],
     jsonLimit: "3mb"
 }));
-
-// Use single init await
-universalis.use(async (ctx, next) => {
-    await init;
-    await next();
-});
+// Query parameters
+universalis.use(queryParams());
 
 // Logging
 universalis.use(async (ctx, next) => {
@@ -115,8 +111,11 @@ universalis.use(async (ctx, next) => {
     await next();
 });
 
-// Get query parameters
-universalis.use(queryParams());
+// Use single init await
+universalis.use(async (ctx, next) => {
+    await init;
+    await next();
+});
 
 // Convert worldDC strings (numbers or names) to world IDs or DC names
 universalis.use(async (ctx, next) => {
@@ -375,7 +374,7 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
 
     uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
 
-    err = await validation.validateUploadData(ctx, uploadData, blacklistManager);
+    err = await validation.validateUploadData({ ctx, uploadData, blacklistManager });
     if (err) {
         return err;
     }
@@ -384,41 +383,22 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     if (uploadData.listings) {
         const dataArray: MarketBoardItemListing[] = [];
         uploadData.listings = uploadData.listings.map((listing) => {
-            const newListing = {
-                creatorID: sha("sha256").update(listing.creatorID + "").digest("hex"),
-                creatorName: listing.creatorName,
-                hq: typeof listing.hq === "undefined" ? false : listing.hq,
-                lastReviewTime: listing.lastReviewTime,
-                listingID: sha("sha256").update(listing.listingID + "").digest("hex"),
-                materia: typeof listing.materia === "undefined" ? [] : listing.materia,
-                onMannequin: typeof listing.onMannequin === "undefined" ? false : listing.onMannequin,
-                pricePerUnit: listing.pricePerUnit,
-                quantity: listing.quantity,
-                retainerCity: typeof listing.retainerCity === "number" ?
-                    listing.retainerCity : City[listing.retainerCity],
-                retainerID: sha("sha256").update(listing.retainerID + "").digest("hex"),
-                retainerName: listing.retainerName,
-                sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
-                stainID: listing.stainID
-            };
+            return validation.cleanListing(listing);
+        });
 
+        for (const listing of uploadData.listings) {
             if (listing.creatorID && listing.creatorName) {
-                contentIDCollection.set(newListing.creatorID, "player", {
-                    characterName: newListing.creatorName
+                contentIDCollection.set(listing.creatorID, "player", {
+                    characterName: listing.creatorName
                 });
             }
 
             if (listing.retainerID && listing.retainerName) {
-                contentIDCollection.set(newListing.retainerID, "retainer", {
-                    characterName: newListing.retainerName
+                contentIDCollection.set(listing.retainerID, "retainer", {
+                    characterName: listing.retainerName
                 });
             }
 
-            return newListing;
-        });
-
-        for (const listing of uploadData.listings) {
-            listing.total = listing.pricePerUnit * listing.quantity;
             dataArray.push(listing as any);
         }
 
@@ -433,18 +413,10 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     if (uploadData.entries) {
         const dataArray: MarketBoardHistoryEntry[] = [];
         uploadData.entries = uploadData.entries.map((entry) => {
-            return {
-                buyerName: entry.buyerName,
-                hq: entry.hq,
-                pricePerUnit: entry.pricePerUnit,
-                quantity: entry.quantity,
-                sellerID: sha("sha256").update(entry.sellerID + "").digest("hex"),
-                timestamp: entry.timestamp
-            };
+            return validation.cleanHistoryEntry(entry);
         });
 
         for (const entry of uploadData.entries) {
-            entry.total = entry.pricePerUnit * entry.quantity;
             dataArray.push(entry);
         }
 

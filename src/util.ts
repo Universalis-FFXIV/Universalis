@@ -2,7 +2,7 @@ import winston = require("winston");
 
 import { ParameterizedContext } from "koa";
 
-import { RemoteDataManager } from "./RemoteDataManager";
+import { RemoteDataManager } from "./remote/RemoteDataManager";
 
 const logger = winston.createLogger();
 

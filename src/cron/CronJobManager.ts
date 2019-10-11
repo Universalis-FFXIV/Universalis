@@ -1,9 +1,9 @@
 import { CronJob } from "cron";
 import { Logger } from "winston";
 
-import { CronJobManagerOptions } from "./models/CronJobManagerOptions";
+import { CronJobManagerOptions } from "../models/CronJobManagerOptions";
 
-import ArchiveLogs from "./cron/ArchiveLogs";
+import ArchiveLogs from "./jobs/ArchiveLogs";
 
 const cronJobObjects = {
     ArchiveLogs
