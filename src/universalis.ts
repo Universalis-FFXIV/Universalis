@@ -120,7 +120,7 @@ universalis.use(queryParams());
 
 // Convert worldDC strings (numbers or names) to world IDs or DC names
 universalis.use(async (ctx, next) => {
-    if (ctx.params.world) {
+    if (ctx.params && ctx.params.world) {
         const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
         if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
             ctx.params.dcName = ctx.params.world;
