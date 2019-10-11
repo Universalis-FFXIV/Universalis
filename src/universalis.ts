@@ -5,6 +5,7 @@ import difference from "lodash.difference";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import serve from "koa-static";
+import queryParams from "koa-queryparams";
 import { MongoClient } from "mongodb";
 import sha from "sha.js";
 import winston from "winston";
@@ -115,19 +116,7 @@ universalis.use(async (ctx, next) => {
 });
 
 // Get query parameters
-universalis.use(async (ctx, next) => {
-    const queryParameters: string[] = ctx.url.substr(ctx.url.indexOf("?")).split(/[?&]+/g).slice(1);
-    
-    ctx.queryParameters = {};
-    if (queryParameters) {
-        for (const param of queryParameters) {
-            const keyValuePair = param.split(/[^a-zA-Z0-9]+/g);
-            ctx.queryParameters[keyValuePair[0]] = keyValuePair[1];
-        }
-    }
-
-    await next();
-});
+universalis.use(queryParams());
 
 // Convert worldDC strings (numbers or names) to world IDs or DC names
 universalis.use(async (ctx, next) => {
@@ -211,7 +200,7 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 });
 
 router.get("/api/history/:world/:item", async (ctx) => { // Extended history
-    let entriesToReturn: any = ctx.queryParameters.entries;
+    let entriesToReturn: any = ctx.queryParams.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
     const itemIDs: number[] = ctx.params.item.split(",").map((id) => {
@@ -280,7 +269,7 @@ router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
 });
 
 router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
-    let daysToReturn: any = ctx.queryParameters.entries;
+    let daysToReturn: any = ctx.queryParams.entries;
     if (daysToReturn) daysToReturn = parseInt(daysToReturn.replace(/[^0-9]/g, ""));
 
     const data: DailyUploadStatistics = await extraDataManager.getDailyUploads(daysToReturn);
@@ -296,7 +285,7 @@ router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
 });
 
 router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently updated items
-    let entriesToReturn: any = ctx.queryParameters.entries;
+    let entriesToReturn: any = ctx.queryParams.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
     const data: RecentlyUpdated = await extraDataManager.getRecentlyUpdatedItems(entriesToReturn);
@@ -312,10 +301,10 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
 });
 
 router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recently updated items
-    let worldID = ctx.queryParameters.world ? ctx.queryParameters.world.charAt(0).toUpperCase() +
-        ctx.queryParameters.world.substr(1).toLowerCase() : null;
-    let dcName = ctx.queryParameters.dcName ? ctx.queryParameters.dcName.charAt(0).toUpperCase() +
-        ctx.queryParameters.dcName.substr(1).toLowerCase() : null;
+    let worldID = ctx.queryParams.world ? ctx.queryParams.world.charAt(0).toUpperCase() +
+        ctx.queryParams.world.substr(1).toLowerCase() : null;
+    let dcName = ctx.queryParams.dcName ? ctx.queryParams.dcName.charAt(0).toUpperCase() +
+        ctx.queryParams.dcName.substr(1).toLowerCase() : null;
 
     if (worldID && !parseInt(worldID)) {
         worldID = worldMap.get(worldID);
@@ -329,7 +318,7 @@ router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recent
         worldID = null;
     }
 
-    let entriesToReturn: any = ctx.queryParameters.entries;
+    let entriesToReturn: any = ctx.queryParams.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
     const data: WorldItemPairList =
