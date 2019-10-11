@@ -268,12 +268,12 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
 });
 
 router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
-    const content = contentIDCollection.get(ctx.params.contentID);
+    const content = await contentIDCollection.get(ctx.params.contentID);
 
     if (!content) {
         ctx.body = {
-            contentID: "",
-            contentType: ""
+            contentID: null,
+            contentType: null
         };
         return;
     }
