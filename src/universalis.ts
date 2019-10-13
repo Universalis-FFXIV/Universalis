@@ -173,12 +173,16 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
                 return 0;
             });
         }
-        for (const listing of item.listings) {
-            listing.isCrafted =
-                listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9";
+        if (Array.isArray(item.listings)) {
+            for (const listing of item.listings) {
+                listing.isCrafted =
+                    listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9";
+            }
         }
-        for (const entry of item.recentHistory) {
-            if (entry.uploaderID) delete entry.uploaderID;
+        if (Array.isArray(item.recentHistory)) {
+            for (const entry of item.recentHistory) {
+                if (entry.uploaderID) delete entry.uploaderID;
+            }
         }
     }
 
