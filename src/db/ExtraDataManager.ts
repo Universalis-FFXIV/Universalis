@@ -1,11 +1,11 @@
-import { RemoteDataManager } from "./RemoteDataManager";
+import { RemoteDataManager } from "../remote/RemoteDataManager";
 
 import { Collection, Db } from "mongodb";
 
-import { DailyUploadStatistics } from "./models/DailyUploadStatistics";
-import { RecentlyUpdated } from "./models/RecentlyUpdated";
-import { WorldItemPair } from "./models/WorldItemPair";
-import { WorldItemPairList } from "./models/WorldItemPairList";
+import { DailyUploadStatistics } from "../models/DailyUploadStatistics";
+import { RecentlyUpdated } from "../models/RecentlyUpdated";
+import { WorldItemPair } from "../models/WorldItemPair";
+import { WorldItemPairList } from "../models/WorldItemPairList";
 
 export class ExtraDataManager {
     public static async create(rdm: RemoteDataManager, db: Db): Promise<ExtraDataManager> {

@@ -24,6 +24,7 @@
     "csv-parse": "^4.4.6",
     "koa": "^2.7.0",
     "koa-bodyparser": "^4.2.1",
+    "koa-queryparams": "^1.0.3",
     "koa-static": "^5.0.0",
     "lodash.compact": "^3.0.1",
     "lodash.difference": "^4.5.0",

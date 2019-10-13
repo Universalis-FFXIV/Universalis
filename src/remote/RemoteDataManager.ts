@@ -7,7 +7,7 @@ import util from "util";
 
 import { Logger } from "winston";
 
-import { RemoteDataManagerOptions } from "./models/RemoteDataManagerOptions";
+import { RemoteDataManagerOptions } from "../models/RemoteDataManagerOptions";
 
 const exists = util.promisify(fs.exists);
 const readFile = util.promisify(fs.readFile);
@@ -29,7 +29,7 @@ export class RemoteDataManager {
     constructor(options: RemoteDataManagerOptions) {
         this.exts = options.exts ? options.exts : ["csv", "json"];
         this.logger = options.logger;
-        this.remoteFileDirectory = options.remoteFileDirectory ? options.remoteFileDirectory : "../public";
+        this.remoteFileDirectory = options.remoteFileDirectory ? options.remoteFileDirectory : "../../public";
 
         for (const ext of this.exts) {
             const extPath = path.join(__dirname, this.remoteFileDirectory, ext);

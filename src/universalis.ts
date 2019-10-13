@@ -4,17 +4,21 @@ import Router from "@koa/router";
 import difference from "lodash.difference";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
+import queryParams from "koa-queryparams";
 import serve from "koa-static";
 import { MongoClient } from "mongodb";
 import sha from "sha.js";
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
-import { BlacklistManager } from "./BlacklistManager";
-import { ContentIDCollection } from "./ContentIDCollection";
-import { CronJobManager } from "./CronJobManager";
-import { ExtraDataManager } from "./ExtraDataManager";
-import { RemoteDataManager } from "./RemoteDataManager";
+import { CronJobManager } from "./cron/CronJobManager";
+import { BlacklistManager } from "./db/BlacklistManager";
+import { ContentIDCollection } from "./db/ContentIDCollection";
+import { ExtraDataManager } from "./db/ExtraDataManager";
+import { RemoteDataManager } from "./remote/RemoteDataManager";
+import { HistoryTracker } from "./trackers/HistoryTracker";
+import { PriceTracker } from "./trackers/PriceTracker";
+import { appendWorldDC } from "./util";
 import validation from "./validate";
 
 // Load models
@@ -30,9 +34,6 @@ import { MarketBoardSaleHistoryUpload } from "./models/MarketBoardSaleHistoryUpl
 import { RecentlyUpdated } from "./models/RecentlyUpdated";
 import { TrustedSource } from "./models/TrustedSource";
 import { WorldItemPairList } from "./models/WorldItemPairList";
-
-import { HistoryTracker } from "./trackers/HistoryTracker";
-import { PriceTracker } from "./trackers/PriceTracker";
 
 // Define application and its resources
 const logger = winston.createLogger({
@@ -94,11 +95,15 @@ const init = (async () => {
 })();
 
 const universalis = new Koa();
+// CORS support
 universalis.use(cors());
+// POST endpoint enabling
 universalis.use(bodyParser({
     enableTypes: ["json"],
     jsonLimit: "3mb"
 }));
+// Query parameters
+universalis.use(queryParams());
 
 // Logging
 universalis.use(async (ctx, next) => {
@@ -106,16 +111,27 @@ universalis.use(async (ctx, next) => {
     await next();
 });
 
-// Get query parameters
+// Use single init await
 universalis.use(async (ctx, next) => {
-    const queryParameters: string[] = ctx.url.substr(ctx.url.indexOf("?")).split(/[?&]+/g).slice(1);
-    ctx.queryParameters = {};
-    if (queryParameters) {
-        for (const param of queryParameters) {
-            const keyValuePair = param.split(/[^a-zA-Z0-9]+/g);
-            ctx.queryParameters[keyValuePair[0]] = keyValuePair[1];
+    await init;
+    await next();
+});
+
+// Convert worldDC strings (numbers or names) to world IDs or DC names
+universalis.use(async (ctx, next) => {
+    if (ctx.params && ctx.params.world) {
+        const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
+        if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
+            ctx.params.dcName = ctx.params.world;
+        } else {
+            if (parseInt(ctx.params.world)) {
+                ctx.params.worldID = parseInt(ctx.params.world);
+            } else {
+                ctx.params.worldID = worldMap.get(worldName);
+            }
         }
     }
+
     await next();
 });
 
@@ -125,41 +141,28 @@ universalis.use(serve("./public"));
 // Routing
 const router = new Router();
 
-router.get("/api/:world/:item", async (ctx) => { // Normal data
-    await init;
+// Documentation page (temporary)
+router.get("/docs", async (ctx) => {
+    ctx.redirect("/docs/index.html");
+});
 
-    const itemIDs: number[] = ctx.params.item.split(",").map((id) => {
+// REST API
+router.get("/api/:world/:item", async (ctx) => { // Normal data
+    const itemIDs: number[] = (ctx.params.item as string).split(",").map((id, index) => {
+        if (index > 20) return;
         return parseInt(id);
     });
 
     // Query construction
     const query = { itemID: { $in: itemIDs } };
-    const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
-    if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-        query["dcName"] = ctx.params.world;
-    } else {
-        if (parseInt(ctx.params.world)) {
-            query["worldID"] = parseInt(ctx.params.world);
-        } else {
-            query["worldID"] = worldMap.get(worldName);
-        }
-    }
+    appendWorldDC(query, ctx);
 
     // Request database info
     let data = {
         itemIDs,
         items: await recentData.find(query, { projection: { _id: 0, uploaderID: 0 } }).toArray()
     };
-
-    if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-        data["dcName"] = ctx.params.world;
-    } else {
-        if (parseInt(ctx.params.world)) {
-            data["worldID"] = parseInt(ctx.params.world);
-        } else {
-            data["worldID"] = worldMap.get(worldName);
-        }
-    }
+    appendWorldDC(data, ctx);
 
     // Do some post-processing on resolved item listings.
     for (const item of data.items) {
@@ -173,6 +176,9 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
         for (const listing of item.listings) {
             listing.isCrafted =
                 listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9";
+        }
+        for (const entry of item.recentHistory) {
+            if (entry.uploaderID) delete entry.uploaderID;
         }
     }
 
@@ -188,15 +194,7 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
             listings: [],
             recentHistory: []
         };
-        if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-            unresolvedItemData["dcName"] = ctx.params.world;
-        } else {
-            if (parseInt(ctx.params.world)) {
-                unresolvedItemData["worldID"] = parseInt(ctx.params.world);
-            } else {
-                unresolvedItemData["worldID"] = worldMap.get(worldName);
-            }
-        }
+        appendWorldDC(unresolvedItemData, ctx);
         data.items.push(unresolvedItemData);
     }
 
@@ -211,27 +209,17 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 });
 
 router.get("/api/history/:world/:item", async (ctx) => { // Extended history
-    await init;
-
-    let entriesToReturn: any = ctx.queryParameters.entries;
+    let entriesToReturn: any = ctx.queryParams.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
-    const itemIDs: number[] = ctx.params.item.split(",").map((id) => {
+    const itemIDs: number[] = (ctx.params.item as string).split(",").map((id, index) => {
+        if (index > 20) return;
         return parseInt(id);
     });
 
     // Query construction
     const query = { itemID: { $in: itemIDs } };
-    const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1).toLowerCase();
-    if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-        query["dcName"] = ctx.params.world;
-    } else {
-        if (parseInt(ctx.params.world)) {
-            query["worldID"] = parseInt(ctx.params.world);
-        } else {
-            query["worldID"] = worldMap.get(worldName);
-        }
-    }
+    appendWorldDC(query, ctx);
 
     // Request database info
     let data = {
@@ -240,16 +228,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
             projection: { _id: 0, uploaderID: 0 }
         }).toArray()
     };
-
-    if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-        data["dcName"] = ctx.params.world;
-    } else {
-        if (parseInt(ctx.params.world)) {
-            data["worldID"] = parseInt(ctx.params.world);
-        } else {
-            data["worldID"] = worldMap.get(worldName);
-        }
-    }
+    appendWorldDC(data, ctx);
 
     // Data filtering
     data.items = data.items.map((item) => {
@@ -273,15 +252,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
             itemID: item,
             lastUploadTime: 0
         };
-        if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-            unresolvedItemData["dcName"] = ctx.params.world;
-        } else {
-            if (parseInt(ctx.params.world)) {
-                unresolvedItemData["worldID"] = parseInt(ctx.params.world);
-            } else {
-                unresolvedItemData["worldID"] = worldMap.get(worldName);
-            }
-        }
+        appendWorldDC(unresolvedItemData, ctx);
 
         data.items.push(unresolvedItemData);
     }
@@ -297,12 +268,13 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
 });
 
 router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
-    await init;
-
-    const content = contentIDCollection.get(ctx.params.contentID);
+    const content = await contentIDCollection.get(ctx.params.contentID);
 
     if (!content) {
-        ctx.body = {};
+        ctx.body = {
+            contentID: null,
+            contentType: null
+        };
         return;
     }
 
@@ -310,9 +282,7 @@ router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
 });
 
 router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
-    await init;
-
-    let daysToReturn: any = ctx.queryParameters.entries;
+    let daysToReturn: any = ctx.queryParams.entries;
     if (daysToReturn) daysToReturn = parseInt(daysToReturn.replace(/[^0-9]/g, ""));
 
     const data: DailyUploadStatistics = await extraDataManager.getDailyUploads(daysToReturn);
@@ -328,9 +298,7 @@ router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
 });
 
 router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently updated items
-    await init;
-
-    let entriesToReturn: any = ctx.queryParameters.entries;
+    let entriesToReturn: any = ctx.queryParams.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
     const data: RecentlyUpdated = await extraDataManager.getRecentlyUpdatedItems(entriesToReturn);
@@ -346,12 +314,10 @@ router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently upd
 });
 
 router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recently updated items
-    await init;
-
-    let worldID = ctx.queryParameters.world ? ctx.queryParameters.world.charAt(0).toUpperCase() +
-        ctx.queryParameters.world.substr(1).toLowerCase() : null;
-    let dcName = ctx.queryParameters.dcName ? ctx.queryParameters.dcName.charAt(0).toUpperCase() +
-        ctx.queryParameters.dcName.substr(1).toLowerCase() : null;
+    let worldID = ctx.queryParams.world ? ctx.queryParams.world.charAt(0).toUpperCase() +
+        ctx.queryParams.world.substr(1).toLowerCase() : null;
+    let dcName = ctx.queryParams.dcName ? ctx.queryParams.dcName.charAt(0).toUpperCase() +
+        ctx.queryParams.dcName.substr(1).toLowerCase() : null;
 
     if (worldID && !parseInt(worldID)) {
         worldID = worldMap.get(worldID);
@@ -365,7 +331,7 @@ router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recent
         worldID = null;
     }
 
-    let entriesToReturn: any = ctx.queryParameters.entries;
+    let entriesToReturn: any = ctx.queryParams.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
     const data: WorldItemPairList =
@@ -386,8 +352,6 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     if (err) {
         return err;
     }
-
-    await init;
 
     const promises: Array<Promise<any>> = []; // Sort of like a thread list.
 
@@ -424,7 +388,7 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
 
     uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
 
-    err = await validation.validateUploadData(ctx, uploadData, blacklistManager);
+    err = await validation.validateUploadData({ ctx, uploadData, blacklistManager });
     if (err) {
         return err;
     }
@@ -433,41 +397,22 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     if (uploadData.listings) {
         const dataArray: MarketBoardItemListing[] = [];
         uploadData.listings = uploadData.listings.map((listing) => {
-            const newListing = {
-                creatorID: sha("sha256").update(listing.creatorID + "").digest("hex"),
-                creatorName: listing.creatorName,
-                hq: typeof listing.hq === "undefined" ? false : listing.hq,
-                lastReviewTime: listing.lastReviewTime,
-                listingID: sha("sha256").update(listing.listingID + "").digest("hex"),
-                materia: typeof listing.materia === "undefined" ? [] : listing.materia,
-                onMannequin: typeof listing.onMannequin === "undefined" ? false : listing.onMannequin,
-                pricePerUnit: listing.pricePerUnit,
-                quantity: listing.quantity,
-                retainerCity: typeof listing.retainerCity === "number" ?
-                    listing.retainerCity : City[listing.retainerCity],
-                retainerID: sha("sha256").update(listing.retainerID + "").digest("hex"),
-                retainerName: listing.retainerName,
-                sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
-                stainID: listing.stainID
-            };
+            return validation.cleanListing(listing);
+        });
 
+        for (const listing of uploadData.listings) {
             if (listing.creatorID && listing.creatorName) {
-                contentIDCollection.set(newListing.creatorID, "player", {
-                    characterName: newListing.creatorName
+                contentIDCollection.set(listing.creatorID, "player", {
+                    characterName: listing.creatorName
                 });
             }
 
             if (listing.retainerID && listing.retainerName) {
-                contentIDCollection.set(newListing.retainerID, "retainer", {
-                    characterName: newListing.retainerName
+                contentIDCollection.set(listing.retainerID, "retainer", {
+                    characterName: listing.retainerName
                 });
             }
 
-            return newListing;
-        });
-
-        for (const listing of uploadData.listings) {
-            listing.total = listing.pricePerUnit * listing.quantity;
             dataArray.push(listing as any);
         }
 
@@ -482,18 +427,10 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     if (uploadData.entries) {
         const dataArray: MarketBoardHistoryEntry[] = [];
         uploadData.entries = uploadData.entries.map((entry) => {
-            return {
-                buyerName: entry.buyerName,
-                hq: entry.hq,
-                pricePerUnit: entry.pricePerUnit,
-                quantity: entry.quantity,
-                sellerID: sha("sha256").update(entry.sellerID + "").digest("hex"),
-                timestamp: entry.timestamp
-            };
+            return validation.cleanHistoryEntry(entry);
         });
 
         for (const entry of uploadData.entries) {
-            entry.total = entry.pricePerUnit * entry.quantity;
             dataArray.push(entry);
         }
 

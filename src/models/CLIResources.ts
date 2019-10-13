@@ -1,6 +1,6 @@
 import { Collection } from "mongodb";
 
-import { TrustedSourceManager } from "../TrustedSourceManager";
+import { TrustedSourceManager } from "../db/TrustedSourceManager";
 
 export interface CLIResources {
     extendedHistory: Collection;

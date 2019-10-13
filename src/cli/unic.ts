@@ -5,7 +5,7 @@ import path from "path";
 import readline from "readline";
 import util from "util";
 
-import { TrustedSourceManager } from "../TrustedSourceManager";
+import { TrustedSourceManager } from "../db/TrustedSourceManager";
 
 import { CLIResources } from "../models/CLIResources";
 
