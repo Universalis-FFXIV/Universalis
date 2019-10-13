@@ -117,24 +117,6 @@ universalis.use(async (ctx, next) => {
     await next();
 });
 
-// Convert worldDC strings (numbers or names) to world IDs or DC names
-universalis.use(async (ctx, next) => {
-    if (ctx.params && ctx.params.world) {
-        const worldName = ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
-        if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-            ctx.params.dcName = ctx.params.world;
-        } else {
-            if (parseInt(ctx.params.world)) {
-                ctx.params.worldID = parseInt(ctx.params.world);
-            } else {
-                ctx.params.worldID = worldMap.get(worldName);
-            }
-        }
-    }
-
-    await next();
-});
-
 // Publish public resources
 universalis.use(serve("./public"));
 
@@ -155,14 +137,14 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
 
     // Query construction
     const query = { itemID: { $in: itemIDs } };
-    appendWorldDC(query, ctx);
+    appendWorldDC(query, worldMap, ctx);
 
     // Request database info
     let data = {
         itemIDs,
         items: await recentData.find(query, { projection: { _id: 0, uploaderID: 0 } }).toArray()
     };
-    appendWorldDC(data, ctx);
+    appendWorldDC(data, worldMap, ctx);
 
     // Do some post-processing on resolved item listings.
     for (const item of data.items) {
@@ -198,7 +180,7 @@ router.get("/api/:world/:item", async (ctx) => { // Normal data
             listings: [],
             recentHistory: []
         };
-        appendWorldDC(unresolvedItemData, ctx);
+        appendWorldDC(unresolvedItemData, worldMap, ctx);
         data.items.push(unresolvedItemData);
     }
 
@@ -223,7 +205,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
 
     // Query construction
     const query = { itemID: { $in: itemIDs } };
-    appendWorldDC(query, ctx);
+    appendWorldDC(query, worldMap, ctx);
 
     // Request database info
     let data = {
@@ -232,7 +214,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
             projection: { _id: 0, uploaderID: 0 }
         }).toArray()
     };
-    appendWorldDC(data, ctx);
+    appendWorldDC(data, worldMap, ctx);
 
     // Data filtering
     data.items = data.items.map((item) => {
@@ -256,7 +238,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
             itemID: item,
             lastUploadTime: 0
         };
-        appendWorldDC(unresolvedItemData, ctx);
+        appendWorldDC(unresolvedItemData, worldMap, ctx);
 
         data.items.push(unresolvedItemData);
     }
