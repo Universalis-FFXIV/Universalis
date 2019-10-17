@@ -68,7 +68,7 @@ export class RemoteDataManager {
                 `${chalk.greenBright(firstLine.toString())} from page 1.`);
 
             for (let i = 2; i < pageCount; i++) {
-                await new Promise((resolve) => { setTimeout(resolve, 250); });
+                await new Promise((resolve) => { setTimeout(resolve, 93); }); // Rate limit  boundary is 83.3ms
 
                 const nextPage = JSON.parse(await request(url + `&page=${i}`));
                 const nextLine = nextPage.Results.map((item: { ID: number }) => item.ID);
