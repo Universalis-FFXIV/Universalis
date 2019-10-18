@@ -67,8 +67,8 @@ export class RemoteDataManager {
             this.logger.info("(Marketable Item ID Catalog) Pushed " +
                 `${chalk.greenBright(firstLine.toString())} from page 1.`);
 
-            for (let i = 2; i < pageCount; i++) {
-                await new Promise((resolve) => { setTimeout(resolve, 93); }); // Rate limit  boundary is 83.3ms
+            for (let i = 2; i <= pageCount; i++) {
+                await new Promise((resolve) => { setTimeout(resolve, 93); }); // Rate limit boundary is 83.3ms
 
                 const nextPage = JSON.parse(await request(url + `&page=${i}`));
                 const nextLine = nextPage.Results.map((item: { ID: number }) => item.ID);
