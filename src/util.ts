@@ -79,6 +79,10 @@ export function levenshtein(input: string, test: string): number {
     return matrix[test.length][input.length]; // The total cost is described in the last element of the matrix
 }
 
+export function sleep(duration: number) {
+    return new Promise((resolve) => setTimeout(resolve, duration));
+}
+
 export function stringifyContentIDs(jsonString: string) {
     const parameters = ["sellerID", "buyerID", "creatorID"];
 

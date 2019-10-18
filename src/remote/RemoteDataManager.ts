@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import csvParser from "csv-parse";
+import flatten from "lodash.flatten"
 import fs from "fs";
 import path from "path";
 import request from "request-promise";
@@ -17,6 +18,8 @@ const urlDictionary = {
     "Materia.csv": "https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/Materia.csv",
     "World.csv": "https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/World.csv"
 };
+
+const XIVAPI_RATELIMIT = 12;
 
 const csvMap = new Map<string, string[][]>();
 const remoteFileMap = new Map<string, any>();
@@ -44,7 +47,10 @@ export class RemoteDataManager {
         const url = "https://xivapi.com/search?indexes=item&filters=ItemSearchCategory.ID%3E8&columns=ID";
         const existingFile = path.join(__dirname, this.remoteFileDirectory, "json/item.json");
 
-        let storageFile: any = {};
+        let storageFile: { itemID: number[] } = {
+            itemID: []
+        };
+
         if (remoteFileMap.get("item.json")) {
             return remoteFileMap.get("item.json").itemID;
         } else if (await exists(existingFile)) {
@@ -55,33 +61,43 @@ export class RemoteDataManager {
             }
         }
 
-        storageFile.itemID = [];
-
-        // This fills the array after it's returned, since this is roughly an 8-minute job.
+        // This fills the array after it's returned, since this is a somewhat lengthy job.
         (async () => {
-            const firstPage = JSON.parse(await request(url));
-            const pageCount = firstPage.Pagination.PageTotal;
-            const firstLine = firstPage.Results.map((item: { ID: number }) => item.ID);
+            let pageCount = Number.MAX_VALUE;
+            const startTime = Date.now();
 
-            storageFile.itemID.push.apply(storageFile.itemID, firstLine);
-            this.logger.info("(Marketable Item ID Catalog) Pushed " +
-                `${chalk.greenBright(firstLine.toString())} from page 1.`);
+            for (let i = 1; i <= pageCount; i += XIVAPI_RATELIMIT) {
+                const startTime = Date.now();
 
-            for (let i = 2; i <= pageCount; i++) {
-                await new Promise((resolve) => { setTimeout(resolve, 93); }); // Rate limit boundary is 83.3ms
+                // Batch as many requests as possible.
+                const requestPromises: Promise<number[]>[] = [];
+                for (let j = i; j < i + XIVAPI_RATELIMIT && j <= pageCount; j++) {
+                    requestPromises.push(new Promise(async (resolve) => {
+                        await new Promise((resolve) => setTimeout(resolve, (j - i) * 15));
+                        const nextPage = JSON.parse(await request(url + `&page=${j}`));
+                        if (nextPage.Pagination.PageTotal < pageCount) pageCount = nextPage.Pagination.PageTotal;
+                        const nextPageItems = nextPage.Results.map((item: { ID: number }) => item.ID);
+                        resolve(nextPageItems);
+                    }));
+                }
 
-                const nextPage = JSON.parse(await request(url + `&page=${i}`));
-                const nextLine = nextPage.Results.map((item: { ID: number }) => item.ID);
-
+                const nextLine = flatten(await Promise.all(requestPromises));
                 storageFile.itemID.push.apply(storageFile.itemID, nextLine);
+
+                const timeDiff = Date.now() - startTime;
                 this.logger.info("(Marketable Item ID Catalog) Pushed " +
-                    `${chalk.greenBright(nextLine.toString())} from page ${i}.`);
+                    `${chalk.greenBright(requestPromises.length.toString())} pages in ${timeDiff}ms.`);
+
+                // If the batched requests took less than a second, wait the remainder of the second
+                // to avoid hitting the rate limit.
+                await new Promise((resolve) => setTimeout(resolve, 1000 - timeDiff));
             }
 
+            const timeDiff = Date.now() - startTime;
             remoteFileMap.set("item.json", storageFile);
             await writeFile(existingFile, JSON.stringify(storageFile));
-            this.logger.info("(Marketable Item ID Catalog) Wrote list out to " +
-                `${chalk.greenBright(existingFile)}.`);
+            this.logger.info(`(Marketable Item ID Catalog) Wrote ${pageCount} pages of ${storageFile.itemID.length} ` +
+                `items out to ${chalk.greenBright(existingFile)} (operation time: ${timeDiff}ms).`);
         })();
 
         return storageFile.itemID;
