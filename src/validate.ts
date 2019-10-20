@@ -1,7 +1,9 @@
-import { Context } from "koa";
+import compact from "lodash.compact";
 import sha from "sha.js";
 
 import { City } from "./models/City";
+import { Context } from "koa";
+import { ItemMateria } from "./models/ItemMateria";
 import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListingUpload } from "./models/MarketBoardItemListingUpload";
 import { ValidateUploadDataArgs } from "./models/ValidateUploadDataArgs";
@@ -39,7 +41,35 @@ export default {
             total: listing.pricePerUnit * listing.quantity
         };
 
+        newListing.materia = this.cleanMateria(newListing.materia);
+
         return newListing;
+    },
+
+    cleanMateria: (materiaArray: ItemMateria[]): ItemMateria[] => {
+        if (materiaArray.length > 0) {
+            materiaArray = materiaArray.map((materiaSlot) => {
+                if (!materiaSlot.materiaID && materiaSlot["materiaId"]) {
+                    materiaSlot.materiaID = materiaSlot["materiaId"];
+                    delete materiaSlot["materiaId"];
+                } else if (!materiaSlot.materiaID) {
+                    return undefined;
+                }
+
+                if (!materiaSlot.slotID && materiaSlot["slotId"]) {
+                    materiaSlot.slotID = materiaSlot["slotId"];
+                    delete materiaSlot["slotId"];
+                } else if (!materiaSlot.slotID) {
+                    return undefined;
+                }
+
+                return materiaSlot;
+            });
+
+            materiaArray = compact(materiaArray);
+        }
+
+        return materiaArray;
     },
 
     validateUploadDataPreCast: (ctx: Context) => {
