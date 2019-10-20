@@ -1,8 +1,9 @@
 import compact from "lodash.compact";
 import sha from "sha.js";
 
-import { City } from "./models/City";
 import { Context } from "koa";
+
+import { City } from "./models/City";
 import { ItemMateria } from "./models/ItemMateria";
 import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListingUpload } from "./models/MarketBoardItemListingUpload";

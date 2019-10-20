@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import csvParser from "csv-parse";
-import flatten from "lodash.flatten"
 import fs from "fs";
+import flatten from "lodash.flatten";
 import path from "path";
 import request from "request-promise";
 import util from "util";
@@ -67,13 +67,13 @@ export class RemoteDataManager {
             const startTime = Date.now();
 
             for (let i = 1; i <= pageCount; i += XIVAPI_RATELIMIT) {
-                const startTime = Date.now();
+                const pagesStartTime = Date.now();
 
                 // Batch as many requests as possible.
-                const requestPromises: Promise<number[]>[] = [];
+                const requestPromises: Array<Promise<number[]>> = [];
                 for (let j = i; j < i + XIVAPI_RATELIMIT && j <= pageCount; j++) {
                     requestPromises.push(new Promise(async (resolve) => {
-                        await new Promise((resolve) => setTimeout(resolve, (j - i) * 15));
+                        await new Promise((resolve2) => setTimeout(resolve2, (j - i) * 15));
                         const nextPage = JSON.parse(await request(url + `&page=${j}`));
                         if (nextPage.Pagination.PageTotal < pageCount) pageCount = nextPage.Pagination.PageTotal;
                         const nextPageItems = nextPage.Results.map((item: { ID: number }) => item.ID);
@@ -84,9 +84,9 @@ export class RemoteDataManager {
                 const nextLine = flatten(await Promise.all(requestPromises));
                 storageFile.itemID.push.apply(storageFile.itemID, nextLine);
 
-                const timeDiff = Date.now() - startTime;
+                const pagesTimeDiff = Date.now() - pagesStartTime;
                 this.logger.info("(Marketable Item ID Catalog) Pushed " +
-                    `${chalk.greenBright(requestPromises.length.toString())} pages in ${timeDiff}ms.`);
+                    `${chalk.greenBright(requestPromises.length.toString())} pages in ${pagesTimeDiff}ms.`);
 
                 // If the batched requests took less than a second, wait the remainder of the second
                 // to avoid hitting the rate limit.
