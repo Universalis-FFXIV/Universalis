@@ -42,8 +42,6 @@ export default {
             total: listing.pricePerUnit * listing.quantity
         };
 
-        //newListing.materia = this.cleanMateria(newListing.materia);
-
         return newListing;
     },
 
