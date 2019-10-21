@@ -384,7 +384,9 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     if (uploadData.listings) {
         const dataArray: MarketBoardItemListing[] = [];
         uploadData.listings = uploadData.listings.map((listing) => {
-            return validation.cleanListing(listing);
+            const newListing = validation.cleanListing(listing);
+            newListing.materia = validation.cleanMateria(newListing.materia);
+            return newListing;
         });
 
         for (const listing of uploadData.listings) {
