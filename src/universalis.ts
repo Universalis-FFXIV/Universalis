@@ -32,6 +32,7 @@ import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
 import { MarketBoardListingsUpload } from "./models/MarketBoardListingsUpload";
 import { MarketBoardSaleHistoryUpload } from "./models/MarketBoardSaleHistoryUpload";
 import { RecentlyUpdated } from "./models/RecentlyUpdated";
+import { TaxRates } from "./models/TaxRates";
 import { TrustedSource } from "./models/TrustedSource";
 import { WorldItemPairList } from "./models/WorldItemPairList";
 
@@ -254,6 +255,24 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     ctx.body = data;
 });
 
+router.get("/api/tax-rates", async (ctx) => { // Tax rates
+    const taxRates: TaxRates = await extraDataManager.getTaxRates();
+
+    if (!taxRates) {
+        ctx.body = {
+            limsaLominsa: null,
+            gridania: null,
+            uldah: null,
+            ishgard: null,
+            kugane: null,
+            crystarium: null
+        };
+        return;
+    }
+
+    ctx.body = taxRates;
+});
+
 router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
     const content = await contentIDCollection.get(ctx.params.contentID);
 
@@ -404,6 +423,8 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
 
             dataArray.push(listing as any);
         }
+
+        // Set tax rates here
 
         promises.push(priceTracker.set(
             uploadData.uploaderID,
