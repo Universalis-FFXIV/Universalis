@@ -142,11 +142,12 @@ export class ExtraDataManager {
         if (!data) {
             await this.extraDataCollection.insertOne({
                 setName: "taxRates",
-                limsaLominsa: null,
-                gridania: null,
-                uldah: null,
-                ishgard: null,
-                crystarium: null
+                "Limsa Lominsa": null,
+                "Gridania": null,
+                "Ul'dah": null,
+                "Ishgard": null,
+                "Kugane": null,
+                "Crystarium": null
             });
         }
 
