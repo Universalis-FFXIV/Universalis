@@ -32,6 +32,7 @@ import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
 import { MarketBoardListingsUpload } from "./models/MarketBoardListingsUpload";
 import { MarketBoardSaleHistoryUpload } from "./models/MarketBoardSaleHistoryUpload";
 import { RecentlyUpdated } from "./models/RecentlyUpdated";
+import { TaxRates } from "./models/TaxRates";
 import { TrustedSource } from "./models/TrustedSource";
 import { WorldItemPairList } from "./models/WorldItemPairList";
 
@@ -131,7 +132,7 @@ router.get("/docs", async (ctx) => {
 // REST API
 router.get("/api/:world/:item", async (ctx) => { // Normal data
     const itemIDs: number[] = (ctx.params.item as string).split(",").map((id, index) => {
-        if (index > 20) return;
+        if (index > 100) return;
         return parseInt(id);
     });
 
@@ -200,7 +201,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
     const itemIDs: number[] = (ctx.params.item as string).split(",").map((id, index) => {
-        if (index > 20) return;
+        if (index > 100) return;
         return parseInt(id);
     });
 
@@ -253,6 +254,24 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
 
     ctx.body = data;
 });
+
+/*router.get("/api/tax-rates", async (ctx) => { // Tax rates
+    const taxRates: TaxRates = await extraDataManager.getTaxRates();
+
+    if (!taxRates) {
+        ctx.body = {
+            "Limsa Lominsa": null,
+            "Gridania": null,
+            "Ul'dah": null,
+            "Ishgard": null,
+            "Kugane": null,
+            "Crystarium": null
+        };
+        return;
+    }
+
+    ctx.body = taxRates;
+});*/
 
 router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
     const content = await contentIDCollection.get(ctx.params.contentID);
@@ -405,6 +424,16 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
             dataArray.push(listing as any);
         }
 
+        // Set tax rates
+        /*if (uploadData.listings.length > 0 && uploadData.listings[0].totalTax) {
+            const city: string = Object.keys(City).find((c) => City[c] === uploadData.listings[0].retainerCity);
+            const totalTax = uploadData.listings[0].totalTax;
+            const total = uploadData.listings[0].total;
+            const taxRate = Math.floor((totalTax - total) / total * 100);
+            promises.push(extraDataManager.setTaxRate(city, taxRate));
+        }*/
+
+        // Post listing to DB
         promises.push(priceTracker.set(
             uploadData.uploaderID,
             uploadData.itemID,

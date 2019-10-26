@@ -4,6 +4,7 @@ import { Collection, Db } from "mongodb";
 
 import { DailyUploadStatistics } from "../models/DailyUploadStatistics";
 import { RecentlyUpdated } from "../models/RecentlyUpdated";
+import { TaxRates } from "../models/TaxRates";
 import { WorldItemPair } from "../models/WorldItemPair";
 import { WorldItemPairList } from "../models/WorldItemPairList";
 
@@ -120,6 +121,39 @@ export class ExtraDataManager {
                 setName: "recentlyUpdated"
             });
         }
+    }
+
+    /** Get the tax rates of all cities. */
+    public async getTaxRates(): Promise<TaxRates> {
+        const query = { setName: "taxRates" };
+
+        const data: TaxRates =
+            await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0 } });
+
+        return data;
+    }
+
+    /** Set a tax rate in a city. */
+    public async setTaxRate(city: string, rate: number): Promise<void> {
+        const query = { setName: "taxRates" };
+
+        const data: TaxRates = await this.extraDataCollection.findOne(query);
+
+        if (!data) {
+            await this.extraDataCollection.insertOne({
+                setName: "taxRates",
+                "Limsa Lominsa": null,
+                "Gridania": null,
+                "Ul'dah": null,
+                "Ishgard": null,
+                "Kugane": null,
+                "Crystarium": null
+            });
+        }
+
+        const updateData = { $set: {} };
+        updateData.$set[city] = rate;
+        await this.extraDataCollection.updateOne(query, updateData);
     }
 
     /** Get the daily upload statistics for the past 30 days, or a specified shorter period. */
