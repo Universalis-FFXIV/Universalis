@@ -255,7 +255,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     ctx.body = data;
 });
 
-/*router.get("/api/tax-rates", async (ctx) => { // Tax rates
+router.get("/api/tax-rates", async (ctx) => { // Tax rates
     const taxRates: TaxRates = await extraDataManager.getTaxRates();
 
     if (!taxRates) {
@@ -271,7 +271,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     }
 
     ctx.body = taxRates;
-});*/
+});
 
 router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
     const content = await contentIDCollection.get(ctx.params.contentID);
@@ -425,13 +425,13 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
         }
 
         // Set tax rates
-        /*if (uploadData.listings.length > 0 && uploadData.listings[0].totalTax) {
+        if (uploadData.listings.length > 0 && uploadData.listings[0].totalTax) {
             const city: string = Object.keys(City).find((c) => City[c] === uploadData.listings[0].retainerCity);
-            const totalTax = uploadData.listings[0].totalTax;
             const total = uploadData.listings[0].total;
-            const taxRate = Math.floor((totalTax - total) / total * 100);
+            const totalWithTax = total + uploadData.listings[0].totalTax;
+            const taxRate = Math.floor((totalWithTax - total) / total * 100);
             promises.push(extraDataManager.setTaxRate(city, taxRate));
-        }*/
+        }
 
         // Post listing to DB
         promises.push(priceTracker.set(
