@@ -7,6 +7,7 @@ import { RecentlyUpdated } from "../models/RecentlyUpdated";
 import { TaxRates } from "../models/TaxRates";
 import { WorldItemPair } from "../models/WorldItemPair";
 import { WorldItemPairList } from "../models/WorldItemPairList";
+import { WorldUploadCount } from "../models/WorldUploadCount";
 
 export class ExtraDataManager {
     public static async create(rdm: RemoteDataManager, db: Db): Promise<ExtraDataManager> {
@@ -44,6 +45,53 @@ export class ExtraDataManager {
         this.recentData = recentData;
 
         this.rdm = rdm;
+    }
+
+    /** Return the number of uploads from each world. */
+    public async getWorldUploadCounts(): Promise<WorldUploadCount[]> {
+        const query = { setName: "worldUploadCount" };
+
+        const data = await this.extraDataCollection.find(query, { projection: { _id: 0, setName: 0 } }).toArray();
+
+        return data;
+    }
+
+    /** Return the proportion of uploads from each world. */
+    public async getWorldUploadProportions(): Promise<any> {
+        const query = { setName: "worldUploadCount" };
+
+        const mergedEntries = {};
+
+        let sum = 0;
+
+        const data = (await this.extraDataCollection.find(query, { projection: { _id: 0, setName: 0 } }).toArray());
+
+        data.forEach((worldUploadCount: WorldUploadCount) => {
+            sum += worldUploadCount.count;
+        });
+
+        data.forEach((worldUploadCount: WorldUploadCount) => {
+            mergedEntries[worldUploadCount.worldName] = worldUploadCount.count / sum;
+        });
+
+        return mergedEntries;
+    }
+
+    /** Increment the upload count for a world. */
+    public async incrementWorldUploads(worldName: string): Promise<void> {
+        const query = { setName: "worldUploadCount", worldName };
+
+        const data = await this.extraDataCollection.findOne(query);
+
+        if (data) {
+            await this.extraDataCollection.updateOne(query, { $inc: { count: 1 } });
+        } else {
+            await this.extraDataCollection.insertOne(<WorldUploadCount> {
+                count: 0,
+                setName: "worldUploadCount",
+                worldName
+            });
+        }
     }
 
     /** Return the list of the most recently updated items, or a subset of them. */

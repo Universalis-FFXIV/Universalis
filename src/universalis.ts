@@ -31,10 +31,12 @@ import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
 import { MarketBoardListingsUpload } from "./models/MarketBoardListingsUpload";
 import { MarketBoardSaleHistoryUpload } from "./models/MarketBoardSaleHistoryUpload";
+import { MinimizedHistoryEntry } from "./models/MinimizedHistoryEntry";
 import { RecentlyUpdated } from "./models/RecentlyUpdated";
 import { TaxRates } from "./models/TaxRates";
 import { TrustedSource } from "./models/TrustedSource";
 import { WorldItemPairList } from "./models/WorldItemPairList";
+import { WorldUploadCount } from "./models/WorldUploadCount";
 
 // Define application and its resources
 const logger = winston.createLogger({
@@ -67,6 +69,7 @@ var recentData: Collection;
 var remoteDataManager: RemoteDataManager;
 
 const worldMap: Map<string, number> = new Map();
+const worldIDMap: Map<number, string> = new Map();
 
 const init = (async () => {
     // DB Data Managers
@@ -88,8 +91,9 @@ const init = (async () => {
     // World-ID conversions
     const worldList = await remoteDataManager.parseCSV("World.csv");
 	for (const worldEntry of worldList) {
-        if (worldEntry[0] === "25") continue;
+        if (!parseInt(worldEntry[0]) || worldEntry[0] === "25") continue;
         worldMap.set(worldEntry[1], parseInt(worldEntry[0]));
+        worldIDMap.set(parseInt(worldEntry[0]), worldEntry[1]);
 	}
 
     logger.info("Connected to database and started data managers.");
@@ -221,7 +225,7 @@ router.get("/api/history/:world/:item", async (ctx) => { // Extended history
     // Data filtering
     data.items = data.items.map((item) => {
         if (entriesToReturn) item.entries = item.entries.slice(0, Math.min(500, entriesToReturn));
-        item.entries = item.entries.map((entry) => {
+        item.entries = item.entries.map((entry: MinimizedHistoryEntry) => {
             delete entry.uploaderID;
             return entry;
         });
@@ -301,6 +305,27 @@ router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
     }
 
     ctx.body = data;
+});
+
+router.get("/api/extra/stats/world-upload-counts", async (ctx) => { // World upload counts
+    const worldUploadCounts = await extraDataManager.getWorldUploadCounts();
+
+    const mergedEntries = {};
+
+    let sum = 0;
+
+    worldUploadCounts.forEach((worldUploadCount: WorldUploadCount) => {
+        sum += worldUploadCount.count;
+    });
+
+    worldUploadCounts.forEach((worldUploadCount: WorldUploadCount) => {
+        mergedEntries[worldUploadCount.worldName] = {
+            count: worldUploadCount.count,
+            proportion: worldUploadCount.count / sum
+        };
+    });
+
+    ctx.body = mergedEntries;
 });
 
 router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently updated items
@@ -384,7 +409,7 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
 
     promises.push(extraDataManager.incrementDailyUploads());
 
-    // Data processing
+    // Preliminary data processing and metadata stuff
     if (ctx.request.body.retainerCity) ctx.request.body.retainerCity = City[ctx.request.body.retainerCity];
     const uploadData:
         CharacterContentIDUpload &
@@ -397,6 +422,10 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     err = await validation.validateUploadData({ ctx, uploadData, blacklistManager });
     if (err) {
         return err;
+    }
+
+    if (uploadData.worldID) {
+        promises.push(extraDataManager.incrementWorldUploads(worldIDMap.get(uploadData.worldID)));
     }
 
     // Hashing and passing data
