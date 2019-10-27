@@ -1,4 +1,4 @@
-import winston from "winston";
+import winston, { Logger } from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
 import { ParameterizedContext } from "koa";
@@ -31,7 +31,7 @@ export function appendWorldDC(obj: any, worldMap: Map<string, number>, ctx: Para
     }
 }
 
-export function createLogger() {
+export function createLogger(): Logger {
     return winston.createLogger({
         transports: [
             new (DailyRotateFile)({
