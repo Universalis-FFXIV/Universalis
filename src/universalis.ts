@@ -15,6 +15,7 @@ import { CronJobManager } from "./cron/CronJobManager";
 import { BlacklistManager } from "./db/BlacklistManager";
 import { ContentIDCollection } from "./db/ContentIDCollection";
 import { ExtraDataManager } from "./db/ExtraDataManager";
+import { TrustedSourceManager } from "./db/TrustedSourceManager";
 import { RemoteDataManager } from "./remote/RemoteDataManager";
 import { HistoryTracker } from "./trackers/HistoryTracker";
 import { PriceTracker } from "./trackers/PriceTracker";
@@ -67,6 +68,7 @@ var historyTracker: HistoryTracker;
 var priceTracker: PriceTracker;
 var recentData: Collection;
 var remoteDataManager: RemoteDataManager;
+var trustedSourceManager: TrustedSourceManager;
 
 const worldMap: Map<string, number> = new Map();
 const worldIDMap: Map<number, string> = new Map();
@@ -87,6 +89,7 @@ const init = (async () => {
     extraDataManager = await ExtraDataManager.create(remoteDataManager, universalisDB);
     historyTracker = await HistoryTracker.create(universalisDB);
     priceTracker = await PriceTracker.create(universalisDB);
+    trustedSourceManager = await TrustedSourceManager.create(universalisDB);
 
     // World-ID conversions
     const worldList = await remoteDataManager.parseCSV("World.csv");
@@ -387,23 +390,14 @@ router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
     const promises: Array<Promise<any>> = []; // Sort of like a thread list.
 
     // Accept identity via API key.
-    const dbo = (await db).db("universalis");
     const apiKey = sha("sha512").update(ctx.params.apiKey).digest("hex");
-    const trustedSource: TrustedSource = await dbo.collection("trustedSources").findOne({ apiKey });
+
+    const trustedSource: TrustedSource = await trustedSourceManager.get(apiKey);
     if (!trustedSource) return ctx.throw(401);
 
     const sourceName = trustedSource.sourceName;
 
-    if (trustedSource.uploadCount) promises.push(dbo.collection("trustedSources").updateOne({ apiKey }, {
-        $inc: {
-            uploadCount: 1
-        }
-    }));
-    else promises.push(dbo.collection("trustedSources").updateOne({ apiKey }, {
-        $set: {
-            uploadCount: 1
-        }
-    }));
+    promises.push(trustedSourceManager.increaseUploadCount(apiKey));
 
     logger.info("Received upload from " + sourceName + ":\n" + JSON.stringify(ctx.request.body));
 
