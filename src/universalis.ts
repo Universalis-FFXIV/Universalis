@@ -1,17 +1,14 @@
 // Dependencies
 import cors from "@koa/cors";
 import Router from "@koa/router";
-import difference from "lodash.difference";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import queryParams from "koa-queryparams";
 import serve from "koa-static";
-import { MongoClient } from "mongodb";
-import sha from "sha.js";
-import winston from "winston";
-import DailyRotateFile from "winston-daily-rotate-file";
+import { Collection, MongoClient } from "mongodb";
 
-import { CronJobManager } from "./cron/CronJobManager";
+// Data managers
+// import { CronJobManager } from "./cron/CronJobManager";
 import { BlacklistManager } from "./db/BlacklistManager";
 import { ContentIDCollection } from "./db/ContentIDCollection";
 import { ExtraDataManager } from "./db/ExtraDataManager";
@@ -19,43 +16,23 @@ import { TrustedSourceManager } from "./db/TrustedSourceManager";
 import { RemoteDataManager } from "./remote/RemoteDataManager";
 import { HistoryTracker } from "./trackers/HistoryTracker";
 import { PriceTracker } from "./trackers/PriceTracker";
-import { appendWorldDC } from "./util";
-import validation from "./validate";
 
-// Load models
-import { Collection } from "mongodb";
+// Endpoint parsers
+import { parseContentID } from "./endpoints/parseContentID";
+import { parseHistory } from "./endpoints/parseHistory";
+import { parseLeastRecentlyUpdatedItems } from "./endpoints/parseLeastRecentlyUpdatedItems";
+import { parseListings } from "./endpoints/parseListings";
+import { parseRecentlyUpdatedItems } from "./endpoints/parseRecentlyUpdatedItems";
+import { parseTaxRates } from "./endpoints/parseTaxRates";
+import { parseUploadHistory } from "./endpoints/parseUploadHistory";
+import { parseWorldUploadCounts } from "./endpoints/parseWorldUploadCounts";
+import { upload } from "./endpoints/upload";
 
-import { CharacterContentIDUpload } from "./models/CharacterContentIDUpload";
-import { City } from "./models/City";
-import { DailyUploadStatistics } from "./models/DailyUploadStatistics";
-import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
-import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
-import { MarketBoardListingsUpload } from "./models/MarketBoardListingsUpload";
-import { MarketBoardSaleHistoryUpload } from "./models/MarketBoardSaleHistoryUpload";
-import { MinimizedHistoryEntry } from "./models/MinimizedHistoryEntry";
-import { RecentlyUpdated } from "./models/RecentlyUpdated";
-import { TaxRates } from "./models/TaxRates";
-import { TrustedSource } from "./models/TrustedSource";
-import { WorldItemPairList } from "./models/WorldItemPairList";
-import { WorldUploadCount } from "./models/WorldUploadCount";
+// Utils
+import { createLogger } from "./util";
 
 // Define application and its resources
-const logger = winston.createLogger({
-    transports: [
-        new (DailyRotateFile)({
-            datePattern: "YYYY-MM-DD-HH",
-            filename: "logs/universalis-%DATE%.log",
-            maxSize: "20m"
-        }),
-        new winston.transports.File({
-            filename: "logs/error.log",
-            level: "error"
-        }),
-        new winston.transports.Console({
-            format: winston.format.simple()
-        })
-    ]
-});
+const logger = createLogger();
 logger.info("Process started.");
 
 const db = MongoClient.connect("mongodb://localhost:27017/", { useNewUrlParser: true, useUnifiedTopology: true });
@@ -137,368 +114,44 @@ router.get("/docs", async (ctx) => {
 });
 
 // REST API
-router.get("/api/:world/:item", async (ctx) => { // Normal data
-    const itemIDs: number[] = (ctx.params.item as string).split(",").map((id, index) => {
-        if (index > 100) return;
-        return parseInt(id);
-    });
-
-    // Query construction
-    const query = { itemID: { $in: itemIDs } };
-    appendWorldDC(query, worldMap, ctx);
-
-    // Request database info
-    let data = {
-        itemIDs,
-        items: await recentData.find(query, { projection: { _id: 0, uploaderID: 0 } }).toArray()
-    };
-    appendWorldDC(data, worldMap, ctx);
-
-    // Do some post-processing on resolved item listings.
-    for (const item of data.items) {
-        if (item.listings.length > 0) {
-            item.listings = item.listings.sort((a: MarketBoardItemListing, b: MarketBoardItemListing) => {
-                if (a.pricePerUnit > b.pricePerUnit) return 1;
-                if (a.pricePerUnit < b.pricePerUnit) return -1;
-                return 0;
-            });
-        }
-        if (Array.isArray(item.listings)) {
-            for (const listing of item.listings) {
-                listing.isCrafted =
-                    listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9";
-                listing.materia = validation.cleanMateria(listing.materia);
-            }
-        }
-        if (Array.isArray(item.recentHistory)) {
-            for (const entry of item.recentHistory) {
-                if (entry.uploaderID) delete entry.uploaderID;
-            }
-        }
-    }
-
-    // Fill in unresolved items
-    const resolvedItems: number[] = data.items.map((item) => item.itemID);
-    const unresolvedItems: number[] = difference(itemIDs, resolvedItems);
-    data["unresolvedItems"] = unresolvedItems;
-
-    for (const item of unresolvedItems) {
-        const unresolvedItemData = {
-            itemID: item,
-            lastUploadTime: 0,
-            listings: [],
-            recentHistory: []
-        };
-        appendWorldDC(unresolvedItemData, worldMap, ctx);
-        data.items.push(unresolvedItemData);
-    }
-
-    // If only one item is requested we just turn the whole thing into the one item.
-    if (data.itemIDs.length === 1) {
-        data = data.items[0];
-    } else if (!unresolvedItems) {
-        delete data["unresolvedItems"];
-    }
-
-    ctx.body = data;
-});
-
-router.get("/api/history/:world/:item", async (ctx) => { // Extended history
-    let entriesToReturn: any = ctx.queryParams.entries;
-    if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
-
-    const itemIDs: number[] = (ctx.params.item as string).split(",").map((id, index) => {
-        if (index > 100) return;
-        return parseInt(id);
-    });
-
-    // Query construction
-    const query = { itemID: { $in: itemIDs } };
-    appendWorldDC(query, worldMap, ctx);
-
-    // Request database info
-    let data = {
-        itemIDs,
-        items: await extendedHistory.find(query, {
-            projection: { _id: 0, uploaderID: 0 }
-        }).toArray()
-    };
-    appendWorldDC(data, worldMap, ctx);
-
-    // Data filtering
-    data.items = data.items.map((item) => {
-        if (entriesToReturn) item.entries = item.entries.slice(0, Math.min(500, entriesToReturn));
-        item.entries = item.entries.map((entry: MinimizedHistoryEntry) => {
-            delete entry.uploaderID;
-            return entry;
+router
+    .get("/api/:world/:item", async (ctx) => { // Normal data
+        await parseListings(ctx, worldMap, recentData);
+    })
+    .get("/api/history/:world/:item", async (ctx) => { // Extended history
+        await parseHistory(ctx, worldMap, extendedHistory);
+    })
+    .get("/api/tax-rates", async (ctx) => { // Tax rates
+        await parseTaxRates(ctx, extraDataManager);
+    })
+    .get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
+        await parseContentID(ctx, contentIDCollection);
+    })
+    .get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recently updated items
+        await parseLeastRecentlyUpdatedItems(ctx, worldMap, extraDataManager);
+    })
+    .get("/api/extra/stats/recently-updated", async (ctx) => { // Recently updated items
+        await parseRecentlyUpdatedItems(ctx, extraDataManager);
+    })
+    .get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
+        await parseUploadHistory(ctx, extraDataManager);
+    })
+    .get("/api/extra/stats/world-upload-counts", async (ctx) => { // World upload counts
+        await parseWorldUploadCounts(ctx, extraDataManager);
+    })
+    .post("/upload/:apiKey", async (ctx) => { // Upload process
+        await upload({
+            blacklistManager,
+            contentIDCollection,
+            ctx,
+            extraDataManager,
+            historyTracker,
+            logger,
+            priceTracker,
+            trustedSourceManager,
+            worldIDMap
         });
-        if (!item.lastUploadTime) item.lastUploadTime = 0;
-        return item;
     });
-
-    // Fill in unresolved items
-    const resolvedItems: number[] = data.items.map((item) => item.itemID);
-    const unresolvedItems: number[] = difference(itemIDs, resolvedItems);
-    data["unresolvedItems"] = unresolvedItems;
-
-    for (const item of unresolvedItems) {
-        const unresolvedItemData = {
-            entries: [],
-            itemID: item,
-            lastUploadTime: 0
-        };
-        appendWorldDC(unresolvedItemData, worldMap, ctx);
-
-        data.items.push(unresolvedItemData);
-    }
-
-    // If only one item is requested we just turn the whole thing into the one item.
-    if (data.itemIDs.length === 1) {
-        data = data.items[0];
-    } else if (!unresolvedItems) {
-        delete data["unresolvedItems"];
-    }
-
-    ctx.body = data;
-});
-
-router.get("/api/tax-rates", async (ctx) => { // Tax rates
-    const taxRates: TaxRates = await extraDataManager.getTaxRates();
-
-    if (!taxRates) {
-        ctx.body = {
-            "Limsa Lominsa": null,
-            "Gridania": null,
-            "Ul'dah": null,
-            "Ishgard": null,
-            "Kugane": null,
-            "Crystarium": null
-        };
-        return;
-    }
-
-    ctx.body = taxRates;
-});
-
-router.get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
-    const content = await contentIDCollection.get(ctx.params.contentID);
-
-    if (!content) {
-        ctx.body = {
-            contentID: null,
-            contentType: null
-        };
-        return;
-    }
-
-    ctx.body = content;
-});
-
-router.get("/api/extra/stats/upload-history", async (ctx) => { // Upload rate
-    let daysToReturn: any = ctx.queryParams.entries;
-    if (daysToReturn) daysToReturn = parseInt(daysToReturn.replace(/[^0-9]/g, ""));
-
-    const data: DailyUploadStatistics = await extraDataManager.getDailyUploads(daysToReturn);
-
-    if (!data) {
-        ctx.body =  {
-            uploadCountByDay: []
-        } as DailyUploadStatistics;
-        return;
-    }
-
-    ctx.body = data;
-});
-
-router.get("/api/extra/stats/world-upload-counts", async (ctx) => { // World upload counts
-    const worldUploadCounts = await extraDataManager.getWorldUploadCounts();
-
-    const mergedEntries = {};
-
-    let sum = 0;
-
-    worldUploadCounts.forEach((worldUploadCount: WorldUploadCount) => {
-        sum += worldUploadCount.count;
-    });
-
-    worldUploadCounts.forEach((worldUploadCount: WorldUploadCount) => {
-        mergedEntries[worldUploadCount.worldName] = {
-            count: worldUploadCount.count,
-            proportion: worldUploadCount.count / sum
-        };
-    });
-
-    ctx.body = mergedEntries;
-});
-
-router.get("/api/extra/stats/recently-updated", async (ctx) => { // Recently updated items
-    let entriesToReturn: any = ctx.queryParams.entries;
-    if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
-
-    const data: RecentlyUpdated = await extraDataManager.getRecentlyUpdatedItems(entriesToReturn);
-
-    if (!data) {
-        ctx.body =  {
-            items: []
-        } as RecentlyUpdated;
-        return;
-    }
-
-    ctx.body = data;
-});
-
-router.get("/api/extra/stats/least-recently-updated", async (ctx) => { // Recently updated items
-    let worldID = ctx.queryParams.world ? ctx.queryParams.world.charAt(0).toUpperCase() +
-        ctx.queryParams.world.substr(1).toLowerCase() : null;
-    let dcName = ctx.queryParams.dcName ? ctx.queryParams.dcName.charAt(0).toUpperCase() +
-        ctx.queryParams.dcName.substr(1).toLowerCase() : null;
-
-    if (worldID && !parseInt(worldID)) {
-        worldID = worldMap.get(worldID);
-    } else if (parseInt(worldID)) {
-        worldID = parseInt(worldID);
-    }
-
-    if (worldID && dcName && worldID !== 0) {
-        dcName = null;
-    } else if (worldID && dcName && worldID === 0) {
-        worldID = null;
-    }
-
-    let entriesToReturn: any = ctx.queryParams.entries;
-    if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
-
-    const data: WorldItemPairList =
-        await extraDataManager.getLeastRecentlyUpdatedItems(worldID || dcName, entriesToReturn);
-
-    if (!data) {
-        ctx.body =  {
-            items: []
-        } as WorldItemPairList;
-        return;
-    }
-
-    ctx.body = data;
-});
-
-router.post("/upload/:apiKey", async (ctx) => { // Kinda like a main loop
-    let err = validation.validateUploadDataPreCast(ctx);
-    if (err) {
-        return err;
-    }
-
-    const promises: Array<Promise<any>> = []; // Sort of like a thread list.
-
-    // Accept identity via API key.
-    const apiKey = sha("sha512").update(ctx.params.apiKey).digest("hex");
-
-    const trustedSource: TrustedSource = await trustedSourceManager.get(apiKey);
-    if (!trustedSource) return ctx.throw(401);
-
-    const sourceName = trustedSource.sourceName;
-
-    promises.push(trustedSourceManager.increaseUploadCount(apiKey));
-
-    logger.info("Received upload from " + sourceName + ":\n" + JSON.stringify(ctx.request.body));
-
-    promises.push(extraDataManager.incrementDailyUploads());
-
-    // Preliminary data processing and metadata stuff
-    if (ctx.request.body.retainerCity) ctx.request.body.retainerCity = City[ctx.request.body.retainerCity];
-    const uploadData:
-        CharacterContentIDUpload &
-        MarketBoardListingsUpload &
-        MarketBoardSaleHistoryUpload
-    = ctx.request.body;
-
-    uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
-
-    err = await validation.validateUploadData({ ctx, uploadData, blacklistManager });
-    if (err) {
-        return err;
-    }
-
-    if (uploadData.worldID) {
-        promises.push(extraDataManager.incrementWorldUploads(worldIDMap.get(uploadData.worldID)));
-    }
-
-    // Hashing and passing data
-    if (uploadData.listings) {
-        const dataArray: MarketBoardItemListing[] = [];
-        uploadData.listings = uploadData.listings.map((listing) => {
-            const newListing = validation.cleanListing(listing);
-            newListing.materia = validation.cleanMateria(newListing.materia);
-            return newListing;
-        });
-
-        for (const listing of uploadData.listings) {
-            if (listing.creatorID && listing.creatorName) {
-                contentIDCollection.set(listing.creatorID, "player", {
-                    characterName: listing.creatorName
-                });
-            }
-
-            if (listing.retainerID && listing.retainerName) {
-                contentIDCollection.set(listing.retainerID, "retainer", {
-                    characterName: listing.retainerName
-                });
-            }
-
-            dataArray.push(listing as any);
-        }
-
-        // Set tax rates
-        if (uploadData.listings.length > 0 && uploadData.listings[0].totalTax) {
-            const city: string = Object.keys(City).find((c) => City[c] === uploadData.listings[0].retainerCity);
-            const total = uploadData.listings[0].total;
-            const totalWithTax = total + uploadData.listings[0].totalTax;
-            const taxRate = Math.floor((totalWithTax - total) / total * 100);
-            promises.push(extraDataManager.setTaxRate(city, taxRate));
-        }
-
-        // Post listing to DB
-        promises.push(priceTracker.set(
-            uploadData.uploaderID,
-            uploadData.itemID,
-            uploadData.worldID,
-            dataArray as MarketBoardItemListing[]
-        ));
-    }
-
-    if (uploadData.entries) {
-        const dataArray: MarketBoardHistoryEntry[] = [];
-        uploadData.entries = uploadData.entries.map((entry) => {
-            return validation.cleanHistoryEntry(entry);
-        });
-
-        for (const entry of uploadData.entries) {
-            dataArray.push(entry);
-        }
-
-        promises.push(historyTracker.set(
-            uploadData.uploaderID,
-            uploadData.itemID,
-            uploadData.worldID,
-            dataArray as MarketBoardHistoryEntry[]
-        ));
-    }
-
-    if (uploadData.itemID) {
-        promises.push(extraDataManager.addRecentlyUpdatedItem(uploadData.itemID));
-    }
-
-    if (uploadData.contentID && uploadData.characterName) {
-        uploadData.contentID = sha("sha256").update(uploadData.contentID + "").digest("hex");
-
-        promises.push(contentIDCollection.set(uploadData.contentID, "player", {
-            characterName: uploadData.characterName
-        }));
-    }
-
-    await Promise.all(promises);
-
-    ctx.body = "Success";
-});
 
 universalis.use(router.routes());
 
