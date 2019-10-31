@@ -119,11 +119,11 @@ export class ExtraDataManager {
             await this.extraDataCollection.updateOne(query, { $inc: { "internal.uploadCount": 1 } });
         } else {
             await this.extraDataCollection.insertOne(<MostPopularItems> {
-                setName: "mostPopularItems",
                 internal: {
                     itemID,
                     uploadCount: 1
-                }
+                },
+                setName: "mostPopularItems"
             });
         }
     }

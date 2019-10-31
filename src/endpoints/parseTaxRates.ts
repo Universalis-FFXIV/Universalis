@@ -9,12 +9,12 @@ export async function parseTaxRates(ctx: ParameterizedContext, extraDataManager:
 
     if (!taxRates) {
         ctx.body = {
-            "Limsa Lominsa": null,
+            "Crystarium": null,
             "Gridania": null,
-            "Ul'dah": null,
             "Ishgard": null,
             "Kugane": null,
-            "Crystarium": null
+            "Limsa Lominsa": null,
+            "Ul'dah": null
         };
         return;
     }

@@ -8,7 +8,6 @@ import { PriceTracker } from "../trackers/PriceTracker";
 import { ParameterizedContext } from "koa";
 import { Logger } from "winston";
 
-
 export interface UploadProcessParameters {
     ctx: ParameterizedContext;
     logger: Logger;

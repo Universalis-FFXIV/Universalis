@@ -4,9 +4,8 @@ import { ExtraDataManager } from "../db/ExtraDataManager";
 
 import { WorldItemPairList } from "../models/WorldItemPairList";
 
-export async function parseLeastRecentlyUpdatedItems(ctx: ParameterizedContext
-        , worldMap: Map<string, number>
-        , edm: ExtraDataManager) {
+export async function parseLeastRecentlyUpdatedItems(ctx: ParameterizedContext,
+        worldMap: Map<string, number>, edm: ExtraDataManager) {
     let worldID = ctx.queryParams.world ? ctx.queryParams.world.charAt(0).toUpperCase() +
         ctx.queryParams.world.substr(1).toLowerCase() : null;
     let dcName = ctx.queryParams.dcName ? ctx.queryParams.dcName.charAt(0).toUpperCase() +
