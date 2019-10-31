@@ -32,14 +32,12 @@ export async function upload(parameters: UploadProcessParameters) {
     const promises: Array<Promise<any>> = []; // Sort of like a thread list.
 
     // Accept identity via API key.
-    const apiKey = sha("sha512").update(ctx.params.apiKey).digest("hex");
-
-    const trustedSource: TrustedSource = await trustedSourceManager.get(apiKey);
+    const trustedSource: TrustedSource = await trustedSourceManager.get(ctx.params.apiKey);
     if (!trustedSource) return ctx.throw(401);
 
     const sourceName = trustedSource.sourceName;
 
-    promises.push(trustedSourceManager.increaseUploadCount(apiKey));
+    promises.push(trustedSourceManager.increaseUploadCount(ctx.params.apiKey));
 
     logger.info("Received upload from " + sourceName + ":\n" + JSON.stringify(ctx.request.body));
 
