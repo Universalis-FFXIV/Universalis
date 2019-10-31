@@ -31,6 +31,15 @@ export function appendWorldDC(obj: any, worldMap: Map<string, number>, ctx: Para
     }
 }
 
+export function calcAverage(...numbers: number[]): number {
+    if (numbers.length === 0) return 0;
+    let out = 0;
+    numbers.forEach((number) => {
+        out += number;
+    });
+    return out /= numbers.length;
+}
+
 export function createLogger(): Logger {
     return winston.createLogger({
         transports: [
