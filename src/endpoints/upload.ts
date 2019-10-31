@@ -1,3 +1,4 @@
+import commontags from "common-tags";
 import sha from "sha.js";
 
 // Utils
@@ -94,8 +95,12 @@ export async function upload(parameters: UploadProcessParameters) {
                 const taxRate = Math.floor((totalWithTax - total) / total * 100);
                 logger.info(`Setting tax rate for ${city}: ${taxRate}%`);
                 promises.push(extraDataManager.setTaxRate(city, taxRate));
-            } else if (!listing.totalTax) {
-                logger.error(`totalTax not found, please ask ${trustedSource.sourceName} to upload it!`);
+            } else {
+                logger.error(commontags.stripIndents`
+                    totalTax not found, please ask ${trustedSource.sourceName} to upload it!
+                    Listing: ${JSON.stringify(listing)}
+                    totalTax: ${listing.totalTax}
+                `);
             }
         }
 
