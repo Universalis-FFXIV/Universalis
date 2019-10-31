@@ -39,7 +39,8 @@ export default {
             retainerName: listing.retainerName,
             sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
             stainID: listing.stainID,
-            total: listing.pricePerUnit * listing.quantity
+            total: listing.pricePerUnit * listing.quantity,
+            totalTax: listing.totalTax
         };
 
         return newListing;

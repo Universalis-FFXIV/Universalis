@@ -95,11 +95,10 @@ export async function upload(parameters: UploadProcessParameters) {
                 logger.info(`Setting tax rate for ${city}: ${taxRate}%`);
                 promises.push(extraDataManager.setTaxRate(city, taxRate));
             } else {
-                logger.error(`
-                    totalTax not found, please ask ${trustedSource.sourceName} to upload it!
-                    Listing: ${JSON.stringify(listing)}
-                    totalTax: ${listing.totalTax}
-                `);
+                logger.error(`totalTax not found, please ask ${trustedSource.sourceName} to upload it!\n` +
+                    `Listing: ${JSON.stringify(listing)}\n` +
+                    `totalTax: ${listing.totalTax}`
+                );
             }
         }
 
