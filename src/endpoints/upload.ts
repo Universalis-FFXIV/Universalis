@@ -85,15 +85,18 @@ export async function upload(parameters: UploadProcessParameters) {
             }
 
             dataArray.push(listing as any);
-        }
 
-        // Set tax rates
-        if (uploadData.listings.length > 0 && uploadData.listings[0].totalTax) {
-            const city: string = Object.keys(City).find((c) => City[c] === uploadData.listings[0].retainerCity);
-            const total = uploadData.listings[0].total;
-            const totalWithTax = total + uploadData.listings[0].totalTax;
-            const taxRate = Math.floor((totalWithTax - total) / total * 100);
-            promises.push(extraDataManager.setTaxRate(city, taxRate));
+            // Set tax rates
+            if (listing.totalTax) {
+                const city: string = Object.keys(City).find((c) => City[c] === listing.retainerCity);
+                const total = listing.total;
+                const totalWithTax = total + listing.totalTax;
+                const taxRate = Math.floor((totalWithTax - total) / total * 100);
+                logger.info(`Setting tax rate for ${city}: ${taxRate}%`);
+                promises.push(extraDataManager.setTaxRate(city, taxRate));
+            } else if (!listing.totalTax) {
+                logger.error(`totalTax not found, please ask ${trustedSource.sourceName} to upload it!`);
+            }
         }
 
         // Post listing to DB

@@ -56,27 +56,6 @@ export class ExtraDataManager {
         return data;
     }
 
-    /** Return the proportion of uploads from each world. */
-    public async getWorldUploadProportions(): Promise<any> {
-        const query = { setName: "worldUploadCount" };
-
-        const mergedEntries = {};
-
-        let sum = 0;
-
-        const data = (await this.extraDataCollection.find(query, { projection: { _id: 0, setName: 0 } }).toArray());
-
-        data.forEach((worldUploadCount: WorldUploadCount) => {
-            sum += worldUploadCount.count;
-        });
-
-        data.forEach((worldUploadCount: WorldUploadCount) => {
-            mergedEntries[worldUploadCount.worldName] = worldUploadCount.count / sum;
-        });
-
-        return mergedEntries;
-    }
-
     /** Increment the upload count for a world. */
     public async incrementWorldUploads(worldName: string): Promise<void> {
         const query = { setName: "worldUploadCount", worldName };
