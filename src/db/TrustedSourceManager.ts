@@ -7,7 +7,7 @@ export class TrustedSourceManager {
     public static async create(db: Db): Promise<TrustedSourceManager> {
         const collection = db.collection("trustedSources");
 
-        const indices = [
+        /*const indices = [
             { apiKey: 1 },
         ];
         const indexNames = indices.map(Object.keys);
@@ -16,7 +16,7 @@ export class TrustedSourceManager {
             if (!await collection.indexExists(indexNames[i])) {
                 await collection.createIndex(indices[i]);
             }
-        }
+        }*/
 
         return new TrustedSourceManager(collection);
     }
