@@ -1,4 +1,3 @@
-import commontags from "common-tags";
 import sha from "sha.js";
 
 // Utils
