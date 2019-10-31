@@ -42,7 +42,7 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 .filter((listing: MarketBoardItemListing) => !listing.hq)
                 .map((listing: MarketBoardItemListing) => listing.pricePerUnit)
             );
-            item.averagePriceNQ = calcAverage(...item.listings
+            item.averagePriceHQ = calcAverage(...item.listings
                 .filter((listing: MarketBoardItemListing) => listing.hq)
                 .map((listing: MarketBoardItemListing) => listing.pricePerUnit)
             );
