@@ -1,4 +1,5 @@
-import winston = require("winston");
+import winston, { Logger } from "winston";
+import DailyRotateFile from "winston-daily-rotate-file";
 
 import { ParameterizedContext } from "koa";
 
@@ -28,6 +29,34 @@ export function appendWorldDC(obj: any, worldMap: Map<string, number>, ctx: Para
     } else {
         obj["dcName"] = ctx.params.dcName;
     }
+}
+
+export function calcAverage(...numbers: number[]): number {
+    if (numbers.length === 0) return 0;
+    let out = 0;
+    numbers.forEach((num) => {
+        out += num;
+    });
+    return out /= numbers.length;
+}
+
+export function createLogger(): Logger {
+    return winston.createLogger({
+        transports: [
+            new (DailyRotateFile)({
+                datePattern: "YYYY-MM-DD-HH",
+                filename: "logs/universalis-%DATE%.log",
+                maxSize: "20m"
+            }),
+            new winston.transports.File({
+                filename: "logs/error.log",
+                level: "error"
+            }),
+            new winston.transports.Console({
+                format: winston.format.simple()
+            })
+        ]
+    });
 }
 
 export async function getWorldDC(world: string): Promise<string> {

@@ -3,10 +3,12 @@ import { RemoteDataManager } from "../remote/RemoteDataManager";
 import { Collection, Db } from "mongodb";
 
 import { DailyUploadStatistics } from "../models/DailyUploadStatistics";
+import { MostPopularItems } from "../models/MostPopularItems";
 import { RecentlyUpdated } from "../models/RecentlyUpdated";
 import { TaxRates } from "../models/TaxRates";
 import { WorldItemPair } from "../models/WorldItemPair";
 import { WorldItemPairList } from "../models/WorldItemPairList";
+import { WorldUploadCount } from "../models/WorldUploadCount";
 
 export class ExtraDataManager {
     public static async create(rdm: RemoteDataManager, db: Db): Promise<ExtraDataManager> {
@@ -36,14 +38,94 @@ export class ExtraDataManager {
 
     private dailyUploadTrackingLimit = 30;
     private maxUnsafeLoopCount = 50;
-    private neverUpdatedItemsCap = 20;
-    private recentlyUpdatedItemsCap = 20;
+    private returnCap = 20;
 
     private constructor(rdm: RemoteDataManager, extraDataCollection: Collection, recentData: Collection) {
         this.extraDataCollection = extraDataCollection;
         this.recentData = recentData;
 
         this.rdm = rdm;
+    }
+
+    /** Return the number of uploads from each world. */
+    public async getWorldUploadCounts(): Promise<WorldUploadCount[]> {
+        const query = { setName: "worldUploadCount" };
+
+        const data = await this.extraDataCollection.find(query, { projection: { _id: 0, setName: 0 } }).toArray();
+
+        return data;
+    }
+
+    /** Return the proportion of uploads from each world. */
+    public async getWorldUploadProportions(): Promise<any> {
+        const query = { setName: "worldUploadCount" };
+
+        const mergedEntries = {};
+
+        let sum = 0;
+
+        const data = (await this.extraDataCollection.find(query, { projection: { _id: 0, setName: 0 } }).toArray());
+
+        data.forEach((worldUploadCount: WorldUploadCount) => {
+            sum += worldUploadCount.count;
+        });
+
+        data.forEach((worldUploadCount: WorldUploadCount) => {
+            mergedEntries[worldUploadCount.worldName] = worldUploadCount.count / sum;
+        });
+
+        return mergedEntries;
+    }
+
+    /** Increment the upload count for a world. */
+    public async incrementWorldUploads(worldName: string): Promise<void> {
+        const query = { setName: "worldUploadCount", worldName };
+
+        const data = await this.extraDataCollection.findOne(query);
+
+        if (data) {
+            await this.extraDataCollection.updateOne(query, { $inc: { count: 1 } });
+        } else {
+            await this.extraDataCollection.insertOne(<WorldUploadCount> {
+                count: 0,
+                setName: "worldUploadCount",
+                worldName
+            });
+        }
+    }
+
+    /** Return the list of the most popular items, or a subset of them. */
+    public async getPopularItems(count?: number): Promise<MostPopularItems> {
+        if (count) count = Math.max(count, 0);
+        else count = Number.MAX_VALUE;
+
+        const query = { setName: "mostPopularItems" };
+
+        const data: RecentlyUpdated =
+            await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0 } });
+
+        if (count && data) data.items = data.items.slice(0, Math.min(count, data.items.length));
+
+        return data;
+    }
+
+    /** Increment the popular upload count for an item. */
+    public async incrementPopularUploads(itemID: number): Promise<void> {
+        const query = { setName: "mostPopularItems", itemID };
+
+        const data = await this.extraDataCollection.findOne(query);
+
+        if (data) {
+            await this.extraDataCollection.updateOne(query, { $inc: { "internal.uploadCount": 1 } });
+        } else {
+            await this.extraDataCollection.insertOne(<MostPopularItems> {
+                internal: {
+                    itemID,
+                    uploadCount: 1
+                },
+                setName: "mostPopularItems"
+            });
+        }
     }
 
     /** Return the list of the most recently updated items, or a subset of them. */
@@ -75,7 +157,7 @@ export class ExtraDataManager {
 
         if (items.length < 20) items.concat(await this.recentData
             .find(query, { projection: { _id: 0, listings: 0, recentHistory: 0, timestamp: 1 } })
-            .limit(Math.min(count, Math.max(0, this.recentlyUpdatedItemsCap - items.length)))
+            .limit(Math.min(count, Math.max(0, this.returnCap - items.length)))
             .sort({ timestamp: 1 })
             .toArray()
         );
@@ -106,8 +188,8 @@ export class ExtraDataManager {
             data.items = [itemID].concat(data.items);
 
             // Limit size
-            if (data.items.length > this.recentlyUpdatedItemsCap) {
-                data.items = data.items.slice(0, this.recentlyUpdatedItemsCap);
+            if (data.items.length > this.returnCap) {
+                data.items = data.items.slice(0, this.returnCap);
             }
 
             await this.extraDataCollection.updateOne(query, {
@@ -215,7 +297,7 @@ export class ExtraDataManager {
         const items: WorldItemPair[] = [];
 
         for (let i = 0; i < this.maxUnsafeLoopCount; i++) {
-            if (items.length === Math.min(count, this.neverUpdatedItemsCap)) return { items };
+            if (items.length === Math.min(count, this.returnCap)) return { items };
 
             // Random world ID
             const worldID = (() => {
