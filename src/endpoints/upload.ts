@@ -91,7 +91,7 @@ export async function upload(parameters: UploadProcessParameters) {
                 const city: string = Object.keys(City).find((c) => City[c] === listing.retainerCity);
                 const total = listing.total;
                 const totalWithTax = total + listing.totalTax;
-                const taxRate = Math.floor((totalWithTax - total) / total * 100);
+                const taxRate = Math.round((totalWithTax - total) / total * 100);
                 logger.info(`Setting tax rate for ${city}: ${taxRate}%`);
                 promises.push(extraDataManager.setTaxRate(city, taxRate));
             } else {
