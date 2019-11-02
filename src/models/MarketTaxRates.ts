@@ -1,4 +1,4 @@
-export interface TaxRates {
+export interface MarketTaxRates {
     limsaLominsa: number;
     gridania: number;
     uldah: number;

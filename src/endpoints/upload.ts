@@ -10,6 +10,7 @@ import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
 import { MarketBoardListingsUpload } from "../models/MarketBoardListingsUpload";
 import { MarketBoardSaleHistoryUpload } from "../models/MarketBoardSaleHistoryUpload";
+import { MarketTaxRatesUpload } from "../models/MarketTaxRatesUpload";
 import { TrustedSource } from "../models/TrustedSource";
 import { UploadProcessParameters } from "../models/UploadProcessParameters";
 
@@ -48,7 +49,8 @@ export async function upload(parameters: UploadProcessParameters) {
     const uploadData:
         CharacterContentIDUpload &
         MarketBoardListingsUpload &
-        MarketBoardSaleHistoryUpload
+        MarketBoardSaleHistoryUpload &
+        MarketTaxRatesUpload
     = ctx.request.body;
 
     uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
@@ -85,21 +87,6 @@ export async function upload(parameters: UploadProcessParameters) {
             }
 
             dataArray.push(listing as any);
-
-            // Set tax rates
-            if (listing.totalTax) {
-                const city: string = Object.keys(City).find((c) => City[c] === listing.retainerCity);
-                const total = listing.total;
-                const totalWithTax = total + listing.totalTax;
-                const taxRate = Math.round((totalWithTax - total) / total * 100);
-                logger.info(`Setting tax rate for ${city}: ${taxRate}%`);
-                promises.push(extraDataManager.setTaxRate(city, taxRate));
-            } else {
-                logger.error(`totalTax not found, please ask ${trustedSource.sourceName} to upload it!\n` +
-                    `Listing: ${JSON.stringify(listing)}\n` +
-                    `totalTax: ${listing.totalTax}`
-                );
-            }
         }
 
         // Post listing to DB
@@ -131,6 +118,10 @@ export async function upload(parameters: UploadProcessParameters) {
 
     if (uploadData.itemID) {
         promises.push(extraDataManager.addRecentlyUpdatedItem(uploadData.itemID));
+    }
+
+    if (uploadData.marketTaxRates) {
+        promises.push(extraDataManager.setTaxRates(uploadData.marketTaxRates));
     }
 
     if (uploadData.contentID && uploadData.characterName) {

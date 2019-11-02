@@ -3,9 +3,9 @@ import { RemoteDataManager } from "../remote/RemoteDataManager";
 import { Collection, Db } from "mongodb";
 
 import { DailyUploadStatistics } from "../models/DailyUploadStatistics";
+import { MarketTaxRates } from "../models/MarketTaxRates";
 import { MostPopularItems } from "../models/MostPopularItems";
 import { RecentlyUpdated } from "../models/RecentlyUpdated";
-import { TaxRates } from "../models/TaxRates";
 import { WorldItemPair } from "../models/WorldItemPair";
 import { WorldItemPairList } from "../models/WorldItemPairList";
 import { WorldUploadCount } from "../models/WorldUploadCount";
@@ -185,36 +185,27 @@ export class ExtraDataManager {
     }
 
     /** Get the tax rates of all cities. */
-    public async getTaxRates(): Promise<TaxRates> {
+    public async getTaxRates(): Promise<MarketTaxRates> {
         const query = { setName: "taxRates" };
 
-        const data: TaxRates =
+        const data: MarketTaxRates =
             await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0 } });
 
         return data;
     }
 
-    /** Set a tax rate in a city. */
-    public async setTaxRate(city: string, rate: number): Promise<void> {
+    /** Set the market tax rates. */
+    public async setTaxRates(tx: MarketTaxRates): Promise<void> {
+        tx["setName"] = "taxRates";
         const query = { setName: "taxRates" };
 
-        const data: TaxRates = await this.extraDataCollection.findOne(query);
+        const data: MarketTaxRates = await this.extraDataCollection.findOne(query);
 
         if (!data) {
-            await this.extraDataCollection.insertOne({
-                setName: "taxRates",
-                "Limsa Lominsa": null,
-                "Gridania": null,
-                "Ul'dah": null,
-                "Ishgard": null,
-                "Kugane": null,
-                "Crystarium": null
-            });
+            await this.extraDataCollection.insertOne(tx);
+        } else {
+            await this.extraDataCollection.updateOne(query, tx);
         }
-
-        const updateData = { $set: {} };
-        updateData.$set[city] = rate;
-        await this.extraDataCollection.updateOne(query, updateData);
     }
 
     /** Get the daily upload statistics for the past 30 days, or a specified shorter period. */
