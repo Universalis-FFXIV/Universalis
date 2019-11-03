@@ -133,6 +133,20 @@ export default {
             }
         });
 
+        // Market tax rates
+        if (args.uploadData.marketTaxRates) {
+            if (typeof args.uploadData.marketTaxRates.crystarium !== "number" ||
+                typeof args.uploadData.marketTaxRates.gridania !== "number" ||
+                typeof args.uploadData.marketTaxRates.ishgard !== "number" ||
+                typeof args.uploadData.marketTaxRates.kugane !== "number" ||
+                typeof args.uploadData.marketTaxRates.limsaLominsa !== "number" ||
+                typeof args.uploadData.marketTaxRates.uldah !== "number")
+            {
+                args.ctx.throw(422, "Bad Market Tax Rate Data");
+                return true;
+            }
+        }
+
         // Crafter data
         if (args.uploadData.contentID && typeof args.uploadData.characterName === "undefined") {
             args.ctx.throw(422);
@@ -144,12 +158,20 @@ export default {
         }
 
         // General filters
-        if (!args.uploadData.worldID && !args.uploadData.itemID && typeof args.uploadData.contentID === "undefined") {
+        if (!args.uploadData.worldID &&
+            !args.uploadData.itemID &&
+            !args.uploadData.marketTaxRates &&
+            !args.uploadData.contentID)
+        {
             args.ctx.throw(422);
             return true;
         }
 
-        if (!args.uploadData.listings && !args.uploadData.entries && typeof args.uploadData.contentID === "undefined") {
+        if (!args.uploadData.listings &&
+            !args.uploadData.entries &&
+            !args.uploadData.marketTaxRates &&
+            !args.uploadData.contentID)
+        {
             args.ctx.throw(418);
             return true;
         }
