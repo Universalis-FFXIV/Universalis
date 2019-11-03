@@ -34,7 +34,8 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 return 0;
             });
         }
-        if (Array.isArray(item.listings)) {
+
+        if (item.listings) {
             item.averagePrice = calcAverage(...item.listings.map((listing: MarketBoardItemListing) => {
                 return listing.pricePerUnit;
             }));
@@ -51,11 +52,16 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                     listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9";
                 listing.materia = validation.cleanMateria(listing.materia);
             }
+        } else {
+            item.listings = [];
         }
-        if (Array.isArray(item.recentHistory)) {
+
+        if (item.recentHistory) {
             for (const entry of item.recentHistory) {
                 if (entry.uploaderID) delete entry.uploaderID;
             }
+        } else {
+            item.recentHistory = [];
         }
     }
 
