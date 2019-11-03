@@ -1,14 +1,12 @@
-'use strict';
-
-const data = require('../public/json/materia.json');
+const data = require("../public/json/materia.json");
 
 export function materiaIDToValueAndTier(materiaID: number): { materiaID: number; tier: number; } {
     const materiaIDAsString = "" + materiaID;
-    for (let row = 0; row < data.length; row++) {
-        if (data[row].includes(materiaIDAsString)) {
+    for (const row of data) {
+        if (row.includes(materiaIDAsString)) {
             return {
-                materiaID: parseInt(data[row][0]),
-                tier: parseInt(data[0][data[row].indexOf(materiaIDAsString)])
+                materiaID: parseInt(row[0]),
+                tier: parseInt(data[0][row.indexOf(materiaIDAsString)])
             };
         }
     }
@@ -19,26 +17,25 @@ export function materiaIDToValueAndTier(materiaID: number): { materiaID: number;
 }
 
 export async function materiaValueToItemID(materiaValue: number): Promise<number> {
-    let materiaData = await this.materiaValueToMateriaData(materiaValue);
-
+    const materiaData = await this.materiaValueToMateriaData(materiaValue);
     return data[materiaData.materiaID + 3][materiaData.tier + 1];
 }
 
 export async function materiaValueToItemName(materiaValue: number): Promise<string> {
-    let itemID = await this.materiaValueToItemID(materiaValue);
+    const itemID = await this.materiaValueToItemID(materiaValue);
     return this.materiaIDList[itemID];
 }
 
 // https://discordapp.com/channels/192333432481775627/266296762690568192/611403811881222145
 // tyvm Adam
 export async function materiaValueToMateriaData(materiaValue: number) {
-    let materiaData: {
+    const materiaData: {
         materiaValue: number;
         materiaID?: number;
         tier?: number;
         leftover?: number;
     } = {
-        materiaValue: materiaValue
+        materiaValue
     };
 
     materiaData.materiaID = (materiaValue & 0xFF0) >> 4;
