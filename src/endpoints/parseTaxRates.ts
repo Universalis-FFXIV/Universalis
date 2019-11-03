@@ -2,10 +2,10 @@ import { ParameterizedContext } from "koa";
 
 import { ExtraDataManager } from "../db/ExtraDataManager";
 
-import { TaxRates } from "../models/TaxRates";
+import { MarketTaxRates } from "../models/MarketTaxRates";
 
 export async function parseTaxRates(ctx: ParameterizedContext, extraDataManager: ExtraDataManager) {
-    const taxRates: TaxRates = await extraDataManager.getTaxRates();
+    const taxRates: MarketTaxRates = await extraDataManager.getTaxRates();
 
     if (!taxRates) {
         ctx.body = {
@@ -16,8 +16,14 @@ export async function parseTaxRates(ctx: ParameterizedContext, extraDataManager:
             "Limsa Lominsa": null,
             "Ul'dah": null
         };
-        return;
+    } else {
+        ctx.body = {
+            "Crystarium": taxRates.crystarium,
+            "Gridania": taxRates.gridania,
+            "Ishgard": taxRates.ishgard,
+            "Kugane": taxRates.kugane,
+            "Limsa Lominsa": taxRates.limsaLominsa,
+            "Ul'dah": taxRates.uldah
+        };
     }
-
-    ctx.body = taxRates;
 }

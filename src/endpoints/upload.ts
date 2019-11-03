@@ -10,6 +10,7 @@ import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
 import { MarketBoardListingsUpload } from "../models/MarketBoardListingsUpload";
 import { MarketBoardSaleHistoryUpload } from "../models/MarketBoardSaleHistoryUpload";
+import { MarketTaxRatesUpload } from "../models/MarketTaxRatesUpload";
 import { TrustedSource } from "../models/TrustedSource";
 import { UploadProcessParameters } from "../models/UploadProcessParameters";
 
@@ -34,13 +35,9 @@ export async function upload(parameters: UploadProcessParameters) {
     // Accept identity via API key.
     const trustedSource: TrustedSource = await trustedSourceManager.get(ctx.params.apiKey);
     if (!trustedSource) return ctx.throw(401);
-
     const sourceName = trustedSource.sourceName;
-
     promises.push(trustedSourceManager.increaseUploadCount(ctx.params.apiKey));
-
     logger.info("Received upload from " + sourceName + ":\n" + JSON.stringify(ctx.request.body));
-
     promises.push(extraDataManager.incrementDailyUploads());
 
     // Preliminary data processing and metadata stuff
@@ -48,7 +45,8 @@ export async function upload(parameters: UploadProcessParameters) {
     const uploadData:
         CharacterContentIDUpload &
         MarketBoardListingsUpload &
-        MarketBoardSaleHistoryUpload
+        MarketBoardSaleHistoryUpload &
+        MarketTaxRatesUpload
     = ctx.request.body;
 
     uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
@@ -58,48 +56,37 @@ export async function upload(parameters: UploadProcessParameters) {
         return err;
     }
 
+    // Metadata
     if (uploadData.worldID) {
         promises.push(extraDataManager.incrementWorldUploads(worldIDMap.get(uploadData.worldID)));
+    }
+
+    if (uploadData.itemID) {
+        promises.push(extraDataManager.addRecentlyUpdatedItem(uploadData.itemID));
     }
 
     // Hashing and passing data
     if (uploadData.listings) {
         const dataArray: MarketBoardItemListing[] = [];
-        uploadData.listings = uploadData.listings.map((listing) => {
-            const newListing = validation.cleanListing(listing);
-            newListing.materia = validation.cleanMateria(newListing.materia);
-            return newListing;
-        });
 
         for (const listing of uploadData.listings) {
-            if (listing.creatorID && listing.creatorName) {
-                contentIDCollection.set(listing.creatorID, "player", {
-                    characterName: listing.creatorName
+            // Ensures retainer and listing information exists
+            const cleanListing = validation.cleanListing(listing);
+
+            // Needs to be called separately because... reasons
+            cleanListing.materia = validation.cleanMateria(cleanListing.materia);
+
+            if (cleanListing.creatorID && cleanListing.creatorName) {
+                contentIDCollection.set(cleanListing.creatorID, "player", {
+                    characterName: cleanListing.creatorName
                 });
             }
 
-            if (listing.retainerID && listing.retainerName) {
-                contentIDCollection.set(listing.retainerID, "retainer", {
-                    characterName: listing.retainerName
-                });
-            }
+            contentIDCollection.set(cleanListing.retainerID, "retainer", {
+                characterName: cleanListing.retainerName
+            });
 
             dataArray.push(listing as any);
-
-            // Set tax rates
-            if (listing.totalTax) {
-                const city: string = Object.keys(City).find((c) => City[c] === listing.retainerCity);
-                const total = listing.total;
-                const totalWithTax = total + listing.totalTax;
-                const taxRate = Math.round((totalWithTax - total) / total * 100);
-                logger.info(`Setting tax rate for ${city}: ${taxRate}%`);
-                promises.push(extraDataManager.setTaxRate(city, taxRate));
-            } else {
-                logger.error(`totalTax not found, please ask ${trustedSource.sourceName} to upload it!\n` +
-                    `Listing: ${JSON.stringify(listing)}\n` +
-                    `totalTax: ${listing.totalTax}`
-                );
-            }
         }
 
         // Post listing to DB
@@ -129,13 +116,11 @@ export async function upload(parameters: UploadProcessParameters) {
         ));
     }
 
-    if (uploadData.itemID) {
-        promises.push(extraDataManager.addRecentlyUpdatedItem(uploadData.itemID));
+    if (uploadData.marketTaxRates) {
+        promises.push(extraDataManager.setTaxRates(uploadData.marketTaxRates));
     }
 
     if (uploadData.contentID && uploadData.characterName) {
-        uploadData.contentID = sha("sha256").update(uploadData.contentID + "").digest("hex");
-
         promises.push(contentIDCollection.set(uploadData.contentID, "player", {
             characterName: uploadData.characterName
         }));
