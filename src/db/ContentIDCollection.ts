@@ -1,3 +1,5 @@
+import sha from "sha.js";
+
 import { Collection, Db } from "mongodb";
 import { Logger } from "winston";
 
@@ -36,8 +38,8 @@ export class ContentIDCollection {
     }
 
     /** Add content to the database. */
-    public async set(contentID: string, contentType: string, content: any): Promise<any> {
-        content.contentID = contentID;
+    public async set(contentID: string | number, contentType: string, content: any): Promise<any> {
+        content.contentID = sha("sha256").update(contentID + "").digest("hex");;
         content.contentType = contentType;
 
         await this.contentIDCollection.insertOne(content);

@@ -24,7 +24,7 @@ export default {
 
     cleanListing: (listing: MarketBoardItemListingUpload): MarketBoardItemListingUpload => {
         const newListing = {
-            creatorID: sha("sha256").update(listing.creatorID + "").digest("hex"),
+            creatorID: listing.creatorID,
             creatorName: listing.creatorName,
             hq: typeof listing.hq === "undefined" ? false : listing.hq,
             lastReviewTime: listing.lastReviewTime,
@@ -35,7 +35,7 @@ export default {
             quantity: listing.quantity,
             retainerCity: typeof listing.retainerCity === "number" ?
                 listing.retainerCity : City[listing.retainerCity],
-            retainerID: sha("sha256").update(listing.retainerID + "").digest("hex"),
+            retainerID: listing.retainerID,
             retainerName: listing.retainerName,
             sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
             stainID: listing.stainID,
