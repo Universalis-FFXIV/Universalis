@@ -1,6 +1,8 @@
 import compact from "lodash.compact";
 import sha from "sha.js";
 
+import { materiaIDToValueAndTier } from "./materiaUtils";
+
 import { Context } from "koa";
 
 import { City } from "./models/City";
@@ -61,6 +63,15 @@ export default {
                     delete materiaSlot["slotId"];
                 } else if (!materiaSlot.slotID) {
                     return undefined;
+                }
+
+                const materiaID = parseInt(materiaSlot.materiaID as unknown as string);
+                if (materiaID > 973) {
+                    const materiaData = materiaIDToValueAndTier(materiaID);
+                    return {
+                        materiaID: materiaData.materiaID,
+                        slotID: materiaData.tier
+                    };
                 }
 
                 return materiaSlot;
