@@ -203,9 +203,7 @@ export class ExtraDataManager {
 
         if (data) {
             await this.extraDataCollection.updateOne(query, {
-                $set: {
-                    tx
-                }
+                $set: tx
             });
         } else {
             await this.extraDataCollection.insertOne(tx);
