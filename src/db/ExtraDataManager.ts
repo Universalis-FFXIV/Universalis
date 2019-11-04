@@ -201,10 +201,14 @@ export class ExtraDataManager {
 
         const data: MarketTaxRates = await this.extraDataCollection.findOne(query);
 
-        if (!data) {
-            await this.extraDataCollection.insertOne(tx);
+        if (data) {
+            await this.extraDataCollection.updateOne(query, {
+                $set: {
+                    tx
+                }
+            });
         } else {
-            await this.extraDataCollection.updateOne(query, tx);
+            await this.extraDataCollection.insertOne(tx);
         }
     }
 
