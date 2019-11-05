@@ -73,9 +73,9 @@ export class RemoteDataManager {
                 const requestPromises: Array<Promise<number[]>> = [];
                 for (let j = i; j < i + XIVAPI_RATELIMIT && j <= pageCount; j++) {
                     requestPromises.push(new Promise(async (resolve) => {
-                        await new Promise((resolve2) => setTimeout(resolve2, (j - i) * 15));
+                        await new Promise((resolve2) => setTimeout(resolve2, (j - i) * (1000 / XIVAPI_RATELIMIT)));
                         const nextPage = JSON.parse(await request(url + `&page=${j}`));
-                        if (nextPage.Pagination.PageTotal < pageCount) pageCount = nextPage.Pagination.PageTotal;
+                        if (nextPage.Pagination.PageTotal !== pageCount) pageCount = nextPage.Pagination.PageTotal;
                         const nextPageItems = nextPage.Results.map((item: { ID: number }) => item.ID);
                         resolve(nextPageItems);
                     }));
@@ -90,7 +90,7 @@ export class RemoteDataManager {
 
                 // If the batched requests took less than a second, wait the remainder of the second
                 // to avoid hitting the rate limit.
-                await new Promise((resolve) => setTimeout(resolve, 1000 - timeDiff));
+                await new Promise((resolve) => setTimeout(resolve, 1000 - pagesTimeDiff));
             }
 
             const timeDiff = Date.now() - startTime;
