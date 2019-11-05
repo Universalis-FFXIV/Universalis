@@ -18,7 +18,6 @@ export default {
             hq: entry.hq,
             pricePerUnit: entry.pricePerUnit,
             quantity: entry.quantity,
-            sellerID: sha("sha256").update(entry.sellerID + "").digest("hex"),
             timestamp: entry.timestamp,
             total: entry.pricePerUnit * entry.quantity
         };
@@ -137,8 +136,7 @@ export default {
             if (typeof entry.hq === "undefined" ||
                     typeof entry.pricePerUnit === "undefined" ||
                     typeof entry.quantity === "undefined" ||
-                    typeof entry.buyerName === "undefined" ||
-                    typeof entry.sellerID === "undefined") {
+                    typeof entry.buyerName === "undefined") {
                 args.ctx.throw(422, "Bad History Data");
                 return true;
             }
