@@ -6,6 +6,7 @@ import validation from "../validate";
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
+import { City } from "../models/City";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
 
 export async function parseListings(ctx: ParameterizedContext, worldMap: Map<string, number>, recentData: Collection) {
@@ -51,6 +52,9 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 listing.isCrafted =
                     listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9";
                 listing.materia = validation.cleanMateria(listing.materia);
+                if (!parseInt(listing.retainerCity)) {
+                    listing.retainerCity = City[listing.retainerCity];
+                }
             }
         } else {
             item.listings = [];
