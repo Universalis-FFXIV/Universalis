@@ -149,7 +149,19 @@ export default {
                     typeof args.uploadData.marketTaxRates.ishgard !== "number" ||
                     typeof args.uploadData.marketTaxRates.kugane !== "number" ||
                     typeof args.uploadData.marketTaxRates.limsaLominsa !== "number" ||
-                    typeof args.uploadData.marketTaxRates.uldah !== "number") {
+                    typeof args.uploadData.marketTaxRates.uldah !== "number" ||
+                    args.uploadData.marketTaxRates.crystarium < 0 ||
+                    args.uploadData.marketTaxRates.crystarium > 5 ||
+                    args.uploadData.marketTaxRates.gridania < 0 ||
+                    args.uploadData.marketTaxRates.gridania > 5 ||
+                    args.uploadData.marketTaxRates.ishgard < 0 ||
+                    args.uploadData.marketTaxRates.ishgard > 5 ||
+                    args.uploadData.marketTaxRates.kugane < 0 ||
+                    args.uploadData.marketTaxRates.kugane > 5 ||
+                    args.uploadData.marketTaxRates.limsaLominsa < 0 ||
+                    args.uploadData.marketTaxRates.limsaLominsa > 5 ||
+                    args.uploadData.marketTaxRates.uldah < 0 ||
+                    args.uploadData.marketTaxRates.uldah > 5 ) {
                 args.ctx.throw(422, "Bad Market Tax Rate Data");
                 return true;
             }
