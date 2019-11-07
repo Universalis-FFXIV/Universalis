@@ -185,8 +185,8 @@ export class ExtraDataManager {
     }
 
     /** Get the tax rates of all cities. */
-    public async getTaxRates(): Promise<MarketTaxRates> {
-        const query = { setName: "taxRates" };
+    public async getTaxRates(worldID: number): Promise<MarketTaxRates> {
+        const query = { setName: "taxRates", worldID };
 
         const data: MarketTaxRates =
             await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0, uploaderID: 0 } });
@@ -195,10 +195,11 @@ export class ExtraDataManager {
     }
 
     /** Set the market tax rates. */
-    public async setTaxRates(uploaderID: string | number, tx: MarketTaxRates): Promise<void> {
-        tx["setName"] = "taxRates";
+    public async setTaxRates(uploaderID: string | number, worldID: number, tx: MarketTaxRates): Promise<void> {
+        if (!uploaderID || !worldID) return;
+
         tx["uploaderID"] = uploaderID;
-        const query = { setName: "taxRates" };
+        const query = { setName: "taxRates", worldID };
 
         const data: MarketTaxRates = await this.extraDataCollection.findOne(query);
 
@@ -207,6 +208,8 @@ export class ExtraDataManager {
                 $set: tx
             });
         } else {
+            tx["setName"] = "taxRates";
+            tx["worldID"] = worldID;
             await this.extraDataCollection.insertOne(tx);
         }
     }
@@ -218,7 +221,13 @@ export class ExtraDataManager {
 
         const query = { setName: "uploadCountHistory" };
 
-        const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0, lastPush: 0 } });
+        const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query, {
+            projection: {
+                _id: 0,
+                setName: 0,
+                lastPush: 0
+            }
+        });
 
         if (data && data.uploadCountByDay.length < this.dailyUploadTrackingLimit) {
             data.uploadCountByDay = data.uploadCountByDay.concat(
