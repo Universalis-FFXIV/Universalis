@@ -80,7 +80,7 @@ stdin.on("line", async (line) => {
 });
 
 function autocomplete(line: string) {
-    const completions = ["addkey", "rmkey", "upstats", "drop", "dropex"];
+    const completions = ["addkey", "rmkey", "upstats", "drop", "dropex", "logs"];
     const hits = completions.filter((command) => command.startsWith(line));
     return [hits.length ? hits : completions, line];
 }

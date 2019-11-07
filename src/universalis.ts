@@ -121,8 +121,8 @@ router
     .get("/api/history/:world/:item", async (ctx) => { // Extended history
         await parseHistory(ctx, worldMap, extendedHistory);
     })
-    .get("/api/tax-rates", async (ctx) => { // Tax rates
-        await parseTaxRates(ctx, extraDataManager);
+    .get("/api/tax-rates/:world", async (ctx) => { // Tax rates
+        await parseTaxRates(ctx, worldMap, extraDataManager);
     })
     .get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
         await parseContentID(ctx, contentIDCollection);

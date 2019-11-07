@@ -1,11 +1,16 @@
 import { ParameterizedContext } from "koa";
 
+import { appendWorldDC } from "../util";
+
 import { ExtraDataManager } from "../db/ExtraDataManager";
 
 import { MarketTaxRates } from "../models/MarketTaxRates";
 
-export async function parseTaxRates(ctx: ParameterizedContext, extraDataManager: ExtraDataManager) {
-    const taxRates: MarketTaxRates = await extraDataManager.getTaxRates();
+export async function parseTaxRates(ctx: ParameterizedContext,
+                                    worldMap: Map<string, number>, extraDataManager: ExtraDataManager) {
+    appendWorldDC({}, worldMap, ctx);
+    if (!ctx.params.worldID) return ctx.throw(404, "Invalid World");
+    const taxRates: MarketTaxRates = await extraDataManager.getTaxRates(ctx.params.worldID);
 
     if (!taxRates) {
         ctx.body = {

@@ -117,7 +117,11 @@ export async function upload(parameters: UploadProcessParameters) {
     }
 
     if (uploadData.marketTaxRates) {
-        promises.push(extraDataManager.setTaxRates(uploadData.uploaderID, uploadData.marketTaxRates));
+        promises.push(extraDataManager.setTaxRates(
+            uploadData.uploaderID,
+            uploadData.worldID,
+            uploadData.marketTaxRates)
+        );
     }
 
     if (uploadData.contentID && uploadData.characterName) {

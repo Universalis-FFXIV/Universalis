@@ -6,10 +6,12 @@ A crowdsourced market board aggregator.
 ## Endpoint Reference
 *   /api/:world/:item
 *   /api/history/:world/:item
+*   /api/tax-rates
 *   /api/extra/content/:contentID
 *   /api/extra/stats/upload-history
 *   /api/extra/stats/recently-updated
 *   /api/extra/stats/least-recently-updated
+*   /api/extra/stats/world-upload-counts
 *   /upload/:apiKey
 
 ## Client-app Development
