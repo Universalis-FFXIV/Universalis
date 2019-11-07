@@ -7,7 +7,7 @@ import { ExtraDataManager } from "../db/ExtraDataManager";
 import { MarketTaxRates } from "../models/MarketTaxRates";
 
 export async function parseTaxRates(ctx: ParameterizedContext,
-        worldMap: Map<string, number>, extraDataManager: ExtraDataManager) {
+                                    worldMap: Map<string, number>, extraDataManager: ExtraDataManager) {
     appendWorldDC({}, worldMap, ctx);
     if (!ctx.params.worldID) return ctx.throw(404, "Invalid World");
     const taxRates: MarketTaxRates = await extraDataManager.getTaxRates(ctx.params.worldID);

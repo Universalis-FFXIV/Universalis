@@ -33,7 +33,7 @@ function logs(resources: CLIResources, args: string[]) {
     });
 }
 
-function initLogger(args: string[], cb: Function, options?: SpawnOptionsWithoutStdio) {
+function initLogger(args: string[], cb: (arg0?: unknown) => void, options?: SpawnOptionsWithoutStdio) {
     const logger = spawn(`pm2 logs universalis${args.join(" ")}`, options);
     logger.on("close", () => {
         cb();

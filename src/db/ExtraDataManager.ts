@@ -224,8 +224,8 @@ export class ExtraDataManager {
         const data: DailyUploadStatistics = await this.extraDataCollection.findOne(query, {
             projection: {
                 _id: 0,
-                setName: 0,
-                lastPush: 0
+                lastPush: 0,
+                setName: 0
             }
         });
 
