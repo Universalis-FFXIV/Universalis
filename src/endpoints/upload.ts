@@ -116,7 +116,7 @@ export async function upload(parameters: UploadProcessParameters) {
         ));
     }
 
-    if (uploadData.marketTaxRates) {
+    if (uploadData.marketTaxRates && trustedSource.sourceName === "FFXIV Teamcraft") {
         promises.push(extraDataManager.setTaxRates(uploadData.marketTaxRates));
     }
 
