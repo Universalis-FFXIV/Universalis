@@ -189,14 +189,15 @@ export class ExtraDataManager {
         const query = { setName: "taxRates" };
 
         const data: MarketTaxRates =
-            await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0 } });
+            await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0, uploaderID: 0 } });
 
         return data;
     }
 
     /** Set the market tax rates. */
-    public async setTaxRates(tx: MarketTaxRates): Promise<void> {
+    public async setTaxRates(uploaderID: string | number, tx: MarketTaxRates): Promise<void> {
         tx["setName"] = "taxRates";
+        tx["uploaderID"] = uploaderID;
         const query = { setName: "taxRates" };
 
         const data: MarketTaxRates = await this.extraDataCollection.findOne(query);
