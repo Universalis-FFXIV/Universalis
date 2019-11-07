@@ -117,7 +117,7 @@ export async function upload(parameters: UploadProcessParameters) {
     }
 
     if (uploadData.marketTaxRates) {
-        promises.push(extraDataManager.setTaxRates(uploadData.marketTaxRates));
+        promises.push(extraDataManager.setTaxRates(uploadData.uploaderID, uploadData.marketTaxRates));
     }
 
     if (uploadData.contentID && uploadData.characterName) {
