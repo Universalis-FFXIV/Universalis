@@ -48,9 +48,9 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 .map((listing: MarketBoardItemListing) => listing.pricePerUnit)
             );
             for (let listing of item.listings) {
-                if (typeof listing.retainerID !== "string" ||
-                    typeof listing.sellerID !== "string" ||
-                    typeof listing.creatorID !== "string") {
+                if (!listing.retainerID.length ||
+                    !listing.sellerID.length ||
+                    !listing.creatorID.length) {
                     listing = validation.cleanListing(listing);
                 }
 
