@@ -47,13 +47,13 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 .filter((listing: MarketBoardItemListing) => listing.hq)
                 .map((listing: MarketBoardItemListing) => listing.pricePerUnit)
             );
-            for (const listing of item.listings) {
+            for (let listing of item.listings) {
                 if (typeof listing.retainerID !== "string" ||
                     typeof listing.sellerID !== "string" ||
                     typeof listing.creatorID !== "string") {
-                    validation.cleanListing(listing);
+                    listing = validation.cleanListing(listing);
                 }
-                
+
                 listing.isCrafted =
                     listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9";
                 listing.materia = validation.cleanMateria(listing.materia);
