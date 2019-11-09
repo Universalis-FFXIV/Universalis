@@ -47,20 +47,19 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 .filter((listing: MarketBoardItemListing) => listing.hq)
                 .map((listing: MarketBoardItemListing) => listing.pricePerUnit)
             );
-            for (let listing of item.listings) {
+            item.listings.forEach((listing) => {
                 if (!listing.retainerID.length ||
                     !listing.sellerID.length ||
                     !listing.creatorID.length) {
                     listing = validation.cleanListing(listing);
                 }
-
                 listing.isCrafted =
                     listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9";
                 listing.materia = validation.cleanMateria(listing.materia);
                 if (!parseInt(listing.retainerCity)) {
                     listing.retainerCity = City[listing.retainerCity];
                 }
-            }
+            });
         } else {
             item.listings = [];
         }
