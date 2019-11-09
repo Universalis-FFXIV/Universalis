@@ -54,6 +54,9 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 if (!parseInt(listing.retainerCity)) {
                     listing.retainerCity = City[listing.retainerCity];
                 }
+                if (listing.total === 0) {
+                    listing.total = listing.pricePerUnit * listing.quantity;
+                }
             }
         } else {
             item.listings = [];
