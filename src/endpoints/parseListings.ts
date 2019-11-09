@@ -28,15 +28,14 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
 
     // Do some post-processing on resolved item listings.
     for (const item of data.items) {
-        if (item.listings.length > 0) {
-            item.listings = item.listings.sort((a: MarketBoardItemListing, b: MarketBoardItemListing) => {
-                if (a.pricePerUnit > b.pricePerUnit) return 1;
-                if (a.pricePerUnit < b.pricePerUnit) return -1;
-                return 0;
-            });
-        }
-
         if (item.listings) {
+            if (item.listings.length > 0) {
+                item.listings = item.listings.sort((a: MarketBoardItemListing, b: MarketBoardItemListing) => {
+                    if (a.pricePerUnit > b.pricePerUnit) return 1;
+                    if (a.pricePerUnit < b.pricePerUnit) return -1;
+                    return 0;
+                });
+            }
             item.averagePrice = calcAverage(...item.listings.map((listing: MarketBoardItemListing) => {
                 return listing.pricePerUnit;
             }));
