@@ -48,14 +48,17 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 .map((listing: MarketBoardItemListing) => listing.pricePerUnit)
             );
             for (const listing of item.listings) {
+                if (typeof listing.retainerID !== "string" ||
+                    typeof listing.sellerID !== "string" ||
+                    typeof listing.creatorID !== "string") {
+                    validation.cleanListing(listing);
+                }
+                
                 listing.isCrafted =
                     listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9";
                 listing.materia = validation.cleanMateria(listing.materia);
                 if (!parseInt(listing.retainerCity)) {
                     listing.retainerCity = City[listing.retainerCity];
-                }
-                if (listing.total === 0) {
-                    listing.total = listing.pricePerUnit * listing.quantity;
                 }
             }
         } else {
