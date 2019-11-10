@@ -32,7 +32,7 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
     // Do some post-processing on resolved item listings.
     for (const item of data.items) {
         // Recovering from an error that screwed up merging world data into the DC file
-        if (query.dcName) {
+        /*if (query.dcName) {
             const dcJSON = require("../../public/json/dc.json");
             const worldIDs: number[] = [];
             dcJSON[query.dcName].forEach((worldName: string) => {
@@ -52,7 +52,7 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
                     return entry;
                 });
             });
-        }
+        }*/
         // Regular stuff
         if (item.listings) {
             if (item.listings.length > 0) {
