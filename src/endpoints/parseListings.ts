@@ -8,7 +8,7 @@ import { Collection } from "mongodb";
 
 import { City } from "../models/City";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
-import { WorldDCQuery } from "../models/WorldDCQuery"
+import { WorldDCQuery } from "../models/WorldDCQuery";
 
 export async function parseListings(ctx: ParameterizedContext, worldMap: Map<string, number>,
                                     worldIDMap: Map<number, string>, recentData: Collection) {
@@ -29,8 +29,7 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
     appendWorldDC(data, worldMap, ctx);
 
     // Do some post-processing on resolved item listings.
-    for (let i = 0; i < data.items.length; i++) {
-        let item = data.items[i];
+    for (const item of data.items) {
         // Recovering from an error that screwed up merging world data into the DC file
         if (query.dcName) {
             if (!(item.listings as MarketBoardItemListing[])
