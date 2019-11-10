@@ -5,12 +5,13 @@ import validation from "../validate";
 
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
+import { Logger } from "winston";
 
 import { City } from "../models/City";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
 import { WorldDCQuery } from "../models/WorldDCQuery";
 
-export async function parseListings(ctx: ParameterizedContext, worldMap: Map<string, number>,
+export async function parseListings(logger: Logger, ctx: ParameterizedContext, worldMap: Map<string, number>,
                                     worldIDMap: Map<number, string>, recentData: Collection) {
     const itemIDs: number[] = (ctx.params.item as string).split(",").map((id, index) => {
         if (index > 100) return;
@@ -35,6 +36,8 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
             if (!(item.listings as MarketBoardItemListing[])
                 .every((listing: MarketBoardItemListing) => listing.worldName)
             ) {
+                logger.warn(`Item ${item.itemID} on ${query.dcName} has listings with missing world names!`);
+
                 const dcJSON = require("../../public/dc.json");
                 const worldIDs: number[] = [];
                 dcJSON[query.dcName].forEach((worldName: string) => {

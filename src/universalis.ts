@@ -116,7 +116,7 @@ router.get("/docs", async (ctx) => {
 // REST API
 router
     .get("/api/:world/:item", async (ctx) => { // Normal data
-        await parseListings(ctx, worldMap, worldIDMap, recentData);
+        await parseListings(logger, ctx, worldMap, worldIDMap, recentData);
     })
     .get("/api/history/:world/:item", async (ctx) => { // Extended history
         await parseHistory(ctx, worldMap, extendedHistory);
