@@ -36,7 +36,7 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
             if (!(item.listings as MarketBoardItemListing[])
                 .every((listing: MarketBoardItemListing) => listing.worldName)
             ) {
-                logger.warn(`Item ${item.itemID} on ${query.dcName} has listings with missing world names!`);
+                logger.info(`Item ${item.itemID} on ${query.dcName} has listings with missing world names!`);
 
                 const dcJSON = require("../../public/dc.json");
                 const worldIDs: number[] = [];
