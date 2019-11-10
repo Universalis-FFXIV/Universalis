@@ -33,33 +33,25 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
     for (const item of data.items) {
         // Recovering from an error that screwed up merging world data into the DC file
         if (query.dcName) {
-            if (item.listings && !(item.listings as MarketBoardItemListing[])
-                    .every((listing: MarketBoardItemListing) => listing.worldName) ||
-                item.recentHistory && !item.recentHistory
-                    .every((entry) => entry.worldName)
-            ) {
-                logger.info(`Item ${item.itemID} on ${query.dcName} has listings with missing world names!`);
-
-                const dcJSON = require("../../public/dc.json");
-                const worldIDs: number[] = [];
-                dcJSON[query.dcName].forEach((worldName: string) => {
-                    worldIDs.push(worldMap.get(worldName));
+            const dcJSON = require("../../public/dc.json");
+            const worldIDs: number[] = [];
+            dcJSON[query.dcName].forEach((worldName: string) => {
+                worldIDs.push(worldMap.get(worldName));
+            });
+            const newQuery: WorldDCQuery = { worldID: { $in: worldIDs }, itemID: item.itemID };
+            const newData = await recentData.find(newQuery, { projection: { _id: 0, uploaderID: 0 } }).toArray();
+            item.listings = newData.map((worldData, index) => {
+                return worldData.listings.map((listing: MarketBoardItemListing) => {
+                    listing.worldName = worldIDMap.get(worldIDs[index]);
+                    return listing;
                 });
-                const newQuery: WorldDCQuery = { worldID: { $in: worldIDs }, itemID: item.itemID };
-                const newData = await recentData.find(newQuery, { projection: { _id: 0, uploaderID: 0 } }).toArray();
-                item.listings = newData.map((worldData, index) => {
-                    return worldData.listings.map((listing: MarketBoardItemListing) => {
-                        listing.worldName = worldIDMap.get(worldIDs[index]);
-                        return listing;
-                    });
+            });
+            item.recentHistory = newData.map((worldData, index) => {
+                return worldData.recentHistory.map((entry: MarketBoardItemListing) => {
+                    entry.worldName = worldIDMap.get(worldIDs[index]);
+                    return entry;
                 });
-                item.recentHistory = newData.map((worldData, index) => {
-                    return worldData.recentHistory.map((entry: MarketBoardItemListing) => {
-                        entry.worldName = worldIDMap.get(worldIDs[index]);
-                        return entry;
-                    });
-                });
-            }
+            });
         }
         // Regular stuff
         if (item.listings) {
