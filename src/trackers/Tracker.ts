@@ -22,9 +22,10 @@ export abstract class Tracker {
         const world = await getWorldName(worldID);
         const dcName = await getWorldDC(world);
 
-        propertyData.forEach((entry) => {
+        propertyData = propertyData.map((entry) => {
             entry.uploaderID = uploaderID;
             entry.worldName = world;
+            return entry;
         });
 
         const query = { dcName, itemID };
