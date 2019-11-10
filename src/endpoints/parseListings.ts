@@ -33,8 +33,10 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
     for (const item of data.items) {
         // Recovering from an error that screwed up merging world data into the DC file
         if (query.dcName) {
-            if (!(item.listings as MarketBoardItemListing[])
-                .every((listing: MarketBoardItemListing) => listing.worldName)
+            if (item.listings && !(item.listings as MarketBoardItemListing[])
+                    .every((listing: MarketBoardItemListing) => listing.worldName) ||
+                item.recentHistory && !item.recentHistory
+                    .every((entry) => entry.worldName)
             ) {
                 logger.info(`Item ${item.itemID} on ${query.dcName} has listings with missing world names!`);
 
