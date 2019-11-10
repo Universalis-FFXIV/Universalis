@@ -9,6 +9,7 @@ import { City } from "../models/City";
 import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
 import { MarketBoardListingsUpload } from "../models/MarketBoardListingsUpload";
+import { MarketBoardNoItemListingsUpload } from "../models/MarketBoardNoItemListingsUpload";
 import { MarketBoardSaleHistoryUpload } from "../models/MarketBoardSaleHistoryUpload";
 import { MarketTaxRatesUpload } from "../models/MarketTaxRatesUpload";
 import { TrustedSource } from "../models/TrustedSource";
@@ -46,6 +47,7 @@ export async function upload(parameters: UploadProcessParameters) {
         CharacterContentIDUpload &
         MarketBoardListingsUpload &
         MarketBoardSaleHistoryUpload &
+        MarketBoardNoItemListingsUpload &
         MarketTaxRatesUpload
     = ctx.request.body;
 
@@ -96,6 +98,17 @@ export async function upload(parameters: UploadProcessParameters) {
             uploadData.worldID,
             dataArray as MarketBoardItemListing[]
         ));
+    }
+
+    if (uploadData.noListings) {
+        for (const itemID of uploadData.noListings) {
+            promises.push(priceTracker.set(
+                uploadData.uploaderID,
+                itemID,
+                uploadData.worldID,
+                []
+            ));
+        }
     }
 
     if (uploadData.entries) {
