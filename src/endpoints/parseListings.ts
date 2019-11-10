@@ -47,7 +47,7 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 .filter((listing: MarketBoardItemListing) => listing.hq)
                 .map((listing: MarketBoardItemListing) => listing.pricePerUnit)
             );
-            item.listings.forEach((listing) => {
+            item.listings = item.listings.map((listing) => {
                 if (!listing.retainerID.length ||
                     !listing.sellerID.length ||
                     !listing.creatorID.length) {
@@ -59,6 +59,7 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 if (!parseInt(listing.retainerCity)) {
                     listing.retainerCity = City[listing.retainerCity];
                 }
+                return listing;
             });
         } else {
             item.listings = [];
