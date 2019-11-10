@@ -18,8 +18,7 @@ export default {
             hq: entry.hq,
             pricePerUnit: entry.pricePerUnit,
             quantity: entry.quantity,
-            timestamp: entry.timestamp,
-            total: entry.pricePerUnit * entry.quantity
+            timestamp: entry.timestamp
         };
     },
 
@@ -39,9 +38,7 @@ export default {
             retainerID: sha("sha256").update(listing.retainerID + "").digest("hex"),
             retainerName: listing.retainerName,
             sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
-            stainID: listing.stainID,
-            total: listing.pricePerUnit * listing.quantity,
-            totalTax: listing.totalTax
+            stainID: listing.stainID
         };
 
         return newListing;

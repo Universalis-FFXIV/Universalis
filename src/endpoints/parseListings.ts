@@ -57,6 +57,7 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                     listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9" && // 0n
                     listing.creatorID !== "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";   // ""
                 listing.materia = validation.cleanMateria(listing.materia);
+                listing.total = listing.pricePerUnit * listing.quantity;
                 if (!parseInt(listing.retainerCity)) {
                     listing.retainerCity = City[listing.retainerCity];
                 }
@@ -69,6 +70,7 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
         if (item.recentHistory) {
             for (const entry of item.recentHistory) {
                 if (entry.uploaderID) delete entry.uploaderID;
+                entry.total = entry.pricePerUnit * entry.quantity;
             }
         } else {
             item.recentHistory = [];
