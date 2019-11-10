@@ -8,15 +8,17 @@ import { Collection } from "mongodb";
 
 import { City } from "../models/City";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
+import { WorldDCQuery } from "../models/WorldDCQuery"
 
-export async function parseListings(ctx: ParameterizedContext, worldMap: Map<string, number>, recentData: Collection) {
+export async function parseListings(ctx: ParameterizedContext, worldMap: Map<string, number>,
+                                    worldIDMap: Map<number, string>, recentData: Collection) {
     const itemIDs: number[] = (ctx.params.item as string).split(",").map((id, index) => {
         if (index > 100) return;
         return parseInt(id);
     });
 
     // Query construction
-    const query = { itemID: { $in: itemIDs } };
+    const query: WorldDCQuery = { itemID: { $in: itemIDs } };
     appendWorldDC(query, worldMap, ctx);
 
     // Request database info
@@ -27,7 +29,35 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
     appendWorldDC(data, worldMap, ctx);
 
     // Do some post-processing on resolved item listings.
-    for (const item of data.items) {
+    for (let i = 0; i < data.items.length; i++) {
+        let item = data.items[i];
+        // Recovering from an error that screwed up merging world data into the DC file
+        if (query.dcName) {
+            if (!(item.listings as MarketBoardItemListing[])
+                .every((listing: MarketBoardItemListing) => listing.worldName)
+            ) {
+                const dcJSON = require("../../public/dc.json");
+                const worldIDs: number[] = [];
+                dcJSON[query.dcName].forEach((worldName: string) => {
+                    worldIDs.push(worldMap.get(worldName));
+                });
+                const newQuery: WorldDCQuery = { worldID: { $in: worldIDs }, itemID: item.itemID };
+                const newData = await recentData.find(newQuery, { projection: { _id: 0, uploaderID: 0 } }).toArray();
+                item.listings = newData.map((worldData, index) => {
+                    return worldData.listings.map((listing: MarketBoardItemListing) => {
+                        listing.worldName = worldIDMap.get(worldIDs[index]);
+                        return listing;
+                    });
+                });
+                item.recentHistory = newData.map((worldData, index) => {
+                    return worldData.recentHistory.map((entry: MarketBoardItemListing) => {
+                        entry.worldName = worldIDMap.get(worldIDs[index]);
+                        return entry;
+                    });
+                });
+            }
+        }
+        // Regular stuff
         if (item.listings) {
             if (item.listings.length > 0) {
                 item.listings = item.listings.sort((a: MarketBoardItemListing, b: MarketBoardItemListing) => {
