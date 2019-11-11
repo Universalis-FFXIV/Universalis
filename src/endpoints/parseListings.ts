@@ -1,3 +1,4 @@
+import compact from "lodash.compact";
 import difference from "lodash.difference";
 
 import { appendWorldDC, calcAverage } from "../util";
@@ -41,20 +42,14 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
             });
             const newQuery: WorldDCQuery = { worldID: { $in: worldIDs }, itemID: item.itemID };
             const newData = await recentData.find(newQuery, { projection: { _id: 0, uploaderID: 0 } }).toArray();
-            item.listings = newData.map((worldData, index) => {
-                console.log(worldData);
+            item.listings = compact(newData.map((worldData) => {
+                if (!worldData.listings) return null;
                 return worldData.listings.map((listing: MarketBoardItemListing) => {
-                    listing.worldName = worldIDMap.get(worldIDs[index]);
+                    listing.worldName = worldIDMap.get(worldData.worldID);
                     return listing;
                 });
-            });
-            item.recentHistory = newData.map((worldData, index) => {
-                console.log(worldData);
-                return worldData.recentHistory.map((entry: MarketBoardItemListing) => {
-                    entry.worldName = worldIDMap.get(worldIDs[index]);
-                    return entry;
-                });
-            });
+            }));
+            // recentHistory seems not to have broken, strangely enough.
         }
         // Regular stuff
         if (item.listings) {
