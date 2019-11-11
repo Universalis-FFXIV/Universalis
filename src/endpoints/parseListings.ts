@@ -72,9 +72,12 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
                 .map((listing: MarketBoardItemListing) => listing.pricePerUnit)
             );
             item.listings = item.listings.map((listing) => {
+                if (!listing || Object.getOwnPropertyNames(listing) === []) {
+                    return;
+                }
                 if (listing.retainerID && !listing.retainerID.length ||
                     listing.sellerID && !listing.sellerID.length ||
-                    listing.creatorID && !listing.creatorID.length) {
+                    !listing.creatorID.length) {
                     listing = validation.cleanListing(listing);
                 }
                 listing.isCrafted =
