@@ -38,7 +38,8 @@ export default {
             retainerID: sha("sha256").update(listing.retainerID + "").digest("hex"),
             retainerName: listing.retainerName,
             sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
-            stainID: listing.stainID
+            stainID: listing.stainID,
+            worldName: listing["worldName"] ? listing["worldName"] : undefined
         };
 
         return newListing;
