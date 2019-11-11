@@ -34,7 +34,7 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
     // Do some post-processing on resolved item listings.
     for (const item of data.items) {
         // Recovering from an error that screwed up merging world data into the DC file
-        /*if (query.dcName) {
+        if (ctx.queryParams.debug && query.dcName) {
             const worldIDs: number[] = [];
             dcJSON[query.dcName].forEach((worldName: string) => {
                 worldIDs.push(worldMap.get(worldName));
