@@ -1,5 +1,6 @@
 import compact from "lodash.compact";
 import difference from "lodash.difference";
+import flatten from "lodash.flatten";
 
 import { appendWorldDC, calcAverage } from "../util";
 import validation from "../validate";
@@ -44,10 +45,10 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
             const newData = await recentData.find(newQuery, { projection: { _id: 0, uploaderID: 0 } }).toArray();
             item.listings = compact(newData.map((worldData) => {
                 if (!worldData.listings) return null;
-                return worldData.listings.map((listing: MarketBoardItemListing) => {
+                return flatten(worldData.listings.map((listing: MarketBoardItemListing) => {
                     listing.worldName = worldIDMap.get(worldData.worldID);
                     return listing;
-                });
+                }));
             }));
             // recentHistory seems not to have broken, strangely enough.
         }
@@ -72,11 +73,8 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
                 .map((listing: MarketBoardItemListing) => listing.pricePerUnit)
             );
             item.listings = item.listings.map((listing) => {
-                if (!listing || Object.getOwnPropertyNames(listing) === []) {
-                    return;
-                }
-                if (listing.retainerID && !listing.retainerID.length ||
-                    listing.sellerID && !listing.sellerID.length ||
+                if (!listing.retainerID.length ||
+                    !listing.sellerID.length ||
                     !listing.creatorID.length) {
                     listing = validation.cleanListing(listing);
                 }
