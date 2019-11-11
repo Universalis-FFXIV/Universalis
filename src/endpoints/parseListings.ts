@@ -11,6 +11,8 @@ import { City } from "../models/City";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
 import { WorldDCQuery } from "../models/WorldDCQuery";
 
+const dcJSON = require("../../public/json/dc.json");
+
 export async function parseListings(logger: Logger, ctx: ParameterizedContext, worldMap: Map<string, number>,
                                     worldIDMap: Map<number, string>, recentData: Collection) {
     const itemIDs: number[] = (ctx.params.item as string).split(",").map((id, index) => {
@@ -32,8 +34,7 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
     // Do some post-processing on resolved item listings.
     for (const item of data.items) {
         // Recovering from an error that screwed up merging world data into the DC file
-        /*if (query.dcName) {
-            const dcJSON = require("../../public/json/dc.json");
+        if (query.dcName) {
             const worldIDs: number[] = [];
             dcJSON[query.dcName].forEach((worldName: string) => {
                 worldIDs.push(worldMap.get(worldName));
@@ -52,7 +53,7 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
                     return entry;
                 });
             });
-        }*/
+        }
         // Regular stuff
         if (item.listings) {
             if (item.listings.length > 0) {
