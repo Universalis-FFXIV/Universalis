@@ -53,7 +53,7 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
                     return entry;
                 });
             });
-        }*/
+        }
         // Regular stuff
         if (item.listings) {
             if (item.listings.length > 0) {
