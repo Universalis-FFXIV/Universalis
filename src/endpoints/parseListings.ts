@@ -74,7 +74,7 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
             item.listings = item.listings.map((listing) => {
                 if (listing.retainerID && !listing.retainerID.length ||
                     listing.sellerID && !listing.sellerID.length ||
-                    !listing.creatorID.length) {
+                    listing.creatorID && !listing.creatorID.length) {
                     listing = validation.cleanListing(listing);
                 }
                 listing.isCrafted =
