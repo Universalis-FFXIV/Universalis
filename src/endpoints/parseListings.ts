@@ -42,12 +42,14 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
             const newQuery: WorldDCQuery = { worldID: { $in: worldIDs }, itemID: item.itemID };
             const newData = await recentData.find(newQuery, { projection: { _id: 0, uploaderID: 0 } }).toArray();
             item.listings = newData.map((worldData, index) => {
+                console.log(worldData);
                 return worldData.listings.map((listing: MarketBoardItemListing) => {
                     listing.worldName = worldIDMap.get(worldIDs[index]);
                     return listing;
                 });
             });
             item.recentHistory = newData.map((worldData, index) => {
+                console.log(worldData);
                 return worldData.recentHistory.map((entry: MarketBoardItemListing) => {
                     entry.worldName = worldIDMap.get(worldIDs[index]);
                     return entry;
