@@ -35,23 +35,6 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
 
     // Do some post-processing on resolved item listings.
     for (const item of data.items) {
-        // Recovering from an error that screwed up merging world data into the DC file
-        if (ctx.queryParams.debug && query.dcName) {
-            const worldIDs: number[] = [];
-            dcJSON[query.dcName].forEach((worldName: string) => {
-                worldIDs.push(worldMap.get(worldName));
-            });
-            const newQuery: WorldDCQuery = { worldID: { $in: worldIDs }, itemID: item.itemID };
-            const newData = await recentData.find(newQuery, { projection: { _id: 0, uploaderID: 0 } }).toArray();
-            item.listings = compact(newData.map((worldData) => {
-                if (!worldData.listings) return null;
-                return flatten(worldData.listings.map((listing: MarketBoardItemListing) => {
-                    listing.worldName = worldIDMap.get(worldData.worldID);
-                    return listing;
-                }));
-            }));
-            // recentHistory seems not to have broken, strangely enough.
-        }
         // Regular stuff
         if (item.listings) {
             if (item.listings.length > 0) {
