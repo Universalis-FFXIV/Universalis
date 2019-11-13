@@ -13,13 +13,14 @@ import { MarketBoardItemListingUpload } from "./models/MarketBoardItemListingUpl
 import { ValidateUploadDataArgs } from "./models/ValidateUploadDataArgs";
 
 export default {
-    cleanHistoryEntry: (entry: MarketBoardHistoryEntry) => {
+    cleanHistoryEntry: (entry: MarketBoardHistoryEntry, sourceName?: string) => {
         return {
             buyerName: entry.buyerName,
             hq: entry.hq,
             pricePerUnit: entry.pricePerUnit,
             quantity: entry.quantity,
-            timestamp: entry.timestamp
+            timestamp: entry.timestamp,
+            uploadApplication: entry.uploadApplication ? entry.uploadApplication : sourceName,
         };
     },
 

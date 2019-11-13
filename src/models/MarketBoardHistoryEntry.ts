@@ -5,5 +5,6 @@ export interface MarketBoardHistoryEntry {
     total?: number;
     buyerName: string;
     timestamp: number;
+    uploadApplication?: string;
     onMannequin?: boolean;
 }
