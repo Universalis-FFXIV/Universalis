@@ -40,7 +40,7 @@ export default {
             retainerName: listing.retainerName,
             sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
             stainID: listing.stainID,
-            uploaderID: listing["uploaderID"],
+            uploaderID: listing.uploaderID,
             worldName: listing["worldName"] ? listing["worldName"] : undefined,
         };
 
@@ -50,7 +50,7 @@ export default {
         return newListing;
     },
 
-    cleanListingOutput: (listing: MarketBoardItemListing): any => {
+    cleanListingOutput: (listing: MarketBoardItemListing): MarketBoardItemListing => {
         const formattedListing = {
             creatorID: listing.creatorID,
             creatorName: listing.creatorName,
@@ -71,7 +71,7 @@ export default {
             sellerID: listing.sellerID,
             stainID: listing.stainID,
             total: listing.pricePerUnit * listing.quantity,
-            worldName: listing.worldName ? listing["worldName"] : undefined,
+            worldName: listing.worldName ? listing.worldName : undefined,
         };
 
         return formattedListing;

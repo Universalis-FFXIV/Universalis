@@ -6,7 +6,6 @@ import validation from "../validate";
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
-import { City } from "../models/City";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
 import { WorldDCQuery } from "../models/WorldDCQuery";
 
