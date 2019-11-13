@@ -64,7 +64,7 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
         }
 
         if (item.recentHistory) {
-            item.recentHistory = item.reecntHistory.map((entry: MarketBoardHistoryEntry) => {
+            item.recentHistory = item.recentHistory.map((entry: MarketBoardHistoryEntry) => {
                 return validation.cleanHistoryEntryOutput(entry);
             });
         } else {
