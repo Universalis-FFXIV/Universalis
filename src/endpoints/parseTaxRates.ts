@@ -4,8 +4,7 @@ import { ExtraDataManager } from "../db/ExtraDataManager";
 
 import { MarketTaxRates } from "../models/MarketTaxRates";
 
-export async function parseTaxRates(ctx: ParameterizedContext,
-                                    worldMap: Map<string, number>, extraDataManager: ExtraDataManager) {
+export async function parseTaxRates(ctx: ParameterizedContext, worldMap: Map<string, number>, extraDataManager: ExtraDataManager) {
     let worldID = ctx.queryParams.world ? ctx.queryParams.world.charAt(0).toUpperCase() +
         ctx.queryParams.world.substr(1).toLowerCase() : null;
 

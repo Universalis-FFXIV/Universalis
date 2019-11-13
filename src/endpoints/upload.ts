@@ -73,7 +73,7 @@ export async function upload(parameters: UploadProcessParameters) {
 
         for (const listing of uploadData.listings) {
             // Ensures retainer and listing information exists
-            const cleanListing = validation.cleanListing(listing);
+            const cleanListing = validation.cleanListing(listing, sourceName);
 
             // Needs to be called separately because... reasons
             cleanListing.materia = validation.cleanMateria(cleanListing.materia);

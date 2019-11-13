@@ -1,22 +1,15 @@
-import compact from "lodash.compact";
 import difference from "lodash.difference";
-import flatten from "lodash.flatten";
 
 import { appendWorldDC, calcAverage } from "../util";
 import validation from "../validate";
 
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
-import { Logger } from "winston";
 
-import { City } from "../models/City";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
 import { WorldDCQuery } from "../models/WorldDCQuery";
 
-const dcJSON = require("../../public/json/dc.json");
-
-export async function parseListings(logger: Logger, ctx: ParameterizedContext, worldMap: Map<string, number>,
-                                    worldIDMap: Map<number, string>, recentData: Collection) {
+export async function parseListings(ctx: ParameterizedContext, worldMap: Map<string, number>, recentData: Collection) {
     const itemIDs: number[] = (ctx.params.item as string).split(",").map((id, index) => {
         if (index > 100) return;
         return parseInt(id);
@@ -61,14 +54,8 @@ export async function parseListings(logger: Logger, ctx: ParameterizedContext, w
                     !listing.creatorID.length) {
                     listing = validation.cleanListing(listing);
                 }
-                listing.isCrafted =
-                    listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9" && // 0n
-                    listing.creatorID !== "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";   // ""
                 listing.materia = validation.cleanMateria(listing.materia);
-                listing.total = listing.pricePerUnit * listing.quantity;
-                if (!parseInt(listing.retainerCity)) {
-                    listing.retainerCity = City[listing.retainerCity];
-                }
+                listing = validation.cleanListingOutput(listing);
                 return listing;
             });
         } else {

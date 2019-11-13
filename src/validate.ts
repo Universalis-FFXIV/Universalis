@@ -8,6 +8,7 @@ import { Context } from "koa";
 import { City } from "./models/City";
 import { ItemMateria } from "./models/ItemMateria";
 import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
+import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
 import { MarketBoardItemListingUpload } from "./models/MarketBoardItemListingUpload";
 import { ValidateUploadDataArgs } from "./models/ValidateUploadDataArgs";
 
@@ -22,7 +23,7 @@ export default {
         };
     },
 
-    cleanListing: (listing: MarketBoardItemListingUpload): MarketBoardItemListingUpload => {
+    cleanListing: (listing: MarketBoardItemListingUpload, sourceName?: string): MarketBoardItemListingUpload => {
         const newListing = {
             creatorID: sha("sha256").update(listing.creatorID + "").digest("hex"),
             creatorName: listing.creatorName,
@@ -39,10 +40,41 @@ export default {
             retainerName: listing.retainerName,
             sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
             stainID: listing.stainID,
-            worldName: listing["worldName"] ? listing["worldName"] : undefined
+            uploaderID: listing.uploaderID,
+            worldName: listing["worldName"] ? listing["worldName"] : undefined,
         };
 
+        if (sourceName) newListing["uploadApplication"] = sourceName;
+        else if (listing["uploadApplication"]) newListing["uploadApplication"] = listing["uploadApplication"];
+
         return newListing;
+    },
+
+    cleanListingOutput: (listing: MarketBoardItemListing): MarketBoardItemListing => {
+        const formattedListing = {
+            creatorID: listing.creatorID,
+            creatorName: listing.creatorName,
+            hq: typeof listing.hq === "undefined" ? false : listing.hq,
+            isCrafted:
+                listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9" && // 0n
+                listing.creatorID !== "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",   // ""
+            lastReviewTime: listing.lastReviewTime,
+            listingID: listing.listingID,
+            materia: typeof listing.materia === "undefined" ? [] : listing.materia,
+            onMannequin: typeof listing.onMannequin === "undefined" ? false : listing.onMannequin,
+            pricePerUnit: listing.pricePerUnit,
+            quantity: listing.quantity,
+            retainerCity: typeof listing.retainerCity === "number" ?
+                listing.retainerCity : City[listing.retainerCity],
+            retainerID: listing.retainerID,
+            retainerName: listing.retainerName,
+            sellerID: listing.sellerID,
+            stainID: listing.stainID,
+            total: listing.pricePerUnit * listing.quantity,
+            worldName: listing.worldName ? listing.worldName : undefined,
+        };
+
+        return formattedListing;
     },
 
     cleanMateria: (materiaArray: ItemMateria[]): ItemMateria[] => {
