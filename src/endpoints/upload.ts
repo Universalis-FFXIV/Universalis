@@ -100,21 +100,10 @@ export async function upload(parameters: UploadProcessParameters) {
         ));
     }
 
-    if (uploadData.noListings) {
-        for (const itemID of uploadData.noListings) {
-            promises.push(priceTracker.set(
-                uploadData.uploaderID,
-                itemID,
-                uploadData.worldID,
-                []
-            ));
-        }
-    }
-
     if (uploadData.entries) {
         const dataArray: MarketBoardHistoryEntry[] = [];
         uploadData.entries = uploadData.entries.map((entry) => {
-            return validation.cleanHistoryEntry(entry);
+            return validation.cleanHistoryEntry(entry, sourceName);
         });
 
         for (const entry of uploadData.entries) {
