@@ -7,6 +7,7 @@ import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
+import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
 import { WorldDCQuery } from "../models/WorldDCQuery";
 
 export async function parseListings(ctx: ParameterizedContext, worldMap: Map<string, number>, recentData: Collection) {
@@ -63,10 +64,9 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
         }
 
         if (item.recentHistory) {
-            for (let entry of item.recentHistory) {
-                if (entry.uploaderID) delete entry.uploaderID;
-                entry = validation.cleanHistoryEntryOutput(entry);
-            }
+            item.recentHistory = item.reecntHistory.map((entry: MarketBoardHistoryEntry) => {
+                return validation.cleanHistoryEntryOutput(entry);
+            });
         } else {
             item.recentHistory = [];
         }
