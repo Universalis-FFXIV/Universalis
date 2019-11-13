@@ -63,9 +63,9 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
         }
 
         if (item.recentHistory) {
-            for (const entry of item.recentHistory) {
+            for (let entry of item.recentHistory) {
                 if (entry.uploaderID) delete entry.uploaderID;
-                entry.total = entry.pricePerUnit * entry.quantity;
+                entry = validation.cleanHistoryEntryOutput(entry);
             }
         } else {
             item.recentHistory = [];
