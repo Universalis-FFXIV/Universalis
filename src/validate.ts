@@ -13,7 +13,7 @@ import { MarketBoardItemListingUpload } from "./models/MarketBoardItemListingUpl
 import { ValidateUploadDataArgs } from "./models/ValidateUploadDataArgs";
 
 export default {
-    cleanHistoryEntry: (entry: MarketBoardHistoryEntry, sourceName?: string) => {
+    cleanHistoryEntry: (entry: MarketBoardHistoryEntry, sourceName?: string): MarketBoardHistoryEntry => {
         return {
             buyerName: entry.buyerName,
             hq: entry.hq,
@@ -21,6 +21,17 @@ export default {
             quantity: entry.quantity,
             timestamp: entry.timestamp,
             uploadApplication: entry.uploadApplication ? entry.uploadApplication : sourceName,
+        };
+    },
+
+    cleanHistoryEntryOutput: (entry: MarketBoardHistoryEntry): MarketBoardHistoryEntry => {
+        return {
+            buyerName: entry.buyerName,
+            hq: entry.hq,
+            pricePerUnit: entry.pricePerUnit,
+            quantity: entry.quantity,
+            timestamp: entry.timestamp,
+            total: entry.pricePerUnit * entry.quantity,
         };
     },
 
