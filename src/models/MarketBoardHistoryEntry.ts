@@ -7,4 +7,5 @@ export interface MarketBoardHistoryEntry {
     timestamp: number;
     uploadApplication?: string;
     onMannequin?: boolean;
+    worldName?: string;
 }
