@@ -32,6 +32,7 @@ export default {
             quantity: entry.quantity,
             timestamp: entry.timestamp,
             total: entry.pricePerUnit * entry.quantity,
+            worldName: entry.worldName ? entry.worldName : undefined,
         };
     },
 
