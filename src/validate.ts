@@ -14,14 +14,21 @@ import { ValidateUploadDataArgs } from "./models/ValidateUploadDataArgs";
 
 export default {
     cleanHistoryEntry: (entry: MarketBoardHistoryEntry, sourceName?: string): MarketBoardHistoryEntry => {
-        return {
+        const newEntry = {
             buyerName: entry.buyerName,
-            hq: entry.hq,
+            hq: typeof entry.hq === "undefined" ? false : entry.hq,
             pricePerUnit: entry.pricePerUnit,
             quantity: entry.quantity,
             timestamp: entry.timestamp,
             uploadApplication: entry.uploadApplication ? entry.uploadApplication : sourceName,
         };
+
+        if (typeof newEntry.hq === "number") {
+            // newListing.hq as a conditional will be truthy if not 0
+            newEntry.hq = newEntry.hq ? true : false;
+        }
+
+        return newEntry;
     },
 
     cleanHistoryEntryOutput: (entry: MarketBoardHistoryEntry): MarketBoardHistoryEntry => {
@@ -57,6 +64,11 @@ export default {
             uploaderID: listing.uploaderID,
             worldName: listing.worldName,
         };
+
+        if (typeof newListing.hq === "number") {
+            // newListing.hq as a conditional will be truthy if not 0
+            newListing.hq = newListing.hq ? true : false;
+        }
 
         return newListing;
     },
