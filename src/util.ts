@@ -37,7 +37,26 @@ export function calcAverage(...numbers: number[]): number {
     numbers.forEach((num) => {
         out += num;
     });
-    return out /= numbers.length;
+    return out / numbers.length;
+}
+
+export function calcTrimmedAverage(...numbers: number[]): number {
+    if (numbers.length === 0) return 0;
+    let out = 0;
+
+    // Stuff is already sorted, so we won't sort it here.
+
+    // This is the same thing as doing:
+    // const iqr = numbers.slice(Math.floor(numbers.length / 4), Math.floor(numbers.length * 3 / 4));
+    // const lqOfIqr = iqr.slice(0, Math.floor(iqr.length / 4));
+    const lqOfIqr = numbers.slice(Math.floor(numbers.length / 4), Math.floor(numbers.length * 3 / 8));
+
+    lqOfIqr.forEach((num) => {
+        // Logic
+        out += num;
+    });
+
+    return out / numbers.length;
 }
 
 export function createLogger(): Logger {
