@@ -1,5 +1,5 @@
 export interface DailyUploadStatistics {
-    setName: string;
+    setName: "uploadCountHistory";
     lastPush: number;
     uploadCountByDay: number[];
 }

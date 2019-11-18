@@ -1,6 +1,6 @@
 import difference from "lodash.difference";
 
-import { appendWorldDC, calcTrimmedAverage } from "../util";
+import { appendWorldDC, calcSaleVelocity, calcTrimmedAverage } from "../util";
 import validation from "../validate";
 
 import { ParameterizedContext } from "koa";
@@ -68,6 +68,19 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 .filter((entry) => entry.hq)
                 .map((entry) => entry.pricePerUnit)
             );
+
+            item.saleVelocity = calcSaleVelocity(...item.recentHistory
+                .map((entry) => entry.timestamp)
+            );
+            item.saleVelocityNQ = calcSaleVelocity(...item.recentHistory
+                .filter((entry) => !entry.hq)
+                .map((entry) => entry.timestamp)
+            );
+            item.saleVelocityHQ = calcSaleVelocity(...item.recentHistory
+                .filter((entry) => entry.hq)
+                .map((entry) => entry.timestamp)
+            );
+            item.saleVelocityUnits = "per day";
         } else {
             item.recentHistory = [];
         }

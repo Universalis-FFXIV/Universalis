@@ -1,5 +1,5 @@
 export interface MostPopularItems {
-    setName: string;
+    setName: "itemPopularity";
     items?: number[];
     internal?: {
         itemID: number;

@@ -64,6 +64,7 @@ export async function upload(parameters: UploadProcessParameters) {
     }
 
     if (uploadData.itemID) {
+        promises.push(extraDataManager.incrementPopularUploads(uploadData.itemID));
         promises.push(extraDataManager.addRecentlyUpdatedItem(uploadData.itemID));
     }
 
