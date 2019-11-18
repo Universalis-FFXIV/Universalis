@@ -44,7 +44,7 @@ export function calcTrimmedAverage(...numbers: number[]): number {
     if (numbers.length === 0) return 0;
     let out = 0;
 
-    // Stuff is already sorted, so we won't sort it here.
+    numbers = numbers.sort((a, b) => a - b);
 
     // This is the same thing as doing:
     // const iqr = numbers.slice(Math.floor(numbers.length / 4), Math.floor(numbers.length * 3 / 4));
