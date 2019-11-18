@@ -59,6 +59,16 @@ export function calcTrimmedAverage(...numbers: number[]): number {
     return out / numbers.length;
 }
 
+/** Calculate the rate at which items have been selling per day over the past week. */
+export function calcSaleVelocity(...timestamps: number[]): number {
+    const thisWeek = timestamps.filter((timestamp) => timestamp >= Date.now() - 604800000);
+
+    let out = 0;
+    thisWeek.forEach(() => out++);
+
+    return out / 7;
+}
+
 export function createLogger(): Logger {
     return winston.createLogger({
         transports: [

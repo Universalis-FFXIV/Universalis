@@ -11,4 +11,9 @@ export interface MarketBoardListingsEndpoint {
     averagePrice?: number;
     averagePriceNQ?: number;
     averagePriceHQ?: number;
+
+    saleVelocity?: number;
+    saleVelocityNQ?: number;
+    saleVelocityHQ?: number;
+    saleVelocityUnits?: "per day";
 }

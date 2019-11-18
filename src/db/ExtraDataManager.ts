@@ -78,9 +78,9 @@ export class ExtraDataManager {
         if (count) count = Math.max(count, 0);
         else count = Number.MAX_VALUE;
 
-        const query = { setName: "mostPopularItems" };
+        const query = { setName: "itemPopularity" };
 
-        const data: RecentlyUpdated =
+        const data: MostPopularItems =
             await this.extraDataCollection.findOne(query, { projection: { _id: 0, setName: 0 } });
 
         if (count && data) data.items = data.items.slice(0, Math.min(count, data.items.length));
@@ -90,7 +90,7 @@ export class ExtraDataManager {
 
     /** Increment the popular upload count for an item. */
     public async incrementPopularUploads(itemID: number): Promise<void> {
-        const query = { setName: "mostPopularItems", itemID };
+        const query = { setName: "itemPopularity", itemID };
 
         const data = await this.extraDataCollection.findOne(query);
 
@@ -102,7 +102,7 @@ export class ExtraDataManager {
                     itemID,
                     uploadCount: 1
                 },
-                setName: "mostPopularItems"
+                setName: "itemPopularity"
             });
         }
     }

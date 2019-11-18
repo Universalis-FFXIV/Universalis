@@ -1,4 +1,4 @@
 export interface RecentlyUpdated {
-    setName: string;
+    setName: "recentlyUpdated";
     items: number[];
 }
