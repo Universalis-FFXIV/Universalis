@@ -1,6 +1,6 @@
 import difference from "lodash.difference";
 
-import { appendWorldDC, calcAverage } from "../util";
+import { appendWorldDC, calcTrimmedAverage } from "../util";
 import validation from "../validate";
 
 import { ParameterizedContext } from "koa";
@@ -38,17 +38,6 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                     return 0;
                 });
             }
-            item.averagePrice = calcAverage(...item.listings.map((listing: MarketBoardItemListing) => {
-                return listing.pricePerUnit;
-            }));
-            item.averagePriceNQ = calcAverage(...item.listings
-                .filter((listing: MarketBoardItemListing) => !listing.hq)
-                .map((listing: MarketBoardItemListing) => listing.pricePerUnit)
-            );
-            item.averagePriceHQ = calcAverage(...item.listings
-                .filter((listing: MarketBoardItemListing) => listing.hq)
-                .map((listing: MarketBoardItemListing) => listing.pricePerUnit)
-            );
             item.listings = item.listings.map((listing) => {
                 if (!listing.retainerID.length ||
                     !listing.sellerID.length ||
@@ -67,6 +56,20 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
             item.recentHistory = item.recentHistory.map((entry: MarketBoardHistoryEntry) => {
                 return validation.cleanHistoryEntryOutput(entry);
             });
+
+            const oneWeekRecentHistory = item.recentHistory.filter((entry) => entry.timestamp <= 604800000);
+
+            item.averagePrice = calcTrimmedAverage(...oneWeekRecentHistory
+                .map((entry: MarketBoardHistoryEntry) => entry.pricePerUnit)
+            );
+            item.averagePriceNQ = calcTrimmedAverage(...oneWeekRecentHistory
+                .filter((entry: MarketBoardHistoryEntry) => !entry.hq)
+                .map((entry: MarketBoardHistoryEntry) => entry.pricePerUnit)
+            );
+            item.averagePriceHQ = calcTrimmedAverage(...oneWeekRecentHistory
+                .filter((entry: MarketBoardHistoryEntry) => entry.hq)
+                .map((entry: MarketBoardHistoryEntry) => entry.pricePerUnit)
+            );
         } else {
             item.recentHistory = [];
         }

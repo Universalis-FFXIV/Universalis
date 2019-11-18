@@ -14,14 +14,21 @@ import { ValidateUploadDataArgs } from "./models/ValidateUploadDataArgs";
 
 export default {
     cleanHistoryEntry: (entry: MarketBoardHistoryEntry, sourceName?: string): MarketBoardHistoryEntry => {
-        return {
+        const newEntry = {
             buyerName: entry.buyerName,
-            hq: entry.hq,
+            hq: typeof entry.hq === "undefined" ? false : entry.hq,
             pricePerUnit: entry.pricePerUnit,
             quantity: entry.quantity,
             timestamp: entry.timestamp,
             uploadApplication: entry.uploadApplication ? entry.uploadApplication : sourceName,
         };
+
+        if (typeof newEntry.hq === "number") {
+            // newListing.hq as a conditional will be truthy if not 0
+            newEntry.hq = newEntry.hq ? true : false;
+        }
+
+        return newEntry;
     },
 
     cleanHistoryEntryOutput: (entry: MarketBoardHistoryEntry): MarketBoardHistoryEntry => {
@@ -32,7 +39,7 @@ export default {
             quantity: entry.quantity,
             timestamp: entry.timestamp,
             total: entry.pricePerUnit * entry.quantity,
-            worldName: entry.worldName ? entry.worldName : undefined,
+            worldName: entry.worldName,
         };
     },
 
@@ -53,12 +60,15 @@ export default {
             retainerName: listing.retainerName,
             sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
             stainID: listing.stainID,
+            uploadApplication: sourceName ? sourceName : listing.uploadApplication,
             uploaderID: listing.uploaderID,
-            worldName: listing["worldName"] ? listing["worldName"] : undefined,
+            worldName: listing.worldName,
         };
 
-        if (sourceName) newListing["uploadApplication"] = sourceName;
-        else if (listing["uploadApplication"]) newListing["uploadApplication"] = listing["uploadApplication"];
+        if (typeof newListing.hq === "number") {
+            // newListing.hq as a conditional will be truthy if not 0
+            newListing.hq = newListing.hq ? true : false;
+        }
 
         return newListing;
     },
@@ -84,7 +94,7 @@ export default {
             sellerID: listing.sellerID,
             stainID: listing.stainID,
             total: listing.pricePerUnit * listing.quantity,
-            worldName: listing.worldName ? listing.worldName : undefined,
+            worldName: listing.worldName,
         };
 
         return formattedListing;
@@ -97,14 +107,14 @@ export default {
                     materiaSlot.materiaID = materiaSlot["materiaId"];
                     delete materiaSlot["materiaId"];
                 } else if (!materiaSlot.materiaID) {
-                    return undefined;
+                    return;
                 }
 
                 if (!materiaSlot.slotID && materiaSlot["slotId"]) {
                     materiaSlot.slotID = materiaSlot["slotId"];
                     delete materiaSlot["slotId"];
                 } else if (!materiaSlot.slotID) {
-                    return undefined;
+                    return;
                 }
 
                 const materiaID = parseInt(materiaSlot.materiaID as unknown as string);
