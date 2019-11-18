@@ -6,8 +6,8 @@ import validation from "../validate";
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
-import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
-import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
+import { MarketBoardItemListingUpload } from "../models/MarketBoardItemListingUpload";
+import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoint";
 import { WorldDCQuery } from "../models/WorldDCQuery";
 
 export async function parseListings(ctx: ParameterizedContext, worldMap: Map<string, number>, recentData: Collection) {
@@ -28,11 +28,11 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
     appendWorldDC(data, worldMap, ctx);
 
     // Do some post-processing on resolved item listings.
-    for (const item of data.items) {
+    for (const item of data.items as MarketBoardListingsEndpoint[]) {
         // Regular stuff
         if (item.listings) {
             if (item.listings.length > 0) {
-                item.listings = item.listings.sort((a: MarketBoardItemListing, b: MarketBoardItemListing) => {
+                item.listings = item.listings.sort((a, b) => {
                     if (a.pricePerUnit > b.pricePerUnit) return 1;
                     if (a.pricePerUnit < b.pricePerUnit) return -1;
                     return 0;
@@ -42,7 +42,7 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 if (!listing.retainerID.length ||
                     !listing.sellerID.length ||
                     !listing.creatorID.length) {
-                    listing = validation.cleanListing(listing);
+                    listing = <any> validation.cleanListing(listing as unknown as MarketBoardItemListingUpload);
                 }
                 listing.materia = validation.cleanMateria(listing.materia);
                 listing = validation.cleanListingOutput(listing);
@@ -53,22 +53,22 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
         }
 
         if (item.recentHistory) {
-            item.recentHistory = item.recentHistory.map((entry: MarketBoardHistoryEntry) => {
+            item.recentHistory = item.recentHistory.map((entry) => {
                 return validation.cleanHistoryEntryOutput(entry);
             });
 
-            const oneWeekRecentHistory = item.recentHistory.filter((entry) => entry.timestamp <= 604800000);
+            const oneWeekRecentHistory = item.recentHistory.filter((entry) => entry.timestamp >= Date.now() - 604800000);
 
             item.averagePrice = calcTrimmedAverage(...oneWeekRecentHistory
-                .map((entry: MarketBoardHistoryEntry) => entry.pricePerUnit)
+                .map((entry) => entry.pricePerUnit)
             );
             item.averagePriceNQ = calcTrimmedAverage(...oneWeekRecentHistory
-                .filter((entry: MarketBoardHistoryEntry) => !entry.hq)
-                .map((entry: MarketBoardHistoryEntry) => entry.pricePerUnit)
+                .filter((entry) => !entry.hq)
+                .map((entry) => entry.pricePerUnit)
             );
             item.averagePriceHQ = calcTrimmedAverage(...oneWeekRecentHistory
-                .filter((entry: MarketBoardHistoryEntry) => entry.hq)
-                .map((entry: MarketBoardHistoryEntry) => entry.pricePerUnit)
+                .filter((entry) => entry.hq)
+                .map((entry) => entry.pricePerUnit)
             );
         } else {
             item.recentHistory = [];
