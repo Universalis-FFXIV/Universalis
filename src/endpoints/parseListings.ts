@@ -57,7 +57,7 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 return validation.cleanHistoryEntryOutput(entry);
             });
 
-            const oneWeekRecentHistory = item.recentHistory.filter((entry) => entry.timestamp * 1000 <= Date.now() - 604800000);
+            const oneWeekRecentHistory = item.recentHistory.filter((entry) => entry.timestamp * 1000 >= Date.now() - 604800000);
 
             item.averagePrice = calcTrimmedAverage(...oneWeekRecentHistory
                 .map((entry) => entry.pricePerUnit)
