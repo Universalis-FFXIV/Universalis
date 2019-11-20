@@ -69,6 +69,22 @@ export function calcSaleVelocity(...timestamps: number[]): number {
     return out / 7;
 }
 
+/** Calculate the standard deviation of some numbers */
+export function calcStandardDeviation(...numbers: number[]): number {
+    let average = 0;
+    numbers.forEach((num) => {
+        average += num;
+    });
+    average /= numbers.length;
+
+    let sumSqr = 0;
+    numbers.forEach((num) => {
+        sumSqr += Math.pow((num - average), 2);
+    });
+
+    return Math.sqrt(sumSqr / (numbers.length - 1));
+}
+
 export function createLogger(): Logger {
     return winston.createLogger({
         transports: [
