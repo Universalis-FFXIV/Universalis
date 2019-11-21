@@ -69,7 +69,7 @@ export function calcSaleVelocity(...timestamps: number[]): number {
     return out / 7;
 }
 
-/** Calculate the standard deviation of some numbers */
+/** Calculate the standard deviation of some numbers. */
 export function calcStandardDeviation(...numbers: number[]): number {
     let average = 0;
     numbers.forEach((num) => {
@@ -83,6 +83,19 @@ export function calcStandardDeviation(...numbers: number[]): number {
     });
 
     return Math.sqrt(sumSqr / (numbers.length - 1));
+}
+
+/** Create a distribution table of some numbers. */
+export function makeDistrTable(...numbers: number[]): { [key: number]: number } {
+    const table: { [key: number]: number } = {};
+    for (const num of numbers) {
+        if (!table[num]) {
+            table[num] = 1;
+        } else {
+            ++table[num];
+        }
+    }
+    return table;
 }
 
 export function createLogger(): Logger {

@@ -1,6 +1,6 @@
 import difference from "lodash.difference";
 
-import { appendWorldDC } from "../util";
+import { appendWorldDC, makeDistrTable } from "../util";
 
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
@@ -36,6 +36,8 @@ export async function parseHistory(ctx: ParameterizedContext, worldMap: Map<stri
             delete entry.uploaderID;
             return entry;
         });
+
+        // Error handling
         if (!item.lastUploadTime) item.lastUploadTime = 0;
         return item;
     });

@@ -1,12 +1,13 @@
 import difference from "lodash.difference";
 
-import { appendWorldDC, calcSaleVelocity, calcTrimmedAverage } from "../util";
+import { appendWorldDC, calcSaleVelocity, calcTrimmedAverage, makeDistrTable } from "../util";
 import validation from "../validate";
 
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
 import { MarketBoardItemListingUpload } from "../models/MarketBoardItemListingUpload";
+import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
 import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoint";
 import { WorldDCQuery } from "../models/WorldDCQuery";
 
@@ -81,6 +82,12 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 .map((entry) => entry.timestamp)
             );
             item.saleVelocityUnits = "per day";
+
+            item.stackSizeHistogram = makeDistrTable(
+                ...item.recentHistory.map(
+                    (entry: MarketBoardHistoryEntry) => entry.quantity
+                )
+            );
         } else {
             item.recentHistory = [];
         }
