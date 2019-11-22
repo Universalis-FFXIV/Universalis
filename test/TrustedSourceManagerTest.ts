@@ -1,6 +1,5 @@
-import { MongoClient } from "mongodb";
-import should from "should";
-import { TrustedSourceManager } from "../src/TrustedSourceManager";
+import * as should from "should";
+import { TrustedSourceManager } from "../src/db/TrustedSourceManager";
 import { MongoFixture } from "./MongoFixture";
 
 const dummyKey: string = "dummyKey";
@@ -22,8 +21,8 @@ describe("TrustedSourceManager", () => {
     });
 
     it("should store new api keys properly, even when added multiple times", async () => {
-        await manager.addToTrusted(dummyKey, "tests");
-        await manager.addToTrusted(dummyKey, "tests");
+        await manager.add(dummyKey, "tests");
+        await manager.add(dummyKey, "tests");
     });
 
     it("should recognize stored keys", async () => {
