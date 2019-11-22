@@ -56,7 +56,7 @@ export function calcTrimmedAverage(...numbers: number[]): number {
         out += num;
     });
 
-    return out / numbers.length;
+    return out / (numbers.length === 0 ? 1 : numbers.length);
 }
 
 /** Calculate the rate at which items have been selling per day over the past week. */

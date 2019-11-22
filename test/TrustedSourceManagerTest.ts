@@ -16,7 +16,7 @@ describe("TrustedSourceManager", () => {
 
     after(async () => await mongo.after());
 
-    it("should report unkown keys as not trusted", async () => {
+    it("should report unknown keys as not trusted", async () => {
         should.not.exist(await manager.get(dummyKey));
     });
 
