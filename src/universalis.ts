@@ -26,6 +26,7 @@ import { parseRecentlyUpdatedItems } from "./endpoints/parseRecentlyUpdatedItems
 import { parseTaxRates } from "./endpoints/parseTaxRates";
 import { parseUploadHistory } from "./endpoints/parseUploadHistory";
 import { parseWorldUploadCounts } from "./endpoints/parseWorldUploadCounts";
+import { parseUploaderCounts } from "./endpoints/parseUploaderCounts";
 import { upload } from "./endpoints/upload";
 
 // Utils
@@ -140,7 +141,7 @@ router
         await parseWorldUploadCounts(ctx, extraDataManager);
     })
     .get("/api/extra/stats/uploader-upload-counts", async (ctx) => { // World upload counts
-        await parseWorldUploadCounts(ctx, extraDataManager);
+        await parseUploaderCounts(ctx, trustedSourceManager);
     })
     .post("/upload/:apiKey", async (ctx) => { // Upload process
         await upload({
