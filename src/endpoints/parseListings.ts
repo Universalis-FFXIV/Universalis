@@ -84,9 +84,15 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
             item.saleVelocityUnits = "per day";
 
             item.stackSizeHistogram = makeDistrTable(
-                ...item.recentHistory.map(
-                    (entry: MarketBoardHistoryEntry) => entry.quantity
-                )
+                ...item.recentHistory.map((entry: MarketBoardHistoryEntry) => entry.quantity)
+            );
+            item.stackSizeHistogramNQ = makeDistrTable(...item.recentHistory
+                .filter((entry) => entry.hq)
+                .map((entry: MarketBoardHistoryEntry) => entry.quantity)
+            );
+            item.stackSizeHistogramHQ = makeDistrTable(...item.recentHistory
+                .filter((entry) => entry.hq)
+                .map((entry: MarketBoardHistoryEntry) => entry.quantity)
             );
         } else {
             item.recentHistory = [];
