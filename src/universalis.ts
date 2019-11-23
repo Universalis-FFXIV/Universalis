@@ -139,6 +139,9 @@ router
     .get("/api/extra/stats/world-upload-counts", async (ctx) => { // World upload counts
         await parseWorldUploadCounts(ctx, extraDataManager);
     })
+    .get("/api/extra/stats/uploader-upload-counts", async (ctx) => { // World upload counts
+        await parseWorldUploadCounts(ctx, extraDataManager);
+    })
     .post("/upload/:apiKey", async (ctx) => { // Upload process
         await upload({
             blacklistManager,
