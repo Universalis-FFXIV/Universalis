@@ -16,4 +16,6 @@ export interface MarketBoardListingsEndpoint {
     saleVelocityNQ?: number;
     saleVelocityHQ?: number;
     saleVelocityUnits?: "per day";
+
+    stackSizeHistogram?: { [key: number]: number };
 }

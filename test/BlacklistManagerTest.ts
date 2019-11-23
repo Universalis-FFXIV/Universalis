@@ -1,17 +1,19 @@
-import should from "should";
-import { BlacklistManager } from "../src/BlacklistManager";
+import * as should from "should";
+import * as winston from "winston";
+import { BlacklistManager } from "../src/db/BlacklistManager";
 import { MongoFixture } from "./MongoFixture";
 
 const dummyUploaderID: string = "dummyUploaderID";
 
 describe("BlacklistManager", () => {
+    const logger = winston.createLogger();
     const mongo = new MongoFixture();
 
     var manager: BlacklistManager;
 
     before(async () => {
         await mongo.before();
-        manager = await BlacklistManager.create(mongo.db);
+        manager = await BlacklistManager.create(logger, mongo.db);
     });
 
     after(async () => await mongo.after());

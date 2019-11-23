@@ -1,7 +1,7 @@
-import should from "should";
-import winston from "winston";
+import * as should from "should";
+import * as winston from "winston";
 
-import { RemoteDataManager } from "../src/RemoteDataManager";
+import { RemoteDataManager } from "../src/remote/RemoteDataManager";
 
 describe("RemoteDataManager", () => {
     const logger = winston.createLogger();

@@ -56,7 +56,7 @@ export function calcTrimmedAverage(...numbers: number[]): number {
         out += num;
     });
 
-    return out / numbers.length;
+    return out / (numbers.length === 0 ? 1 : numbers.length);
 }
 
 /** Calculate the rate at which items have been selling per day over the past week. */
@@ -67,6 +67,35 @@ export function calcSaleVelocity(...timestamps: number[]): number {
     thisWeek.forEach(() => out++);
 
     return out / 7;
+}
+
+/** Calculate the standard deviation of some numbers. */
+export function calcStandardDeviation(...numbers: number[]): number {
+    let average = 0;
+    numbers.forEach((num) => {
+        average += num;
+    });
+    average /= numbers.length;
+
+    let sumSqr = 0;
+    numbers.forEach((num) => {
+        sumSqr += Math.pow((num - average), 2);
+    });
+
+    return Math.sqrt(sumSqr / (numbers.length - 1));
+}
+
+/** Create a distribution table of some numbers. */
+export function makeDistrTable(...numbers: number[]): { [key: number]: number } {
+    const table: { [key: number]: number } = {};
+    for (const num of numbers) {
+        if (!table[num]) {
+            table[num] = 1;
+        } else {
+            ++table[num];
+        }
+    }
+    return table;
 }
 
 export function createLogger(): Logger {
