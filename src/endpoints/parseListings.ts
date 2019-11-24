@@ -58,9 +58,12 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 return validation.cleanHistoryEntryOutput(entry);
             });
 
+            const nqItems = item.recentHistory.filter((entry) => !entry.hq);
+            const hqItems = item.recentHistory.filter((entry) => entry.hq);
+
             const pPU = item.recentHistory.map((entry) => entry.pricePerUnit);
-            const nqPPU = item.recentHistory.filter((entry) => !entry.hq).map((entry) => entry.pricePerUnit);
-            const hqPPU = item.recentHistory.filter((entry) => entry.hq).map((entry) => entry.pricePerUnit);
+            const nqPPU = nqItems.map((entry) => entry.pricePerUnit);
+            const hqPPU = hqItems.map((entry) => entry.pricePerUnit);
             item.averagePrice = calcTrimmedAverage(calcStandardDeviation(...pPU), ...pPU);
             item.averagePriceNQ = calcTrimmedAverage(calcStandardDeviation(...nqPPU), ...nqPPU);
             item.averagePriceHQ = calcTrimmedAverage(calcStandardDeviation(...hqPPU), ...hqPPU);
@@ -68,26 +71,22 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
             item.saleVelocity = calcSaleVelocity(...item.recentHistory
                 .map((entry) => entry.timestamp)
             );
-            item.saleVelocityNQ = calcSaleVelocity(...item.recentHistory
-                .filter((entry) => !entry.hq)
+            item.saleVelocityNQ = calcSaleVelocity(...nqItems
                 .map((entry) => entry.timestamp)
             );
-            item.saleVelocityHQ = calcSaleVelocity(...item.recentHistory
-                .filter((entry) => entry.hq)
+            item.saleVelocityHQ = calcSaleVelocity(...hqItems
                 .map((entry) => entry.timestamp)
             );
             item.saleVelocityUnits = "per day";
 
             item.stackSizeHistogram = makeDistrTable(
-                ...item.recentHistory.map((entry: MarketBoardHistoryEntry) => entry.quantity)
+                ...item.recentHistory.map((entry) => entry.quantity)
             );
-            item.stackSizeHistogramNQ = makeDistrTable(...item.recentHistory
-                .filter((entry) => !entry.hq)
-                .map((entry: MarketBoardHistoryEntry) => entry.quantity)
+            item.stackSizeHistogramNQ = makeDistrTable(...nqItems
+                .map((entry) => entry.quantity)
             );
-            item.stackSizeHistogramHQ = makeDistrTable(...item.recentHistory
-                .filter((entry) => entry.hq)
-                .map((entry: MarketBoardHistoryEntry) => entry.quantity)
+            item.stackSizeHistogramHQ = makeDistrTable(...hqItems
+                .map((entry) => entry.quantity)
             );
         } else {
             item.recentHistory = [];
