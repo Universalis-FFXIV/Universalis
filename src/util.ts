@@ -104,11 +104,13 @@ export function createLogger(): Logger {
             new (DailyRotateFile)({
                 datePattern: "YYYY-MM-DD-HH",
                 filename: "logs/universalis-%DATE%.log",
-                maxSize: "20m"
+                zippedArchive: true,
+                maxSize: "20m",
+                maxFiles: '14d',
             }),
             new winston.transports.File({
                 filename: "logs/error.log",
-                level: "error"
+                level: "error",
             }),
             new winston.transports.Console({
                 format: winston.format.simple()
