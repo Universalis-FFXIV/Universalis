@@ -40,23 +40,23 @@ export function calcAverage(...numbers: number[]): number {
     return out / numbers.length;
 }
 
-export function calcTrimmedAverage(...numbers: number[]): number {
+export function calcTrimmedAverage(standardDeviation: number, ...numbers: number[]): number {
     if (numbers.length === 0) return 0;
     let out = 0;
 
-    numbers = numbers.sort((a, b) => a - b);
+    let mean = 0;
+    numbers.forEach((num) => {
+        mean += num;
+    });
+    mean /= numbers.length;
 
-    // This is the same thing as doing:
-    // const iqr = numbers.slice(Math.floor(numbers.length / 4), Math.floor(numbers.length * 3 / 4));
-    // const lqOfIqr = iqr.slice(0, Math.floor(iqr.length / 4));
-    const lqOfIqr = numbers.slice(Math.floor(numbers.length / 4), Math.floor(numbers.length * 3 / 8));
-
-    lqOfIqr.forEach((num) => {
-        // Logic
-        out += num;
+    numbers.forEach((num) => {
+        if (num < mean + 3 * standardDeviation && num > mean - 3 * standardDeviation) {
+            out += num;
+        }
     });
 
-    return out / (numbers.length === 0 ? 1 : numbers.length);
+    return out / numbers.length;
 }
 
 /** Calculate the rate at which items have been selling per day over the past week. */
