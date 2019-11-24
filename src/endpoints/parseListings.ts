@@ -1,6 +1,6 @@
 import difference from "lodash.difference";
 
-import { appendWorldDC, calcSaleVelocity, calcTrimmedAverage, makeDistrTable } from "../util";
+import { appendWorldDC, calcSaleVelocity, calcTrimmedAverage, makeDistrTable, calcStandardDeviation } from "../util";
 import validation from "../validate";
 
 import { ParameterizedContext } from "koa";
@@ -58,42 +58,37 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                 return validation.cleanHistoryEntryOutput(entry);
             });
 
-            item.averagePrice = calcTrimmedAverage(...item.recentHistory
-                .map((entry) => entry.pricePerUnit)
-            );
-            item.averagePriceNQ = calcTrimmedAverage(...item.recentHistory
-                .filter((entry) => !entry.hq)
-                .map((entry) => entry.pricePerUnit)
-            );
-            item.averagePriceHQ = calcTrimmedAverage(...item.recentHistory
-                .filter((entry) => entry.hq)
-                .map((entry) => entry.pricePerUnit)
-            );
+            const pPU = item.recentHistory.map((entry) => entry.pricePerUnit);
+            const nqPPU = item.recentHistory.filter((entry) => !entry.hq).map((entry) => entry.pricePerUnit);
+            const hqPPU = item.recentHistory.filter((entry) => entry.hq).map((entry) => entry.pricePerUnit);
+            item.averagePrice = calcTrimmedAverage(calcStandardDeviation(...pPU), ...pPU);
+            item.averagePriceNQ = calcTrimmedAverage(calcStandardDeviation(...nqPPU), ...nqPPU);
+            item.averagePriceHQ = calcTrimmedAverage(calcStandardDeviation(...hqPPU), ...hqPPU);
 
             item.saleVelocity = calcSaleVelocity(...item.recentHistory
                 .map((entry) => entry.timestamp)
             );
-            /*item.saleVelocityNQ = calcSaleVelocity(...item.recentHistory
+            item.saleVelocityNQ = calcSaleVelocity(...item.recentHistory
                 .filter((entry) => !entry.hq)
                 .map((entry) => entry.timestamp)
             );
             item.saleVelocityHQ = calcSaleVelocity(...item.recentHistory
                 .filter((entry) => entry.hq)
                 .map((entry) => entry.timestamp)
-            );*/
+            );
             item.saleVelocityUnits = "per day";
 
             item.stackSizeHistogram = makeDistrTable(
                 ...item.recentHistory.map((entry: MarketBoardHistoryEntry) => entry.quantity)
             );
-            /*item.stackSizeHistogramNQ = makeDistrTable(...item.recentHistory
+            item.stackSizeHistogramNQ = makeDistrTable(...item.recentHistory
                 .filter((entry) => !entry.hq)
                 .map((entry: MarketBoardHistoryEntry) => entry.quantity)
             );
             item.stackSizeHistogramHQ = makeDistrTable(...item.recentHistory
                 .filter((entry) => entry.hq)
                 .map((entry: MarketBoardHistoryEntry) => entry.quantity)
-            );*/
+            );
         } else {
             item.recentHistory = [];
         }
