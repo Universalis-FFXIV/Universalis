@@ -93,7 +93,7 @@ universalis.use(queryParams());
 
 // Logging
 universalis.use(async (ctx, next) => {
-    console.log(`${ctx.method} ${ctx.url}`);
+    console.log(`${ctx.method} ${ctx.url.slice(0, ctx.url.includes("upload") ? ctx.url.indexOf("upload") + 6 : undefined)}`);
     await next();
 });
 
