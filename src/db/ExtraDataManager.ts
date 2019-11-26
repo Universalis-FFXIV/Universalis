@@ -135,7 +135,7 @@ export class ExtraDataManager {
         else if (typeof worldDC === "string") query.dcName = worldDC;
 
         if (items.length < 20) items.concat(await this.recentData
-            .find(query, { projection: { _id: 0, listings: 0, recentHistory: 0, timestamp: 1 } })
+            .find(query, { projection: { _id: 0, listings: 0, recentHistory: 0 } })
             .limit(Math.min(count, Math.max(0, this.returnCap - items.length)))
             .sort({ timestamp: 1 })
             .toArray()
