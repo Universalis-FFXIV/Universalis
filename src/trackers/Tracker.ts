@@ -18,12 +18,13 @@ export abstract class Tracker {
     public abstract set(...params);
 
     protected async updateDataCenterProperty(uploaderID: string, property: string, itemID: number,
-                                             worldID: number, propertyData: any[]) {
+                                             worldID: number, propertyData: any[], sourceName?: string) {
         const world = await getWorldName(worldID);
         const dcName = await getWorldDC(world);
 
         propertyData = propertyData.map((entry) => {
             entry.uploaderID = uploaderID;
+            if (sourceName) entry.sourceName = sourceName;
             entry.worldName = world;
             return entry;
         });

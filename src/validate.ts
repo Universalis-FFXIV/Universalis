@@ -233,6 +233,7 @@ export default {
         // General filters
         if (!args.uploadData.worldID &&
                 !args.uploadData.itemID &&
+                !args.uploadData.itemIDs &&
                 !args.uploadData.marketTaxRates &&
                 !args.uploadData.contentID &&
                 !args.uploadData.op) {

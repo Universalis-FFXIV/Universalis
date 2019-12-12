@@ -6,6 +6,7 @@ export interface GenericUpload {
     uploaderID: number | string;
 
     itemID?: number;
+    itemIDs?: number[];
     worldID?: number;
 
     contentID?: string | number;

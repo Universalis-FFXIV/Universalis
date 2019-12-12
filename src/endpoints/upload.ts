@@ -85,6 +85,7 @@ export async function upload(parameters: UploadProcessParameters) {
         // Post listing to DB
         promises.push(priceTracker.set(
             uploadData.uploaderID,
+            sourceName,
             uploadData.itemID,
             uploadData.worldID,
             dataArray as MarketBoardItemListing[]
@@ -127,13 +128,21 @@ export async function upload(parameters: UploadProcessParameters) {
     // Bulk operations
     if (uploadData.op) {
         const op = uploadData.op;
-        if (uploadData.itemID && uploadData.worldID && op.listings === -1) {
-            promises.push(priceTracker.set(
-                uploadData.uploaderID,
-                uploadData.itemID,
-                uploadData.worldID,
-                [],
-            ));
+        if (uploadData.itemIDs && uploadData.worldID && op.listings === -1) {
+            if (uploadData.itemIDs.length <= 100) {
+                for (const itemID of uploadData.itemIDs) {
+                    promises.push(priceTracker.set(
+                        uploadData.uploaderID,
+                        sourceName,
+                        itemID,
+                        uploadData.worldID,
+                        [],
+                    ));
+                }
+            } else {
+                logger.info("Attempted to run a bulk delisting of over 100 items, returning.");
+                return ctx.throw(422);
+            }
         }
     }
 
