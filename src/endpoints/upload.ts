@@ -4,14 +4,10 @@ import sha from "sha.js";
 import validation from "../validate";
 
 // Load models
-import { CharacterContentIDUpload } from "../models/CharacterContentIDUpload";
 import { City } from "../models/City";
+import { GenericUpload } from "../models/GenericUpload";
 import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
-import { MarketBoardListingsUpload } from "../models/MarketBoardListingsUpload";
-import { MarketBoardNoItemListingsUpload } from "../models/MarketBoardNoItemListingsUpload";
-import { MarketBoardSaleHistoryUpload } from "../models/MarketBoardSaleHistoryUpload";
-import { MarketTaxRatesUpload } from "../models/MarketTaxRatesUpload";
 import { TrustedSource } from "../models/TrustedSource";
 import { UploadProcessParameters } from "../models/UploadProcessParameters";
 
@@ -43,13 +39,7 @@ export async function upload(parameters: UploadProcessParameters) {
 
     // Preliminary data processing and metadata stuff
     if (ctx.request.body.retainerCity) ctx.request.body.retainerCity = City[ctx.request.body.retainerCity];
-    const uploadData:
-        CharacterContentIDUpload &
-        MarketBoardListingsUpload &
-        MarketBoardSaleHistoryUpload &
-        MarketBoardNoItemListingsUpload &
-        MarketTaxRatesUpload
-    = ctx.request.body;
+    const uploadData: GenericUpload = ctx.request.body;
 
     uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
 
@@ -95,6 +85,7 @@ export async function upload(parameters: UploadProcessParameters) {
         // Post listing to DB
         promises.push(priceTracker.set(
             uploadData.uploaderID,
+            sourceName,
             uploadData.itemID,
             uploadData.worldID,
             dataArray as MarketBoardItemListing[]
@@ -115,7 +106,7 @@ export async function upload(parameters: UploadProcessParameters) {
             uploadData.uploaderID,
             uploadData.itemID,
             uploadData.worldID,
-            dataArray as MarketBoardHistoryEntry[]
+            dataArray as MarketBoardHistoryEntry[],
         ));
     }
 
@@ -124,14 +115,35 @@ export async function upload(parameters: UploadProcessParameters) {
             uploadData.uploaderID,
             sourceName,
             uploadData.worldID,
-            uploadData.marketTaxRates)
-        );
+            uploadData.marketTaxRates,
+        ));
     }
 
     if (uploadData.contentID && uploadData.characterName) {
         promises.push(contentIDCollection.set(uploadData.contentID, "player", {
             characterName: uploadData.characterName
         }));
+    }
+
+    // Bulk operations
+    if (uploadData.op) {
+        const op = uploadData.op;
+        if (uploadData.itemIDs && uploadData.worldID && op.listings === -1) {
+            if (uploadData.itemIDs.length <= 100) {
+                for (const itemID of uploadData.itemIDs) {
+                    promises.push(priceTracker.set(
+                        uploadData.uploaderID,
+                        sourceName,
+                        itemID,
+                        uploadData.worldID,
+                        [],
+                    ));
+                }
+            } else {
+                logger.info("Attempted to run a bulk delisting of over 100 items, returning.");
+                return ctx.throw(422);
+            }
+        }
     }
 
     await Promise.all(promises);

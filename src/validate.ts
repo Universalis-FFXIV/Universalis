@@ -233,8 +233,10 @@ export default {
         // General filters
         if (!args.uploadData.worldID &&
                 !args.uploadData.itemID &&
+                !args.uploadData.itemIDs &&
                 !args.uploadData.marketTaxRates &&
-                !args.uploadData.contentID) {
+                !args.uploadData.contentID &&
+                !args.uploadData.op) {
             args.ctx.throw(422);
             return true;
         }
@@ -242,7 +244,8 @@ export default {
         if (!args.uploadData.listings &&
                 !args.uploadData.entries &&
                 !args.uploadData.marketTaxRates &&
-                !args.uploadData.contentID) {
+                !args.uploadData.contentID &&
+                !args.uploadData.op) {
             args.ctx.throw(418);
             return true;
         }

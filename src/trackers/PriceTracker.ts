@@ -29,14 +29,19 @@ export class PriceTracker extends Tracker {
         super(collection);
     }
 
-    public async set(uploaderID: string, itemID: number, worldID: number, listings: MarketBoardItemListing[]) {
+    public async set(uploaderID: string, sourceName: string, itemID: number, worldID: number, listings: MarketBoardItemListing[]) {
         const data: MarketInfoLocalData = {
             itemID,
             lastUploadTime: Date.now(),
             listings,
             uploaderID,
-            worldID
+            worldID,
         };
+
+        data.listings = data.listings.map((listing) => {
+            listing.sourceName = sourceName;
+            return listing;
+        });
 
         const query = { worldID, itemID };
 
@@ -45,7 +50,7 @@ export class PriceTracker extends Tracker {
             data.recentHistory = existing.recentHistory;
         }
 
-        this.updateDataCenterProperty(uploaderID, "listings", itemID, worldID, listings);
+        this.updateDataCenterProperty(uploaderID, "listings", itemID, worldID, listings, sourceName);
 
         if (existing) {
             await this.collection.updateOne(query, { $set: data });
