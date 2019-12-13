@@ -30,7 +30,14 @@ export async function parseHistory(ctx: ParameterizedContext, worldMap: Map<stri
     appendWorldDC(data, worldMap, ctx);
 
     // Data filtering
-    data.items = data.items.map((item) => {
+    data.items = data.items.map((item: {
+        entries: MinimizedHistoryEntry[];
+        stackSizeHistogram: { [key: number]: number };
+        stackSizeHistogramNQ: { [key: number]: number };
+        stackSizeHistogramHQ: { [key: number]: number };
+        lastUploadTime: number;
+
+    }) => {
         if (entriesToReturn) item.entries = item.entries.slice(0, Math.min(500, entriesToReturn));
         item.entries = item.entries.map((entry: MinimizedHistoryEntry) => {
             delete entry.uploaderID;
@@ -41,13 +48,13 @@ export async function parseHistory(ctx: ParameterizedContext, worldMap: Map<stri
         const hqItems = item.entries.filter((entry) => entry.hq);
 
         item.stackSizeHistogram = makeDistrTable(
-            ...item.recentHistory.map((entry) => entry.quantity)
+            ...item.entries.map((entry) => entry.quantity != null ? entry.quantity : 0)
         );
         item.stackSizeHistogramNQ = makeDistrTable(...nqItems
-            .map((entry) => entry.quantity)
+            .map((entry) => entry.quantity != null ? entry.quantity : 0)
         );
         item.stackSizeHistogramHQ = makeDistrTable(...hqItems
-            .map((entry) => entry.quantity)
+            .map((entry) => entry.quantity != null ? entry.quantity : 0)
         );
 
         // Error handling
