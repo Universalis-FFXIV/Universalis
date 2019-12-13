@@ -16,7 +16,7 @@ export default {
     cleanHistoryEntry: (entry: MarketBoardHistoryEntry, sourceName?: string): MarketBoardHistoryEntry => {
         const newEntry = {
             buyerName: entry.buyerName,
-            hq: typeof entry.hq === "undefined" ? false : entry.hq,
+            hq: entry.hq == null ? false : entry.hq,
             pricePerUnit: entry.pricePerUnit,
             quantity: entry.quantity,
             timestamp: entry.timestamp,
@@ -47,11 +47,11 @@ export default {
         const newListing = {
             creatorID: sha("sha256").update(listing.creatorID + "").digest("hex"),
             creatorName: listing.creatorName,
-            hq: typeof listing.hq === "undefined" ? false : listing.hq,
+            hq: listing.hq == null ? false : listing.hq,
             lastReviewTime: listing.lastReviewTime,
             listingID: sha("sha256").update(listing.listingID + "").digest("hex"),
-            materia: typeof listing.materia === "undefined" ? [] : listing.materia,
-            onMannequin: typeof listing.onMannequin === "undefined" ? false : listing.onMannequin,
+            materia: listing.materia == null ? [] : listing.materia,
+            onMannequin: listing.onMannequin == null ? false : listing.onMannequin,
             pricePerUnit: listing.pricePerUnit,
             quantity: listing.quantity,
             retainerCity: typeof listing.retainerCity === "number" ?
@@ -77,14 +77,14 @@ export default {
         const formattedListing = {
             creatorID: listing.creatorID,
             creatorName: listing.creatorName,
-            hq: typeof listing.hq === "undefined" ? false : listing.hq,
+            hq: listing.hq == null ? false : listing.hq,
             isCrafted:
                 listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9" && // 0n
                 listing.creatorID !== "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",   // ""
             lastReviewTime: listing.lastReviewTime,
             listingID: listing.listingID,
-            materia: typeof listing.materia === "undefined" ? [] : listing.materia,
-            onMannequin: typeof listing.onMannequin === "undefined" ? false : listing.onMannequin,
+            materia: listing.materia == null ? [] : listing.materia,
+            onMannequin: listing.onMannequin == null ? false : listing.onMannequin,
             pricePerUnit: listing.pricePerUnit,
             quantity: listing.quantity,
             retainerCity: typeof listing.retainerCity === "number" ?
@@ -150,7 +150,7 @@ export default {
 
     validateUploadData: async (args: ValidateUploadDataArgs) => {
         // Check blacklisted uploaders (people who upload fake data)
-        if (typeof args.uploadData.uploaderID === "undefined" ||
+        if (args.uploadData.uploaderID == null ||
             await args.blacklistManager.has(args.uploadData.uploaderID as string)) {
                 args.ctx.throw(403);
                 return true;
@@ -171,14 +171,14 @@ export default {
 
         // Listings
         if (args.uploadData.listings) args.uploadData.listings.forEach((listing) => {
-            if (typeof listing.hq === "undefined" ||
-                    typeof listing.lastReviewTime === "undefined" ||
-                    typeof listing.pricePerUnit === "undefined" ||
-                    typeof listing.quantity === "undefined" ||
-                    typeof listing.retainerID === "undefined" ||
-                    typeof listing.retainerCity === "undefined" ||
-                    typeof listing.retainerName === "undefined" ||
-                    typeof listing.sellerID === "undefined") {
+            if (listing.hq == null ||
+                    listing.lastReviewTime == null ||
+                    listing.pricePerUnit == null ||
+                    listing.quantity == null ||
+                    listing.retainerID == null ||
+                    listing.retainerCity == null ||
+                    listing.retainerName == null ||
+                    listing.sellerID == null) {
                 args.ctx.throw(422, "Bad Listing Data");
                 return true;
             }
@@ -186,10 +186,10 @@ export default {
 
         // History entries
         if (args.uploadData.entries) args.uploadData.entries.forEach((entry) => {
-            if (typeof entry.hq === "undefined" ||
-                    typeof entry.pricePerUnit === "undefined" ||
-                    typeof entry.quantity === "undefined" ||
-                    typeof entry.buyerName === "undefined") {
+            if (entry.hq == null ||
+                    entry.pricePerUnit == null ||
+                    entry.quantity == null ||
+                    entry.buyerName == null) {
                 args.ctx.throw(422, "Bad History Data");
                 return true;
             }
@@ -221,11 +221,11 @@ export default {
         }
 
         // Crafter data
-        if (args.uploadData.contentID && typeof args.uploadData.characterName === "undefined") {
+        if (args.uploadData.contentID && args.uploadData.characterName == null) {
             args.ctx.throw(422);
             return true;
         }
-        if (args.uploadData.characterName && typeof args.uploadData.contentID === "undefined") {
+        if (args.uploadData.characterName && args.uploadData.contentID == null) {
             args.ctx.throw(422);
             return true;
         }
