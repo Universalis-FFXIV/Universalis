@@ -37,6 +37,19 @@ export async function parseHistory(ctx: ParameterizedContext, worldMap: Map<stri
             return entry;
         });
 
+        const nqItems = item.entries.filter((entry) => !entry.hq);
+        const hqItems = item.entries.filter((entry) => entry.hq);
+
+        item.stackSizeHistogram = makeDistrTable(
+            ...item.recentHistory.map((entry) => entry.quantity)
+        );
+        item.stackSizeHistogramNQ = makeDistrTable(...nqItems
+            .map((entry) => entry.quantity)
+        );
+        item.stackSizeHistogramHQ = makeDistrTable(...hqItems
+            .map((entry) => entry.quantity)
+        );
+
         // Error handling
         if (!item.lastUploadTime) item.lastUploadTime = 0;
         return item;
