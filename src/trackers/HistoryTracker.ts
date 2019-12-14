@@ -138,6 +138,7 @@ export class HistoryTracker extends Tracker {
             return {
                 hq: entry.hq,
                 pricePerUnit: entry.pricePerUnit,
+                quantity: entry.quantity,
                 timestamp: entry.timestamp,
                 uploaderID,
                 worldName: world
