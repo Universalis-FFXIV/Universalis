@@ -1,4 +1,5 @@
 import compact from "lodash.compact";
+import isEqual from "lodash.isequal";
 
 import { getWorldDC, getWorldName } from "../util";
 
@@ -43,6 +44,8 @@ export class HistoryTracker extends Tracker {
     }
 
     public async set(uploaderID: string, itemID: number, worldID: number, recentHistory: MarketBoardHistoryEntry[]) {
+        if (!recentHistory) return; // This should never be empty.
+
         const data: MarketInfoLocalData = {
             itemID,
             lastUploadTime: Date.now(),
