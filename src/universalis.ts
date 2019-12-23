@@ -33,10 +33,9 @@ import { upload } from "./endpoints/upload";
 import { createLogger } from "./util";
 
 // Define application and its resources
-const logger = createLogger();
-logger.info("Process started.");
-
 const db = MongoClient.connect("mongodb://localhost:27017/", { useNewUrlParser: true, useUnifiedTopology: true });
+const logger = createLogger(db);
+logger.info("Process started.");
 
 var blacklistManager: BlacklistManager;
 var contentIDCollection: ContentIDCollection;

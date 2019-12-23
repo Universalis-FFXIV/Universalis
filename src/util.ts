@@ -2,8 +2,11 @@ import winston, { Logger } from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
 import { ParameterizedContext } from "koa";
+import { MongoClient } from "mongodb";
 
 import { RemoteDataManager } from "./remote/RemoteDataManager";
+
+require("winston-mongodb"); // Applies itself to the winston.transports namespace
 
 const logger = winston.createLogger();
 
@@ -98,7 +101,7 @@ export function makeDistrTable(...numbers: number[]): { [key: number]: number } 
     return table;
 }
 
-export function createLogger(): Logger {
+export function createLogger(db: MongoClient | Promise<MongoClient>): Logger {
     return winston.createLogger({
         transports: [
             new (DailyRotateFile)({
@@ -106,7 +109,12 @@ export function createLogger(): Logger {
                 filename: "logs/universalis-%DATE%.log",
                 zippedArchive: true,
                 maxSize: "20m",
-                maxFiles: '14d',
+                maxFiles: '7d',
+            }),
+            new winston.transports["MongoDB"]({
+                capped: true,
+                db,
+                leaveConnectionOpen: true,
             }),
             new winston.transports.File({
                 filename: "logs/error.log",
