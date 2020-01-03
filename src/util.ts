@@ -1,5 +1,4 @@
 import winston, { Logger } from "winston";
-import DailyRotateFile from "winston-daily-rotate-file";
 
 import { ParameterizedContext } from "koa";
 import { MongoClient } from "mongodb";
@@ -104,13 +103,6 @@ export function makeDistrTable(...numbers: number[]): { [key: number]: number } 
 export function createLogger(db: MongoClient | Promise<MongoClient>): Logger {
     return winston.createLogger({
         transports: [
-            new (DailyRotateFile)({
-                datePattern: "YYYY-MM-DD-HH",
-                filename: "logs/universalis-%DATE%.log",
-                zippedArchive: true,
-                maxSize: "20m",
-                maxFiles: '7d',
-            }),
             new winston.transports["MongoDB"]({
                 capped: true,
                 db,

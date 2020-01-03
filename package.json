@@ -35,7 +35,6 @@
     "sha.js": "^2.4.11",
     "typescript": "^3.5.3",
     "winston": "^3.2.1",
-    "winston-daily-rotate-file": "^4.1.0",
     "winston-mongodb": "^5.0.1"
   },
   "devDependencies": {
