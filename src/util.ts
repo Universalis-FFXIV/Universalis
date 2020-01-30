@@ -106,6 +106,7 @@ export function createLogger(db: MongoClient | Promise<MongoClient>): Logger {
             new winston.transports["MongoDB"]({
                 capped: true,
                 db,
+                name: "universalis",
                 leaveConnectionOpen: true,
             }),
             new winston.transports.File({
