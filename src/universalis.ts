@@ -27,6 +27,7 @@ import { parseTaxRates } from "./endpoints/parseTaxRates";
 import { parseUploadHistory } from "./endpoints/parseUploadHistory";
 import { parseWorldUploadCounts } from "./endpoints/parseWorldUploadCounts";
 import { parseUploaderCounts } from "./endpoints/parseUploaderCounts";
+import { serveItemIDJSON } from "./endpoints/serveItemIDJSON";
 import { upload } from "./endpoints/upload";
 
 // Utils
@@ -124,6 +125,7 @@ router
     .get("/api/tax-rates", async (ctx) => { // Tax rates
         await parseTaxRates(ctx, worldMap, extraDataManager);
     })
+
     .get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
         await parseContentID(ctx, contentIDCollection);
     })
@@ -142,6 +144,11 @@ router
     .get("/api/extra/stats/uploader-upload-counts", async (ctx) => { // World upload counts
         await parseUploaderCounts(ctx, trustedSourceManager);
     })
+
+    .get("/api/marketable", async (ctx) => { // Marketable item ID JSON
+        await serveItemIDJSON(ctx, remoteDataManager);
+    })
+
     .post("/upload/:apiKey", async (ctx) => { // Upload process
         await upload({
             blacklistManager,
