@@ -103,12 +103,11 @@ export function makeDistrTable(...numbers: number[]): { [key: number]: number } 
 export function createLogger(db: MongoClient | Promise<MongoClient>): Logger {
     return winston.createLogger({
         transports: [
-            new winston.transports["MongoDB"]({
+            /*new winston.transports["MongoDB"]({
                 capped: true,
                 db,
-                name: "universalis",
                 leaveConnectionOpen: true,
-            }),
+            }),*/
             new winston.transports.File({
                 filename: "logs/error.log",
                 level: "error",
