@@ -35,7 +35,7 @@ import { createLogger } from "./util";
 
 // Define application and its resources
 const db = MongoClient.connect("mongodb://localhost:27017/", { useNewUrlParser: true, useUnifiedTopology: true });
-const logger = createLogger(db);
+const logger = createLogger("mongodb://localhost:27017/");
 logger.info("Process started.");
 
 var blacklistManager: BlacklistManager;
