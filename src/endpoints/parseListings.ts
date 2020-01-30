@@ -7,7 +7,6 @@ import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
 import { MarketBoardItemListingUpload } from "../models/MarketBoardItemListingUpload";
-import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
 import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoint";
 import { WorldDCQuery } from "../models/WorldDCQuery";
 
@@ -68,6 +67,7 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
             item.averagePriceNQ = calcTrimmedAverage(calcStandardDeviation(...nqPPU), ...nqPPU);
             item.averagePriceHQ = calcTrimmedAverage(calcStandardDeviation(...hqPPU), ...hqPPU);
 
+            // Per day
             item.saleVelocity = calcSaleVelocity(...item.recentHistory
                 .map((entry) => entry.timestamp)
             );
@@ -77,7 +77,6 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
             item.saleVelocityHQ = calcSaleVelocity(...hqItems
                 .map((entry) => entry.timestamp)
             );
-            item.saleVelocityUnits = "per day";
 
             item.stackSizeHistogram = makeDistrTable(
                 ...item.recentHistory.map((entry) => entry.quantity)
