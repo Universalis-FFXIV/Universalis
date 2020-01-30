@@ -100,20 +100,21 @@ export function makeDistrTable(...numbers: number[]): { [key: number]: number } 
     return table;
 }
 
-export function createLogger(db: MongoClient | Promise<MongoClient>): Logger {
+export function createLogger(db: string): Logger {
     return winston.createLogger({
         transports: [
-            /*new winston.transports["MongoDB"]({
+            new winston.transports["MongoDB"]({
                 capped: true,
+                cappedMax: 10000,
                 db,
-                leaveConnectionOpen: true,
-            }),*/
+                options: { useNewUrlParser: true, useUnifiedTopology: true },
+            }),
             new winston.transports.File({
                 filename: "logs/error.log",
                 level: "error",
             }),
             new winston.transports.Console({
-                format: winston.format.simple()
+                format: winston.format.simple(),
             })
         ]
     });
