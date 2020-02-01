@@ -19,7 +19,7 @@ module.exports = {
 	name: "market",
 	args: true,
 	async execute(client, message, logger, args) {
-		if (args.length < 3) return message.reply("please provide an item name in your command, followed by the World or DC name to query.");
+		if (args.length < 2) return message.reply("please provide an item name in your command, followed by the World or DC name to query.");
 
 		await init;
 
