@@ -5,7 +5,7 @@ const request = require("request-promise");
 const worldMap = new Map();
 const init = (async () => {
 	const dataFile = await request("https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/World.csv");
-	let lines = dataFile.match(/[^\r\n]+/g).slice(3);
+	const lines = dataFile.match(/[^\r\n]+/g).slice(3);
 	for (let line of lines) {
 	    line = line.split(",");
 	    worldMap.set(line[1].replace(/[^a-zA-Z]+/g, ""), line[0]);
