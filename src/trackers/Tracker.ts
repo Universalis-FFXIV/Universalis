@@ -45,6 +45,8 @@ export abstract class Tracker {
                 if (a.pricePerUnit < b.pricePerUnit) return -1;
                 return 0;
             });
+
+            data.lastUploadTime = Date.now();
         } else {
             if (!data) {
                 data = {
