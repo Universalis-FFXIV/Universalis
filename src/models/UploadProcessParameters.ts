@@ -2,6 +2,7 @@ import { BlacklistManager } from "../db/BlacklistManager";
 import { ContentIDCollection } from "../db/ContentIDCollection";
 import { ExtraDataManager } from "../db/ExtraDataManager";
 import { TrustedSourceManager } from "../db/TrustedSourceManager";
+import { RemoteDataManager } from "../remote/RemoteDataManager";
 import { HistoryTracker } from "../trackers/HistoryTracker";
 import { PriceTracker } from "../trackers/PriceTracker";
 
@@ -20,4 +21,5 @@ export interface UploadProcessParameters {
     historyTracker: HistoryTracker;
     priceTracker: PriceTracker;
     trustedSourceManager: TrustedSourceManager;
+    remoteDataManager: RemoteDataManager;
 }

@@ -138,13 +138,11 @@ export default {
     validateUploadDataPreCast: (ctx: Context) => {
         if (!ctx.params.apiKey) {
             ctx.throw(401);
-            return true;
         }
 
         if (!ctx.is("json")) {
             ctx.body = "Unsupported content type";
             ctx.throw(415);
-            return true;
         }
     },
 
@@ -152,8 +150,7 @@ export default {
         // Check blacklisted uploaders (people who upload fake data)
         if (args.uploadData.uploaderID == null ||
             await args.blacklistManager.has(args.uploadData.uploaderID as string)) {
-                args.ctx.throw(403);
-                return true;
+                return args.ctx.throw(403);
         }
 
         // You can't upload data for these worlds because you can't scrape it.
@@ -165,8 +162,15 @@ export default {
                 args.uploadData.worldID === 38 ||
                 args.uploadData.worldID === 84) {
             args.ctx.body = "Unsupported World";
-            args.ctx.throw(404);
-            return true;
+            return args.ctx.throw(404);
+        }
+
+        // Filter out junk item IDs.
+        if (args.uploadData.itemID) {
+            if (!(await args.remoteDataManager.getMarketableItemIDs()).includes(args.uploadData.itemID)) {
+                args.ctx.body = "Unsupported Item";
+                return args.ctx.throw(404);
+            }
         }
 
         // Listings
@@ -179,8 +183,7 @@ export default {
                     listing.retainerCity == null ||
                     listing.retainerName == null ||
                     listing.sellerID == null) {
-                args.ctx.throw(422, "Bad Listing Data");
-                return true;
+                return args.ctx.throw(422, "Bad Listing Data");
             }
         });
 
@@ -190,8 +193,7 @@ export default {
                     entry.pricePerUnit == null ||
                     entry.quantity == null ||
                     entry.buyerName == null) {
-                args.ctx.throw(422, "Bad History Data");
-                return true;
+                return args.ctx.throw(422, "Bad History Data");
             }
         });
 
@@ -215,19 +217,16 @@ export default {
                     args.uploadData.marketTaxRates.limsaLominsa > 5 ||
                     args.uploadData.marketTaxRates.uldah < 0 ||
                     args.uploadData.marketTaxRates.uldah > 5 ) {
-                args.ctx.throw(422, "Bad Market Tax Rate Data");
-                return true;
+                return args.ctx.throw(422, "Bad Market Tax Rate Data");
             }
         }
 
         // Crafter data
         if (args.uploadData.contentID && args.uploadData.characterName == null) {
-            args.ctx.throw(422);
-            return true;
+            return args.ctx.throw(422);
         }
         if (args.uploadData.characterName && args.uploadData.contentID == null) {
-            args.ctx.throw(422);
-            return true;
+            return args.ctx.throw(422);
         }
 
         // General filters
@@ -237,8 +236,7 @@ export default {
                 !args.uploadData.marketTaxRates &&
                 !args.uploadData.contentID &&
                 !args.uploadData.op) {
-            args.ctx.throw(422);
-            return true;
+            return args.ctx.throw(422);
         }
 
         if (!args.uploadData.listings &&
@@ -246,8 +244,7 @@ export default {
                 !args.uploadData.marketTaxRates &&
                 !args.uploadData.contentID &&
                 !args.uploadData.op) {
-            args.ctx.throw(418);
-            return true;
+            return args.ctx.throw(418);
         }
 
         return false;

@@ -19,6 +19,7 @@ export async function upload(parameters: UploadProcessParameters) {
     const historyTracker = parameters.historyTracker;
     const logger = parameters.logger;
     const priceTracker = parameters.priceTracker;
+    const remoteDataManager = parameters.remoteDataManager;
     const trustedSourceManager = parameters.trustedSourceManager;
     const worldIDMap = parameters.worldIDMap;
 
@@ -43,7 +44,7 @@ export async function upload(parameters: UploadProcessParameters) {
 
     uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
 
-    err = await validation.validateUploadData({ ctx, uploadData, blacklistManager });
+    err = await validation.validateUploadData({ ctx, uploadData, blacklistManager, remoteDataManager });
     if (err) {
         return err;
     }
