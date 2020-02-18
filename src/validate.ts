@@ -150,7 +150,7 @@ export default {
         // Check blacklisted uploaders (people who upload fake data)
         if (args.uploadData.uploaderID == null ||
             await args.blacklistManager.has(args.uploadData.uploaderID as string)) {
-                return args.ctx.throw(403);
+                args.ctx.throw(403);
         }
 
         // You can't upload data for these worlds because you can't scrape it.
@@ -162,14 +162,14 @@ export default {
                 args.uploadData.worldID === 38 ||
                 args.uploadData.worldID === 84) {
             args.ctx.body = "Unsupported World";
-            return args.ctx.throw(404);
+            args.ctx.throw(404);
         }
 
         // Filter out junk item IDs.
         if (args.uploadData.itemID) {
             if (!(await args.remoteDataManager.getMarketableItemIDs()).includes(args.uploadData.itemID)) {
                 args.ctx.body = "Unsupported Item";
-                return args.ctx.throw(404);
+                args.ctx.throw(404);
             }
         }
 
@@ -183,7 +183,7 @@ export default {
                     listing.retainerCity == null ||
                     listing.retainerName == null ||
                     listing.sellerID == null) {
-                return args.ctx.throw(422, "Bad Listing Data");
+                args.ctx.throw(422, "Bad Listing Data");
             }
         });
 
@@ -193,7 +193,7 @@ export default {
                     entry.pricePerUnit == null ||
                     entry.quantity == null ||
                     entry.buyerName == null) {
-                return args.ctx.throw(422, "Bad History Data");
+                args.ctx.throw(422, "Bad History Data");
             }
         });
 
@@ -217,16 +217,16 @@ export default {
                     args.uploadData.marketTaxRates.limsaLominsa > 5 ||
                     args.uploadData.marketTaxRates.uldah < 0 ||
                     args.uploadData.marketTaxRates.uldah > 5 ) {
-                return args.ctx.throw(422, "Bad Market Tax Rate Data");
+                args.ctx.throw(422, "Bad Market Tax Rate Data");
             }
         }
 
         // Crafter data
         if (args.uploadData.contentID && args.uploadData.characterName == null) {
-            return args.ctx.throw(422);
+            args.ctx.throw(422);
         }
         if (args.uploadData.characterName && args.uploadData.contentID == null) {
-            return args.ctx.throw(422);
+            args.ctx.throw(422);
         }
 
         // General filters
@@ -236,7 +236,7 @@ export default {
                 !args.uploadData.marketTaxRates &&
                 !args.uploadData.contentID &&
                 !args.uploadData.op) {
-            return args.ctx.throw(422);
+            args.ctx.throw(422);
         }
 
         if (!args.uploadData.listings &&
@@ -244,7 +244,7 @@ export default {
                 !args.uploadData.marketTaxRates &&
                 !args.uploadData.contentID &&
                 !args.uploadData.op) {
-            return args.ctx.throw(418);
+            args.ctx.throw(418);
         }
 
         return false;
