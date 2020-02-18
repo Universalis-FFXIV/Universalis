@@ -146,7 +146,7 @@ export default {
         }
     },
 
-    validateUploadData: async (args: ValidateUploadDataArgs) => {
+    validateUploadData: async (args: ValidateUploadDataArgs): Promise<boolean> => {
         // Check blacklisted uploaders (people who upload fake data)
         if (args.uploadData.uploaderID == null ||
             await args.blacklistManager.has(args.uploadData.uploaderID as string)) {
@@ -163,6 +163,7 @@ export default {
                 args.uploadData.worldID === 84) {
             args.ctx.body = "Unsupported World";
             args.ctx.throw(404);
+            return true;
         }
 
         // Filter out junk item IDs.
@@ -170,6 +171,7 @@ export default {
             if (!(await args.remoteDataManager.getMarketableItemIDs()).includes(args.uploadData.itemID)) {
                 args.ctx.body = "Unsupported Item";
                 args.ctx.throw(404);
+                return true;
             }
         }
 
@@ -184,6 +186,7 @@ export default {
                     listing.retainerName == null ||
                     listing.sellerID == null) {
                 args.ctx.throw(422, "Bad Listing Data");
+                return true;
             }
         });
 
@@ -194,6 +197,7 @@ export default {
                     entry.quantity == null ||
                     entry.buyerName == null) {
                 args.ctx.throw(422, "Bad History Data");
+                return true;
             }
         });
 
@@ -218,15 +222,18 @@ export default {
                     args.uploadData.marketTaxRates.uldah < 0 ||
                     args.uploadData.marketTaxRates.uldah > 5 ) {
                 args.ctx.throw(422, "Bad Market Tax Rate Data");
+                return true;
             }
         }
 
         // Crafter data
         if (args.uploadData.contentID && args.uploadData.characterName == null) {
             args.ctx.throw(422);
+            return true;
         }
         if (args.uploadData.characterName && args.uploadData.contentID == null) {
             args.ctx.throw(422);
+            return true;
         }
 
         // General filters
@@ -237,6 +244,7 @@ export default {
                 !args.uploadData.contentID &&
                 !args.uploadData.op) {
             args.ctx.throw(422);
+            return true;
         }
 
         if (!args.uploadData.listings &&
@@ -245,6 +253,7 @@ export default {
                 !args.uploadData.contentID &&
                 !args.uploadData.op) {
             args.ctx.throw(418);
+            return true;
         }
 
         return false;
