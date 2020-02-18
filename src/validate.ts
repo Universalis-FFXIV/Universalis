@@ -135,14 +135,16 @@ export default {
         return materiaArray;
     },
 
-    validateUploadDataPreCast: (ctx: Context) => {
+    validateUploadDataPreCast: (ctx: Context): boolean => {
         if (!ctx.params.apiKey) {
             ctx.throw(401);
+            return true;
         }
 
         if (!ctx.is("json")) {
             ctx.body = "Unsupported content type";
             ctx.throw(415);
+            return true;
         }
     },
 
