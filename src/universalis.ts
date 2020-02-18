@@ -158,6 +158,7 @@ router
             historyTracker,
             logger,
             priceTracker,
+            remoteDataManager,
             trustedSourceManager,
             worldIDMap
         });

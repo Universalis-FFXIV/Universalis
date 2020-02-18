@@ -135,7 +135,7 @@ export default {
         return materiaArray;
     },
 
-    validateUploadDataPreCast: (ctx: Context) => {
+    validateUploadDataPreCast: (ctx: Context): boolean => {
         if (!ctx.params.apiKey) {
             ctx.throw(401);
             return true;
@@ -148,12 +148,11 @@ export default {
         }
     },
 
-    validateUploadData: async (args: ValidateUploadDataArgs) => {
+    validateUploadData: async (args: ValidateUploadDataArgs): Promise<boolean> => {
         // Check blacklisted uploaders (people who upload fake data)
         if (args.uploadData.uploaderID == null ||
             await args.blacklistManager.has(args.uploadData.uploaderID as string)) {
                 args.ctx.throw(403);
-                return true;
         }
 
         // You can't upload data for these worlds because you can't scrape it.
@@ -167,6 +166,15 @@ export default {
             args.ctx.body = "Unsupported World";
             args.ctx.throw(404);
             return true;
+        }
+
+        // Filter out junk item IDs.
+        if (args.uploadData.itemID) {
+            if (!(await args.remoteDataManager.getMarketableItemIDs()).includes(args.uploadData.itemID)) {
+                args.ctx.body = "Unsupported Item";
+                args.ctx.throw(404);
+                return true;
+            }
         }
 
         // Listings
