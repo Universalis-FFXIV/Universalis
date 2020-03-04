@@ -62,6 +62,7 @@ const worldIDMap: Map<number, string> = new Map();
 const init = (async () => {
     // DB Data Managers
     const universalisDB = (await db).db("universalis");
+    logger.info(`Database connected: ${(await db).isConnected()}`);
 
     extendedHistory = universalisDB.collection("extendedHistory");
     recentData = universalisDB.collection("recentData");
