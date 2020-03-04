@@ -120,6 +120,11 @@ export function createLogger(db: string): Logger {
     });
 }
 
+export async function getDCWorlds(dc: string): Promise<string[]> {
+    const dataCenterWorlds = JSON.parse((await remoteDataManager.fetchFile("dc.json")).toString())[dc];
+    return dataCenterWorlds;
+}
+
 export async function getWorldDC(world: string): Promise<string> {
     const dataCenterWorlds = JSON.parse((await remoteDataManager.fetchFile("dc.json")).toString());
     for (const dc in dataCenterWorlds) {

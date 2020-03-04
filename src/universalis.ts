@@ -16,6 +16,9 @@ import { TrustedSourceManager } from "./db/TrustedSourceManager";
 import { RemoteDataManager } from "./remote/RemoteDataManager";
 import { HistoryTracker } from "./trackers/HistoryTracker";
 import { PriceTracker } from "./trackers/PriceTracker";
+import { TransportManager } from "./transports/TransportManager";
+
+import { EorzeanMarketNoteTransport } from "./transports/EorzeanMarketNoteTransport";
 
 // Endpoint parsers
 import { parseContentID } from "./endpoints/parseContentID";
@@ -28,6 +31,9 @@ import { parseUploadHistory } from "./endpoints/parseUploadHistory";
 import { parseWorldUploadCounts } from "./endpoints/parseWorldUploadCounts";
 import { parseUploaderCounts } from "./endpoints/parseUploaderCounts";
 import { serveItemIDJSON } from "./endpoints/serveItemIDJSON";
+
+import { parseEorzeanMarketNote } from "./endpoints/parseEorzeanMarketNote";
+
 import { upload } from "./endpoints/upload";
 
 // Utils
@@ -38,15 +44,17 @@ const db = MongoClient.connect("mongodb://localhost:27017/", { useNewUrlParser: 
 const logger = createLogger("mongodb://localhost:27017/");
 logger.info("Process started.");
 
-var blacklistManager: BlacklistManager;
-var contentIDCollection: ContentIDCollection;
-var extendedHistory: Collection;
-var extraDataManager: ExtraDataManager;
-var historyTracker: HistoryTracker;
-var priceTracker: PriceTracker;
-var recentData: Collection;
-var remoteDataManager: RemoteDataManager;
-var trustedSourceManager: TrustedSourceManager;
+let blacklistManager: BlacklistManager;
+let contentIDCollection: ContentIDCollection;
+let extendedHistory: Collection;
+let extraDataManager: ExtraDataManager;
+let historyTracker: HistoryTracker;
+let priceTracker: PriceTracker;
+let recentData: Collection;
+let remoteDataManager: RemoteDataManager;
+let trustedSourceManager: TrustedSourceManager;
+
+const transportManager = new TransportManager();
 
 const worldMap: Map<string, number> = new Map();
 const worldIDMap: Map<number, string> = new Map();
@@ -54,6 +62,7 @@ const worldIDMap: Map<number, string> = new Map();
 const init = (async () => {
     // DB Data Managers
     const universalisDB = (await db).db("universalis");
+    logger.info(`Database connected: ${(await db).isConnected()}`);
 
     extendedHistory = universalisDB.collection("extendedHistory");
     recentData = universalisDB.collection("recentData");
@@ -68,6 +77,8 @@ const init = (async () => {
     historyTracker = await HistoryTracker.create(universalisDB);
     priceTracker = await PriceTracker.create(universalisDB);
     trustedSourceManager = await TrustedSourceManager.create(universalisDB);
+
+    transportManager.addTransport(new EorzeanMarketNoteTransport(logger));
 
     // World-ID conversions
     const worldList = await remoteDataManager.parseCSV("World.csv");
@@ -125,6 +136,10 @@ router
     .get("/api/tax-rates", async (ctx) => { // Tax rates
         await parseTaxRates(ctx, worldMap, extraDataManager);
     })
+
+    /*.get("/api/transports/eorzea-market-note/:world/:item", async (ctx) => {
+        await parseEorzeanMarketNote(ctx, transportManager);
+    })*/
 
     .get("/api/extra/content/:contentID", async (ctx) => { // Content IDs
         await parseContentID(ctx, contentIDCollection);
