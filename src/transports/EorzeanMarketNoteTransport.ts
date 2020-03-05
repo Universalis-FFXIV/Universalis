@@ -8,7 +8,7 @@ import { Logger } from "winston";
 
 const BASE_URL = "https://ff14marketnoteapi.ownway.info/research/1/market_research";
 
-const lodestoneKeys = {};//require("../resources/lodestoneKeys.json");
+const lodestoneKeys = require("../../public/json/lodestoneKeys.json");
 
 export class EorzeanMarketNoteTransport implements ITransport {
     name = "Eorzean Market Note";
