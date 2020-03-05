@@ -45,7 +45,7 @@ export class EorzeanMarketNoteTransport implements ITransport {
         const dataInWorld = data.apiResponse.data[world];
         const latestMarketResearches = dataInWorld["l"] || {};
 
-        const itemKey: string = (lodestoneKeys[itemID] as string).slice(29, 41);
+        const itemKey: string = lodestoneKeys[itemID];
         const itemL: number[] = latestMarketResearches[itemKey] || null;
 
         // Map the data to a useful structure.
