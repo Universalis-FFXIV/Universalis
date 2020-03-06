@@ -83,6 +83,7 @@ cli/build/
 # Cached files
 /public/csv
 /public-test/
+/public/json/item.json
 
 # Misc
 run.bat
