@@ -148,6 +148,7 @@ export class ExtraDataManager {
             if (!item.lastUploadTime) {
                 item.lastUploadTime = 0;
             }
+            delete item["_id"];
             return item;
         });
 
