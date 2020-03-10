@@ -1,3 +1,8 @@
+/**
+ * @url /api/extra/stats/recently-updated
+ * @param entries The number of entries to return.
+ */
+
 import { ParameterizedContext } from "koa";
 
 import { ExtraDataManager } from "../db/ExtraDataManager";

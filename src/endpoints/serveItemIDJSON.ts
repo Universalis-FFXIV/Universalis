@@ -1,3 +1,7 @@
+/**
+ * @url /api/marketable
+ */
+
 import { ParameterizedContext } from "koa";
 
 import { RemoteDataManager } from "../remote/RemoteDataManager";

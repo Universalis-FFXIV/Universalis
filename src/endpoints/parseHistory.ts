@@ -1,3 +1,9 @@
+/**
+ * @url /api/history/:world/:item
+ * @param world The world or DC to retrieve data from.
+ * @param item The item to retrieve data for.
+ */
+
 import difference from "lodash.difference";
 
 import { appendWorldDC, makeDistrTable } from "../util";

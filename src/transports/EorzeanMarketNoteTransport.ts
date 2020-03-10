@@ -8,7 +8,7 @@ import { Logger } from "winston";
 
 const BASE_URL = "https://ff14marketnoteapi.ownway.info/research/1/market_research";
 
-const lodestoneKeys = {};//require("../resources/lodestoneKeys.json");
+const lodestoneKeys = require("../../public/json/lodestoneKeys.json");
 
 export class EorzeanMarketNoteTransport implements ITransport {
     name = "Eorzean Market Note";
@@ -45,7 +45,7 @@ export class EorzeanMarketNoteTransport implements ITransport {
         const dataInWorld = data.apiResponse.data[world];
         const latestMarketResearches = dataInWorld["l"] || {};
 
-        const itemKey: string = (lodestoneKeys[itemID] as string).slice(29, 41);
+        const itemKey: string = lodestoneKeys[itemID];
         const itemL: number[] = latestMarketResearches[itemKey] || null;
 
         // Map the data to a useful structure.
