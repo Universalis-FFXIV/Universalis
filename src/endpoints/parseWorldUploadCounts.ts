@@ -1,3 +1,7 @@
+/**
+ * @url /api/extra/stats/world-upload-counts
+ */
+
 import { ParameterizedContext } from "koa";
 
 import { ExtraDataManager } from "../db/ExtraDataManager";

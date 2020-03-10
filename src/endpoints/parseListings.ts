@@ -1,3 +1,9 @@
+/**
+ * @url /api/:world/:item
+ * @param world The world or DC to retrieve data from.
+ * @param item The item to retrieve data for.
+ */
+
 import difference from "lodash.difference";
 
 import { appendWorldDC, calcSaleVelocity, calcTrimmedAverage, makeDistrTable, calcStandardDeviation } from "../util";

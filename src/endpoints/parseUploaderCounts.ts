@@ -1,3 +1,7 @@
+/**
+ * @url /api/extra/stats/uploader-upload-counts
+ */
+
 import { ParameterizedContext } from "koa";
 
 import { TrustedSourceManager } from "../db/TrustedSourceManager"

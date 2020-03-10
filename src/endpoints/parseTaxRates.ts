@@ -1,3 +1,8 @@
+/**
+ * @url /api/tax-rates
+ * @param world The world to retrieve data from.
+ */
+
 import { ParameterizedContext } from "koa";
 
 import { ExtraDataManager } from "../db/ExtraDataManager";
