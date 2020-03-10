@@ -135,16 +135,18 @@ export class ExtraDataManager {
         else if (typeof worldDC === "string") query.dcName = worldDC;
 
         if (items.length < 20) items = items.concat(await this.recentData
-            .find(query, { projection: { _id: 0, listings: 0, recentHistory: 0 } })
+            .find(query, { projection: { itemID: 1, worldID: 1, lastUploadTime: 1 } })
+            .sort({ lastUploadTime: 1 })
             .limit(Math.min(count, Math.max(0, this.returnCap - items.length)))
-            .sort({ timestamp: 1 })
             .toArray()
         );
 
+        items = items.sort((a, b) => a.lastUploadTime - b.lastUploadTime);
+
         // Uninitialized items won't have a timestamp in the first place.
         items = items.map((item) => {
-            if (!item.timestamp) {
-                item.timestamp = 0;
+            if (!item.lastUploadTime) {
+                item.lastUploadTime = 0;
             }
             return item;
         });
