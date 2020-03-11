@@ -1,5 +1,6 @@
 export interface WorldItemPair {
-    worldID: string | number;
+    worldID: number;
+    worldName: string;
     itemID: number;
     lastUploadTime: number;
 }
