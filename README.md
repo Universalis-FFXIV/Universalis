@@ -53,7 +53,7 @@ npm run build
 npm start
 ```
 
-# To update
+## To update
 Go to the mogboard/ folder, and execute the following commands after adding the new DataExports and icon2x data.
 ```
 sudo rm -rf var/
