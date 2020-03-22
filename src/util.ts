@@ -120,6 +120,10 @@ export function createLogger(db: string): Logger {
     });
 }
 
+export function capitalise(input: string): string {
+    return input.charAt(0).toUpperCase() + input.substr(1).toLowerCase();
+}
+
 export async function getDCWorlds(dc: string): Promise<string[]> {
     const dataCenterWorlds = JSON.parse((await remoteDataManager.fetchFile("dc.json")).toString())[dc];
     return dataCenterWorlds;

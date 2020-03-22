@@ -8,10 +8,10 @@ import { ParameterizedContext } from "koa";
 import { ExtraDataManager } from "../db/ExtraDataManager";
 
 import { MarketTaxRates } from "../models/MarketTaxRates";
+import { capitalise } from "../util";
 
 export async function parseTaxRates(ctx: ParameterizedContext, worldMap: Map<string, number>, extraDataManager: ExtraDataManager) {
-    let worldID = ctx.queryParams.world ? ctx.queryParams.world.charAt(0).toUpperCase() +
-        ctx.queryParams.world.substr(1).toLowerCase() : null;
+    let worldID: string | number = ctx.queryParams.world ? capitalise(ctx.queryParams.world) : null;
 
     if (worldID && !parseInt(worldID)) {
         worldID = worldMap.get(worldID);
@@ -20,7 +20,7 @@ export async function parseTaxRates(ctx: ParameterizedContext, worldMap: Map<str
     }
     if (!worldID) return ctx.throw(404, "Invalid World");
 
-    const taxRates: MarketTaxRates = await extraDataManager.getTaxRates(worldID);
+    const taxRates: MarketTaxRates = await extraDataManager.getTaxRates(worldID as number);
 
     if (!taxRates) {
         ctx.body = {
