@@ -1,7 +1,8 @@
 /**
  * @url /api/extra/stats/least-recently-updated
- * @param world The world or DC to retrieve data from.
- * @param entries The number of entries to return.
+ * @param world string | number The world or DC to retrieve data from.
+ * @param entries number The number of entries to return.
+ * @returns items WorldItemPairList[] An array of world-item pairs for the least-recently-updated items.
  */
 
 import { ParameterizedContext } from "koa";

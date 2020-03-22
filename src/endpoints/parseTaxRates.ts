@@ -1,6 +1,12 @@
 /**
  * @url /api/tax-rates
- * @param world The world to retrieve data from.
+ * @param world string | number The world to retrieve data from.
+ * @returns Crystarium number The Crystarium's current tax rate.
+ * @returns Gridania number Gridania's current tax rate.
+ * @returns Ishgard number Ishgard's current tax rate.
+ * @returns Kugane number Kugane's current tax rate.
+ * @returns Limsa Lominsa number Limsa Lominsa's current tax rate.
+ * @returns Ul'dah number Ul'dah's current tax rate.
  */
 
 import { ParameterizedContext } from "koa";

@@ -1,6 +1,9 @@
 /**
  * @url /api/extra/content/:contentID
- * @param contentID The content ID of the content you wish to retrieve from the content database.
+ * @param contentID string The content ID of the content you wish to retrieve from the content database.
+ * @returns contentID string The content ID of the object retrieved.
+ * @returns contentType string The category of the object retrieved.
+ * @experimental
  */
 
 import { ParameterizedContext } from "koa";

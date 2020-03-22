@@ -31,6 +31,8 @@ function readMarkup(data: string): DocInfo {
 
     let url: string;
     let params: Parameter[] = [];
+    let returns: Return[] = [];
+    let experimental = false;
     let disabled = false;
 
     markupComment.forEach((line) => {
@@ -40,19 +42,42 @@ function readMarkup(data: string): DocInfo {
         if (directive === "url")
             url = value;
         else if (directive === "param") {
-            const name = value.split(" ")[0];
+            const words = value.split(" ");
+            const name = words.shift();
+            let type = words.shift();
+            while (words[0] === "|") {
+                type += ` ${words.shift()} ${words.shift()}`;
+            }
             params.push({
-                name: name,
-                usage: value.slice(name.length + 1)
+                name,
+                type,
+                usage: value.slice(name.length + type.length + 2),
             });
         }
+        else if (directive === "returns") {
+            const words = value.split(" ");
+            const name = words.shift();
+            let type = words.shift();
+            while (words[0] === "|") {
+                type += ` ${words.shift()} ${words.shift()}`;
+            }
+            returns.push({
+                name,
+                type,
+                usage: value.slice(name.length + type.length + 2),
+            });
+        }
+        else if (directive === "experimental")
+            experimental = true;
         else if (directive === "disabled")
-            disabled = (value === "true" ? true : false);
+            disabled = true;
     });
 
     return {
         url,
         params,
+        returns,
+        experimental,
         disabled
     };
 }
@@ -60,10 +85,19 @@ function readMarkup(data: string): DocInfo {
 interface DocInfo {
     url: string;
     params: Parameter[];
+    returns: Return[];
+    experimental: boolean;
     disabled: boolean;
 }
 
 interface Parameter {
     name: string;
+    type: string;
+    usage: string;
+}
+
+interface Return {
+    name: string;
+    type: string;
     usage: string;
 }

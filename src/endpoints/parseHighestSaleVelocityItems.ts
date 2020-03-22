@@ -1,7 +1,8 @@
 /**
  * @url /api/extra/highest-sale-velocity
- * @param world The world to retrieve data from.
- * @disabled true
+ * @param world string | number The world to retrieve data from.
+ * @experimental
+ * @disabled
  */
 
 import { ParameterizedContext } from "koa";

@@ -1,7 +1,7 @@
 /**
  * @url /api/history/:world/:item
- * @param world The world or DC to retrieve data from.
- * @param item The item to retrieve data for.
+ * @param world string | number The world or DC to retrieve data from.
+ * @param item number The item to retrieve data for.
  */
 
 import difference from "lodash.difference";
