@@ -21,8 +21,11 @@ writeFileSync(outputFile, JSON.stringify(output));
 function readMarkup(data: string): DocInfo {
     const markupComment = data.substring(0, data.indexOf("*/"))
         .split(/\r\n/g)
+        .filter((line) => line.indexOf("@") !== -1)
         .map((line) => {
-            return line.slice(line.indexOf("@") + 1);
+            const thing = line.slice(line.indexOf("@") + 1);
+            const things = thing.split(" ");
+            return [things[0], thing.slice(things[0].length + 1)];
         });
     console.log(markupComment);
 
@@ -31,18 +34,20 @@ function readMarkup(data: string): DocInfo {
     let disabled = false;
 
     markupComment.forEach((line) => {
-        const directive = line.split(" ").shift();
-        const value = line.slice(directive.length);
+        const directive = line[0];
+        const value = line[1];
 
         if (directive === "url")
             url = value;
-        else if (directive === "param")
+        else if (directive === "param") {
+            const name = value.split(" ")[0];
             params.push({
-                name: value.split(" ")[0],
-                usage: value.slice(this.name.length)
+                name: name,
+                usage: value.slice(name.length + 1)
             });
+        }
         else if (directive === "disabled")
-            disabled = value === "true" ? true : false;
+            disabled = (value === "true" ? true : false);
     });
 
     return {
