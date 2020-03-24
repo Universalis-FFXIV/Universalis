@@ -1,4 +1,5 @@
 /**
+ * @name Market History
  * @url /api/history/:world/:item
  * @param world string | number The world or DC to retrieve data from.
  * @param item number The item to retrieve data for.

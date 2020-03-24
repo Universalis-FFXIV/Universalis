@@ -1,4 +1,5 @@
 /**
+ * @name Uploader Application Counts
  * @url /api/extra/stats/uploader-upload-counts
  */
 

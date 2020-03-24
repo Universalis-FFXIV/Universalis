@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from "fs";
 import { join } from "path"
+import { inspect } from "util"
 
 const inputPath = join(__dirname, "..", "..", "src", "endpoints");
 const outputFile = join(__dirname, "..", "..", "public", "json", "docs.json");
@@ -18,7 +19,10 @@ endpoints.forEach(file => {
 
 writeFileSync(outputFile, JSON.stringify(output));
 
+console.log(inspect(output, false, null, true));
+
 function readMarkup(data: string): DocInfo {
+    // Split the markup comment into key-value pairs
     const markupComment = data.substring(0, data.indexOf("*/"))
         .split(/\r\n/g)
         .filter((line) => line.indexOf("@") !== -1)
@@ -27,19 +31,22 @@ function readMarkup(data: string): DocInfo {
             const things = thing.split(" ");
             return [things[0], thing.slice(things[0].length + 1)];
         });
-    console.log(markupComment);
 
+    let endpointName: string;
     let url: string;
     let params: Parameter[] = [];
     let returns: Return[] = [];
     let experimental = false;
     let disabled = false;
 
+    // Parse values by directive
     markupComment.forEach((line) => {
         const directive = line[0];
         const value = line[1];
 
-        if (directive === "url")
+        if (directive === "name")
+            endpointName = value;
+        else if (directive === "url")
             url = value;
         else if (directive === "param") {
             const words = value.split(" ");
@@ -74,6 +81,7 @@ function readMarkup(data: string): DocInfo {
     });
 
     return {
+        name: endpointName,
         url,
         params,
         returns,
@@ -83,6 +91,7 @@ function readMarkup(data: string): DocInfo {
 }
 
 interface DocInfo {
+    name: string;
     url: string;
     params: Parameter[];
     returns: Return[];

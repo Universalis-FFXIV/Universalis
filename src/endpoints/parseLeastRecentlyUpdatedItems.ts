@@ -1,4 +1,5 @@
 /**
+ * @name Least-Recently-Updated Items
  * @url /api/extra/stats/least-recently-updated
  * @param world string | number The world or DC to retrieve data from.
  * @param entries number The number of entries to return.

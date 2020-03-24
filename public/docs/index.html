@@ -3,157 +3,74 @@
     <head>
         <!-- Required meta tags -->
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-        <!-- Bootstrap CSS -->
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet"> 
+        <title>Universalis API Documentation</title>
         <style>
             body {
-                margin-left: 25%;
-                margin-right: 25%;
+                margin-left: 15%;
+                margin-right: 15%;
+                font-family: 'Open Sans', sans-serif;
             }
         </style>
-
-        <title>Temporary API Documentation</title>
+        <script type="text/javascript">
+            const http = new XMLHttpRequest();
+            const url = "/json/docs.json"
+            http.open("GET", url);
+            http.send();
+        </script>
     </head>
     <body>
-        <h1 id="top">Temporary API Documentation</h1>
+        <h1 id="top">Universalis API Documentation</h1>
+        <h3>Table of Contents</h3>
+        <ul id="toc"></ul>
+        <div id="endpointdocs"></div>
+        <script type="text/javascript">
+            http.onreadystatechange = (e) => {
+                const baseUrl = "https://universalis.app";
 
-        <p>This documentation page will only exist until a more explanatory one that looks good gets set up on mogboard.</p>
+                let docs;
+                try {
+                    docs = JSON.parse(http.responseText);
+                } catch {
+                    return;
+                }
+                const tableOfContents = document.getElementById("toc");
+                const documentation = document.getElementById("endpointdocs");
 
-        <h2>Table of Contents</h2>
-        <ul>
-            <li><a href="#current">Current Listings and Currently-visible History</a></li>
-            <ul>
-                <li><a href="#multiitem">Multi-item Queries</a></li>
-                <li><a href="#worldnames">World Names Instead of World IDs</a></li>
-                <li><a href="#dcwidequeries">DC-Wide Queries</a></li>
-            </ul>
-            <li><a href="#extended-history">Extended History</a></li>
-            <ul>
-                <li><a href="#entries1">Entry-Limiting</a></li>
-            </ul>
-            <li><a href="#contentid">Content IDs</a></li>
-            <li><a href="#upload-history">Stats - Upload History</a></li>
-            <ul>
-                <li><a href="#entries2">Entry-Limiting</a></li>
-            </ul>
-            <li><a href="#recently-updated">Stats - Recently Updated</a></li>
-            <ul>
-                <li><a href="#entries3">Entry-Limiting</a></li>
-            </ul>
-            <li><a href="#least-recently-updated">Stats - Least-Recently Updated</a></li>
-            <ul>
-                <li><a href="#entries4">Entry-Limiting</a></li>
-                <li><a href="#lruWorldDC">World and DC Filtering</a></li>
-            </ul>
-        </ul>
+                for (let i = 0; i < docs.length; i++) {
+                    const tableOfContentsEntry = tableOfContents.appendChild(document.createElement("li"));
+                    tableOfContentsEntry.innerHTML = `
+                        <a href="#endpoint${i}">${docs[i].name}</a>
+                    `;
 
-        <h3 id="current">Current Listings and Currently-visible History</h3>
-        <code>https://universalis.app/api/worldID/itemID</code>
-        <p>Example: <a href="/api/74/26465">https://universalis.app/api/74/26465</a></p>
-        <p>World ID 74 corresponds to Coeurl, and item ID corresponds to the Facet Tabard of Aiming.
-            Each listing has the following properties:</p>
-        <p><code>creatorID</code>: The hash of the crafter's content ID.</p>
-        <p><code>creatorName</code>: The crafter's name.</p>
-        <p><code>hq</code>: Whether or not the item is high-quality.</p>
-        <p><code>lastReviewTime</code>: The time in milliseconds since the listing was checked by the seller.</p>
-        <p><code>listingID</code>: The hash of the content ID of the listing.</p>
-        <p><code>materia</code>: An array of materia values. These are not materia item IDs.</p>
-        <p><code>onMannequin</code>: Whether or not the item for sale is on a mannequin in a player house.</p>
-        <p><code>pricePerUnit</code></p>
-        <p><code>quantity</code></p>
-        <p><code>retainerCity</code>: The ID of the retainer's stationed city. Limsa Lominsa is 1, Gridania is 2, Ul'dah is 3, Ishgard is 4, Kugane is 7, and the Crystarium is 10.</p>
-        <p><code>retainerID</code>: The hash of the retainer's content ID.</p>
-        <p><code>retainerName</code></p>
-        <p><code>sellerID</code>: The hash of the seller's content ID.</p>
-        <p><code>stainID</code>: The ID of the item's dye.</p>
-        <p><code>total</code>: <code>pricePerUnit * quantity</code></p>
-        <p><code>isCrafted</code>: Whether or not it's crafted.</p>
-        <p>Each history entry has the following properties:</p>
-        <p><code>buyerName</code>: The buyer's name.</p>
-        <p><code>hq</code>: Whether or not the item is high-quality.</p>
-        <p><code>pricePerUnit</code></p>
-        <p><code>quantity</code></p>
-        <p><code>sellerID</code>: The hash of the seller's content ID.</p>
-        <p><code>timestamp</code>: The UNIX timestamp of the sale.</p>
-        <p><code>total</code>: <code>pricePerUnit * quantity</code></p>
-        <p><code>worldName</code>: The name of the world.</p>
-
-        <h4 id="multiitem">Multi-item Queries</h4>
-        <p>You can query multiple items at once by separating their IDs with commas.</p>
-        <p>Example: <a href="/api/74/26465,4">https://universalis.app/api/74/26465,4</a></p>
-
-        <h4 id="worldnames">World Names Instead of World IDs</h4>
-        <p>You can query for a World Name instead of a World ID.</p>
-        <p>Example: <a href="/api/Coeurl/26465">https://universalis.app/api/Coeurl/26465</a></p>
-
-        <h4 id="dcwidequeries">DC-Wide Queries</h4>
-        <p>You can query the whole DC at once, as well.</p>
-        <p>Example: <a href="/api/Crystal/26465">https://universalis.app/api/Crystal/26465</a></p>
-
-        <h3 id="extended-history">Extended History</h3>
-        <code>https://universalis.app/api/history/worldID/itemID</code>
-        <p>Example: <a href="/api/history/74/26465">https://universalis.app/api/history/74/26465</a></p>
-        <p>World ID 74 corresponds to Coeurl, and item ID corresponds to the Facet Tabard of Aiming.
-            The same advanced queries can be run as described above.
-            This endpoint is primarily to be used for graphing.</p>
-        <p>Each entry has the following properties:</p>
-        <p><code>hq</code>: Whether or not the item is high-quality.</p>
-        <p><code>pricePerUnit</code></p>
-        <p><code>timestamp</code>: The UNIX timestamp of the sale.</p>
-
-        <h4 id="entries1">Entry-Limiting</h4>
-        <p>You can request fewer entries using a query parameter.</p>
-        <p>Example: <a href="/api/history/74/26465?entries=1">https://universalis.app/api/history/74/26465?entries=1</a></p>
-
-        <h3 id="contentid">Content IDs</h3>
-        <code>https://universalis.app/api/extra/content/contentID</code>
-        <p>Example: <a href="/api/extra/content/32jfd98234fjwioehio4">https://universalis.app/api/extra/content/32jfd98234fjwioehio4</a></p>
-        <p>This endpoint allows you to look up what limited data is available associated with a content ID.</p>
-        <p>TODO: How does this work, exactly?</p>
-
-        <h3 id="upload-history">Stats - Upload History</h3>
-        <code>https://universalis.app/api/extra/stats/upload-history</code>
-        <p><a href="/api/extra/stats/upload-history">https://universalis.app/api/extra/stats/upload-history</a></p>
-        <p>This endpoint allows you to see how many uploads occurred over the past 30 days.</p>
-        <p>The smaller indices describe more recent days.</p>
-
-        <h4 id="entries2">Entry-Limiting</h4>
-        <p>You can request fewer entries using a query parameter.</p>
-        <p>Example: <a href="/api/extra/stats/upload-history?entries=1">https://universalis.app/api/extra/stats/upload-history?entries=1</a></p>
-
-        <h3 id="recently-updated">Stats - Recently Updated</h3>
-        <code>https://universalis.app/api/extra/stats/recently-updated</code>
-        <p><a href="/api/extra/stats/recently-updated">https://universalis.app/api/extra/stats/recently-updated</a></p>
-        <p>This endpoint provides the item IDs of the most-recently updated items on the website.</p>
-        <p>The smaller indices describe more-recently updated items.</p>
-
-        <h4 id="entries3">Entry-Limiting</h4>
-        <p>You can request fewer entries using a query parameter.</p>
-        <p>Example: <a href="/api/extra/stats/recently-updated?entries=1">https://universalis.app/api/extra/stats/recently-updated?entries=1</a></p>
-
-        <h3 id="least-recently-updated">Stats - Least-Recently Updated</h3>
-        <code>https://universalis.app/api/extra/stats/least-recently-updated</code>
-        <p><a href="/api/extra/stats/least-recently-updated">https://universalis.app/api/extra/stats/least-recently-updated</a></p>
-        <p>This endpoint provides the item IDs of the least-recently updated items on the website.</p>
-        <p>The smaller indices describe less-recently updated items.</p>
-
-        <h4 id="entries4">Entry-Limiting</h4>
-        <p>You can request fewer entries using a query parameter.</p>
-        <p>Example: <a href="/api/extra/stats/least-recently-updated?entries=1">https://universalis.app/api/extra/stats/least-recently-updated?entries=1</a></p>
-
-        <h4 id="lruWorldDC">World and DC Filtering</h4>
-        <p>You can request data for a World or whole DC using a query parameter. World names can also be provided as described above. If both parameters are provided, the World will take priority if it is not 0.</p>
-        <p>Example: <a href="/api/extra/stats/least-recently-updated?world=74">https://universalis.app/api/extra/stats/least-recently-updated?world=74</a></p>
-        <p>Example: <a href="/api/extra/stats/least-recently-updated?world=Coeurl">https://universalis.app/api/extra/stats/least-recently-updated?world=Coeurl</a></p>
-        <p>Example: <a href="/api/extra/stats/least-recently-updated?dcName=Crystal">https://universalis.app/api/extra/stats/least-recently-updated?dcName=Crystal</a></p>
-
-        <!-- Optional JavaScript -->
-        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+                    const docEntry = documentation.appendChild(document.createElement("div"));
+                    docEntry.innerHTML = `
+                        <h3 id="endpoint${i}">${docs[i].name}</h3>
+                        <div>
+                            <a href="${baseUrl}${docs[i].url}">${baseUrl}${docs[i].url}</a>
+                            <p>
+                                ${(() => {
+                                    let paramList = "";
+                                    for (const param of docs[i].params) {
+                                        paramList += "<p><code>" + param.name + "</code> <code style=\"color:red\">" + param.type + "</code> - " + param.usage + "</p>";
+                                    }
+                                    return paramList
+                                })()}
+                            </p>
+                            Returns:
+                            <p>
+                                ${(() => {
+                                    let returnList = "";
+                                    for (const ret of docs[i].returns) {
+                                        returnList += "<p><code>" + ret.name + "</code> <code style=\"color:red\">" + ret.type + "</code> - " + ret.usage + "</p>";
+                                    }
+                                    return returnList
+                                })()}
+                            </p>
+                        </div>
+                    `;
+                }
+            };
+        </script>
     </body>
 </html>

@@ -1,4 +1,5 @@
 /**
+ * @name Eorzean Market Note
  * @url /api/transports/eorzea-market-note/:world/:item
  * @param world string | number The world or DC to retrieve data from.
  * @param item string The item to retrieve data for.

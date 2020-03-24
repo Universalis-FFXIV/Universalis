@@ -1,4 +1,5 @@
 /**
+ * @name Recently-Updated Items
  * @url /api/extra/stats/recently-updated
  * @param entries number The number of entries to return.
  * @returns items RecentlyUpdated The most-recently-updated items, up to "entries".

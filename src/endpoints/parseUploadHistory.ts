@@ -1,4 +1,5 @@
 /**
+ * @name Upload History Count
  * @url /api/extra/stats/upload-history
  * @param entries number The number of entries to return.
  */

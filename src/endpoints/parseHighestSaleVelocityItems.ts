@@ -1,4 +1,5 @@
 /**
+ * @name Highest Sale Velocity Items
  * @url /api/extra/highest-sale-velocity
  * @param world string | number The world to retrieve data from.
  * @experimental

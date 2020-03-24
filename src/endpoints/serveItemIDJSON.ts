@@ -1,6 +1,7 @@
 /**
+ * @name Marketable Items
  * @url /api/marketable
- * @returns number[] The entire list of marketable items.
+ * @returns  number[] The entire list of marketable items.
  */
 
 import { ParameterizedContext } from "koa";
