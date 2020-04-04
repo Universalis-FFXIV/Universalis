@@ -126,19 +126,17 @@ export default {
         );
     },
 
-    validateUploadDataPreCast: (ctx: Context): boolean => {
+    validateUploadDataPreCast: (ctx: Context): void | never => {
         if (!ctx.params.apiKey) {
             ctx.throw(HttpStatusCodes.UNAUTHENTICATED);
-            return true;
         }
 
         if (!ctx.is("json") || hasHtmlTags(JSON.stringify(ctx.request.body))) {
             ctx.throw(HttpStatusCodes.UNSUPPORTED_MEDIA_TYPE);
-            return true;
         }
     },
 
-    validateUploadData: async (args: ValidateUploadDataArgs): Promise<boolean> => {
+    validateUploadData: async (args: ValidateUploadDataArgs): Promise<void | never> => {
         // Check blacklisted uploaders (people who upload fake data)
         if (args.uploadData.uploaderID == null ||
             await args.blacklistManager.has(args.uploadData.uploaderID as string)) {
@@ -150,7 +148,6 @@ export default {
         if (!isValidWorld(args.uploadData.worldID)) {
             args.ctx.body = "Unsupported World";
             args.ctx.throw(HttpStatusCodes.NOT_FOUND);
-            return true;
         }
 
         // Filter out junk item IDs.
@@ -158,7 +155,6 @@ export default {
             if (!(await args.remoteDataManager.getMarketableItemIDs()).includes(args.uploadData.itemID)) {
                 args.ctx.body = "Unsupported Item";
                 args.ctx.throw(HttpStatusCodes.NOT_FOUND);
-                return true;
             }
         }
 
@@ -173,7 +169,6 @@ export default {
                     !isValidName(listing.retainerName) ||
                     listing.sellerID == null) {
                 args.ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY, "Bad Listing Data");
-                return true;
             }
         });
 
@@ -184,7 +179,6 @@ export default {
                 !isValidUInt32(entry.quantity) ||
                 !isValidName(entry.buyerName)) {
                 args.ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY, "Bad History Data");
-                return true;
             }
         });
 
@@ -197,17 +191,14 @@ export default {
                 !isValidTaxRate(args.uploadData.marketTaxRates.limsaLominsa) ||
                 !isValidTaxRate(args.uploadData.marketTaxRates.uldah)) {
                 args.ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY, "Bad Market Tax Rate Data");
-                return true;
             }
         }
 
         // Crafter data
         if (args.uploadData.characterName == null || args.uploadData.contentID == null) {
             args.ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY);
-            return true;
         } else if (!isValidName(args.uploadData.characterName)) {
             args.ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY);
-            return true;
         }
 
         // General filters
@@ -218,7 +209,6 @@ export default {
                 !args.uploadData.contentID &&
                 !args.uploadData.op) {
             args.ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY);
-            return true;
         }
 
         if (!args.uploadData.listings &&
@@ -227,10 +217,7 @@ export default {
                 !args.uploadData.contentID &&
                 !args.uploadData.op) {
             args.ctx.throw(HttpStatusCodes.IM_A_TEAPOT);
-            return true;
         }
-
-        return false;
     }
 };
 

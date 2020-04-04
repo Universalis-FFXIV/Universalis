@@ -10,6 +10,7 @@ import validation from "../validate";
 
 // Load models
 import { City } from "../models/City";
+import { HttpStatusCodes } from "../models/HttpStatusCodes";
 import { GenericUpload } from "../models/GenericUpload";
 import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
@@ -28,16 +29,13 @@ export async function upload(parameters: UploadProcessParameters) {
     const trustedSourceManager = parameters.trustedSourceManager;
     const worldIDMap = parameters.worldIDMap;
 
-    let err = validation.validateUploadDataPreCast(ctx);
-    if (err) {
-        return err;
-    }
+    validation.validateUploadDataPreCast(ctx);
 
     const promises: Array<Promise<any>> = []; // Sort of like a thread list.
 
     // Accept identity via API key.
     const trustedSource: TrustedSource = await trustedSourceManager.get(ctx.params.apiKey);
-    if (!trustedSource) return ctx.throw(401);
+    if (!trustedSource) return ctx.throw(HttpStatusCodes.UNAUTHENTICATED);
     const sourceName = trustedSource.sourceName;
     promises.push(trustedSourceManager.increaseUploadCount(ctx.params.apiKey));
     logger.info("Received upload from " + sourceName + ":\n" + JSON.stringify(ctx.request.body));
@@ -49,10 +47,7 @@ export async function upload(parameters: UploadProcessParameters) {
 
     uploadData.uploaderID = sha("sha256").update(uploadData.uploaderID + "").digest("hex");
 
-    err = await validation.validateUploadData({ ctx, uploadData, blacklistManager, remoteDataManager });
-    if (err) {
-        return err;
-    }
+    await validation.validateUploadData({ ctx, uploadData, blacklistManager, remoteDataManager });
 
     // Metadata
     if (uploadData.worldID) {
@@ -147,7 +142,7 @@ export async function upload(parameters: UploadProcessParameters) {
                 }
             } else {
                 logger.info("Attempted to run a bulk delisting of over 100 items, returning.");
-                return ctx.throw(422);
+                return ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY);
             }
         }
     }
