@@ -15,7 +15,7 @@ import { ValidateUploadDataArgs } from "./models/ValidateUploadDataArgs";
 export default {
     cleanHistoryEntry: (entry: MarketBoardHistoryEntry, sourceName?: string): MarketBoardHistoryEntry => {
         const stringifiedEntry = JSON.stringify(entry);
-        if (stringifiedEntry.match(/<[\s\S]*?>/).length != 0) {
+        if (stringifiedEntry.match(/<[\s\S]*?>/)) {
             entry = JSON.parse(stringifiedEntry.replace(/<[\s\S]*?>/, ""));
         }
 
@@ -38,7 +38,7 @@ export default {
 
     cleanHistoryEntryOutput: (entry: MarketBoardHistoryEntry): MarketBoardHistoryEntry => {
         const stringifiedEntry = JSON.stringify(entry);
-        if (stringifiedEntry.match(/<[\s\S]*?>/).length != 0) {
+        if (stringifiedEntry.match(/<[\s\S]*?>/)) {
             entry = JSON.parse(stringifiedEntry.replace(/<[\s\S]*?>/, ""));
         }
 
@@ -55,7 +55,7 @@ export default {
 
     cleanListing: (listing: MarketBoardItemListingUpload, sourceName?: string): MarketBoardItemListingUpload => {
         const stringifiedListing = JSON.stringify(listing);
-        if (stringifiedListing.match(/<[\s\S]*?>/).length != 0) {
+        if (stringifiedListing.match(/<[\s\S]*?>/)) {
             listing = JSON.parse(stringifiedListing.replace(/<[\s\S]*?>/, ""));
         }
 
@@ -90,7 +90,7 @@ export default {
 
     cleanListingOutput: (listing: MarketBoardItemListing): MarketBoardItemListing => {
         const stringifiedListing = JSON.stringify(listing);
-        if (stringifiedListing.match(/<[\s\S]*?>/).length != 0) {
+        if (stringifiedListing.match(/<[\s\S]*?>/)) {
             listing = JSON.parse(stringifiedListing.replace(/<[\s\S]*?>/, ""));
         }
 
@@ -212,7 +212,7 @@ export default {
                     listing.retainerCity == null ||
                     listing.retainerName == null ||
                     listing.retainerName.length > 32 ||
-                    listing.retainerName.match(/[^a-zA-Z0-9'-]/g).length != 0 ||
+                    listing.retainerName.match(/[^a-zA-Z0-9'-]/g) ||
                     listing.sellerID == null) {
                 args.ctx.throw(422, "Bad Listing Data");
                 return true;
@@ -226,7 +226,7 @@ export default {
                     entry.quantity == null ||
                     entry.buyerName == null ||
                     entry.buyerName.length > 32 ||
-                    entry.buyerName.match(/[^a-zA-Z0-9'-]/g).length != 0) {
+                    entry.buyerName.match(/[^a-zA-Z0-9'-]/g)) {
                 args.ctx.throw(422, "Bad History Data");
                 return true;
             }
@@ -258,7 +258,7 @@ export default {
         }
 
         // Crafter data
-        if (args.uploadData.contentID && (args.uploadData.characterName == null || args.uploadData.characterName.length > 32 || args.uploadData.characterName.match(/[^a-zA-Z0-9'-]/g).length != 0)) {
+        if (args.uploadData.contentID && (args.uploadData.characterName == null || args.uploadData.characterName.length > 32 || args.uploadData.characterName.match(/[^a-zA-Z0-9'-]/g))) {
             args.ctx.throw(422);
             return true;
         }
