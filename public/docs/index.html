@@ -26,6 +26,9 @@
         <div id="endpointdocs"></div>
         <script type="text/javascript">
             http.onreadystatechange = (e) => {
+                if (http.readyState !== 4)
+                    return;
+
                 const baseUrl = "https://universalis.app";
 
                 let docs;
@@ -44,8 +47,10 @@
                     `;
 
                     const docEntry = documentation.appendChild(document.createElement("div"));
+                    const disabled = docs[i].disabled;
+                    const experimentalEnabled = docs[i].experimental && !disabled;
                     docEntry.innerHTML = `
-                        <h3 id="endpoint${i}">${docs[i].name}</h3>
+                        <h3 id="endpoint${i}" ${experimentalEnabled ? "style=\"color:red\"" : ""}${disabled ? "style=\"color:gray\"" : ""}>${docs[i].name}${experimentalEnabled ? "<small><small> Experimental</small></small>" : ""}${disabled ? "<small><small> Disabled</small></small>" : ""}</h3>
                         <div>
                             <a href="${baseUrl}${docs[i].url}">${baseUrl}${docs[i].url}</a>
                             <p>
@@ -54,7 +59,7 @@
                                     for (const param of docs[i].params) {
                                         paramList += "<p><code>" + param.name + "</code> <code style=\"color:red\">" + param.type + "</code> - " + param.usage + "</p>";
                                     }
-                                    return paramList
+                                    return paramList;
                                 })()}
                             </p>
                             Returns:
@@ -64,7 +69,7 @@
                                     for (const ret of docs[i].returns) {
                                         returnList += "<p><code>" + ret.name + "</code> <code style=\"color:red\">" + ret.type + "</code> - " + ret.usage + "</p>";
                                     }
-                                    return returnList
+                                    return returnList;
                                 })()}
                             </p>
                         </div>

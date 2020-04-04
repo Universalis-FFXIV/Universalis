@@ -1,3 +1,8 @@
+/**
+ * @name Upload
+ * @url /upload
+ */
+
 import sha from "sha.js";
 
 // Utils
