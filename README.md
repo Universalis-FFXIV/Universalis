@@ -58,8 +58,8 @@ Go to the mogboard/ folder, and execute the following commands after adding the 
 ```
 sudo rm -rf var/
 sudo redis-cli FLUSHALL
-php bin/console PopulateGameDataCommand -vvv
-sudo chmod 0777 var/
+sudo php bin/console PopulateGameDataCommand -vvv
+sudo chmod 0777 var/ -R
 ```
 
 ## Uploads
