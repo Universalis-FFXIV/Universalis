@@ -2,6 +2,7 @@
  * @name Upload History Count
  * @url /api/extra/stats/upload-history
  * @param entries number The number of entries to return.
+ * @returns uploadCountByDay DailyUploadStatistics A 30-index long array containing upload tallies for each of the past 30 days.
  */
 
 import { ParameterizedContext } from "koa";

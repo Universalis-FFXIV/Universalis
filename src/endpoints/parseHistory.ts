@@ -4,8 +4,7 @@
  * @param world string | number The world or DC to retrieve data from.
  * @param item number The item to retrieve data for.
  */
-
-import difference from "lodash.difference";
+import R from "remeda"
 
 import { appendWorldDC, makeDistrTable } from "../util";
 
@@ -13,7 +12,6 @@ import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
 import { MinimizedHistoryEntry } from "../models/MinimizedHistoryEntry";
-
 export async function parseHistory(ctx: ParameterizedContext, worldMap: Map<string, number>, history: Collection) {
     let entriesToReturn: any = ctx.queryParams.entries;
     if (entriesToReturn) entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
@@ -37,7 +35,7 @@ export async function parseHistory(ctx: ParameterizedContext, worldMap: Map<stri
     appendWorldDC(data, worldMap, ctx);
 
     // Data filtering
-    data.items = data.items.map((item: {
+    data.items = data.items.map((item: { // Something needs to be done about this.
         entries: MinimizedHistoryEntry[];
         stackSizeHistogram: { [key: number]: number };
         stackSizeHistogramNQ: { [key: number]: number };
@@ -71,7 +69,7 @@ export async function parseHistory(ctx: ParameterizedContext, worldMap: Map<stri
 
     // Fill in unresolved items
     const resolvedItems: number[] = data.items.map((item) => item.itemID);
-    const unresolvedItems: number[] = difference(itemIDs, resolvedItems);
+    const unresolvedItems: number[] = R.difference(itemIDs, resolvedItems);
     data["unresolvedItems"] = unresolvedItems;
 
     for (const item of unresolvedItems) {

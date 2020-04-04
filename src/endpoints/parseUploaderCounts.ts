@@ -1,6 +1,7 @@
 /**
  * @name Uploader Application Counts
  * @url /api/extra/stats/uploader-upload-counts
+ * @returns  [{sourceName:string;uploadCount:number;}] An array of uploader source names and their respective total upload counts.
  */
 
 import { ParameterizedContext } from "koa";

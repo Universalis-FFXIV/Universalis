@@ -1,6 +1,7 @@
 /**
  * @name Upload Counts By-World
  * @url /api/extra/stats/world-upload-counts
+ * @returns  {count:number;proportion:number;} The total uploads and the proportion of that to the total uploads on the website, per world.
  */
 
 import { ParameterizedContext } from "koa";
