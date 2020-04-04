@@ -20,7 +20,7 @@ export default {
         }
 
         const newEntry = {
-            buyerName: entry.buyerName,
+            buyerName: entry.buyerName.replace(/[^a-zA-Z0-9'-]/g, ""),
             hq: entry.hq == null ? false : entry.hq,
             pricePerUnit: entry.pricePerUnit,
             quantity: entry.quantity,
@@ -43,7 +43,7 @@ export default {
         }
 
         return {
-            buyerName: entry.buyerName,
+            buyerName: entry.buyerName.replace(/[^a-zA-Z0-9'-]/g, ""),
             hq: entry.hq,
             pricePerUnit: entry.pricePerUnit,
             quantity: entry.quantity,
@@ -61,7 +61,7 @@ export default {
 
         const newListing = {
             creatorID: sha("sha256").update(listing.creatorID + "").digest("hex"),
-            creatorName: listing.creatorName,
+            creatorName: listing.creatorName.replace(/[^a-zA-Z0-9'-]/g, ""),
             hq: listing.hq == null ? false : listing.hq,
             lastReviewTime: listing.lastReviewTime,
             listingID: sha("sha256").update(listing.listingID + "").digest("hex"),
@@ -72,7 +72,7 @@ export default {
             retainerCity: typeof listing.retainerCity === "number" ?
                 listing.retainerCity : City[listing.retainerCity],
             retainerID: sha("sha256").update(listing.retainerID + "").digest("hex"),
-            retainerName: listing.retainerName,
+            retainerName: listing.retainerName.replace(/[^a-zA-Z0-9'-]/g, ""),
             sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
             stainID: listing.stainID,
             uploadApplication: sourceName ? sourceName : listing.uploadApplication,
@@ -96,7 +96,7 @@ export default {
 
         const formattedListing = {
             creatorID: listing.creatorID,
-            creatorName: listing.creatorName,
+            creatorName: listing.creatorName.replace(/[^a-zA-Z0-9'-]/g, ""),
             hq: listing.hq == null ? false : listing.hq,
             isCrafted:
                 listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9" && // 0n
@@ -110,7 +110,7 @@ export default {
             retainerCity: typeof listing.retainerCity === "number" ?
                 listing.retainerCity : City[listing.retainerCity],
             retainerID: listing.retainerID,
-            retainerName: listing.retainerName,
+            retainerName: listing.retainerName.replace(/[^a-zA-Z0-9'-]/g, ""),
             sellerID: listing.sellerID,
             stainID: listing.stainID,
             total: listing.pricePerUnit * listing.quantity,
@@ -212,6 +212,7 @@ export default {
                     listing.retainerCity == null ||
                     listing.retainerName == null ||
                     listing.retainerName.length > 32 ||
+                    listing.retainerName.match(/[^a-zA-Z0-9'-]/g).length != 0 ||
                     listing.sellerID == null) {
                 args.ctx.throw(422, "Bad Listing Data");
                 return true;
@@ -224,7 +225,8 @@ export default {
                     entry.pricePerUnit == null ||
                     entry.quantity == null ||
                     entry.buyerName == null ||
-                    entry.buyerName.length > 32) {
+                    entry.buyerName.length > 32 ||
+                    entry.buyerName.match(/[^a-zA-Z0-9'-]/g).length != 0) {
                 args.ctx.throw(422, "Bad History Data");
                 return true;
             }
@@ -256,7 +258,7 @@ export default {
         }
 
         // Crafter data
-        if (args.uploadData.contentID && (args.uploadData.characterName == null || args.uploadData.characterName.length > 32)) {
+        if (args.uploadData.contentID && (args.uploadData.characterName == null || args.uploadData.characterName.length > 32 || args.uploadData.characterName.match(/[^a-zA-Z0-9'-]/g).length != 0)) {
             args.ctx.throw(422);
             return true;
         }
