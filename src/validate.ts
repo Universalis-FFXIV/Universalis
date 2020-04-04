@@ -23,9 +23,11 @@ export default {
         const newEntry = R.pipe(
             entry,
             R.pick(["pricePerUnit", "quantity", "timestamp"]),
-            R.set("buyerName", entry.buyerName.replace(/[^a-zA-Z0-9'\- ]/g, "")),
-            R.set("hq", entry.hq || false),
-            R.set("uploadApplication", entry.uploadApplication || sourceName),
+            R.merge({
+                buyerName: entry.buyerName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
+                hq: entry.hq || false,
+                uploadApplication: entry.uploadApplication || sourceName,
+            }),
         );
 
         if (typeof newEntry.hq === "number") {
@@ -45,8 +47,10 @@ export default {
         return R.pipe(
             entry,
             R.pick(["hq", "pricePerUnit", "quantity", "timestamp", "worldName"]),
-            R.set("buyerName", entry.buyerName.replace(/[^a-zA-Z0-9'\- ]/g, "")),
-            R.set("total", entry.pricePerUnit * entry.quantity),
+            R.merge({
+                buyerName: entry.buyerName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
+                total: entry.pricePerUnit * entry.quantity,
+            }),
         );
     },
 
@@ -56,24 +60,22 @@ export default {
             listing = JSON.parse(stringifiedListing.replace(/<[\s\S]*?>/, ""));
         }
 
-        const securedFields = R.pipe(
-            listing,
-            R.set("creatorID", parseSha256(listing.creatorID)),
-            R.set("listingID", parseSha256(listing.listingID)),
-            R.set("retainerID", parseSha256(listing.retainerID)),
-            R.set("sellerID", parseSha256(listing.sellerID)),
-        );
+        const securedFields = {
+            creatorID: parseSha256(listing.creatorID),
+            listingID: parseSha256(listing.listingID),
+            retainerID: parseSha256(listing.retainerID),
+            sellerID: parseSha256(listing.sellerID),
+        };
 
-        const cleanedListing = R.pipe(
-            listing,
-            R.set("creatorName", listing.creatorName.replace(/[^a-zA-Z0-9'\- ]/g, "")),
-            R.set("hq", listing.hq || false),
-            R.set("materia", listing.materia || []),
-            R.set("onMannequin", listing.onMannequin || false),
-            R.set("retainerCity", typeof listing.retainerCity === "number" ? listing.retainerCity : City[listing.retainerCity]),
-            R.set("retainerName", listing.retainerName.replace(/[^a-zA-Z0-9'\- ]/g, "")),
-            R.set("uploadApplication", sourceName || listing.uploadApplication),
-        );
+        const cleanedListing = {
+            creatorName: listing.creatorName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
+            hq: listing.hq || false,
+            materia: listing.materia || [],
+            onMannequin: listing.onMannequin || false,
+            retainerCity: typeof listing.retainerCity === "number" ? listing.retainerCity : City[listing.retainerCity],
+            retainerName: listing.retainerName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
+            uploadApplication: sourceName || listing.uploadApplication,
+        };
 
         const newListing = R.pipe(
             listing,
@@ -99,14 +101,18 @@ export default {
         const formattedListing = R.pipe(
             listing,
             R.pick(["creatorID", "lastReviewTime", "listingID", "pricePerUnit", "quantity", "retainerID", "sellerID", "stainID", "worldName"]),
-            R.set("creatorName", listing.creatorName.replace(/[^a-zA-Z0-9'\- ]/g, "")),
-            R.set("isCrafted",
-                listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9" && // 0n
-                listing.creatorID !== "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),  // ""
-            R.set("materia", listing.materia || []),
-            R.set("onMannequin", listing.onMannequin || false),
-            R.set("retainerCity", typeof listing.retainerCity === "number" ? listing.retainerCity : City[listing.retainerCity]),
-            R.set("total", listing.pricePerUnit * listing.quantity),
+            R.merge({
+                creatorName: listing.creatorName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
+                hq: listing.hq || false,
+                isCrafted:
+                    listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9" && // 0n
+                    listing.creatorID !== "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",  // ""
+                materia: listing.materia || [],
+                onMannequin: listing.onMannequin || false,
+                retainerCity: typeof listing.retainerCity === "number" ? listing.retainerCity : City[listing.retainerCity],
+                retainerName: listing.retainerName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
+                total: listing.pricePerUnit * listing.quantity,
+            }),
         );
 
         return formattedListing;
