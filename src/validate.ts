@@ -14,6 +14,11 @@ import { ValidateUploadDataArgs } from "./models/ValidateUploadDataArgs";
 
 export default {
     cleanHistoryEntry: (entry: MarketBoardHistoryEntry, sourceName?: string): MarketBoardHistoryEntry => {
+        const stringifiedEntry = JSON.stringify(entry);
+        if (stringifiedEntry.match(/<[\s\S]*?>/).length != 0) {
+            entry = JSON.parse(stringifiedEntry.replace(/<[\s\S]*?>/, ""));
+        }
+
         const newEntry = {
             buyerName: entry.buyerName,
             hq: entry.hq == null ? false : entry.hq,
@@ -32,6 +37,11 @@ export default {
     },
 
     cleanHistoryEntryOutput: (entry: MarketBoardHistoryEntry): MarketBoardHistoryEntry => {
+        const stringifiedEntry = JSON.stringify(entry);
+        if (stringifiedEntry.match(/<[\s\S]*?>/).length != 0) {
+            entry = JSON.parse(stringifiedEntry.replace(/<[\s\S]*?>/, ""));
+        }
+
         return {
             buyerName: entry.buyerName,
             hq: entry.hq,
@@ -44,6 +54,11 @@ export default {
     },
 
     cleanListing: (listing: MarketBoardItemListingUpload, sourceName?: string): MarketBoardItemListingUpload => {
+        const stringifiedListing = JSON.stringify(listing);
+        if (stringifiedListing.match(/<[\s\S]*?>/).length != 0) {
+            listing = JSON.parse(stringifiedListing.replace(/<[\s\S]*?>/, ""));
+        }
+
         const newListing = {
             creatorID: sha("sha256").update(listing.creatorID + "").digest("hex"),
             creatorName: listing.creatorName,
@@ -127,7 +142,7 @@ export default {
                     const materiaData = materiaIDToValueAndTier(materiaID);
                     return {
                         materiaID: materiaData.materiaID,
-                        slotID: materiaData.tier
+                        slotID: materiaData.tier,
                     };
                 }
 
@@ -196,6 +211,7 @@ export default {
                     listing.retainerID == null ||
                     listing.retainerCity == null ||
                     listing.retainerName == null ||
+                    listing.retainerName.length > 32 ||
                     listing.sellerID == null) {
                 args.ctx.throw(422, "Bad Listing Data");
                 return true;
@@ -207,7 +223,8 @@ export default {
             if (entry.hq == null ||
                     entry.pricePerUnit == null ||
                     entry.quantity == null ||
-                    entry.buyerName == null) {
+                    entry.buyerName == null ||
+                    entry.buyerName.length > 32) {
                 args.ctx.throw(422, "Bad History Data");
                 return true;
             }
@@ -239,7 +256,7 @@ export default {
         }
 
         // Crafter data
-        if (args.uploadData.contentID && args.uploadData.characterName == null) {
+        if (args.uploadData.contentID && (args.uploadData.characterName == null || args.uploadData.characterName.length > 32)) {
             args.ctx.throw(422);
             return true;
         }
