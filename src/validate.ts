@@ -258,10 +258,10 @@ export default {
         }
 
         // Crafter data
-        if (args.uploadData.characterName == null || args.uploadData.contentID == null) {
+        if (args.uploadData.characterName != null && args.uploadData.contentID == null || args.uploadData.characterName == null && args.uploadData.contentID != null) {
             args.ctx.throw(422);
             return true;
-        } else if (args.uploadData.characterName.length > 32 || args.uploadData.characterName.match(/[^a-zA-Z0-9'\- ]/g)) {
+        } else if (args.uploadData.characterName != null && (args.uploadData.characterName.length > 32 || args.uploadData.characterName.match(/[^a-zA-Z0-9'\- ]/g))) {
             args.ctx.throw(422);
             return true;
         }
