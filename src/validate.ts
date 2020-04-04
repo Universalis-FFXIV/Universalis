@@ -74,6 +74,11 @@ export default {
     },
 
     cleanListingOutput: (listing: MarketBoardItemListing): MarketBoardItemListing => {
+        const stringifiedListing = JSON.stringify(listing);
+        if (stringifiedListing.match(/<[\s\S]*?>/).length != 0) {
+            listing = JSON.parse(stringifiedListing.replace(/<[\s\S]*?>/, ""));
+        }
+
         const formattedListing = {
             creatorID: listing.creatorID,
             creatorName: listing.creatorName,
@@ -143,6 +148,11 @@ export default {
 
         if (!ctx.is("json")) {
             ctx.body = "Unsupported content type";
+            ctx.throw(415);
+            return true;
+        }
+
+        if ((ctx.request.body as string).match(/<[\s\S]*?>/).length != 0) { // Immediately reject anything with an HTML tag in it
             ctx.throw(415);
             return true;
         }
