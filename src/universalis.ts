@@ -73,7 +73,7 @@ const init = (async () => {
 
     blacklistManager = await BlacklistManager.create(logger, universalisDB);
     contentIDCollection = await ContentIDCollection.create(logger, universalisDB);
-    extraDataManager = await ExtraDataManager.create(remoteDataManager, universalisDB);
+    extraDataManager = await ExtraDataManager.create(remoteDataManager, worldIDMap, universalisDB);
     historyTracker = await HistoryTracker.create(universalisDB);
     priceTracker = await PriceTracker.create(universalisDB);
     trustedSourceManager = await TrustedSourceManager.create(universalisDB);

@@ -14,8 +14,13 @@ import { ValidateUploadDataArgs } from "./models/ValidateUploadDataArgs";
 
 export default {
     cleanHistoryEntry: (entry: MarketBoardHistoryEntry, sourceName?: string): MarketBoardHistoryEntry => {
+        const stringifiedEntry = JSON.stringify(entry);
+        if (stringifiedEntry.match(/<[\s\S]*?>/).length != 0) {
+            entry = JSON.parse(stringifiedEntry.replace(/<[\s\S]*?>/, ""));
+        }
+
         const newEntry = {
-            buyerName: entry.buyerName,
+            buyerName: entry.buyerName.replace(/[^a-zA-Z0-9'-]/g, ""),
             hq: entry.hq == null ? false : entry.hq,
             pricePerUnit: entry.pricePerUnit,
             quantity: entry.quantity,
@@ -32,8 +37,13 @@ export default {
     },
 
     cleanHistoryEntryOutput: (entry: MarketBoardHistoryEntry): MarketBoardHistoryEntry => {
+        const stringifiedEntry = JSON.stringify(entry);
+        if (stringifiedEntry.match(/<[\s\S]*?>/).length != 0) {
+            entry = JSON.parse(stringifiedEntry.replace(/<[\s\S]*?>/, ""));
+        }
+
         return {
-            buyerName: entry.buyerName,
+            buyerName: entry.buyerName.replace(/[^a-zA-Z0-9'-]/g, ""),
             hq: entry.hq,
             pricePerUnit: entry.pricePerUnit,
             quantity: entry.quantity,
@@ -44,9 +54,14 @@ export default {
     },
 
     cleanListing: (listing: MarketBoardItemListingUpload, sourceName?: string): MarketBoardItemListingUpload => {
+        const stringifiedListing = JSON.stringify(listing);
+        if (stringifiedListing.match(/<[\s\S]*?>/).length != 0) {
+            listing = JSON.parse(stringifiedListing.replace(/<[\s\S]*?>/, ""));
+        }
+
         const newListing = {
             creatorID: sha("sha256").update(listing.creatorID + "").digest("hex"),
-            creatorName: listing.creatorName,
+            creatorName: listing.creatorName.replace(/[^a-zA-Z0-9'-]/g, ""),
             hq: listing.hq == null ? false : listing.hq,
             lastReviewTime: listing.lastReviewTime,
             listingID: sha("sha256").update(listing.listingID + "").digest("hex"),
@@ -57,7 +72,7 @@ export default {
             retainerCity: typeof listing.retainerCity === "number" ?
                 listing.retainerCity : City[listing.retainerCity],
             retainerID: sha("sha256").update(listing.retainerID + "").digest("hex"),
-            retainerName: listing.retainerName,
+            retainerName: listing.retainerName.replace(/[^a-zA-Z0-9'-]/g, ""),
             sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
             stainID: listing.stainID,
             uploadApplication: sourceName ? sourceName : listing.uploadApplication,
@@ -74,9 +89,14 @@ export default {
     },
 
     cleanListingOutput: (listing: MarketBoardItemListing): MarketBoardItemListing => {
+        const stringifiedListing = JSON.stringify(listing);
+        if (stringifiedListing.match(/<[\s\S]*?>/).length != 0) {
+            listing = JSON.parse(stringifiedListing.replace(/<[\s\S]*?>/, ""));
+        }
+
         const formattedListing = {
             creatorID: listing.creatorID,
-            creatorName: listing.creatorName,
+            creatorName: listing.creatorName.replace(/[^a-zA-Z0-9'-]/g, ""),
             hq: listing.hq == null ? false : listing.hq,
             isCrafted:
                 listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9" && // 0n
@@ -90,7 +110,7 @@ export default {
             retainerCity: typeof listing.retainerCity === "number" ?
                 listing.retainerCity : City[listing.retainerCity],
             retainerID: listing.retainerID,
-            retainerName: listing.retainerName,
+            retainerName: listing.retainerName.replace(/[^a-zA-Z0-9'-]/g, ""),
             sellerID: listing.sellerID,
             stainID: listing.stainID,
             total: listing.pricePerUnit * listing.quantity,
@@ -122,7 +142,7 @@ export default {
                     const materiaData = materiaIDToValueAndTier(materiaID);
                     return {
                         materiaID: materiaData.materiaID,
-                        slotID: materiaData.tier
+                        slotID: materiaData.tier,
                     };
                 }
 
@@ -143,6 +163,11 @@ export default {
 
         if (!ctx.is("json")) {
             ctx.body = "Unsupported content type";
+            ctx.throw(415);
+            return true;
+        }
+
+        if ((ctx.request.body as string).match(/<[\s\S]*?>/).length != 0) { // Immediately reject anything with an HTML tag in it
             ctx.throw(415);
             return true;
         }
@@ -186,6 +211,8 @@ export default {
                     listing.retainerID == null ||
                     listing.retainerCity == null ||
                     listing.retainerName == null ||
+                    listing.retainerName.length > 32 ||
+                    listing.retainerName.match(/[^a-zA-Z0-9'-]/g).length != 0 ||
                     listing.sellerID == null) {
                 args.ctx.throw(422, "Bad Listing Data");
                 return true;
@@ -197,7 +224,9 @@ export default {
             if (entry.hq == null ||
                     entry.pricePerUnit == null ||
                     entry.quantity == null ||
-                    entry.buyerName == null) {
+                    entry.buyerName == null ||
+                    entry.buyerName.length > 32 ||
+                    entry.buyerName.match(/[^a-zA-Z0-9'-]/g).length != 0) {
                 args.ctx.throw(422, "Bad History Data");
                 return true;
             }
@@ -229,7 +258,7 @@ export default {
         }
 
         // Crafter data
-        if (args.uploadData.contentID && args.uploadData.characterName == null) {
+        if (args.uploadData.contentID && (args.uploadData.characterName == null || args.uploadData.characterName.length > 32 || args.uploadData.characterName.match(/[^a-zA-Z0-9'-]/g).length != 0)) {
             args.ctx.throw(422);
             return true;
         }

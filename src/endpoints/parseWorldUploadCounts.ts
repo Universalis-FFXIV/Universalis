@@ -1,4 +1,5 @@
 /**
+ * @name Upload Counts By-World
  * @url /api/extra/stats/world-upload-counts
  */
 

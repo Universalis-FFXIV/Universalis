@@ -1,7 +1,10 @@
 /**
+ * @name Eorzean Market Note
  * @url /api/transports/eorzea-market-note/:world/:item
- * @param world The world or DC to retrieve data from.
- * @param item The item to retrieve data for.
+ * @param world string | number The world or DC to retrieve data from.
+ * @param item string The item to retrieve data for.
+ * @experimental
+ * @disabled
  */
 
 import { ParameterizedContext } from "koa";

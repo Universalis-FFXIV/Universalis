@@ -1,6 +1,8 @@
 /**
+ * @name Recently-Updated Items
  * @url /api/extra/stats/recently-updated
- * @param entries The number of entries to return.
+ * @param entries number The number of entries to return.
+ * @returns items RecentlyUpdated The most-recently-updated items, up to "entries".
  */
 
 import { ParameterizedContext } from "koa";

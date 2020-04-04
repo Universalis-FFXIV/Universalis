@@ -11,7 +11,7 @@ import { WorldItemPairList } from "../models/WorldItemPairList";
 import { WorldUploadCount } from "../models/WorldUploadCount";
 
 export class ExtraDataManager {
-    public static async create(rdm: RemoteDataManager, db: Db): Promise<ExtraDataManager> {
+    public static async create(rdm: RemoteDataManager, worldIDMap: Map<number, string>, db: Db): Promise<ExtraDataManager> {
         const extraDataCollection = db.collection("extraData");
 
         const indices = [
@@ -28,7 +28,7 @@ export class ExtraDataManager {
         // recentData indices are created in the recent data manager
         const recentData = db.collection("recentData");
 
-        return new ExtraDataManager(rdm, extraDataCollection, recentData);
+        return new ExtraDataManager(rdm, worldIDMap, extraDataCollection, recentData);
     }
 
     private extraDataCollection: Collection;
@@ -36,15 +36,19 @@ export class ExtraDataManager {
 
     private rdm: RemoteDataManager;
 
+    private worldIDMap: Map<number, string>;
+
     private dailyUploadTrackingLimit = 30;
     private maxUnsafeLoopCount = 50;
     private returnCap = 20;
 
-    private constructor(rdm: RemoteDataManager, extraDataCollection: Collection, recentData: Collection) {
+    private constructor(rdm: RemoteDataManager, worldIDMap: Map<number, string>, extraDataCollection: Collection, recentData: Collection) {
         this.extraDataCollection = extraDataCollection;
         this.recentData = recentData;
 
         this.rdm = rdm;
+
+        this.worldIDMap = worldIDMap;
     }
 
     /** Return the number of uploads from each world. */
@@ -148,6 +152,7 @@ export class ExtraDataManager {
             if (!item.lastUploadTime) {
                 item.lastUploadTime = 0;
             }
+            item.worldName = this.worldIDMap.get(item.worldID) || null; // Shouldn't ever be null
             delete item["_id"];
             return item;
         });
