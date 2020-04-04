@@ -167,7 +167,7 @@ export default {
             return true;
         }
 
-        if (JSON.stringify(ctx.request.body.match(/<[\s\S]*?>/).length != 0)) { // Immediately reject anything with an HTML tag in it
+        if (JSON.stringify(ctx.request.body.match(/<[\s\S]*?>/)).length != 0) { // Immediately reject anything with an HTML tag in it
             ctx.throw(415);
             return true;
         }
