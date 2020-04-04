@@ -51,7 +51,7 @@ export async function parseListings(ctx: ParameterizedContext, worldMap: Map<str
                     !listing.creatorID.length) {
                     listing = <any> validation.cleanListing(listing as unknown as MarketBoardItemListingUpload);
                 }
-                listing.materia = validation.cleanMateria(listing.materia);
+                listing.materia = validation.cleanMateriaArray(listing.materia);
                 listing.pricePerUnit = Math.ceil(listing.pricePerUnit * 1.05);
                 listing = validation.cleanListingOutput(listing);
                 return listing;

@@ -32,6 +32,7 @@
     "lodash.difference": "^4.5.0",
     "lodash.flatten": "^4.4.0",
     "mongodb": "^3.3.2",
+    "remeda": "0.0.18",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "sha.js": "^2.4.11",
