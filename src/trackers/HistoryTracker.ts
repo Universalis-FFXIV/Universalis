@@ -1,5 +1,4 @@
-import compact from "lodash.compact";
-import isEqual from "lodash.isequal";
+import R, { dropLast } from "remeda"
 
 import { getWorldDC, getWorldName } from "../util";
 
@@ -93,16 +92,20 @@ export class HistoryTracker extends Tracker {
         if (existing) {
             extendedHistory = existing;
 
-            minimizedEntries = compact(minimizedEntries.map((entry) => {
-                if (extendedHistory.entries.some((ex) => {
-                    return ex.hq === entry.hq &&
-                           ex.pricePerUnit === entry.pricePerUnit &&
-                           ex.timestamp === entry.timestamp;
-                })) {
-                    return;
-                }
-                return entry;
-            }));
+            minimizedEntries = R.pipe(
+                minimizedEntries,
+                R.map((entry) => {
+                    if (extendedHistory.entries.some((ex) => {
+                        return ex.hq === entry.hq &&
+                               ex.pricePerUnit === entry.pricePerUnit &&
+                               ex.timestamp === entry.timestamp;
+                    })) {
+                        return;
+                    }
+                    return entry;
+                }),
+                R.compact,
+            );
         } else {
             extendedHistory = {
                 entries: [],
@@ -113,12 +116,11 @@ export class HistoryTracker extends Tracker {
         }
 
         // Limit to 500 entries
-        const entrySum = extendedHistory.entries.length + minimizedEntries.length;
-        if (entrySum > 500) {
-            extendedHistory.entries = extendedHistory.entries.slice(0, 500 - minimizedEntries.length);
-        }
-
-        extendedHistory.entries = minimizedEntries.concat(extendedHistory.entries);
+        extendedHistory.entries = R.pipe(
+            extendedHistory.entries,
+            R.take(500 - minimizedEntries.length),
+            R.concat(minimizedEntries),
+        );
 
         if (existing) {
             await this.extendedHistory.updateOne(query, { $set: extendedHistory });
@@ -157,7 +159,7 @@ export class HistoryTracker extends Tracker {
         if (extendedHistory && extendedHistory.entries) { // Delete entries from the upload world
             extendedHistory.entries = extendedHistory.entries.filter((entry) => entry.worldName !== world);
 
-            minimizedEntries = compact(minimizedEntries.map((entry) => {
+            minimizedEntries = R.compact(minimizedEntries.map((entry) => {
                 if (extendedHistory.entries.some((ex) => {
                     return ex.hq === entry.hq &&
                            ex.pricePerUnit === entry.pricePerUnit &&
@@ -180,7 +182,7 @@ export class HistoryTracker extends Tracker {
 
         const entrySum = extendedHistory.entries.length + minimizedEntries.length;
         if (entrySum > 500) {
-            extendedHistory.entries = extendedHistory.entries.slice(0, 500 - minimizedEntries.length);
+            extendedHistory.entries = R.take(extendedHistory.entries, 500 - minimizedEntries.length);
         }
 
         if (existing) {
