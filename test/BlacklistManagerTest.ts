@@ -6,22 +6,22 @@ import { MongoFixture } from "./MongoFixture";
 const dummyUploaderID: string = "dummyUploaderID";
 
 describe("BlacklistManager", () => {
-    const logger = winston.createLogger();
-    const mongo = new MongoFixture();
+	const logger = winston.createLogger();
+	const mongo = new MongoFixture();
 
-    var manager: BlacklistManager;
+	let manager: BlacklistManager;
 
-    before(async () => {
-        await mongo.before();
-        manager = await BlacklistManager.create(logger, mongo.db);
-    });
+	before(async () => {
+		await mongo.before();
+		manager = await BlacklistManager.create(logger, mongo.db);
+	});
 
-    after(async () => await mongo.after());
+	after(async () => await mongo.after());
 
-    it("should allow blacklisting of uploaders", async () => {
-        should.equal(await manager.has(dummyUploaderID), false);
-        await manager.add(dummyUploaderID);
-        await manager.add(dummyUploaderID);
-        should.equal(await manager.has(dummyUploaderID), true);
-    });
+	it("should allow blacklisting of uploaders", async () => {
+		should.equal(await manager.has(dummyUploaderID), false);
+		await manager.add(dummyUploaderID);
+		await manager.add(dummyUploaderID);
+		should.equal(await manager.has(dummyUploaderID), true);
+	});
 });
