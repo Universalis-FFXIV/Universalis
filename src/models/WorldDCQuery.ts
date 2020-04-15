@@ -1,7 +1,7 @@
 export interface WorldDCQuery {
-    dcName?: string;
-    worldID?: any;
+	dcName?: string;
+	worldID?: any;
 
-    itemID?: any;
-    itemIDs?: number[];
+	itemID?: any;
+	itemIDs?: number[];
 }

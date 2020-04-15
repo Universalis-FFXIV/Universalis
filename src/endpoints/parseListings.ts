@@ -5,9 +5,15 @@
  * @param item number The item to retrieve data for.
  */
 
-import R from "remeda"
+import R from "remeda";
 
-import { appendWorldDC, calcSaleVelocity, calcTrimmedAverage, makeDistrTable, calcStandardDeviation } from "../util";
+import {
+	appendWorldDC,
+	calcSaleVelocity,
+	calcStandardDeviation,
+	calcTrimmedAverage,
+	makeDistrTable,
+} from "../util";
 import validation from "../validate";
 
 import { ParameterizedContext } from "koa";
@@ -15,152 +21,184 @@ import { Collection } from "mongodb";
 
 import { AveragePrices } from "../models/AveragePrices";
 import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
-import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
 import { MarketBoardItemListingUpload } from "../models/MarketBoardItemListingUpload";
 import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoint";
 import { SaleVelocitySeries } from "../models/SaleVelocitySeries";
 import { StackSizeHistograms } from "../models/StackSizeHistograms";
 import { WorldDCQuery } from "../models/WorldDCQuery";
 
-export async function parseListings(ctx: ParameterizedContext, worldMap: Map<string, number>, recentData: Collection) {
-    const itemIDs: number[] = (ctx.params.item as string).split(",").map((id, index) => {
-        if (index > 100) return;
-        return parseInt(id);
-    });
+export async function parseListings(
+	ctx: ParameterizedContext,
+	worldMap: Map<string, number>,
+	recentData: Collection,
+) {
+	const itemIDs: number[] = (ctx.params.item as string)
+		.split(",")
+		.map((id, index) => {
+			if (index > 100) return;
+			return parseInt(id);
+		});
 
-    // Query construction
-    const query: WorldDCQuery = { itemID: { $in: itemIDs } };
-    appendWorldDC(query, worldMap, ctx);
+	// Query construction
+	const query: WorldDCQuery = { itemID: { $in: itemIDs } };
+	appendWorldDC(query, worldMap, ctx);
 
-    // Request database info
-    let data = {
-        itemIDs,
-        items: await recentData.find(query, { projection: { _id: 0, uploaderID: 0 } }).toArray()
-    };
-    appendWorldDC(data, worldMap, ctx);
+	// Request database info
+	let data = {
+		itemIDs,
+		items: await recentData
+			.find(query, { projection: { _id: 0, uploaderID: 0 } })
+			.toArray(),
+	};
+	appendWorldDC(data, worldMap, ctx);
 
-    // Do some post-processing on resolved item listings.
-    for (let item of data.items as MarketBoardListingsEndpoint[]) {
-        if (item.listings) {
-            item.listings = R.pipe(
-                item.listings,
-                R.sort((a, b) => {
-                    if (a.pricePerUnit > b.pricePerUnit) return 1;
-                    if (a.pricePerUnit < b.pricePerUnit) return -1;
-                    return 0;
-                }),
-                R.map((listing) => {
-                    if (!listing.retainerID.length ||
-                        !listing.sellerID.length ||
-                        !listing.creatorID.length) {
-                        listing = <any> validation.cleanListing(listing as unknown as MarketBoardItemListingUpload); // Something needs to be done about this
-                    }
-                    listing.materia = validation.cleanMateriaArray(listing.materia);
-                    listing.pricePerUnit = Math.ceil(listing.pricePerUnit * 1.05);
-                    listing = validation.cleanListingOutput(listing);
-                    return listing;
-                }),
-            );
-        } else {
-            item.listings = [];
-        }
+	// Do some post-processing on resolved item listings.
+	for (let item of data.items as MarketBoardListingsEndpoint[]) {
+		if (item.listings) {
+			item.listings = R.pipe(
+				item.listings,
+				R.sort((a, b) => {
+					if (a.pricePerUnit > b.pricePerUnit) return 1;
+					if (a.pricePerUnit < b.pricePerUnit) return -1;
+					return 0;
+				}),
+				R.map((listing) => {
+					if (
+						!listing.retainerID.length ||
+						!listing.sellerID.length ||
+						!listing.creatorID.length
+					) {
+						listing = validation.cleanListing(
+							(listing as unknown) as MarketBoardItemListingUpload,
+						) as any; // Something needs to be done about this
+					}
+					listing.materia = validation.cleanMateriaArray(listing.materia);
+					listing.pricePerUnit = Math.ceil(listing.pricePerUnit * 1.05);
+					listing = validation.cleanListingOutput(listing);
+					return listing;
+				}),
+			);
+		} else {
+			item.listings = [];
+		}
 
-        if (item.recentHistory) {
-            item.recentHistory = R.pipe(
-                item.recentHistory,
-                R.map((entry) => {
-                    return validation.cleanHistoryEntryOutput(entry);
-                }),
-            );
+		if (item.recentHistory) {
+			item.recentHistory = R.pipe(
+				item.recentHistory,
+				R.map((entry) => {
+					return validation.cleanHistoryEntryOutput(entry);
+				}),
+			);
 
-            const nqItems = item.recentHistory.filter((entry) => !entry.hq);
-            const hqItems = item.recentHistory.filter((entry) => entry.hq);
+			const nqItems = item.recentHistory.filter((entry) => !entry.hq);
+			const hqItems = item.recentHistory.filter((entry) => entry.hq);
 
-            item = R.pipe(
-                item,
-                R.merge(calculateSaleVelocities(item.recentHistory, nqItems, hqItems)),
-                R.merge(calculateAveragePrices(item.recentHistory, nqItems, hqItems)),
-                R.merge(makeStackSizeHistograms(item.recentHistory, nqItems, hqItems)),
-            );
-        } else {
-            item.recentHistory = [];
-        }
-    }
+			item = R.pipe(
+				item,
+				R.merge(calculateSaleVelocities(item.recentHistory, nqItems, hqItems)),
+				R.merge(calculateAveragePrices(item.recentHistory, nqItems, hqItems)),
+				R.merge(makeStackSizeHistograms(item.recentHistory, nqItems, hqItems)),
+			);
+		} else {
+			item.recentHistory = [];
+		}
+	}
 
-    // Fill in unresolved items
-    const resolvedItems: number[] = data.items.map((item) => item.itemID);
-    const unresolvedItems: number[] = R.difference(itemIDs, resolvedItems);
-    data["unresolvedItems"] = unresolvedItems;
+	// Fill in unresolved items
+	const resolvedItems: number[] = data.items.map((item) => item.itemID);
+	const unresolvedItems: number[] = R.difference(itemIDs, resolvedItems);
+	data["unresolvedItems"] = unresolvedItems;
 
-    for (const item of unresolvedItems) {
-        const unresolvedItemData = {
-            itemID: item,
-            lastUploadTime: 0,
-            listings: [],
-            recentHistory: []
-        };
-        appendWorldDC(unresolvedItemData, worldMap, ctx);
-        data.items.push(unresolvedItemData);
-    }
+	for (const item of unresolvedItems) {
+		const unresolvedItemData = {
+			itemID: item,
+			lastUploadTime: 0,
+			listings: [],
+			recentHistory: [],
+		};
+		appendWorldDC(unresolvedItemData, worldMap, ctx);
+		data.items.push(unresolvedItemData);
+	}
 
-    // If only one item is requested we just turn the whole thing into the one item.
-    if (data.itemIDs.length === 1) {
-        data = data.items[0];
-    } else if (!unresolvedItems) {
-        delete data["unresolvedItems"];
-    }
+	// If only one item is requested we just turn the whole thing into the one item.
+	if (data.itemIDs.length === 1) {
+		data = data.items[0];
+	} else if (!unresolvedItems) {
+		delete data["unresolvedItems"];
+	}
 
-    ctx.body = data;
+	ctx.body = data;
 }
 
 /////////////////////
 // PRIVATE METHODS //
 /////////////////////
-function calculateSaleVelocities(regularSeries: MarketBoardHistoryEntry[], nqSeries: MarketBoardHistoryEntry[], hqSeries: MarketBoardHistoryEntry[]): SaleVelocitySeries {
-    // Per day
-    const regularSaleVelocity = calcSaleVelocity(...regularSeries
-        .map((entry) => entry.timestamp)
-    );
-    const nqSaleVelocity = calcSaleVelocity(...nqSeries
-        .map((entry) => entry.timestamp)
-    );
-    const hqSaleVelocity = calcSaleVelocity(...hqSeries
-        .map((entry) => entry.timestamp)
-    );
-    return {
-        regularSaleVelocity,
-        nqSaleVelocity,
-        hqSaleVelocity,
-    };
+function calculateSaleVelocities(
+	regularSeries: MarketBoardHistoryEntry[],
+	nqSeries: MarketBoardHistoryEntry[],
+	hqSeries: MarketBoardHistoryEntry[],
+): SaleVelocitySeries {
+	// Per day
+	const regularSaleVelocity = calcSaleVelocity(
+		...regularSeries.map((entry) => entry.timestamp),
+	);
+	const nqSaleVelocity = calcSaleVelocity(
+		...nqSeries.map((entry) => entry.timestamp),
+	);
+	const hqSaleVelocity = calcSaleVelocity(
+		...hqSeries.map((entry) => entry.timestamp),
+	);
+	return {
+		regularSaleVelocity,
+		nqSaleVelocity,
+		hqSaleVelocity,
+	};
 }
 
-function calculateAveragePrices(regularSeries: MarketBoardHistoryEntry[], nqSeries: MarketBoardHistoryEntry[], hqSeries: MarketBoardHistoryEntry[]): AveragePrices {
-    const pPU = regularSeries.map((entry) => entry.pricePerUnit);
-    const nqPPU = nqSeries.map((entry) => entry.pricePerUnit);
-    const hqPPU = hqSeries.map((entry) => entry.pricePerUnit);
-    const averagePrice = calcTrimmedAverage(calcStandardDeviation(...pPU), ...pPU);
-    const averagePriceNQ = calcTrimmedAverage(calcStandardDeviation(...nqPPU), ...nqPPU);
-    const averagePriceHQ = calcTrimmedAverage(calcStandardDeviation(...hqPPU), ...hqPPU);
-    return {
-        averagePrice,
-        averagePriceNQ,
-        averagePriceHQ,
-    };
+function calculateAveragePrices(
+	regularSeries: MarketBoardHistoryEntry[],
+	nqSeries: MarketBoardHistoryEntry[],
+	hqSeries: MarketBoardHistoryEntry[],
+): AveragePrices {
+	const pPU = regularSeries.map((entry) => entry.pricePerUnit);
+	const nqPPU = nqSeries.map((entry) => entry.pricePerUnit);
+	const hqPPU = hqSeries.map((entry) => entry.pricePerUnit);
+	const averagePrice = calcTrimmedAverage(
+		calcStandardDeviation(...pPU),
+		...pPU,
+	);
+	const averagePriceNQ = calcTrimmedAverage(
+		calcStandardDeviation(...nqPPU),
+		...nqPPU,
+	);
+	const averagePriceHQ = calcTrimmedAverage(
+		calcStandardDeviation(...hqPPU),
+		...hqPPU,
+	);
+	return {
+		averagePrice,
+		averagePriceNQ,
+		averagePriceHQ,
+	};
 }
 
-function makeStackSizeHistograms(regularSeries: MarketBoardHistoryEntry[], nqSeries: MarketBoardHistoryEntry[], hqSeries: MarketBoardHistoryEntry[]): StackSizeHistograms {
-    const stackSizeHistogram = makeDistrTable(...regularSeries
-        .map((entry) => entry.quantity)
-    );
-    const stackSizeHistogramNQ = makeDistrTable(...nqSeries
-        .map((entry) => entry.quantity)
-    );
-    const stackSizeHistogramHQ = makeDistrTable(...hqSeries
-        .map((entry) => entry.quantity)
-    );
-    return {
-        stackSizeHistogram,
-        stackSizeHistogramNQ,
-        stackSizeHistogramHQ,
-    };
+function makeStackSizeHistograms(
+	regularSeries: MarketBoardHistoryEntry[],
+	nqSeries: MarketBoardHistoryEntry[],
+	hqSeries: MarketBoardHistoryEntry[],
+): StackSizeHistograms {
+	const stackSizeHistogram = makeDistrTable(
+		...regularSeries.map((entry) => entry.quantity),
+	);
+	const stackSizeHistogramNQ = makeDistrTable(
+		...nqSeries.map((entry) => entry.quantity),
+	);
+	const stackSizeHistogramHQ = makeDistrTable(
+		...hqSeries.map((entry) => entry.quantity),
+	);
+	return {
+		stackSizeHistogram,
+		stackSizeHistogramNQ,
+		stackSizeHistogramHQ,
+	};
 }

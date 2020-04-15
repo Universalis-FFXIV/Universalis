@@ -1,4 +1,4 @@
 export interface ItemMateria {
-    slotID: number;
-    materiaID: number;
+	slotID: number;
+	materiaID: number;
 }

@@ -1,30 +1,15 @@
 {
-    "defaultSeverity": "error",
-    "extends": [
-        "tslint:recommended"
-    ],
-    "jsRules": {},
+    "extends": ["tslint:recommended", "tslint-config-prettier"],
     "rules": {
         "curly": false,
         "interface-name": false,
-        "no-angle-bracket-type-assertion": false,
         "no-console": {
-            "severity": "warning"
+            "severity": "warn"
         },
+        "no-bitwise": false,
         "no-string-literal": false,
-        "no-var-keyword": false,
-        "prefer-const": {
-            "severity": "warning"
-        },
-        "radix": false,
-        "trailing-comma": false,
-        "variable-name": {
-            "options": [
-                "ban-keywords",
-                "check-format",
-                "allow-leading-underscore"
-            ]
-        }
-    },
-    "rulesDirectory": []
+        "no-var-requires": false,
+        "object-literal-sort-keys": false,
+        "radix": false
+    }
 }

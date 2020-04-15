@@ -1,5 +1,5 @@
 export interface SaleVelocitySeries {
-    regularSaleVelocity: number;
-    nqSaleVelocity: number;
-    hqSaleVelocity: number;
+	regularSaleVelocity: number;
+	nqSaleVelocity: number;
+	hqSaleVelocity: number;
 }

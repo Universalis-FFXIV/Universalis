@@ -10,16 +10,16 @@ import { ParameterizedContext } from "koa";
 import { Logger } from "winston";
 
 export interface UploadProcessParameters {
-    ctx: ParameterizedContext;
-    logger: Logger;
+	ctx: ParameterizedContext;
+	logger: Logger;
 
-    worldIDMap: Map<number, string>;
+	worldIDMap: Map<number, string>;
 
-    blacklistManager: BlacklistManager;
-    contentIDCollection: ContentIDCollection;
-    extraDataManager: ExtraDataManager;
-    historyTracker: HistoryTracker;
-    priceTracker: PriceTracker;
-    trustedSourceManager: TrustedSourceManager;
-    remoteDataManager: RemoteDataManager;
+	blacklistManager: BlacklistManager;
+	contentIDCollection: ContentIDCollection;
+	extraDataManager: ExtraDataManager;
+	historyTracker: HistoryTracker;
+	priceTracker: PriceTracker;
+	trustedSourceManager: TrustedSourceManager;
+	remoteDataManager: RemoteDataManager;
 }
