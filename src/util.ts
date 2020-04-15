@@ -207,33 +207,3 @@ export function levenshtein(input: string, test: string): number {
 export function sleep(duration: number) {
 	return new Promise((resolve) => setTimeout(resolve, duration));
 }
-
-export function stringifyContentIDs(jsonString: string) {
-	const parameters = ["sellerID", "buyerID", "creatorID"];
-
-	parameters.forEach((parameter) => {
-		let paramIndex = jsonString.indexOf(parameter);
-
-		if (paramIndex === -1) return;
-
-		paramIndex += parameter.length + 2;
-		while (jsonString.charAt(paramIndex) === " ") paramIndex++;
-
-		let endIndex = jsonString.substr(paramIndex).indexOf(",");
-		if (endIndex === -1) {
-			endIndex = jsonString.substr(paramIndex).indexOf(" ");
-		}
-		if (endIndex === -1) {
-			endIndex = jsonString.substr(paramIndex).indexOf("}");
-		}
-
-		jsonString =
-			jsonString.substr(0, paramIndex) +
-			'"' +
-			jsonString.substr(paramIndex, endIndex).trim() +
-			'"' +
-			jsonString.substr(endIndex);
-	});
-
-	return jsonString;
-}
