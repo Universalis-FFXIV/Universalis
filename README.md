@@ -1,4 +1,5 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/d07d05e0461749748734bba48cabfb1f)](https://www.codacy.com/manual/karashiiro/Universalis?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=karashiiro/Universalis&amp;utm_campaign=Badge_Grade)
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
 # Universalis
 A crowdsourced market board aggregator.
