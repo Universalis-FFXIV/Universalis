@@ -162,10 +162,8 @@ export async function getWorldDC(world: string): Promise<string> {
 
 export async function getWorldName(worldID: number): Promise<string> {
 	const worldCSV = (await remoteDataManager.parseCSV("World.csv")).slice(3);
-	const world = worldCSV.find(
-		(line: string[]) => line[0] === String(worldID),
-	)[1];
-	return world;
+	const world = worldCSV.find((line: string[]) => line[0] === String(worldID));
+	return world == null ? null : world[1];
 }
 
 export function levenshtein(input: string, test: string): number {
@@ -190,14 +188,14 @@ export function levenshtein(input: string, test: string): number {
 	// Calculation to fill out the matrix
 	for (let i = 1; i <= test.length; i++) {
 		for (let j = 1; j <= input.length; j++) {
-			if (test[i] === input[j]) {
+			if (test[i - 1] === input[j - 1]) {
 				// It takes 0 changes to turn a letter into itself
 				matrix[i][j] = matrix[i - 1][j - 1];
 				continue;
 			}
 
 			matrix[i][j] =
-				Math.min(matrix[i - 1][j], matrix[i][j - 1], matrix[i - 1][j - 1]) + 1;
+				Math.min(matrix[i][j - 1], matrix[i - 1][j], matrix[i - 1][j - 1]) + 1;
 		}
 	}
 
