@@ -6,7 +6,7 @@ export class MongoFixture {
 	private client: MongoClient;
 	private _db: Db;
 
-	public constructor(mongoUri: string = "mongodb://localhost") {
+	public constructor(mongoUri: string = "mongodb://localhost:27017/") {
 		this.mongoUri = mongoUri;
 	}
 
