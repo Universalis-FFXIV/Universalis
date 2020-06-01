@@ -78,9 +78,9 @@ stdin
 		const command = args[0];
 		args = args.slice(1);
 
-		const commandF = commands.get(command);
-		if (commandF) {
-			await commandF(resources, args);
+		const fn = commands.get(command);
+		if (fn) {
+			await fn(resources, args);
 		} else if (command === "exit") {
 			stdin.close();
 		} else {
