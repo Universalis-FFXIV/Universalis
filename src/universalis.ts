@@ -143,7 +143,7 @@ router.get("/docs", async (ctx) => {
 router
 	.get("/api/:world/:item", async (ctx) => {
 		// Normal data
-		await parseListings(ctx, worldMap, recentData);
+		await parseListings(ctx, worldMap, recentData, transportManager);
 	})
 	.get("/api/history/:world/:item", async (ctx) => {
 		// Extended history
