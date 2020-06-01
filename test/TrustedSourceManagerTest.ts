@@ -9,7 +9,8 @@ describe("TrustedSourceManager", () => {
 
 	let manager: TrustedSourceManager;
 
-	before(async () => {
+	before(async function () {
+		this.timeout(5000);
 		await mongo.before();
 		manager = await TrustedSourceManager.create(mongo.db);
 	});
