@@ -26,11 +26,14 @@ import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoi
 import { SaleVelocitySeries } from "../models/SaleVelocitySeries";
 import { StackSizeHistograms } from "../models/StackSizeHistograms";
 import { WorldDCQuery } from "../models/WorldDCQuery";
+import { TransportManager } from "../transports/TransportManager";
+import { getResearch } from "./parseEorzeanMarketNote";
 
 export async function parseListings(
 	ctx: ParameterizedContext,
 	worldMap: Map<string, number>,
 	recentData: Collection,
+	transportManager: TransportManager,
 ) {
 	const itemIDs: number[] = (ctx.params.item as string)
 		.split(",")
@@ -83,6 +86,12 @@ export async function parseListings(
 		}
 
 		if (item.recentHistory) {
+			const emnData = await getResearch(
+				transportManager,
+				item.itemID,
+				item.worldID,
+			);
+
 			item.recentHistory = R.pipe(
 				item.recentHistory,
 				R.map((entry) => {
@@ -93,9 +102,20 @@ export async function parseListings(
 			const nqItems = item.recentHistory.filter((entry) => !entry.hq);
 			const hqItems = item.recentHistory.filter((entry) => entry.hq);
 
+			// Average sale velocities with EMN data
+			const saleVelocities = calculateSaleVelocities(
+				item.recentHistory,
+				nqItems,
+				hqItems,
+			);
+			saleVelocities.nqSaleVelocity =
+				(saleVelocities.nqSaleVelocity + emnData.turnoverPerDayNQ) / 2;
+			saleVelocities.hqSaleVelocity =
+				(saleVelocities.hqSaleVelocity + emnData.turnoverPerDayHQ) / 2;
+
 			item = R.pipe(
 				item,
-				R.merge(calculateSaleVelocities(item.recentHistory, nqItems, hqItems)),
+				R.merge(saleVelocities),
 				R.merge(calculateAveragePrices(item.recentHistory, nqItems, hqItems)),
 				R.merge(makeStackSizeHistograms(item.recentHistory, nqItems, hqItems)),
 			);

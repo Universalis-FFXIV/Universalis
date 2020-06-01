@@ -11,6 +11,8 @@ export interface IEorzeanMarketNoteResearch {
 	stockHQ: number;
 	circulationNQ: number;
 	circulationHQ: number;
+	turnoverPerDayNQ: number;
+	turnoverPerDayHQ: number;
 	researchedTime: number;
 	researchedTimeWorld?: string;
 }

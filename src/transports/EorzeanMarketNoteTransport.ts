@@ -70,6 +70,8 @@ export class EorzeanMarketNoteTransport implements ITransport {
 				circulation1HQ && circulation2HQ
 					? Math.round((24 * circulation1HQ) / circulation2HQ)
 					: null;
+			result.turnoverPerDayNQ = result.circulationNQ * result.priceNQ;
+			result.turnoverPerDayHQ = result.circulationHQ * result.priceHQ;
 			result.researchedTime = new Date(itemL[8]);
 
 			return result as IEorzeanMarketNoteResearch;

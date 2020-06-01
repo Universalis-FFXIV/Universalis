@@ -18,14 +18,44 @@ export async function parseEorzeanMarketNote(
 	ctx: ParameterizedContext,
 	transportManager: TransportManager,
 ) {
-	const dc = await getWorldDC(ctx.params.world);
+	const data: IEorzeanMarketNoteResearch = await getResearch(
+		transportManager,
+		ctx.params.item,
+		ctx.params.world,
+	);
+
+	if (!data) {
+		ctx.body = {
+			itemID: ctx.params.item,
+			world: ctx.params.world,
+			priceNQ: null,
+			priceHQ: null,
+			stockNQ: null,
+			stockHQ: null,
+			circulationNQ: null,
+			circulationHQ: null,
+			researchedTime: null,
+		} as IEorzeanMarketNoteResearch;
+		return;
+	}
+
+	ctx.body = data;
+}
+
+/* Used to supplement statistics like sale velocity. */
+export async function getResearch(
+	transportManager: TransportManager,
+	item: number,
+	worldOrDc: number | string,
+): Promise<IEorzeanMarketNoteResearch> {
+	const dc = await getWorldDC(worldOrDc.toString());
 	const dcWorlds = dc ? await getDCWorlds(dc) : null;
 
 	const transport = transportManager.getTransport("Eorzean Market Note");
 
 	const data: IEorzeanMarketNoteResearch = await transport.fetchData(
-		ctx.params.item,
-		dc ? dcWorlds[0] : ctx.params.world,
+		item,
+		dc ? dcWorlds[0] : worldOrDc.toString(),
 	);
 
 	if (dc) {
@@ -34,7 +64,7 @@ export async function parseEorzeanMarketNote(
 		data.priceNQWorld = data.priceHQWorld = data.researchedTimeWorld = dcWorlds.shift();
 		for (const world of dcWorlds) {
 			const nextData: IEorzeanMarketNoteResearch = await transport.fetchData(
-				ctx.params.item,
+				item,
 				world,
 			);
 
@@ -61,19 +91,20 @@ export async function parseEorzeanMarketNote(
 	}
 
 	if (!data) {
-		ctx.body = {
-			itemID: ctx.params.item,
-			world: ctx.params.world,
+		return {
+			itemID: item,
+			world: worldOrDc.toString(),
 			priceNQ: null,
 			priceHQ: null,
 			stockNQ: null,
 			stockHQ: null,
 			circulationNQ: null,
 			circulationHQ: null,
+			turnoverPerDayNQ: null,
+			turnoverPerDayHQ: null,
 			researchedTime: null,
-		} as IEorzeanMarketNoteResearch;
-		return;
+		};
 	}
 
-	ctx.body = data;
+	return data;
 }
