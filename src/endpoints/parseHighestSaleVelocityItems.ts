@@ -28,6 +28,18 @@ export async function parseHighestSaleVelocityItems(
 	} else if (parseInt(worldID)) {
 		worldID = parseInt(worldID);
 	}
+
+	let entriesToReturn: any = ctx.queryParams.entries;
+	if (entriesToReturn)
+		entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
+
+	ctx.body = await getHighestSaleVelocity(
+		worldID as number,
+		entriesToReturn,
+		worldIDMap,
+		collection,
+	);
+
 	if (!worldID) return ctx.throw(404, "Invalid World");
 }
 
