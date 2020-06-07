@@ -46,7 +46,6 @@ export async function parseHistory(
 	// Data filtering
 	data.items = data.items.map(
 		(item: {
-			// Something needs to be done about this.
 			entries: MinimizedHistoryEntry[];
 			stackSizeHistogram: { [key: number]: number };
 			stackSizeHistogramNQ: { [key: number]: number };
