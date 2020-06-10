@@ -245,32 +245,6 @@ describe("util", function () {
 		makeTest(91, "Balmung");
 	});
 
-	describe("levenshtein", function () {
-		it("should generate 3 for 'kitten' and 'sitting'.", function () {
-			should.equal(util.levenshtein("kitten", "sitting"), 3);
-		});
-
-		it("should generate 2 for 'book' and 'back'.", function () {
-			should.equal(util.levenshtein("book", "back"), 2);
-		});
-
-		it("should generate 3 for '' and 'cat'.", function () {
-			should.equal(util.levenshtein("", "cat"), 3);
-		});
-
-		it("should generate 3 for 'dog' and ''.", function () {
-			should.equal(util.levenshtein("dog", ""), 3);
-		});
-
-		it("should generate 8 for 'interimo' and 'adapare'.", function () {
-			should.equal(util.levenshtein("interimo", "adapare"), 8);
-		});
-
-		it("should generate 0 for 'dorime' and 'dorime'.", function () {
-			should.equal(util.levenshtein("dorime", "dorime"), 0);
-		});
-	});
-
 	describe("sleep", function () {
 		it("should sleep for 1 second.", async function () {
 			await util.sleep(1000);
