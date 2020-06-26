@@ -47,10 +47,8 @@ export class RemoteDataManager {
 		}
 	}
 
-	/** Get all marketable item IDs from XIVAPI. It is accessible while it is being populated. */
+	/** Get all marketable item IDs. It is accessible while it is being populated. */
 	public async getMarketableItemIDs(): Promise<number[]> {
-		const url =
-			"https://xivapi.com/search?indexes=item&filters=ItemSearchCategory.ID%3E8&columns=ID";
 		const existingFile = path.join(
 			__dirname,
 			this.remoteFileDirectory,
@@ -70,62 +68,6 @@ export class RemoteDataManager {
 				return storageFile.itemID;
 			}
 		}
-
-		// This fills the array after it's returned, since this is a somewhat lengthy job.
-		(async () => {
-			let pageCount = Number.MAX_VALUE;
-			const startTime = Date.now();
-
-			for (let i = 1; i <= pageCount; i += XIVAPI_RATELIMIT) {
-				const pagesStartTime = Date.now();
-
-				// Batch as many requests as possible.
-				const requestPromises: Array<Promise<number[]>> = [];
-				for (let j = i; j < i + XIVAPI_RATELIMIT && j <= pageCount; j++) {
-					requestPromises.push(
-						new Promise(async (resolve) => {
-							await new Promise((resolve2) =>
-								setTimeout(resolve2, (j - i) * (1000 / XIVAPI_RATELIMIT)),
-							);
-							const nextPage = JSON.parse(await request(url + `&page=${j}`));
-							if (nextPage.Pagination.PageTotal !== pageCount)
-								pageCount = nextPage.Pagination.PageTotal;
-							const nextPageItems = nextPage.Results.map(
-								(item: { ID: number }) => item.ID,
-							);
-							resolve(nextPageItems);
-						}),
-					);
-				}
-
-				const nextLine = flatten(await Promise.all(requestPromises));
-				storageFile.itemID.push.apply(storageFile.itemID, nextLine);
-
-				const pagesTimeDiff = Date.now() - pagesStartTime;
-				this.logger.info(
-					"(Marketable Item ID Catalog) Pushed " +
-						`${chalk.greenBright(
-							requestPromises.length.toString(),
-						)} pages in ${pagesTimeDiff}ms.`,
-				);
-
-				// If the batched requests took less than a second, wait the remainder of the second
-				// to avoid hitting the rate limit.
-				await new Promise((resolve) =>
-					setTimeout(resolve, 1000 - pagesTimeDiff),
-				);
-			}
-
-			const timeDiff = Date.now() - startTime;
-			remoteFileMap.set("item.json", storageFile);
-			await writeFile(existingFile, JSON.stringify(storageFile));
-			this.logger.info(
-				`(Marketable Item ID Catalog) Wrote ${pageCount} pages of ${storageFile.itemID.length} ` +
-					`items out to ${chalk.greenBright(
-						existingFile,
-					)} (operation time: ${timeDiff}ms).`,
-			);
-		})();
 
 		return storageFile.itemID;
 	}
