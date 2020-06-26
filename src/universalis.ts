@@ -37,6 +37,7 @@ import { parseEorzeanMarketNote } from "./endpoints/parseEorzeanMarketNote";
 import { upload } from "./endpoints/upload";
 
 // Utils
+import { initializeWorldMappings } from "./initializeWorldMappings";
 import { createLogger } from "./util";
 
 // Define application and its resources
@@ -87,13 +88,7 @@ const init = (async () => {
 
 	transportManager.addTransport(new EorzeanMarketNoteTransport(logger));
 
-	// World-ID conversions
-	const worldList = await remoteDataManager.parseCSV("World.csv");
-	for (const worldEntry of worldList) {
-		if (!parseInt(worldEntry[0]) || worldEntry[0] === "25") continue;
-		worldMap.set(worldEntry[1], parseInt(worldEntry[0]));
-		worldIDMap.set(parseInt(worldEntry[0]), worldEntry[1]);
-	}
+	await initializeWorldMappings(remoteDataManager, worldMap, worldIDMap);
 
 	logger.info("Connected to database and started data managers.");
 })();
