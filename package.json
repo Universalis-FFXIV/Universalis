@@ -30,7 +30,7 @@
     "koa-bodyparser": "^4.2.1",
     "koa-queryparams": "^1.0.3",
     "koa-static": "^5.0.0",
-    "mongodb": "^3.3.2",
+    "mongodb": "^3.5.9",
     "remeda": "0.0.18",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
