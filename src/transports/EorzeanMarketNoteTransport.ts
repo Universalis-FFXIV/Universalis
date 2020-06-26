@@ -1,4 +1,4 @@
-import request from "request-promise";
+import bent from "bent";
 
 import { IEorzeanMarketNoteResearch } from "../models/transports/IEorzeanMarketNoteResearch";
 import { ITransport } from "../models/transports/ITransport";
@@ -10,6 +10,8 @@ const BASE_URL =
 	"https://ff14marketnoteapi.ownway.info/research/1/market_research";
 
 const lodestoneKeys = require("../../public/json/lodestoneKeys.json");
+
+const marketNote = bent("GET", "json");
 
 export class EorzeanMarketNoteTransport implements ITransport {
 	public name = "Eorzean Market Note";
@@ -35,7 +37,7 @@ export class EorzeanMarketNoteTransport implements ITransport {
 		const data = this.cachedData.get(dc);
 		if (!data || Date.now() - data.requestTime > 180000) {
 			try {
-				data.apiResponse = await request(BASE_URL + `?dc=${dc}`);
+				data.apiResponse = await marketNote(BASE_URL + `?dc=${dc}`);
 			} catch (err) {
 				this.logger.error(err);
 				return null;

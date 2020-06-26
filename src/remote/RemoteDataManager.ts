@@ -1,9 +1,7 @@
-import chalk from "chalk";
+import bent from "bent";
 import csvParser from "csv-parse";
 import fs from "fs";
-import flatten from "lodash.flatten";
 import path from "path";
-import request from "request-promise";
 import util from "util";
 
 import { Logger } from "winston";
@@ -22,10 +20,10 @@ const urlDictionary = {
 		"https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/World.csv",
 };
 
-const XIVAPI_RATELIMIT = 12;
-
 const csvMap = new Map<string, string[][]>();
 const remoteFileMap = new Map<string, any>();
+
+const download = bent("GET", "buffer");
 
 export class RemoteDataManager {
 	private exts: string[];
@@ -138,7 +136,7 @@ export class RemoteDataManager {
 		);
 
 		if (!(await exists(filePath))) {
-			const remoteData = await request(urlDictionary[fileName]);
+			const remoteData = (await download(urlDictionary[fileName])) as Buffer;
 			await writeFile(filePath, remoteData);
 
 			remoteFileMap.set(fileName, remoteData);
