@@ -3,7 +3,7 @@
  * @url /upload
  */
 
-import R from "remeda";
+import * as R from "remeda";
 import sha from "sha.js";
 
 // Utils

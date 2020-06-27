@@ -5,7 +5,7 @@
  * @param item number The item to retrieve data for.
  */
 
-import R from "remeda";
+import * as R from "remeda";
 
 import {
 	appendWorldDC,
@@ -60,11 +60,7 @@ export async function parseListings(
 		if (item.listings) {
 			item.listings = R.pipe(
 				item.listings,
-				R.sort((a, b) => {
-					if (a.pricePerUnit > b.pricePerUnit) return 1;
-					if (a.pricePerUnit < b.pricePerUnit) return -1;
-					return 0;
-				}),
+				R.sort((a, b) => a.pricePerUnit - b.pricePerUnit),
 				R.map((listing) => {
 					if (
 						!listing.retainerID.length ||

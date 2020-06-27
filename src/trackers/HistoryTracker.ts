@@ -1,4 +1,4 @@
-import R, { dropLast } from "remeda";
+import * as R from "remeda";
 
 import { getWorldDC, getWorldName } from "../util";
 

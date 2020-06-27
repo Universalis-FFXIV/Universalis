@@ -4,7 +4,7 @@
  * @param world string | number The world or DC to retrieve data from.
  * @param item number The item to retrieve data for.
  */
-import R from "remeda";
+import * as R from "remeda";
 
 import { appendWorldDC, makeDistrTable } from "../util";
 
