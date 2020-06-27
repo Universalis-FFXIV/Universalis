@@ -21,7 +21,7 @@ Please see goat's [ACT plugin](https://github.com/goaaats/universalis_act_plugin
 ## Development
 Requires [Node.js](https://nodejs.org/) v10 or higher, [PHP](https://www.php.net/downloads.php), [MariaDB](https://mariadb.org/download/), [Redis](https://redis.io/download), [Composer](https://getcomposer.org/), and [MongoDB Community Edition](https://docs.mongodb.com/manual/administration/install-community/) v4.2 or higher.
 
-Also build a DataExports using SaintCoinach (Overview TODO)
+Also build a DataExports and an icon2x by running the exporter solution.
 
 Uncomment/add in php.ini:
 ```
@@ -52,6 +52,15 @@ symfony server:start -vvv --port 8000
 cd ..
 npm run build
 npm start
+```
+
+## To update
+Go to the mogboard/ folder, and execute the following commands after adding the new DataExports and icon2x data.
+```
+sudo rm -rf var/
+sudo redis-cli FLUSHALL
+sudo php bin/console PopulateGameDataCommand -vvv
+sudo chmod 0777 var/ -R
 ```
 
 ## Uploads
