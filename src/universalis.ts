@@ -202,6 +202,6 @@ router
 universalis.use(router.routes());
 
 // Start server
-const port = 4000;
+const port = process.argv[2] ? parseInt(process.argv[2]) : 4000;
 universalis.listen(port);
 logger.info(`Server started on port ${port}.`);
