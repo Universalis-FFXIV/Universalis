@@ -13,7 +13,6 @@ const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
 
 const urlDictionary = {
-	"dc.json": "https://xivapi.com/servers/dc",
 	"Materia.csv":
 		"https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/Materia.csv",
 	"World.csv":

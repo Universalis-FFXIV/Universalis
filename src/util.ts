@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+import util from "util";
 import winston, { Logger } from "winston";
 
 import { ParameterizedContext } from "koa";
@@ -5,6 +8,8 @@ import { ParameterizedContext } from "koa";
 import { RemoteDataManager } from "./remote/RemoteDataManager";
 
 require("winston-mongodb"); // Applies itself to the winston.transports namespace
+
+const readFile = util.promisify(fs.readFile);
 
 const logger = winston.createLogger();
 
@@ -139,21 +144,21 @@ export function capitalise(input: string): string {
 }
 
 export async function getDCWorlds(dc: string): Promise<string[]> {
-	const dataCenterWorlds = JSON.parse(
-		(await remoteDataManager.fetchFile("dc.json")).toString(),
-	)[dc];
-	return dataCenterWorlds;
+	const fpath = path.join(__dirname, "..", "public", "json", "dc.json");
+	return JSON.parse((await readFile(fpath)).toString())[dc];
 }
 
-export async function getWorldDC(world: string): Promise<string> {
-	const dataCenterWorlds = JSON.parse(
-		(await remoteDataManager.fetchFile("dc.json")).toString(),
-	);
+export async function getWorldDC(worldInput: string | number): Promise<string> {
+	const world = !parseInt(worldInput as string)
+		? worldInput
+		: await getWorldName(worldInput as number);
+
+	const fpath = path.join(__dirname, "..", "public", "json", "dc.json");
+	const dataCenterWorlds = JSON.parse((await readFile(fpath)).toString());
 	for (const dc in dataCenterWorlds) {
 		if (dataCenterWorlds.hasOwnProperty(dc)) {
-			const foundWorld = dataCenterWorlds[dc].find(
-				(el: string) => el === world,
-			);
+			const dcWorlds: string[] = dataCenterWorlds[dc];
+			const foundWorld = dcWorlds.find((el: string) => el === world);
 			if (foundWorld) return dc;
 		}
 	}

@@ -48,7 +48,7 @@ export async function getResearch(
 	item: number,
 	worldOrDc: number | string,
 ): Promise<IEorzeanMarketNoteResearch> {
-	const dc = await getWorldDC(worldOrDc.toString());
+	const dc = await getWorldDC(worldOrDc);
 	const dcWorlds = dc ? await getDCWorlds(dc) : null;
 
 	const transport = transportManager.getTransport("Eorzean Market Note");
@@ -58,8 +58,8 @@ export async function getResearch(
 		dc ? dcWorlds[0] : worldOrDc.toString(),
 	);
 
-	if (dc) {
-		delete data.world;
+	if (dc && data) {
+		if ("world" in data) delete data.world;
 		data.dc = dc;
 		data.priceNQWorld = data.priceHQWorld = data.researchedTimeWorld = dcWorlds.shift();
 		for (const world of dcWorlds) {
