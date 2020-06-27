@@ -9,62 +9,102 @@
 
 import { ParameterizedContext } from "koa";
 
-import { TransportManager } from "../transports/TransportManager";
 import { IEorzeanMarketNoteResearch } from "../models/transports/IEorzeanMarketNoteResearch";
+import { TransportManager } from "../transports/TransportManager";
 
-import { getWorldDC, getDCWorlds } from "../util";
+import { getDCWorlds, getWorldDC } from "../util";
 
-export async function parseEorzeanMarketNote(ctx: ParameterizedContext, transportManager: TransportManager) {
-    const dc = await getWorldDC(ctx.params.world);
-    const dcWorlds = dc ? await getDCWorlds(dc) : null;
+export async function parseEorzeanMarketNote(
+	ctx: ParameterizedContext,
+	transportManager: TransportManager,
+) {
+	const data: IEorzeanMarketNoteResearch = await getResearch(
+		transportManager,
+		ctx.params.item,
+		ctx.params.world,
+	);
 
-    const transport = transportManager.getTransport("Eorzean Market Note");
+	if (!data) {
+		ctx.body = {
+			itemID: ctx.params.item,
+			world: ctx.params.world,
+			priceNQ: null,
+			priceHQ: null,
+			stockNQ: null,
+			stockHQ: null,
+			circulationNQ: null,
+			circulationHQ: null,
+			researchedTime: null,
+		} as IEorzeanMarketNoteResearch;
+		return;
+	}
 
-    const data: IEorzeanMarketNoteResearch = await transport.fetchData(ctx.params.item, dc ? dcWorlds[0] : ctx.params.world);
+	ctx.body = data;
+}
 
-    if (dc) {
-        delete data.world;
-        data.dc = dc;
-        data.priceNQWorld = data.priceHQWorld = data.researchedTimeWorld = dcWorlds.shift();
-        for (const world of dcWorlds) {
-            const nextData: IEorzeanMarketNoteResearch = await transport.fetchData(ctx.params.item, world);
+/* Used to supplement statistics like sale velocity. */
+export async function getResearch(
+	transportManager: TransportManager,
+	item: number,
+	worldOrDc: number | string,
+): Promise<IEorzeanMarketNoteResearch> {
+	const dc = await getWorldDC(worldOrDc);
+	const dcWorlds = dc ? await getDCWorlds(dc) : null;
 
-            if (nextData.priceNQ < data.priceNQ) {
-                data.priceNQ = nextData.priceNQ;
-                data.priceNQWorld = world;
-            }
+	const transport = transportManager.getTransport("Eorzean Market Note");
 
-            if (nextData.priceHQ < data.priceHQ) {
-                data.priceHQ = nextData.priceHQ;
-                data.priceHQWorld = world;
-            }
+	const data: IEorzeanMarketNoteResearch = await transport.fetchData(
+		item,
+		dc ? dcWorlds[0] : worldOrDc.toString(),
+	);
 
-            data.stockNQ += nextData.stockNQ;
-            data.stockHQ += nextData.stockHQ;
-            data.circulationNQ += nextData.circulationNQ;
-            data.circulationHQ += nextData.circulationHQ;
+	if (dc && data) {
+		if ("world" in data) delete data.world;
+		data.dc = dc;
+		data.priceNQWorld = data.priceHQWorld = data.researchedTimeWorld = dcWorlds.shift();
+		for (const world of dcWorlds) {
+			const nextData: IEorzeanMarketNoteResearch = await transport.fetchData(
+				item,
+				world,
+			);
 
-            if (nextData.researchedTime < data.researchedTime) {
-                data.researchedTime = nextData.researchedTime;
-                data.researchedTimeWorld = world;
-            }
-        }
-    }
+			if (nextData.priceNQ < data.priceNQ) {
+				data.priceNQ = nextData.priceNQ;
+				data.priceNQWorld = world;
+			}
 
-    if (!data) {
-        ctx.body = {
-            itemID: ctx.params.item,
-            world: ctx.params.world,
-            priceNQ: null,
-            priceHQ: null,
-            stockNQ: null,
-            stockHQ: null,
-            circulationNQ: null,
-            circulationHQ: null,
-            researchedTime: null,
-        } as IEorzeanMarketNoteResearch;
-        return;
-    }
+			if (nextData.priceHQ < data.priceHQ) {
+				data.priceHQ = nextData.priceHQ;
+				data.priceHQWorld = world;
+			}
 
-    ctx.body = data;
+			data.stockNQ += nextData.stockNQ;
+			data.stockHQ += nextData.stockHQ;
+			data.circulationNQ += nextData.circulationNQ;
+			data.circulationHQ += nextData.circulationHQ;
+
+			if (nextData.researchedTime < data.researchedTime) {
+				data.researchedTime = nextData.researchedTime;
+				data.researchedTimeWorld = world;
+			}
+		}
+	}
+
+	if (!data) {
+		return {
+			itemID: item,
+			world: worldOrDc.toString(),
+			priceNQ: null,
+			priceHQ: null,
+			stockNQ: null,
+			stockHQ: null,
+			circulationNQ: null,
+			circulationHQ: null,
+			turnoverPerDayNQ: null,
+			turnoverPerDayHQ: null,
+			researchedTime: null,
+		};
+	}
+
+	return data;
 }

@@ -1,5 +1,5 @@
 import { Logger } from "winston";
 
 export interface CronJobManagerOptions {
-    logger: Logger;
+	logger: Logger;
 }

@@ -1,6 +1,6 @@
 import { MarketBoardItemListing } from "./MarketBoardItemListing";
 
 export interface MarketBoardDCItemListing extends MarketBoardItemListing {
-    worldName: string;
-    uploaderID: string;
+	worldName: string;
+	uploaderID: string;
 }

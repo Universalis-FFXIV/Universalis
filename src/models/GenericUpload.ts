@@ -3,19 +3,19 @@ import { MarketBoardItemListingUpload } from "./MarketBoardItemListingUpload";
 import { MarketTaxRates } from "./MarketTaxRates";
 
 export interface GenericUpload {
-    uploaderID: number | string;
+	uploaderID: number | string;
 
-    itemID?: number;
-    itemIDs?: number[];
-    worldID?: number;
+	itemID?: number;
+	itemIDs?: number[];
+	worldID?: number;
 
-    contentID?: string | number;
-    characterName?: string;
-    entries?: MarketBoardHistoryEntry[];
-    listings?: MarketBoardItemListingUpload[];
-    marketTaxRates?: MarketTaxRates;
+	contentID?: string | number;
+	characterName?: string;
+	entries?: MarketBoardHistoryEntry[];
+	listings?: MarketBoardItemListingUpload[];
+	marketTaxRates?: MarketTaxRates;
 
-    op?: {
-        listings?: number;
-    };
+	op?: {
+		listings?: number;
+	};
 }
