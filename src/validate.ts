@@ -344,6 +344,31 @@ function isValidUInt32(input: any): boolean {
 	return true;
 }
 
+const chineseWorldIds = [
+	1042,
+	1043,
+	1044,
+	1045,
+	1060,
+	1076,
+	1081,
+	1106,
+	1113,
+	1121,
+	1166,
+	1167,
+	1169,
+	1170,
+	1171,
+	1172,
+	1173,
+	1174,
+	1175,
+	1176,
+	1177,
+	1178,
+	1179,
+]; // Put this somewhere proper later
 function isValidWorld(input: any): boolean {
 	if (typeof input !== "number") return false;
 	if (
@@ -353,8 +378,11 @@ function isValidWorld(input: any): boolean {
 		input === 27 ||
 		input === 38 ||
 		input === 84
-	)
-		return false;
+	) {
+		if (!chineseWorldIds.includes(input)) {
+			return false;
+		}
+	}
 	return true;
 }
 
