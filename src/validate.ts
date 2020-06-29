@@ -183,7 +183,12 @@ export default {
 
 		// You can't upload data for these worlds because you can't scrape it.
 		// This does include Korean worlds for the time being.
-		if (!isValidWorld(args.uploadData.worldID)) {
+		if (
+			(args.uploadData.listings ||
+				args.uploadData.entries ||
+				args.uploadData.marketTaxRates) &&
+			!isValidWorld(args.uploadData.worldID)
+		) {
 			logger.warn(
 				`Data received for unsupported world ${args.uploadData.worldID}, rejecting.`,
 			);
@@ -199,7 +204,7 @@ export default {
 				)
 			) {
 				logger.warn(
-					`Data received for unsupported world ${args.uploadData.itemID}, rejecting.`,
+					`Data received for unsupported item ${args.uploadData.itemID}, rejecting.`,
 				);
 				args.ctx.body = "Unsupported Item";
 				args.ctx.throw(HttpStatusCodes.NOT_FOUND);
