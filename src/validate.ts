@@ -5,6 +5,8 @@ import { materiaIDToValueAndTier } from "./materiaUtils";
 
 import { Context } from "koa";
 
+import { Logger } from "winston";
+import winston from "winston/lib/winston/config";
 import { City } from "./models/City";
 import { HttpStatusCodes } from "./models/HttpStatusCodes";
 import { ItemMateria } from "./models/ItemMateria";
@@ -168,6 +170,7 @@ export default {
 	},
 
 	validateUploadData: async (
+		logger: Logger,
 		args: ValidateUploadDataArgs,
 	): Promise<void | never> => {
 		// Check blacklisted uploaders (people who upload fake data)
@@ -179,8 +182,11 @@ export default {
 		}
 
 		// You can't upload data for these worlds because you can't scrape it.
-		// This does include Chinese and Korean worlds for the time being.
+		// This does include Korean worlds for the time being.
 		if (!isValidWorld(args.uploadData.worldID)) {
+			logger.warn(
+				`Data received for unsupported world ${args.uploadData.worldID}, rejecting.`,
+			);
 			args.ctx.body = "Unsupported World";
 			args.ctx.throw(HttpStatusCodes.NOT_FOUND);
 		}
@@ -192,6 +198,9 @@ export default {
 					args.uploadData.itemID,
 				)
 			) {
+				logger.warn(
+					`Data received for unsupported world ${args.uploadData.itemID}, rejecting.`,
+				);
 				args.ctx.body = "Unsupported Item";
 				args.ctx.throw(HttpStatusCodes.NOT_FOUND);
 			}
@@ -210,6 +219,23 @@ export default {
 					!isValidName(listing.retainerName) ||
 					listing.sellerID == null
 				) {
+					logger.warn(
+						`Received bad listing data, rejecting. Reason:\nlisting.hq == null: ${
+							listing.hq == null
+						}\n!isValidUInt16(listing.lastReviewTime): ${!isValidUInt16(
+							listing.lastReviewTime,
+						)}\n!isValidUInt32(listing.pricePerUnit): ${!isValidUInt32(
+							listing.pricePerUnit,
+						)}\n!isValidUInt32(listing.quantity): ${!isValidUInt32(
+							listing.quantity,
+						)}\nlisting.retainerID == null: ${
+							listing.retainerID == null
+						}\nlisting.retainerCity == null: ${
+							listing.retainerCity == null
+						}\n!isValidName(listing.retainerName): ${!isValidName(
+							listing.retainerName,
+						)}\nlisting.sellerID == null: ${listing.sellerID == null}`,
+					);
 					args.ctx.throw(
 						HttpStatusCodes.UNPROCESSABLE_ENTITY,
 						"Bad Listing Data",
@@ -226,6 +252,17 @@ export default {
 					!isValidUInt32(entry.quantity) ||
 					!isValidName(entry.buyerName)
 				) {
+					logger.warn(
+						`Received bad history data, rejecting. Reason:\nentry.hq == null: ${
+							entry.hq == null
+						}\n!isValidUInt32(entry.pricePerUnit): ${!isValidUInt32(
+							entry.pricePerUnit,
+						)}\n!isValidUInt32(entry.quantity): ${!isValidUInt32(
+							entry.quantity,
+						)}\n!isValidName(entry.buyerName): ${!isValidName(
+							entry.buyerName,
+						)}`,
+					);
 					args.ctx.throw(
 						HttpStatusCodes.UNPROCESSABLE_ENTITY,
 						"Bad History Data",

@@ -108,17 +108,14 @@ universalis.use(queryParams());
 
 // Logging
 universalis.use(async (ctx, next) => {
-	logger.info(
-		`${ctx.method} ${ctx.url.slice(
-			0,
-			ctx.url.includes("upload") ? ctx.url.indexOf("upload") + 6 : undefined,
-		)}`,
-	);
+	if (!ctx.url.includes("upload")) {
+		logger.info(`${ctx.method} ${ctx.url}`);
+	}
 	await next();
 });
 
 // Use single init await
-universalis.use(async (ctx, next) => {
+universalis.use(async (_, next) => {
 	await init;
 	await next();
 });

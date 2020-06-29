@@ -58,7 +58,7 @@ export async function upload(parameters: UploadProcessParameters) {
 		.update(uploadData.uploaderID + "")
 		.digest("hex");
 
-	await validation.validateUploadData({
+	await validation.validateUploadData(logger, {
 		ctx,
 		uploadData,
 		blacklistManager,

@@ -9,7 +9,12 @@ export async function initializeWorldMappings(
 
 	const worldList = await remoteDataManager.parseCSV("World.csv");
 	for (const worldEntry of worldList) {
-		if (!parseInt(worldEntry[0]) || worldEntry[0] === "25") continue;
+		if (
+			!parseInt(worldEntry[0]) ||
+			worldEntry[0] === "25" ||
+			worldEntry[4] === "False"
+		)
+			continue;
 		registerWorld(worldEntry[1], parseInt(worldEntry[0]));
 	}
 
