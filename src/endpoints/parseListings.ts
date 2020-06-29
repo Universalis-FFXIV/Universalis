@@ -82,11 +82,11 @@ export async function parseListings(
 		}
 
 		if (item.recentHistory) {
-			const emnData = await getResearch(
+			/*const emnData = await getResearch(
 				transportManager,
 				item.itemID,
 				item.worldID,
-			);
+			);*/
 
 			item.recentHistory = R.pipe(
 				item.recentHistory,
@@ -104,10 +104,10 @@ export async function parseListings(
 				nqItems,
 				hqItems,
 			);
-			saleVelocities.nqSaleVelocity =
+			/*saleVelocities.nqSaleVelocity =
 				(saleVelocities.nqSaleVelocity + emnData.turnoverPerDayNQ) / 2;
 			saleVelocities.hqSaleVelocity =
-				(saleVelocities.hqSaleVelocity + emnData.turnoverPerDayHQ) / 2;
+				(saleVelocities.hqSaleVelocity + emnData.turnoverPerDayHQ) / 2;*/
 
 			item = R.pipe(
 				item,
