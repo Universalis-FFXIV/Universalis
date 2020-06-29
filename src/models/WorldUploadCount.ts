@@ -1,6 +1,6 @@
 export interface WorldUploadCount {
-    setName?: "worldUploadCount";
-    worldName: string;
-    count: number;
-    proportion: number;
+	setName?: "worldUploadCount";
+	worldName: string;
+	count: number;
+	proportion: number;
 }

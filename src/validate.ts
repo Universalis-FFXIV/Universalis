@@ -1,4 +1,4 @@
-import compact from "lodash.compact";
+import * as R from "remeda";
 import sha from "sha.js";
 
 import { materiaIDToValueAndTier } from "./materiaUtils";
@@ -6,6 +6,7 @@ import { materiaIDToValueAndTier } from "./materiaUtils";
 import { Context } from "koa";
 
 import { City } from "./models/City";
+import { HttpStatusCodes } from "./models/HttpStatusCodes";
 import { ItemMateria } from "./models/ItemMateria";
 import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
@@ -13,279 +14,380 @@ import { MarketBoardItemListingUpload } from "./models/MarketBoardItemListingUpl
 import { ValidateUploadDataArgs } from "./models/ValidateUploadDataArgs";
 
 export default {
-    cleanHistoryEntry: (entry: MarketBoardHistoryEntry, sourceName?: string): MarketBoardHistoryEntry => {
-        const stringifiedEntry = JSON.stringify(entry);
-        if (stringifiedEntry.match(/<[\s\S]*?>/)) {
-            entry = JSON.parse(stringifiedEntry.replace(/<[\s\S]*?>/, ""));
-        }
+	cleanHistoryEntry: (
+		entry: MarketBoardHistoryEntry,
+		sourceName?: string,
+	): MarketBoardHistoryEntry => {
+		const stringifiedEntry = JSON.stringify(entry);
+		if (hasHtmlTags(stringifiedEntry)) {
+			entry = JSON.parse(stringifiedEntry.replace(/<[\s\S]*?>/, ""));
+		}
 
-        const newEntry = {
-            buyerName: entry.buyerName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
-            hq: entry.hq == null ? false : entry.hq,
-            pricePerUnit: entry.pricePerUnit,
-            quantity: entry.quantity,
-            timestamp: entry.timestamp,
-            uploadApplication: entry.uploadApplication ? entry.uploadApplication : sourceName,
-        };
+		const newEntry = R.pipe(
+			entry,
+			R.pick(["pricePerUnit", "quantity", "timestamp"]),
+			R.merge({
+				buyerName: entry.buyerName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
+				hq: entry.hq || false,
+				uploadApplication: entry.uploadApplication || sourceName,
+			}),
+		);
 
-        if (typeof newEntry.hq === "number") {
-            // newListing.hq as a conditional will be truthy if not 0
-            newEntry.hq = newEntry.hq ? true : false;
-        }
+		if (typeof newEntry.hq === "number") {
+			// newListing.hq as a conditional will be truthy if not 0
+			newEntry.hq = newEntry.hq ? true : false;
+		}
 
-        return newEntry;
-    },
+		return newEntry;
+	},
 
-    cleanHistoryEntryOutput: (entry: MarketBoardHistoryEntry): MarketBoardHistoryEntry => {
-        const stringifiedEntry = JSON.stringify(entry);
-        if (stringifiedEntry.match(/<[\s\S]*?>/)) {
-            entry = JSON.parse(stringifiedEntry.replace(/<[\s\S]*?>/, ""));
-        }
+	cleanHistoryEntryOutput: (
+		entry: MarketBoardHistoryEntry,
+	): MarketBoardHistoryEntry => {
+		const stringifiedEntry = JSON.stringify(entry);
+		if (hasHtmlTags(stringifiedEntry)) {
+			entry = JSON.parse(stringifiedEntry.replace(/<[\s\S]*?>/, ""));
+		}
 
-        return {
-            buyerName: entry.buyerName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
-            hq: entry.hq,
-            pricePerUnit: entry.pricePerUnit,
-            quantity: entry.quantity,
-            timestamp: entry.timestamp,
-            total: entry.pricePerUnit * entry.quantity,
-            worldName: entry.worldName,
-        };
-    },
+		return R.pipe(
+			entry,
+			R.pick(["hq", "pricePerUnit", "quantity", "timestamp", "worldName"]),
+			R.merge({
+				buyerName: entry.buyerName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
+				total: entry.pricePerUnit * entry.quantity,
+			}),
+		);
+	},
 
-    cleanListing: (listing: MarketBoardItemListingUpload, sourceName?: string): MarketBoardItemListingUpload => {
-        const stringifiedListing = JSON.stringify(listing);
-        if (stringifiedListing.match(/<[\s\S]*?>/)) {
-            listing = JSON.parse(stringifiedListing.replace(/<[\s\S]*?>/, ""));
-        }
+	cleanListing: (
+		listing: MarketBoardItemListingUpload,
+		sourceName?: string,
+	): MarketBoardItemListingUpload => {
+		const stringifiedListing = JSON.stringify(listing);
+		if (hasHtmlTags(stringifiedListing)) {
+			listing = JSON.parse(stringifiedListing.replace(/<[\s\S]*?>/, ""));
+		}
 
-        const newListing = {
-            creatorID: sha("sha256").update(listing.creatorID + "").digest("hex"),
-            creatorName: listing.creatorName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
-            hq: listing.hq == null ? false : listing.hq,
-            lastReviewTime: listing.lastReviewTime,
-            listingID: sha("sha256").update(listing.listingID + "").digest("hex"),
-            materia: listing.materia == null ? [] : listing.materia,
-            onMannequin: listing.onMannequin == null ? false : listing.onMannequin,
-            pricePerUnit: listing.pricePerUnit,
-            quantity: listing.quantity,
-            retainerCity: typeof listing.retainerCity === "number" ?
-                listing.retainerCity : City[listing.retainerCity],
-            retainerID: sha("sha256").update(listing.retainerID + "").digest("hex"),
-            retainerName: listing.retainerName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
-            sellerID: sha("sha256").update(listing.sellerID + "").digest("hex"),
-            stainID: listing.stainID,
-            uploadApplication: sourceName ? sourceName : listing.uploadApplication,
-            uploaderID: listing.uploaderID,
-            worldName: listing.worldName,
-        };
+		const securedFields = {
+			creatorID: parseSha256(listing.creatorID),
+			listingID: parseSha256(listing.listingID),
+			retainerID: parseSha256(listing.retainerID),
+			sellerID: parseSha256(listing.sellerID),
+		};
 
-        if (typeof newListing.hq === "number") {
-            // newListing.hq as a conditional will be truthy if not 0
-            newListing.hq = newListing.hq ? true : false;
-        }
+		const cleanedListing = {
+			creatorName: listing.creatorName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
+			hq: listing.hq || false,
+			materia: listing.materia || [],
+			onMannequin: listing.onMannequin || false,
+			retainerCity:
+				typeof listing.retainerCity === "number"
+					? listing.retainerCity
+					: City[listing.retainerCity],
+			retainerName: listing.retainerName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
+			uploadApplication: sourceName || listing.uploadApplication,
+		};
 
-        return newListing;
-    },
+		const newListing = R.pipe(
+			listing,
+			R.pick([
+				"lastReviewTime",
+				"pricePerUnit",
+				"quantity",
+				"stainID",
+				"uploaderID",
+				"worldName",
+			]),
+			R.merge(securedFields),
+			R.merge(cleanedListing),
+		);
 
-    cleanListingOutput: (listing: MarketBoardItemListing): MarketBoardItemListing => {
-        const stringifiedListing = JSON.stringify(listing);
-        if (stringifiedListing.match(/<[\s\S]*?>/)) {
-            listing = JSON.parse(stringifiedListing.replace(/<[\s\S]*?>/, ""));
-        }
+		if (typeof newListing.hq === "number") {
+			// newListing.hq as a conditional will be truthy if not 0
+			newListing.hq = newListing.hq ? true : false;
+		}
 
-        const formattedListing = {
-            creatorID: listing.creatorID,
-            creatorName: listing.creatorName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
-            hq: listing.hq == null ? false : listing.hq,
-            isCrafted:
-                listing.creatorID !== "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9" && // 0n
-                listing.creatorID !== "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",   // ""
-            lastReviewTime: listing.lastReviewTime,
-            listingID: listing.listingID,
-            materia: listing.materia == null ? [] : listing.materia,
-            onMannequin: listing.onMannequin == null ? false : listing.onMannequin,
-            pricePerUnit: listing.pricePerUnit,
-            quantity: listing.quantity,
-            retainerCity: typeof listing.retainerCity === "number" ?
-                listing.retainerCity : City[listing.retainerCity],
-            retainerID: listing.retainerID,
-            retainerName: listing.retainerName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
-            sellerID: listing.sellerID,
-            stainID: listing.stainID,
-            total: listing.pricePerUnit * listing.quantity,
-            worldName: listing.worldName,
-        };
+		return newListing;
+	},
 
-        return formattedListing;
-    },
+	cleanListingOutput: (
+		listing: MarketBoardItemListing,
+	): MarketBoardItemListing => {
+		const stringifiedListing = JSON.stringify(listing);
+		if (hasHtmlTags(stringifiedListing)) {
+			listing = JSON.parse(stringifiedListing.replace(/<[\s\S]*?>/, ""));
+		}
 
-    cleanMateria: (materiaArray: ItemMateria[]): ItemMateria[] => {
-        if (materiaArray.length > 0) {
-            materiaArray = materiaArray.map((materiaSlot) => {
-                if (!materiaSlot.materiaID && materiaSlot["materiaId"]) {
-                    materiaSlot.materiaID = materiaSlot["materiaId"];
-                    delete materiaSlot["materiaId"];
-                } else if (!materiaSlot.materiaID) {
-                    return;
-                }
+		const formattedListing = R.pipe(
+			listing,
+			R.pick([
+				"creatorID",
+				"lastReviewTime",
+				"listingID",
+				"pricePerUnit",
+				"quantity",
+				"retainerID",
+				"sellerID",
+				"stainID",
+				"worldName",
+			]),
+			R.merge({
+				creatorName: listing.creatorName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
+				hq: listing.hq || false,
+				isCrafted:
+					listing.creatorID !==
+						"5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9" && // 0n
+					listing.creatorID !==
+						"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", // ""
+				materia: listing.materia || [],
+				onMannequin: listing.onMannequin || false,
+				retainerCity:
+					typeof listing.retainerCity === "number"
+						? listing.retainerCity
+						: City[listing.retainerCity],
+				retainerName: listing.retainerName.replace(/[^a-zA-Z0-9'\- ]/g, ""),
+				total: listing.pricePerUnit * listing.quantity,
+			}),
+		);
 
-                if (!materiaSlot.slotID && materiaSlot["slotId"]) {
-                    materiaSlot.slotID = materiaSlot["slotId"];
-                    delete materiaSlot["slotId"];
-                } else if (!materiaSlot.slotID) {
-                    return;
-                }
+		return formattedListing;
+	},
 
-                const materiaID = parseInt(materiaSlot.materiaID as unknown as string);
-                if (materiaID > 973) {
-                    const materiaData = materiaIDToValueAndTier(materiaID);
-                    return {
-                        materiaID: materiaData.materiaID,
-                        slotID: materiaData.tier,
-                    };
-                }
+	cleanMateriaArray: (materiaArray: ItemMateria[]): ItemMateria[] => {
+		return R.pipe(materiaArray, R.map(cleanMateria), R.compact);
+	},
 
-                return materiaSlot;
-            });
+	validateUploadDataPreCast: (ctx: Context): void | never => {
+		if (!ctx.params.apiKey) {
+			ctx.throw(HttpStatusCodes.UNAUTHENTICATED);
+		}
 
-            materiaArray = compact(materiaArray);
-        }
+		if (!ctx.is("json") || hasHtmlTags(JSON.stringify(ctx.request.body))) {
+			ctx.throw(HttpStatusCodes.UNSUPPORTED_MEDIA_TYPE);
+		}
+	},
 
-        return materiaArray;
-    },
+	validateUploadData: async (
+		args: ValidateUploadDataArgs,
+	): Promise<void | never> => {
+		// Check blacklisted uploaders (people who upload fake data)
+		if (
+			args.uploadData.uploaderID == null ||
+			(await args.blacklistManager.has(args.uploadData.uploaderID as string))
+		) {
+			args.ctx.throw(HttpStatusCodes.FORBIDDEN);
+		}
 
-    validateUploadDataPreCast: (ctx: Context): boolean => {
-        if (!ctx.params.apiKey) {
-            ctx.throw(401);
-            return true;
-        }
+		// You can't upload data for these worlds because you can't scrape it.
+		// This does include Chinese and Korean worlds for the time being.
+		if (!isValidWorld(args.uploadData.worldID)) {
+			args.ctx.body = "Unsupported World";
+			args.ctx.throw(HttpStatusCodes.NOT_FOUND);
+		}
 
-        if (!ctx.is("json")) {
-            ctx.body = "Unsupported content type";
-            ctx.throw(415);
-            return true;
-        }
+		// Filter out junk item IDs.
+		if (args.uploadData.itemID) {
+			if (
+				!(await args.remoteDataManager.getMarketableItemIDs()).includes(
+					args.uploadData.itemID,
+				)
+			) {
+				args.ctx.body = "Unsupported Item";
+				args.ctx.throw(HttpStatusCodes.NOT_FOUND);
+			}
+		}
 
-        if (JSON.stringify(ctx.request.body).match(/<[\s\S]*?>/)) { // Immediately reject anything with an HTML tag in it
-            ctx.throw(415);
-            return true;
-        }
-    },
+		// Listings
+		if (args.uploadData.listings)
+			args.uploadData.listings.forEach((listing) => {
+				if (
+					listing.hq == null ||
+					!isValidUInt16(listing.lastReviewTime) ||
+					!isValidUInt32(listing.pricePerUnit) ||
+					!isValidUInt32(listing.quantity) ||
+					listing.retainerID == null ||
+					listing.retainerCity == null ||
+					!isValidName(listing.retainerName) ||
+					listing.sellerID == null
+				) {
+					args.ctx.throw(
+						HttpStatusCodes.UNPROCESSABLE_ENTITY,
+						"Bad Listing Data",
+					);
+				}
+			});
 
-    validateUploadData: async (args: ValidateUploadDataArgs): Promise<boolean> => {
-        // Check blacklisted uploaders (people who upload fake data)
-        if (args.uploadData.uploaderID == null ||
-            await args.blacklistManager.has(args.uploadData.uploaderID as string)) {
-                args.ctx.throw(403);
-        }
+		// History entries
+		if (args.uploadData.entries)
+			args.uploadData.entries.forEach((entry) => {
+				if (
+					entry.hq == null ||
+					!isValidUInt32(entry.pricePerUnit) ||
+					!isValidUInt32(entry.quantity) ||
+					!isValidName(entry.buyerName)
+				) {
+					args.ctx.throw(
+						HttpStatusCodes.UNPROCESSABLE_ENTITY,
+						"Bad History Data",
+					);
+				}
+			});
 
-        // You can't upload data for these worlds because you can't scrape it.
-        // This does include Chinese and Korean worlds for the time being.
-        if (args.uploadData.worldID && args.uploadData.worldID <= 16 ||
-                args.uploadData.worldID >= 100 ||
-                args.uploadData.worldID === 26 ||
-                args.uploadData.worldID === 27 ||
-                args.uploadData.worldID === 38 ||
-                args.uploadData.worldID === 84) {
-            args.ctx.body = "Unsupported World";
-            args.ctx.throw(404);
-            return true;
-        }
+		// Market tax rates
+		if (args.uploadData.marketTaxRates) {
+			if (
+				!isValidTaxRate(args.uploadData.marketTaxRates.crystarium) ||
+				!isValidTaxRate(args.uploadData.marketTaxRates.gridania) ||
+				!isValidTaxRate(args.uploadData.marketTaxRates.ishgard) ||
+				!isValidTaxRate(args.uploadData.marketTaxRates.kugane) ||
+				!isValidTaxRate(args.uploadData.marketTaxRates.limsaLominsa) ||
+				!isValidTaxRate(args.uploadData.marketTaxRates.uldah)
+			) {
+				args.ctx.throw(
+					HttpStatusCodes.UNPROCESSABLE_ENTITY,
+					"Bad Market Tax Rate Data",
+				);
+			}
+		}
 
-        // Filter out junk item IDs.
-        if (args.uploadData.itemID) {
-            if (!(await args.remoteDataManager.getMarketableItemIDs()).includes(args.uploadData.itemID)) {
-                args.ctx.body = "Unsupported Item";
-                args.ctx.throw(404);
-                return true;
-            }
-        }
+		// Crafter data
+		if (
+			args.uploadData.characterName == null ||
+			args.uploadData.contentID == null
+		) {
+			args.ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY);
+		} else if (!isValidName(args.uploadData.characterName)) {
+			args.ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY);
+		}
 
-        // Listings
-        if (args.uploadData.listings) args.uploadData.listings.forEach((listing) => {
-            if (listing.hq == null ||
-                    listing.lastReviewTime == null ||
-                    listing.pricePerUnit == null ||
-                    listing.quantity == null ||
-                    listing.retainerID == null ||
-                    listing.retainerCity == null ||
-                    listing.retainerName == null ||
-                    listing.retainerName.length > 32 ||
-                    listing.retainerName.match(/[^a-zA-Z0-9'\- ]/g) ||
-                    listing.sellerID == null) {
-                args.ctx.throw(422, "Bad Listing Data");
-                return true;
-            }
-        });
+		// General filters
+		if (
+			!args.uploadData.worldID &&
+			!args.uploadData.itemID &&
+			!args.uploadData.itemIDs &&
+			!args.uploadData.marketTaxRates &&
+			!args.uploadData.contentID &&
+			!args.uploadData.op
+		) {
+			args.ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY);
+		}
 
-        // History entries
-        if (args.uploadData.entries) args.uploadData.entries.forEach((entry) => {
-            if (entry.hq == null ||
-                    entry.pricePerUnit == null ||
-                    entry.quantity == null ||
-                    entry.buyerName == null ||
-                    entry.buyerName.length > 32 ||
-                    entry.buyerName.match(/[^a-zA-Z0-9'\- ]/g)) {
-                args.ctx.throw(422, "Bad History Data");
-                return true;
-            }
-        });
-
-        // Market tax rates
-        if (args.uploadData.marketTaxRates) {
-            if (typeof args.uploadData.marketTaxRates.crystarium !== "number" ||
-                    typeof args.uploadData.marketTaxRates.gridania !== "number" ||
-                    typeof args.uploadData.marketTaxRates.ishgard !== "number" ||
-                    typeof args.uploadData.marketTaxRates.kugane !== "number" ||
-                    typeof args.uploadData.marketTaxRates.limsaLominsa !== "number" ||
-                    typeof args.uploadData.marketTaxRates.uldah !== "number" ||
-                    args.uploadData.marketTaxRates.crystarium < 0 ||
-                    args.uploadData.marketTaxRates.crystarium > 5 ||
-                    args.uploadData.marketTaxRates.gridania < 0 ||
-                    args.uploadData.marketTaxRates.gridania > 5 ||
-                    args.uploadData.marketTaxRates.ishgard < 0 ||
-                    args.uploadData.marketTaxRates.ishgard > 5 ||
-                    args.uploadData.marketTaxRates.kugane < 0 ||
-                    args.uploadData.marketTaxRates.kugane > 5 ||
-                    args.uploadData.marketTaxRates.limsaLominsa < 0 ||
-                    args.uploadData.marketTaxRates.limsaLominsa > 5 ||
-                    args.uploadData.marketTaxRates.uldah < 0 ||
-                    args.uploadData.marketTaxRates.uldah > 5 ) {
-                args.ctx.throw(422, "Bad Market Tax Rate Data");
-                return true;
-            }
-        }
-
-        // Crafter data
-        if (args.uploadData.characterName != null && args.uploadData.contentID == null || args.uploadData.characterName == null && args.uploadData.contentID != null) {
-            args.ctx.throw(422);
-            return true;
-        } else if (args.uploadData.characterName != null && (args.uploadData.characterName.length > 32 || args.uploadData.characterName.match(/[^a-zA-Z0-9'\- ]/g))) {
-            args.ctx.throw(422);
-            return true;
-        }
-
-        // General filters
-        if (!args.uploadData.worldID &&
-                !args.uploadData.itemID &&
-                !args.uploadData.itemIDs &&
-                !args.uploadData.marketTaxRates &&
-                !args.uploadData.contentID &&
-                !args.uploadData.op) {
-            args.ctx.throw(422);
-            return true;
-        }
-
-        if (!args.uploadData.listings &&
-                !args.uploadData.entries &&
-                !args.uploadData.marketTaxRates &&
-                !args.uploadData.contentID &&
-                !args.uploadData.op) {
-            args.ctx.throw(418);
-            return true;
-        }
-
-        return false;
-    }
+		if (
+			!args.uploadData.listings &&
+			!args.uploadData.entries &&
+			!args.uploadData.marketTaxRates &&
+			!args.uploadData.contentID &&
+			!args.uploadData.op
+		) {
+			args.ctx.throw(HttpStatusCodes.IM_A_TEAPOT);
+		}
+	},
 };
+
+/////////////////////
+// PRIVATE METHODS //
+/////////////////////
+function cleanMateria(materiaSlot: ItemMateria): ItemMateria {
+	if (!materiaSlot.materiaID && materiaSlot["materiaId"]) {
+		materiaSlot.materiaID = materiaSlot["materiaId"];
+		delete materiaSlot["materiaId"];
+	} else if (!materiaSlot.materiaID) {
+		return;
+	}
+
+	if (!materiaSlot.slotID && materiaSlot["slotId"]) {
+		materiaSlot.slotID = materiaSlot["slotId"];
+		delete materiaSlot["slotId"];
+	} else if (!materiaSlot.slotID) {
+		return;
+	}
+
+	const materiaID = parseInt((materiaSlot.materiaID as unknown) as string);
+	if (materiaID > 973) {
+		const materiaData = materiaIDToValueAndTier(materiaID);
+		return {
+			materiaID: materiaData.materiaID,
+			slotID: materiaData.tier,
+		};
+	}
+
+	return materiaSlot;
+}
+
+function hasHtmlTags(input: string): boolean {
+	if (input.match(/<[\s\S]*?>/)) return true;
+	return false;
+}
+
+function isValidName(input: any): boolean {
+	if (typeof input !== "string") return false;
+	if (input.length > 32) return false;
+	if (input.match(/[^a-zA-Z0-9'\- ]/g)) return false;
+	return true;
+}
+
+function isValidTaxRate(input: any): boolean {
+	if (typeof input !== "number") return false;
+	if (input < 0 || input > 5) return false;
+	return true;
+}
+
+function isValidUInt16(input: any): boolean {
+	if (typeof input !== "number") return false;
+	if (input < 0 || input > 65535) return false;
+	return true;
+}
+
+function isValidUInt32(input: any): boolean {
+	if (typeof input !== "number") return false;
+	if (input < 0 || input > 4294967295) return false;
+	return true;
+}
+
+const chineseWorldIds = [
+	1042,
+	1043,
+	1044,
+	1045,
+	1060,
+	1076,
+	1081,
+	1106,
+	1113,
+	1121,
+	1166,
+	1167,
+	1169,
+	1170,
+	1171,
+	1172,
+	1173,
+	1174,
+	1175,
+	1176,
+	1177,
+	1178,
+	1179,
+]; // Put this somewhere proper later
+function isValidWorld(input: any): boolean {
+	if (typeof input !== "number") return false;
+	if (
+		input <= 16 ||
+		input >= 100 ||
+		input === 26 ||
+		input === 27 ||
+		input === 38 ||
+		input === 84
+	) {
+		if (!chineseWorldIds.includes(input)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function parseSha256(input: any): string {
+	return sha("sha256")
+		.update(input + "")
+		.digest("hex");
+}
