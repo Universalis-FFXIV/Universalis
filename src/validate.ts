@@ -304,12 +304,9 @@ export default {
 
 		// Crafter data
 		if (
-			args.uploadData.characterName == null ||
-			args.uploadData.contentID == null
+			args.uploadData.contentID &&
+			!isValidName(args.uploadData.characterName)
 		) {
-			logger.warn("Recieved null character name or content ID, rejecting.");
-			args.ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY);
-		} else if (!isValidName(args.uploadData.characterName)) {
 			logger.warn("Recieved invalid character name, rejecting.");
 			args.ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY);
 		}
