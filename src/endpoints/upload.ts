@@ -172,8 +172,8 @@ export async function upload(parameters: UploadProcessParameters) {
 					);
 				}
 			} else {
-				logger.info(
-					"Attempted to run a bulk delisting of over 100 items, returning.",
+				logger.warn(
+					"Attempted to run a bulk delisting of over 100 items, rejecting.",
 				);
 				return ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY);
 			}

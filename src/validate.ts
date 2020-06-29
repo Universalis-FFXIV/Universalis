@@ -280,6 +280,21 @@ export default {
 				!isValidTaxRate(args.uploadData.marketTaxRates.limsaLominsa) ||
 				!isValidTaxRate(args.uploadData.marketTaxRates.uldah)
 			) {
+				logger.warn(
+					`Recieved bad tax rate data, rejecting. Reason:\n!isValidTaxRate(args.uploadData.marketTaxRates.crystarium): ${!isValidTaxRate(
+						args.uploadData.marketTaxRates.crystarium,
+					)}\n!isValidTaxRate(args.uploadData.marketTaxRates.gridania): ${!isValidTaxRate(
+						args.uploadData.marketTaxRates.gridania,
+					)}\n!isValidTaxRate(args.uploadData.marketTaxRates.ishgard): ${!isValidTaxRate(
+						args.uploadData.marketTaxRates.ishgard,
+					)}\n!isValidTaxRate(args.uploadData.marketTaxRates.kugane): ${!isValidTaxRate(
+						args.uploadData.marketTaxRates.kugane,
+					)}\n!isValidTaxRate(args.uploadData.marketTaxRates.limsaLominsa): ${!isValidTaxRate(
+						args.uploadData.marketTaxRates.limsaLominsa,
+					)}\n!isValidTaxRate(args.uploadData.marketTaxRates.uldah): ${!isValidTaxRate(
+						args.uploadData.marketTaxRates.uldah,
+					)}`,
+				);
 				args.ctx.throw(
 					HttpStatusCodes.UNPROCESSABLE_ENTITY,
 					"Bad Market Tax Rate Data",
@@ -292,8 +307,10 @@ export default {
 			args.uploadData.characterName == null ||
 			args.uploadData.contentID == null
 		) {
+			logger.warn("Recieved null character name or content ID, rejecting.");
 			args.ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY);
 		} else if (!isValidName(args.uploadData.characterName)) {
+			logger.warn("Recieved invalid character name, rejecting.");
 			args.ctx.throw(HttpStatusCodes.UNPROCESSABLE_ENTITY);
 		}
 
