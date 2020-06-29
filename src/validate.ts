@@ -224,7 +224,9 @@ export default {
 							listing.hq == null
 						}\n!isValidUInt16(listing.lastReviewTime): ${!isValidUInt16(
 							listing.lastReviewTime,
-						)}\n!isValidUInt32(listing.pricePerUnit): ${!isValidUInt32(
+						)} (${
+							listing.lastReviewTime
+						}: ${typeof listing.lastReviewTime})\n!isValidUInt32(listing.pricePerUnit): ${!isValidUInt32(
 							listing.pricePerUnit,
 						)}\n!isValidUInt32(listing.quantity): ${!isValidUInt32(
 							listing.quantity,
