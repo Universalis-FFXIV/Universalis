@@ -211,7 +211,6 @@ export default {
 			args.uploadData.listings.forEach((listing) => {
 				if (
 					listing.hq == null ||
-					!isValidUInt16(listing.lastReviewTime) ||
 					!isValidUInt32(listing.pricePerUnit) ||
 					!isValidUInt32(listing.quantity) ||
 					listing.retainerID == null ||
@@ -222,13 +221,7 @@ export default {
 					logger.warn(
 						`Received bad listing data, rejecting. Reason:\nlisting.hq == null: ${
 							listing.hq == null
-						}\n!isValidUInt16(listing.lastReviewTime): ${!isValidUInt16(
-							listing.lastReviewTime,
-						)} (${
-							listing.lastReviewTime
-						}: ${typeof listing.lastReviewTime})\n!isValidUInt32(listing.pricePerUnit): ${!isValidUInt32(
-							listing.pricePerUnit,
-						)}\n!isValidUInt32(listing.quantity): ${!isValidUInt32(
+						}\n!isValidUInt32(listing.quantity): ${!isValidUInt32(
 							listing.quantity,
 						)}\nlisting.retainerID == null: ${
 							listing.retainerID == null
