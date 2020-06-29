@@ -335,9 +335,6 @@ export default {
 	},
 };
 
-/////////////////////
-// PRIVATE METHODS //
-/////////////////////
 function cleanMateria(materiaSlot: ItemMateria): ItemMateria {
 	if (!materiaSlot.materiaID && materiaSlot["materiaId"]) {
 		materiaSlot.materiaID = materiaSlot["materiaId"];
@@ -370,22 +367,20 @@ function hasHtmlTags(input: string): boolean {
 	return false;
 }
 
-function isValidName(input: any): boolean {
+export function isValidName(input: any): boolean {
 	if (typeof input !== "string") return false;
 	if (input.length > 32) return false;
-	if (input.match(/[^a-zA-Z0-9'\- ]/g)) return false;
+	if (
+		input.match(/[^a-zA-Z0-9'\- ]/g) &&
+		!input.match(/[⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]/gu)
+	)
+		return false;
 	return true;
 }
 
 function isValidTaxRate(input: any): boolean {
 	if (typeof input !== "number") return false;
 	if (input < 0 || input > 5) return false;
-	return true;
-}
-
-function isValidUInt16(input: any): boolean {
-	if (typeof input !== "number") return false;
-	if (input < 0 || input > 65535) return false;
 	return true;
 }
 
