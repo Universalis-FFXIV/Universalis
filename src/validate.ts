@@ -364,20 +364,23 @@ function isValidName(input: any): boolean {
 }
 
 function isValidTaxRate(input: any): boolean {
-	if (typeof input !== "number") return false;
-	if (input < 0 || input > 5) return false;
+	const tryParse = parseInt(input);
+	if (isNaN(tryParse)) return false;
+	if (tryParse < 0 || tryParse > 5) return false;
 	return true;
 }
 
 function isValidUInt16(input: any): boolean {
-	if (typeof input !== "number") return false;
-	if (input < 0 || input > 65535) return false;
+	const tryParse = parseInt(input);
+	if (isNaN(tryParse)) return false;
+	if (tryParse < 0 || tryParse > 65535) return false;
 	return true;
 }
 
 function isValidUInt32(input: any): boolean {
-	if (typeof input !== "number") return false;
-	if (input < 0 || input > 4294967295) return false;
+	const tryParse = parseInt(input);
+	if (isNaN(tryParse)) return false;
+	if (tryParse < 0 || tryParse > 4294967295) return false;
 	return true;
 }
 
