@@ -66,21 +66,19 @@ export class ExtraDataManager {
 
 	/** Return the number of uploads from each world. */
 	public async getWorldUploadCounts(): Promise<WorldUploadCount[]> {
-		const query = {
-			setName: "worldUploadCount",
-			worldName: { $not: /null/gm },
-		};
+		const query = { setName: "worldUploadCount" };
 
-		const data = await this.extraDataCollection
+		let data: WorldUploadCount[] = await this.extraDataCollection
 			.find(query, { projection: { _id: 0, setName: 0 } })
 			.toArray();
+		data = data.filter((wuc) => wuc.worldName);
 
 		return data;
 	}
 
 	/** Increment the upload count for a world. */
 	public async incrementWorldUploads(worldName: string): Promise<void> {
-		if (worldName == null) return;
+		if (!worldName) return;
 
 		const query = { setName: "worldUploadCount", worldName };
 

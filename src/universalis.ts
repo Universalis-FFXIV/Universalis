@@ -136,6 +136,10 @@ router.get("/docs", async (ctx) => {
 
 // REST API
 router
+	.get("/api/tax-rates", async (ctx) => {
+		// Tax rates
+		await parseTaxRates(ctx, worldMap, extraDataManager);
+	})
 	.get("/api/:world/:item", async (ctx) => {
 		// Normal data
 		await parseListings(ctx, worldMap, recentData, transportManager);
@@ -144,15 +148,9 @@ router
 		// Extended history
 		await parseHistory(ctx, worldMap, extendedHistory);
 	})
-	.get("/api/tax-rates", async (ctx) => {
-		// Tax rates
-		await parseTaxRates(ctx, worldMap, extraDataManager);
-	})
-
 	/*.get("/api/transports/eorzea-market-note/:world/:item", async (ctx) => {
         await parseEorzeanMarketNote(ctx, transportManager);
     })*/
-
 	.get("/api/extra/content/:contentID", async (ctx) => {
 		// Content IDs
 		await parseContentID(ctx, contentIDCollection);
