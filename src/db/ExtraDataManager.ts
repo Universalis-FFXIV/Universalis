@@ -340,15 +340,15 @@ export class ExtraDataManager {
 
 			// Random world ID
 			const worldID = (() => {
-				let num = Math.floor(Math.random() * 87) + 23;
-				if (num === 25) num--;
-				if (num === 26) num -= 2;
-				if (num === 27) num -= 3;
-				if (num === 38) num--;
-				if (num === 86) num--;
-				if (num === 87) num -= 2;
-				if (num === 88) num -= 3;
-				if (num === 89) num -= 4;
+				let num = 0;
+				do {
+					num = Math.floor(Math.random() * 77) + 23;
+				} while (
+					(num >= 25 && num <= 27) ||
+					num === 38 ||
+					num === 84 ||
+					!this.worldIDMap.get(num)
+				);
 				return num;
 			})();
 
