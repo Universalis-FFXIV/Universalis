@@ -66,7 +66,7 @@ export class ExtraDataManager {
 
 	/** Return the number of uploads from each world. */
 	public async getWorldUploadCounts(): Promise<WorldUploadCount[]> {
-		const query = { setName: "worldUploadCount" };
+		const query = { setName: "worldUploadCount", worldName: { $not: "null" } };
 
 		const data = await this.extraDataCollection
 			.find(query, { projection: { _id: 0, setName: 0 } })
@@ -77,6 +77,8 @@ export class ExtraDataManager {
 
 	/** Increment the upload count for a world. */
 	public async incrementWorldUploads(worldName: string): Promise<void> {
+		if (worldName == null) return;
+
 		const query = { setName: "worldUploadCount", worldName };
 
 		const data = await this.extraDataCollection.findOne(query);
