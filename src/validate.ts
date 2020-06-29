@@ -6,13 +6,13 @@ import { materiaIDToValueAndTier } from "./materiaUtils";
 import { Context } from "koa";
 
 import { Logger } from "winston";
-import winston from "winston/lib/winston/config";
 import { City } from "./models/City";
 import { HttpStatusCodes } from "./models/HttpStatusCodes";
 import { ItemMateria } from "./models/ItemMateria";
 import { MarketBoardHistoryEntry } from "./models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
 import { MarketBoardItemListingUpload } from "./models/MarketBoardItemListingUpload";
+import { MarketTaxRates } from "./models/MarketTaxRates";
 import { ValidateUploadDataArgs } from "./models/ValidateUploadDataArgs";
 
 export default {
@@ -212,89 +212,28 @@ export default {
 		}
 
 		// Listings
-		if (args.uploadData.listings)
-			args.uploadData.listings.forEach((listing) => {
-				if (
-					listing.hq == null ||
-					!isValidUInt32(listing.pricePerUnit) ||
-					!isValidUInt32(listing.quantity) ||
-					listing.retainerID == null ||
-					listing.retainerCity == null ||
-					!isValidName(listing.retainerName) ||
-					listing.sellerID == null
-				) {
-					logger.warn(
-						`Received bad listing data, rejecting. Reason:\nlisting.hq == null: ${
-							listing.hq == null
-						}\n!isValidUInt32(listing.quantity): ${!isValidUInt32(
-							listing.quantity,
-						)}\nlisting.retainerID == null: ${
-							listing.retainerID == null
-						}\nlisting.retainerCity == null: ${
-							listing.retainerCity == null
-						}\n!isValidName(listing.retainerName): ${!isValidName(
-							listing.retainerName,
-						)}\nlisting.sellerID == null: ${listing.sellerID == null}`,
-					);
-					args.ctx.throw(
-						HttpStatusCodes.UNPROCESSABLE_ENTITY,
-						"Bad Listing Data",
-					);
-				}
-			});
+		if (args.uploadData.listings) {
+			if (!areListingsValid(logger, args.uploadData.listings)) {
+				args.ctx.throw(
+					HttpStatusCodes.UNPROCESSABLE_ENTITY,
+					"Bad Listing Data",
+				);
+			}
+		}
 
 		// History entries
-		if (args.uploadData.entries)
-			args.uploadData.entries.forEach((entry) => {
-				if (
-					entry.hq == null ||
-					!isValidUInt32(entry.pricePerUnit) ||
-					!isValidUInt32(entry.quantity) ||
-					!isValidName(entry.buyerName)
-				) {
-					logger.warn(
-						`Received bad history data, rejecting. Reason:\nentry.hq == null: ${
-							entry.hq == null
-						}\n!isValidUInt32(entry.pricePerUnit): ${!isValidUInt32(
-							entry.pricePerUnit,
-						)}\n!isValidUInt32(entry.quantity): ${!isValidUInt32(
-							entry.quantity,
-						)}\n!isValidName(entry.buyerName): ${!isValidName(
-							entry.buyerName,
-						)}`,
-					);
-					args.ctx.throw(
-						HttpStatusCodes.UNPROCESSABLE_ENTITY,
-						"Bad History Data",
-					);
-				}
-			});
+		if (args.uploadData.entries) {
+			if (!areHistoryEntriesValid(logger, args.uploadData.entries)) {
+				args.ctx.throw(
+					HttpStatusCodes.UNPROCESSABLE_ENTITY,
+					"Bad History Data",
+				);
+			}
+		}
 
 		// Market tax rates
 		if (args.uploadData.marketTaxRates) {
-			if (
-				!isValidTaxRate(args.uploadData.marketTaxRates.crystarium) ||
-				!isValidTaxRate(args.uploadData.marketTaxRates.gridania) ||
-				!isValidTaxRate(args.uploadData.marketTaxRates.ishgard) ||
-				!isValidTaxRate(args.uploadData.marketTaxRates.kugane) ||
-				!isValidTaxRate(args.uploadData.marketTaxRates.limsaLominsa) ||
-				!isValidTaxRate(args.uploadData.marketTaxRates.uldah)
-			) {
-				logger.warn(
-					`Recieved bad tax rate data, rejecting. Reason:\n!isValidTaxRate(args.uploadData.marketTaxRates.crystarium): ${!isValidTaxRate(
-						args.uploadData.marketTaxRates.crystarium,
-					)}\n!isValidTaxRate(args.uploadData.marketTaxRates.gridania): ${!isValidTaxRate(
-						args.uploadData.marketTaxRates.gridania,
-					)}\n!isValidTaxRate(args.uploadData.marketTaxRates.ishgard): ${!isValidTaxRate(
-						args.uploadData.marketTaxRates.ishgard,
-					)}\n!isValidTaxRate(args.uploadData.marketTaxRates.kugane): ${!isValidTaxRate(
-						args.uploadData.marketTaxRates.kugane,
-					)}\n!isValidTaxRate(args.uploadData.marketTaxRates.limsaLominsa): ${!isValidTaxRate(
-						args.uploadData.marketTaxRates.limsaLominsa,
-					)}\n!isValidTaxRate(args.uploadData.marketTaxRates.uldah): ${!isValidTaxRate(
-						args.uploadData.marketTaxRates.uldah,
-					)}`,
-				);
+			if (!areTaxRatesValid(logger, args.uploadData.marketTaxRates)) {
 				args.ctx.throw(
 					HttpStatusCodes.UNPROCESSABLE_ENTITY,
 					"Bad Market Tax Rate Data",
@@ -362,6 +301,92 @@ function cleanMateria(materiaSlot: ItemMateria): ItemMateria {
 	return materiaSlot;
 }
 
+export function areListingsValid(logger: Logger, listings: any[]): boolean {
+	for (const listing of listings) {
+		if (
+			listing.hq == null ||
+			!isValidUInt32(listing.pricePerUnit) ||
+			!isValidUInt32(listing.quantity) ||
+			listing.retainerID == null ||
+			listing.retainerCity == null ||
+			!isValidName(listing.retainerName) ||
+			listing.sellerID == null
+		) {
+			logger.warn(
+				`Received bad listing data, rejecting. Reason:\nlisting.hq == null: ${
+					listing.hq == null
+				}\n!isValidUInt32(listing.quantity): ${!isValidUInt32(
+					listing.quantity,
+				)}\nlisting.retainerID == null: ${
+					listing.retainerID == null
+				}\nlisting.retainerCity == null: ${
+					listing.retainerCity == null
+				}\n!isValidName(listing.retainerName): ${!isValidName(
+					listing.retainerName,
+				)}\nlisting.sellerID == null: ${listing.sellerID == null}`,
+			);
+			return false;
+		}
+	}
+	return true;
+}
+
+export function areHistoryEntriesValid(
+	logger: Logger,
+	entries: MarketBoardHistoryEntry[],
+): boolean {
+	for (const entry of entries) {
+		if (
+			entry.hq == null ||
+			!isValidUInt32(entry.pricePerUnit) ||
+			!isValidUInt32(entry.quantity) ||
+			!isValidName(entry.buyerName)
+		) {
+			logger.warn(
+				`Received bad history data, rejecting. Reason:\nentry.hq == null: ${
+					entry.hq == null
+				}\n!isValidUInt32(entry.pricePerUnit): ${!isValidUInt32(
+					entry.pricePerUnit,
+				)}\n!isValidUInt32(entry.quantity): ${!isValidUInt32(
+					entry.quantity,
+				)}\n!isValidName(entry.buyerName): ${!isValidName(entry.buyerName)}`,
+			);
+			return false;
+		}
+	}
+	return true;
+}
+
+export function areTaxRatesValid(
+	logger: Logger,
+	rates: MarketTaxRates,
+): boolean {
+	if (
+		!isValidTaxRate(rates.crystarium) ||
+		!isValidTaxRate(rates.gridania) ||
+		!isValidTaxRate(rates.ishgard) ||
+		!isValidTaxRate(rates.kugane) ||
+		!isValidTaxRate(rates.limsaLominsa) ||
+		!isValidTaxRate(rates.uldah)
+	) {
+		logger.warn(
+			`Recieved bad tax rate data, rejecting. Reason:\n!isValidTaxRate(rates.crystarium): ${!isValidTaxRate(
+				rates.crystarium,
+			)}\n!isValidTaxRate(rates.gridania): ${!isValidTaxRate(
+				rates.gridania,
+			)}\n!isValidTaxRate(rates.ishgard): ${!isValidTaxRate(
+				rates.ishgard,
+			)}\n!isValidTaxRate(rates.kugane): ${!isValidTaxRate(
+				rates.kugane,
+			)}\n!isValidTaxRate(rates.limsaLominsa): ${!isValidTaxRate(
+				rates.limsaLominsa,
+			)}\n!isValidTaxRate(rates.uldah): ${!isValidTaxRate(rates.uldah)}`,
+		);
+		return false;
+	}
+	return true;
+}
+
 function hasHtmlTags(input: string): boolean {
 	if (input.match(/<[\s\S]*?>/)) return true;
 	return false;
@@ -415,7 +440,7 @@ const chineseWorldIds = [
 	1178,
 	1179,
 ]; // Put this somewhere proper later
-function isValidWorld(input: any): boolean {
+export function isValidWorld(input: any): boolean {
 	if (typeof input !== "number") return false;
 	if (
 		input <= 16 ||
