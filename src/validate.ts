@@ -179,7 +179,7 @@ export default {
 		}
 
 		// You can't upload data for these worlds because you can't scrape it.
-		// This does include Chinese and Korean worlds for the time being.
+		// This does include Korean worlds for the time being.
 		if (!isValidWorld(args.uploadData.worldID)) {
 			args.ctx.body = "Unsupported World";
 			args.ctx.throw(HttpStatusCodes.NOT_FOUND);
