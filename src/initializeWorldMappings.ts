@@ -1,21 +1,26 @@
-import { RemoteDataManager } from "./remote/RemoteDataManager";
+import * as util from "./util";
 
 export async function initializeWorldMappings(
-	remoteDataManager: RemoteDataManager,
 	worldMap: Map<string, number>,
 	worldIDMap: Map<number, string>,
 ) {
+	const lxnWorlds = await util.getDCWorlds("LuXingNiao");
+	const mglWorlds = await util.getDCWorlds("MoGuLi");
+	const mxpWorlds = await util.getDCWorlds("MaoXiaoPang");
+
 	const registerWorld = bindMaps(worldMap, worldIDMap);
 
-	const worldList = await remoteDataManager.parseCSV("World.csv");
+	const worldList = await util.getWorldTable();
 	for (const worldEntry of worldList) {
 		if (
-			!parseInt(worldEntry[0]) ||
-			worldEntry[0] === "25" || // for Chaos
-			worldEntry[4] === "False"
+			worldEntry[0] === 25 || // for Chaos
+			(!worldEntry[4] && // Non-public
+			!lxnWorlds.includes(worldEntry[1]) && // Not in LuXingNiao
+			!mglWorlds.includes(worldEntry[1]) && // Not in MoGuLi
+				!mxpWorlds.includes(worldEntry[1])) // Not in MaoXiaoPang
 		)
 			continue;
-		registerWorld(worldEntry[1], parseInt(worldEntry[0]));
+		registerWorld(worldEntry[1], worldEntry[0]);
 	}
 
 	// CN needs some custom stuff so people can look up world data in both Chinese and romanized Chinese

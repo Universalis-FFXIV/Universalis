@@ -38,5 +38,7 @@ describe("validate", function () {
 		makeTest(1060, "MengYaChi", true);
 		makeTest(25, "Chaos", false);
 		makeTest(74, "Coeurl", true);
+		makeTest(100, "dev_test", false);
+		makeTest(0, "crossworld", false);
 	});
 });
