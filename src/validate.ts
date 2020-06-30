@@ -458,6 +458,7 @@ export function isValidWorld(input: any): boolean {
 	if (
 		input <= 16 ||
 		input >= 100 ||
+		input === 25 ||
 		input === 26 ||
 		input === 27 ||
 		input === 38 ||

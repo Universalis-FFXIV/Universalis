@@ -11,7 +11,7 @@ export async function initializeWorldMappings(
 	for (const worldEntry of worldList) {
 		if (
 			!parseInt(worldEntry[0]) ||
-			worldEntry[0] === "25" ||
+			worldEntry[0] === "25" || // for Chaos
 			worldEntry[4] === "False"
 		)
 			continue;
