@@ -1,5 +1,9 @@
+import beep from "beepbeep";
+import fs from "fs";
+import path from "path";
 import * as R from "remeda";
 import sha from "sha.js";
+import util from "util";
 
 import { materiaIDToValueAndTier } from "./materiaUtils";
 
@@ -14,6 +18,10 @@ import { MarketBoardItemListing } from "./models/MarketBoardItemListing";
 import { MarketBoardItemListingUpload } from "./models/MarketBoardItemListingUpload";
 import { MarketTaxRates } from "./models/MarketTaxRates";
 import { ValidateUploadDataArgs } from "./models/ValidateUploadDataArgs";
+
+const exists = util.promisify(fs.exists);
+const mkdir = util.promisify(fs.mkdir);
+const writeFile = util.promisify(fs.writeFile);
 
 export default {
 	cleanHistoryEntry: (
@@ -213,7 +221,7 @@ export default {
 
 		// Listings
 		if (args.uploadData.listings) {
-			if (!areListingsValid(logger, args.uploadData.listings)) {
+			if (!(await areListingsValid(logger, args.uploadData.listings))) {
 				args.ctx.throw(
 					HttpStatusCodes.UNPROCESSABLE_ENTITY,
 					"Bad Listing Data",
@@ -223,7 +231,7 @@ export default {
 
 		// History entries
 		if (args.uploadData.entries) {
-			if (!areHistoryEntriesValid(logger, args.uploadData.entries)) {
+			if (!(await areHistoryEntriesValid(logger, args.uploadData.entries))) {
 				args.ctx.throw(
 					HttpStatusCodes.UNPROCESSABLE_ENTITY,
 					"Bad History Data",
@@ -233,7 +241,7 @@ export default {
 
 		// Market tax rates
 		if (args.uploadData.marketTaxRates) {
-			if (!areTaxRatesValid(logger, args.uploadData.marketTaxRates)) {
+			if (!(await areTaxRatesValid(logger, args.uploadData.marketTaxRates))) {
 				args.ctx.throw(
 					HttpStatusCodes.UNPROCESSABLE_ENTITY,
 					"Bad Market Tax Rate Data",
@@ -301,7 +309,10 @@ function cleanMateria(materiaSlot: ItemMateria): ItemMateria {
 	return materiaSlot;
 }
 
-export function areListingsValid(logger: Logger, listings: any[]): boolean {
+export async function areListingsValid(
+	logger: Logger,
+	listings: any[],
+): Promise<boolean> {
 	for (const listing of listings) {
 		if (
 			listing.hq == null ||
@@ -325,16 +336,17 @@ export function areListingsValid(logger: Logger, listings: any[]): boolean {
 					listing.retainerName,
 				)}\nlisting.sellerID == null: ${listing.sellerID == null}`,
 			);
+			beep(2);
 			return false;
 		}
 	}
 	return true;
 }
 
-export function areHistoryEntriesValid(
+export async function areHistoryEntriesValid(
 	logger: Logger,
 	entries: MarketBoardHistoryEntry[],
-): boolean {
+): Promise<boolean> {
 	for (const entry of entries) {
 		if (
 			entry.hq == null ||
@@ -351,16 +363,17 @@ export function areHistoryEntriesValid(
 					entry.quantity,
 				)}\n!isValidName(entry.buyerName): ${!isValidName(entry.buyerName)}`,
 			);
+			await writeOutObject(logger, entry);
 			return false;
 		}
 	}
 	return true;
 }
 
-export function areTaxRatesValid(
+export async function areTaxRatesValid(
 	logger: Logger,
 	rates: MarketTaxRates,
-): boolean {
+): Promise<boolean> {
 	if (
 		!isValidTaxRate(rates.crystarium) ||
 		!isValidTaxRate(rates.gridania) ||
@@ -455,6 +468,23 @@ export function isValidWorld(input: any): boolean {
 		}
 	}
 	return true;
+}
+
+export async function writeOutObject(logger: Logger, obj: any) {
+	const outDir = path.join(__dirname, "..", "badUploads");
+	if (!(await exists(outDir))) {
+		await mkdir(outDir);
+	}
+
+	const outFile = path.join(outDir, `${obj.itemID}.json`); // sloppy but eh
+	if (!(await exists(outFile))) {
+		await writeFile(outFile, JSON.stringify(obj));
+	}
+
+	logger.info(
+		`Wrote out ${obj.itemID}.json. Please examine the contents of this file.`,
+	);
+	beep();
 }
 
 function parseSha256(input: any): string {
