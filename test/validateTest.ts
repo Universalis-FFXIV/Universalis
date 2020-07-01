@@ -20,6 +20,8 @@ describe("validate", function () {
 		makeTest("Nichiren", true);
 		makeTest("392cmu328g5huh48terf94jgoi34j52kl535", false);
 		makeTest("보라", false);
+		makeTest("所列哇多卡纳", true);
+		makeTest("伊·达芙妮", true);
 	});
 
 	describe("isValidWorld", function () {
