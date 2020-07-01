@@ -56,7 +56,9 @@ export async function parseListings(
 	appendWorldDC(data, worldMap, ctx);
 
 	// Do some post-processing on resolved item listings.
-	for (let item of data.items as MarketBoardListingsEndpoint[]) {
+	for (let i = 0; i < data.items.length; i++) {
+		const item: MarketBoardListingsEndpoint = data.items[i];
+
 		if (item.listings) {
 			item.listings = R.pipe(
 				item.listings,
@@ -109,14 +111,11 @@ export async function parseListings(
 			saleVelocities.hqSaleVelocity =
 				(saleVelocities.hqSaleVelocity + emnData.turnoverPerDayHQ) / 2;*/
 
-			item = R.merge(item, saleVelocities);
-			item = R.merge(
+			data.items[i] = R.pipe(
 				item,
-				calculateAveragePrices(item.recentHistory, nqItems, hqItems),
-			);
-			item = R.merge(
-				item,
-				makeStackSizeHistograms(item.recentHistory, nqItems, hqItems),
+				R.merge(saleVelocities),
+				R.merge(calculateAveragePrices(item.recentHistory, nqItems, hqItems)),
+				R.merge(makeStackSizeHistograms(item.recentHistory, nqItems, hqItems)),
 			);
 		} else {
 			item.recentHistory = [];
