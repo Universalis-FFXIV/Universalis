@@ -109,11 +109,14 @@ export async function parseListings(
 			saleVelocities.hqSaleVelocity =
 				(saleVelocities.hqSaleVelocity + emnData.turnoverPerDayHQ) / 2;*/
 
-			item = R.pipe(
+			item = R.merge(item, saleVelocities);
+			item = R.merge(
 				item,
-				R.merge(saleVelocities),
-				R.merge(calculateAveragePrices(item.recentHistory, nqItems, hqItems)),
-				R.merge(makeStackSizeHistograms(item.recentHistory, nqItems, hqItems)),
+				calculateAveragePrices(item.recentHistory, nqItems, hqItems),
+			);
+			item = R.merge(
+				item,
+				makeStackSizeHistograms(item.recentHistory, nqItems, hqItems),
 			);
 		} else {
 			item.recentHistory = [];
