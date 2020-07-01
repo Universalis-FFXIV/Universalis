@@ -6,7 +6,13 @@ import { MongoFixture } from "./MongoFixture";
 const dummyUploaderID: string = "dummyUploaderID";
 
 describe("BlacklistManager", () => {
-	const logger = winston.createLogger();
+	const logger = winston.createLogger({
+		transports: [
+			new winston.transports.Console({
+				format: winston.format.simple(),
+			}),
+		],
+	});
 	const mongo = new MongoFixture();
 
 	let manager: BlacklistManager;
