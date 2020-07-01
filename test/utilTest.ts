@@ -2,78 +2,7 @@ import * as should from "should";
 
 import * as util from "../src/util";
 
-const worldDCs = {
-	Crystal: [
-		"Balmung",
-		"Brynhildr",
-		"Coeurl",
-		"Diabolos",
-		"Goblin",
-		"Malboro",
-		"Mateus",
-		"Zalera",
-	],
-	Aether: [
-		"Adamantoise",
-		"Cactuar",
-		"Faerie",
-		"Gilgamesh",
-		"Jenova",
-		"Midgardsormr",
-		"Sargatanas",
-		"Siren",
-	],
-	Primal: [
-		"Behemoth",
-		"Excalibur",
-		"Exodus",
-		"Famfrit",
-		"Hyperion",
-		"Lamia",
-		"Leviathan",
-		"Ultros",
-	],
-	Chaos: ["Cerberus", "Louisoix", "Moogle", "Omega", "Ragnarok", "Spriggan"],
-	Light: ["Lich", "Odin", "Phoenix", "Shiva", "Zodiark", "Twintania"],
-	Gaia: [
-		"Alexander",
-		"Bahamut",
-		"Durandal",
-		"Fenrir",
-		"Ifrit",
-		"Ridill",
-		"Tiamat",
-		"Ultima",
-		"Valefor",
-		"Yojimbo",
-		"Zeromus",
-	],
-	Mana: [
-		"Anima",
-		"Asura",
-		"Belias",
-		"Chocobo",
-		"Hades",
-		"Ixion",
-		"Mandragora",
-		"Masamune",
-		"Pandaemonium",
-		"Shinryu",
-		"Titan",
-	],
-	Elemental: [
-		"Aegis",
-		"Atomos",
-		"Carbuncle",
-		"Garuda",
-		"Gungnir",
-		"Kujata",
-		"Ramuh",
-		"Tonberry",
-		"Typhon",
-		"Unicorn",
-	],
-};
+const worldDCs = require("../public/json/dc.json");
 
 describe("util", function () {
 	describe("appendWorldDC", function () {
@@ -220,8 +149,11 @@ describe("util", function () {
 	});
 
 	describe("getWorldDC", async function () {
+		const exclude = ["LuXingNiao", "MoGuLi", "MaoXiaoPang"];
 		for (const dc in worldDCs) {
 			if (worldDCs.hasOwnProperty(dc)) {
+				if (exclude.includes(dc)) continue;
+
 				for (const worldName of worldDCs[dc]) {
 					it(`should return ${dc} for the input ${worldName}.`, async function () {
 						should.equal(await util.getWorldDC(worldName), dc);

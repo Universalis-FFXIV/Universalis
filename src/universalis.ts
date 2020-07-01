@@ -88,7 +88,7 @@ const init = (async () => {
 
 	transportManager.addTransport(new EorzeanMarketNoteTransport(logger));
 
-	await initializeWorldMappings(remoteDataManager, worldMap, worldIDMap);
+	await initializeWorldMappings(worldMap, worldIDMap);
 
 	logger.info("Connected to database and started data managers.");
 })();

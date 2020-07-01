@@ -4,7 +4,13 @@ import * as winston from "winston";
 import { RemoteDataManager } from "../src/remote/RemoteDataManager";
 
 describe("RemoteDataManager", () => {
-	const logger = winston.createLogger();
+	const logger = winston.createLogger({
+		transports: [
+			new winston.transports.Console({
+				format: winston.format.simple(),
+			}),
+		],
+	});
 	const manager: RemoteDataManager = new RemoteDataManager({
 		logger,
 		remoteFileDirectory: "../public-test",

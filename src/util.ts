@@ -38,6 +38,9 @@ export function appendWorldDC(
 	if (ctx.params.worldID) {
 		obj["worldID"] = ctx.params.worldID;
 	} else {
+		if (ctx.params.dcName === "LuXingNiao") ctx.params.dcName = "陆行鸟"; // Little messy, but eh?
+		if (ctx.params.dcName === "MoGuLi") ctx.params.dcName = "莫古力";
+		if (ctx.params.dcName === "MaoXiaoPang") ctx.params.dcName = "猫小胖";
 		obj["dcName"] = ctx.params.dcName;
 	}
 }
@@ -166,9 +169,23 @@ export async function getWorldDC(worldInput: string | number): Promise<string> {
 }
 
 export async function getWorldName(worldID: number): Promise<string> {
-	const worldCSV = (await remoteDataManager.parseCSV("World.csv")).slice(3);
-	const world = worldCSV.find((line: string[]) => line[0] === String(worldID));
+	const worldCSV = await getWorldTable();
+	const world = worldCSV.find((line) => line[0] === worldID);
 	return world == null ? null : world[1];
+}
+
+export async function getWorldTable(): Promise<
+	Array<[number, string, number, number, boolean]>
+> {
+	let csv: any[][] = await remoteDataManager.parseCSV("World.csv");
+	csv = csv.slice(3);
+	for (const row of csv) {
+		row[0] = parseInt(row[0]);
+		row[2] = parseInt(row[2]);
+		row[3] = parseInt(row[3]);
+		row[4] = row[4] === "True";
+	}
+	return csv as Array<[number, string, number, number, boolean]>;
 }
 
 export function sleep(duration: number) {
