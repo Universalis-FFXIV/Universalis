@@ -38,6 +38,9 @@ export function appendWorldDC(
 	if (ctx.params.worldID) {
 		obj["worldID"] = ctx.params.worldID;
 	} else {
+		if (ctx.params.dcName === "LuXingNiao") ctx.params.dcName = "陆行鸟"; // Little messy, but eh?
+		if (ctx.params.dcName === "MoGuLi") ctx.params.dcName = "莫古力";
+		if (ctx.params.dcName === "MaoXiaoPang") ctx.params.dcName = "猫小胖";
 		obj["dcName"] = ctx.params.dcName;
 	}
 }
