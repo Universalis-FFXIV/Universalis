@@ -6,7 +6,8 @@ export interface MarketBoardListingsEndpoint {
 	lastUploadTime: number;
 	listings?: MarketBoardItemListing[];
 	recentHistory?: MarketBoardHistoryEntry[];
-	worldID: number;
+	worldID?: number;
+	dcName?: string;
 
 	averagePrice?: number;
 	averagePriceNQ?: number;

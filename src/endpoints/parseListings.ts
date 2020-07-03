@@ -12,6 +12,7 @@ import {
 	calcSaleVelocity,
 	calcStandardDeviation,
 	calcTrimmedAverage,
+	getWorldDC,
 	makeDistrTable,
 } from "../util";
 import validation from "../validate";
@@ -60,6 +61,8 @@ export async function parseListings(
 		const item: MarketBoardListingsEndpoint = data.items[i];
 
 		if (item.listings) {
+			const dc = await getWorldDC(item.worldID); // For conditional tax factoring, remove on CN 5.2
+			const cnDCs = ["陆行鸟", "莫古力", "猫小胖"];
 			item.listings = R.pipe(
 				item.listings,
 				R.sort((a, b) => a.pricePerUnit - b.pricePerUnit),
@@ -74,7 +77,9 @@ export async function parseListings(
 						) as any; // Something needs to be done about this
 					}
 					listing.materia = validation.cleanMateriaArray(listing.materia);
-					listing.pricePerUnit = Math.ceil(listing.pricePerUnit * 1.05);
+					if (!cnDCs.includes(dc) && !cnDCs.includes(item.dcName)) {
+						listing.pricePerUnit = Math.ceil(listing.pricePerUnit * 1.05);
+					}
 					listing = validation.cleanListingOutput(listing);
 					return listing;
 				}),
