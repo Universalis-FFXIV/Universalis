@@ -15,7 +15,8 @@
     "test-github": "mocha --require ts-node/register test/utilTest.ts test/RemoteDataManagerTest.ts",
     "unic": "node build/cli/unic.js",
     "update": "git pull && npm install && npm run build",
-    "deploy": "git pull && npm install && npm run build && pm2 restart Universalis"
+    "deploy": "git pull && npm install && npm run build && pm2 restart Universalis",
+    "update-mogboard": "git pull && git submodule update && cd mogboard && git submodule update"
   },
   "author": "karashiiro",
   "license": "MIT",
