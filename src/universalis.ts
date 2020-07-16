@@ -39,6 +39,7 @@ import { upload } from "./endpoints/upload";
 // Utils
 import { initializeWorldMappings } from "./initializeWorldMappings";
 import { createLogger } from "./util";
+import { parseHighestSaleVelocityItems } from "./endpoints/parseHighestSaleVelocityItems";
 
 // Define application and its resources
 const db = MongoClient.connect("mongodb://localhost:27017/", {
@@ -142,34 +143,31 @@ router
 		await parseHistory(ctx, worldMap, extendedHistory);
 	})
 	.get("/api/tax-rates", async (ctx) => {
-		// Tax rates
 		await parseTaxRates(ctx, worldMap, extraDataManager);
 	})
 	/*.get("/api/transports/eorzea-market-note/:world/:item", async (ctx) => {
         await parseEorzeanMarketNote(ctx, transportManager);
     })*/
 	.get("/api/extra/content/:contentID", async (ctx) => {
-		// Content IDs
 		await parseContentID(ctx, contentIDCollection);
 	})
 	.get("/api/extra/stats/least-recently-updated", async (ctx) => {
-		// Recently updated items
 		await parseLeastRecentlyUpdatedItems(ctx, worldMap, extraDataManager);
 	})
 	.get("/api/extra/stats/recently-updated", async (ctx) => {
-		// Recently updated items
 		await parseRecentlyUpdatedItems(ctx, extraDataManager);
 	})
+	.get("/api/extra/stats/highest-sale-velocity", async (ctx) => {
+		// Note: disable this if it uses too much memory on staging.
+		await parseHighestSaleVelocityItems(ctx, worldMap, worldIDMap, recentData);
+	})
 	.get("/api/extra/stats/upload-history", async (ctx) => {
-		// Upload rate
 		await parseUploadHistory(ctx, extraDataManager);
 	})
 	.get("/api/extra/stats/world-upload-counts", async (ctx) => {
-		// World upload counts
 		await parseWorldUploadCounts(ctx, extraDataManager);
 	})
 	.get("/api/extra/stats/uploader-upload-counts", async (ctx) => {
-		// World upload counts
 		await parseUploaderCounts(ctx, trustedSourceManager);
 	})
 

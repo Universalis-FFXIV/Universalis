@@ -183,20 +183,20 @@ function calculateAveragePrices(
 	nqSeries: MarketBoardHistoryEntry[],
 	hqSeries: MarketBoardHistoryEntry[],
 ): AveragePrices {
-	const pPU = regularSeries.map((entry) => entry.pricePerUnit);
-	const nqPPU = nqSeries.map((entry) => entry.pricePerUnit);
-	const hqPPU = hqSeries.map((entry) => entry.pricePerUnit);
+	const ppu = regularSeries.map((entry) => entry.pricePerUnit);
+	const nqPpu = nqSeries.map((entry) => entry.pricePerUnit);
+	const hqPpu = hqSeries.map((entry) => entry.pricePerUnit);
 	const averagePrice = calcTrimmedAverage(
-		calcStandardDeviation(...pPU),
-		...pPU,
+		calcStandardDeviation(...ppu),
+		...ppu,
 	);
 	const averagePriceNQ = calcTrimmedAverage(
-		calcStandardDeviation(...nqPPU),
-		...nqPPU,
+		calcStandardDeviation(...nqPpu),
+		...nqPpu,
 	);
 	const averagePriceHQ = calcTrimmedAverage(
-		calcStandardDeviation(...hqPPU),
-		...hqPPU,
+		calcStandardDeviation(...hqPpu),
+		...hqPpu,
 	);
 	return {
 		averagePrice,

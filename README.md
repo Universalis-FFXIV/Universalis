@@ -46,6 +46,7 @@ git submodule update
 composer install
 php bin/console doctrine:schema:create
 php bin/console PopulateGameDataCommand -vvv
+php bin/console ImportTranslationsCommand -vvv
 yarn
 yarn dev
 symfony server:start -vvv --port 8000
@@ -55,12 +56,18 @@ npm start
 ```
 
 ## To update
-Go to the mogboard/ folder, and execute the following commands after adding the new DataExports and icon2x data.
+Go to the mogboard/ folder, and execute the following commands after adding any new front-end data.
 ```
 sudo rm -rf var/
 sudo redis-cli FLUSHALL
 sudo php bin/console PopulateGameDataCommand -vvv
+sudo php bin/console ImportTranslationsCommand -vvv
 sudo chmod 0777 var/ -R
+```
+
+### Single-line form
+```
+sudo rm -rf var/ && sudo redis-cli FLUSHALL && sudo php bin/console PopulateGameDataCommand -vvv && sudo php bin/console ImportTranslationsCommand -vvv && sudo chmod 0777 var/ -R
 ```
 
 ## Uploads

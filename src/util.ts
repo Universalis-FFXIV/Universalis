@@ -45,6 +45,7 @@ export function appendWorldDC(
 	}
 }
 
+/** Calculate the average of some numbers. */
 export function calcAverage(...numbers: number[]): number {
 	if (numbers.length === 0) return 0;
 	let out = 0;
@@ -61,12 +62,10 @@ export function calcTrimmedAverage(
 	if (numbers.length === 0) return 0;
 	let out = 0;
 
-	let mean = 0;
-	numbers.forEach((num) => {
-		mean += num;
-	});
-	mean /= numbers.length;
+	const mean = calcAverage(...numbers);
 
+	// TODO: benchmark against this one-liner:
+	// numbers.forEach((num) => out += num * Number(num < mean + 3 * standardDeviation && num > mean - 3 * standardDeviation));
 	numbers.forEach((num) => {
 		if (
 			num < mean + 3 * standardDeviation &&
@@ -85,19 +84,12 @@ export function calcSaleVelocity(...timestamps: number[]): number {
 		(timestamp) => timestamp * 1000 >= Date.now() - 604800000,
 	);
 
-	let out = 0;
-	thisWeek.forEach(() => out++);
-
-	return out / 7;
+	return thisWeek.length / 7;
 }
 
 /** Calculate the standard deviation of some numbers. */
 export function calcStandardDeviation(...numbers: number[]): number {
-	let average = 0;
-	numbers.forEach((num) => {
-		average += num;
-	});
-	average /= numbers.length;
+	const average = calcAverage(...numbers);
 
 	let sumSqr = 0;
 	numbers.forEach((num) => {
