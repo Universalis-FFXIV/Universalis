@@ -84,10 +84,7 @@ export function calcSaleVelocity(...timestamps: number[]): number {
 		(timestamp) => timestamp * 1000 >= Date.now() - 604800000,
 	);
 
-	let out = 0;
-	thisWeek.forEach(() => out++);
-
-	return out / 7;
+	return thisWeek.length / 7;
 }
 
 /** Calculate the standard deviation of some numbers. */
