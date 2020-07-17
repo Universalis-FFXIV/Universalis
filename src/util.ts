@@ -65,11 +65,11 @@ export function calcTrimmedAverage(
 	const mean = calcAverage(...numbers);
 
 	// TODO: benchmark against this one-liner:
-	// numbers.forEach((num) => out += num * Number(num < mean + 3 * standardDeviation && num > mean - 3 * standardDeviation));
+	// numbers.forEach((num) => out += num * Number(num <= mean + 3 * standardDeviation && num >= mean - 3 * standardDeviation));
 	numbers.forEach((num) => {
 		if (
-			num < mean + 3 * standardDeviation &&
-			num > mean - 3 * standardDeviation
+			num <= mean + 3 * standardDeviation &&
+			num >= mean - 3 * standardDeviation
 		) {
 			out += num;
 		}
