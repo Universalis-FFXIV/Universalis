@@ -36,13 +36,34 @@ describe("util", function () {
 	});
 
 	describe("calcTrimmedAverage", function () {
-		it(
-			"should correctly calculate trimmed averages using the range of values between three standard deviations from the mean.",
+		const makeTest = (list: number[], expected: number) => {
+			it(`should return ${expected} for [${list.toString()}].`, function () {
+				const standardDeviation = util.calcStandardDeviation(...list);
+				should.equal(
+					util.calcTrimmedAverage(standardDeviation, ...list),
+					expected,
+				);
+			});
+		};
+
+		makeTest([], 0);
+		makeTest([2, 2], 2);
+		makeTest([2, 3], 2.5);
+		makeTest([8, 0, 5], 4.333333333333333);
+		makeTest([0, 5, 8], 4.333333333333333);
+		makeTest([8, 5, 0], 4.333333333333333);
+		makeTest(
+			[35437, 35438, 35439, 36100, 36100, 36100, 37535],
+			36021.28571428572,
 		);
+		makeTest([-1, -1, -1, -1], -1);
+		makeTest([-1, 1], 0);
 	});
 
 	describe("calcSaleVelocity", function () {
-		it("should correctly calculate the sale volume per day.");
+		it(
+			"should correctly calculate the sale volume per day, over the past week of data.",
+		);
 	});
 
 	describe("calcStandardDeviation", function () {
