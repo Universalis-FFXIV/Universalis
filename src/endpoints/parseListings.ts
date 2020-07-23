@@ -29,9 +29,12 @@ import { StackSizeHistograms } from "../models/StackSizeHistograms";
 import { WorldDCQuery } from "../models/WorldDCQuery";
 import { TransportManager } from "../transports/TransportManager";
 import { getResearch } from "./parseEorzeanMarketNote";
+import { HttpStatusCodes } from "../models/HttpStatusCodes";
+import { RemoteDataManager } from "../remote/RemoteDataManager";
 
 export async function parseListings(
 	ctx: ParameterizedContext,
+	rdm: RemoteDataManager,
 	worldMap: Map<string, number>,
 	recentData: Collection,
 	transportManager: TransportManager,
@@ -42,6 +45,11 @@ export async function parseListings(
 			if (index > 100) return;
 			return parseInt(id);
 		});
+
+	const marketableItems = await rdm.getMarketableItemIDs();
+	if (R.difference(itemIDs, marketableItems).length !== 0) {
+		ctx.throw(HttpStatusCodes.NOT_FOUND);
+	}
 
 	// Query construction
 	const query: WorldDCQuery = { itemID: { $in: itemIDs } };
