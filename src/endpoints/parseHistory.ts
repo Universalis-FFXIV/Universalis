@@ -34,7 +34,7 @@ export async function parseHistory(
 
 	if (itemIDs.length > 1) {
 		const marketableItems = await rdm.getMarketableItemIDs();
-		if (marketableItems.includes(itemIDs[0])) {
+		if (!marketableItems.includes(itemIDs[0])) {
 			ctx.throw(HttpStatusCodes.NOT_FOUND);
 		}
 	}
