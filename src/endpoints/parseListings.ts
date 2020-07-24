@@ -46,10 +46,11 @@ export async function parseListings(
 			return parseInt(id);
 		});
 
-	const marketableItems = await rdm.getMarketableItemIDs();
-	const diff = R.difference(itemIDs, marketableItems);
-	if (diff.length !== 0) {
-		ctx.throw(HttpStatusCodes.NOT_FOUND, `Not Found (${diff.toString()})`);
+	if (itemIDs.length > 1) {
+		const marketableItems = await rdm.getMarketableItemIDs();
+		if (marketableItems.includes(itemIDs[0])) {
+			ctx.throw(HttpStatusCodes.NOT_FOUND);
+		}
 	}
 
 	// Query construction
