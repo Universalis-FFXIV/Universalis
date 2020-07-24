@@ -46,7 +46,7 @@ export async function parseListings(
 			return parseInt(id);
 		});
 
-	if (itemIDs.length > 1) {
+	if (itemIDs.length === 1) {
 		const marketableItems = await rdm.getMarketableItemIDs();
 		if (!marketableItems.includes(itemIDs[0])) {
 			ctx.throw(HttpStatusCodes.NOT_FOUND);
