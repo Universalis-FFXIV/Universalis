@@ -25,6 +25,7 @@ describe("util", function () {
 		};
 
 		makeTest([], 0);
+		makeTest([1], 1);
 		makeTest([2, 2], 2);
 		makeTest([2, 3], 2.5);
 		makeTest([8, 0, 5], (5 + 8) / 3);
@@ -47,6 +48,7 @@ describe("util", function () {
 		};
 
 		makeTest([], 0);
+		makeTest([1], 1);
 		makeTest([2, 2], 2);
 		makeTest([2, 3], 2.5);
 		makeTest([8, 0, 5], 4.333333333333333);
@@ -87,12 +89,8 @@ describe("util", function () {
 		makeTest([0, 0], 0);
 		makeTest([9999999999, 1], 7071067810.45126);
 		makeTest([1e100, -1e100], 1.414213562373095e100);
-
-		it("should return NaN for an input of a single value.", function (done) {
-			if (!isNaN(util.calcStandardDeviation(0)))
-				done("Function did not return NaN.");
-			done();
-		});
+		makeTest([1], 0);
+		makeTest([0], 0);
 	});
 
 	describe("makeDistrTable", function () {
