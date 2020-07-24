@@ -23,6 +23,10 @@ const exists = util.promisify(fs.exists);
 const mkdir = util.promisify(fs.mkdir);
 const writeFile = util.promisify(fs.writeFile);
 
+const gameReleaseDateSeconds = Math.floor(
+	new Date(2013, 7, 27).valueOf() / 1000,
+);
+
 export default {
 	cleanHistoryEntry: (
 		entry: MarketBoardHistoryEntry,
@@ -96,12 +100,15 @@ export default {
 					: City[listing.retainerCity],
 			retainerName: removeUnsafeCharacters(listing.retainerName),
 			uploadApplication: sourceName || listing.uploadApplication,
+			lastReviewTime:
+				listing.lastReviewTime < gameReleaseDateSeconds
+					? Math.floor(new Date().valueOf() / 1000) - listing.lastReviewTime
+					: listing.lastReviewTime,
 		};
 
 		const newListing = R.pipe(
 			listing,
 			R.pick([
-				"lastReviewTime",
 				"pricePerUnit",
 				"quantity",
 				"stainID",
@@ -157,6 +164,10 @@ export default {
 						: City[listing.retainerCity],
 				retainerName: removeUnsafeCharacters(listing.retainerName),
 				total: listing.pricePerUnit * listing.quantity,
+				lastReviewTime:
+					listing.lastReviewTime < gameReleaseDateSeconds
+						? Math.floor(new Date().valueOf() / 1000) - listing.lastReviewTime
+						: listing.lastReviewTime,
 			}),
 		);
 

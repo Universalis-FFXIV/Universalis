@@ -90,6 +90,8 @@ export function calcSaleVelocity(...timestamps: number[]): number {
 
 /** Calculate the standard deviation of some numbers. */
 export function calcStandardDeviation(...numbers: number[]): number {
+	if (numbers.length === 1) return 0;
+
 	const average = calcAverage(...numbers);
 
 	let sumSqr = 0;
