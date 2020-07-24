@@ -136,11 +136,17 @@ router.get("/docs", async (ctx) => {
 router
 	.get("/api/:world/:item", async (ctx) => {
 		// Normal data
-		await parseListings(ctx, worldMap, recentData, transportManager);
+		await parseListings(
+			ctx,
+			remoteDataManager,
+			worldMap,
+			recentData,
+			transportManager,
+		);
 	})
 	.get("/api/history/:world/:item", async (ctx) => {
 		// Extended history
-		await parseHistory(ctx, worldMap, extendedHistory);
+		await parseHistory(ctx, remoteDataManager, worldMap, extendedHistory);
 	})
 	.get("/api/tax-rates", async (ctx) => {
 		await parseTaxRates(ctx, worldMap, extraDataManager);

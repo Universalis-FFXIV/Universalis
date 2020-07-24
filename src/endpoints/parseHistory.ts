@@ -12,8 +12,12 @@ import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
 import { MinimizedHistoryEntry } from "../models/MinimizedHistoryEntry";
+import { HttpStatusCodes } from "../models/HttpStatusCodes";
+import { RemoteDataManager } from "../remote/RemoteDataManager";
+
 export async function parseHistory(
 	ctx: ParameterizedContext,
+	rdm: RemoteDataManager,
 	worldMap: Map<string, number>,
 	history: Collection,
 ) {
@@ -27,6 +31,11 @@ export async function parseHistory(
 			if (index > 100) return;
 			return parseInt(id);
 		});
+
+	const marketableItems = await rdm.getMarketableItemIDs();
+	if (R.difference(itemIDs, marketableItems).length !== 0) {
+		ctx.throw(HttpStatusCodes.NOT_FOUND);
+	}
 
 	// Query construction
 	const query = { itemID: { $in: itemIDs } };
