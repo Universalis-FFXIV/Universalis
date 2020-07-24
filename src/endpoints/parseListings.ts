@@ -47,8 +47,9 @@ export async function parseListings(
 		});
 
 	const marketableItems = await rdm.getMarketableItemIDs();
-	if (R.difference(itemIDs, marketableItems).length !== 0) {
-		ctx.throw(HttpStatusCodes.NOT_FOUND);
+	const diff = R.difference(itemIDs, marketableItems);
+	if (diff.length !== 0) {
+		ctx.throw(HttpStatusCodes.NOT_FOUND, `Not Found (${diff.toString()})`);
 	}
 
 	// Query construction
