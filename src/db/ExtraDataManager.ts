@@ -166,7 +166,11 @@ export class ExtraDataManager {
 
 		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
 
-		const query: any = {};
+		const query: any = {
+			itemID: {
+				$in: marketableItemIDs,
+			},
+		};
 
 		if (typeof worldDC === "number") query.worldID = worldDC;
 		else if (typeof worldDC === "string") query.dcName = worldDC;
@@ -178,7 +182,6 @@ export class ExtraDataManager {
 						projection: { itemID: 1, worldID: 1, lastUploadTime: 1 },
 					})
 					.sort({ lastUploadTime: 1 })
-					/*.filter((o: any) => marketableItemIDs.includes(o.itemID))*/
 					.limit(Math.min(count, Math.max(0, this.returnCap - items.length)))
 					.toArray(),
 			);
