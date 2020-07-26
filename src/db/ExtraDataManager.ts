@@ -178,7 +178,7 @@ export class ExtraDataManager {
 						projection: { itemID: 1, worldID: 1, lastUploadTime: 1 },
 					})
 					.sort({ lastUploadTime: 1 })
-					.filter((o: any) => marketableItemIDs.includes(o.itemID))
+					/*.filter((o: any) => marketableItemIDs.includes(o.itemID))*/
 					.limit(Math.min(count, Math.max(0, this.returnCap - items.length)))
 					.toArray(),
 			);
