@@ -164,6 +164,8 @@ export class ExtraDataManager {
 		if (count) count = Math.max(count, 0);
 		else count = Number.MAX_VALUE;
 
+		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
+
 		const query: any = {};
 
 		if (typeof worldDC === "number") query.worldID = worldDC;
@@ -176,6 +178,7 @@ export class ExtraDataManager {
 						projection: { itemID: 1, worldID: 1, lastUploadTime: 1 },
 					})
 					.sort({ lastUploadTime: 1 })
+					.filter((o: any) => marketableItemIDs.includes(o.itemID))
 					.limit(Math.min(count, Math.max(0, this.returnCap - items.length)))
 					.toArray(),
 			);
@@ -338,6 +341,8 @@ export class ExtraDataManager {
 
 		const items: WorldItemPair[] = [];
 
+		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
+
 		for (let i = 0; i < this.maxUnsafeLoopCount; i++) {
 			if (items.length === Math.min(count, this.returnCap)) return { items };
 
@@ -356,8 +361,8 @@ export class ExtraDataManager {
 			})();
 
 			// Item ID
-			const itemIDs = await this.rdm.getMarketableItemIDs();
-			const itemID = itemIDs[Math.floor(Math.random() * itemIDs.length)];
+			const itemID =
+				marketableItemIDs[Math.floor(Math.random() * marketableItemIDs.length)];
 
 			// DB query
 			const query: any = { itemID };
