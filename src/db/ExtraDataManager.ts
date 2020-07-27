@@ -48,7 +48,7 @@ export class ExtraDataManager {
 
 	private dailyUploadTrackingLimit = 30;
 	private maxUnsafeLoopCount = 50;
-	private returnCap = 20;
+	private returnCap = 50;
 
 	private constructor(
 		rdm: RemoteDataManager,
@@ -162,23 +162,26 @@ export class ExtraDataManager {
 		let items = (await this.getNeverUpdatedItems(worldDC, count)).items;
 
 		if (count) count = Math.max(count, 0);
-		else count = Number.MAX_VALUE;
+		else count = Math.min(count, this.returnCap);
 
 		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
 
-		const query: any = {};
+		const query: any = {
+			itemID: {
+				$in: marketableItemIDs,
+			},
+		};
 
 		if (typeof worldDC === "number") query.worldID = worldDC;
 		else if (typeof worldDC === "string") query.dcName = worldDC;
 
-		if (items.length < 20)
+		if (items.length < count)
 			items = items.concat(
 				await this.recentData
 					.find(query, {
 						projection: { itemID: 1, worldID: 1, lastUploadTime: 1 },
 					})
 					.sort({ lastUploadTime: 1 })
-					/*.filter((o: any) => marketableItemIDs.includes(o.itemID))*/
 					.limit(Math.min(count, Math.max(0, this.returnCap - items.length)))
 					.toArray(),
 			);
