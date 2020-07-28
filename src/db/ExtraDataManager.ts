@@ -175,16 +175,37 @@ export class ExtraDataManager {
 		if (typeof worldDC === "number") query.worldID = worldDC;
 		else if (typeof worldDC === "string") query.dcName = worldDC;
 
-		if (items.length < count)
-			items = items.concat(
-				await this.recentData
-					.find(query, {
-						projection: { itemID: 1, worldID: 1, lastUploadTime: 1 },
-					})
-					.sort({ lastUploadTime: 1 })
-					.limit(Math.min(count, Math.max(0, this.returnCap - items.length)))
-					.toArray(),
+		if (items.length < count) {
+			let newItems = this.recentData
+				.find(query, {
+					projection: { itemID: 1, worldID: 1, lastUploadTime: 1 },
+				})
+				.sort({ lastUploadTime: 1 });
+
+			// Some cleanup
+			await new Promise((resolve1) => {
+				newItems.forEach(async (doc) => {
+					const itemDocs = this.recentData.find({ itemID: doc.itemID });
+					if ((await itemDocs.count()) > 1) {
+						let oldestItemDoc = null;
+						itemDocs.forEach((itemDoc) => {
+							if (
+								oldestItemDoc == null ||
+								oldestItemDoc.lastUploadTime > itemDoc.lastUploadTime
+							) {
+								oldestItemDoc = itemDoc;
+							}
+						});
+						this.recentData.deleteOne(oldestItemDoc);
+					}
+				}, resolve1);
+			});
+
+			newItems = newItems.limit(
+				Math.min(count, Math.max(0, this.returnCap - items.length)),
 			);
+			items = items.concat(await newItems.toArray());
+		}
 
 		items = items.sort((a, b) => a.lastUploadTime - b.lastUploadTime);
 
