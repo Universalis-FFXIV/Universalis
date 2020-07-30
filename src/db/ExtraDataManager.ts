@@ -175,14 +175,15 @@ export class ExtraDataManager {
 		if (typeof worldDC === "number") query.worldID = worldDC;
 		else if (typeof worldDC === "string") query.dcName = worldDC;
 
-		console.log(query);
-
 		if (items.length < count) {
 			const newItems = this.recentData
 				.find(query, {
 					projection: { itemID: 1, worldID: 1, lastUploadTime: 1 },
 				})
 				.filter((doc: any) => marketableItemIDs.includes(doc.itemID))
+				.filter((doc: any) =>
+					query.worldID ? doc.worldID === query.worldID : true,
+				)
 				.sort({ lastUploadTime: 1 })
 				.limit(Math.min(count, Math.max(0, this.returnCap - items.length)));
 
