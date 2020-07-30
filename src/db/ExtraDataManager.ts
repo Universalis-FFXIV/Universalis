@@ -175,8 +175,10 @@ export class ExtraDataManager {
 		if (typeof worldDC === "number") query.worldID = worldDC;
 		else if (typeof worldDC === "string") query.dcName = worldDC;
 
+		console.log(query);
+
 		if (items.length < count) {
-			let newItems = this.recentData
+			const newItems = this.recentData
 				.find(query, {
 					projection: { itemID: 1, worldID: 1, lastUploadTime: 1 },
 				})
