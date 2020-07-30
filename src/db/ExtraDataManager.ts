@@ -161,8 +161,12 @@ export class ExtraDataManager {
 	): Promise<WorldItemPairList> {
 		let items = (await this.getNeverUpdatedItems(worldDC, count)).items;
 
-		if (count) count = Math.max(count, 0);
-		else count = Math.min(count, this.returnCap);
+		if (count) {
+			count = Math.max(count, 0);
+			count = Math.min(count, this.returnCap);
+		} else {
+			count = this.returnCap;
+		}
 
 		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
 
@@ -175,16 +179,16 @@ export class ExtraDataManager {
 		if (typeof worldDC === "number") query.worldID = worldDC;
 		else if (typeof worldDC === "string") query.dcName = worldDC;
 
-		if (items.length < count)
-			items = items.concat(
-				await this.recentData
-					.find(query, {
-						projection: { itemID: 1, worldID: 1, lastUploadTime: 1 },
-					})
-					.sort({ lastUploadTime: 1 })
-					.limit(Math.min(count, Math.max(0, this.returnCap - items.length)))
-					.toArray(),
-			);
+		if (items.length < count) {
+			const newItems = this.recentData
+				.find(query, {
+					projection: { itemID: 1, worldID: 1, lastUploadTime: 1 },
+				})
+				.sort({ lastUploadTime: 1 })
+				.limit(Math.min(count, Math.max(0, this.returnCap - items.length)));
+
+			items = items.concat(await newItems.toArray());
+		}
 
 		items = items.sort((a, b) => a.lastUploadTime - b.lastUploadTime);
 
@@ -339,8 +343,12 @@ export class ExtraDataManager {
 		worldDC?: string | number,
 		count?: number,
 	): Promise<WorldItemPairList> {
-		if (count) count = Math.max(count, 0);
-		else count = Number.MAX_VALUE;
+		if (count) {
+			count = Math.max(count, 0);
+			count = Math.min(count, this.returnCap);
+		} else {
+			count = this.returnCap;
+		}
 
 		const items: WorldItemPair[] = [];
 
