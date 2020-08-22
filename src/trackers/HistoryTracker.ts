@@ -144,10 +144,10 @@ export class HistoryTracker extends Tracker {
 			};
 		}
 
-		// Limit to 500 entries
+		// Limit to 1200 entries
 		extendedHistory.entries = R.pipe(
 			extendedHistory.entries,
-			R.take(500 - minimizedEntries.length),
+			R.take(1200 - minimizedEntries.length),
 			R.concat(minimizedEntries),
 		);
 
@@ -229,10 +229,10 @@ export class HistoryTracker extends Tracker {
 		}
 
 		const entrySum = extendedHistory.entries.length + minimizedEntries.length;
-		if (entrySum > 500) {
+		if (entrySum > 1200) {
 			extendedHistory.entries = R.take(
 				extendedHistory.entries,
-				500 - minimizedEntries.length,
+				1200 - minimizedEntries.length,
 			);
 		}
 
