@@ -11,8 +11,8 @@ import { appendWorldDC, makeDistrTable } from "../util";
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
-import { MinimizedHistoryEntry } from "../models/MinimizedHistoryEntry";
 import { HttpStatusCodes } from "../models/HttpStatusCodes";
+import { MinimizedHistoryEntry } from "../models/MinimizedHistoryEntry";
 import { RemoteDataManager } from "../remote/RemoteDataManager";
 
 export async function parseHistory(
@@ -64,7 +64,7 @@ export async function parseHistory(
 			lastUploadTime: number;
 		}) => {
 			if (entriesToReturn)
-				item.entries = item.entries.slice(0, Math.min(500, entriesToReturn));
+				item.entries = item.entries.slice(0, Math.min(1200, entriesToReturn));
 			item.entries = item.entries.map((entry: MinimizedHistoryEntry) => {
 				delete entry.uploaderID;
 				return entry;
