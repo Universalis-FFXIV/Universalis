@@ -48,7 +48,7 @@ export class ExtraDataManager {
 
 	private dailyUploadTrackingLimit = 30;
 	private maxUnsafeLoopCount = 50;
-	private returnCap = 50;
+	private returnCap = 150;
 
 	private constructor(
 		rdm: RemoteDataManager,
@@ -165,7 +165,7 @@ export class ExtraDataManager {
 			count = Math.max(count, 0);
 			count = Math.min(count, this.returnCap);
 		} else {
-			count = this.returnCap;
+			count = 50;
 		}
 
 		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
