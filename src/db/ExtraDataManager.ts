@@ -48,7 +48,7 @@ export class ExtraDataManager {
 
 	private dailyUploadTrackingLimit = 30;
 	private maxUnsafeLoopCount = 50;
-	private returnCap = 150;
+	private returnCap = 200;
 
 	private constructor(
 		rdm: RemoteDataManager,
