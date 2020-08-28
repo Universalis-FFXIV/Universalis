@@ -178,6 +178,7 @@ export class ExtraDataManager {
 
 		if (typeof worldDC === "number") query.worldID = worldDC;
 		else if (typeof worldDC === "string") query.dcName = worldDC;
+		else query.worldID = { $ne: null };
 
 		if (items.length < count) {
 			const newItems = this.recentData
