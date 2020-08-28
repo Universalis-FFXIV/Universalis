@@ -162,8 +162,7 @@ export class ExtraDataManager {
 		let items = (await this.getNeverUpdatedItems(worldDC, count)).items;
 
 		if (count) {
-			count = Math.max(count, 0);
-			count = Math.min(count, this.returnCap);
+			count = Math.max(0, Math.min(count, this.returnCap));
 		} else {
 			count = 50;
 		}
@@ -186,7 +185,7 @@ export class ExtraDataManager {
 					projection: { itemID: 1, worldID: 1, lastUploadTime: 1 },
 				})
 				.sort({ lastUploadTime: 1 })
-				.limit(Math.min(count, Math.max(0, this.returnCap - items.length)));
+				.limit(count - items.length);
 
 			items = items.concat(await newItems.toArray());
 		}
