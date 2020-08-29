@@ -217,11 +217,9 @@ export class ExtraDataManager {
 				return item;
 			})
 			.filter((item) => item.worldName); // Being super thorough
-		items = (
-			await this.getNeverUpdatedItems(worldDC, count - items.length)
-		).items
-			.concat(items)
-			.sort((a, b) => a.lastUploadTime - b.lastUploadTime);
+
+		const fillerItems = (await this.getNeverUpdatedItems(worldDC, count)).items;
+		items = fillerItems.concat(items);
 
 		return { items };
 	}
@@ -400,7 +398,10 @@ export class ExtraDataManager {
 			const randomData = await this.recentData.findOne(query, {
 				projection: { _id: 0, listings: 0, recentHistory: 0 },
 			});
-			if (!randomData) items.push(query);
+			if (!randomData) {
+				query.worldName = this.worldIDMap.get(query.worldID);
+				items.push(query);
+			}
 		}
 
 		return { items };
