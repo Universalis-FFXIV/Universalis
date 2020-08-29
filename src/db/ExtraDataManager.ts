@@ -10,6 +10,7 @@ import { SourceAttribution } from "../models/SourceAttribution";
 import { WorldItemPair } from "../models/WorldItemPair";
 import { WorldItemPairList } from "../models/WorldItemPairList";
 import { WorldUploadCount } from "../models/WorldUploadCount";
+import { getDCWorlds } from "../util";
 
 export class ExtraDataManager {
 	public static async create(
@@ -201,22 +202,26 @@ export class ExtraDataManager {
 		}
 
 		// Uninitialized items won't have a timestamp in the first place.
-		items = items.map((item) => {
-			if (!item.lastUploadTime) {
-				item.lastUploadTime = 0;
-			}
-			item.worldID =
-				item.worldID ||
-				(item["listings"] && item["listings"].length
-					? this.worldMap.get(item["listings"][0].worldName)
-					: null);
-			item.worldName = this.worldIDMap.get(item.worldID) || null;
-			delete item["_id"];
-			delete item["listings"];
-			return item;
-		});
+		items = items
+			.map((item) => {
+				if (!item.lastUploadTime) {
+					item.lastUploadTime = 0;
+				}
+				item.worldID =
+					item.worldID ||
+					(item["listings"] && item["listings"].length
+						? this.worldMap.get(item["listings"][0].worldName)
+						: null);
+				item.worldName = this.worldIDMap.get(item.worldID) || null;
+				delete item["_id"];
+				delete item["listings"];
+				return item;
+			})
+			.filter((item) => item.worldName); // Being super thorough
 
-		const fillerItems = (await this.getNeverUpdatedItems(worldDC, count)).items;
+		const fillerItems = (
+			await this.getNeverUpdatedItems(worldDC, count - items.length)
+		).items;
 		items = fillerItems.concat(items);
 
 		return { items };
@@ -360,11 +365,13 @@ export class ExtraDataManager {
 		worldDC?: string | number,
 		count?: number,
 	): Promise<WorldItemPairList> {
-		if (count <= 0) return { items: [] };
-
 		const items: WorldItemPair[] = [];
 
+		if (count <= 0) return { items };
+
 		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
+		const dcWorlds =
+			typeof worldDC === "string" ? await getDCWorlds(worldDC) : null;
 
 		for (let i = 0; i < this.maxUnsafeLoopCount; i++) {
 			if (items.length === Math.min(count, this.returnCap)) return { items };
@@ -372,14 +379,20 @@ export class ExtraDataManager {
 			// Random world ID
 			const worldID = (() => {
 				let num = 0;
-				do {
-					num = Math.floor(Math.random() * 77) + 23;
-				} while (
-					(num >= 25 && num <= 27) ||
-					num === 38 ||
-					num === 84 ||
-					!this.worldIDMap.get(num)
-				);
+				if (dcWorlds) {
+					num = this.worldMap.get(
+						dcWorlds[Math.floor(Math.random() * dcWorlds.length)],
+					);
+				} else {
+					do {
+						num = Math.floor(Math.random() * 77) + 23;
+					} while (
+						(num >= 25 && num <= 27) ||
+						num === 38 ||
+						num === 84 ||
+						!this.worldIDMap.get(num)
+					);
+				}
 				return num;
 			})();
 
