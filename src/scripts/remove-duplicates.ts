@@ -40,12 +40,13 @@ const worldIDMap: Map<number, string> = new Map();
 						);
 					}
 				}
-				// tslint:disable-next-line: no-console
-				console.log(
-					`Finished cleanup, new count: ${await recentData
-						.find({ worldID, itemID })
-						.count()}`,
-				);
+				const newCount = await recentData.find({ worldID, itemID }).count();
+				if (newCount === 1) {
+					// tslint:disable-next-line: no-console
+					console.log(`Finished cleanup, new count: 1`);
+				} else {
+					throw new Error(`Something went very wrong! New count: ${newCount}`);
+				}
 			}
 		}
 	}
