@@ -66,6 +66,7 @@ export class ExtraDataManager {
 		this.rdm = rdm;
 
 		this.worldIDMap = worldIDMap;
+		this.worldMap = worldMap;
 	}
 
 	/** Return the number of uploads from each world. */
