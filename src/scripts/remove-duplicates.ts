@@ -33,8 +33,12 @@ const worldIDMap: Map<number, string> = new Map();
 					.skip(1);
 				while (await cursor.hasNext()) {
 					const record = await cursor.next();
-					// tslint:disable-next-line: no-console
-					console.log(record);
+					if (await recentData.deleteOne(record)) {
+						// tslint:disable-next-line: no-console
+						console.log(
+							`Deleted object from ${new Date(record.lastUploadTime)}.`,
+						);
+					}
 				}
 			}
 		}
