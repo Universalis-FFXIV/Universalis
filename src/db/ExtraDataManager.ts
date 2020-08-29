@@ -201,22 +201,20 @@ export class ExtraDataManager {
 		}
 
 		// Uninitialized items won't have a timestamp in the first place.
-		items = items
-			.map((item) => {
-				if (!item.lastUploadTime) {
-					item.lastUploadTime = 0;
-				}
-				item.worldID =
-					item.worldID ||
-					(item["listings"] && item["listings"].length
-						? this.worldMap.get(item["listings"][0].worldName)
-						: null);
-				item.worldName = this.worldIDMap.get(item.worldID) || null;
-				delete item["_id"];
-				delete item["listings"];
-				return item;
-			})
-			.filter((item) => item.worldName); // Being super thorough
+		items = items.map((item) => {
+			if (!item.lastUploadTime) {
+				item.lastUploadTime = 0;
+			}
+			item.worldID =
+				item.worldID ||
+				(item["listings"] && item["listings"].length
+					? this.worldMap.get(item["listings"][0].worldName)
+					: null);
+			item.worldName = this.worldIDMap.get(item.worldID) || null;
+			delete item["_id"];
+			delete item["listings"];
+			return item;
+		});
 
 		const fillerItems = (await this.getNeverUpdatedItems(worldDC, count)).items;
 		items = fillerItems.concat(items);
