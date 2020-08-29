@@ -217,10 +217,10 @@ export class ExtraDataManager {
 				return item;
 			})
 			.filter((item) => item.worldName); // Being super thorough
-		items = items
-			.concat(
-				(await this.getNeverUpdatedItems(worldDC, count - items.length)).items,
-			)
+		items = (
+			await this.getNeverUpdatedItems(worldDC, count - items.length)
+		).items
+			.concat(items)
 			.sort((a, b) => a.lastUploadTime - b.lastUploadTime);
 
 		return { items };
@@ -364,13 +364,7 @@ export class ExtraDataManager {
 		worldDC?: string | number,
 		count?: number,
 	): Promise<WorldItemPairList> {
-		if (count) {
-			if (count === 0) return { items: [] };
-			count = Math.max(count, 0);
-			count = Math.min(count, this.returnCap);
-		} else {
-			count = this.returnCap;
-		}
+		if (count <= 0) return { items: [] };
 
 		const items: WorldItemPair[] = [];
 
