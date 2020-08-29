@@ -31,7 +31,6 @@ const worldIDMap: Map<number, string> = new Map();
 				cursor
 					.sort((a: any, b: any) => b.lastUploadTime - a.lastUploadTime)
 					.skip(1);
-				// tslint:disable-next-line: no-conditional-assignment
 				while (await cursor.hasNext()) {
 					const record = await cursor.next();
 					// tslint:disable-next-line: no-console
