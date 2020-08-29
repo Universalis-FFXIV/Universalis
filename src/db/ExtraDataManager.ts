@@ -200,23 +200,28 @@ export class ExtraDataManager {
 			items = items.concat(await newItems.toArray());
 		}
 
-		items = items.sort((a, b) => a.lastUploadTime - b.lastUploadTime);
-
 		// Uninitialized items won't have a timestamp in the first place.
-		items = items.map((item) => {
-			if (!item.lastUploadTime) {
-				item.lastUploadTime = 0;
-			}
-			item.worldID =
-				item.worldID ||
-				(item["listings"] && item["listings"].length
-					? this.worldMap.get(item["listings"][0].worldName)
-					: null);
-			item.worldName = this.worldIDMap.get(item.worldID) || null;
-			delete item["_id"];
-			delete item["listings"];
-			return item;
-		});
+		items = items
+			.map((item) => {
+				if (!item.lastUploadTime) {
+					item.lastUploadTime = 0;
+				}
+				item.worldID =
+					item.worldID ||
+					(item["listings"] && item["listings"].length
+						? this.worldMap.get(item["listings"][0].worldName)
+						: null);
+				item.worldName = this.worldIDMap.get(item.worldID) || null;
+				delete item["_id"];
+				delete item["listings"];
+				return item;
+			})
+			.filter((item) => item.worldName); // Being super thorough
+		items = items
+			.concat(
+				(await this.getNeverUpdatedItems(worldDC, count - items.length)).items,
+			)
+			.sort((a, b) => a.lastUploadTime - b.lastUploadTime);
 
 		return { items };
 	}
@@ -360,6 +365,7 @@ export class ExtraDataManager {
 		count?: number,
 	): Promise<WorldItemPairList> {
 		if (count) {
+			if (count === 0) return { items: [] };
 			count = Math.max(count, 0);
 			count = Math.min(count, this.returnCap);
 		} else {
