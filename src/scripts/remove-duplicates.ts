@@ -40,6 +40,12 @@ const worldIDMap: Map<number, string> = new Map();
 						);
 					}
 				}
+				// tslint:disable-next-line: no-console
+				console.log(
+					`Finished cleanup, new count: ${await recentData
+						.find({ worldID, itemID })
+						.count()}`,
+				);
 			}
 		}
 	}
