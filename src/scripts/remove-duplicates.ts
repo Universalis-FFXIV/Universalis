@@ -26,14 +26,14 @@ const worldIDMap: Map<number, string> = new Map();
 
 	for (const [worldID] of worldIDMap) {
 		for (const itemID of marketableItemIDs) {
-			const data = recentData.find({ worldID, itemID });
-			if ((await data.count()) > 1) {
-				data
+			const cursor = recentData.find({ worldID, itemID });
+			if ((await cursor.count()) > 1) {
+				cursor
 					.sort((a: any, b: any) => b.lastUploadTime - a.lastUploadTime)
 					.skip(1);
-				let record: any;
 				// tslint:disable-next-line: no-conditional-assignment
-				while ((record = data.read(1))) {
+				while (await cursor.hasNext()) {
+					const record = await cursor.next();
 					// tslint:disable-next-line: no-console
 					console.log(record);
 				}
