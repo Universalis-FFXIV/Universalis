@@ -190,7 +190,7 @@ export class ExtraDataManager {
 					projection: {
 						itemID: 1,
 						worldID: 1,
-						worldName: 1,
+						listings: 1,
 						lastUploadTime: 1,
 					},
 				})
@@ -207,9 +207,13 @@ export class ExtraDataManager {
 			if (!item.lastUploadTime) {
 				item.lastUploadTime = 0;
 			}
-			item.worldID = this.worldMap.get(item.worldName) || null;
+			item.worldID =
+				item.worldID ||
+				this.worldMap.get(item["listings"][0].worldName) ||
+				null;
 			item.worldName = this.worldIDMap.get(item.worldID) || null;
 			delete item["_id"];
+			delete item["listings"];
 			return item;
 		});
 
