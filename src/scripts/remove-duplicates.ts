@@ -33,8 +33,19 @@ const worldIDMap: Map<number, string> = new Map();
 					.skip(1);
 				while (await cursor.hasNext()) {
 					const record = await cursor.next();
+					if (await recentData.deleteOne(record)) {
+						// tslint:disable-next-line: no-console
+						console.log(
+							`Deleted object from ${new Date(record.lastUploadTime)}.`,
+						);
+					}
+				}
+				const newCount = await recentData.find({ worldID, itemID }).count();
+				if (newCount === 1) {
 					// tslint:disable-next-line: no-console
-					console.log(record);
+					console.log(`Finished cleanup, new count: 1`);
+				} else {
+					throw new Error(`Something went very wrong! New count: ${newCount}`);
 				}
 			}
 		}

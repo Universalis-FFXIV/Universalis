@@ -383,6 +383,8 @@ export class ExtraDataManager {
 					num = this.worldMap.get(
 						dcWorlds[Math.floor(Math.random() * dcWorlds.length)],
 					);
+				} else if (typeof worldDC === "number") {
+					return worldDC;
 				} else {
 					do {
 						num = Math.floor(Math.random() * 77) + 23;
