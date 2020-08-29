@@ -15,6 +15,7 @@ export class ExtraDataManager {
 	public static async create(
 		rdm: RemoteDataManager,
 		worldIDMap: Map<number, string>,
+		worldMap: Map<string, number>,
 		db: Db,
 	): Promise<ExtraDataManager> {
 		const extraDataCollection = db.collection("extraData");
@@ -34,6 +35,7 @@ export class ExtraDataManager {
 		return new ExtraDataManager(
 			rdm,
 			worldIDMap,
+			worldMap,
 			extraDataCollection,
 			recentData,
 		);
@@ -45,6 +47,7 @@ export class ExtraDataManager {
 	private rdm: RemoteDataManager;
 
 	private worldIDMap: Map<number, string>;
+	private worldMap: Map<string, number>;
 
 	private dailyUploadTrackingLimit = 30;
 	private maxUnsafeLoopCount = 50;
@@ -53,6 +56,7 @@ export class ExtraDataManager {
 	private constructor(
 		rdm: RemoteDataManager,
 		worldIDMap: Map<number, string>,
+		worldMap: Map<string, number>,
 		extraDataCollection: Collection,
 		recentData: Collection,
 	) {
@@ -182,7 +186,12 @@ export class ExtraDataManager {
 		if (items.length < count) {
 			const newItems = this.recentData
 				.find(query, {
-					projection: { itemID: 1, worldID: 1, lastUploadTime: 1 },
+					projection: {
+						itemID: 1,
+						worldID: 1,
+						worldName: 1,
+						lastUploadTime: 1,
+					},
 				})
 				.sort({ lastUploadTime: 1 })
 				.limit(count - items.length);
@@ -197,7 +206,8 @@ export class ExtraDataManager {
 			if (!item.lastUploadTime) {
 				item.lastUploadTime = 0;
 			}
-			item.worldName = this.worldIDMap.get(item.worldID) || null; // Shouldn't ever be null
+			item.worldID = this.worldMap.get(item.worldName) || null;
+			item.worldName = this.worldIDMap.get(item.worldID) || null;
 			delete item["_id"];
 			return item;
 		});
