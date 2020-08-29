@@ -37,9 +37,9 @@ import { parseEorzeanMarketNote } from "./endpoints/parseEorzeanMarketNote";
 import { upload } from "./endpoints/upload";
 
 // Utils
+import { parseHighestSaleVelocityItems } from "./endpoints/parseHighestSaleVelocityItems";
 import { initializeWorldMappings } from "./initializeWorldMappings";
 import { createLogger } from "./util";
-import { parseHighestSaleVelocityItems } from "./endpoints/parseHighestSaleVelocityItems";
 
 // Define application and its resources
 const db = MongoClient.connect("mongodb://localhost:27017/", {
@@ -81,6 +81,7 @@ const init = (async () => {
 	extraDataManager = await ExtraDataManager.create(
 		remoteDataManager,
 		worldIDMap,
+		worldMap,
 		universalisDB,
 	);
 	historyTracker = await HistoryTracker.create(universalisDB);

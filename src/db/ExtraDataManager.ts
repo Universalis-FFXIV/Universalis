@@ -10,11 +10,13 @@ import { SourceAttribution } from "../models/SourceAttribution";
 import { WorldItemPair } from "../models/WorldItemPair";
 import { WorldItemPairList } from "../models/WorldItemPairList";
 import { WorldUploadCount } from "../models/WorldUploadCount";
+import { getDCWorlds } from "../util";
 
 export class ExtraDataManager {
 	public static async create(
 		rdm: RemoteDataManager,
 		worldIDMap: Map<number, string>,
+		worldMap: Map<string, number>,
 		db: Db,
 	): Promise<ExtraDataManager> {
 		const extraDataCollection = db.collection("extraData");
@@ -34,6 +36,7 @@ export class ExtraDataManager {
 		return new ExtraDataManager(
 			rdm,
 			worldIDMap,
+			worldMap,
 			extraDataCollection,
 			recentData,
 		);
@@ -45,6 +48,7 @@ export class ExtraDataManager {
 	private rdm: RemoteDataManager;
 
 	private worldIDMap: Map<number, string>;
+	private worldMap: Map<string, number>;
 
 	private dailyUploadTrackingLimit = 30;
 	private maxUnsafeLoopCount = 50;
@@ -53,6 +57,7 @@ export class ExtraDataManager {
 	private constructor(
 		rdm: RemoteDataManager,
 		worldIDMap: Map<number, string>,
+		worldMap: Map<string, number>,
 		extraDataCollection: Collection,
 		recentData: Collection,
 	) {
@@ -62,6 +67,7 @@ export class ExtraDataManager {
 		this.rdm = rdm;
 
 		this.worldIDMap = worldIDMap;
+		this.worldMap = worldMap;
 	}
 
 	/** Return the number of uploads from each world. */
@@ -182,7 +188,12 @@ export class ExtraDataManager {
 		if (items.length < count) {
 			const newItems = this.recentData
 				.find(query, {
-					projection: { itemID: 1, worldID: 1, lastUploadTime: 1 },
+					projection: {
+						itemID: 1,
+						worldID: 1,
+						listings: 1,
+						lastUploadTime: 1,
+					},
 				})
 				.sort({ lastUploadTime: 1 })
 				.limit(count - items.length);
@@ -190,17 +201,28 @@ export class ExtraDataManager {
 			items = items.concat(await newItems.toArray());
 		}
 
-		items = items.sort((a, b) => a.lastUploadTime - b.lastUploadTime);
-
 		// Uninitialized items won't have a timestamp in the first place.
-		items = items.map((item) => {
-			if (!item.lastUploadTime) {
-				item.lastUploadTime = 0;
-			}
-			item.worldName = this.worldIDMap.get(item.worldID) || null; // Shouldn't ever be null
-			delete item["_id"];
-			return item;
-		});
+		items = items
+			.map((item) => {
+				if (!item.lastUploadTime) {
+					item.lastUploadTime = 0;
+				}
+				item.worldID =
+					item.worldID ||
+					(item["listings"] && item["listings"].length
+						? this.worldMap.get(item["listings"][0].worldName)
+						: null);
+				item.worldName = this.worldIDMap.get(item.worldID) || null;
+				delete item["_id"];
+				delete item["listings"];
+				return item;
+			})
+			.filter((item) => item.worldName); // Being super thorough
+
+		const fillerItems = (
+			await this.getNeverUpdatedItems(worldDC, count - items.length)
+		).items;
+		items = fillerItems.concat(items);
 
 		return { items };
 	}
@@ -343,16 +365,13 @@ export class ExtraDataManager {
 		worldDC?: string | number,
 		count?: number,
 	): Promise<WorldItemPairList> {
-		if (count) {
-			count = Math.max(count, 0);
-			count = Math.min(count, this.returnCap);
-		} else {
-			count = this.returnCap;
-		}
-
 		const items: WorldItemPair[] = [];
 
+		if (count <= 0) return { items };
+
 		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
+		const dcWorlds =
+			typeof worldDC === "string" ? await getDCWorlds(worldDC) : null;
 
 		for (let i = 0; i < this.maxUnsafeLoopCount; i++) {
 			if (items.length === Math.min(count, this.returnCap)) return { items };
@@ -360,14 +379,20 @@ export class ExtraDataManager {
 			// Random world ID
 			const worldID = (() => {
 				let num = 0;
-				do {
-					num = Math.floor(Math.random() * 77) + 23;
-				} while (
-					(num >= 25 && num <= 27) ||
-					num === 38 ||
-					num === 84 ||
-					!this.worldIDMap.get(num)
-				);
+				if (dcWorlds) {
+					num = this.worldMap.get(
+						dcWorlds[Math.floor(Math.random() * dcWorlds.length)],
+					);
+				} else {
+					do {
+						num = Math.floor(Math.random() * 77) + 23;
+					} while (
+						(num >= 25 && num <= 27) ||
+						num === 38 ||
+						num === 84 ||
+						!this.worldIDMap.get(num)
+					);
+				}
 				return num;
 			})();
 
@@ -376,15 +401,16 @@ export class ExtraDataManager {
 				marketableItemIDs[Math.floor(Math.random() * marketableItemIDs.length)];
 
 			// DB query
-			const query: any = { itemID };
-			if (typeof worldDC === "number") query.worldID = worldDC;
-			else if (typeof worldDC === "string") query.dcName = worldDC;
-			else query.worldID = worldID;
+			const query: any = { itemID, worldID };
 
 			const randomData = await this.recentData.findOne(query, {
 				projection: { _id: 0, listings: 0, recentHistory: 0 },
 			});
-			if (!randomData) items.push(query);
+			if (!randomData) {
+				query.worldName = this.worldIDMap.get(query.worldID);
+				query.lastUploadTime = 0;
+				items.push(query);
+			}
 		}
 
 		return { items };
