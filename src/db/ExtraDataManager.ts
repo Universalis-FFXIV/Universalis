@@ -401,10 +401,7 @@ export class ExtraDataManager {
 				marketableItemIDs[Math.floor(Math.random() * marketableItemIDs.length)];
 
 			// DB query
-			const query: any = { itemID };
-			if (typeof worldDC === "number") query.worldID = worldDC;
-			else if (typeof worldDC === "string") query.dcName = worldDC;
-			else query.worldID = worldID;
+			const query: any = { itemID, worldID };
 
 			const randomData = await this.recentData.findOne(query, {
 				projection: { _id: 0, listings: 0, recentHistory: 0 },
