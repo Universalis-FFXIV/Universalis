@@ -400,6 +400,7 @@ export class ExtraDataManager {
 			});
 			if (!randomData) {
 				query.worldName = this.worldIDMap.get(query.worldID);
+				query.lastUploadTime = 0;
 				items.push(query);
 			}
 		}
