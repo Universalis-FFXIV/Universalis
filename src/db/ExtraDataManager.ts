@@ -209,8 +209,9 @@ export class ExtraDataManager {
 			}
 			item.worldID =
 				item.worldID ||
-				this.worldMap.get(item["listings"][0].worldName) ||
-				null;
+				(item["listings"] && item["listings"].length
+					? this.worldMap.get(item["listings"][0].worldName)
+					: null);
 			item.worldName = this.worldIDMap.get(item.worldID) || null;
 			delete item["_id"];
 			delete item["listings"];
