@@ -199,8 +199,6 @@ export class ExtraDataManager {
 				.limit(count - items.length)
 				.toArray();
 
-			console.log(newItems.length === count - items.length);
-
 			items = items.concat(newItems);
 		}
 
@@ -226,6 +224,8 @@ export class ExtraDataManager {
 			await this.getNeverUpdatedItems(worldDC, count - items.length)
 		).items;
 		items = fillerItems.concat(items);
+
+		console.log(0 === count - items.length);
 
 		return { items };
 	}
