@@ -165,13 +165,13 @@ export class ExtraDataManager {
 		worldDC?: string | number,
 		count?: number,
 	): Promise<WorldItemPairList> {
-		let items = (await this.getNeverUpdatedItems(worldDC, count)).items;
-
-		if (count) {
+		if (count != null) {
 			count = Math.max(0, Math.min(count, this.returnCap));
 		} else {
 			count = 50;
 		}
+
+		let items = (await this.getNeverUpdatedItems(worldDC, count)).items;
 
 		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
 
@@ -186,7 +186,7 @@ export class ExtraDataManager {
 		else query.worldID = { $ne: null };
 
 		if (items.length < count) {
-			const newItems = this.recentData
+			const newItems = await this.recentData
 				.find(query, {
 					projection: {
 						itemID: 1,
@@ -196,9 +196,12 @@ export class ExtraDataManager {
 					},
 				})
 				.sort({ lastUploadTime: 1 })
-				.limit(count - items.length);
+				.limit(count - items.length)
+				.toArray();
 
-			items = items.concat(await newItems.toArray());
+			console.log(newItems.length === count - items.length);
+
+			items = items.concat(newItems);
 		}
 
 		// Uninitialized items won't have a timestamp in the first place.
