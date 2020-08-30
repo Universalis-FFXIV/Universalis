@@ -225,7 +225,7 @@ export class ExtraDataManager {
 		).items;
 		items = fillerItems.concat(items);
 
-		console.log(0 === count - items.length);
+		console.log(fillerItems.length === count - items.length);
 
 		return { items };
 	}
