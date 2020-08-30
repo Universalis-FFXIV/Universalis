@@ -196,7 +196,7 @@ export class ExtraDataManager {
 					},
 				})
 				.sort({ lastUploadTime: 1 })
-				.limit(count - items.length)
+				.limit((count - items.length) * 2)
 				.toArray();
 
 			items = items.concat(newItems);
@@ -220,12 +220,7 @@ export class ExtraDataManager {
 			})
 			.filter((item) => item.worldName); // Being super thorough
 
-		const fillerItems = (
-			await this.getNeverUpdatedItems(worldDC, count - items.length)
-		).items;
-		items = fillerItems.concat(items);
-
-		console.log(fillerItems.length === count - items.length);
+		items = items.slice(0, count);
 
 		return { items };
 	}
