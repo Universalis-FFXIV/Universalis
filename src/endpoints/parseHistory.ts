@@ -27,10 +27,8 @@ export async function parseHistory(
 
 	const itemIDs: number[] = (ctx.params.item as string)
 		.split(",")
-		.map((id, index) => {
-			if (index > 100) return;
-			return parseInt(id);
-		});
+		.slice(0, 100)
+		.map(parseInt);
 
 	if (itemIDs.length === 1) {
 		const marketableItems = await rdm.getMarketableItemIDs();

@@ -21,16 +21,16 @@ import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
 import { AveragePrices } from "../models/AveragePrices";
+import { HttpStatusCodes } from "../models/HttpStatusCodes";
 import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
 import { MarketBoardItemListingUpload } from "../models/MarketBoardItemListingUpload";
 import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoint";
 import { SaleVelocitySeries } from "../models/SaleVelocitySeries";
 import { StackSizeHistograms } from "../models/StackSizeHistograms";
 import { WorldDCQuery } from "../models/WorldDCQuery";
+import { RemoteDataManager } from "../remote/RemoteDataManager";
 import { TransportManager } from "../transports/TransportManager";
 import { getResearch } from "./parseEorzeanMarketNote";
-import { HttpStatusCodes } from "../models/HttpStatusCodes";
-import { RemoteDataManager } from "../remote/RemoteDataManager";
 
 export async function parseListings(
 	ctx: ParameterizedContext,
@@ -41,10 +41,8 @@ export async function parseListings(
 ) {
 	const itemIDs: number[] = (ctx.params.item as string)
 		.split(",")
-		.map((id, index) => {
-			if (index > 100) return;
-			return parseInt(id);
-		});
+		.slice(0, 100)
+		.map(parseInt);
 
 	if (itemIDs.length === 1) {
 		const marketableItems = await rdm.getMarketableItemIDs();
