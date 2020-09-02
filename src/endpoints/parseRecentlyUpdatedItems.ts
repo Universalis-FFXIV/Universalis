@@ -2,7 +2,7 @@
  * @name Recently-Updated Items
  * @url /api/extra/stats/recently-updated
  * @param entries number The number of entries to return.
- * @returns items RecentlyUpdated The most-recently-updated items, up to "entries".
+ * @returns items RecentlyUpdated The most-recently-updated items, up to "entries". This endpoint is not very useful, and as such should be considered deprecated in favor of /api/extra/stats/most-recently-updated.
  */
 
 import { ParameterizedContext } from "koa";
