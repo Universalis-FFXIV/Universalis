@@ -160,6 +160,45 @@ export class ExtraDataManager {
 		return data;
 	}
 
+	/** Return the list of the most recently updated items, or a subset of them. */
+	public async getMostRecentlyUpdatedItems(
+		worldDC?: string | number,
+		count?: number,
+	): Promise<WorldItemPairList> {
+		if (count != null) {
+			count = Math.max(0, Math.min(count, this.returnCap));
+		} else {
+			count = 50;
+		}
+
+		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
+
+		const query: any = {
+			itemID: {
+				$in: marketableItemIDs,
+			},
+		};
+
+		if (typeof worldDC === "number") query.worldID = worldDC;
+		else if (typeof worldDC === "string") query.dcName = worldDC;
+		else query.worldID = { $ne: null };
+
+		const items = await this.recentData
+			.find(query, {
+				projection: {
+					itemID: 1,
+					worldID: 1,
+					listings: 1,
+					lastUploadTime: 1,
+				},
+			})
+			.sort({ lastUploadTime: 0 })
+			.limit(count)
+			.toArray();
+
+		return { items };
+	}
+
 	/** Return the list of the least recently updated items, or a subset of them. */
 	public async getLeastRecentlyUpdatedItems(
 		worldDC?: string | number,
