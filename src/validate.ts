@@ -63,6 +63,10 @@ export default {
 			entry = JSON.parse(stringifiedEntry.replace(/<[\s\S]*?>/, ""));
 		}
 
+		if (entry.quantity == null || entry.pricePerUnit == null) {
+			return null;
+		}
+
 		return R.pipe(
 			entry,
 			R.pick(["hq", "pricePerUnit", "quantity", "timestamp", "worldName"]),
@@ -133,6 +137,10 @@ export default {
 		const stringifiedListing = JSON.stringify(listing);
 		if (hasHtmlTags(stringifiedListing)) {
 			listing = JSON.parse(stringifiedListing.replace(/<[\s\S]*?>/, ""));
+		}
+
+		if (listing.quantity == null || listing.pricePerUnit == null) {
+			return null;
 		}
 
 		const formattedListing = R.pipe(
