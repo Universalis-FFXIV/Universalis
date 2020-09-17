@@ -170,11 +170,10 @@ export class ExtraDataManager {
 		} else {
 			count = 50;
 		}
-
 		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
 
 		const query: any = {
-			itemIDs: {
+			itemID: {
 				$in: marketableItemIDs,
 			},
 		};
@@ -183,20 +182,20 @@ export class ExtraDataManager {
 		else if (typeof worldDC === "string") query.dcName = worldDC;
 		else query.worldID = { $ne: null };
 
-		let items = await this.recentData
-			.find(query, {
-				projection: {
-					itemID: 1,
-					worldID: 1,
-					listings: 1,
-					lastUploadTime: 1,
-				},
-			})
-			.sort({ lastUploadTime: -1 })
-			.limit(count)
-			.toArray();
-
-		items = items
+		const items = (
+			await this.recentData
+				.find(query, {
+					projection: {
+						itemID: 1,
+						worldID: 1,
+						listings: 1,
+						lastUploadTime: -1,
+					},
+				})
+				.sort({ lastUploadTime: -1 })
+				.limit(count * 2)
+				.toArray()
+		)
 			.map((item) => {
 				if (!item.lastUploadTime) {
 					item.lastUploadTime = 0;
@@ -233,7 +232,7 @@ export class ExtraDataManager {
 		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
 
 		const query: any = {
-			itemIDs: {
+			itemID: {
 				$in: marketableItemIDs,
 			},
 		};
@@ -275,8 +274,9 @@ export class ExtraDataManager {
 				delete item["listings"];
 				return item;
 			})
-			.filter((item) => item.worldName)
-			.slice(0, count);
+			.filter((item) => item.worldName); // Being super thorough
+
+		items = items.slice(0, count);
 
 		return { items };
 	}
