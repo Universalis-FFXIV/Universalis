@@ -94,6 +94,7 @@ export async function parseListings(
 					listing = validation.cleanListingOutput(listing);
 					return listing;
 				}),
+				R.filter((listing) => listing != null),
 			);
 		} else {
 			item.listings = [];
@@ -111,6 +112,7 @@ export async function parseListings(
 				R.map((entry) => {
 					return validation.cleanHistoryEntryOutput(entry);
 				}),
+				R.filter((entry) => entry != null),
 			);
 
 			const nqItems = item.recentHistory.filter((entry) => !entry.hq);

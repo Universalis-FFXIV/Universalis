@@ -40,6 +40,7 @@ import { upload } from "./endpoints/upload";
 import { parseHighestSaleVelocityItems } from "./endpoints/parseHighestSaleVelocityItems";
 import { initializeWorldMappings } from "./initializeWorldMappings";
 import { createLogger } from "./util";
+import { parseMostRecentlyUpdatedItems } from "./endpoints/parseMostRecentlyUpdatedItems";
 
 // Define application and its resources
 const db = MongoClient.connect("mongodb://localhost:27017/", {
@@ -160,6 +161,9 @@ router
 	})
 	.get("/api/extra/stats/least-recently-updated", async (ctx) => {
 		await parseLeastRecentlyUpdatedItems(ctx, worldMap, extraDataManager);
+	})
+	.get("/api/extra/stats/most-recently-updated", async (ctx) => {
+		await parseMostRecentlyUpdatedItems(ctx, worldMap, extraDataManager);
 	})
 	.get("/api/extra/stats/recently-updated", async (ctx) => {
 		await parseRecentlyUpdatedItems(ctx, extraDataManager);

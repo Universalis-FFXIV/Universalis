@@ -160,6 +160,68 @@ export class ExtraDataManager {
 		return data;
 	}
 
+	/** Return the list of the most recently updated items, or a subset of them. */
+	public async getMostRecentlyUpdatedItems(
+		worldDC?: string | number,
+		count?: number,
+	): Promise<WorldItemPairList> {
+		if (count != null) {
+			count = Math.max(0, Math.min(count, this.returnCap));
+		} else {
+			count = 50;
+		}
+
+		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
+
+		const query: any = {};
+
+		if (typeof worldDC === "number") query.worldID = worldDC;
+		else if (typeof worldDC === "string") query.dcName = worldDC;
+		else query.worldID = { $ne: null };
+
+		let items = await this.recentData
+			.find(query, {
+				projection: {
+					itemID: 1,
+					worldID: 1,
+					listings: 1,
+					lastUploadTime: 1,
+				},
+			})
+			.sort({ lastUploadTime: -1 })
+			.limit(count)
+			.toArray();
+
+		for (let i = 0; i < this.maxUnsafeLoopCount; i++) {
+			const filteredItems = items.filter(
+				(item) => marketableItemIDs.indexOf(item.itemID) !== -1,
+			);
+
+			if (filteredItems.length !== items.length) {
+				items = filteredItems;
+
+				const newItems = await this.recentData
+					.find(query, {
+						projection: {
+							itemID: 1,
+							worldID: 1,
+							listings: 1,
+							lastUploadTime: 1,
+						},
+					})
+					.sort({ lastUploadTime: -1 })
+					.limit((count - items.length) * 2)
+					.toArray();
+
+				items = items.concat(newItems);
+			}
+		}
+
+		items = items.slice(0, count);
+
+		return { items };
+	}
+
 	/** Return the list of the least recently updated items, or a subset of them. */
 	public async getLeastRecentlyUpdatedItems(
 		worldDC?: string | number,
@@ -175,11 +237,7 @@ export class ExtraDataManager {
 
 		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
 
-		const query: any = {
-			itemID: {
-				$in: marketableItemIDs,
-			},
-		};
+		const query: any = {};
 
 		if (typeof worldDC === "number") query.worldID = worldDC;
 		else if (typeof worldDC === "string") query.dcName = worldDC;
@@ -200,6 +258,31 @@ export class ExtraDataManager {
 				.toArray();
 
 			items = items.concat(newItems);
+		}
+
+		for (let i = 0; i < this.maxUnsafeLoopCount; i++) {
+			const filteredItems = items.filter(
+				(item) => marketableItemIDs.indexOf(item.itemID) !== -1,
+			);
+
+			if (filteredItems.length !== items.length) {
+				items = filteredItems;
+
+				const newItems = await this.recentData
+					.find(query, {
+						projection: {
+							itemID: 1,
+							worldID: 1,
+							listings: 1,
+							lastUploadTime: 1,
+						},
+					})
+					.sort({ lastUploadTime: 1 })
+					.limit((count - items.length) * 2)
+					.toArray();
+
+				items = items.concat(newItems);
+			}
 		}
 
 		// Uninitialized items won't have a timestamp in the first place.
