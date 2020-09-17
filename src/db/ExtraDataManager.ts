@@ -171,7 +171,13 @@ export class ExtraDataManager {
 			count = 50;
 		}
 
-		const query: any = {};
+		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
+
+		const query: any = {
+			itemIDs: {
+				$in: marketableItemIDs,
+			},
+		};
 
 		if (typeof worldDC === "number") query.worldID = worldDC;
 		else if (typeof worldDC === "string") query.dcName = worldDC;
@@ -224,7 +230,13 @@ export class ExtraDataManager {
 
 		let items = (await this.getNeverUpdatedItems(worldDC, count)).items;
 
-		const query: any = {};
+		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
+
+		const query: any = {
+			itemIDs: {
+				$in: marketableItemIDs,
+			},
+		};
 
 		if (typeof worldDC === "number") query.worldID = worldDC;
 		else if (typeof worldDC === "string") query.dcName = worldDC;
