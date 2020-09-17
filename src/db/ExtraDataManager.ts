@@ -170,7 +170,6 @@ export class ExtraDataManager {
 		} else {
 			count = 50;
 		}
-
 		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
 
 		const query: any = {
@@ -183,18 +182,36 @@ export class ExtraDataManager {
 		else if (typeof worldDC === "string") query.dcName = worldDC;
 		else query.worldID = { $ne: null };
 
-		const items = await this.recentData
-			.find(query, {
-				projection: {
-					itemID: 1,
-					worldID: 1,
-					listings: 1,
-					lastUploadTime: 1,
-				},
+		const items = (
+			await this.recentData
+				.find(query, {
+					projection: {
+						itemID: 1,
+						worldID: 1,
+						listings: 1,
+						lastUploadTime: -1,
+					},
+				})
+				.sort({ lastUploadTime: -1 })
+				.limit(count * 2)
+				.toArray()
+		)
+			.map((item) => {
+				if (!item.lastUploadTime) {
+					item.lastUploadTime = 0;
+				}
+				item.worldID =
+					item.worldID ||
+					(item["listings"] && item["listings"].length
+						? this.worldMap.get(item["listings"][0].worldName)
+						: null);
+				item.worldName = this.worldIDMap.get(item.worldID) || null;
+				delete item["_id"];
+				delete item["listings"];
+				return item;
 			})
-			.sort({ lastUploadTime: 0 })
-			.limit(count)
-			.toArray();
+			.filter((item) => item.worldName)
+			.slice(0, count);
 
 		return { items };
 	}
