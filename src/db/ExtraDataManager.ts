@@ -171,7 +171,13 @@ export class ExtraDataManager {
 			count = 50;
 		}
 
-		const query: any = {};
+		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
+
+		const query: any = {
+			itemIDs: {
+				$in: marketableItemIDs,
+			},
+		};
 
 		if (typeof worldDC === "number") query.worldID = worldDC;
 		else if (typeof worldDC === "string") query.dcName = worldDC;
@@ -190,7 +196,23 @@ export class ExtraDataManager {
 			.limit(count)
 			.toArray();
 
-		items = items.slice(0, count);
+		items = items
+			.map((item) => {
+				if (!item.lastUploadTime) {
+					item.lastUploadTime = 0;
+				}
+				item.worldID =
+					item.worldID ||
+					(item["listings"] && item["listings"].length
+						? this.worldMap.get(item["listings"][0].worldName)
+						: null);
+				item.worldName = this.worldIDMap.get(item.worldID) || null;
+				delete item["_id"];
+				delete item["listings"];
+				return item;
+			})
+			.filter((item) => item.worldName)
+			.slice(0, count);
 
 		return { items };
 	}
@@ -208,7 +230,13 @@ export class ExtraDataManager {
 
 		let items = (await this.getNeverUpdatedItems(worldDC, count)).items;
 
-		const query: any = {};
+		const marketableItemIDs = await this.rdm.getMarketableItemIDs();
+
+		const query: any = {
+			itemIDs: {
+				$in: marketableItemIDs,
+			},
+		};
 
 		if (typeof worldDC === "number") query.worldID = worldDC;
 		else if (typeof worldDC === "string") query.dcName = worldDC;
@@ -247,9 +275,8 @@ export class ExtraDataManager {
 				delete item["listings"];
 				return item;
 			})
-			.filter((item) => item.worldName); // Being super thorough
-
-		items = items.slice(0, count);
+			.filter((item) => item.worldName)
+			.slice(0, count);
 
 		return { items };
 	}
