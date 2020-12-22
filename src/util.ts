@@ -84,7 +84,7 @@ export function calcSaleVelocity(...timestamps: number[]): number {
 	const thisWeek = timestamps.filter(
 		(timestamp) => timestamp * 1000 >= Date.now() - 604800000,
 	);
-
+	console.log(thisWeek.length);
 	return thisWeek.length / 7;
 }
 
