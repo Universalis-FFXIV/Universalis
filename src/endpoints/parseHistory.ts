@@ -96,6 +96,7 @@ export async function parseHistory(
 			item.regularSaleVelocity = calcSaleVelocity(
 				...item.entries.map((entry) => entry.timestamp),
 			);
+			console.log(nqItems.length);
 			item.nqSaleVelocity = calcSaleVelocity(
 				...nqItems.map((entry) => entry.timestamp),
 			);
