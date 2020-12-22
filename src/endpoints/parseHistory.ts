@@ -6,7 +6,7 @@
  */
 import * as R from "remeda";
 
-import { appendWorldDC, makeDistrTable } from "../util";
+import { appendWorldDC, calcSaleVelocity, makeDistrTable } from "../util";
 
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
@@ -62,6 +62,9 @@ export async function parseHistory(
 			stackSizeHistogram: { [key: number]: number };
 			stackSizeHistogramNQ: { [key: number]: number };
 			stackSizeHistogramHQ: { [key: number]: number };
+			regularSaleVelocity: number;
+			nqSaleVelocity: number;
+			hqSaleVelocity: number;
 			lastUploadTime: number;
 		}) => {
 			if (entriesToReturn)
@@ -88,6 +91,16 @@ export async function parseHistory(
 				...hqItems.map((entry) =>
 					entry.quantity != null ? entry.quantity : 0,
 				),
+			);
+
+			item.regularSaleVelocity = calcSaleVelocity(
+				...item.entries.map((entry) => entry.timestamp),
+			);
+			item.nqSaleVelocity = calcSaleVelocity(
+				...nqItems.map((entry) => entry.timestamp),
+			);
+			item.hqSaleVelocity = calcSaleVelocity(
+				...hqItems.map((entry) => entry.timestamp),
 			);
 
 			// Error handling
