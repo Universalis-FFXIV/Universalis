@@ -21,6 +21,7 @@ import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
 import { AveragePrices } from "../models/AveragePrices";
+import { CurrentAveragePrices } from "../models/CurrentAveragePrices";
 import { HttpStatusCodes } from "../models/HttpStatusCodes";
 import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
@@ -93,7 +94,7 @@ export async function parseListings(
 					listing = validation.cleanListingOutput(listing);
 					return listing;
 				}),
-				R.merge(calculateAveragePrices(item.listings, nqItems, hqItems)),
+				R.merge(calculateCurrentAveragePrices(item.listings, nqItems, hqItems)),
 				R.filter((listing) => listing != null),
 			);
 		} else {
@@ -132,6 +133,7 @@ export async function parseListings(
 			data.items[i] = R.pipe(
 				item,
 				R.merge(saleVelocities),
+				R.merge(calculateAveragePrices(item.recentHistory, nqItems, hqItems)),
 				R.merge(makeStackSizeHistograms(item.recentHistory, nqItems, hqItems)),
 			);
 		} else {
@@ -191,13 +193,13 @@ function calculateSaleVelocities(
 }
 
 function calculateAveragePrices(
-	regularSeries: MarketBoardItemListing[],
-	nqSeries: MarketBoardItemListing[],
-	hqSeries: MarketBoardItemListing[],
+	regularSeries: MarketBoardHistoryEntry[],
+	nqSeries: MarketBoardHistoryEntry[],
+	hqSeries: MarketBoardHistoryEntry[],
 ): AveragePrices {
-	const ppu = regularSeries.map((listing) => listing.pricePerUnit);
-	const nqPpu = nqSeries.map((listing) => listing.pricePerUnit);
-	const hqPpu = hqSeries.map((listing) => listing.pricePerUnit);
+	const ppu = regularSeries.map((entry) => entry.pricePerUnit);
+	const nqPpu = nqSeries.map((entry) => entry.pricePerUnit);
+	const hqPpu = hqSeries.map((entry) => entry.pricePerUnit);
 	const averagePrice = calcTrimmedAverage(
 		calcStandardDeviation(...ppu),
 		...ppu,
@@ -214,6 +216,33 @@ function calculateAveragePrices(
 		averagePrice,
 		averagePriceNQ,
 		averagePriceHQ,
+	};
+}
+
+function calculateCurrentAveragePrices(
+	regularSeries: MarketBoardItemListing[],
+	nqSeries: MarketBoardItemListing[],
+	hqSeries: MarketBoardItemListing[],
+): CurrentAveragePrices {
+	const ppu = regularSeries.map((listing) => listing.pricePerUnit);
+	const nqPpu = nqSeries.map((listing) => listing.pricePerUnit);
+	const hqPpu = hqSeries.map((listing) => listing.pricePerUnit);
+	const currentAveragePrice = calcTrimmedAverage(
+		calcStandardDeviation(...ppu),
+		...ppu,
+	);
+	const currentAveragePriceNQ = calcTrimmedAverage(
+		calcStandardDeviation(...nqPpu),
+		...nqPpu,
+	);
+	const currentAveragePriceHQ = calcTrimmedAverage(
+		calcStandardDeviation(...hqPpu),
+		...hqPpu,
+	);
+	return {
+		currentAveragePrice,
+		currentAveragePriceNQ,
+		currentAveragePriceHQ,
 	};
 }
 
