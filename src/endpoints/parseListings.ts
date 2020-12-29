@@ -23,6 +23,7 @@ import { Collection } from "mongodb";
 import { AveragePrices } from "../models/AveragePrices";
 import { HttpStatusCodes } from "../models/HttpStatusCodes";
 import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
+import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
 import { MarketBoardItemListingUpload } from "../models/MarketBoardItemListingUpload";
 import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoint";
 import { SaleVelocitySeries } from "../models/SaleVelocitySeries";
@@ -92,7 +93,7 @@ export async function parseListings(
 					listing = validation.cleanListingOutput(listing);
 					return listing;
 				}),
-				R.merge(calculateAveragePrices(item.recentHistory, nqItems, hqItems)),
+				R.merge(calculateAveragePrices(item.listings, nqItems, hqItems)),
 				R.filter((listing) => listing != null),
 			);
 		} else {
@@ -190,13 +191,13 @@ function calculateSaleVelocities(
 }
 
 function calculateAveragePrices(
-	regularSeries: MarketBoardHistoryEntry[],
-	nqSeries: MarketBoardHistoryEntry[],
-	hqSeries: MarketBoardHistoryEntry[],
+	regularSeries: MarketBoardItemListing[],
+	nqSeries: MarketBoardItemListing[],
+	hqSeries: MarketBoardItemListing[],
 ): AveragePrices {
-	const ppu = regularSeries.map((entry) => entry.pricePerUnit);
-	const nqPpu = nqSeries.map((entry) => entry.pricePerUnit);
-	const hqPpu = hqSeries.map((entry) => entry.pricePerUnit);
+	const ppu = regularSeries.map((listing) => listing.pricePerUnit);
+	const nqPpu = nqSeries.map((listing) => listing.pricePerUnit);
+	const hqPpu = hqSeries.map((listing) => listing.pricePerUnit);
 	const averagePrice = calcTrimmedAverage(
 		calcStandardDeviation(...ppu),
 		...ppu,
