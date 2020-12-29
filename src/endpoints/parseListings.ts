@@ -72,6 +72,9 @@ export async function parseListings(
 		const item: MarketBoardListingsEndpoint = data.items[i];
 
 		if (item.listings) {
+			const nqItems = item.listings.filter((listing) => !listing.hq);
+			const hqItems = item.listings.filter((listing) => listing.hq);
+
 			item.listings = R.pipe(
 				item.listings,
 				R.sort((a, b) => a.pricePerUnit - b.pricePerUnit),
@@ -89,6 +92,7 @@ export async function parseListings(
 					listing = validation.cleanListingOutput(listing);
 					return listing;
 				}),
+				R.merge(calculateAveragePrices(item.recentHistory, nqItems, hqItems)),
 				R.filter((listing) => listing != null),
 			);
 		} else {
@@ -127,7 +131,6 @@ export async function parseListings(
 			data.items[i] = R.pipe(
 				item,
 				R.merge(saleVelocities),
-				R.merge(calculateAveragePrices(item.recentHistory, nqItems, hqItems)),
 				R.merge(makeStackSizeHistograms(item.recentHistory, nqItems, hqItems)),
 			);
 		} else {
