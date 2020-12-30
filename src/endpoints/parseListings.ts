@@ -96,10 +96,10 @@ export async function parseListings(
 
 			const nqItems = item.listings.filter((listing) => !listing.hq);
 			const hqItems = item.listings.filter((listing) => listing.hq);
-			item.listings = {
-				...item.listings,
-				...calculateCurrentAveragePrices(item.listings, nqItems, hqItems),
-			};
+			data.items[i] = R.merge(
+				item,
+				R.merge(calculateCurrentAveragePrices(item.listings, nqItems, hqItems)),
+			);
 		} else {
 			item.listings = [];
 		}
