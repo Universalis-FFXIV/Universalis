@@ -71,7 +71,7 @@ export async function parseListings(
 
 	// Do some post-processing on resolved item listings.
 	for (let i = 0; i < data.items.length; i++) {
-		let item: MarketBoardListingsEndpoint = data.items[i];
+		const item: MarketBoardListingsEndpoint = data.items[i];
 
 		if (item.listings) {
 			item.listings = R.pipe(
@@ -96,10 +96,14 @@ export async function parseListings(
 
 			const nqItems = item.listings.filter((listing) => !listing.hq);
 			const hqItems = item.listings.filter((listing) => listing.hq);
-			item = R.merge(
-				item,
-				calculateCurrentAveragePrices(item.listings, nqItems, hqItems),
+			const curAvg = calculateCurrentAveragePrices(
+				item.listings,
+				nqItems,
+				hqItems,
 			);
+			item.currentAveragePrice = curAvg.currentAveragePrice;
+			item.currentAveragePriceNQ = curAvg.currentAveragePriceNQ;
+			item.currentAveragePriceHQ = curAvg.currentAveragePriceHQ;
 		} else {
 			item.listings = [];
 		}
