@@ -13,6 +13,10 @@ export interface MarketBoardListingsEndpoint {
 	averagePriceNQ?: number;
 	averagePriceHQ?: number;
 
+	currentAveragePrice?: number;
+	currentAveragePriceNQ?: number;
+	currentAveragePriceHQ?: number;
+
 	saleVelocity?: number;
 	saleVelocityNQ?: number;
 	saleVelocityHQ?: number;

@@ -21,8 +21,10 @@ import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
 import { AveragePrices } from "../models/AveragePrices";
+import { CurrentAveragePrices } from "../models/CurrentAveragePrices";
 import { HttpStatusCodes } from "../models/HttpStatusCodes";
 import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
+import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
 import { MarketBoardItemListingUpload } from "../models/MarketBoardItemListingUpload";
 import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoint";
 import { SaleVelocitySeries } from "../models/SaleVelocitySeries";
@@ -72,8 +74,6 @@ export async function parseListings(
 		const item: MarketBoardListingsEndpoint = data.items[i];
 
 		if (item.listings) {
-			const dc = await getWorldDC(item.worldID); // For conditional tax factoring, remove on CN 5.2
-			const cnDCs = ["陆行鸟", "莫古力", "猫小胖"];
 			item.listings = R.pipe(
 				item.listings,
 				R.sort((a, b) => a.pricePerUnit - b.pricePerUnit),
@@ -88,14 +88,22 @@ export async function parseListings(
 						) as any; // Something needs to be done about this
 					}
 					listing.materia = validation.cleanMateriaArray(listing.materia);
-					if (!cnDCs.includes(dc) && !cnDCs.includes(item.dcName)) {
-						listing.pricePerUnit = Math.ceil(listing.pricePerUnit * 1.05);
-					}
 					listing = validation.cleanListingOutput(listing);
 					return listing;
 				}),
 				R.filter((listing) => listing != null),
 			);
+
+			const nqItems = item.listings.filter((listing) => !listing.hq);
+			const hqItems = item.listings.filter((listing) => listing.hq);
+			const curAvg = calculateCurrentAveragePrices(
+				item.listings,
+				nqItems,
+				hqItems,
+			);
+			item.currentAveragePrice = curAvg.currentAveragePrice;
+			item.currentAveragePriceNQ = curAvg.currentAveragePriceNQ;
+			item.currentAveragePriceHQ = curAvg.currentAveragePriceHQ;
 		} else {
 			item.listings = [];
 		}
@@ -215,6 +223,33 @@ function calculateAveragePrices(
 		averagePrice,
 		averagePriceNQ,
 		averagePriceHQ,
+	};
+}
+
+function calculateCurrentAveragePrices(
+	regularSeries: MarketBoardItemListing[],
+	nqSeries: MarketBoardItemListing[],
+	hqSeries: MarketBoardItemListing[],
+): CurrentAveragePrices {
+	const ppu = regularSeries.map((listing) => listing.pricePerUnit);
+	const nqPpu = nqSeries.map((listing) => listing.pricePerUnit);
+	const hqPpu = hqSeries.map((listing) => listing.pricePerUnit);
+	const currentAveragePrice = calcTrimmedAverage(
+		calcStandardDeviation(...ppu),
+		...ppu,
+	);
+	const currentAveragePriceNQ = calcTrimmedAverage(
+		calcStandardDeviation(...nqPpu),
+		...nqPpu,
+	);
+	const currentAveragePriceHQ = calcTrimmedAverage(
+		calcStandardDeviation(...hqPpu),
+		...hqPpu,
+	);
+	return {
+		currentAveragePrice,
+		currentAveragePriceNQ,
+		currentAveragePriceHQ,
 	};
 }
 
