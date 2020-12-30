@@ -73,72 +73,72 @@ export async function parseListings(
 	for (let i = 0; i < data.items.length; i++) {
 		const item: MarketBoardListingsEndpoint = data.items[i];
 
-		if (item.listings) {
-			const nqItems = item.listings.filter((listing) => !listing.hq);
-			const hqItems = item.listings.filter((listing) => listing.hq);
-
-			item.listings = R.pipe(
-				item.listings,
-				R.sort((a, b) => a.pricePerUnit - b.pricePerUnit),
-				R.map((listing) => {
-					if (
-						!listing.retainerID.length ||
-						!listing.sellerID.length ||
-						!listing.creatorID.length
-					) {
-						listing = validation.cleanListing(
-							(listing as unknown) as MarketBoardItemListingUpload,
-						) as any; // Something needs to be done about this
-					}
-					listing.materia = validation.cleanMateriaArray(listing.materia);
-					listing = validation.cleanListingOutput(listing);
-					return listing;
-				}),
-				R.merge(calculateCurrentAveragePrices(item.listings, nqItems, hqItems)),
-				R.filter((listing) => listing != null),
-			);
-		} else {
+		if (!item.listings) {
 			item.listings = [];
 		}
 
-		if (item.recentHistory) {
-			/*const emnData = await getResearch(
-				transportManager,
-				item.itemID,
-				item.worldID,
-			);*/
+		const nqItems = item.listings.filter((listing) => !listing.hq);
+		const hqItems = item.listings.filter((listing) => listing.hq);
 
-			item.recentHistory = R.pipe(
-				item.recentHistory,
-				R.map((entry) => {
-					return validation.cleanHistoryEntryOutput(entry);
-				}),
-				R.filter((entry) => entry != null),
-			);
+		item.listings = R.pipe(
+			item.listings,
+			R.sort((a, b) => a.pricePerUnit - b.pricePerUnit),
+			R.map((listing) => {
+				if (
+					!listing.retainerID.length ||
+					!listing.sellerID.length ||
+					!listing.creatorID.length
+				) {
+					listing = validation.cleanListing(
+						(listing as unknown) as MarketBoardItemListingUpload,
+					) as any; // Something needs to be done about this
+				}
+				listing.materia = validation.cleanMateriaArray(listing.materia);
+				listing = validation.cleanListingOutput(listing);
+				return listing;
+			}),
+			R.merge(calculateCurrentAveragePrices(item.listings, nqItems, hqItems)),
+			R.filter((listing) => listing != null),
+		);
 
-			const nqItems = item.recentHistory.filter((entry) => !entry.hq);
-			const hqItems = item.recentHistory.filter((entry) => entry.hq);
-
-			// Average sale velocities with EMN data
-			const saleVelocities = calculateSaleVelocities(
-				item.recentHistory,
-				nqItems,
-				hqItems,
-			);
-			/*saleVelocities.nqSaleVelocity =
-				(saleVelocities.nqSaleVelocity + emnData.turnoverPerDayNQ) / 2;
-			saleVelocities.hqSaleVelocity =
-				(saleVelocities.hqSaleVelocity + emnData.turnoverPerDayHQ) / 2;*/
-
-			data.items[i] = R.pipe(
-				item,
-				R.merge(saleVelocities),
-				R.merge(calculateAveragePrices(item.recentHistory, nqItems, hqItems)),
-				R.merge(makeStackSizeHistograms(item.recentHistory, nqItems, hqItems)),
-			);
-		} else {
+		if (!item.recentHistory) {
 			item.recentHistory = [];
 		}
+
+		/*const emnData = await getResearch(
+			transportManager,
+			item.itemID,
+			item.worldID,
+		);*/
+
+		item.recentHistory = R.pipe(
+			item.recentHistory,
+			R.map((entry) => {
+				return validation.cleanHistoryEntryOutput(entry);
+			}),
+			R.filter((entry) => entry != null),
+		);
+
+		const nqHistoryItems = item.recentHistory.filter((entry) => !entry.hq);
+		const hqHistoryItems = item.recentHistory.filter((entry) => entry.hq);
+
+		// Average sale velocities with EMN data
+		const saleVelocities = calculateSaleVelocities(
+			item.recentHistory,
+			nqHistoryItems,
+			hqHistoryItems,
+		);
+		/*saleVelocities.nqSaleVelocity =
+			(saleVelocities.nqSaleVelocity + emnData.turnoverPerDayNQ) / 2;
+		saleVelocities.hqSaleVelocity =
+			(saleVelocities.hqSaleVelocity + emnData.turnoverPerDayHQ) / 2;*/
+
+		data.items[i] = R.pipe(
+			item,
+			R.merge(saleVelocities),
+			R.merge(calculateAveragePrices(item.recentHistory, nqHistoryItems, hqHistoryItems)),
+			R.merge(makeStackSizeHistograms(item.recentHistory, nqHistoryItems, hqHistoryItems)),
+		);
 	}
 
 	// Fill in unresolved items
