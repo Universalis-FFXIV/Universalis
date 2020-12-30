@@ -96,7 +96,9 @@ export async function parseListings(
 
 			const nqItems = item.listings.filter((listing) => !listing.hq);
 			const hqItems = item.listings.filter((listing) => listing.hq);
-
+			console.log(
+				calculateCurrentAveragePrices(item.listings, nqItems, hqItems),
+			);
 			item.listings = R.merge(
 				item.listings,
 				calculateCurrentAveragePrices(item.listings, nqItems, hqItems),
