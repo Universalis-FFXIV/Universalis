@@ -88,6 +88,7 @@ export async function parseListings(
 						) as any; // Something needs to be done about this
 					}
 					listing.materia = validation.cleanMateriaArray(listing.materia);
+					listing.pricePerUnit = Math.ceil(listing.pricePerUnit * 1.05);
 					listing = validation.cleanListingOutput(listing);
 					return listing;
 				}),
