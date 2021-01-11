@@ -6,7 +6,13 @@
  */
 import * as R from "remeda";
 
-import { appendWorldDC, calcSaleVelocity, makeDistrTable } from "../util";
+import {
+	appendWorldDC,
+	calcSaleVelocity,
+	getItemIdEn,
+	getItemNameEn,
+	makeDistrTable,
+} from "../util";
 
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
@@ -41,7 +47,18 @@ export async function parseHistory(
 	}
 
 	// Query construction
-	const query = { itemID: { $in: itemIDs } };
+	const query = {
+		itemID: {
+			$in: itemIDs.map((id) => {
+				// Special-casing for Firmament items
+				// This is really shit and should be done differently.
+				const name = getItemNameEn(id);
+				const approvedId = getItemIdEn("Approved " + name);
+				if (approvedId != null) return approvedId;
+				return id;
+			}),
+		},
+	};
 	appendWorldDC(query, worldMap, ctx);
 
 	// Request database info

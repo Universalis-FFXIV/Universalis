@@ -87,6 +87,18 @@ export function calcSaleVelocity(...timestamps: number[]): number {
 	return thisWeek.length / 7;
 }
 
+import _itemNameIds from "../public/json/itemNameIds.json";
+const itemNameIds = _itemNameIds as { [key: number]: string };
+export function getItemNameEn(id: number): string {
+	return itemNameIds[id];
+}
+
+import _itemIdNames from "../public/json/itemIdNames.json";
+const itemIdNames = _itemIdNames as { [key: string]: number };
+export function getItemIdEn(nameEn: string): number {
+	return itemIdNames[nameEn];
+}
+
 /** Calculate the standard deviation of some numbers. */
 export function calcStandardDeviation(...numbers: number[]): number {
 	if (numbers.length === 1) return 0;

@@ -12,6 +12,8 @@ import {
 	calcSaleVelocity,
 	calcStandardDeviation,
 	calcTrimmedAverage,
+	getItemIdEn,
+	getItemNameEn,
 	getWorldDC,
 	makeDistrTable,
 } from "../util";
@@ -57,7 +59,18 @@ export async function parseListings(
 	}
 
 	// Query construction
-	const query: WorldDCQuery = { itemID: { $in: itemIDs } };
+	const query: WorldDCQuery = {
+		itemID: {
+			$in: itemIDs.map((id) => {
+				// Special-casing for Firmament items
+				// This is really shit and should be done differently.
+				const name = getItemNameEn(id);
+				const approvedId = getItemIdEn("Approved " + name);
+				if (approvedId != null) return approvedId;
+				return id;
+			}),
+		},
+	};
 	appendWorldDC(query, worldMap, ctx);
 
 	// Request database info
