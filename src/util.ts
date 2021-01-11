@@ -7,8 +7,6 @@ import { ParameterizedContext } from "koa";
 
 import { RemoteDataManager } from "./remote/RemoteDataManager";
 
-require("winston-mongodb"); // Applies itself to the winston.transports namespace
-
 const readFile = util.promisify(fs.readFile);
 
 const logger = winston.createLogger();
@@ -131,12 +129,6 @@ export function makeDistrTable(
 export function createLogger(db: string): Logger {
 	return winston.createLogger({
 		transports: [
-			new winston.transports["MongoDB"]({
-				capped: true,
-				cappedMax: 10000,
-				db,
-				options: { useNewUrlParser: true, useUnifiedTopology: true },
-			}),
 			new winston.transports.File({
 				filename: "logs/error.log",
 				level: "error",
