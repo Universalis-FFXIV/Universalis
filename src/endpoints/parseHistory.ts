@@ -37,6 +37,14 @@ export async function parseHistory(
 			if (index > 100) return null;
 			return parseInt(id);
 		})
+		.map((id) => {
+			// Special-casing for Firmament items
+			// This is really shit and should be done differently.
+			const name = getItemNameEn(id);
+			const approvedId = getItemIdEn("Approved " + name);
+			if (approvedId != null) return approvedId;
+			return id;
+		})
 		.filter((id) => id != null);
 
 	if (itemIDs.length === 1) {
@@ -49,14 +57,7 @@ export async function parseHistory(
 	// Query construction
 	const query = {
 		itemID: {
-			$in: itemIDs.map((id) => {
-				// Special-casing for Firmament items
-				// This is really shit and should be done differently.
-				const name = getItemNameEn(id);
-				const approvedId = getItemIdEn("Approved " + name);
-				if (approvedId != null) return approvedId;
-				return id;
-			}),
+			$in: itemIDs,
 		},
 	};
 	appendWorldDC(query, worldMap, ctx);
