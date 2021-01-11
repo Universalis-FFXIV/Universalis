@@ -7,8 +7,6 @@ import { ParameterizedContext } from "koa";
 
 import { RemoteDataManager } from "./remote/RemoteDataManager";
 
-require("winston-mongodb"); // Applies itself to the winston.transports namespace
-
 const readFile = util.promisify(fs.readFile);
 
 const logger = winston.createLogger();
@@ -87,6 +85,18 @@ export function calcSaleVelocity(...timestamps: number[]): number {
 	return thisWeek.length / 7;
 }
 
+const untypedItemNameIds = require("../public/json/itemNameIds.json");
+const itemNameIds = untypedItemNameIds as { [key: number]: string };
+export function getItemNameEn(id: number): string {
+	return itemNameIds[id];
+}
+
+const untypedItemIdNames = require("../public/json/itemIdNames.json");
+const itemIdNames = untypedItemIdNames as { [key: string]: number };
+export function getItemIdEn(nameEn: string): number {
+	return itemIdNames[nameEn];
+}
+
 /** Calculate the standard deviation of some numbers. */
 export function calcStandardDeviation(...numbers: number[]): number {
 	if (numbers.length === 1) return 0;
@@ -119,12 +129,6 @@ export function makeDistrTable(
 export function createLogger(db: string): Logger {
 	return winston.createLogger({
 		transports: [
-			new winston.transports["MongoDB"]({
-				capped: true,
-				cappedMax: 10000,
-				db,
-				options: { useNewUrlParser: true, useUnifiedTopology: true },
-			}),
 			new winston.transports.File({
 				filename: "logs/error.log",
 				level: "error",

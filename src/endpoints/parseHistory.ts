@@ -6,7 +6,13 @@
  */
 import * as R from "remeda";
 
-import { appendWorldDC, calcSaleVelocity, makeDistrTable } from "../util";
+import {
+	appendWorldDC,
+	calcSaleVelocity,
+	getItemIdEn,
+	getItemNameEn,
+	makeDistrTable,
+} from "../util";
 
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
@@ -31,7 +37,15 @@ export async function parseHistory(
 			if (index > 100) return null;
 			return parseInt(id);
 		})
-		.filter((id) => id != null);
+		.filter((id) => id != null)
+		.map((id) => {
+			// Special-casing for Firmament items
+			// This is really shit and should be done differently.
+			const name = getItemNameEn(id);
+			const approvedId = getItemIdEn("Approved " + name);
+			if (approvedId != null) return approvedId;
+			return id;
+		});
 
 	if (itemIDs.length === 1) {
 		const marketableItems = await rdm.getMarketableItemIDs();
@@ -41,7 +55,11 @@ export async function parseHistory(
 	}
 
 	// Query construction
-	const query = { itemID: { $in: itemIDs } };
+	const query = {
+		itemID: {
+			$in: itemIDs,
+		},
+	};
 	appendWorldDC(query, worldMap, ctx);
 
 	// Request database info
