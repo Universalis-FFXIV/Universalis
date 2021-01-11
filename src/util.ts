@@ -87,14 +87,14 @@ export function calcSaleVelocity(...timestamps: number[]): number {
 	return thisWeek.length / 7;
 }
 
-import _itemNameIds from "../public/json/itemNameIds.json";
-const itemNameIds = _itemNameIds as { [key: number]: string };
+const untypedItemNameIds = require("../public/json/itemNameIds.json");
+const itemNameIds = untypedItemNameIds as { [key: number]: string };
 export function getItemNameEn(id: number): string {
 	return itemNameIds[id];
 }
 
-import _itemIdNames from "../public/json/itemIdNames.json";
-const itemIdNames = _itemIdNames as { [key: string]: number };
+const untypedItemIdNames = require("../public/json/itemIdNames.json");
+const itemIdNames = untypedItemIdNames as { [key: string]: number };
 export function getItemIdEn(nameEn: string): number {
 	return itemIdNames[nameEn];
 }
