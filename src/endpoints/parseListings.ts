@@ -49,6 +49,7 @@ export async function parseListings(
 			if (index > 100) return null;
 			return parseInt(id);
 		})
+		.filter((id) => id != null)
 		.map((id) => {
 			// Special-casing for Firmament items
 			// This is really shit and should be done differently.
@@ -58,8 +59,7 @@ export async function parseListings(
 			console.log(approvedId);
 			if (approvedId != null) return approvedId;
 			return id;
-		})
-		.filter((id) => id != null);
+		});
 
 	if (itemIDs.length === 1) {
 		const marketableItems = await rdm.getMarketableItemIDs();
