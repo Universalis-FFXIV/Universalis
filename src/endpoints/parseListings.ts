@@ -54,9 +54,7 @@ export async function parseListings(
 			// Special-casing for Firmament items
 			// This is really shit and should be done differently.
 			const name = getItemNameEn(id);
-			console.log(name);
 			const approvedId = getItemIdEn("Approved " + name);
-			console.log(approvedId);
 			if (approvedId != null) return approvedId;
 			return id;
 		});
