@@ -217,6 +217,7 @@ const dbTeardown = async () => {
 		await dbo.close();
 	}
 	logger.info("Database connection closed.");
+	process.exit();
 };
 const dbTeardownSync = deasync(dbTeardown); // async methods cannot run while the process is closing.
 
