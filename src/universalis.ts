@@ -1,6 +1,7 @@
 // Dependencies
 import cors from "@koa/cors";
 import Router from "@koa/router";
+import deasync from "deasync";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import queryParams from "koa-queryparams";
@@ -38,15 +39,17 @@ import { upload } from "./endpoints/upload";
 
 // Utils
 import { parseHighestSaleVelocityItems } from "./endpoints/parseHighestSaleVelocityItems";
+import { parseMostRecentlyUpdatedItems } from "./endpoints/parseMostRecentlyUpdatedItems";
 import { initializeWorldMappings } from "./initializeWorldMappings";
 import { createLogger } from "./util";
-import { parseMostRecentlyUpdatedItems } from "./endpoints/parseMostRecentlyUpdatedItems";
 
 // Define application and its resources
 const db = MongoClient.connect("mongodb://localhost:27017/", {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 });
+let dbo: MongoClient;
+
 const logger = createLogger("mongodb://localhost:27017/");
 logger.info("Process started.");
 
@@ -66,9 +69,11 @@ const worldMap: Map<string, number> = new Map();
 const worldIDMap: Map<number, string> = new Map();
 
 const init = (async () => {
+	dbo = await db;
+
 	// DB Data Managers
-	const universalisDB = (await db).db("universalis");
-	logger.info(`Database connected: ${(await db).isConnected()}`);
+	const universalisDB = dbo.db("universalis");
+	logger.info(`Database connected: ${dbo.isConnected()}`);
 
 	extendedHistory = universalisDB.collection("extendedHistory");
 	recentData = universalisDB.collection("recentData");
@@ -204,6 +209,20 @@ router
 	});
 
 universalis.use(router.routes());
+
+const dbTeardown = async () => {
+	logger.info("Closing database connection.");
+	if (dbo.isConnected()) {
+		logger.info("Waiting for close completion.");
+		await dbo.close();
+	}
+	logger.info("Database connection closed.");
+};
+const dbTeardownSync = deasync(dbTeardown); // async methods cannot run while the process is closing.
+
+process.on("SIGINT", dbTeardownSync);
+process.on("SIGTERM", dbTeardownSync);
+process.on("SIGKILL", dbTeardownSync);
 
 // Start server
 const port = process.argv[2] ? parseInt(process.argv[2]) : 4000;
