@@ -222,7 +222,6 @@ const dbTeardownSync = deasync(dbTeardown); // async methods cannot run while th
 
 process.on("SIGINT", dbTeardownSync);
 process.on("SIGTERM", dbTeardownSync);
-process.on("SIGKILL", dbTeardownSync);
 
 // Start server
 const port = process.argv[2] ? parseInt(process.argv[2]) : 4000;
