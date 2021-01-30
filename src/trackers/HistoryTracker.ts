@@ -147,6 +147,7 @@ export class HistoryTracker extends Tracker {
 		// Limit to 1500 entries
 		extendedHistory.entries = R.pipe(
 			extendedHistory.entries,
+			R.sort((a, b) => b.timestamp - a.timestamp),
 			R.take(1500 - minimizedEntries.length),
 			R.concat(minimizedEntries),
 		);
