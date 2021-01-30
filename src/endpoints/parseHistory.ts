@@ -92,7 +92,7 @@ export async function parseHistory(
 				return entry;
 			});
 
-			item.entries.sort((a, b) => a.pricePerUnit - b.pricePerUnit); // Sort in descending order
+			item.entries = item.entries.sort((a, b) => b.timestamp - a.timestamp); // Sort in descending order
 
 			const nqItems = item.entries.filter((entry) => !entry.hq);
 			const hqItems = item.entries.filter((entry) => entry.hq);
