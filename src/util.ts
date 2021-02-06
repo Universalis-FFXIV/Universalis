@@ -68,7 +68,8 @@ export function calcTrimmedStats(
 
 	const trimmedMin = Math.min(...inRangeNumbers);
 	const trimmedMax = Math.max(...inRangeNumbers);
-	const trimmedMean = inRangeNumbers.reduce((prev, cur) => prev + cur);
+	const trimmedMean =
+		inRangeNumbers.reduce((prev, cur) => prev + cur) / inRangeNumbers.length;
 
 	return {
 		min: trimmedMin,
