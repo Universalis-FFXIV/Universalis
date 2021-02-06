@@ -53,28 +53,29 @@ export function calcAverage(...numbers: number[]): number {
 	return out / numbers.length;
 }
 
-export function calcTrimmedAverage(
+export function calcTrimmedStats(
 	standardDeviation: number,
 	...numbers: number[]
-): number {
-	if (numbers.length === 0) return 0;
-	let out = 0;
+): { min: number; max: number; mean: number } {
+	if (numbers.length === 0) return { min: 0, max: 0, mean: 0 };
 
 	const mean = calcAverage(...numbers);
 
-	// I would benchmark this, but benchmarking in JS is a pain
-	// Also lol Prettier
-	numbers.forEach(
-		(num) =>
-			(out +=
-				num *
-				Number(
-					num <= mean + 3 * standardDeviation &&
-						num >= mean - 3 * standardDeviation,
-				)),
+	const inRangeNumbers = numbers.filter(
+		(n) =>
+			n <= mean + 3 * standardDeviation && n >= mean - 3 * standardDeviation,
 	);
 
-	return out / numbers.length;
+	const trimmedMin = Math.min(...inRangeNumbers);
+	const trimmedMax = Math.max(...inRangeNumbers);
+	const trimmedMean =
+		inRangeNumbers.reduce((prev, cur) => prev + cur) / inRangeNumbers.length;
+
+	return {
+		min: trimmedMin,
+		max: trimmedMax,
+		mean: trimmedMean,
+	};
 }
 
 /** Calculate the rate at which items have been selling per day over the past week. */

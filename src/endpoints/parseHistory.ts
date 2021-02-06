@@ -86,7 +86,7 @@ export async function parseHistory(
 			lastUploadTime: number;
 		}) => {
 			if (entriesToReturn)
-				item.entries = item.entries.slice(0, Math.min(1500, entriesToReturn));
+				item.entries = item.entries.slice(0, Math.min(1800, entriesToReturn));
 			item.entries = item.entries.map((entry: MinimizedHistoryEntry) => {
 				delete entry.uploaderID;
 				return entry;

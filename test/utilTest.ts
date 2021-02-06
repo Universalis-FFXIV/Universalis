@@ -36,12 +36,12 @@ describe("util", function () {
 		makeTest([-1, 1], 0);
 	});
 
-	describe("calcTrimmedAverage", function () {
+	describe("calcTrimmedStats", function () {
 		const makeTest = (list: number[], expected: number) => {
-			it(`should return ${expected} for [${list.toString()}].`, function () {
+			it(`should return the mean ${expected} for [${list.toString()}].`, function () {
 				const standardDeviation = util.calcStandardDeviation(...list);
 				should.equal(
-					util.calcTrimmedAverage(standardDeviation, ...list),
+					util.calcTrimmedStats(standardDeviation, ...list).mean,
 					expected,
 				);
 			});

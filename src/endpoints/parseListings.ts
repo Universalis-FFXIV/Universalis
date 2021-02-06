@@ -11,10 +11,9 @@ import {
 	appendWorldDC,
 	calcSaleVelocity,
 	calcStandardDeviation,
-	calcTrimmedAverage,
+	calcTrimmedStats,
 	getItemIdEn,
 	getItemNameEn,
-	getWorldDC,
 	makeDistrTable,
 } from "../util";
 import validation from "../validate";
@@ -22,8 +21,7 @@ import validation from "../validate";
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
-import { AveragePrices } from "../models/AveragePrices";
-import { CurrentAveragePrices } from "../models/CurrentAveragePrices";
+import { CurrentStats } from "../models/CurrentStats";
 import { HttpStatusCodes } from "../models/HttpStatusCodes";
 import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
@@ -31,6 +29,7 @@ import { MarketBoardItemListingUpload } from "../models/MarketBoardItemListingUp
 import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoint";
 import { SaleVelocitySeries } from "../models/SaleVelocitySeries";
 import { StackSizeHistograms } from "../models/StackSizeHistograms";
+import { Stats } from "../models/Stats";
 import { WorldDCQuery } from "../models/WorldDCQuery";
 import { RemoteDataManager } from "../remote/RemoteDataManager";
 import { TransportManager } from "../transports/TransportManager";
@@ -218,26 +217,23 @@ function calculateAveragePrices(
 	regularSeries: MarketBoardHistoryEntry[],
 	nqSeries: MarketBoardHistoryEntry[],
 	hqSeries: MarketBoardHistoryEntry[],
-): AveragePrices {
+): Stats {
 	const ppu = regularSeries.map((entry) => entry.pricePerUnit);
 	const nqPpu = nqSeries.map((entry) => entry.pricePerUnit);
 	const hqPpu = hqSeries.map((entry) => entry.pricePerUnit);
-	const averagePrice = calcTrimmedAverage(
-		calcStandardDeviation(...ppu),
-		...ppu,
-	);
-	const averagePriceNQ = calcTrimmedAverage(
-		calcStandardDeviation(...nqPpu),
-		...nqPpu,
-	);
-	const averagePriceHQ = calcTrimmedAverage(
-		calcStandardDeviation(...hqPpu),
-		...hqPpu,
-	);
+	const stats = calcTrimmedStats(calcStandardDeviation(...ppu), ...ppu);
+	const statsNQ = calcTrimmedStats(calcStandardDeviation(...nqPpu), ...nqPpu);
+	const statsHQ = calcTrimmedStats(calcStandardDeviation(...hqPpu), ...hqPpu);
 	return {
-		averagePrice,
-		averagePriceNQ,
-		averagePriceHQ,
+		averagePrice: stats.mean,
+		averagePriceNQ: statsNQ.mean,
+		averagePriceHQ: statsHQ.mean,
+		minPrice: stats.min,
+		minPriceNQ: statsNQ.min,
+		minPriceHQ: statsHQ.min,
+		maxPrice: stats.max,
+		maxPriceNQ: statsNQ.max,
+		maxPriceHQ: statsHQ.max,
 	};
 }
 
@@ -245,26 +241,23 @@ function calculateCurrentAveragePrices(
 	regularSeries: MarketBoardItemListing[],
 	nqSeries: MarketBoardItemListing[],
 	hqSeries: MarketBoardItemListing[],
-): CurrentAveragePrices {
+): CurrentStats {
 	const ppu = regularSeries.map((listing) => listing.pricePerUnit);
 	const nqPpu = nqSeries.map((listing) => listing.pricePerUnit);
 	const hqPpu = hqSeries.map((listing) => listing.pricePerUnit);
-	const currentAveragePrice = calcTrimmedAverage(
-		calcStandardDeviation(...ppu),
-		...ppu,
-	);
-	const currentAveragePriceNQ = calcTrimmedAverage(
-		calcStandardDeviation(...nqPpu),
-		...nqPpu,
-	);
-	const currentAveragePriceHQ = calcTrimmedAverage(
-		calcStandardDeviation(...hqPpu),
-		...hqPpu,
-	);
+	const stats = calcTrimmedStats(calcStandardDeviation(...ppu), ...ppu);
+	const statsNQ = calcTrimmedStats(calcStandardDeviation(...nqPpu), ...nqPpu);
+	const statsHQ = calcTrimmedStats(calcStandardDeviation(...hqPpu), ...hqPpu);
 	return {
-		currentAveragePrice,
-		currentAveragePriceNQ,
-		currentAveragePriceHQ,
+		currentAveragePrice: stats.mean,
+		currentAveragePriceNQ: statsNQ.mean,
+		currentAveragePriceHQ: statsHQ.mean,
+		currentMinPrice: stats.min,
+		currentMinPriceNQ: statsNQ.min,
+		currentMinPriceHQ: statsHQ.min,
+		currentMaxPrice: stats.max,
+		currentMaxPriceNQ: statsNQ.max,
+		currentMaxPriceHQ: statsHQ.max,
 	};
 }
 
