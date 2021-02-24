@@ -42,6 +42,7 @@ import { parseHighestSaleVelocityItems } from "./endpoints/parseHighestSaleVeloc
 import { parseMostRecentlyUpdatedItems } from "./endpoints/parseMostRecentlyUpdatedItems";
 import { initializeWorldMappings } from "./initializeWorldMappings";
 import { createLogger } from "./util";
+import { deleteListings } from "./endpoints/deleteListings";
 
 // Define application and its resources
 const db = MongoClient.connect("mongodb://localhost:27017/", {
@@ -150,6 +151,9 @@ router
 			recentData,
 			transportManager,
 		);
+	})
+	.delete("/api/:worldDC/:item", async (ctx) => {
+		await deleteListings(ctx);
 	})
 	.get("/api/history/:world/:item", async (ctx) => {
 		// Extended history
