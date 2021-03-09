@@ -38,7 +38,7 @@ export async function upload(parameters: UploadProcessParameters) {
 	const trustedSource: TrustedSource = await trustedSourceManager.get(
 		ctx.params.apiKey,
 	);
-	if (!trustedSource) return ctx.throw(HttpStatusCodes.UNAUTHENTICATED);
+	if (!trustedSource) return ctx.throw(HttpStatusCodes.FORBIDDEN);
 	const sourceName = trustedSource.sourceName;
 	promises.push(trustedSourceManager.increaseUploadCount(ctx.params.apiKey));
 	logger.info(
