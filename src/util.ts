@@ -6,12 +6,34 @@ import winston, { Logger } from "winston";
 import { ParameterizedContext } from "koa";
 
 import { RemoteDataManager } from "./remote/RemoteDataManager";
+import { Collection } from "mongodb";
 
 const readFile = util.promisify(fs.readFile);
 
 const logger = winston.createLogger();
 
 const remoteDataManager = new RemoteDataManager({ logger });
+
+export async function removeOld(recentData: Collection, worldID: number, itemID: number): Promise<boolean> {
+	const cursor = recentData.find({ worldID, itemID });
+	let deletedAny = false;
+	if ((await cursor.count()) > 1) {
+		cursor
+			.sort((a: any, b: any) => b.lastUploadTime - a.lastUploadTime)
+			.skip(1);
+		while (await cursor.hasNext()) {
+			deletedAny = true;
+			const record = await cursor.next();
+			if (await recentData.deleteOne(record)) {
+				// tslint:disable-next-line: no-console
+				console.log(
+					`Deleted object from ${new Date(record.lastUploadTime)}.`,
+				);
+			}
+		}
+	}
+	return deletedAny;
+}
 
 export function appendWorldDC(
 	obj: any,

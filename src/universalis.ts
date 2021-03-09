@@ -152,8 +152,8 @@ router
 			transportManager,
 		);
 	})
-	.delete("/api/:worldDC/:item", async (ctx) => {
-		await deleteListings(ctx);
+	.delete("/api/:world/:item/:listing", async (ctx) => {
+		await deleteListings(ctx, worldMap, recentData);
 	})
 	.get("/api/history/:world/:item", async (ctx) => {
 		// Extended history
