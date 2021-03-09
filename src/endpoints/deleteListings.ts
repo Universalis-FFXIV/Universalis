@@ -41,12 +41,12 @@ export async function deleteListings(ctx: ParameterizedContext, trustedSourceMan
 	await removeOld(recentData, worldID, itemID); // Remove old records while we're at it
 
 	const itemInfo: MarketBoardListingsEndpoint = await recentData.findOne({ worldID, itemID });
-	if (itemInfo == null) {
+	if (itemInfo == null || itemInfo.listings == null) {
 		return;
 	}
 	
 	// delete the listing
-	const toDelete = itemInfo.listings?.find(l => l.listingID == ctx.params.listing);
+	const toDelete = itemInfo.listings.find(l => l.listingID == ctx.params.listing);
 	if (toDelete == null) {
 		return;
 	}
