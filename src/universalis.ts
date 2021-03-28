@@ -146,7 +146,7 @@ universalis.use(ratelimit({
 	max: 1,
 	disableHeader: false,
 	whitelist: (ctx) => {
-		return ctx.method === "DELETE";
+		return ctx.method !== "DELETE";
 	}
 }));
 
