@@ -6,6 +6,8 @@ import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import queryParams from "koa-queryparams";
 import serve from "koa-static";
+import ratelimit from "koa-ratelimit";
+import redis from "redis";
 import { Collection, MongoClient } from "mongodb";
 
 // Data managers
@@ -44,15 +46,22 @@ import { initializeWorldMappings } from "./initializeWorldMappings";
 import { createLogger } from "./util";
 import { deleteListings } from "./endpoints/deleteListings";
 
-// Define application and its resources
+// Database
 const db = MongoClient.connect("mongodb://localhost:27017/", {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 });
 let dbo: MongoClient;
 
+// Logger
 const logger = createLogger("mongodb://localhost:27017/");
 logger.info("Process started.");
+
+// Redis
+const redisClient = redis.createClient();
+redisClient.on("error", function(error) {
+	logger.error(error);
+});
 
 let blacklistManager: BlacklistManager;
 let contentIDCollection: ContentIDCollection;
@@ -122,6 +131,24 @@ universalis.use(async (ctx, next) => {
 	}
 	await next();
 });
+
+universalis.use(ratelimit({
+	driver: "redis",
+	db: redisClient,
+	duration: 1000,
+	errorMessage: "Rate limit exceeded (1/1s).",
+	id: (ctx) => ctx.ip,
+	headers: {
+		remaining: "Rate-Limit-Remaining",
+		reset: "Rate-Limit-Total",
+		total: "Rate-Limit-Total"
+	},
+	max: 1,
+	disableHeader: false,
+	whitelist: (ctx) => {
+		return ctx.method === "DELETE";
+	}
+}));
 
 // Use single init await
 universalis.use(async (_, next) => {
