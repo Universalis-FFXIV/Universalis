@@ -132,18 +132,20 @@ universalis.use(async (ctx, next) => {
 	await next();
 });
 
+// Deletions can only be done 4 times per second, since that's at least how long
+// it takes to buy an item and wait for confirmation from the server.
 universalis.use(ratelimit({
 	driver: "redis",
 	db: redisClient,
 	duration: 1000,
-	errorMessage: "Rate limit exceeded (1/1s).",
+	errorMessage: "Rate limit exceeded (4/1s).",
 	id: (ctx) => ctx.ip,
 	headers: {
 		remaining: "Rate-Limit-Remaining",
 		reset: "Rate-Limit-Total",
 		total: "Rate-Limit-Total"
 	},
-	max: 1,
+	max: 4,
 	disableHeader: false,
 	whitelist: (ctx) => {
 		return ctx.method !== "DELETE";
