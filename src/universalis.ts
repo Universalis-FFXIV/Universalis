@@ -180,7 +180,7 @@ router
 		);
 	})
 	.delete("/api/:world/:item/:listing", async (ctx) => {
-		await deleteListings(ctx, worldMap, recentData);
+		await deleteListings(ctx, trustedSourceManager, worldMap, recentData);
 	})
 	.get("/api/history/:world/:item", async (ctx) => {
 		// Extended history
