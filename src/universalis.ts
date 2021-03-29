@@ -59,7 +59,7 @@ logger.info("Process started.");
 
 // Redis
 const redisClient = redis.createClient();
-redisClient.on("error", function(error) {
+redisClient.on("error", function (error) {
 	logger.error(error);
 });
 
@@ -145,7 +145,7 @@ universalis.use(ratelimit({
 		reset: "Rate-Limit-Total",
 		total: "Rate-Limit-Total"
 	},
-	max: 4,
+	max: 12,
 	disableHeader: false,
 	whitelist: (ctx) => {
 		return ctx.method !== "DELETE";
@@ -192,8 +192,8 @@ router
 		await parseTaxRates(ctx, worldMap, extraDataManager);
 	})
 	/*.get("/api/transports/eorzea-market-note/:world/:item", async (ctx) => {
-        await parseEorzeanMarketNote(ctx, transportManager);
-    })*/
+		await parseEorzeanMarketNote(ctx, transportManager);
+	})*/
 	.get("/api/extra/content/:contentID", async (ctx) => {
 		await parseContentID(ctx, contentIDCollection);
 	})
