@@ -5,10 +5,10 @@ import deasync from "deasync";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import queryParams from "koa-queryparams";
-import serve from "koa-static";
 import ratelimit from "koa-ratelimit";
-import redis from "redis";
+import serve from "koa-static";
 import { Collection, MongoClient } from "mongodb";
+import redis from "redis";
 
 // Data managers
 // import { CronJobManager } from "./cron/CronJobManager";
@@ -40,11 +40,11 @@ import { parseEorzeanMarketNote } from "./endpoints/parseEorzeanMarketNote";
 import { upload } from "./endpoints/upload";
 
 // Utils
+import { deleteListings } from "./endpoints/deleteListings";
 import { parseHighestSaleVelocityItems } from "./endpoints/parseHighestSaleVelocityItems";
 import { parseMostRecentlyUpdatedItems } from "./endpoints/parseMostRecentlyUpdatedItems";
 import { initializeWorldMappings } from "./initializeWorldMappings";
 import { createLogger } from "./util";
-import { deleteListings } from "./endpoints/deleteListings";
 
 // Database
 const db = MongoClient.connect("mongodb://localhost:27017/", {
@@ -149,6 +149,25 @@ universalis.use(ratelimit({
 	disableHeader: false,
 	whitelist: (ctx) => {
 		return ctx.method !== "DELETE";
+	}
+}));
+
+// 18/s GET
+universalis.use(ratelimit({
+	driver: "redis",
+	db: redisClient,
+	duration: 1000,
+	errorMessage: "Rate limit exceeded (4/1s).",
+	id: (ctx) => ctx.ip,
+	headers: {
+		remaining: "Rate-Limit-Remaining",
+		reset: "Rate-Limit-Total",
+		total: "Rate-Limit-Total"
+	},
+	max: 48,
+	disableHeader: false,
+	whitelist: (ctx) => {
+		return ctx.method !== "GET";
 	}
 }));
 
