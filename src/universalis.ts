@@ -5,8 +5,10 @@ import deasync from "deasync";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import queryParams from "koa-queryparams";
+import ratelimit from "koa-ratelimit";
 import serve from "koa-static";
 import { Collection, MongoClient } from "mongodb";
+import redis from "redis";
 
 // Data managers
 // import { CronJobManager } from "./cron/CronJobManager";
@@ -38,20 +40,28 @@ import { parseEorzeanMarketNote } from "./endpoints/parseEorzeanMarketNote";
 import { upload } from "./endpoints/upload";
 
 // Utils
+import { deleteListings } from "./endpoints/deleteListings";
 import { parseHighestSaleVelocityItems } from "./endpoints/parseHighestSaleVelocityItems";
 import { parseMostRecentlyUpdatedItems } from "./endpoints/parseMostRecentlyUpdatedItems";
 import { initializeWorldMappings } from "./initializeWorldMappings";
 import { createLogger } from "./util";
 
-// Define application and its resources
+// Database
 const db = MongoClient.connect("mongodb://localhost:27017/", {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 });
 let dbo: MongoClient;
 
+// Logger
 const logger = createLogger("mongodb://localhost:27017/");
 logger.info("Process started.");
+
+// Redis
+const redisClient = redis.createClient();
+redisClient.on("error", (error) => {
+	logger.error(error);
+});
 
 let blacklistManager: BlacklistManager;
 let contentIDCollection: ContentIDCollection;
@@ -122,6 +132,45 @@ universalis.use(async (ctx, next) => {
 	await next();
 });
 
+// Deletions can only be done 4 times per second, since that's at least how long
+// it takes to buy an item and wait for confirmation from the server.
+universalis.use(ratelimit({
+	driver: "redis",
+	db: redisClient,
+	duration: 1000,
+	errorMessage: "Rate limit exceeded (4/1s).",
+	id: (ctx) => ctx.ip,
+	headers: {
+		remaining: "Rate-Limit-Remaining",
+		reset: "Rate-Limit-Total",
+		total: "Rate-Limit-Total"
+	},
+	max: 12,
+	disableHeader: false,
+	whitelist: (ctx) => {
+		return ctx.method !== "DELETE";
+	}
+}));
+
+// 18/s GET
+universalis.use(ratelimit({
+	driver: "redis",
+	db: redisClient,
+	duration: 1000,
+	errorMessage: "Rate limit exceeded (4/1s).",
+	id: (ctx) => ctx.ip,
+	headers: {
+		remaining: "Rate-Limit-Remaining",
+		reset: "Rate-Limit-Total",
+		total: "Rate-Limit-Total"
+	},
+	max: 48,
+	disableHeader: false,
+	whitelist: (ctx) => {
+		return ctx.method !== "GET";
+	}
+}));
+
 // Use single init await
 universalis.use(async (_, next) => {
 	await init;
@@ -151,6 +200,9 @@ router
 			transportManager,
 		);
 	})
+	.delete("/api/:world/:item/:listing", async (ctx) => {
+		await deleteListings(ctx, trustedSourceManager, worldMap, recentData);
+	})
 	.get("/api/history/:world/:item", async (ctx) => {
 		// Extended history
 		await parseHistory(ctx, remoteDataManager, worldMap, extendedHistory);
@@ -159,8 +211,8 @@ router
 		await parseTaxRates(ctx, worldMap, extraDataManager);
 	})
 	/*.get("/api/transports/eorzea-market-note/:world/:item", async (ctx) => {
-        await parseEorzeanMarketNote(ctx, transportManager);
-    })*/
+		await parseEorzeanMarketNote(ctx, transportManager);
+	})*/
 	.get("/api/extra/content/:contentID", async (ctx) => {
 		await parseContentID(ctx, contentIDCollection);
 	})

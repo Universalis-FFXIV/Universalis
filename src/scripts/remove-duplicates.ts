@@ -2,6 +2,7 @@ import { MongoClient } from "mongodb";
 import { createLogger } from "winston";
 import { initializeWorldMappings } from "../initializeWorldMappings";
 import { RemoteDataManager } from "../remote/RemoteDataManager";
+import { removeOld } from "../util";
 
 const db = MongoClient.connect("mongodb://localhost:27017/", {
 	useNewUrlParser: true,
@@ -26,20 +27,8 @@ const worldIDMap: Map<number, string> = new Map();
 
 	for (const [worldID] of worldIDMap) {
 		for (const itemID of marketableItemIDs) {
-			const cursor = recentData.find({ worldID, itemID });
-			if ((await cursor.count()) > 1) {
-				cursor
-					.sort((a: any, b: any) => b.lastUploadTime - a.lastUploadTime)
-					.skip(1);
-				while (await cursor.hasNext()) {
-					const record = await cursor.next();
-					if (await recentData.deleteOne(record)) {
-						// tslint:disable-next-line: no-console
-						console.log(
-							`Deleted object from ${new Date(record.lastUploadTime)}.`,
-						);
-					}
-				}
+			const deletedAny = await removeOld(recentData, worldID, itemID);
+			if (deletedAny) {
 				const newCount = await recentData.find({ worldID, itemID }).count();
 				if (newCount === 1) {
 					// tslint:disable-next-line: no-console
