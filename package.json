@@ -34,6 +34,7 @@
     "csv-parse": "^4.4.6",
     "deasync": "^0.1.21",
     "ioredis": "^4.26.0",
+    "is-localhost-ip": "^1.4.0",
     "koa": "^2.7.0",
     "koa-bodyparser": "^4.2.1",
     "koa-queryparams": "^1.0.3",
