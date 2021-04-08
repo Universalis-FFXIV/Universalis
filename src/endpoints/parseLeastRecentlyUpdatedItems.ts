@@ -6,6 +6,7 @@
  * @returns items WorldItemPairList[] An array of world-item pairs for the least-recently-updated items.
  */
 
+import { Redis } from "ioredis";
 import { ParameterizedContext } from "koa";
 
 import { ExtraDataManager } from "../db/ExtraDataManager";
@@ -16,6 +17,7 @@ export async function parseLeastRecentlyUpdatedItems(
 	ctx: ParameterizedContext,
 	worldMap: Map<string, number>,
 	edm: ExtraDataManager,
+	redis: Redis,
 ) {
 	let worldID = ctx.queryParams.world
 		? ctx.queryParams.world.charAt(0).toUpperCase() +
@@ -41,6 +43,12 @@ export async function parseLeastRecentlyUpdatedItems(
 	let entriesToReturn: any = ctx.queryParams.entries;
 	if (entriesToReturn)
 		entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
+	
+	const redisKey = "lru-" + worldID || dcName + "-" + entriesToReturn;
+	const existing = await redis.get(redisKey);
+	if (existing) {
+		ctx.body = JSON.parse(existing);
+	}
 
 	const data: WorldItemPairList = await edm.getLeastRecentlyUpdatedItems(
 		worldID || dcName,
@@ -53,6 +61,8 @@ export async function parseLeastRecentlyUpdatedItems(
 		} as WorldItemPairList;
 		return;
 	}
+
+	await redis.set(redisKey, JSON.stringify(data), "EX", 60);
 
 	ctx.body = data;
 }
