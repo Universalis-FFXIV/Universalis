@@ -85,7 +85,7 @@ export async function upload(parameters: UploadProcessParameters) {
 
 		for (const listing of uploadData.listings) {
 			// Ensures retainer and listing information exists
-			const cleanListing = validation.cleanListing(listing, sourceName);
+			const cleanListing = validation.cleanListing(ctx, listing, sourceName);
 
 			// Needs to be called separately because... reasons
 			cleanListing.materia = validation.cleanMateriaArray(cleanListing.materia);
@@ -118,7 +118,7 @@ export async function upload(parameters: UploadProcessParameters) {
 	if (uploadData.entries) {
 		const dataArray: MarketBoardHistoryEntry[] = [];
 		uploadData.entries = uploadData.entries.map((entry) => {
-			return validation.cleanHistoryEntry(entry, sourceName);
+			return validation.cleanHistoryEntry(ctx, entry, sourceName);
 		});
 
 		for (const entry of uploadData.entries) {
