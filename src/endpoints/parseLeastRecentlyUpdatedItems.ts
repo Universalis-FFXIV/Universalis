@@ -48,6 +48,7 @@ export async function parseLeastRecentlyUpdatedItems(
 	const existing = await redis.get(redisKey);
 	if (existing) {
 		ctx.body = JSON.parse(existing);
+		return;
 	}
 
 	const data: WorldItemPairList = await edm.getLeastRecentlyUpdatedItems(
