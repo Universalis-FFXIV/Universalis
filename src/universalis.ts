@@ -2,13 +2,13 @@
 import cors from "@koa/cors";
 import Router from "@koa/router";
 import deasync from "deasync";
+import Redis from "ioredis";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import queryParams from "koa-queryparams";
 import ratelimit from "koa-ratelimit";
 import serve from "koa-static";
 import { Collection, MongoClient } from "mongodb";
-import redis from "redis";
 
 // Data managers
 // import { CronJobManager } from "./cron/CronJobManager";
@@ -58,7 +58,7 @@ const logger = createLogger("mongodb://localhost:27017/");
 logger.info("Process started.");
 
 // Redis
-const redisClient = redis.createClient();
+const redisClient = new Redis();
 redisClient.on("error", (error) => {
 	logger.error(error);
 });
