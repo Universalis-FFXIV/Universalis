@@ -5,8 +5,8 @@ import winston, { Logger } from "winston";
 
 import { ParameterizedContext } from "koa";
 
-import { RemoteDataManager } from "./remote/RemoteDataManager";
 import { Collection } from "mongodb";
+import { RemoteDataManager } from "./remote/RemoteDataManager";
 
 const readFile = util.promisify(fs.readFile);
 

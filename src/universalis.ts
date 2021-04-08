@@ -3,6 +3,7 @@ import cors from "@koa/cors";
 import Router from "@koa/router";
 import deasync from "deasync";
 import Redis from "ioredis";
+import isLocalhost from "is-localhost-ip";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import queryParams from "koa-queryparams";
@@ -149,6 +150,25 @@ universalis.use(ratelimit({
 	disableHeader: false,
 	whitelist: (ctx) => {
 		return ctx.method !== "DELETE";
+	}
+}));
+
+// 18/s
+universalis.use(ratelimit({
+	driver: "redis",
+	db: redisClient,
+	duration: 1000,
+	errorMessage: "Rate limit exceeded (18/1s).",
+	id: (ctx) => ctx.ip,
+	headers: {
+		remaining: "Rate-Limit-Remaining",
+		reset: "Rate-Limit-Total",
+		total: "Rate-Limit-Total"
+	},
+	max: 48,
+	disableHeader: false,
+	whitelist: (ctx) => {
+		return isLocalhost(ctx.ip) || ctx.method !== "GET";
 	}
 }));
 
