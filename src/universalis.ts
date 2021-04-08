@@ -152,25 +152,6 @@ universalis.use(ratelimit({
 	}
 }));
 
-// 18/s GET
-universalis.use(ratelimit({
-	driver: "redis",
-	db: redisClient,
-	duration: 1000,
-	errorMessage: "Rate limit exceeded (4/1s).",
-	id: (ctx) => ctx.ip,
-	headers: {
-		remaining: "Rate-Limit-Remaining",
-		reset: "Rate-Limit-Total",
-		total: "Rate-Limit-Total"
-	},
-	max: 48,
-	disableHeader: false,
-	whitelist: (ctx) => {
-		return ctx.method !== "GET";
-	}
-}));
-
 // Use single init await
 universalis.use(async (_, next) => {
 	await init;
