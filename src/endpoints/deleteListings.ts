@@ -28,19 +28,19 @@ export async function deleteListings(ctx: ParameterizedContext, trustedSourceMan
 		? capitalise(ctx.params.world)
 		: null;
 
-	if (worldID && !parseInt(worldID)) {
-		worldID = worldMap.get(worldID);
-	} else if (parseInt(worldID)) {
-		worldID = parseInt(worldID);
+	if (worldID && !parseInt(String(worldID))) {
+		worldID = worldMap.get(String(worldID));
+	} else if (parseInt(String(worldID))) {
+		worldID = parseInt(String(worldID));
 	}
 
 	if (typeof worldID !== "number") {
 		return;
 	}
 
-	let itemID = parseInt(ctx.params.item as string);
+	const itemID = parseInt(ctx.params.item as string);
 
-	await removeOld(recentData, worldID, itemID); // Remove old records while we're at it
+	await removeOld(recentData, worldID as number, itemID); // Remove old records while we're at it
 
 	const itemInfo: MarketBoardListingsEndpoint = await recentData.findOne({ worldID, itemID });
 	if (itemInfo == null || itemInfo.listings == null) {
