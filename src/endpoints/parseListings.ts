@@ -21,6 +21,7 @@ import validation from "../validate";
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
+import { Redis } from "ioredis";
 import { CurrentStats } from "../models/CurrentStats";
 import { HttpStatusCodes } from "../models/HttpStatusCodes";
 import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
@@ -41,7 +42,14 @@ export async function parseListings(
 	worldMap: Map<string, number>,
 	recentData: Collection,
 	transportManager: TransportManager,
+	redis: Redis
 ) {
+	const existing = await redis.get(ctx.params.item);
+	if (existing != null) {
+		ctx.body = JSON.parse(existing);
+		return;
+	}
+
 	const itemIDs: number[] = (ctx.params.item as string)
 		.split(",")
 		.map((id, index) => {
@@ -184,6 +192,8 @@ export async function parseListings(
 	} else if (!unresolvedItems) {
 		delete data["unresolvedItems"];
 	}
+
+	await redis.set(ctx.params.item, JSON.stringify(data), "EX", 10);
 
 	ctx.body = data;
 }

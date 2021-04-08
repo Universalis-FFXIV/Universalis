@@ -179,6 +179,7 @@ router
 			worldMap,
 			recentData,
 			transportManager,
+			redisClient,
 		);
 	})
 	.delete("/api/:world/:item/:listing", async (ctx) => {
