@@ -199,10 +199,10 @@ router
 		await parseContentID(ctx, contentIDCollection);
 	})
 	.get("/api/extra/stats/least-recently-updated", async (ctx) => {
-		await parseLeastRecentlyUpdatedItems(ctx, worldMap, extraDataManager);
+		await parseLeastRecentlyUpdatedItems(ctx, worldMap, extraDataManager, redisClient);
 	})
 	.get("/api/extra/stats/most-recently-updated", async (ctx) => {
-		await parseMostRecentlyUpdatedItems(ctx, worldMap, extraDataManager);
+		await parseMostRecentlyUpdatedItems(ctx, worldMap, extraDataManager, redisClient);
 	})
 	.get("/api/extra/stats/recently-updated", async (ctx) => {
 		await parseRecentlyUpdatedItems(ctx, extraDataManager);
