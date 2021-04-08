@@ -59,7 +59,7 @@ logger.info("Process started.");
 
 // Redis
 const redisClient = redis.createClient();
-redisClient.on("error", function (error) {
+redisClient.on("error", (error) => {
 	logger.error(error);
 });
 
