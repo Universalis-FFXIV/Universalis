@@ -32,22 +32,20 @@ export async function upload(parameters: UploadProcessParameters) {
 
 	validation.validateUploadDataPreCast(ctx);
 
-	const promises: Array<Promise<any>> = []; // Sort of like a thread list.
-
 	// Accept identity via API key.
 	const trustedSource: TrustedSource = await trustedSourceManager.get(
 		ctx.params.apiKey,
 	);
 	if (!trustedSource) return ctx.throw(HttpStatusCodes.FORBIDDEN);
 	const sourceName = trustedSource.sourceName;
-	promises.push(trustedSourceManager.increaseUploadCount(ctx.params.apiKey));
+	await trustedSourceManager.increaseUploadCount(ctx.params.apiKey);
 	logger.info(
 		"Received upload from " +
 			sourceName +
 			":\n" +
 			JSON.stringify(ctx.request.body),
 	);
-	promises.push(extraDataManager.incrementDailyUploads());
+	await extraDataManager.incrementDailyUploads();
 
 	// Preliminary data processing and metadata stuff
 	if (ctx.request.body.retainerCity)
@@ -67,16 +65,14 @@ export async function upload(parameters: UploadProcessParameters) {
 
 	// Metadata
 	if (uploadData.worldID) {
-		promises.push(
-			extraDataManager.incrementWorldUploads(
-				worldIDMap.get(uploadData.worldID),
-			),
+		await extraDataManager.incrementWorldUploads(
+			worldIDMap.get(uploadData.worldID),
 		);
 	}
 
 	if (uploadData.itemID) {
-		promises.push(extraDataManager.incrementPopularUploads(uploadData.itemID));
-		promises.push(extraDataManager.addRecentlyUpdatedItem(uploadData.itemID));
+		await extraDataManager.incrementPopularUploads(uploadData.itemID);
+		await extraDataManager.addRecentlyUpdatedItem(uploadData.itemID);
 	}
 
 	// Hashing and passing data
@@ -85,7 +81,7 @@ export async function upload(parameters: UploadProcessParameters) {
 
 		for (const listing of uploadData.listings) {
 			// Ensures retainer and listing information exists
-			const cleanListing = validation.cleanListing(listing, sourceName);
+			const cleanListing = validation.cleanListing(ctx, listing, sourceName);
 
 			// Needs to be called separately because... reasons
 			cleanListing.materia = validation.cleanMateriaArray(cleanListing.materia);
@@ -104,55 +100,47 @@ export async function upload(parameters: UploadProcessParameters) {
 		}
 
 		// Post listing to DB
-		promises.push(
-			priceTracker.set(
-				uploadData.uploaderID,
-				sourceName,
-				uploadData.itemID,
-				uploadData.worldID,
-				dataArray as MarketBoardItemListing[],
-			),
+		await priceTracker.set(
+			uploadData.uploaderID,
+			sourceName,
+			uploadData.itemID,
+			uploadData.worldID,
+			dataArray as MarketBoardItemListing[],
 		);
 	}
 
 	if (uploadData.entries) {
 		const dataArray: MarketBoardHistoryEntry[] = [];
 		uploadData.entries = uploadData.entries.map((entry) => {
-			return validation.cleanHistoryEntry(entry, sourceName);
+			return validation.cleanHistoryEntry(ctx, entry, sourceName);
 		});
 
 		for (const entry of uploadData.entries) {
 			dataArray.push(entry);
 		}
 
-		promises.push(
-			historyTracker.set(
-				uploadData.uploaderID,
-				uploadData.itemID,
-				uploadData.worldID,
-				dataArray as MarketBoardHistoryEntry[],
-			),
+		await historyTracker.set(
+			uploadData.uploaderID,
+			uploadData.itemID,
+			uploadData.worldID,
+			dataArray as MarketBoardHistoryEntry[],
 		);
 	}
 
 	if (uploadData.marketTaxRates) {
-		promises.push(
-			extraDataManager.setTaxRates(
-				uploadData.worldID,
-				R.merge(uploadData.marketTaxRates, {
-					uploaderID: uploadData.uploaderID,
-					sourceName,
-				}),
-			),
+		await extraDataManager.setTaxRates(
+			uploadData.worldID,
+			R.merge(uploadData.marketTaxRates, {
+				uploaderID: uploadData.uploaderID,
+				sourceName,
+			}),
 		);
 	}
 
 	if (uploadData.contentID && uploadData.characterName) {
-		promises.push(
-			contentIDCollection.set(uploadData.contentID, "player", {
-				characterName: uploadData.characterName,
-			}),
-		);
+		await contentIDCollection.set(uploadData.contentID, "player", {
+			characterName: uploadData.characterName,
+		});
 	}
 
 	// Bulk operations
@@ -161,14 +149,12 @@ export async function upload(parameters: UploadProcessParameters) {
 		if (uploadData.itemIDs && uploadData.worldID && op.listings === -1) {
 			if (uploadData.itemIDs.length <= 100) {
 				for (const itemID of uploadData.itemIDs) {
-					promises.push(
-						priceTracker.set(
-							uploadData.uploaderID,
-							sourceName,
-							itemID,
-							uploadData.worldID,
-							[],
-						),
+					await priceTracker.set(
+						uploadData.uploaderID,
+						sourceName,
+						itemID,
+						uploadData.worldID,
+						[],
 					);
 				}
 			} else {
@@ -179,8 +165,6 @@ export async function upload(parameters: UploadProcessParameters) {
 			}
 		}
 	}
-
-	await Promise.all(promises);
 
 	ctx.body = "Success";
 }

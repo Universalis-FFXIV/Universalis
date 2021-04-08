@@ -7,7 +7,7 @@ import util from "util";
 
 import { materiaIDToValueAndTier } from "./materiaUtils";
 
-import { Context } from "koa";
+import { Context, ParameterizedContext } from "koa";
 
 import { Logger } from "winston";
 import { City } from "./models/City";
@@ -29,12 +29,13 @@ const gameReleaseDateSeconds = Math.floor(
 
 export default {
 	cleanHistoryEntry: (
+		ctx: ParameterizedContext,
 		entry: MarketBoardHistoryEntry,
 		sourceName?: string,
 	): MarketBoardHistoryEntry => {
 		const stringifiedEntry = JSON.stringify(entry);
 		if (hasHtmlTags(stringifiedEntry)) {
-			entry = JSON.parse(stringifiedEntry.replace(/<[\s\S]*?>/, ""));
+			ctx.throw(HttpStatusCodes.BAD_REQUEST);
 		}
 
 		const newEntry = R.pipe(
@@ -56,11 +57,12 @@ export default {
 	},
 
 	cleanHistoryEntryOutput: (
+		ctx: ParameterizedContext,
 		entry: MarketBoardHistoryEntry,
 	): MarketBoardHistoryEntry => {
 		const stringifiedEntry = JSON.stringify(entry);
 		if (hasHtmlTags(stringifiedEntry)) {
-			entry = JSON.parse(stringifiedEntry.replace(/<[\s\S]*?>/, ""));
+			ctx.throw(HttpStatusCodes.BAD_REQUEST);
 		}
 
 		if (entry.quantity == null || entry.pricePerUnit == null) {
@@ -78,12 +80,13 @@ export default {
 	},
 
 	cleanListing: (
+		ctx: ParameterizedContext,
 		listing: MarketBoardItemListingUpload,
 		sourceName?: string,
 	): MarketBoardItemListingUpload => {
 		const stringifiedListing = JSON.stringify(listing);
 		if (hasHtmlTags(stringifiedListing)) {
-			listing = JSON.parse(stringifiedListing.replace(/<[\s\S]*?>/, ""));
+			ctx.throw(HttpStatusCodes.BAD_REQUEST);
 		}
 
 		const securedFields = {
@@ -132,11 +135,12 @@ export default {
 	},
 
 	cleanListingOutput: (
+		ctx: ParameterizedContext,
 		listing: MarketBoardItemListing,
 	): MarketBoardItemListing => {
 		const stringifiedListing = JSON.stringify(listing);
 		if (hasHtmlTags(stringifiedListing)) {
-			listing = JSON.parse(stringifiedListing.replace(/<[\s\S]*?>/, ""));
+			ctx.throw(HttpStatusCodes.BAD_REQUEST);
 		}
 
 		if (listing.quantity == null || listing.pricePerUnit == null) {

@@ -105,12 +105,13 @@ export async function parseListings(
 						!listing.creatorID.length
 					) {
 						listing = validation.cleanListing(
+							ctx,
 							(listing as unknown) as MarketBoardItemListingUpload,
 						) as any; // Something needs to be done about this
 					}
 					listing.materia = validation.cleanMateriaArray(listing.materia);
 					listing.pricePerUnit = Math.ceil(listing.pricePerUnit * 1.05);
-					listing = validation.cleanListingOutput(listing);
+					listing = validation.cleanListingOutput(ctx, listing);
 					return listing;
 				}),
 				R.filter((listing) => listing != null),
@@ -140,7 +141,7 @@ export async function parseListings(
 			item.recentHistory = R.pipe(
 				item.recentHistory,
 				R.map((entry) => {
-					return validation.cleanHistoryEntryOutput(entry);
+					return validation.cleanHistoryEntryOutput(ctx, entry);
 				}),
 				R.filter((entry) => entry != null),
 			);
