@@ -44,7 +44,8 @@ export async function parseListings(
 	transportManager: TransportManager,
 	redis: Redis
 ) {
-	const existing = await redis.get(ctx.params.item);
+	const redisKey = "listing-" + ctx.params.world + "-" + ctx.params.item;
+	const existing = await redis.get(redisKey);
 	if (existing != null) {
 		ctx.body = JSON.parse(existing);
 		return;
@@ -194,7 +195,7 @@ export async function parseListings(
 		delete data["unresolvedItems"];
 	}
 
-	await redis.set(ctx.params.item, JSON.stringify(data), "EX", 10);
+	await redis.set(redisKey, JSON.stringify(data), "EX", 15);
 
 	ctx.body = data;
 }
