@@ -33,6 +33,7 @@ export async function parseHighestSaleVelocityItems(
 		entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 
 	ctx.body = await getHighestSaleVelocity(
+		ctx,
 		worldID as number,
 		entriesToReturn,
 		worldIDMap,
@@ -44,6 +45,7 @@ export async function parseHighestSaleVelocityItems(
 
 /** Get the so-and-so items with the highest sale velocity. */
 async function getHighestSaleVelocity(
+	ctx: ParameterizedContext,
 	worldID: number,
 	count: number,
 	worldIDMap: Map<number, string>,
@@ -66,7 +68,7 @@ async function getHighestSaleVelocity(
 		})
 		.map((item) => {
 			item.recentHistory = item.recentHistory.map((entry) => {
-				return validation.cleanHistoryEntryOutput(entry);
+				return validation.cleanHistoryEntryOutput(ctx, entry);
 			});
 
 			item.saleVelocity = calcSaleVelocity(
