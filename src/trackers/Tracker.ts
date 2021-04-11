@@ -50,6 +50,12 @@ export abstract class Tracker {
 
 			data[property] = data[property].concat(propertyData);
 
+			data[property] = data[property].sort((a, b) => {
+				if (a.pricePerUnit > b.pricePerUnit) return 1;
+				if (a.pricePerUnit < b.pricePerUnit) return -1;
+				return 0;
+			});
+
 			data.lastUploadTime = Date.now();
 		} else {
 			if (!data) {
