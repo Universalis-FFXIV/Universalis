@@ -42,7 +42,7 @@ export default {
 			entry,
 			R.pick(["pricePerUnit", "quantity", "timestamp"]),
 			R.merge({
-				buyerName: entry.buyerName,
+				buyerName: removeUnsafeCharacters(entry.buyerName),
 				hq: entry.hq || false,
 				uploadApplication: entry.uploadApplication || sourceName,
 			}),
@@ -73,7 +73,7 @@ export default {
 			entry,
 			R.pick(["hq", "pricePerUnit", "quantity", "timestamp", "worldName"]),
 			R.merge({
-				buyerName: entry.buyerName,
+				buyerName: removeUnsafeCharacters(entry.buyerName),
 				total: entry.pricePerUnit * entry.quantity,
 			}),
 		);
@@ -97,7 +97,7 @@ export default {
 		};
 
 		const cleanedListing = {
-			creatorName: listing.creatorName,
+			creatorName: removeUnsafeCharacters(listing.creatorName),
 			hq: listing.hq || false,
 			materia: listing.materia || [],
 			onMannequin: listing.onMannequin || false,
@@ -105,7 +105,7 @@ export default {
 				typeof listing.retainerCity === "number"
 					? listing.retainerCity
 					: City[listing.retainerCity],
-			retainerName: listing.retainerName,
+			retainerName: removeUnsafeCharacters(listing.retainerName),
 			uploadApplication: sourceName || listing.uploadApplication,
 			lastReviewTime:
 				listing.lastReviewTime < gameReleaseDateSeconds
@@ -161,7 +161,7 @@ export default {
 				"worldName",
 			]),
 			R.merge({
-				creatorName: listing.creatorName,
+				creatorName: removeUnsafeCharacters(listing.creatorName),
 				hq: listing.hq || false,
 				isCrafted:
 					listing.creatorID !==
@@ -174,7 +174,7 @@ export default {
 					typeof listing.retainerCity === "number"
 						? listing.retainerCity
 						: City[listing.retainerCity],
-				retainerName: listing.retainerName,
+				retainerName: removeUnsafeCharacters(listing.retainerName),
 				total: listing.pricePerUnit * listing.quantity,
 				lastReviewTime:
 					listing.lastReviewTime < gameReleaseDateSeconds
@@ -431,6 +431,7 @@ function hasHtmlTags(input: string): boolean {
 export function isValidName(input: any): boolean {
 	if (typeof input !== "string") return false;
 	if (input.length > 32) return false;
+	if (removeUnsafeCharacters(input) !== input) return false;
 	return true;
 }
 
@@ -504,6 +505,13 @@ export async function writeOutObject(logger: Logger, obj: any) {
 		`Wrote out ${obj.itemID}.json. Please examine the contents of this file.`,
 	);
 	beep();
+}
+
+export function removeUnsafeCharacters(input: string): string {
+	return input.replace(
+		/[^a-zA-Z0-9'\- ·⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]/gu,
+		"",
+	);
 }
 
 function parseSha256(input: any): string {
