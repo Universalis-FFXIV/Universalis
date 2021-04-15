@@ -144,7 +144,7 @@ export async function parseListings(
 				R.map((entry) => {
 					return validation.cleanHistoryEntryOutput(ctx, entry);
 				}),
-				R.filter((entry) => entry != null),
+				R.filter((entry) => entry != null && entry.quantity !== 0),
 			);
 
 			const nqItems = item.recentHistory.filter((entry) => !entry.hq);
