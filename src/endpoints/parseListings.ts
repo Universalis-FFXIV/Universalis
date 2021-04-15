@@ -115,7 +115,7 @@ export async function parseListings(
 					listing = validation.cleanListingOutput(ctx, listing);
 					return listing;
 				}),
-				R.filter((listing) => listing != null),
+				R.filter((listing) => listing != null && listing.quantity !== 0),
 			);
 
 			const nqItems = item.listings.filter((listing) => !listing.hq);
