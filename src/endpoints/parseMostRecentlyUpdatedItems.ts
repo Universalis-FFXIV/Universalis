@@ -23,7 +23,6 @@ export async function parseMostRecentlyUpdatedItems(
 	let dcName = ctx.query.dcName;
 
 	if (worldID && !parseInt(worldID)) {
-		console.log(worldID);
 		worldID = worldMap.get(worldID);
 		if (!worldID && typeof worldID === "string")  {
 			worldID = worldMap.get(worldID.charAt(0).toLocaleUpperCase() + worldID.substr(1).toLocaleLowerCase())
