@@ -20,6 +20,7 @@ export async function parseMostRecentlyUpdatedItems(
 	edm: ExtraDataManager,
 	redis: Redis,
 ) {
+	// Don't even ask.
 	const filler: {
 		worldID: any;
 		dcName: any;
@@ -27,8 +28,8 @@ export async function parseMostRecentlyUpdatedItems(
 		worldID: null,
 		dcName: null,
 	};
+	ctx.params = ctx.queryParams;
 	appendWorldDC(filler, worldMap, ctx);
-	console.log(filler);
 	let { worldID, dcName } = filler;
 
 	if (worldID && !parseInt(worldID)) {
