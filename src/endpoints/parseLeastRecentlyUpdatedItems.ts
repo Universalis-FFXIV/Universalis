@@ -37,6 +37,10 @@ export async function parseLeastRecentlyUpdatedItems(
 		worldID = null;
 	}
 
+	if (dcName === "LuXingNiao") dcName = "陆行鸟";
+	if (dcName === "MoGuLi") dcName = "莫古力";
+	if (dcName === "MaoXiaoPang") dcName = "猫小胖";
+
 	let entriesToReturn: any = ctx.queryParams.entries;
 	if (entriesToReturn)
 		entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
