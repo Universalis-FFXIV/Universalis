@@ -20,20 +20,14 @@ export async function parseLeastRecentlyUpdatedItems(
 	edm: ExtraDataManager,
 	redis: Redis,
 ) {
-	// Do not ask.
-	const filler: {
-		worldID: any;
-		dcName: any;
-	} = {
-		worldID: null,
-		dcName: null,
-	};
-	ctx.params = ctx.queryParams;
-	appendWorldDC(filler, worldMap, ctx);
-	let { worldID, dcName } = filler;
+	let worldID = ctx.queryParams.world;
+	let dcName = ctx.queryParams.dcName;
 
 	if (worldID && !parseInt(worldID)) {
 		worldID = worldMap.get(worldID);
+		if (!worldID && typeof worldID === "string")  {
+			worldID = worldMap.get(worldID.charAt(0).toLocaleUpperCase() + worldID.substr(1).toLocaleLowerCase())
+		}
 	} else if (parseInt(worldID)) {
 		worldID = parseInt(worldID);
 	}
