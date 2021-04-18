@@ -35,12 +35,12 @@ export async function removeOld(recentData: Collection, worldID: number, itemID:
 	return deletedAny;
 }
 
+/* Convert worldDC strings (numbers or names) to world IDs or DC names. */
 export function appendWorldDC(
 	obj: any,
 	worldMap: Map<string, number>,
 	ctx: ParameterizedContext,
 ): void {
-	// Convert worldDC strings (numbers or names) to world IDs or DC names
 	if (ctx.params && ctx.params.world) {
 		const worldName =
 			ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
