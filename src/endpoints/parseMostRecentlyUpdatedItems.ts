@@ -12,7 +12,6 @@ import { ParameterizedContext } from "koa";
 import { ExtraDataManager } from "../db/ExtraDataManager";
 
 import { WorldItemPairList } from "../models/WorldItemPairList";
-import { appendWorldDC } from "../util";
 
 export async function parseMostRecentlyUpdatedItems(
 	ctx: ParameterizedContext,
@@ -25,6 +24,7 @@ export async function parseMostRecentlyUpdatedItems(
 
 	if (worldID && !parseInt(worldID)) {
 		worldID = worldMap.get(worldID);
+		console.log(worldID);
 		if (!worldID && typeof worldID === "string")  {
 			worldID = worldMap.get(worldID.charAt(0).toLocaleUpperCase() + worldID.substr(1).toLocaleLowerCase())
 		}

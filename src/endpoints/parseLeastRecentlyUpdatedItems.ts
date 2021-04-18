@@ -12,7 +12,6 @@ import { ParameterizedContext } from "koa";
 import { ExtraDataManager } from "../db/ExtraDataManager";
 
 import { WorldItemPairList } from "../models/WorldItemPairList";
-import { appendWorldDC } from "../util";
 
 export async function parseLeastRecentlyUpdatedItems(
 	ctx: ParameterizedContext,
