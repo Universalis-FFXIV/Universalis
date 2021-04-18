@@ -45,7 +45,7 @@ export async function parseLeastRecentlyUpdatedItems(
 	if (entriesToReturn)
 		entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
 	
-	const redisKey = "lru-" + worldID || dcName + "-" + entriesToReturn;
+	const redisKey = "lru-" + (worldID || dcName) + "-" + entriesToReturn;
 	const existing = await redis.get(redisKey);
 	if (existing) {
 		ctx.body = JSON.parse(existing);
