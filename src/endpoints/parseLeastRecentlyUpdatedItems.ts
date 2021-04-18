@@ -12,6 +12,7 @@ import { ParameterizedContext } from "koa";
 import { ExtraDataManager } from "../db/ExtraDataManager";
 
 import { WorldItemPairList } from "../models/WorldItemPairList";
+import { appendWorldDC } from "../util";
 
 export async function parseLeastRecentlyUpdatedItems(
 	ctx: ParameterizedContext,
@@ -19,14 +20,15 @@ export async function parseLeastRecentlyUpdatedItems(
 	edm: ExtraDataManager,
 	redis: Redis,
 ) {
-	let worldID = ctx.queryParams.world
-		? ctx.queryParams.world.charAt(0).toUpperCase() +
-		  ctx.queryParams.world.substr(1).toLowerCase()
-		: null;
-	let dcName = ctx.queryParams.dcName
-		? ctx.queryParams.dcName.charAt(0).toUpperCase() +
-		  ctx.queryParams.dcName.substr(1).toLowerCase()
-		: null;
+	const filler: {
+		worldID: any;
+		dcName: any;
+	} = {
+		worldID: null,
+		dcName: null,
+	};
+	appendWorldDC(filler, worldMap, ctx);
+	let { worldID, dcName } = filler;
 
 	if (worldID && !parseInt(worldID)) {
 		worldID = worldMap.get(worldID);
