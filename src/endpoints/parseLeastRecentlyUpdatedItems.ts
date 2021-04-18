@@ -19,8 +19,8 @@ export async function parseLeastRecentlyUpdatedItems(
 	edm: ExtraDataManager,
 	redis: Redis,
 ) {
-	let worldID = ctx.queryParams.world;
-	let dcName = ctx.queryParams.dcName;
+	let worldID = ctx.query.world;
+	let dcName = ctx.query.dcName;
 
 	if (worldID && !parseInt(worldID)) {
 		worldID = worldMap.get(worldID);
