@@ -28,6 +28,7 @@ export async function parseMostRecentlyUpdatedItems(
 		dcName: null,
 	};
 	appendWorldDC(filler, worldMap, ctx);
+	console.log(filler);
 	let { worldID, dcName } = filler;
 
 	if (worldID && !parseInt(worldID)) {
