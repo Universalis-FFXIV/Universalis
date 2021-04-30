@@ -42,12 +42,6 @@ export async function parseListings(
 	recentData: Collection,
 	transportManager: TransportManager,
 ) {
-	const existing = await redis.get(redisKey);
-	if (existing != null) {
-		ctx.body = JSON.parse(existing);
-		return;
-	}
-
 	const itemIDs: number[] = (ctx.params.item as string)
 		.split(",")
 		.map((id, index) => {
