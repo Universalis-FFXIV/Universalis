@@ -108,27 +108,29 @@ export default {
 			retainerName: removeUnsafeCharacters(listing.retainerName),
 			uploadApplication: sourceName || listing.uploadApplication,
 			lastReviewTime:
-				listing.lastReviewTime < gameReleaseDateSeconds
-					? Math.floor(new Date().valueOf() / 1000) - listing.lastReviewTime
-					: listing.lastReviewTime,
+				listing.lastReviewTime.valueOf() < gameReleaseDateSeconds
+					? Math.floor(new Date().valueOf() / 1000) - listing.lastReviewTime.valueOf()
+					: listing.lastReviewTime.valueOf(),
 		};
 
 		const newListing = R.pipe(
 			listing,
 			R.pick([
-				"pricePerUnit",
-				"quantity",
-				"stainID",
 				"uploaderID",
 				"worldName",
 			]),
 			R.merge(securedFields),
 			R.merge(cleanedListing),
+			R.merge({
+				pricePerUnit: listing.pricePerUnit.valueOf(),
+				quantity: listing.quantity.valueOf(),
+				stainID: listing.stainID.valueOf(),
+			}),
 		);
 
 		if (typeof newListing.hq === "number") {
 			// newListing.hq as a conditional will be truthy if not 0
-			newListing.hq = newListing.hq ? true : false;
+			newListing.hq = (newListing.hq as number).valueOf() ? true : false;
 		}
 
 		return newListing;
