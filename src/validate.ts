@@ -303,7 +303,7 @@ export default {
 
 function isHash(maybeHash: any): boolean {
 	const maybierHash = "" + maybeHash
-	return !maybierHash.match(/[0-9]/) || maybierHash.length > 20
+	return !maybierHash.match(/[0-9]/) || maybierHash.length > 30
 }
 
 function cleanMateria(materiaSlot: ItemMateria): ItemMateria {
