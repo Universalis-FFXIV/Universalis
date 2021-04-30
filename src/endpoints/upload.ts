@@ -3,6 +3,7 @@
  * @url /upload
  */
 
+import LosslessJSON from "lossless-json";
 import * as R from "remeda";
 import sha from "sha.js";
 
@@ -39,21 +40,24 @@ export async function upload(parameters: UploadProcessParameters) {
 	if (!trustedSource) return ctx.throw(HttpStatusCodes.FORBIDDEN);
 	const sourceName = trustedSource.sourceName;
 	await trustedSourceManager.increaseUploadCount(ctx.params.apiKey);
+
+	const body = LosslessJSON.parse(ctx.request.rawBody)
+
 	logger.info(
 		"Received upload from " +
 			sourceName +
 			":\n" +
-			JSON.stringify(ctx.request.body),
+			JSON.stringify(body),
 	);
 	await extraDataManager.incrementDailyUploads();
 
 	// Preliminary data processing and metadata stuff
-	if (ctx.request.body.retainerCity)
-		ctx.request.body.retainerCity = City[ctx.request.body.retainerCity];
-	const uploadData: GenericUpload = ctx.request.body;
+	if (body.retainerCity)
+		body.retainerCity = City[body.retainerCity];
+	const uploadData: GenericUpload = body;
 
 	uploadData.uploaderID = sha("sha256")
-		.update(uploadData.uploaderID + "")
+		.update(uploadData.uploaderID.toString())
 		.digest("hex");
 
 	await validation.validateUploadData(logger, {
