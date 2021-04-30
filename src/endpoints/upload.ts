@@ -41,20 +41,18 @@ export async function upload(parameters: UploadProcessParameters) {
 	const sourceName = trustedSource.sourceName;
 	await trustedSourceManager.increaseUploadCount(ctx.params.apiKey);
 
-	const body = parse(ctx.request.rawBody)
-
 	logger.info(
 		"Received upload from " +
 			sourceName +
 			":\n" +
-			JSON.stringify(body),
+			JSON.stringify(ctx.request.body),
 	);
 	await extraDataManager.incrementDailyUploads();
 
 	// Preliminary data processing and metadata stuff
-	if (body.retainerCity)
-		body.retainerCity = City[body.retainerCity];
-	const uploadData: GenericUpload = body;
+	if (ctx.request.body.retainerCity)
+		ctx.request.body.retainerCity = City[ctx.request.body.retainerCity];
+	const uploadData: GenericUpload = ctx.request.body;
 
 	uploadData.uploaderID = sha("sha256")
 		.update(uploadData.uploaderID.toString())
@@ -66,6 +64,8 @@ export async function upload(parameters: UploadProcessParameters) {
 		blacklistManager,
 		remoteDataManager,
 	});
+
+	const losslessBody = parse(ctx.request.rawBody);
 
 	// Metadata
 	if (uploadData.worldID) {
@@ -83,7 +83,7 @@ export async function upload(parameters: UploadProcessParameters) {
 	if (uploadData.listings) {
 		const dataArray: MarketBoardItemListing[] = [];
 
-		for (const listing of uploadData.listings) {
+		for (const listing of losslessBody.listings) {
 			// Ensures retainer and listing information exists
 			const cleanListing = validation.cleanListing(ctx, listing, sourceName);
 
