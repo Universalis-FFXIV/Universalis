@@ -83,7 +83,7 @@ export async function upload(parameters: UploadProcessParameters) {
 	if (uploadData.listings) {
 		const dataArray: MarketBoardItemListing[] = [];
 
-		for (const listing of losslessBody.listings) {
+		for (const listing of uploadData.listings) {
 			// Ensures retainer and listing information exists
 			const cleanListing = validation.cleanListing(ctx, listing, sourceName);
 
