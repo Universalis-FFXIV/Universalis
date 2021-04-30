@@ -150,31 +150,31 @@ export default {
 		const formattedListing = R.pipe(
 			listing,
 			R.pick([
-				"creatorID",
 				"lastReviewTime",
-				"listingID",
 				"pricePerUnit",
 				"quantity",
-				"retainerID",
-				"sellerID",
 				"stainID",
 				"worldName",
 			]),
 			R.merge({
 				creatorName: removeUnsafeCharacters(listing.creatorName),
+				creatorID: isHash(listing.creatorID) ? listing.creatorID : parseSha256(listing.creatorID),
 				hq: listing.hq || false,
 				isCrafted:
 					listing.creatorID !==
 						"5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9" && // 0n
 					listing.creatorID !==
 						"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", // ""
+				listingID: isHash(listing.listingID) ? listing.listingID : parseSha256(listing.listingID),
 				materia: listing.materia || [],
 				onMannequin: listing.onMannequin || false,
 				retainerCity:
 					typeof listing.retainerCity === "number"
 						? listing.retainerCity
 						: City[listing.retainerCity],
+				retainerID: isHash(listing.retainerID) ? listing.retainerID : parseSha256(listing.retainerID),
 				retainerName: removeUnsafeCharacters(listing.retainerName),
+				sellerID: isHash(listing.sellerID) ? listing.sellerID : parseSha256(listing.sellerID),
 				total: listing.pricePerUnit * listing.quantity,
 				lastReviewTime:
 					listing.lastReviewTime < gameReleaseDateSeconds
@@ -304,6 +304,11 @@ export default {
 		}
 	},
 };
+
+function isHash(maybeHash: any): boolean {
+	let maybierHash = "" + maybeHash
+	return !maybierHash.match(/[0-9]/) || maybierHash.length > 20
+}
 
 function cleanMateria(materiaSlot: ItemMateria): ItemMateria {
 	if (!materiaSlot.materiaID && materiaSlot["materiaId"]) {
@@ -516,6 +521,6 @@ export function removeUnsafeCharacters(input: string): string {
 
 function parseSha256(input: any): string {
 	return sha("sha256")
-		.update(input + "")
+		.update("" + input)
 		.digest("hex");
 }
