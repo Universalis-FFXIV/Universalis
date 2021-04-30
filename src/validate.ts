@@ -160,11 +160,7 @@ export default {
 				creatorName: removeUnsafeCharacters(listing.creatorName),
 				creatorID: isHash(listing.creatorID) ? listing.creatorID : parseSha256(listing.creatorID),
 				hq: listing.hq || false,
-				isCrafted:
-					listing.creatorID !==
-						"5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9" && // 0n
-					listing.creatorID !==
-						"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", // ""
+				isCrafted: listing.creatorName !== "",
 				listingID: isHash(listing.listingID) ? listing.listingID : parseSha256(listing.listingID),
 				materia: listing.materia || [],
 				onMannequin: listing.onMannequin || false,
@@ -306,7 +302,7 @@ export default {
 };
 
 function isHash(maybeHash: any): boolean {
-	let maybierHash = "" + maybeHash
+	const maybierHash = "" + maybeHash
 	return !maybierHash.match(/[0-9]/) || maybierHash.length > 20
 }
 
