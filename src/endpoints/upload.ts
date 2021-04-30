@@ -3,7 +3,7 @@
  * @url /upload
  */
 
-import LosslessJSON from "lossless-json";
+import { parse } from "lossless-json";
 import * as R from "remeda";
 import sha from "sha.js";
 
@@ -41,7 +41,7 @@ export async function upload(parameters: UploadProcessParameters) {
 	const sourceName = trustedSource.sourceName;
 	await trustedSourceManager.increaseUploadCount(ctx.params.apiKey);
 
-	const body = LosslessJSON.parse(ctx.request.rawBody)
+	const body = parse(ctx.request.rawBody)
 
 	logger.info(
 		"Received upload from " +
