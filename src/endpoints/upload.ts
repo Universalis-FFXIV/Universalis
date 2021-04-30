@@ -3,7 +3,6 @@
  * @url /upload
  */
 
-import { parse } from "lossless-json";
 import * as R from "remeda";
 import sha from "sha.js";
 
@@ -64,8 +63,6 @@ export async function upload(parameters: UploadProcessParameters) {
 		blacklistManager,
 		remoteDataManager,
 	});
-
-	const losslessBody = parse(ctx.request.rawBody);
 
 	// Metadata
 	if (uploadData.worldID) {
