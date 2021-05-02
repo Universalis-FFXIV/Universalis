@@ -519,6 +519,6 @@ export function removeUnsafeCharacters(input: string): string {
 
 function parseSha256(input: any): string {
 	return sha("sha256")
-		.update(input.toString())
+		.update((input || "").toString())
 		.digest("hex");
 }
