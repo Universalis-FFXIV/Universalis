@@ -24,14 +24,15 @@ export async function deleteListings(ctx: ParameterizedContext, trustedSourceMan
 	}
 
 	// look for listing ID
-	let worldID: string | number = ctx.params.world
-		? capitalise(ctx.params.world)
-		: null;
+	let worldID = ctx.query.world;
 
-	if (worldID && !parseInt(String(worldID))) {
-		worldID = worldMap.get(String(worldID));
-	} else if (parseInt(String(worldID))) {
-		worldID = parseInt(String(worldID));
+	if (worldID && !parseInt(worldID)) {
+		worldID = worldMap.get(worldID.charAt(0).toUpperCase() + worldID.substr(1));
+		if (!worldID && typeof worldID === "string")  {
+			worldID = worldMap.get(worldID.charAt(0).toUpperCase() + worldID.substr(1).toLowerCase())
+		}
+	} else if (parseInt(worldID)) {
+		worldID = parseInt(worldID);
 	}
 
 	if (typeof worldID !== "number") {
