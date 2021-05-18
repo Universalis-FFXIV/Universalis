@@ -24,8 +24,10 @@ export async function parseLeastRecentlyUpdatedItems(
 
 	if (worldID && !parseInt(worldID)) {
 		worldID = worldMap.get(worldID.charAt(0).toUpperCase() + worldID.substr(1));
-		if (!worldID && typeof worldID === "string")  {
-			worldID = worldMap.get(worldID.charAt(0).toUpperCase() + worldID.substr(1).toLowerCase())
+		if (!worldID && typeof worldID === "string") {
+			worldID = worldMap.get(
+				worldID.charAt(0).toUpperCase() + worldID.substr(1).toLowerCase(),
+			);
 		}
 	} else if (parseInt(worldID)) {
 		worldID = parseInt(worldID);
@@ -44,7 +46,7 @@ export async function parseLeastRecentlyUpdatedItems(
 	let entriesToReturn: any = ctx.queryParams.entries;
 	if (entriesToReturn)
 		entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
-	
+
 	const redisKey = "lru-" + (worldID || dcName) + "-" + entriesToReturn;
 	const existing = await redis.get(redisKey);
 	if (existing) {

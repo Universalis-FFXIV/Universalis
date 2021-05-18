@@ -109,16 +109,14 @@ export default {
 			uploadApplication: sourceName || listing.uploadApplication,
 			lastReviewTime:
 				listing.lastReviewTime.valueOf() < gameReleaseDateSeconds
-					? Math.floor(new Date().valueOf() / 1000) - listing.lastReviewTime.valueOf()
+					? Math.floor(new Date().valueOf() / 1000) -
+					  listing.lastReviewTime.valueOf()
 					: listing.lastReviewTime.valueOf(),
 		};
 
 		const newListing = R.pipe(
 			listing,
-			R.pick([
-				"uploaderID",
-				"worldName",
-			]),
+			R.pick(["uploaderID", "worldName"]),
 			R.merge(securedFields),
 			R.merge(cleanedListing),
 			R.merge({
@@ -160,19 +158,27 @@ export default {
 			]),
 			R.merge({
 				creatorName: removeUnsafeCharacters(listing.creatorName),
-				creatorID: isHash(listing.creatorID) ? listing.creatorID : parseSha256(listing.creatorID),
+				creatorID: isHash(listing.creatorID)
+					? listing.creatorID
+					: parseSha256(listing.creatorID),
 				hq: listing.hq || false,
 				isCrafted: listing.creatorName !== "",
-				listingID: isHash(listing.listingID) ? listing.listingID : parseSha256(listing.listingID),
+				listingID: isHash(listing.listingID)
+					? listing.listingID
+					: parseSha256(listing.listingID),
 				materia: listing.materia || [],
 				onMannequin: listing.onMannequin || false,
 				retainerCity:
 					typeof listing.retainerCity === "number"
 						? listing.retainerCity
 						: City[listing.retainerCity],
-				retainerID: isHash(listing.retainerID) ? listing.retainerID : parseSha256(listing.retainerID),
+				retainerID: isHash(listing.retainerID)
+					? listing.retainerID
+					: parseSha256(listing.retainerID),
 				retainerName: removeUnsafeCharacters(listing.retainerName),
-				sellerID: isHash(listing.sellerID) ? listing.sellerID : parseSha256(listing.sellerID),
+				sellerID: isHash(listing.sellerID)
+					? listing.sellerID
+					: parseSha256(listing.sellerID),
 				total: listing.pricePerUnit * listing.quantity,
 				lastReviewTime:
 					listing.lastReviewTime < gameReleaseDateSeconds
@@ -304,8 +310,8 @@ export default {
 };
 
 function isHash(maybeHash: any): boolean {
-	const maybierHash = "" + maybeHash
-	return !maybierHash.match(/[0-9]/) || maybierHash.length > 30
+	const maybierHash = "" + maybeHash;
+	return !maybierHash.match(/[0-9]/) || maybierHash.length > 30;
 }
 
 function cleanMateria(materiaSlot: ItemMateria): ItemMateria {
