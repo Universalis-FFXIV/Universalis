@@ -41,10 +41,7 @@ export async function upload(parameters: UploadProcessParameters) {
 	await trustedSourceManager.increaseUploadCount(ctx.params.apiKey);
 
 	logger.info(
-		"Received upload from " +
-			sourceName +
-			":\n" +
-			JSON.stringify(ctx.request.body),
+		`Received upload from user ${ctx.request.body.uploaderID} using ${sourceName} to item ${ctx.request.body.itemID} on world ${ctx.request.body.worldID}.`,
 	);
 	await extraDataManager.incrementDailyUploads();
 

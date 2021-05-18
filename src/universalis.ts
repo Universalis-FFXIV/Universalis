@@ -135,23 +135,25 @@ universalis.use(async (ctx, next) => {
 
 // Deletions can only be done 4 times per second, since that's at least how long
 // it takes to buy an item and wait for confirmation from the server.
-universalis.use(ratelimit({
-	driver: "redis",
-	db: redisClient,
-	duration: 1000,
-	errorMessage: "Rate limit exceeded (4/1s).",
-	id: (ctx) => ctx.ip,
-	headers: {
-		remaining: "Rate-Limit-Remaining",
-		reset: "Rate-Limit-Total",
-		total: "Rate-Limit-Total"
-	},
-	max: 12,
-	disableHeader: false,
-	whitelist: (ctx) => {
-		return ctx.method !== "DELETE";
-	}
-}));
+universalis.use(
+	ratelimit({
+		driver: "redis",
+		db: redisClient,
+		duration: 1000,
+		errorMessage: "Rate limit exceeded (4/1s).",
+		id: (ctx) => ctx.ip,
+		headers: {
+			remaining: "Rate-Limit-Remaining",
+			reset: "Rate-Limit-Total",
+			total: "Rate-Limit-Total",
+		},
+		max: 12,
+		disableHeader: false,
+		whitelist: (ctx) => {
+			return ctx.method !== "DELETE";
+		},
+	}),
+);
 
 // Use single init await
 universalis.use(async (_, next) => {
@@ -199,10 +201,20 @@ router
 		await parseContentID(ctx, contentIDCollection);
 	})
 	.get("/api/extra/stats/least-recently-updated", async (ctx) => {
-		await parseLeastRecentlyUpdatedItems(ctx, worldMap, extraDataManager, redisClient);
+		await parseLeastRecentlyUpdatedItems(
+			ctx,
+			worldMap,
+			extraDataManager,
+			redisClient,
+		);
 	})
 	.get("/api/extra/stats/most-recently-updated", async (ctx) => {
-		await parseMostRecentlyUpdatedItems(ctx, worldMap, extraDataManager, redisClient);
+		await parseMostRecentlyUpdatedItems(
+			ctx,
+			worldMap,
+			extraDataManager,
+			redisClient,
+		);
 	})
 	.get("/api/extra/stats/recently-updated", async (ctx) => {
 		await parseRecentlyUpdatedItems(ctx, extraDataManager);

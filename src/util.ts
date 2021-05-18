@@ -14,7 +14,11 @@ const logger = winston.createLogger();
 
 const remoteDataManager = new RemoteDataManager({ logger });
 
-export async function removeOld(recentData: Collection, worldID: number, itemID: number): Promise<boolean> {
+export async function removeOld(
+	recentData: Collection,
+	worldID: number,
+	itemID: number,
+): Promise<boolean> {
 	const cursor = recentData.find({ worldID, itemID });
 	let deletedAny = false;
 	if ((await cursor.count()) > 1) {
@@ -26,9 +30,7 @@ export async function removeOld(recentData: Collection, worldID: number, itemID:
 			const record = await cursor.next();
 			if (await recentData.deleteOne(record)) {
 				// tslint:disable-next-line: no-console
-				console.log(
-					`Deleted object from ${new Date(record.lastUploadTime)}.`,
-				);
+				console.log(`Deleted object from ${new Date(record.lastUploadTime)}.`);
 			}
 		}
 	}

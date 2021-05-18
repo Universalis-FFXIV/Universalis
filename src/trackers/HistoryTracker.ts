@@ -119,13 +119,16 @@ export class HistoryTracker extends Tracker {
 
 			minimizedEntries = R.pipe(
 				minimizedEntries,
-				R.filter((entry) => !extendedHistory.entries.some((ex) => {
-					return (
-						ex.hq === entry.hq &&
-						ex.pricePerUnit === entry.pricePerUnit &&
-						ex.timestamp === entry.timestamp
-					);
-				})),
+				R.filter(
+					(entry) =>
+						!extendedHistory.entries.some((ex) => {
+							return (
+								ex.hq === entry.hq &&
+								ex.pricePerUnit === entry.pricePerUnit &&
+								ex.timestamp === entry.timestamp
+							);
+						}),
+				),
 			);
 		} else {
 			extendedHistory = {
@@ -194,13 +197,16 @@ export class HistoryTracker extends Tracker {
 
 			minimizedEntries = R.pipe(
 				minimizedEntries,
-				R.filter((entry) => !extendedHistory.entries.some((ex) => {
-					return (
-						ex.hq === entry.hq &&
-						ex.pricePerUnit === entry.pricePerUnit &&
-						ex.timestamp === entry.timestamp
-					);
-				})),
+				R.filter(
+					(entry) =>
+						!extendedHistory.entries.some((ex) => {
+							return (
+								ex.hq === entry.hq &&
+								ex.pricePerUnit === entry.pricePerUnit &&
+								ex.timestamp === entry.timestamp
+							);
+						}),
+				),
 			);
 
 			extendedHistory.entries = extendedHistory.entries.concat(
