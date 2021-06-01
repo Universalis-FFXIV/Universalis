@@ -90,14 +90,14 @@ export function calcTrimmedStats(
 			n <= mean + 3 * standardDeviation && n >= mean - 3 * standardDeviation,
 	);
 
-	const trimmedMin = Math.min(...inRangeNumbers);
-	const trimmedMax = Math.max(...inRangeNumbers);
+	const min = Math.min(...numbers);
+	const max = Math.max(...numbers);
 	const trimmedMean =
 		inRangeNumbers.reduce((prev, cur) => prev + cur) / inRangeNumbers.length;
 
 	return {
-		min: trimmedMin,
-		max: trimmedMax,
+		min: min,
+		max: max,
 		mean: trimmedMean,
 	};
 }
