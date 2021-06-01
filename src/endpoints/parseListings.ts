@@ -230,9 +230,9 @@ function calculateAveragePrices(
 	const nqPpu = nqSeries.map((entry) => entry.pricePerUnit);
 	const hqPpu = hqSeries.map((entry) => entry.pricePerUnit);
 
-	const historicalPpu = regularSeries.map((entry) => entry.pricePerUnit);
-	const nqHistoricalPpu = nqSeries.map((entry) => entry.pricePerUnit);
-	const hqHistoricalPpu = hqSeries.map((entry) => entry.pricePerUnit);
+	const historicalPpu = regularSeriesHistory.map((entry) => entry.pricePerUnit);
+	const nqHistoricalPpu = nqSeriesHistory.map((entry) => entry.pricePerUnit);
+	const hqHistoricalPpu = hqSeriesHistory.map((entry) => entry.pricePerUnit);
 
 	const stats = calcTrimmedStats(calcStandardDeviation(...historicalPpu), ...historicalPpu);
 	const statsNQ = calcTrimmedStats(calcStandardDeviation(...nqHistoricalPpu), ...nqHistoricalPpu);
