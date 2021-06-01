@@ -159,7 +159,7 @@ export async function parseListings(
 			data.items[i] = R.pipe(
 				item,
 				R.merge(saleVelocities),
-				R.merge(calculateAveragePrices(item.listings, nqItems, hqItems)),
+				R.merge(calculateAveragePrices(item.listings, nqItems, hqItems, item.recentHistory, nqItemsHistory, hqItemsHistory)),
 				R.merge(makeStackSizeHistograms(item.listings, nqItems, hqItems)),
 			);
 		} else {
@@ -222,23 +222,32 @@ function calculateAveragePrices(
 	regularSeries: MarketBoardItemListing[],
 	nqSeries: MarketBoardItemListing[],
 	hqSeries: MarketBoardItemListing[],
+	regularSeriesHistory: MarketBoardHistoryEntry[],
+	nqSeriesHistory: MarketBoardHistoryEntry[],
+	hqSeriesHistory: MarketBoardHistoryEntry[],
 ): Stats {
 	const ppu = regularSeries.map((entry) => entry.pricePerUnit);
 	const nqPpu = nqSeries.map((entry) => entry.pricePerUnit);
 	const hqPpu = hqSeries.map((entry) => entry.pricePerUnit);
-	const stats = calcTrimmedStats(calcStandardDeviation(...ppu), ...ppu);
-	const statsNQ = calcTrimmedStats(calcStandardDeviation(...nqPpu), ...nqPpu);
-	const statsHQ = calcTrimmedStats(calcStandardDeviation(...hqPpu), ...hqPpu);
+
+	const historicalPpu = regularSeries.map((entry) => entry.pricePerUnit);
+	const nqHistoricalPpu = nqSeries.map((entry) => entry.pricePerUnit);
+	const hqHistoricalPpu = hqSeries.map((entry) => entry.pricePerUnit);
+
+	const stats = calcTrimmedStats(calcStandardDeviation(...historicalPpu), ...historicalPpu);
+	const statsNQ = calcTrimmedStats(calcStandardDeviation(...nqHistoricalPpu), ...nqHistoricalPpu);
+	const statsHQ = calcTrimmedStats(calcStandardDeviation(...hqHistoricalPpu), ...hqHistoricalPpu);
+
 	return {
 		averagePrice: stats.mean,
 		averagePriceNQ: statsNQ.mean,
 		averagePriceHQ: statsHQ.mean,
-		minPrice: stats.min,
-		minPriceNQ: statsNQ.min,
-		minPriceHQ: statsHQ.min,
-		maxPrice: stats.max,
-		maxPriceNQ: statsNQ.max,
-		maxPriceHQ: statsHQ.max,
+		minPrice: Math.min(...ppu),
+		minPriceNQ: Math.min(...nqPpu),
+		minPriceHQ: Math.min(...hqPpu),
+		maxPrice: Math.max(...ppu),
+		maxPriceNQ: Math.max(...nqPpu),
+		maxPriceHQ: Math.max(...hqPpu),
 	};
 }
 
@@ -246,7 +255,7 @@ function calculateCurrentAveragePrices(
 	regularSeries: MarketBoardItemListing[],
 	nqSeries: MarketBoardItemListing[],
 	hqSeries: MarketBoardItemListing[],
-): CurrentStats {
+)/*: CurrentStats */ {
 	const ppu = regularSeries.map((listing) => listing.pricePerUnit);
 	const nqPpu = nqSeries.map((listing) => listing.pricePerUnit);
 	const hqPpu = hqSeries.map((listing) => listing.pricePerUnit);
@@ -257,12 +266,6 @@ function calculateCurrentAveragePrices(
 		currentAveragePrice: stats.mean,
 		currentAveragePriceNQ: statsNQ.mean,
 		currentAveragePriceHQ: statsHQ.mean,
-		currentMinPrice: stats.min,
-		currentMinPriceNQ: statsNQ.min,
-		currentMinPriceHQ: statsHQ.min,
-		currentMaxPrice: stats.max,
-		currentMaxPriceNQ: statsNQ.max,
-		currentMaxPriceHQ: statsHQ.max,
 	};
 }
 

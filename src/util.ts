@@ -80,8 +80,8 @@ export function calcAverage(...numbers: number[]): number {
 export function calcTrimmedStats(
 	standardDeviation: number,
 	...numbers: number[]
-): { min: number; max: number; mean: number } {
-	if (numbers.length === 0) return { min: 0, max: 0, mean: 0 };
+): { mean: number } {
+	if (numbers.length === 0) return { mean: 0 };
 
 	const mean = calcAverage(...numbers);
 
@@ -89,15 +89,10 @@ export function calcTrimmedStats(
 		(n) =>
 			n <= mean + 3 * standardDeviation && n >= mean - 3 * standardDeviation,
 	);
-
-	const min = Math.min(...numbers);
-	const max = Math.max(...numbers);
 	const trimmedMean =
 		inRangeNumbers.reduce((prev, cur) => prev + cur) / inRangeNumbers.length;
 
 	return {
-		min: min,
-		max: max,
 		mean: trimmedMean,
 	};
 }
