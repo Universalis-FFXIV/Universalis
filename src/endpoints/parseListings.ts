@@ -138,15 +138,19 @@ export async function parseListings(
 				R.filter((entry) => entry != null && entry.quantity !== 0),
 			);
 
-			const nqItems = item.recentHistory.filter((entry) => !entry.hq);
-			const hqItems = item.recentHistory.filter((entry) => entry.hq);
+			const nqItems = item.listings.filter((entry) => !entry.hq);
+			const hqItems = item.listings.filter((entry) => entry.hq);
 
-			// Average sale velocities with EMN data
+			const nqItemsHistory = item.recentHistory.filter((entry) => !entry.hq);
+			const hqItemsHistory = item.recentHistory.filter((entry) => entry.hq);
+
 			const saleVelocities = calculateSaleVelocities(
 				item.recentHistory,
-				nqItems,
-				hqItems,
+				nqItemsHistory,
+				hqItemsHistory,
 			);
+
+			// Average sale velocities with EMN data
 			/*saleVelocities.nqSaleVelocity =
 				(saleVelocities.nqSaleVelocity + emnData.turnoverPerDayNQ) / 2;
 			saleVelocities.hqSaleVelocity =
@@ -155,8 +159,8 @@ export async function parseListings(
 			data.items[i] = R.pipe(
 				item,
 				R.merge(saleVelocities),
-				R.merge(calculateAveragePrices(item.recentHistory, nqItems, hqItems)),
-				R.merge(makeStackSizeHistograms(item.recentHistory, nqItems, hqItems)),
+				R.merge(calculateAveragePrices(item.listings, nqItems, hqItems)),
+				R.merge(makeStackSizeHistograms(item.listings, nqItems, hqItems)),
 			);
 		} else {
 			item.recentHistory = [];
@@ -215,9 +219,9 @@ function calculateSaleVelocities(
 }
 
 function calculateAveragePrices(
-	regularSeries: MarketBoardHistoryEntry[],
-	nqSeries: MarketBoardHistoryEntry[],
-	hqSeries: MarketBoardHistoryEntry[],
+	regularSeries: MarketBoardItemListing[],
+	nqSeries: MarketBoardItemListing[],
+	hqSeries: MarketBoardItemListing[],
 ): Stats {
 	const ppu = regularSeries.map((entry) => entry.pricePerUnit);
 	const nqPpu = nqSeries.map((entry) => entry.pricePerUnit);
@@ -263,9 +267,9 @@ function calculateCurrentAveragePrices(
 }
 
 function makeStackSizeHistograms(
-	regularSeries: MarketBoardHistoryEntry[],
-	nqSeries: MarketBoardHistoryEntry[],
-	hqSeries: MarketBoardHistoryEntry[],
+	regularSeries: MarketBoardItemListing[],
+	nqSeries: MarketBoardItemListing[],
+	hqSeries: MarketBoardItemListing[],
 ): StackSizeHistograms {
 	const stackSizeHistogram = makeDistrTable(
 		...regularSeries.map((entry) => entry.quantity),
