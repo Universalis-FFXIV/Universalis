@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
-namespace Universalis
+namespace Universalis.Application
 {
     public static class Program
     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace Universalis
+namespace Universalis.Application
 {
     public class WeatherForecast
     {
