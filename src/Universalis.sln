@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Universalis.GameData", "Uni
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Universalis.Alerts", "Universalis.Alerts\Universalis.Alerts.csproj", "{ACD3FA38-C3D0-45C1-8DE4-EA7446D5E2D1}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Entities", "Universalis.Entities\Universalis.Entities.csproj", "{63CAC835-3AA1-414D-B1F3-9CF74AB52B66}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{ACD3FA38-C3D0-45C1-8DE4-EA7446D5E2D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ACD3FA38-C3D0-45C1-8DE4-EA7446D5E2D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ACD3FA38-C3D0-45C1-8DE4-EA7446D5E2D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63CAC835-3AA1-414D-B1F3-9CF74AB52B66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63CAC835-3AA1-414D-B1F3-9CF74AB52B66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63CAC835-3AA1-414D-B1F3-9CF74AB52B66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63CAC835-3AA1-414D-B1F3-9CF74AB52B66}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
