@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Scripts", "Univ
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Application", "Universalis.Application\Universalis.Application.csproj", "{A1FB4209-5085-42DE-A1B4-2ABF990A6BCC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Universalis.GameData", "Universalis.GameData\Universalis.GameData.csproj", "{1CA89525-D044-481C-8A54-3DAC35B2A4BB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{A1FB4209-5085-42DE-A1B4-2ABF990A6BCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1FB4209-5085-42DE-A1B4-2ABF990A6BCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1FB4209-5085-42DE-A1B4-2ABF990A6BCC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CA89525-D044-481C-8A54-3DAC35B2A4BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CA89525-D044-481C-8A54-3DAC35B2A4BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CA89525-D044-481C-8A54-3DAC35B2A4BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CA89525-D044-481C-8A54-3DAC35B2A4BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

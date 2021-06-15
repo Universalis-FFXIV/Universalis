@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Lumina" Version="3.3.0" />
+    <PackageReference Include="Lumina.Excel" Version="5.50.0" />
+  </ItemGroup>
+
+</Project>
