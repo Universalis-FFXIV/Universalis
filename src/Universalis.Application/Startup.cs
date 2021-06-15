@@ -22,7 +22,7 @@ namespace Universalis.Application
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IGameDataProvider, GameDataProvider>();
-            services.AddSingleton<IAlertsProvider, AlertsProvider>();
+            services.AddSingleton<IDiscordAlertsProvider, DiscordAlertsProvider>();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {

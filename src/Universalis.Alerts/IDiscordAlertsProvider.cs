@@ -1,6 +1,6 @@
 ﻿namespace Universalis.Alerts
 {
-    public interface IAlertsProvider
+    public interface IDiscordAlertsProvider
     {
     }
 }
