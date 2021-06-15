@@ -6,10 +6,15 @@
 
   <ItemGroup>
     <PackageReference Include="dbup-mysql" Version="4.5.0" />
-    <PackageReference Include="DSharpPlus" Version="4.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.7" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="5.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Universalis.Alerts\Universalis.Alerts.csproj" />
+    <ProjectReference Include="..\Universalis.GameData\Universalis.GameData.csproj" />
+    <ProjectReference Include="..\Universalis.Scripts\Universalis.Scripts.csproj" />
   </ItemGroup>
 
 </Project>
