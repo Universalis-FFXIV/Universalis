@@ -1,6 +1,7 @@
+using System;
 using Xunit;
 
-namespace Universalis.Tests
+namespace Universalis.Alerts.Tests
 {
     public class UnitTest1
     {

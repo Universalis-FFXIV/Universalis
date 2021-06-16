@@ -3,19 +3,23 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31321.278
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Tests", "Universalis.Tests\Universalis.Tests.csproj", "{A2B77D2D-FF4A-4545-84A8-0E6A2D8941E6}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Scripts", "Universalis.Scripts\Universalis.Scripts.csproj", "{864D194C-9DC6-480C-9998-6E573A2AEEE3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Application", "Universalis.Application\Universalis.Application.csproj", "{A1FB4209-5085-42DE-A1B4-2ABF990A6BCC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Universalis.GameData", "Universalis.GameData\Universalis.GameData.csproj", "{1CA89525-D044-481C-8A54-3DAC35B2A4BB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.GameData", "Universalis.GameData\Universalis.GameData.csproj", "{1CA89525-D044-481C-8A54-3DAC35B2A4BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Universalis.Alerts", "Universalis.Alerts\Universalis.Alerts.csproj", "{ACD3FA38-C3D0-45C1-8DE4-EA7446D5E2D1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Alerts", "Universalis.Alerts\Universalis.Alerts.csproj", "{ACD3FA38-C3D0-45C1-8DE4-EA7446D5E2D1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Entities", "Universalis.Entities\Universalis.Entities.csproj", "{63CAC835-3AA1-414D-B1F3-9CF74AB52B66}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "..\build\_build.csproj", "{23238945-4F89-4776-98A3-E27278F6D83A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Universalis.Alerts.Tests", "Universalis.Alerts.Tests\Universalis.Alerts.Tests.csproj", "{470D6EBB-6363-4DBB-B0B5-A38E7495DB31}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Universalis.Application.Tests", "Universalis.Application.Tests\Universalis.Application.Tests.csproj", "{D31015D8-9218-4DE7-917A-21EDF79F6742}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Universalis.GameData.Tests", "Universalis.GameData.Tests\Universalis.GameData.Tests.csproj", "{2E555253-6B72-459C-8F19-7BDF2AA7B855}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,12 +27,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{23238945-4F89-4776-98A3-E27278F6D83A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{23238945-4F89-4776-98A3-E27278F6D83A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A2B77D2D-FF4A-4545-84A8-0E6A2D8941E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A2B77D2D-FF4A-4545-84A8-0E6A2D8941E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A2B77D2D-FF4A-4545-84A8-0E6A2D8941E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A2B77D2D-FF4A-4545-84A8-0E6A2D8941E6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{864D194C-9DC6-480C-9998-6E573A2AEEE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{864D194C-9DC6-480C-9998-6E573A2AEEE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{864D194C-9DC6-480C-9998-6E573A2AEEE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -49,6 +47,20 @@ Global
 		{63CAC835-3AA1-414D-B1F3-9CF74AB52B66}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63CAC835-3AA1-414D-B1F3-9CF74AB52B66}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63CAC835-3AA1-414D-B1F3-9CF74AB52B66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23238945-4F89-4776-98A3-E27278F6D83A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23238945-4F89-4776-98A3-E27278F6D83A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{470D6EBB-6363-4DBB-B0B5-A38E7495DB31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{470D6EBB-6363-4DBB-B0B5-A38E7495DB31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{470D6EBB-6363-4DBB-B0B5-A38E7495DB31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{470D6EBB-6363-4DBB-B0B5-A38E7495DB31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D31015D8-9218-4DE7-917A-21EDF79F6742}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D31015D8-9218-4DE7-917A-21EDF79F6742}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D31015D8-9218-4DE7-917A-21EDF79F6742}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D31015D8-9218-4DE7-917A-21EDF79F6742}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E555253-6B72-459C-8F19-7BDF2AA7B855}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E555253-6B72-459C-8F19-7BDF2AA7B855}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E555253-6B72-459C-8F19-7BDF2AA7B855}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E555253-6B72-459C-8F19-7BDF2AA7B855}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
