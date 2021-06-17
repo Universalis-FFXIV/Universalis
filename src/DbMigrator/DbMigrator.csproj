@@ -4,7 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <ApplicationIcon />
     <OutputType>Exe</OutputType>
-    <StartupObject>Universalis.Scripts.Program</StartupObject>
+    <StartupObject>DbMigrator.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
