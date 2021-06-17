@@ -1,3 +1,4 @@
+using FluentAssertions;
 using Xunit;
 
 namespace Universalis.GameData.Tests
@@ -20,7 +21,7 @@ namespace Universalis.GameData.Tests
         {
             var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
             var actualWorldName = gameData.AvailableWorlds()[worldId];
-            Assert.Equal(expectedWorldName, actualWorldName);
+            actualWorldName.Should().Be(expectedWorldName);
         }
 
         [Theory]
@@ -31,7 +32,7 @@ namespace Universalis.GameData.Tests
         {
             var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
             var actualWorldId = gameData.AvailableWorldsReversed()[worldName];
-            Assert.Equal(expectedWorldId, actualWorldId);
+            actualWorldId.Should().Be(expectedWorldId);
         }
 
         [Theory]
@@ -44,7 +45,7 @@ namespace Universalis.GameData.Tests
             var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
             var worldIds = gameData.AvailableWorldIds();
             var actuallyContains = worldIds.Contains(worldId);
-            Assert.Equal(expectedToContain, actuallyContains);
+            actuallyContains.Should().Be(expectedToContain);
         }
 
         [Theory]
@@ -57,7 +58,7 @@ namespace Universalis.GameData.Tests
             var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
             var worldIds = gameData.MarketableItemIds();
             var actuallyContains = worldIds.Contains(itemId);
-            Assert.Equal(expectedToContain, actuallyContains);
+            actuallyContains.Should().Be(expectedToContain);
         }
     }
 }
