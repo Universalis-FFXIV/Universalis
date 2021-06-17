@@ -10,6 +10,13 @@ namespace Universalis.Application.Tests
     {
         private const string TestConnectionString = "server=localhost;database=universalis_test;user=dalamud;password=dalamud";
 
+        private static DbContextOptions<T> BuildDbContextOptions<T>() where T : DbContext
+        {
+            return new DbContextOptionsBuilder<T>()
+                .UseMySql(TestConnectionString, ServerVersion.AutoDetect(TestConnectionString))
+                .Options;
+        }
+
         private static void CompareContext<T>(T context) where T : DbContext
         {
             context.Database.EnsureDeleted();
@@ -25,36 +32,24 @@ namespace Universalis.Application.Tests
         [Fact]
         public void Compare_AuthenticationInfoContext()
         {
-            var dbOptions = new DbContextOptionsBuilder<AuthenticationInfoContext>()
-                .UseMySql(TestConnectionString, ServerVersion.AutoDetect(TestConnectionString))
-                .Options;
-
+            var dbOptions = BuildDbContextOptions<AuthenticationInfoContext>();
             using var context = new AuthenticationInfoContext(dbOptions);
-
             CompareContext(context);
         }
 
         [Fact]
         public void Compare_CurrentlyShownContext()
         {
-            var dbOptions = new DbContextOptionsBuilder<CurrentlyShownContext>()
-                .UseMySql(TestConnectionString, ServerVersion.AutoDetect(TestConnectionString))
-                .Options;
-
+            var dbOptions = BuildDbContextOptions<CurrentlyShownContext>();
             using var context = new CurrentlyShownContext(dbOptions);
-
             CompareContext(context);
         }
 
         [Fact]
         public void Compare_UploadApplicationContext()
         {
-            var dbOptions = new DbContextOptionsBuilder<UploadApplicationContext>()
-                .UseMySql(TestConnectionString, ServerVersion.AutoDetect(TestConnectionString))
-                .Options;
-
+            var dbOptions = BuildDbContextOptions<UploadApplicationContext>();
             using var context = new UploadApplicationContext(dbOptions);
-
             CompareContext(context);
         }
     }
