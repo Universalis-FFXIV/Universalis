@@ -19,4 +19,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Universalis.GameData\Universalis.GameData.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Collections.Immutable;
 
 namespace Universalis.GameData
 {
@@ -11,8 +10,18 @@ namespace Universalis.GameData
         public IReadOnlyDictionary<uint, string> AvailableWorlds();
 
         /// <summary>
+        /// Returns a read-only dictionary of all available world IDs and worlds.
+        /// </summary>
+        public IReadOnlyDictionary<string, uint> AvailableWorldsReversed();
+
+        /// <summary>
+        /// Returns a sorted set of all available world IDs. This is useful for performing binary searches.
+        /// </summary>
+        public IReadOnlySet<uint> AvailableWorldIds();
+
+        /// <summary>
         /// Returns a sorted set of all marketable item IDs. This is useful for performing binary searches.
         /// </summary>
-        public ImmutableSortedSet<uint> MarketableItems();
+        public IReadOnlySet<uint> MarketableItemIds();
     }
 }
