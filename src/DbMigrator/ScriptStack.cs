@@ -1,7 +1,7 @@
 ﻿using DbUp;
 using System.Reflection;
 
-namespace Universalis.Scripts
+namespace DbMigrator
 {
     public static class ScriptStack
     {

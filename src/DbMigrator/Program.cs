@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace Universalis.Scripts
+namespace DbMigrator
 {
     public static class Program
     {

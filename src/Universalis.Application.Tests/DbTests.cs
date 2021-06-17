@@ -8,7 +8,7 @@ namespace Universalis.Application.Tests
 {
     public class DbTests
     {
-        private const string TestConnectionString = "server=localhost;database=universalis;user=dalamud;password=dalamud";
+        private const string TestConnectionString = "server=localhost;database=universalis_test;user=dalamud;password=dalamud";
 
         [Fact]
         public void Compare_CurrentlyShownContext()
