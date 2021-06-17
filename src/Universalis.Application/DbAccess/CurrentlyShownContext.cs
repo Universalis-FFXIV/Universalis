@@ -6,11 +6,8 @@ namespace Universalis.Application.DbAccess
     public class CurrentlyShownContext : DbContext
     {
         public DbSet<CurrentlyShown> CurrentlyShownData { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseInMemoryDatabase("Test");
-        }
+        
+        public CurrentlyShownContext(DbContextOptions<CurrentlyShownContext> options) : base(options) {}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

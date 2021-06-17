@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <ApplicationIcon />
-    <OutputType>Library</OutputType>
-    <StartupObject />
+    <OutputType>Exe</OutputType>
+    <StartupObject>Universalis.Scripts.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,6 +13,11 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Script0001 - Create current data table.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="dbup-core" Version="4.5.0" />
+    <PackageReference Include="dbup-mysql" Version="4.5.0" />
   </ItemGroup>
 
 </Project>

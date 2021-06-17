@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Universalis.Alerts;
+using Universalis.Application.DbAccess;
 using Universalis.GameData;
 
 namespace Universalis.Application
@@ -21,8 +23,15 @@ namespace Universalis.Application
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            const string testConnectionString = "server=localhost;database=universalis;user=dalamud;password=dalamud";
+            services.AddDbContext<CurrentlyShownContext>(options =>
+            {
+                options.UseMySql(testConnectionString, ServerVersion.AutoDetect(testConnectionString));
+            });
+
             services.AddGameData(Configuration);
             services.AddUserAlerts();
+            
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
