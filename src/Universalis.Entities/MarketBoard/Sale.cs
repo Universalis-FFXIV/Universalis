@@ -13,7 +13,5 @@
         public uint Timestamp { get; set; }
 
         public bool OnMannequin { get; set; }
-
-        public uint WorldId { get; set; }
     }
 }

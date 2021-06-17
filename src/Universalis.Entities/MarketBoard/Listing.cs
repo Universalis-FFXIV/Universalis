@@ -29,7 +29,5 @@ namespace Universalis.Entities.MarketBoard
         public string RetainerName { get; set; }
 
         public byte RetainerCity { get; set; }
-
-        public uint WorldId { get; set; }
     }
 }

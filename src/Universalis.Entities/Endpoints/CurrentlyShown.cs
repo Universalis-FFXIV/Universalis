@@ -9,6 +9,10 @@ namespace Universalis.Entities.Endpoints
 
         public string UploaderIdHash { get; set; }
 
+        public uint ItemId { get; set; }
+
+        public uint WorldId { get; set; }
+
         public List<Listing> Listings { get; set; }
 
         public List<Sale> RecentHistory { get; set; }
