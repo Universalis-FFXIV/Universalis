@@ -26,7 +26,7 @@ namespace Universalis.Application.Tests
 
             var hasErrors = comparer.CompareEfWithDb(context);
 
-            hasErrors.Should().BeFalse(comparer.GetAllErrors);
+            hasErrors.Should().BeFalse(comparer.GetAllErrors, "because the SQL migrations should match what EF Core expects the database model to be");
         }
 
         [Fact]
