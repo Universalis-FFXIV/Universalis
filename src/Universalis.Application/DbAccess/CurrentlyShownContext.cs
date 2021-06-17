@@ -6,8 +6,10 @@ namespace Universalis.Application.DbAccess
     public class CurrentlyShownContext : DbContext
     {
         public DbSet<CurrentlyShown> CurrentlyShownData { get; set; }
-        
-        public CurrentlyShownContext(DbContextOptions<CurrentlyShownContext> options) : base(options) {}
+
+        public CurrentlyShownContext(DbContextOptions<CurrentlyShownContext> options) : base(options)
+        {
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
