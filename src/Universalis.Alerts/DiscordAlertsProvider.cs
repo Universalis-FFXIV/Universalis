@@ -1,6 +1,6 @@
 ﻿namespace Universalis.Alerts
 {
-    public class DiscordAlertsProvider : IDiscordAlertsProvider
+    internal class DiscordAlertsProvider : IDiscordAlertsProvider
     {
     }
 }

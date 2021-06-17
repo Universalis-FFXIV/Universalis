@@ -1,6 +1,6 @@
 ﻿namespace Universalis.GameData
 {
-    public class GameDataProvider : IGameDataProvider
+    internal class GameDataProvider : IGameDataProvider
     {
     }
 }
