@@ -1,8 +1,10 @@
 ﻿using EfSchemaCompare;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql.Design.Internal;
 using Universalis.Application.DbAccess;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Universalis.Application.Tests
 {
@@ -10,10 +12,18 @@ namespace Universalis.Application.Tests
     {
         private const string TestConnectionString = "server=localhost;database=universalis_test;user=dalamud;password=dalamud";
 
-        private static DbContextOptions<T> BuildDbContextOptions<T>() where T : DbContext
+        private readonly ITestOutputHelper _output;
+
+        public DbTests(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
+        private DbContextOptions<T> BuildDbContextOptions<T>() where T : DbContext
         {
             return new DbContextOptionsBuilder<T>()
                 .UseMySql(TestConnectionString, ServerVersion.AutoDetect(TestConnectionString))
+                .LogTo(_output.WriteLine)
                 .Options;
         }
 
@@ -24,7 +34,9 @@ namespace Universalis.Application.Tests
 
             var comparer = new CompareEfSql();
 
-            var hasErrors = comparer.CompareEfWithDb(context);
+#pragma warning disable EF1001 // Internal EF Core API usage.
+            var hasErrors = comparer.CompareEfWithDb<MySqlDesignTimeServices>(context);
+#pragma warning restore EF1001 // Internal EF Core API usage.
 
             hasErrors.Should().BeFalse(comparer.GetAllErrors, "because the SQL migrations should match what EF Core expects the database model to be");
         }

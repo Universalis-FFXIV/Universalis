@@ -18,15 +18,9 @@ namespace DbMigrator
 
         public static int Main(string[] args)
         {
-            if (args.Length == 0)
-            {
-                WriteError("error: expecting connection string");
-                return -1;
-            }
-
             try
             {
-                ScriptStack.Apply(args.First());
+                ScriptStack.Apply(args.FirstOrDefault() ?? "server=localhost;database=universalis_test;user=dalamud;password=dalamud");
             }
             catch (InvalidOperationException e)
             {
