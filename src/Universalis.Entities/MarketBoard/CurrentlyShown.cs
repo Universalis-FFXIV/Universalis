@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using Universalis.Entities.MarketBoard;
 
-namespace Universalis.Entities.Endpoints
+namespace Universalis.Entities.MarketBoard
 {
     public class CurrentlyShown
     {
