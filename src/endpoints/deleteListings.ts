@@ -1,6 +1,6 @@
 /**
  * @name Delete Listings
- * @url /api/:world/:item/:listing
+ * @url /api/:world/:item/delete
  */
 
 import { ParameterizedContext } from "koa";
