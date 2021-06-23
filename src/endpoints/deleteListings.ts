@@ -8,7 +8,7 @@ import { Collection } from "mongodb";
 import { TrustedSourceManager } from "../db/TrustedSourceManager";
 import { HttpStatusCodes } from "../models/HttpStatusCodes";
 import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoint";
-import { capitalise, removeOld } from "../util";
+import { removeOld } from "../util";
 
 export async function deleteListings(
 	ctx: ParameterizedContext,
@@ -16,8 +16,6 @@ export async function deleteListings(
 	worldMap: Map<string, number>,
 	recentData: Collection,
 ) {
-	return;
-
 	if (!ctx.params.listingID) {
 		ctx.throw(HttpStatusCodes.BAD_REQUEST);
 	}
