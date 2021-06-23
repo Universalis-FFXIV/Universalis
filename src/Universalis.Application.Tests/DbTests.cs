@@ -10,7 +10,7 @@ namespace Universalis.Application.Tests
 {
     public class DbTests
     {
-        private const string TestConnectionString = "server=localhost;database=universalis_test;user=dalamud;password=dalamud";
+        private const string TestConnectionString = "Server=localhost;Database=universalis_test;User=dalamud;Password=dalamud";
 
         private readonly ITestOutputHelper _output;
 

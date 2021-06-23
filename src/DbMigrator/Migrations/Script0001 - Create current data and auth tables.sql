@@ -1,4 +1,7 @@
 CREATE TABLE Applications (
-    Id tinyint unsigned NOT NULL PRIMARY KEY,
-    Name varchar(32) NULL
-);
+    `Id` int unsigned NOT NULL,
+    `Name` varchar(32) NULL DEFAULT NULL,
+    PRIMARY KEY (`Id`)
+)
+ENGINE=InnoDB
+;
