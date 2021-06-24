@@ -7,6 +7,10 @@ namespace Universalis.Application.DbAccess
     {
         public DbSet<AuthenticationInfo> RegisteredClients { get; set; }
 
+        public AuthenticationInfoContext()
+        {
+        }
+
         public AuthenticationInfoContext(DbContextOptions<AuthenticationInfoContext> options) : base(options)
         {
         }

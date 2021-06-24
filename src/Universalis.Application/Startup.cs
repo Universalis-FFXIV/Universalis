@@ -23,10 +23,18 @@ namespace Universalis.Application
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            const string testConnectionString = "server=localhost;database=universalis;user=dalamud;password=dalamud";
+            const string connectionString = "Server=localhost;Database=universalis;User=dalamud;Password=dalamud";
+            services.AddDbContext<AuthenticationInfoContext>(options =>
+            {
+                options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+            });
             services.AddDbContext<CurrentlyShownContext>(options =>
             {
-                options.UseMySql(testConnectionString, ServerVersion.AutoDetect(testConnectionString));
+                options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+            });
+            services.AddDbContext<UploadApplicationContext>(options =>
+            {
+                options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
             });
 
             services.AddGameData(Configuration);

@@ -7,6 +7,10 @@ namespace Universalis.Application.DbAccess
     {
         public DbSet<CurrentlyShown> CurrentlyShownData { get; set; }
 
+        public CurrentlyShownContext()
+        {
+        }
+
         public CurrentlyShownContext(DbContextOptions<CurrentlyShownContext> options) : base(options)
         {
         }

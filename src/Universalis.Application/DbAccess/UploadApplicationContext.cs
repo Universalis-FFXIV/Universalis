@@ -7,6 +7,10 @@ namespace Universalis.Application.DbAccess
     {
         public DbSet<UploadApplication> Applications { get; set; }
 
+        public UploadApplicationContext()
+        {
+        }
+
         public UploadApplicationContext(DbContextOptions<UploadApplicationContext> options) : base(options)
         {
         }
