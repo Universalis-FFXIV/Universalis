@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Universalis.Application.Common;
 using Universalis.GameData;
 
 namespace Universalis.Application.Controllers
@@ -17,10 +18,12 @@ namespace Universalis.Application.Controllers
         [HttpGet]
         public ActionResult<string> Get(uint itemId, string worldOrDc)
         {
-            if (!_gameData.MarketableItemIds().Contains(itemId))
+            if (!_gameData.MarketableItemIds().Contains(itemId) || worldOrDc.Length == 0)
                 return NotFound();
 
-            return worldOrDc;
+            var worldDc = WorldDc.From(worldOrDc, _gameData);
+
+            return worldDc.IsWorld ? worldDc.WorldId.ToString() : worldDc.DcName;
         }
     }
 }
