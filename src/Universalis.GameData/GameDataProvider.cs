@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LuminaWorld = Lumina.Excel.GeneratedSheets.World;
 
 namespace Universalis.GameData
 {
@@ -17,6 +18,8 @@ namespace Universalis.GameData
 
         private readonly Lazy<IReadOnlySet<uint>> _marketableItemIds;
 
+        private readonly Lazy<IReadOnlyList<DataCenter>> _dataCenters;
+
         public GameDataProvider(Lumina.GameData lumina)
         {
             _lumina = lumina;
@@ -26,6 +29,8 @@ namespace Universalis.GameData
             _availableWorldIds = new Lazy<IReadOnlySet<uint>>(LoadAvailableWorldIds);
 
             _marketableItemIds = new Lazy<IReadOnlySet<uint>>(LoadMarketableItems);
+
+            _dataCenters = new Lazy<IReadOnlyList<DataCenter>>(LoadDataCenters);
         }
 
         IReadOnlyDictionary<uint, string> IGameDataProvider.AvailableWorlds()
@@ -40,12 +45,15 @@ namespace Universalis.GameData
         IReadOnlySet<uint> IGameDataProvider.MarketableItemIds()
             => _marketableItemIds.Value;
 
+        IReadOnlyList<DataCenter> IGameDataProvider.DataCenters()
+            => _dataCenters.Value;
+
         /// <summary>
         /// Gets a read-only dictionary of all available worlds. Intended for use in the lazily-loaded member.
         /// </summary>
         private IReadOnlyDictionary<uint, string> LoadAvailableWorlds()
         {
-            var worlds = _lumina.GetExcelSheet<World>();
+            var worlds = _lumina.GetExcelSheet<LuminaWorld>();
             if (worlds == null)
             {
                 throw new InvalidOperationException(ExcelLoadError);
@@ -53,7 +61,9 @@ namespace Universalis.GameData
 
             return worlds
                 .Where(w => w.IsPublic)
-                .ToDictionary(w => w.RowId, w => (string)w.Name);
+                .Select(w => new World { Name = w.Name, Id = w.RowId })
+                .Concat(ChineseServers.Worlds())
+                .ToDictionary(w => w.Id, w => w.Name);
         }
 
         /// <summary>
@@ -61,7 +71,7 @@ namespace Universalis.GameData
         /// </summary>
         private IReadOnlyDictionary<string, uint> LoadAvailableWorldsReversed()
         {
-            var worlds = _lumina.GetExcelSheet<World>();
+            var worlds = _lumina.GetExcelSheet<LuminaWorld>();
             if (worlds == null)
             {
                 throw new InvalidOperationException(ExcelLoadError);
@@ -69,7 +79,9 @@ namespace Universalis.GameData
 
             return worlds
                 .Where(w => w.IsPublic)
-                .ToDictionary(w => (string)w.Name, w => w.RowId);
+                .Select(w => new World { Name = w.Name, Id = w.RowId })
+                .Concat(ChineseServers.Worlds())
+                .ToDictionary(w => w.Name, w => w.Id);
         }
 
         /// <summary>
@@ -77,7 +89,7 @@ namespace Universalis.GameData
         /// </summary>
         private IReadOnlySet<uint> LoadAvailableWorldIds()
         {
-            var worlds = _lumina.GetExcelSheet<World>();
+            var worlds = _lumina.GetExcelSheet<LuminaWorld>();
             if (worlds == null)
             {
                 throw new InvalidOperationException(ExcelLoadError);
@@ -85,7 +97,9 @@ namespace Universalis.GameData
 
             return new SortedSet<uint>(worlds
                 .Where(w => w.IsPublic)
-                .Select(w => w.RowId)
+                .Select(w => new World { Name = w.Name, Id = w.RowId })
+                .Concat(ChineseServers.Worlds())
+                .Select(w => w.Id)
                 .ToList());
         }
 
@@ -104,6 +118,24 @@ namespace Universalis.GameData
                 .Where(i => i.ItemSearchCategory.Value?.RowId >= 1)
                 .Select(i => i.RowId)
                 .ToList());
+        }
+
+        /// <summary>
+        /// Gets a list of all data centers. Intended for use in the lazily-loaded member.
+        /// </summary>
+        private IReadOnlyList<DataCenter> LoadDataCenters()
+        {
+            var dcs = _lumina.GetExcelSheet<WorldDCGroupType>();
+            if (dcs == null)
+            {
+                throw new InvalidOperationException(ExcelLoadError);
+            }
+
+            return dcs
+                .Where(dc => dc.RowId is >= 1 and < 99)
+                .Select(dc => new DataCenter { Name = dc.Name })
+                .Concat(ChineseServers.DataCenters())
+                .ToList();
         }
     }
 }

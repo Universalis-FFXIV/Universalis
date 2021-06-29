@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Universalis.GameData;
 
 namespace Universalis.Application.Common
@@ -32,7 +33,11 @@ namespace Universalis.Application.Common
                 _ = gameData.AvailableWorldsReversed().TryGetValue(cleanWorldOrDc, out worldId);
                 if (worldId == default)
                 {
-                    // TODO: add DC validation, throw exception on failure
+                    if (!gameData.DataCenters().Select(dc => dc.Name).Contains(cleanWorldOrDc))
+                    {
+                        throw new ArgumentException("No world or DC matching the arguments was found.");
+                    }
+
                     dcName = cleanWorldOrDc;
                 }
             }

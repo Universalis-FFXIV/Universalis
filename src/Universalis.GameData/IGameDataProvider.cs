@@ -23,5 +23,10 @@ namespace Universalis.GameData
         /// Returns a sorted set of all marketable item IDs. This is useful for performing binary searches.
         /// </summary>
         public IReadOnlySet<uint> MarketableItemIds();
+
+        /// <summary>
+        /// Returns a sorted set of all data centers.
+        /// </summary>
+        public IReadOnlyList<DataCenter> DataCenters();
     }
 }
