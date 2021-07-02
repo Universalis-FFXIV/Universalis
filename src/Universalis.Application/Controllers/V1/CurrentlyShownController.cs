@@ -2,15 +2,15 @@
 using Universalis.Application.Common;
 using Universalis.GameData;
 
-namespace Universalis.Application.Controllers
+namespace Universalis.Application.Controllers.V1
 {
-    [Route("api/history/{itemId}/{worldOrDc}/[controller]")]
+    [Route("api/{itemId}/{worldOrDc}")]
     [ApiController]
-    public class HistoryController : ControllerBase
+    public class CurrentlyShownController : ControllerBase
     {
         private readonly IGameDataProvider _gameData;
 
-        public HistoryController(IGameDataProvider gameData)
+        public CurrentlyShownController(IGameDataProvider gameData)
         {
             _gameData = gameData;
         }
