@@ -47,7 +47,7 @@ export function appendWorldDC(
 		const worldName =
 			ctx.params.world.charAt(0).toUpperCase() + ctx.params.world.substr(1);
 		if (!parseInt(ctx.params.world) && !worldMap.get(worldName)) {
-			ctx.params.dcName = ctx.params.world;
+			ctx.params.dcName = worldName;
 		} else {
 			if (parseInt(ctx.params.world)) {
 				ctx.params.worldID = parseInt(ctx.params.world);

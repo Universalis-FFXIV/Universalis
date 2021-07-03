@@ -184,7 +184,7 @@ router
 			transportManager,
 		);
 	})
-	.delete("/api/:world/:item/:listing", async (ctx) => {
+	.post("/api/:world/:item/delete", async (ctx) => {
 		await deleteListings(ctx, trustedSourceManager, worldMap, recentData);
 	})
 	.get("/api/history/:world/:item", async (ctx) => {
