@@ -15,7 +15,7 @@ export async function deleteListings(
 	trustedSourceManager: TrustedSourceManager,
 	worldMap: Map<string, number>,
 	recentData: Collection,
-) {
+) {return;
 	if (!ctx.params.listingID) {
 		ctx.throw(HttpStatusCodes.BAD_REQUEST);
 	}
