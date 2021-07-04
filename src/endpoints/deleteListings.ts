@@ -16,6 +16,8 @@ export async function deleteListings(
 	worldMap: Map<string, number>,
 	recentData: Collection,
 ) {
+	return;
+	
 	if (!ctx.params.listingID) {
 		ctx.throw(HttpStatusCodes.BAD_REQUEST);
 	}
