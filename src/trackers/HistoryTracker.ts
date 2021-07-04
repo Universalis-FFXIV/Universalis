@@ -215,7 +215,7 @@ export class HistoryTracker extends Tracker {
 		} else {
 			extendedHistory = {
 				dcName,
-				entries: minimizedEntries,
+				entries: [],
 				itemID,
 				lastUploadTime: Date.now(),
 			};
