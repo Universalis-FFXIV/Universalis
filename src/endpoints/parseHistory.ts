@@ -131,50 +131,51 @@ export async function parseHistory(
 			}
 		}
 
-		item.entries = item.entries.sort((a, b) => b.timestamp - a.timestamp); // Sort in descending order
-
-		if (entriesToReturn) {
-			item.entries = item.entries.slice(0, Math.max(0, entriesToReturn));
+		if (item.entries) {
+			item.entries = R.pipe(
+				item.entries,
+				R.sort((a, b) => b.timestamp - a.timestamp), // Sort in descending order
+				R.take(entriesToReturn ? Math.max(0, entriesToReturn) : 1800), // Limit entries, default 1800
+				R.map((entry) => {
+					delete entry.uploaderID;
+					return entry;
+				}),
+			);
+	
+			const nqItems = item.entries.filter((entry) => !entry.hq);
+			const hqItems = item.entries.filter((entry) => entry.hq);
+	
+			item.stackSizeHistogram = makeDistrTable(
+				...item.entries.map((entry) =>
+					entry.quantity != null ? entry.quantity : 0,
+				),
+			);
+			item.stackSizeHistogramNQ = makeDistrTable(
+				...nqItems.map((entry) =>
+					entry.quantity != null ? entry.quantity : 0,
+				),
+			);
+			item.stackSizeHistogramHQ = makeDistrTable(
+				...hqItems.map((entry) =>
+					entry.quantity != null ? entry.quantity : 0,
+				),
+			);
+	
+			item.regularSaleVelocity = calcSaleVelocity(
+				...item.entries.map((entry) => entry.timestamp),
+			);
+			item.nqSaleVelocity = calcSaleVelocity(
+				...nqItems.map((entry) => entry.timestamp),
+			);
+			item.hqSaleVelocity = calcSaleVelocity(
+				...hqItems.map((entry) => entry.timestamp),
+			);
+	
+			// Error handling
+			if (!item.lastUploadTime) item.lastUploadTime = 0;
 		} else {
-			item.entries = item.entries.slice(0, 1800);
+			item.entries = [];
 		}
-
-		item.entries = item.entries.map((entry) => {
-			delete entry.uploaderID;
-			return entry;
-		});
-
-		const nqItems = item.entries.filter((entry) => !entry.hq);
-		const hqItems = item.entries.filter((entry) => entry.hq);
-
-		item.stackSizeHistogram = makeDistrTable(
-			...item.entries.map((entry) =>
-				entry.quantity != null ? entry.quantity : 0,
-			),
-		);
-		item.stackSizeHistogramNQ = makeDistrTable(
-			...nqItems.map((entry) =>
-				entry.quantity != null ? entry.quantity : 0,
-			),
-		);
-		item.stackSizeHistogramHQ = makeDistrTable(
-			...hqItems.map((entry) =>
-				entry.quantity != null ? entry.quantity : 0,
-			),
-		);
-
-		item.regularSaleVelocity = calcSaleVelocity(
-			...item.entries.map((entry) => entry.timestamp),
-		);
-		item.nqSaleVelocity = calcSaleVelocity(
-			...nqItems.map((entry) => entry.timestamp),
-		);
-		item.hqSaleVelocity = calcSaleVelocity(
-			...hqItems.map((entry) => entry.timestamp),
-		);
-
-		// Error handling
-		if (!item.lastUploadTime) item.lastUploadTime = 0;
 	}
 
 	// Fill in unresolved items
