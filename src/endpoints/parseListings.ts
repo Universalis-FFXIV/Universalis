@@ -95,7 +95,7 @@ export async function parseListings(
 	appendWorldDC(data, worldMap, ctx);
 
 	// Do some post-processing on resolved item listings.
-	for (let i = 0; i < data.items.length; i++) {
+	for (let i = data.items.length - 1; i >= 0; i--) {
 		const item: MarketBoardListingsEndpoint = data.items[i];
 		
 		if (isDC) {
@@ -118,7 +118,6 @@ export async function parseListings(
 				otherItemOnDC.lastUploadTime = Math.max(otherItemOnDC.lastUploadTime, item.lastUploadTime);
 				// Remove this item from the array and continue
 				data.items = data.items.splice(i, 1);
-				i--;
 				continue;
 			} else {
 				// Delete the world ID so it doesn't show up for the user 
