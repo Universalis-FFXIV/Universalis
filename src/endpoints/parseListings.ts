@@ -111,8 +111,9 @@ export async function parseListings(
 
 			const otherItemOnDC: MarketBoardListingsEndpoint = data.items.find(it => it.itemID === item.itemID && it.worldID !== item.worldID);
 			if (otherItemOnDC) {
-				// Merge this into the next applicable listing
+				// Merge this into the next applicable response item
 				otherItemOnDC.listings = otherItemOnDC.listings.concat(item.listings);
+				otherItemOnDC.recentHistory = otherItemOnDC.recentHistory.concat(item.recentHistory);
 				otherItemOnDC.lastUploadTime = Math.max(otherItemOnDC.lastUploadTime, item.lastUploadTime);
 				// Remove this item from the array and continue
 				data.items.splice(i, 1);
