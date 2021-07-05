@@ -99,7 +99,6 @@ export async function parseListings(
 		const item: MarketBoardListingsEndpoint = data.items[i];
 		
 		if (isDC) {
-			console.log("Checking world...");
 			// Add the world name to all listings
 			const worldName = worldIDMap.get(item.worldID);
 			console.log("Got world " + worldName);
@@ -118,7 +117,7 @@ export async function parseListings(
 				otherItemOnDC.listings = otherItemOnDC.listings.concat(item.listings);
 				otherItemOnDC.lastUploadTime = Math.max(otherItemOnDC.lastUploadTime, item.lastUploadTime);
 				// Remove this item from the array and continue
-				data.items = data.items.splice(i, 1);
+				data.items.splice(i, 1);
 				continue;
 			} else {
 				// Delete the world ID so it doesn't show up for the user 
