@@ -9,6 +9,7 @@ import * as R from "remeda";
 import {
 	appendWorldDC,
 	calcSaleVelocity,
+	getDCWorlds,
 	getItemIdEn,
 	getItemNameEn,
 	makeDistrTable,
@@ -18,13 +19,29 @@ import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
 import { HttpStatusCodes } from "../models/HttpStatusCodes";
-import { MinimizedHistoryEntry } from "../models/MinimizedHistoryEntry";
 import { RemoteDataManager } from "../remote/RemoteDataManager";
+import { WorldDCQuery } from "../models/WorldDCQuery";
+import { MinimizedDCHistoryEntry } from "../models/MinimizedDCHistoryEntry";
+
+interface BodgeHistoryResponseData {
+	dcName?: string;
+	worldID?: number;
+	itemID: number;
+	entries: MinimizedDCHistoryEntry[];
+	stackSizeHistogram: { [key: number]: number };
+	stackSizeHistogramNQ: { [key: number]: number };
+	stackSizeHistogramHQ: { [key: number]: number };
+	regularSaleVelocity: number;
+	nqSaleVelocity: number;
+	hqSaleVelocity: number;
+	lastUploadTime: number;
+};
 
 export async function parseHistory(
 	ctx: ParameterizedContext,
 	rdm: RemoteDataManager,
 	worldMap: Map<string, number>,
+	worldIDMap: Map<number, string>,
 	history: Collection,
 ) {
 	let entriesToReturn: any = ctx.queryParams.entries;
@@ -55,12 +72,22 @@ export async function parseHistory(
 	}
 
 	// Query construction
-	const query = {
+	const query: WorldDCQuery = {
 		itemID: {
 			$in: itemIDs,
 		},
 	};
 	appendWorldDC(query, worldMap, ctx);
+
+	const dcName = query.dcName;
+	const isDC = !!query.dcName;
+	if (isDC) {
+		const worlds = await getDCWorlds(query.dcName);
+		delete query.dcName;
+		query.worldID = {
+			$in: worlds.map(w => worldMap.get(w)),
+		};
+	}
 
 	// Request database info
 	let data = {
@@ -73,61 +100,78 @@ export async function parseHistory(
 	};
 	appendWorldDC(data, worldMap, ctx);
 
-	// Data filtering
-	data.items = data.items.map(
-		(item: {
-			entries: MinimizedHistoryEntry[];
-			stackSizeHistogram: { [key: number]: number };
-			stackSizeHistogramNQ: { [key: number]: number };
-			stackSizeHistogramHQ: { [key: number]: number };
-			regularSaleVelocity: number;
-			nqSaleVelocity: number;
-			hqSaleVelocity: number;
-			lastUploadTime: number;
-		}) => {
-			if (entriesToReturn)
-				item.entries = item.entries.slice(0, Math.min(1800, entriesToReturn));
-			item.entries = item.entries.map((entry: MinimizedHistoryEntry) => {
-				delete entry.uploaderID;
-				return entry;
+	// Do some post-processing on resolved item histories.
+	for (let i = data.items.length - 1; i >= 0; i--) {
+		const item: BodgeHistoryResponseData = data.items[i];
+		
+		if (isDC) {
+			// Add the world name to all listings
+			const worldName = worldIDMap.get(item.worldID);
+			item.entries = item.entries.map(l => {
+				if (!l.worldName) {
+					l.worldName = worldName;
+				}
+
+				return l;
 			});
 
-			item.entries = item.entries.sort((a, b) => b.timestamp - a.timestamp); // Sort in descending order
+			const otherItemOnDC: BodgeHistoryResponseData = data.items.find(it => it.itemID === item.itemID && it.worldID !== item.worldID);
+			if (otherItemOnDC) {
+				// Merge this into the next applicable response item
+				otherItemOnDC.entries = otherItemOnDC.entries.concat(item.entries);
+				otherItemOnDC.lastUploadTime = Math.max(otherItemOnDC.lastUploadTime, item.lastUploadTime);
+				// Remove this item from the array and continue
+				data.items.splice(i, 1);
+				continue;
+			} else {
+				// Delete the world ID so it doesn't show up for the user 
+				delete item.worldID;
+				// Add the DC name to the response
+				item.dcName = dcName;
+			}
+		}
 
-			const nqItems = item.entries.filter((entry) => !entry.hq);
-			const hqItems = item.entries.filter((entry) => entry.hq);
+		if (entriesToReturn)
+			item.entries = item.entries.slice(0, Math.min(1800, entriesToReturn));
+		item.entries = item.entries.map((entry) => {
+			delete entry.uploaderID;
+			return entry;
+		});
 
-			item.stackSizeHistogram = makeDistrTable(
-				...item.entries.map((entry) =>
-					entry.quantity != null ? entry.quantity : 0,
-				),
-			);
-			item.stackSizeHistogramNQ = makeDistrTable(
-				...nqItems.map((entry) =>
-					entry.quantity != null ? entry.quantity : 0,
-				),
-			);
-			item.stackSizeHistogramHQ = makeDistrTable(
-				...hqItems.map((entry) =>
-					entry.quantity != null ? entry.quantity : 0,
-				),
-			);
+		item.entries = item.entries.sort((a, b) => b.timestamp - a.timestamp); // Sort in descending order
 
-			item.regularSaleVelocity = calcSaleVelocity(
-				...item.entries.map((entry) => entry.timestamp),
-			);
-			item.nqSaleVelocity = calcSaleVelocity(
-				...nqItems.map((entry) => entry.timestamp),
-			);
-			item.hqSaleVelocity = calcSaleVelocity(
-				...hqItems.map((entry) => entry.timestamp),
-			);
+		const nqItems = item.entries.filter((entry) => !entry.hq);
+		const hqItems = item.entries.filter((entry) => entry.hq);
 
-			// Error handling
-			if (!item.lastUploadTime) item.lastUploadTime = 0;
-			return item;
-		},
-	);
+		item.stackSizeHistogram = makeDistrTable(
+			...item.entries.map((entry) =>
+				entry.quantity != null ? entry.quantity : 0,
+			),
+		);
+		item.stackSizeHistogramNQ = makeDistrTable(
+			...nqItems.map((entry) =>
+				entry.quantity != null ? entry.quantity : 0,
+			),
+		);
+		item.stackSizeHistogramHQ = makeDistrTable(
+			...hqItems.map((entry) =>
+				entry.quantity != null ? entry.quantity : 0,
+			),
+		);
+
+		item.regularSaleVelocity = calcSaleVelocity(
+			...item.entries.map((entry) => entry.timestamp),
+		);
+		item.nqSaleVelocity = calcSaleVelocity(
+			...nqItems.map((entry) => entry.timestamp),
+		);
+		item.hqSaleVelocity = calcSaleVelocity(
+			...hqItems.map((entry) => entry.timestamp),
+		);
+
+		// Error handling
+		if (!item.lastUploadTime) item.lastUploadTime = 0;
+	}
 
 	// Fill in unresolved items
 	const resolvedItems: number[] = data.items.map((item) => item.itemID);
