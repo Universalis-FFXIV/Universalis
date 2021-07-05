@@ -114,6 +114,7 @@ export async function parseListings(
 			if (otherItemOnDC) {
 				// Merge this into the next applicable listing
 				otherItemOnDC.listings = otherItemOnDC.listings.concat(item.listings);
+				otherItemOnDC.lastUploadTime = Math.max(otherItemOnDC.lastUploadTime, item.lastUploadTime);
 				// Remove this item from the array and continue
 				data.items = data.items.splice(i, 1);
 				i--;
