@@ -108,9 +108,8 @@ export async function parseListings(
 
 				return l;
 			});
-			delete item.worldID; // Delete the world ID so it doesn't show up for the user
 
-			const otherItemOnDC: MarketBoardListingsEndpoint = data.items.find(it => it.itemID == item.itemID);
+			const otherItemOnDC: MarketBoardListingsEndpoint = data.items.find(it => it.itemID === item.itemID && it.worldID !== item.worldID);
 			if (otherItemOnDC) {
 				// Merge this into the next applicable listing
 				otherItemOnDC.listings = otherItemOnDC.listings.concat(item.listings);
@@ -119,7 +118,8 @@ export async function parseListings(
 				data.items = data.items.splice(i, 1);
 				i--;
 				continue;
-			} else { 
+			} else {
+				delete item.worldID; // Delete the world ID so it doesn't show up for the user 
 				// Add the DC name to the response
 				item.dcName = dcName;
 			}
