@@ -141,10 +141,10 @@ export async function parseHistory(
 					return entry;
 				}),
 			);
-	
+
 			const nqItems = item.entries.filter((entry) => !entry.hq);
 			const hqItems = item.entries.filter((entry) => entry.hq);
-	
+
 			item.stackSizeHistogram = makeDistrTable(
 				...item.entries.map((entry) =>
 					entry.quantity != null ? entry.quantity : 0,
@@ -160,7 +160,7 @@ export async function parseHistory(
 					entry.quantity != null ? entry.quantity : 0,
 				),
 			);
-	
+
 			item.regularSaleVelocity = calcSaleVelocity(
 				...item.entries.map((entry) => entry.timestamp),
 			);
@@ -170,7 +170,7 @@ export async function parseHistory(
 			item.hqSaleVelocity = calcSaleVelocity(
 				...hqItems.map((entry) => entry.timestamp),
 			);
-	
+
 			// Error handling
 			if (!item.lastUploadTime) item.lastUploadTime = 0;
 		} else {
