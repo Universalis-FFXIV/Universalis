@@ -95,7 +95,7 @@ export async function parseListings(
 	appendWorldDC(data, worldMap, ctx);
 
 	// Do some post-processing on resolved item listings.
-	for (let i = 0; i < data.items.length; i++) {
+	for (let i = data.items.length - 1; i >= 0; i--) {
 		const item: MarketBoardListingsEndpoint = data.items[i];
 		
 		if (isDC) {
@@ -108,18 +108,19 @@ export async function parseListings(
 
 				return l;
 			});
-			delete item.worldID; // Delete the world ID so it doesn't show up for the user
 
-			const otherItemOnDC: MarketBoardListingsEndpoint = data.items.find(it => it.itemID == item.itemID);
+			const otherItemOnDC: MarketBoardListingsEndpoint = data.items.find(it => it.itemID === item.itemID && it.worldID !== item.worldID);
 			if (otherItemOnDC) {
-				// Merge this into the next applicable listing
+				// Merge this into the next applicable response item
 				otherItemOnDC.listings = otherItemOnDC.listings.concat(item.listings);
+				otherItemOnDC.recentHistory = otherItemOnDC.recentHistory.concat(item.recentHistory);
 				otherItemOnDC.lastUploadTime = Math.max(otherItemOnDC.lastUploadTime, item.lastUploadTime);
 				// Remove this item from the array and continue
-				data.items = data.items.splice(i, 1);
-				i--;
+				data.items.splice(i, 1);
 				continue;
-			} else { 
+			} else {
+				// Delete the world ID so it doesn't show up for the user 
+				delete item.worldID;
 				// Add the DC name to the response
 				item.dcName = dcName;
 			}
