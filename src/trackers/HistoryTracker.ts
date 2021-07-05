@@ -1,17 +1,12 @@
 import * as R from "remeda";
 
-import { getWorldDC, getWorldName } from "../util";
-
 import { Tracker } from "./Tracker";
 
 import { Collection, Db } from "mongodb";
 
-import { ExtendedDCHistory } from "../models/ExtendedDCHistory";
 import { ExtendedHistory } from "../models/ExtendedHistory";
-import { MarketBoardDCHistoryEntry } from "../models/MarketBoardDCHistoryEntry";
 import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
 import { MarketInfoLocalData } from "../models/MarketInfoLocalData";
-import { MinimizedDCHistoryEntry } from "../models/MinimizedDCHistoryEntry";
 import { MinimizedHistoryEntry } from "../models/MinimizedHistoryEntry";
 
 export class HistoryTracker extends Tracker {
@@ -63,24 +58,11 @@ export class HistoryTracker extends Tracker {
 			data.listings = existing.listings;
 		}
 
-		this.updateDataCenterProperty(
-			uploaderID,
-			"recentHistory",
-			itemID,
-			worldID,
-			recentHistory,
-		);
-		const existingExtendedHistory = await this.updateExtendedHistory(
+		await this.updateExtendedHistory(
 			uploaderID,
 			itemID,
 			worldID,
 			recentHistory,
-		);
-		this.updateExtendedDCHistory(
-			uploaderID,
-			itemID,
-			worldID,
-			existingExtendedHistory.entries,
 		);
 
 		if (existing) {
@@ -154,87 +136,5 @@ export class HistoryTracker extends Tracker {
 		}
 
 		return extendedHistory;
-	}
-
-	private async updateExtendedDCHistory(
-		uploaderID: string,
-		itemID: number,
-		worldID: number,
-		entries: MinimizedHistoryEntry[],
-	) {
-		const world = await getWorldName(worldID);
-		const dcName = await getWorldDC(world);
-
-		// Append world name to each entry
-		(entries as MarketBoardDCHistoryEntry[]).forEach(
-			(entry) => (entry.worldName = world),
-		);
-
-		let minimizedEntries: MinimizedDCHistoryEntry[] = entries.map((entry) => {
-			return {
-				hq: entry.hq,
-				pricePerUnit: entry.pricePerUnit,
-				quantity: entry.quantity,
-				timestamp: entry.timestamp,
-				uploaderID,
-				worldName: world,
-			};
-		});
-
-		const query = { dcName, itemID };
-
-		const existing = (await this.extendedHistory.findOne(query, {
-			projection: { _id: 0 },
-		})) as ExtendedDCHistory;
-
-		let extendedHistory: ExtendedDCHistory;
-		if (existing) extendedHistory = existing;
-		if (extendedHistory && extendedHistory.entries) {
-			// Delete entries from the upload world
-			extendedHistory.entries = extendedHistory.entries.filter(
-				(entry) => entry.worldName !== world,
-			);
-
-			minimizedEntries = R.pipe(
-				minimizedEntries,
-				R.filter(
-					(entry) =>
-						!extendedHistory.entries.some((ex) => {
-							return (
-								ex.hq === entry.hq &&
-								ex.pricePerUnit === entry.pricePerUnit &&
-								ex.timestamp === entry.timestamp
-							);
-						}),
-				),
-			);
-
-			extendedHistory.entries = extendedHistory.entries.concat(
-				minimizedEntries,
-			);
-		} else {
-			extendedHistory = {
-				dcName,
-				entries: [],
-				itemID,
-				lastUploadTime: Date.now(),
-			};
-		}
-
-		const entrySum = extendedHistory.entries.length + minimizedEntries.length;
-		if (entrySum > 1800) {
-			extendedHistory.entries = R.take(
-				extendedHistory.entries,
-				1800 - minimizedEntries.length,
-			);
-		}
-
-		if (existing) {
-			return await this.extendedHistory.updateOne(query, {
-				$set: extendedHistory,
-			});
-		} else {
-			return await this.extendedHistory.insertOne(extendedHistory);
-		}
 	}
 }
