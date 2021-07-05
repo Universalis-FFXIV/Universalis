@@ -135,6 +135,8 @@ export async function parseHistory(
 
 		if (entriesToReturn) {
 			item.entries = item.entries.slice(0, Math.max(0, entriesToReturn));
+		} else {
+			item.entries = item.entries.slice(0, 1800);
 		}
 
 		item.entries = item.entries.map((entry) => {
