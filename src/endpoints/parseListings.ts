@@ -101,6 +101,7 @@ export async function parseListings(
 		if (isDC) {
 			// Add the world name to all listings
 			const worldName = worldIDMap.get(item.worldID);
+			console.log("Got world " + worldName);
 			item.listings = item.listings.map(l => {
 				if (!l.worldName) {
 					l.worldName = worldName;
@@ -111,6 +112,7 @@ export async function parseListings(
 
 			const otherItemOnDC: MarketBoardListingsEndpoint = data.items.find(it => it.itemID === item.itemID && it.worldID !== item.worldID);
 			if (otherItemOnDC) {
+				console.log("Merging into world " + worldIDMap.get(otherItemOnDC.worldID));
 				// Merge this into the next applicable listing
 				otherItemOnDC.listings = otherItemOnDC.listings.concat(item.listings);
 				otherItemOnDC.lastUploadTime = Math.max(otherItemOnDC.lastUploadTime, item.lastUploadTime);
@@ -119,7 +121,8 @@ export async function parseListings(
 				i--;
 				continue;
 			} else {
-				delete item.worldID; // Delete the world ID so it doesn't show up for the user 
+				// Delete the world ID so it doesn't show up for the user 
+				delete item.worldID;
 				// Add the DC name to the response
 				item.dcName = dcName;
 			}
