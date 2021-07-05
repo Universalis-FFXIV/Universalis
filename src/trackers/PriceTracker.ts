@@ -54,15 +54,6 @@ export class PriceTracker extends Tracker {
 			data.recentHistory = existing.recentHistory;
 		}
 
-		this.updateDataCenterProperty(
-			uploaderID,
-			"listings",
-			itemID,
-			worldID,
-			listings,
-			sourceName,
-		);
-
 		if (existing) {
 			await this.collection.updateOne(query, { $set: data });
 		} else {
