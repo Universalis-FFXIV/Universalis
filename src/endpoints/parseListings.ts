@@ -12,6 +12,7 @@ import {
 	calcSaleVelocity,
 	calcStandardDeviation,
 	calcTrimmedStats,
+	getDCWorlds,
 	getItemIdEn,
 	getItemNameEn,
 	makeDistrTable,
@@ -39,6 +40,7 @@ export async function parseListings(
 	ctx: ParameterizedContext,
 	rdm: RemoteDataManager,
 	worldMap: Map<string, number>,
+	worldIDMap: Map<number, string>,
 	recentData: Collection,
 	transportManager: TransportManager,
 ) {
@@ -73,6 +75,16 @@ export async function parseListings(
 	};
 	appendWorldDC(query, worldMap, ctx);
 
+	const dcName = query.dcName;
+	const isDC = !!query.dcName;
+	if (isDC) {
+		const worlds = await getDCWorlds(query.dcName);
+		delete query.dcName;
+		query.worldID = {
+			$in: worlds.map(w => worldMap.get(w)),
+		};
+	}
+
 	// Request database info
 	let data = {
 		itemIDs,
@@ -85,6 +97,33 @@ export async function parseListings(
 	// Do some post-processing on resolved item listings.
 	for (let i = 0; i < data.items.length; i++) {
 		const item: MarketBoardListingsEndpoint = data.items[i];
+		
+		if (isDC) {
+			// Add the world name to all listings
+			const worldName = worldIDMap.get(item.worldID);
+			item.listings = item.listings.map(l => {
+				if (!l.worldName) {
+					l.worldName = worldName;
+				}
+
+				return l;
+			});
+			delete item.worldID; // Delete the world ID so it doesn't show up for the user
+
+			const otherItemOnDC: MarketBoardListingsEndpoint = data.items.find(it => it.itemID == item.itemID);
+			if (otherItemOnDC) {
+				// Merge this into the next applicable listing
+				otherItemOnDC.listings = otherItemOnDC.listings.concat(item.listings);
+				otherItemOnDC.lastUploadTime = Math.max(otherItemOnDC.lastUploadTime, item.lastUploadTime);
+				// Remove this item from the array and continue
+				data.items = data.items.splice(i, 1);
+				i--;
+				continue;
+			} else { 
+				// Add the DC name to the response
+				item.dcName = dcName;
+			}
+		}
 
 		if (item.listings) {
 			item.listings = R.pipe(

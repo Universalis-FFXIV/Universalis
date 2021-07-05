@@ -180,6 +180,7 @@ router
 			ctx,
 			remoteDataManager,
 			worldMap,
+			worldIDMap,
 			recentData,
 			transportManager,
 		);
