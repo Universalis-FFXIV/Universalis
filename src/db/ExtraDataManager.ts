@@ -179,7 +179,7 @@ export class ExtraDataManager {
 		};
 
 		if (typeof worldDC === "number") query.worldID = worldDC;
-		else if (typeof worldDC === "string") query.dcName = worldDC;
+		else if (typeof worldDC === "string") query.worldID = { $in: (await getDCWorlds(worldDC)).map(w => this.worldMap.get(w)) };
 		else query.worldID = { $ne: null };
 
 		const items = (
@@ -200,11 +200,6 @@ export class ExtraDataManager {
 				if (!item.lastUploadTime) {
 					item.lastUploadTime = 0;
 				}
-				item.worldID =
-					item.worldID ||
-					(item["listings"] && item["listings"].length
-						? this.worldMap.get(item["listings"][0].worldName)
-						: null);
 				item.worldName = this.worldIDMap.get(item.worldID) || null;
 				delete item["_id"];
 				delete item["listings"];
@@ -238,7 +233,7 @@ export class ExtraDataManager {
 		};
 
 		if (typeof worldDC === "number") query.worldID = worldDC;
-		else if (typeof worldDC === "string") query.dcName = worldDC;
+		else if (typeof worldDC === "string") query.worldID = { $in: (await getDCWorlds(worldDC)).map(w => this.worldMap.get(w)) };
 		else query.worldID = { $ne: null };
 
 		if (items.length < count) {
@@ -264,11 +259,6 @@ export class ExtraDataManager {
 				if (!item.lastUploadTime) {
 					item.lastUploadTime = 0;
 				}
-				item.worldID =
-					item.worldID ||
-					(item["listings"] && item["listings"].length
-						? this.worldMap.get(item["listings"][0].worldName)
-						: null);
 				item.worldName = this.worldIDMap.get(item.worldID) || null;
 				delete item["_id"];
 				delete item["listings"];
