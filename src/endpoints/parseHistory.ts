@@ -131,14 +131,16 @@ export async function parseHistory(
 			}
 		}
 
-		if (entriesToReturn)
-			item.entries = item.entries.slice(0, Math.min(1800, entriesToReturn));
+		item.entries = item.entries.sort((a, b) => b.timestamp - a.timestamp); // Sort in descending order
+
+		if (entriesToReturn) {
+			item.entries = item.entries.slice(0, Math.max(0, entriesToReturn));
+		}
+
 		item.entries = item.entries.map((entry) => {
 			delete entry.uploaderID;
 			return entry;
 		});
-
-		item.entries = item.entries.sort((a, b) => b.timestamp - a.timestamp); // Sort in descending order
 
 		const nqItems = item.entries.filter((entry) => !entry.hq);
 		const hqItems = item.entries.filter((entry) => entry.hq);
