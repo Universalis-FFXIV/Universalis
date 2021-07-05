@@ -99,6 +99,7 @@ export async function parseListings(
 		const item: MarketBoardListingsEndpoint = data.items[i];
 		
 		if (isDC) {
+			console.log("Checking world...");
 			// Add the world name to all listings
 			const worldName = worldIDMap.get(item.worldID);
 			console.log("Got world " + worldName);
