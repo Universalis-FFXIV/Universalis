@@ -44,9 +44,11 @@ export async function parseHistory(
 	worldIDMap: Map<number, string>,
 	history: Collection,
 ) {
-	let entriesToReturn: any = ctx.queryParams.entries;
-	if (entriesToReturn)
-		entriesToReturn = parseInt(entriesToReturn.replace(/[^0-9]/g, ""));
+	let entriesToReturn: string | number = ctx.queryParams.entries;
+	if (entriesToReturn) {
+		// Maximum response items is 999999
+		entriesToReturn = parseInt((entriesToReturn as string).replace(/[^0-9]/g, "").substring(0, 6));
+	}
 
 	const itemIDs: number[] = (ctx.params.item as string)
 		.split(",")
@@ -135,7 +137,7 @@ export async function parseHistory(
 			item.entries = R.pipe(
 				item.entries,
 				R.sort((a, b) => b.timestamp - a.timestamp), // Sort in descending order
-				R.take(entriesToReturn ? Math.max(0, entriesToReturn) : 1800), // Limit entries, default 1800
+				R.take(entriesToReturn ? Math.max(0, entriesToReturn as number) : 1800), // Limit entries, default 1800
 				R.map((entry) => {
 					delete entry.uploaderID;
 					return entry;
