@@ -129,6 +129,7 @@ export async function parseListings(
 		if (item.listings) {
 			item.listings = R.pipe(
 				item.listings,
+				R.filter((listing) => listing != null),
 				R.sort((a, b) => a.pricePerUnit - b.pricePerUnit),
 				R.map((listing) => {
 					if (
