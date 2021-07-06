@@ -111,6 +111,10 @@ export async function parseListings(
 
 			const otherItemOnDC: MarketBoardListingsEndpoint = data.items.find(it => it.itemID === item.itemID && it.worldID !== item.worldID);
 			if (otherItemOnDC) {
+				// Handle undefined fields?
+				otherItemOnDC.listings = otherItemOnDC.listings || [];
+				otherItemOnDC.recentHistory = otherItemOnDC.recentHistory || [];
+				otherItemOnDC.lastUploadTime = otherItemOnDC.lastUploadTime || 0;
 				// Merge this into the next applicable response item
 				otherItemOnDC.listings = otherItemOnDC.listings.concat(item.listings);
 				otherItemOnDC.recentHistory = otherItemOnDC.recentHistory.concat(item.recentHistory);
