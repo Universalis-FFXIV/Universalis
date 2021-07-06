@@ -172,6 +172,7 @@ export async function parseListings(
 
 			item.recentHistory = R.pipe(
 				item.recentHistory,
+				R.filter((entry) => entry != null),
 				R.map((entry) => {
 					return validation.cleanHistoryEntryOutput(ctx, entry);
 				}),
