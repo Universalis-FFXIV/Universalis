@@ -94,6 +94,8 @@ export async function parseListings(
 	};
 	appendWorldDC(data, worldMap, ctx);
 
+	const requestIsHq: boolean = (ctx.queryParams.hq as string) === "1";
+
 	// Do some post-processing on resolved item listings.
 	for (let i = data.items.length - 1; i >= 0; i--) {
 		const item: MarketBoardListingsEndpoint = data.items[i];
@@ -134,6 +136,7 @@ export async function parseListings(
 			item.listings = R.pipe(
 				item.listings,
 				R.filter((listing) => listing != null),
+				R.filter((listing) => !requestIsHq || listing.hq),
 				R.sort((a, b) => a.pricePerUnit - b.pricePerUnit),
 				R.map((listing) => {
 					if (
