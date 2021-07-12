@@ -102,6 +102,8 @@ export async function parseHistory(
 	};
 	appendWorldDC(data, worldMap, ctx);
 
+	const requestIsHq: boolean = (ctx.queryParams.hq as string) === "1";
+
 	// Do some post-processing on resolved item histories.
 	for (let i = data.items.length - 1; i >= 0; i--) {
 		const item: BodgeHistoryResponseData = data.items[i];
@@ -137,6 +139,7 @@ export async function parseHistory(
 			item.entries = R.pipe(
 				item.entries,
 				R.sort((a, b) => b.timestamp - a.timestamp), // Sort in descending order
+				R.filter((entry) => !requestIsHq || entry.hq),
 				R.take(entriesToReturn ? Math.max(0, entriesToReturn as number) : 1800), // Limit entries, default 1800
 				R.map((entry) => {
 					delete entry.uploaderID;
