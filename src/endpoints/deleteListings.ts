@@ -17,7 +17,7 @@ export async function deleteListings(
 	recentData: Collection,
 ) {
 	return;
-	
+
 	if (!ctx.params.listingID) {
 		ctx.throw(HttpStatusCodes.BAD_REQUEST);
 	}

@@ -1,10 +1,3 @@
-/**
- * @name Market Listings
- * @url /api/:world/:item
- * @param world string | number The world or DC to retrieve data from.
- * @param item number The item to retrieve data for.
- */
-
 import * as R from "remeda";
 
 import {
@@ -180,10 +173,10 @@ export async function parseListings(
 
 		if (item.recentHistory) {
 			/*const emnData = await getResearch(
-				transportManager,
-				item.itemID,
-				item.worldID,
-			);*/
+                 transportManager,
+                 item.itemID,
+                 item.worldID,
+             );*/
 
 			item.recentHistory = R.pipe(
 				item.recentHistory,
@@ -208,9 +201,9 @@ export async function parseListings(
 
 			// Average sale velocities with EMN data
 			/*saleVelocities.nqSaleVelocity =
-				(saleVelocities.nqSaleVelocity + emnData.turnoverPerDayNQ) / 2;
-			saleVelocities.hqSaleVelocity =
-				(saleVelocities.hqSaleVelocity + emnData.turnoverPerDayHQ) / 2;*/
+                 (saleVelocities.nqSaleVelocity + emnData.turnoverPerDayNQ) / 2;
+             saleVelocities.hqSaleVelocity =
+                 (saleVelocities.hqSaleVelocity + emnData.turnoverPerDayHQ) / 2;*/
 
 			data.items[i] = R.pipe(
 				item,

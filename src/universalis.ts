@@ -190,7 +190,13 @@ router
 	})
 	.get("/api/history/:world/:item", async (ctx) => {
 		// Extended history
-		await parseHistory(ctx, remoteDataManager, worldMap, worldIDMap, extendedHistory);
+		await parseHistory(
+			ctx,
+			remoteDataManager,
+			worldMap,
+			worldIDMap,
+			extendedHistory,
+		);
 	})
 	.get("/api/tax-rates", async (ctx) => {
 		await parseTaxRates(ctx, worldMap, extraDataManager);
