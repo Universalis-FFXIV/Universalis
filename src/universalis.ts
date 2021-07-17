@@ -3,7 +3,6 @@ import cors from "@koa/cors";
 import Router from "@koa/router";
 import deasync from "deasync";
 import Redis from "ioredis";
-import isLocalhost from "is-localhost-ip";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import queryParams from "koa-queryparams";
@@ -25,6 +24,8 @@ import { TransportManager } from "./transports/TransportManager";
 import { EorzeanMarketNoteTransport } from "./transports/EorzeanMarketNoteTransport";
 
 // Endpoint parsers
+import v2 from "./endpoints/v2";
+
 import { parseContentID } from "./endpoints/parseContentID";
 import { parseHistory } from "./endpoints/parseHistory";
 import { parseLeastRecentlyUpdatedItems } from "./endpoints/parseLeastRecentlyUpdatedItems";
@@ -177,6 +178,16 @@ router
 	.get("/api/:world/:item", async (ctx) => {
 		// Normal data
 		await parseListings(
+			ctx,
+			remoteDataManager,
+			worldMap,
+			worldIDMap,
+			recentData,
+			transportManager,
+		);
+	})
+	.get("/api/v2/:world/:item", async (ctx) => {
+		await v2.parseListings(
 			ctx,
 			remoteDataManager,
 			worldMap,

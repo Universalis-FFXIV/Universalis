@@ -9,25 +9,24 @@ import {
 	getItemIdEn,
 	getItemNameEn,
 	makeDistrTable,
-} from "../util";
-import validation from "../validate";
+} from "../../util";
+import validation from "../../validate";
 
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
-import { CurrentStats } from "../models/CurrentStats";
-import { HttpStatusCodes } from "../models/HttpStatusCodes";
-import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
-import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
-import { MarketBoardItemListingUpload } from "../models/MarketBoardItemListingUpload";
-import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoint";
-import { SaleVelocitySeries } from "../models/SaleVelocitySeries";
-import { StackSizeHistograms } from "../models/StackSizeHistograms";
-import { Stats } from "../models/Stats";
-import { WorldDCQuery } from "../models/WorldDCQuery";
-import { RemoteDataManager } from "../remote/RemoteDataManager";
-import { TransportManager } from "../transports/TransportManager";
-import { getResearch } from "./parseEorzeanMarketNote";
+import { HttpStatusCodes } from "../../models/HttpStatusCodes";
+import { MarketBoardHistoryEntry } from "../../models/MarketBoardHistoryEntry";
+import { MarketBoardItemListing } from "../../models/MarketBoardItemListing";
+import { MarketBoardItemListingUpload } from "../../models/MarketBoardItemListingUpload";
+import { MarketBoardListingsEndpoint } from "../../models/MarketBoardListingsEndpoint";
+import { SaleVelocitySeries } from "../../models/SaleVelocitySeries";
+import { StackSizeHistograms } from "../../models/StackSizeHistograms";
+import { Stats } from "../../models/Stats";
+import { WorldDCQuery } from "../../models/WorldDCQuery";
+import { RemoteDataManager } from "../../remote/RemoteDataManager";
+import { TransportManager } from "../../transports/TransportManager";
+import { getResearch } from "../parseEorzeanMarketNote";
 
 export async function parseListings(
 	ctx: ParameterizedContext,
@@ -224,6 +223,13 @@ export async function parseListings(
 			item.recentHistory = [];
 		}
 	}
+
+	// Reshape the items array into a map
+	const newItems = {};
+	for (const item of data.items) {
+		newItems[item.itemID] = item;
+	}
+	data.items = newItems as any;
 
 	// Fill in unresolved items
 	const resolvedItems: number[] = data.items.map((item) => item.itemID);
