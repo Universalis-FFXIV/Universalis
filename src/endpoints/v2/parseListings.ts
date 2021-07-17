@@ -1,10 +1,3 @@
-/**
- * @name Market Listings
- * @url /api/:world/:item
- * @param world string | number The world or DC to retrieve data from.
- * @param item number The item to retrieve data for.
- */
-
 import * as R from "remeda";
 
 import {
@@ -16,25 +9,24 @@ import {
 	getItemIdEn,
 	getItemNameEn,
 	makeDistrTable,
-} from "../util";
-import validation from "../validate";
+} from "../../util";
+import validation from "../../validate";
 
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 
-import { CurrentStats } from "../models/CurrentStats";
-import { HttpStatusCodes } from "../models/HttpStatusCodes";
-import { MarketBoardHistoryEntry } from "../models/MarketBoardHistoryEntry";
-import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
-import { MarketBoardItemListingUpload } from "../models/MarketBoardItemListingUpload";
-import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoint";
-import { SaleVelocitySeries } from "../models/SaleVelocitySeries";
-import { StackSizeHistograms } from "../models/StackSizeHistograms";
-import { Stats } from "../models/Stats";
-import { WorldDCQuery } from "../models/WorldDCQuery";
-import { RemoteDataManager } from "../remote/RemoteDataManager";
-import { TransportManager } from "../transports/TransportManager";
-import { getResearch } from "./parseEorzeanMarketNote";
+import { HttpStatusCodes } from "../../models/HttpStatusCodes";
+import { MarketBoardHistoryEntry } from "../../models/MarketBoardHistoryEntry";
+import { MarketBoardItemListing } from "../../models/MarketBoardItemListing";
+import { MarketBoardItemListingUpload } from "../../models/MarketBoardItemListingUpload";
+import { MarketBoardListingsEndpoint } from "../../models/MarketBoardListingsEndpoint";
+import { SaleVelocitySeries } from "../../models/SaleVelocitySeries";
+import { StackSizeHistograms } from "../../models/StackSizeHistograms";
+import { Stats } from "../../models/Stats";
+import { WorldDCQuery } from "../../models/WorldDCQuery";
+import { RemoteDataManager } from "../../remote/RemoteDataManager";
+import { TransportManager } from "../../transports/TransportManager";
+import { getResearch } from "../parseEorzeanMarketNote";
 
 export async function parseListings(
 	ctx: ParameterizedContext,
@@ -180,10 +172,10 @@ export async function parseListings(
 
 		if (item.recentHistory) {
 			/*const emnData = await getResearch(
-				transportManager,
-				item.itemID,
-				item.worldID,
-			);*/
+                 transportManager,
+                 item.itemID,
+                 item.worldID,
+             );*/
 
 			item.recentHistory = R.pipe(
 				item.recentHistory,
@@ -208,9 +200,9 @@ export async function parseListings(
 
 			// Average sale velocities with EMN data
 			/*saleVelocities.nqSaleVelocity =
-				(saleVelocities.nqSaleVelocity + emnData.turnoverPerDayNQ) / 2;
-			saleVelocities.hqSaleVelocity =
-				(saleVelocities.hqSaleVelocity + emnData.turnoverPerDayHQ) / 2;*/
+                 (saleVelocities.nqSaleVelocity + emnData.turnoverPerDayNQ) / 2;
+             saleVelocities.hqSaleVelocity =
+                 (saleVelocities.hqSaleVelocity + emnData.turnoverPerDayHQ) / 2;*/
 
 			data.items[i] = R.pipe(
 				item,
@@ -251,8 +243,17 @@ export async function parseListings(
 	// If only one item is requested we just turn the whole thing into the one item.
 	if (data.itemIDs.length === 1) {
 		data = data.items[0];
-	} else if (!unresolvedItems) {
-		delete data["unresolvedItems"];
+	} else {
+		// Reshape the items array into a map
+		const newItems = {};
+		for (const item of data.items) {
+			newItems[item.itemID] = item;
+		}
+		data.items = newItems as any;
+
+		if (!unresolvedItems) {
+			delete data["unresolvedItems"];
+		}
 	}
 
 	ctx.body = data;

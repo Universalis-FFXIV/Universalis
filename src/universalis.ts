@@ -3,7 +3,6 @@ import cors from "@koa/cors";
 import Router from "@koa/router";
 import deasync from "deasync";
 import Redis from "ioredis";
-import isLocalhost from "is-localhost-ip";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import queryParams from "koa-queryparams";
@@ -25,6 +24,8 @@ import { TransportManager } from "./transports/TransportManager";
 import { EorzeanMarketNoteTransport } from "./transports/EorzeanMarketNoteTransport";
 
 // Endpoint parsers
+import v2 from "./endpoints/v2";
+
 import { parseContentID } from "./endpoints/parseContentID";
 import { parseHistory } from "./endpoints/parseHistory";
 import { parseLeastRecentlyUpdatedItems } from "./endpoints/parseLeastRecentlyUpdatedItems";
@@ -185,12 +186,28 @@ router
 			transportManager,
 		);
 	})
+	.get("/api/v2/:world/:item", async (ctx) => {
+		await v2.parseListings(
+			ctx,
+			remoteDataManager,
+			worldMap,
+			worldIDMap,
+			recentData,
+			transportManager,
+		);
+	})
 	.post("/api/:world/:item/delete", async (ctx) => {
 		await deleteListings(ctx, trustedSourceManager, worldMap, recentData);
 	})
 	.get("/api/history/:world/:item", async (ctx) => {
 		// Extended history
-		await parseHistory(ctx, remoteDataManager, worldMap, worldIDMap, extendedHistory);
+		await parseHistory(
+			ctx,
+			remoteDataManager,
+			worldMap,
+			worldIDMap,
+			extendedHistory,
+		);
 	})
 	.get("/api/tax-rates", async (ctx) => {
 		await parseTaxRates(ctx, worldMap, extraDataManager);

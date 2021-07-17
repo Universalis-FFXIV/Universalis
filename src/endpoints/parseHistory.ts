@@ -35,7 +35,7 @@ interface BodgeHistoryResponseData {
 	nqSaleVelocity: number;
 	hqSaleVelocity: number;
 	lastUploadTime: number;
-};
+}
 
 export async function parseHistory(
 	ctx: ParameterizedContext,
@@ -47,7 +47,9 @@ export async function parseHistory(
 	let entriesToReturn: string | number = ctx.queryParams.entries;
 	if (entriesToReturn) {
 		// Maximum response items is 999999
-		entriesToReturn = parseInt((entriesToReturn as string).replace(/[^0-9]/g, "").substring(0, 6));
+		entriesToReturn = parseInt(
+			(entriesToReturn as string).replace(/[^0-9]/g, "").substring(0, 6),
+		);
 	}
 
 	const itemIDs: number[] = (ctx.params.item as string)
@@ -87,7 +89,7 @@ export async function parseHistory(
 		const worlds = await getDCWorlds(query.dcName);
 		delete query.dcName;
 		query.worldID = {
-			$in: worlds.map(w => worldMap.get(w)),
+			$in: worlds.map((w) => worldMap.get(w)),
 		};
 	}
 
@@ -107,11 +109,11 @@ export async function parseHistory(
 	// Do some post-processing on resolved item histories.
 	for (let i = data.items.length - 1; i >= 0; i--) {
 		const item: BodgeHistoryResponseData = data.items[i];
-		
+
 		if (isDC) {
 			// Add the world name to all listings
 			const worldName = worldIDMap.get(item.worldID);
-			item.entries = item.entries.map(l => {
+			item.entries = item.entries.map((l) => {
 				if (!l.worldName) {
 					l.worldName = worldName;
 				}
@@ -119,16 +121,21 @@ export async function parseHistory(
 				return l;
 			});
 
-			const otherItemOnDC: BodgeHistoryResponseData = data.items.find(it => it.itemID === item.itemID && it.worldID !== item.worldID);
+			const otherItemOnDC: BodgeHistoryResponseData = data.items.find(
+				(it) => it.itemID === item.itemID && it.worldID !== item.worldID,
+			);
 			if (otherItemOnDC) {
 				// Merge this into the next applicable response item
 				otherItemOnDC.entries = otherItemOnDC.entries.concat(item.entries);
-				otherItemOnDC.lastUploadTime = Math.max(otherItemOnDC.lastUploadTime, item.lastUploadTime);
+				otherItemOnDC.lastUploadTime = Math.max(
+					otherItemOnDC.lastUploadTime,
+					item.lastUploadTime,
+				);
 				// Remove this item from the array and continue
 				data.items.splice(i, 1);
 				continue;
 			} else {
-				// Delete the world ID so it doesn't show up for the user 
+				// Delete the world ID so it doesn't show up for the user
 				delete item.worldID;
 				// Add the DC name to the response
 				item.dcName = dcName;

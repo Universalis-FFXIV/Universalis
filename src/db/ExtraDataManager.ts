@@ -179,7 +179,10 @@ export class ExtraDataManager {
 		};
 
 		if (typeof worldDC === "number") query.worldID = worldDC;
-		else if (typeof worldDC === "string") query.worldID = { $in: (await getDCWorlds(worldDC)).map(w => this.worldMap.get(w)) };
+		else if (typeof worldDC === "string")
+			query.worldID = {
+				$in: (await getDCWorlds(worldDC)).map((w) => this.worldMap.get(w)),
+			};
 		else query.worldID = { $ne: null };
 
 		const items = (
@@ -233,7 +236,10 @@ export class ExtraDataManager {
 		};
 
 		if (typeof worldDC === "number") query.worldID = worldDC;
-		else if (typeof worldDC === "string") query.worldID = { $in: (await getDCWorlds(worldDC)).map(w => this.worldMap.get(w)) };
+		else if (typeof worldDC === "string")
+			query.worldID = {
+				$in: (await getDCWorlds(worldDC)).map((w) => this.worldMap.get(w)),
+			};
 		else query.worldID = { $ne: null };
 
 		if (items.length < count) {
