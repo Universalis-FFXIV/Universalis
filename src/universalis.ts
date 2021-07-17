@@ -209,6 +209,15 @@ router
 			extendedHistory,
 		);
 	})
+	.get("/api/v2/history/:world/:item", async (ctx) => {
+		await v2.parseHistory(
+			ctx,
+			remoteDataManager,
+			worldMap,
+			worldIDMap,
+			extendedHistory,
+		);
+	})
 	.get("/api/tax-rates", async (ctx) => {
 		await parseTaxRates(ctx, worldMap, extraDataManager);
 	})
