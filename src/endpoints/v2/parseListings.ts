@@ -224,13 +224,6 @@ export async function parseListings(
 		}
 	}
 
-	// Reshape the items array into a map
-	const newItems = {};
-	for (const item of data.items) {
-		newItems[item.itemID] = item;
-	}
-	data.items = newItems as any;
-
 	// Fill in unresolved items
 	const resolvedItems: number[] = data.items.map((item) => item.itemID);
 	const unresolvedItems: number[] = R.difference(itemIDs, resolvedItems);
@@ -250,8 +243,17 @@ export async function parseListings(
 	// If only one item is requested we just turn the whole thing into the one item.
 	if (data.itemIDs.length === 1) {
 		data = data.items[0];
-	} else if (!unresolvedItems) {
-		delete data["unresolvedItems"];
+	} else {
+		// Reshape the items array into a map
+		const newItems = {};
+		for (const item of data.items) {
+			newItems[item.itemID] = item;
+		}
+		data.items = newItems as any;
+
+		if (!unresolvedItems) {
+			delete data["unresolvedItems"];
+		}
 	}
 
 	ctx.body = data;
