@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <title>Universalis API Documentation</title>
+        <style>
+            body {
+                margin-left: 15%;
+                margin-right: 15%;
+            }
+            .parameter {
+                color: darkgreen;
+            }
+            .experimental {
+                color: red;
+            }
+            .disabled {
+                color: grey;
+            }
+        </style>
+        <script type="text/javascript">
+            const http = new XMLHttpRequest();
+            const url = "/json/docs.json"
+            http.open("GET", url);
+            http.send();
+        </script>
+    </head>
+    <body>
+        <h1 id="top">Universalis API Documentation</h1>
+        <h3>Table of Contents</h3>
+        <ul id="toc"></ul>
+        <div id="endpointdocs"></div>
+        <script type="text/javascript">
+            http.onreadystatechange = (e) => {
+                if (http.readyState !== 4)
+                    return;
+
+                const baseUrl = "https://universalis.app";
+
+                let docs;
+                try {
+                    docs = JSON.parse(http.responseText);
+                } catch {
+                    return;
+                }
+                const tableOfContents = document.getElementById("toc");
+                const documentation = document.getElementById("endpointdocs");
+
+                for (let i = 0; i < docs.length; i++) {
+                    const tableOfContentsEntry = tableOfContents.appendChild(document.createElement("li"));
+                    tableOfContentsEntry.innerHTML = `
+                        <a href="#endpoint${i}">${docs[i].name}</a>
+                    `;
+
+                    const docEntry = documentation.appendChild(document.createElement("div"));
+                    const disabled = docs[i].disabled;
+                    const experimentalEnabled = docs[i].experimental && !disabled;
+                    docEntry.innerHTML = `
+                        <h3 id="endpoint${i}" class="${experimentalEnabled ? "experimental" : ""}${disabled ? "disabled" : ""}"">${docs[i].name}${experimentalEnabled ? "<small><small> Experimental</small></small>" : ""}${disabled ? "<small><small> Disabled</small></small>" : ""}</h3>
+                        <div>
+                            <a href="${baseUrl}${docs[i].url}">${baseUrl}${docs[i].url}</a>
+                            <p>
+                                ${(() => {
+                                    let paramList = "";
+                                    for (const param of docs[i].params) {
+                                        paramList += "<p><code>" + param.name + "</code> <code class=\"parameter\">" + param.type + "</code> - " + param.usage + "</p>";
+                                    }
+                                    return paramList;
+                                })()}
+                            </p>
+                            Returns:
+                            <p>
+                                ${(() => {
+                                    let returnList = "";
+                                    for (const ret of docs[i].returns) {
+                                        returnList += "<p><code>" + ret.name + "</code> <code class=\"parameter\">" + ret.type + "</code> - " + ret.usage + "</p>";
+                                    }
+                                    return returnList;
+                                })()}
+                            </p>
+                        </div>
+                    `;
+                }
+            };
+        </script>
+    </body>
+</html>
