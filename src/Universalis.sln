@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Application.Tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.GameData.Tests", "Universalis.GameData.Tests\Universalis.GameData.Tests.csproj", "{2E555253-6B72-459C-8F19-7BDF2AA7B855}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Universalis.DbAccess", "Universalis.DbAccess\Universalis.DbAccess.csproj", "{2BE59D3E-96FD-4C3D-8E92-742AD6670CF2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,10 @@ Global
 		{2E555253-6B72-459C-8F19-7BDF2AA7B855}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E555253-6B72-459C-8F19-7BDF2AA7B855}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E555253-6B72-459C-8F19-7BDF2AA7B855}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BE59D3E-96FD-4C3D-8E92-742AD6670CF2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BE59D3E-96FD-4C3D-8E92-742AD6670CF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BE59D3E-96FD-4C3D-8E92-742AD6670CF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BE59D3E-96FD-4C3D-8E92-742AD6670CF2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
