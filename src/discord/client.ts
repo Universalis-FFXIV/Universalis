@@ -2,38 +2,34 @@ import { Client, Message, MessageEmbed, TextChannel } from 'discord.js';
 import { Logger } from 'winston';
 import { BlacklistManager } from '../db/BlacklistManager';
 import { FlaggedUploadManager } from '../db/FlaggedUploadManager';
-import { sleep } from '../util';
 
 export class UniversalisDiscordClient {
+    public static async create(token: string, logger: Logger, blacklistManager: BlacklistManager, flaggedUploadManager: FlaggedUploadManager): Promise<UniversalisDiscordClient> {
+        const discord = new UniversalisDiscordClient();
+        discord.logger = logger;
+        discord.blacklistManager = blacklistManager;
+        discord.flaggedUploadManager = flaggedUploadManager;
+
+        discord.client.once("ready", () => {
+            discord.logger.info("Discord client logged-in.");
+        })
+
+        discord.client.on("message", discord.onMessage);
+
+        await discord.client.login(token);
+        discord.alertsChannel = await discord.client.channels.fetch("868169460983431178") as TextChannel;
+
+        return discord;
+    }
+
     private client = new Client();
     private logger: Logger;
     private blacklistManager: BlacklistManager;
     private flaggedUploadManager: FlaggedUploadManager;
 
     private alertsChannel: TextChannel;
-    private initialized = false;
-
-    constructor(token: string, logger: Logger, blacklistManager: BlacklistManager, flaggedUploadManager: FlaggedUploadManager) {
-        this.logger = logger;
-        this.blacklistManager = blacklistManager;
-        this.flaggedUploadManager = flaggedUploadManager;
-
-        this.client.once("ready", () => {
-            this.logger.info("Discord client logged-in.");
-        })
-
-        this.client.on("message", this.onMessage);
-
-        this.client.login(token)
-        .then(async () => {
-            this.alertsChannel = await this.client.channels.fetch("868169460983431178") as TextChannel;
-            this.initialized = true;
-        });
-    }
 
     public async sendUploadAlert(data: string) {
-        await this.waitUntilInitialized();
-
         this.logger.info("Sending flagged upload to alerts channel.");
         
         const embed = new MessageEmbed()
@@ -87,12 +83,6 @@ export class UniversalisDiscordClient {
         if (command === "!unflag") {
             await this.flaggedUploadManager.add(parseInt(args.shift()), parseInt(args.shift()), args.length === 0 ? null : JSON.parse(args.join(" ")));
             return message.reply("Pattern unflagged.");
-        }
-    }
-
-    private async waitUntilInitialized() {
-        while (!this.initialized) {
-            await sleep(1000);
         }
     }
 }

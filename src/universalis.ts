@@ -78,18 +78,12 @@ let recentData: Collection;
 let remoteDataManager: RemoteDataManager;
 let trustedSourceManager: TrustedSourceManager;
 let flaggedUploadManager: FlaggedUploadManager;
+let discord: UniversalisDiscordClient;
 
 const transportManager = new TransportManager();
 
 const worldMap: Map<string, number> = new Map();
 const worldIDMap: Map<number, string> = new Map();
-
-const discord = new UniversalisDiscordClient(
-	process.env["UNIVERSALIS_DISCORD_BOT_TOKEN"],
-	logger,
-	blacklistManager,
-	flaggedUploadManager
-);
 
 const init = (async () => {
 	dbo = await db;
@@ -123,6 +117,13 @@ const init = (async () => {
 	await initializeWorldMappings(worldMap, worldIDMap);
 
 	logger.info("Connected to database and started data managers.");
+
+	discord = await UniversalisDiscordClient.create(
+		process.env["UNIVERSALIS_DISCORD_BOT_TOKEN"],
+		logger,
+		blacklistManager,
+		flaggedUploadManager
+	);
 })();
 
 const universalis = new Koa();
