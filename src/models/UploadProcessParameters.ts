@@ -8,6 +8,8 @@ import { PriceTracker } from "../trackers/PriceTracker";
 
 import { ParameterizedContext } from "koa";
 import { Logger } from "winston";
+import { FlaggedUploadManager } from "../db/FlaggedUploadManager";
+import { UniversalisDiscordClient } from "../discord";
 
 export interface UploadProcessParameters {
 	ctx: ParameterizedContext;
@@ -15,7 +17,10 @@ export interface UploadProcessParameters {
 
 	worldIDMap: Map<number, string>;
 
+	discord: UniversalisDiscordClient;
+
 	blacklistManager: BlacklistManager;
+	flaggedUploadManager: FlaggedUploadManager;
 	contentIDCollection: ContentIDCollection;
 	extraDataManager: ExtraDataManager;
 	historyTracker: HistoryTracker;

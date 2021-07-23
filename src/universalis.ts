@@ -42,6 +42,8 @@ import { parseEorzeanMarketNote } from "./endpoints/parseEorzeanMarketNote";
 import { upload } from "./endpoints/upload";
 
 // Utils
+import { FlaggedUploadManager } from "./db/FlaggedUploadManager";
+import { UniversalisDiscordClient } from "./discord";
 import { deleteListings } from "./endpoints/deleteListings";
 import { parseHighestSaleVelocityItems } from "./endpoints/parseHighestSaleVelocityItems";
 import { parseMostRecentlyUpdatedItems } from "./endpoints/parseMostRecentlyUpdatedItems";
@@ -65,6 +67,7 @@ redisClient.on("error", (error) => {
 	logger.error(error);
 });
 
+// Other stuff
 let blacklistManager: BlacklistManager;
 let contentIDCollection: ContentIDCollection;
 let extendedHistory: Collection;
@@ -74,11 +77,19 @@ let priceTracker: PriceTracker;
 let recentData: Collection;
 let remoteDataManager: RemoteDataManager;
 let trustedSourceManager: TrustedSourceManager;
+let flaggedUploadManager: FlaggedUploadManager;
 
 const transportManager = new TransportManager();
 
 const worldMap: Map<string, number> = new Map();
 const worldIDMap: Map<number, string> = new Map();
+
+const discord = new UniversalisDiscordClient(
+	process.env["UNIVERSALIS_DISCORD_BOT_TOKEN"],
+	logger,
+	blacklistManager,
+	flaggedUploadManager
+);
 
 const init = (async () => {
 	dbo = await db;
@@ -95,6 +106,7 @@ const init = (async () => {
 	logger.info("Loaded all remote resources.");
 
 	blacklistManager = await BlacklistManager.create(logger, universalisDB);
+	flaggedUploadManager = await FlaggedUploadManager.create(logger, universalisDB);
 	contentIDCollection = await ContentIDCollection.create(logger, universalisDB);
 	extraDataManager = await ExtraDataManager.create(
 		remoteDataManager,
@@ -269,8 +281,10 @@ router
 		// Upload process
 		await upload({
 			blacklistManager,
+			flaggedUploadManager,
 			contentIDCollection,
 			ctx,
+			discord,
 			extraDataManager,
 			historyTracker,
 			logger,
