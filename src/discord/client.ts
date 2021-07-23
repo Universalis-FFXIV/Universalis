@@ -30,9 +30,9 @@ export class UniversalisDiscordClient {
             this.logger.info("Discord client logged-in.");
         });
 
-        this.client.on("message", this.onMessage);
-
-        this.logger.info(`${this.flaggedUploadManager == null}`);
+        this.client.on("message", (message) => {
+            this.onMessage(message);
+        });
     }
 
     public async sendUploadAlert(data: string) {
