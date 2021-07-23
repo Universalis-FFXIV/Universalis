@@ -103,7 +103,7 @@ const init = (async () => {
 	logger.info("Initialized BlacklistManager.");
 	
 	contentIDCollection = await ContentIDCollection.create(logger, universalisDB);
-	logger.info("Initialized ContentIDCollections.");
+	logger.info("Initialized ContentIDCollection.");
 
 	extraDataManager = await ExtraDataManager.create(
 		remoteDataManager,
