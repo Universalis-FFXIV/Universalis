@@ -1,22 +1,12 @@
 import { Client, Message, MessageEmbed, TextChannel } from 'discord.js';
 import { Logger } from 'winston';
+import { cli } from 'winston/lib/winston/config';
 import { BlacklistManager } from '../db/BlacklistManager';
 import { FlaggedUploadManager } from '../db/FlaggedUploadManager';
 
 export class UniversalisDiscordClient {
     public static async create(token: string, logger: Logger, blacklistManager: BlacklistManager, flaggedUploadManager: FlaggedUploadManager): Promise<UniversalisDiscordClient> {
-        const discord = new UniversalisDiscordClient();
-
-        discord.client = new Client();
-        discord.logger = logger;
-        discord.blacklistManager = blacklistManager;
-        discord.flaggedUploadManager = flaggedUploadManager;
-
-        discord.client.once("ready", () => {
-            discord.logger.info("Discord client logged-in.");
-        })
-
-        discord.client.on("message", discord.onMessage);
+        const discord = new UniversalisDiscordClient(new Client(), logger, blacklistManager, flaggedUploadManager);
 
         await discord.client.login(token);
         discord.alertsChannel = await discord.client.channels.fetch("868169460983431178") as TextChannel;
@@ -30,6 +20,19 @@ export class UniversalisDiscordClient {
     private flaggedUploadManager: FlaggedUploadManager;
 
     private alertsChannel: TextChannel;
+
+    constructor(client: Client, logger: Logger, blacklistManager: BlacklistManager, flaggedUploadManager: FlaggedUploadManager) {
+        this.client = client;
+        this.logger = logger;
+        this.blacklistManager = blacklistManager;
+        this.flaggedUploadManager = flaggedUploadManager;
+
+        this.client.once("ready", () => {
+            this.logger.info("Discord client logged-in.");
+        });
+
+        this.client.on("message", this.onMessage);
+    }
 
     public async sendUploadAlert(data: string) {
         this.logger.info("Sending flagged upload to alerts channel.");
