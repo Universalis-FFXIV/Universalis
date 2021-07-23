@@ -14,7 +14,7 @@ export class HistoryTracker extends Tracker {
 		const recentData = db.collection("recentData");
 		const extendedHistory = db.collection("extendedHistory");
 
-		const indices = [{ dcName: 1 }, { itemID: 1 }, { worldID: 1 }];
+		const indices = [{ itemID: 1 }, { worldID: 1 }];
 		const indexNames = indices.map(Object.keys);
 		for (let i = 0; i < indices.length; i++) {
 			// We check each individually to ensure we don't duplicate indices on failure.
