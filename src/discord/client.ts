@@ -57,7 +57,7 @@ export class UniversalisDiscordClient {
 
         if (command === "!block") {
             if (args.length < 1) {
-                return message.reply("No uploader ID supplied.");
+                return message.reply("no uploader ID was supplied.");
             }
 
             await this.blacklistManager.add(args[0]);
@@ -66,7 +66,7 @@ export class UniversalisDiscordClient {
 
         if (command === "!unblock") {
             if (args.length < 1) {
-                return message.reply("No uploader ID supplied.");
+                return message.reply("no uploader ID was supplied.");
             }
 
             await this.blacklistManager.remove(args[0]);
@@ -75,7 +75,7 @@ export class UniversalisDiscordClient {
 
         if (command === "!flag") {
             if (args.length < 2) {
-                return message.reply("Expected world ID, item ID, and optionally listings.");
+                return message.reply("expected world ID, item ID, and optionally listings.");
             }
 
             await this.flaggedUploadManager.add(parseInt(args.shift()), parseInt(args.shift()), args.length === 0 ? null : JSON.parse(args.join(" ")));
@@ -83,6 +83,10 @@ export class UniversalisDiscordClient {
         }
 
         if (command === "!unflag") {
+            if (args.length < 2) {
+                return message.reply("expected world ID, item ID, and optionally listings.");
+            }
+
             await this.flaggedUploadManager.add(parseInt(args.shift()), parseInt(args.shift()), args.length === 0 ? null : JSON.parse(args.join(" ")));
             return message.reply("Pattern unflagged.");
         }

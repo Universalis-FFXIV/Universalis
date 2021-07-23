@@ -133,7 +133,7 @@ const init = (async () => {
 		process.env["UNIVERSALIS_DISCORD_BOT_TOKEN"],
 		logger,
 		blacklistManager,
-		flaggedUploadManager
+		flaggedUploadManager,
 	);
 
 	logger.info("Initialized Discord service.");
