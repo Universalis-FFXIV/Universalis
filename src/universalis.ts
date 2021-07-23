@@ -100,17 +100,28 @@ const init = (async () => {
 	logger.info("Loaded all remote resources.");
 
 	blacklistManager = await BlacklistManager.create(logger, universalisDB);
+	logger.info("Initialized BlacklistManager.");
+	
 	contentIDCollection = await ContentIDCollection.create(logger, universalisDB);
+	logger.info("Initialized ContentIDCollections.");
+
 	extraDataManager = await ExtraDataManager.create(
 		remoteDataManager,
 		worldIDMap,
 		worldMap,
 		universalisDB,
 	);
+	logger.info("Initialized ExtraDataManager.");
+	
 	historyTracker = await HistoryTracker.create(universalisDB);
 	priceTracker = await PriceTracker.create(universalisDB);
+	logger.info("Initialized HistoryTracker and PriceTracker.");
+
 	trustedSourceManager = await TrustedSourceManager.create(universalisDB);
+	logger.info("Initialized TrustedSourceManager.");
+
 	flaggedUploadManager = await FlaggedUploadManager.create(universalisDB);
+	logger.info("Initialized FlaggedUploadManager.");
 
 	logger.info("Initialized all database managers.");
 
