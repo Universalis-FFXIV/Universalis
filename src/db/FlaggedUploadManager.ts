@@ -1,5 +1,4 @@
 import { Collection, Db, MongoError } from "mongodb";
-import { Logger } from "winston";
 import { MarketBoardItemListingUpload } from "../models/MarketBoardItemListingUpload";
 
 export interface FlaggedUploadEntry {
@@ -10,21 +9,10 @@ export interface FlaggedUploadEntry {
 
 export class FlaggedUploadManager {
 	public static async create(
-		logger: Logger,
 		db: Db,
 	): Promise<FlaggedUploadManager> {
-		const blacklist = db.collection("flaggedUpload");
-
-		const indices = [{ uploaderID: 1 }];
-		const indexNames = indices.map(Object.keys);
-		for (let i = 0; i < indices.length; i++) {
-			// We check each individually to ensure we don't duplicate indices on failure.
-			if (!(await blacklist.indexExists(indexNames[i]).catch(logger.error))) {
-				await blacklist.createIndex(indices[i]).catch(logger.error);
-			}
-		}
-
-		return new FlaggedUploadManager(blacklist);
+		const flaggedUploadCollection = db.collection("flaggedUpload");
+		return new FlaggedUploadManager(flaggedUploadCollection);
 	}
 
 	private collection: Collection<FlaggedUploadEntry>;

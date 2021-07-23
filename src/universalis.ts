@@ -100,7 +100,6 @@ const init = (async () => {
 	logger.info("Loaded all remote resources.");
 
 	blacklistManager = await BlacklistManager.create(logger, universalisDB);
-	flaggedUploadManager = await FlaggedUploadManager.create(logger, universalisDB);
 	contentIDCollection = await ContentIDCollection.create(logger, universalisDB);
 	extraDataManager = await ExtraDataManager.create(
 		remoteDataManager,
@@ -111,6 +110,7 @@ const init = (async () => {
 	historyTracker = await HistoryTracker.create(universalisDB);
 	priceTracker = await PriceTracker.create(universalisDB);
 	trustedSourceManager = await TrustedSourceManager.create(universalisDB);
+	flaggedUploadManager = await FlaggedUploadManager.create(universalisDB);
 
 	transportManager.addTransport(new EorzeanMarketNoteTransport(logger));
 
