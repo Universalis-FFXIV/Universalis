@@ -52,7 +52,7 @@ export class UniversalisDiscordClient {
         if (message.guild == null) return;
 
         const member = message.guild.member(message.author.id);
-        if (member.roles.cache.has("617151910251855873")) return;
+        if (!member.roles.cache.has("617151910251855873")) return;
 
         const args = message.content.split(" ");
         const command = args.shift().toLowerCase();
