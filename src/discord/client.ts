@@ -6,6 +6,8 @@ import { FlaggedUploadManager } from '../db/FlaggedUploadManager';
 export class UniversalisDiscordClient {
     public static async create(token: string, logger: Logger, blacklistManager: BlacklistManager, flaggedUploadManager: FlaggedUploadManager): Promise<UniversalisDiscordClient> {
         const discord = new UniversalisDiscordClient();
+
+        discord.client = new Client();
         discord.logger = logger;
         discord.blacklistManager = blacklistManager;
         discord.flaggedUploadManager = flaggedUploadManager;
@@ -22,7 +24,7 @@ export class UniversalisDiscordClient {
         return discord;
     }
 
-    private client = new Client();
+    private client: Client;
     private logger: Logger;
     private blacklistManager: BlacklistManager;
     private flaggedUploadManager: FlaggedUploadManager;
