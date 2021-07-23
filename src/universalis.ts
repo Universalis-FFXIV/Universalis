@@ -112,11 +112,11 @@ const init = (async () => {
 	trustedSourceManager = await TrustedSourceManager.create(universalisDB);
 	flaggedUploadManager = await FlaggedUploadManager.create(universalisDB);
 
+	logger.info("Initialized all database managers.");
+
 	transportManager.addTransport(new EorzeanMarketNoteTransport(logger));
 
 	await initializeWorldMappings(worldMap, worldIDMap);
-
-	logger.info("Connected to database and started data managers.");
 
 	discord = await UniversalisDiscordClient.create(
 		process.env["UNIVERSALIS_DISCORD_BOT_TOKEN"],
@@ -124,6 +124,8 @@ const init = (async () => {
 		blacklistManager,
 		flaggedUploadManager
 	);
+
+	logger.info("Initialized Discord service.");
 })();
 
 const universalis = new Koa();
