@@ -65,7 +65,7 @@ export class UniversalisDiscordClient {
             }
 
             await this.blacklistManager.add(args[0]);
-            return message.reply("Uploader blocked.");
+            return message.reply("uploader blocked.");
         }
 
         if (command === "!unblock") {
@@ -74,7 +74,7 @@ export class UniversalisDiscordClient {
             }
 
             await this.blacklistManager.remove(args[0]);
-            return message.reply("Uploader unblocked.");
+            return message.reply("uploader unblocked.");
         }
 
         if (command === "!flag") {
@@ -83,7 +83,7 @@ export class UniversalisDiscordClient {
             }
 
             await this.flaggedUploadManager.add(parseInt(args.shift()), parseInt(args.shift()), args.length === 0 ? null : JSON.parse(args.join(" ")));
-            return message.reply("Pattern flagged.");
+            return message.reply("pattern flagged.");
         }
 
         if (command === "!unflag") {
@@ -92,7 +92,7 @@ export class UniversalisDiscordClient {
             }
 
             await this.flaggedUploadManager.add(parseInt(args.shift()), parseInt(args.shift()), args.length === 0 ? null : JSON.parse(args.join(" ")));
-            return message.reply("Pattern unflagged.");
+            return message.reply("pattern unflagged.");
         }
     }
 }
