@@ -207,15 +207,23 @@ export default {
 	validateUploadData: async (
 		logger: Logger,
 		args: ValidateUploadDataArgs,
-	): Promise<void | never> => {
+	): Promise<boolean> => {
 		// Check blacklisted uploaders (people who upload fake data)
 		if (
 			args.uploadData.uploaderID == null ||
 			(await args.blacklistManager.has(args.uploadData.uploaderID as string))
 		) {
-			args.ctx.throw(HttpStatusCodes.FORBIDDEN);
+			// Don't make it fast to detect
+			args.ctx.body = "Success";
+			return false;
 		}
 
+		if (args.uploadData.worldID && args.uploadData.itemID && args.uploadData.listings != null) {
+			if (await args.flaggedUploadManager.has(args.uploadData.worldID, args.uploadData.itemID, args.uploadData.listings)) {
+				await args.discord.sendUploadAlert(JSON.stringify(args.uploadData));
+			}
+		}
+		
 		// You can't upload data for these worlds because you can't scrape it.
 		// This does include Korean worlds for the time being.
 		if (
@@ -306,6 +314,8 @@ export default {
 		) {
 			args.ctx.throw(HttpStatusCodes.IM_A_TEAPOT);
 		}
+
+		return true;
 	},
 };
 

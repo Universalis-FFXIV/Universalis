@@ -9,7 +9,7 @@ export class PriceTracker extends Tracker {
 	public static async create(db: Db): Promise<PriceTracker> {
 		const collection = db.collection("recentData");
 
-		const indices = [{ dcName: 1 }, { itemID: 1 }, { worldID: 1 }];
+		const indices = [{ itemID: 1 }, { worldID: 1 }];
 		const indexNames = indices.map(Object.keys);
 		for (let i = 0; i < indices.length; i++) {
 			// We check each individually to ensure we don't duplicate indices on failure.

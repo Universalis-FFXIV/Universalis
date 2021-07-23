@@ -20,6 +20,7 @@ import { UploadProcessParameters } from "../models/UploadProcessParameters";
 
 export async function upload(parameters: UploadProcessParameters) {
 	const blacklistManager = parameters.blacklistManager;
+	const flaggedUploadManager = parameters.flaggedUploadManager;
 	const contentIDCollection = parameters.contentIDCollection;
 	const ctx = parameters.ctx;
 	const extraDataManager = parameters.extraDataManager;
@@ -29,6 +30,7 @@ export async function upload(parameters: UploadProcessParameters) {
 	const remoteDataManager = parameters.remoteDataManager;
 	const trustedSourceManager = parameters.trustedSourceManager;
 	const worldIDMap = parameters.worldIDMap;
+	const discord = parameters.discord;
 
 	validation.validateUploadDataPreCast(ctx);
 
@@ -50,16 +52,24 @@ export async function upload(parameters: UploadProcessParameters) {
 		ctx.request.body.retainerCity = City[ctx.request.body.retainerCity];
 	const uploadData: GenericUpload = ctx.request.body;
 
+	if (!uploadData.uploaderID) {
+		return ctx.throw(HttpStatusCodes.BAD_REQUEST);
+	}
+
 	uploadData.uploaderID = sha("sha256")
 		.update(uploadData.uploaderID.toString())
 		.digest("hex");
 
-	await validation.validateUploadData(logger, {
+	if (!await validation.validateUploadData(logger, {
 		ctx,
 		uploadData,
 		blacklistManager,
+		flaggedUploadManager,
 		remoteDataManager,
-	});
+		discord,
+	})) {
+		return;
+	}
 
 	// Metadata
 	if (uploadData.worldID) {

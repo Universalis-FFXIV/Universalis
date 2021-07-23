@@ -42,6 +42,8 @@ import { parseEorzeanMarketNote } from "./endpoints/parseEorzeanMarketNote";
 import { upload } from "./endpoints/upload";
 
 // Utils
+import { FlaggedUploadManager } from "./db/FlaggedUploadManager";
+import { UniversalisDiscordClient } from "./discord";
 import { deleteListings } from "./endpoints/deleteListings";
 import { parseHighestSaleVelocityItems } from "./endpoints/parseHighestSaleVelocityItems";
 import { parseMostRecentlyUpdatedItems } from "./endpoints/parseMostRecentlyUpdatedItems";
@@ -65,6 +67,7 @@ redisClient.on("error", (error) => {
 	logger.error(error);
 });
 
+// Other stuff
 let blacklistManager: BlacklistManager;
 let contentIDCollection: ContentIDCollection;
 let extendedHistory: Collection;
@@ -74,6 +77,8 @@ let priceTracker: PriceTracker;
 let recentData: Collection;
 let remoteDataManager: RemoteDataManager;
 let trustedSourceManager: TrustedSourceManager;
+let flaggedUploadManager: FlaggedUploadManager;
+let discord: UniversalisDiscordClient;
 
 const transportManager = new TransportManager();
 
@@ -95,22 +100,43 @@ const init = (async () => {
 	logger.info("Loaded all remote resources.");
 
 	blacklistManager = await BlacklistManager.create(logger, universalisDB);
+	logger.info("Initialized BlacklistManager.");
+	
 	contentIDCollection = await ContentIDCollection.create(logger, universalisDB);
+	logger.info("Initialized ContentIDCollection.");
+
 	extraDataManager = await ExtraDataManager.create(
 		remoteDataManager,
 		worldIDMap,
 		worldMap,
 		universalisDB,
 	);
+	logger.info("Initialized ExtraDataManager.");
+	
 	historyTracker = await HistoryTracker.create(universalisDB);
 	priceTracker = await PriceTracker.create(universalisDB);
+	logger.info("Initialized HistoryTracker and PriceTracker.");
+
 	trustedSourceManager = await TrustedSourceManager.create(universalisDB);
+	logger.info("Initialized TrustedSourceManager.");
+
+	flaggedUploadManager = await FlaggedUploadManager.create(universalisDB);
+	logger.info("Initialized FlaggedUploadManager.");
+
+	logger.info("Initialized all database managers.");
 
 	transportManager.addTransport(new EorzeanMarketNoteTransport(logger));
 
 	await initializeWorldMappings(worldMap, worldIDMap);
 
-	logger.info("Connected to database and started data managers.");
+	discord = await UniversalisDiscordClient.create(
+		process.env["UNIVERSALIS_DISCORD_BOT_TOKEN"],
+		logger,
+		blacklistManager,
+		flaggedUploadManager,
+	);
+
+	logger.info("Initialized Discord service.");
 })();
 
 const universalis = new Koa();
@@ -269,8 +295,10 @@ router
 		// Upload process
 		await upload({
 			blacklistManager,
+			flaggedUploadManager,
 			contentIDCollection,
 			ctx,
+			discord,
 			extraDataManager,
 			historyTracker,
 			logger,

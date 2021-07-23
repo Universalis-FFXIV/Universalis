@@ -39,6 +39,15 @@ export class BlacklistManager {
 		}
 	}
 
+	/** Removes an uploader from the blacklist. */
+	public async remove(uploaderID: string): Promise<void> {
+		try {
+			await this.collection.deleteOne({ uploaderID });
+		} catch (e) {
+			if ((e as MongoError).code !== 11000) throw e;
+		}
+	}
+
 	/** Check if the blacklist has an uploader. */
 	public async has(uploaderID: string): Promise<boolean> {
 		return (await this.collection.findOne({ uploaderID })) != null;
