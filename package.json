@@ -33,6 +33,7 @@
     "cron": "^1.7.1",
     "csv-parse": "^4.4.6",
     "deasync": "^0.1.21",
+    "discord.js": "^12.5.3",
     "ioredis": "^4.26.0",
     "is-localhost-ip": "^1.4.0",
     "koa": "^2.7.0",
