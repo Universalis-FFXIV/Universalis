@@ -1,6 +1,5 @@
 import { Client, Message, MessageEmbed, TextChannel } from 'discord.js';
 import { Logger } from 'winston';
-import { cli } from 'winston/lib/winston/config';
 import { BlacklistManager } from '../db/BlacklistManager';
 import { FlaggedUploadManager } from '../db/FlaggedUploadManager';
 
@@ -10,6 +9,9 @@ export class UniversalisDiscordClient {
 
         await discord.client.login(token);
         discord.alertsChannel = await discord.client.channels.fetch("868169460983431178") as TextChannel;
+
+        logger.info(`${flaggedUploadManager == null}`);
+        logger.info(`${discord.flaggedUploadManager == null}`);
 
         return discord;
     }
@@ -21,7 +23,7 @@ export class UniversalisDiscordClient {
 
     private alertsChannel: TextChannel;
 
-    constructor(client: Client, logger: Logger, blacklistManager: BlacklistManager, flaggedUploadManager: FlaggedUploadManager) {
+    private constructor(client: Client, logger: Logger, blacklistManager: BlacklistManager, flaggedUploadManager: FlaggedUploadManager) {
         this.client = client;
         this.logger = logger;
         this.blacklistManager = blacklistManager;
@@ -80,7 +82,7 @@ export class UniversalisDiscordClient {
             if (args.length < 2) {
                 return message.reply("expected world ID, item ID, and optionally listings.");
             }
-
+            this.logger.info(`${this.flaggedUploadManager == null}`);
             await this.flaggedUploadManager.add(parseInt(args.shift()), parseInt(args.shift()), args.length === 0 ? null : JSON.parse(args.join(" ")));
             return message.reply("Pattern flagged.");
         }
