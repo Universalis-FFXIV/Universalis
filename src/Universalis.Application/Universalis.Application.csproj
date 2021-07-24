@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Universalis.Alerts\Universalis.Alerts.csproj" />
+    <ProjectReference Include="..\Universalis.DataTransformations\Universalis.DataTransformations.fsproj" />
     <ProjectReference Include="..\Universalis.Entities\Universalis.Entities.csproj" />
     <ProjectReference Include="..\Universalis.GameData\Universalis.GameData.csproj" />
   </ItemGroup>
