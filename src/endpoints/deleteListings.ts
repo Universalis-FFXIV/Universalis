@@ -74,7 +74,7 @@ export async function deleteListings(
 	const deleteRequest = uploadData as DeleteRequest;
 
 	// delete the listing
-	await recentData.findOneAndUpdate(
+	const result = await recentData.findOneAndUpdate(
 		{ worldID, itemID },
 		{
 			$pull: {
@@ -88,6 +88,8 @@ export async function deleteListings(
 			},
 		},
 	);
+
+	logger.debug(`${result.ok}`);
 
 	ctx.body = "Success";
 }
