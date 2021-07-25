@@ -74,7 +74,7 @@ export async function deleteListings(
 	const deleteRequest = uploadData as DeleteRequest;
 
 	// delete the listing
-	const result = await recentData.findOneAndUpdate(
+	/*await recentData.findOneAndUpdate(
 		{ worldID, itemID },
 		{
 			$pull: {
@@ -87,9 +87,22 @@ export async function deleteListings(
 				} as MarketBoardItemListing,
 			},
 		},
-	);
+	);*/
 
-	logger.debug(`${result.ok}`);
+	logger.warn(`${await recentData.findOneAndUpdate(
+		{ worldID, itemID },
+		{
+			$pull: {
+				listings: {
+					retainerID: sha("sha256")
+						.update(deleteRequest.retainerID.toString())
+						.digest("hex"),
+					quantity: deleteRequest.quantity,
+					pricePerUnit: deleteRequest.pricePerUnit,
+				} as MarketBoardItemListing,
+			},
+		},
+	)}`);
 
 	ctx.body = "Success";
 }
