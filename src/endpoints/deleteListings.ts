@@ -56,6 +56,7 @@ export async function deleteListings(
 	// parse the request body
 	const uploadData: GenericUpload = ctx.request.body;
 
+	logger.warn("Checking for presence of uploader ID:");
 	if (!uploadData.uploaderID) {
 		ctx.throw(HttpStatusCodes.BAD_REQUEST);
 	}
@@ -64,6 +65,7 @@ export async function deleteListings(
 		.update(uploadData.uploaderID.toString())
 		.digest("hex");
 
+	logger.warn("Checking blacklist:");
 	if (blacklistManager.has(uploadData.uploaderID)) {
 		ctx.body = "Success";
 		return;
