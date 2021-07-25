@@ -33,7 +33,7 @@ export async function deleteListings(
 	}
 
 	// parse world ID
-	let worldID = ctx.query.world;
+	let worldID = ctx.params.world;
 
 	if (worldID && !parseInt(worldID)) {
 		worldID = worldMap.get(worldID.charAt(0).toUpperCase() + worldID.substr(1));
