@@ -64,7 +64,7 @@ export async function deleteListings(
 	const uploadData: GenericUpload = ctx.request.body;
 
 	if (!uploadData.uploaderID) {
-		return ctx.throw(HttpStatusCodes.BAD_REQUEST);
+		ctx.throw(HttpStatusCodes.BAD_REQUEST);
 	}
 
 	uploadData.uploaderID = sha("sha256")
