@@ -56,19 +56,6 @@ export async function deleteListings(
 	// parse the request body
 	const uploadData: GenericUpload = ctx.request.body;
 
-	logger.info(`Received listing delete request from user ${uploadData.uploaderID} using ${client.sourceName} to item ${itemID} on world ${worldID}.`);
-
-	await removeOld(recentData, worldID as number, itemID); // Remove old records while we're at it
-
-	const itemInfo: MarketBoardListingsEndpoint = await recentData.findOne({
-		worldID,
-		itemID,
-	});
-	if (itemInfo == null || itemInfo.listings == null) {
-		ctx.body = "Success";
-		return;
-	}
-
 	if (!uploadData.uploaderID) {
 		ctx.throw(HttpStatusCodes.BAD_REQUEST);
 	}
@@ -81,6 +68,8 @@ export async function deleteListings(
 		ctx.body = "Success";
 		return;
 	}
+
+	logger.info(`Received listing delete request from user ${uploadData.uploaderID} using ${client.sourceName} to item ${itemID} on world ${worldID}.`);
 
 	const deleteRequest = uploadData as DeleteRequest;
 
