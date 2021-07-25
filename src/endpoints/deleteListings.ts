@@ -6,29 +6,30 @@
 import { ParameterizedContext } from "koa";
 import { Collection } from "mongodb";
 import { TrustedSourceManager } from "../db/TrustedSourceManager";
+import { GenericUpload } from "../models/GenericUpload";
 import { HttpStatusCodes } from "../models/HttpStatusCodes";
 import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoint";
 import { removeOld } from "../util";
 
+import sha from "sha.js";
+import { BlacklistManager } from "../db/BlacklistManager";
+import { DeleteRequest } from "../models/DeleteRequest";
+import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
+
 export async function deleteListings(
 	ctx: ParameterizedContext,
+	blacklistManager: BlacklistManager,
 	trustedSourceManager: TrustedSourceManager,
 	worldMap: Map<string, number>,
 	recentData: Collection,
 ) {
-	return;
-
-	if (!ctx.params.listingID) {
-		ctx.throw(HttpStatusCodes.BAD_REQUEST);
-	}
-
 	// validate API key
 	const apiKey = ctx.get("Authorization"); // TODO: require the authorization header on uploads, too
 	if (!apiKey || !(await trustedSourceManager.get(apiKey))) {
 		ctx.throw(HttpStatusCodes.FORBIDDEN);
 	}
 
-	// look for listing ID
+	// parse world ID
 	let worldID = ctx.query.world;
 
 	if (worldID && !parseInt(worldID)) {
@@ -43,7 +44,7 @@ export async function deleteListings(
 	}
 
 	if (typeof worldID !== "number") {
-		return;
+		ctx.throw(HttpStatusCodes.BAD_REQUEST);
 	}
 
 	const itemID = parseInt(ctx.params.item as string);
@@ -55,23 +56,43 @@ export async function deleteListings(
 		itemID,
 	});
 	if (itemInfo == null || itemInfo.listings == null) {
+		ctx.body = "Success";
 		return;
 	}
+
+	// parse the request body
+	const uploadData: GenericUpload = ctx.request.body;
+
+	if (!uploadData.uploaderID) {
+		return ctx.throw(HttpStatusCodes.BAD_REQUEST);
+	}
+
+	uploadData.uploaderID = sha("sha256")
+		.update(uploadData.uploaderID.toString())
+		.digest("hex");
+
+	if (blacklistManager.has(uploadData.uploaderID)) {
+		ctx.body = "Success";
+		return;
+	}
+
+	const deleteRequest = uploadData as DeleteRequest;
 
 	// delete the listing
-	const toDelete = itemInfo.listings.find(
-		(l) => l.listingID == ctx.params.listing,
-	);
-	if (toDelete == null) {
-		return;
-	}
-
 	await recentData.findOneAndUpdate(
 		{ worldID, itemID },
 		{
-			$set: {
-				listings: itemInfo.listings.filter((l) => l != ctx.params.listing),
+			$pull: {
+				listings: {
+					retainerID: sha("sha256")
+						.update(deleteRequest.retainerID.toString())
+						.digest("hex"),
+					quantity: deleteRequest.quantity,
+					pricePerUnit: deleteRequest.pricePerUnit,
+				} as MarketBoardItemListing,
 			},
 		},
 	);
+
+	ctx.body = "Success";
 }
