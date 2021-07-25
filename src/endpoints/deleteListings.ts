@@ -89,6 +89,7 @@ export async function deleteListings(
 		},
 	);*/
 
+	logger.warn("Performing database update:");
 	logger.warn(`${await recentData.updateMany(
 		{ worldID, itemID },
 		{
@@ -103,6 +104,7 @@ export async function deleteListings(
 			},
 		},
 	)}`);
+	logger.warn("Done!");
 
 	ctx.body = "Success";
 }
