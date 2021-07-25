@@ -66,7 +66,7 @@ export async function deleteListings(
 		.digest("hex");
 
 	logger.warn("Checking blacklist:");
-	if (blacklistManager.has(uploadData.uploaderID)) {
+	if (await blacklistManager.has(uploadData.uploaderID)) {
 		ctx.body = "Success";
 		return;
 	}
