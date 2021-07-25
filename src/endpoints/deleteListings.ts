@@ -12,12 +12,14 @@ import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoi
 import { removeOld } from "../util";
 
 import sha from "sha.js";
+import { Logger } from "winston";
 import { BlacklistManager } from "../db/BlacklistManager";
 import { DeleteRequest } from "../models/DeleteRequest";
 import { MarketBoardItemListing } from "../models/MarketBoardItemListing";
 
 export async function deleteListings(
 	ctx: ParameterizedContext,
+	logger: Logger,
 	blacklistManager: BlacklistManager,
 	trustedSourceManager: TrustedSourceManager,
 	worldMap: Map<string, number>,
@@ -25,7 +27,8 @@ export async function deleteListings(
 ) {
 	// validate API key
 	const apiKey = ctx.get("Authorization"); // TODO: require the authorization header on uploads, too
-	if (!apiKey || !(await trustedSourceManager.get(apiKey))) {
+	const client = await trustedSourceManager.get(apiKey);
+	if (!apiKey || !client) {
 		ctx.throw(HttpStatusCodes.FORBIDDEN);
 	}
 
@@ -44,10 +47,16 @@ export async function deleteListings(
 	}
 
 	if (typeof worldID !== "number") {
+		logger.warn(`Got delete request with bad world ID "${worldID}".`);
 		ctx.throw(HttpStatusCodes.BAD_REQUEST);
 	}
 
 	const itemID = parseInt(ctx.params.item as string);
+
+	// parse the request body
+	const uploadData: GenericUpload = ctx.request.body;
+
+	logger.info(`Received listing delete request from user ${uploadData.uploaderID} using ${client.sourceName} to item ${itemID} on world ${worldID}.`);
 
 	await removeOld(recentData, worldID as number, itemID); // Remove old records while we're at it
 
@@ -59,11 +68,6 @@ export async function deleteListings(
 		ctx.body = "Success";
 		return;
 	}
-
-	// parse the request body
-	const uploadData: GenericUpload = ctx.request.body;
-
-	console.log(uploadData);
 
 	if (!uploadData.uploaderID) {
 		ctx.throw(HttpStatusCodes.BAD_REQUEST);

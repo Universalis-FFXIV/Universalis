@@ -223,7 +223,7 @@ router
 		);
 	})
 	.post("/api/:world/:item/delete", async (ctx) => {
-		await deleteListings(ctx, blacklistManager, trustedSourceManager, worldMap, recentData);
+		await deleteListings(ctx, logger, blacklistManager, trustedSourceManager, worldMap, recentData);
 	})
 	.get("/api/history/:world/:item", async (ctx) => {
 		// Extended history
