@@ -56,7 +56,6 @@ export async function deleteListings(
 	// parse the request body
 	const uploadData: GenericUpload = ctx.request.body;
 
-	logger.warn("Checking for presence of uploader ID:");
 	if (!uploadData.uploaderID) {
 		ctx.throw(HttpStatusCodes.BAD_REQUEST);
 	}
@@ -65,7 +64,6 @@ export async function deleteListings(
 		.update(uploadData.uploaderID.toString())
 		.digest("hex");
 
-	logger.warn("Checking blacklist:");
 	if (await blacklistManager.has(uploadData.uploaderID)) {
 		ctx.body = "Success";
 		return;
@@ -91,7 +89,6 @@ export async function deleteListings(
 		},
 	);*/
 
-	logger.warn("Performing database update:");
 	logger.warn(`${await recentData.updateMany(
 		{ worldID, itemID },
 		{
@@ -106,7 +103,6 @@ export async function deleteListings(
 			},
 		},
 	)}`);
-	logger.warn("Done!");
 
 	ctx.body = "Success";
 }
