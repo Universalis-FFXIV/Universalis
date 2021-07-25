@@ -89,7 +89,7 @@ export async function deleteListings(
 		},
 	);*/
 
-	logger.warn(`${await recentData.findOneAndUpdate(
+	logger.warn(`${await recentData.updateMany(
 		{ worldID, itemID },
 		{
 			$pull: {
