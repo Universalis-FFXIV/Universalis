@@ -89,17 +89,27 @@ export async function deleteListings(
 		},
 	);*/
 
-	logger.warn(`${await recentData.updateMany(
+	const itemData = await recentData.findOne({ worldID, itemID });
+	if (itemData == null) {
+		ctx.body = "Success";
+		return;
+	}
+
+	const retainerIDCheck = sha("sha256")
+		.update(deleteRequest.retainerID.toString())
+		.digest("hex");
+
+	const newListings = itemData.listings.filter((listing: MarketBoardItemListing) => {
+		return !(listing.retainerID === retainerIDCheck
+		&& listing.quantity === deleteRequest.quantity
+		&& listing.pricePerUnit === deleteRequest.pricePerUnit);
+	});
+
+	logger.warn(`${await recentData.updateOne(
 		{ worldID, itemID },
 		{
-			$pull: {
-				listings: {
-					retainerID: sha("sha256")
-						.update(deleteRequest.retainerID.toString())
-						.digest("hex"),
-					quantity: deleteRequest.quantity,
-					pricePerUnit: deleteRequest.pricePerUnit,
-				} as MarketBoardItemListing,
+			$set: {
+				listings: newListings,
 			},
 		},
 	)}`);
