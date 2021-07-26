@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Universalis.Entities.MarketBoard
 {
-    public class CurrentlyShown
+    public class History
     {
         [BsonElement("itemID")]
         public uint ItemId { get; set; }
@@ -17,10 +17,7 @@ namespace Universalis.Entities.MarketBoard
         [BsonElement("uploaderID")]
         public string UploadIdHash { get; set; }
 
-        [BsonElement("listings")]
-        public List<Listing> Listings { get; set; }
-
-        [BsonElement("recentHistory")]
-        public List<Sale> RecentHistory { get; set; }
+        [BsonElement("entries")]
+        public List<MinimizedSale> Sales { get; set; }
     }
 }
