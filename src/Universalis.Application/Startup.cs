@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Universalis.Alerts;
+using Universalis.Application.Swagger;
 using Universalis.DbAccess;
 using Universalis.GameData;
 
@@ -27,16 +29,34 @@ namespace Universalis.Application
             services.AddGameData(Configuration);
             services.AddUserAlerts();
 
-            services.AddControllers();
-            services.AddApiVersioning(x =>
+            services.AddControllers(options =>
             {
-                x.DefaultApiVersion = new ApiVersion(1, 0);
-                x.AssumeDefaultVersionWhenUnspecified = true;
-                x.ReportApiVersions = true;
+                options.Conventions.Add(new GroupByNamespaceConvention());
             });
-            services.AddSwaggerGen(c =>
+
+            services.AddApiVersioning(options =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Universalis", Version = "v1" });
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.ReportApiVersions = true;
+            });
+
+            var license = new OpenApiLicense { Name = "MIT", Url = new Uri("https://github.com/Universalis-FFXIV/Universalis/blob/master/LICENSE") };
+            services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "Universalis",
+                    Version = "v1",
+                    License = license,
+                });
+
+                options.SwaggerDoc("v2", new OpenApiInfo
+                {
+                    Title = "Universalis",
+                    Version = "v2",
+                    License = license,
+                });
             });
         }
 
@@ -47,7 +67,11 @@ namespace Universalis.Application
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Universalis v1"));
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Universalis v1");
+                    options.SwaggerEndpoint("/swagger/v2/swagger.json", "Universalis v2");
+                });
             }
 
             app.UseHttpsRedirection();

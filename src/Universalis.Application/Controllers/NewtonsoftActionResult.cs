@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
-namespace Universalis.Application.Common
+namespace Universalis.Application.Controllers
 {
     public class NewtonsoftActionResult : ActionResult
     {

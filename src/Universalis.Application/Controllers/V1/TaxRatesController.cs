@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Universalis.Application.Common;
 using Universalis.DbAccess;
 using Universalis.DbAccess.Queries;
@@ -22,17 +24,23 @@ namespace Universalis.Application.Controllers.V1
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] string world)
+        public async Task<IActionResult> Get([FromQuery, BindRequired] string world)
         {
-            var worldMap = _gameData.AvailableWorldsReversed();
-
-            if (!worldMap.ContainsKey(world))
-                return NotFound();
-
-            var taxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery
+            WorldDc worldDc;
+            try
             {
-                WorldId = worldMap[world],
-            });
+                worldDc = WorldDc.From(world, _gameData);
+                if (!worldDc.IsWorld)
+                {
+                    return NotFound();
+                }
+            }
+            catch (Exception)
+            {
+                return NotFound();
+            }
+
+            var taxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = worldDc.WorldId });
 
             return new NewtonsoftActionResult(new TaxRatesView
             {
