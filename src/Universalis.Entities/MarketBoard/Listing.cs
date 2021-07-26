@@ -18,7 +18,7 @@ namespace Universalis.Entities.MarketBoard
 
         public bool IsCrafted { get; set; }
 
-        public string CreatorId { get; set; }
+        public string CreatorIdHash { get; set; }
 
         public string CreatorName { get; set; }
 
