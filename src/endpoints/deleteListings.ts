@@ -99,7 +99,8 @@ export async function deleteListings(
 		.update(deleteRequest.retainerID.toString())
 		.digest("hex");
 
-	const newListings = itemData.listings.filter((listing: MarketBoardItemListing) => {
+	const newListings = (itemData.listings as MarketBoardItemListing[]).filter((listing, i) => {
+		logger.warn(`${i}: ${listing.retainerID === retainerIDCheck} ${listing.quantity === deleteRequest.quantity} ${listing.pricePerUnit === deleteRequest.pricePerUnit}`);
 		return !(listing.retainerID === retainerIDCheck
 		&& listing.quantity === deleteRequest.quantity
 		&& listing.pricePerUnit === deleteRequest.pricePerUnit);
