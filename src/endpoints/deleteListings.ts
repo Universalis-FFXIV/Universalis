@@ -100,7 +100,7 @@ export async function deleteListings(
 		.digest("hex");
 
 	const newListings = (itemData.listings as MarketBoardItemListing[]).filter((listing, i) => {
-		logger.warn(`${i}: ${listing.retainerID === retainerIDCheck} ${listing.quantity === deleteRequest.quantity} ${listing.pricePerUnit === deleteRequest.pricePerUnit}`);
+		logger.warn(`${i}: ${listing.retainerID} ${retainerIDCheck}`);
 		return !(listing.retainerID === retainerIDCheck
 		&& listing.quantity === deleteRequest.quantity
 		&& listing.pricePerUnit === deleteRequest.pricePerUnit);
