@@ -56,7 +56,6 @@ export async function deleteListings(
 	// parse the request body
 	const uploadData: GenericUpload = ctx.request.body;
 
-	logger.warn("Checking for presence of uploader ID:");
 	if (!uploadData.uploaderID) {
 		ctx.throw(HttpStatusCodes.BAD_REQUEST);
 	}
@@ -65,7 +64,6 @@ export async function deleteListings(
 		.update(uploadData.uploaderID.toString())
 		.digest("hex");
 
-	logger.warn("Checking blacklist:");
 	if (await blacklistManager.has(uploadData.uploaderID)) {
 		ctx.body = "Success";
 		return;
@@ -91,22 +89,30 @@ export async function deleteListings(
 		},
 	);*/
 
-	logger.warn("Performing database update:");
-	logger.warn(`${await recentData.updateMany(
+	const itemData = await recentData.findOne({ worldID, itemID });
+	if (itemData == null) {
+		ctx.body = "Success";
+		return;
+	}
+
+	const retainerIDCheck = sha("sha256")
+		.update(deleteRequest.retainerID.toString())
+		.digest("hex");
+
+	const newListings = itemData.listings.filter((listing: MarketBoardItemListing) => {
+		return !(listing.retainerID === retainerIDCheck
+		&& listing.quantity === deleteRequest.quantity
+		&& listing.pricePerUnit === deleteRequest.pricePerUnit);
+	});
+
+	logger.warn(`${await recentData.updateOne(
 		{ worldID, itemID },
 		{
-			$pull: {
-				listings: {
-					retainerID: sha("sha256")
-						.update(deleteRequest.retainerID.toString())
-						.digest("hex"),
-					quantity: deleteRequest.quantity,
-					pricePerUnit: deleteRequest.pricePerUnit,
-				} as MarketBoardItemListing,
+			$set: {
+				listings: newListings,
 			},
 		},
 	)}`);
-	logger.warn("Done!");
 
 	ctx.body = "Success";
 }
