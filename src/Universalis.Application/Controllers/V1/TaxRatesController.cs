@@ -21,6 +21,7 @@ namespace Universalis.Application.Controllers.V1
             _taxRatesDb = taxRatesDb;
         }
 
+        [HttpGet]
         public async Task<IActionResult> Get([FromQuery] string world)
         {
             var worldMap = _gameData.AvailableWorldsReversed();
