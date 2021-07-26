@@ -1,13 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 
 namespace Universalis.Entities.MarketBoard
 {
     public class Listing
     {
-        [Key]
-        public string InternalId { get; set; }
-
         public string ListingId { get; set; }
 
         public bool Hq { get; set; }
