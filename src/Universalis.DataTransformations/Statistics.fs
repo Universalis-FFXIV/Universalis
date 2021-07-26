@@ -6,3 +6,6 @@ type Statistics =
         let average = Seq.average numbers
         let scaled = Seq.map (fun n -> n / float (Seq.length (numbers))) numbers
         sqrt (Seq.fold (fun agg next -> agg + (float next - average) ** 2.0) 0.0 scaled)
+
+    static member GetDistribution(numbers: seq<int>) =
+        dict (Seq.countBy (fun n -> n) numbers)
