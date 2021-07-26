@@ -103,6 +103,11 @@ export async function parseListings(
 		if (isDC) {
 			// Add the world name to all listings
 			const worldName = worldIDMap.get(item.worldID);
+
+			if (item.listings == null) {
+				item.listings = [];
+			}
+			
 			item.listings = item.listings.map((l) => {
 				if (!l.worldName) {
 					l.worldName = worldName;
