@@ -2,6 +2,12 @@
 
 [<AbstractClass; Sealed>]
 type Filters =
+    /// <summary>
+    /// Removes outliers from a sequence according to standard deviations from the mean,
+    /// returning a new sequence with the outliers removed.
+    /// </summary>
+    /// <param name="numbers">The sequence to filter.</param>
+    /// <param name="deviationsFromMean">The number of standard deviations from the mean to keep.</param>
     static member RemoveOutliers(numbers: seq<float>, deviationsFromMean: int) =
         let mean = Seq.average numbers
         let std = Statistics.PopulationStd numbers
