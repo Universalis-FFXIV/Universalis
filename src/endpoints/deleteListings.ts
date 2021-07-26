@@ -8,8 +8,6 @@ import { Collection } from "mongodb";
 import { TrustedSourceManager } from "../db/TrustedSourceManager";
 import { GenericUpload } from "../models/GenericUpload";
 import { HttpStatusCodes } from "../models/HttpStatusCodes";
-import { MarketBoardListingsEndpoint } from "../models/MarketBoardListingsEndpoint";
-import { removeOld } from "../util";
 
 import sha from "sha.js";
 import { Logger } from "winston";
@@ -89,18 +87,25 @@ export async function deleteListings(
 		},
 	);*/
 
-	logger.warn(`${await recentData.updateMany(
-		{ worldID, itemID },
-		{
-			$pull: {
-				listings: {
-					retainerID: deleteRequest.retainerID,
-					quantity: deleteRequest.quantity,
-					pricePerUnit: deleteRequest.pricePerUnit,
-				} as MarketBoardItemListing,
+	const itemData: { listings: MarketBoardItemListing[] } = await recentData.findOne({ worldID, itemID });
+	if (itemData != null) {
+		const listingIndex = itemData.listings.findIndex((listing) => {
+			return listing.retainerID === deleteRequest.retainerID
+				&& listing.quantity === deleteRequest.quantity
+				&& listing.pricePerUnit === deleteRequest.pricePerUnit;
+		});
+
+		itemData.listings.splice(listingIndex, 1);
+
+		logger.warn(`${await recentData.updateMany(
+			{ worldID, itemID },
+			{
+				$set: {
+					listings: itemData.listings,
+				},
 			},
-		},
-	)}`);
+		)}`);
+	}
 
 	ctx.body = "Success";
 }
