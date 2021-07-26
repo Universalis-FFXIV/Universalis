@@ -7,7 +7,7 @@ namespace Universalis.DbAccess.Queries
     {
         private const string SetName = "taxRates";
 
-        public uint WorldId { get; set; }
+        public uint WorldId { get; init; }
 
         internal override FilterDefinition<TaxRates> ToFilterDefinition()
         {

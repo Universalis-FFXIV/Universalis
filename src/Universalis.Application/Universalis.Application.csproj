@@ -7,12 +7,14 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Universalis.Alerts\Universalis.Alerts.csproj" />
     <ProjectReference Include="..\Universalis.DataTransformations\Universalis.DataTransformations.fsproj" />
+    <ProjectReference Include="..\Universalis.DbAccess\Universalis.DbAccess.csproj" />
     <ProjectReference Include="..\Universalis.Entities\Universalis.Entities.csproj" />
     <ProjectReference Include="..\Universalis.GameData\Universalis.GameData.csproj" />
   </ItemGroup>

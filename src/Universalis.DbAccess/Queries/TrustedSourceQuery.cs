@@ -5,7 +5,7 @@ namespace Universalis.DbAccess.Queries
 {
     public class TrustedSourceQuery : DbAccessQuery<TrustedSource>
     {
-        public string ApiKeyHash { get; set; }
+        public string ApiKeyHash { get; init; }
 
         internal override FilterDefinition<TrustedSource> ToFilterDefinition()
         {
