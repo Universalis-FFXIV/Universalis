@@ -21,7 +21,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.GameData.Tests"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.DbAccess", "Universalis.DbAccess\Universalis.DbAccess.csproj", "{2BE59D3E-96FD-4C3D-8E92-742AD6670CF2}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Universalis.DataTransformations", "Universalis.DataTransformations\Universalis.DataTransformations.fsproj", "{0DAB12C3-D997-4BA4-8F0B-743F5CF5B07B}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Universalis.DataTransformations", "Universalis.DataTransformations\Universalis.DataTransformations.fsproj", "{0DAB12C3-D997-4BA4-8F0B-743F5CF5B07B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Universalis.DataTransformations.Tests", "Universalis.DataTransformations.Tests\Universalis.DataTransformations.Tests.csproj", "{73FB0055-FB32-4A6C-9BBC-1D9D1A5FADC0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,6 +69,10 @@ Global
 		{0DAB12C3-D997-4BA4-8F0B-743F5CF5B07B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0DAB12C3-D997-4BA4-8F0B-743F5CF5B07B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0DAB12C3-D997-4BA4-8F0B-743F5CF5B07B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73FB0055-FB32-4A6C-9BBC-1D9D1A5FADC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73FB0055-FB32-4A6C-9BBC-1D9D1A5FADC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73FB0055-FB32-4A6C-9BBC-1D9D1A5FADC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73FB0055-FB32-4A6C-9BBC-1D9D1A5FADC0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
