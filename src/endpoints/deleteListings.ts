@@ -67,26 +67,10 @@ export async function deleteListings(
 		return;
 	}
 
-	logger.info(`Received listing delete request from user ${uploadData.uploaderID} using ${client.sourceName} to item ${itemID} on world ${worldID}.`);
-
 	const deleteRequest = uploadData as DeleteRequest;
 
 	// delete the listing
-	/*await recentData.findOneAndUpdate(
-		{ worldID, itemID },
-		{
-			$pull: {
-				listings: {
-					retainerID: sha("sha256")
-						.update(deleteRequest.retainerID.toString())
-						.digest("hex"),
-					quantity: deleteRequest.quantity,
-					pricePerUnit: deleteRequest.pricePerUnit,
-				} as MarketBoardItemListing,
-			},
-		},
-	);*/
-
+	logger.info(`Received listing delete request from user ${uploadData.uploaderID} using ${client.sourceName} to item ${itemID} on world ${worldID}.`);
 	const itemData: { listings: MarketBoardItemListing[] } = await recentData.findOne({ worldID, itemID });
 	if (itemData != null) {
 		const listingIndex = itemData.listings.findIndex((listing) => {
@@ -97,14 +81,16 @@ export async function deleteListings(
 
 		itemData.listings.splice(listingIndex, 1);
 
-		logger.warn(`${await recentData.updateMany(
+		await recentData.updateMany(
 			{ worldID, itemID },
 			{
 				$set: {
 					listings: itemData.listings,
 				},
 			},
-		)}`);
+		);
+
+		logger.info(`Fulfilled listing delete request from user ${uploadData.uploaderID} using ${client.sourceName} to item ${itemID} on world ${worldID}.`);
 	}
 
 	ctx.body = "Success";
