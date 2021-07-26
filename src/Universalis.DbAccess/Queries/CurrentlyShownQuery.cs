@@ -1,17 +1,17 @@
 ﻿using MongoDB.Driver;
 using Universalis.Entities.MarketBoard;
 
-namespace Universalis.DbAccess.Query
+namespace Universalis.DbAccess.Queries
 {
-    public class HistoryQuery : DbAccessQuery<History>
+    public class CurrentlyShownQuery : DbAccessQuery<CurrentlyShown>
     {
         public uint WorldId { get; init; }
 
         public uint ItemId { get; init; }
 
-        internal override FilterDefinition<History> ToFilterDefinition()
+        internal override FilterDefinition<CurrentlyShown> ToFilterDefinition()
         {
-            var filterBuilder = Builders<History>.Filter;
+            var filterBuilder = Builders<CurrentlyShown>.Filter;
             var filter = filterBuilder.Eq(o => o.WorldId, WorldId) & filterBuilder.Eq(o => o.ItemId, ItemId);
             return filter;
         }

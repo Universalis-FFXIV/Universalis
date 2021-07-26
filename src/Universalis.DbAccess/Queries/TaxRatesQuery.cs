@@ -1,7 +1,7 @@
 ﻿using MongoDB.Driver;
 using Universalis.Entities.MarketBoard;
 
-namespace Universalis.DbAccess.Query
+namespace Universalis.DbAccess.Queries
 {
     public class TaxRatesQuery : DbAccessQuery<TaxRates>
     {

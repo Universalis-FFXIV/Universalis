@@ -1,6 +1,6 @@
 ﻿using MongoDB.Driver;
 
-namespace Universalis.DbAccess.Query
+namespace Universalis.DbAccess.Queries
 {
     public abstract class DbAccessQuery<TDocument> where TDocument : class
     {

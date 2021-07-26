@@ -1,7 +1,7 @@
 ﻿using MongoDB.Driver;
 using Universalis.Entities.Uploaders;
 
-namespace Universalis.DbAccess.Query
+namespace Universalis.DbAccess.Queries
 {
     public class TrustedSourceQuery : DbAccessQuery<TrustedSource>
     {

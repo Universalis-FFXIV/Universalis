@@ -1,6 +1,6 @@
 ﻿using MongoDB.Driver;
 using System.Threading.Tasks;
-using Universalis.DbAccess.Query;
+using Universalis.DbAccess.Queries;
 
 namespace Universalis.DbAccess
 {
