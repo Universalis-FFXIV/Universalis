@@ -89,28 +89,15 @@ export async function deleteListings(
 		},
 	);*/
 
-	const itemData = await recentData.findOne({ worldID, itemID });
-	if (itemData == null) {
-		ctx.body = "Success";
-		return;
-	}
-
-	const retainerIDCheck = sha("sha256")
-		.update(deleteRequest.retainerID.toString())
-		.digest("hex");
-
-	const newListings = (itemData.listings as MarketBoardItemListing[]).filter((listing, i) => {
-		logger.warn(`${i}: ${listing.retainerID} ${retainerIDCheck}`);
-		return !(listing.retainerID === retainerIDCheck
-		&& listing.quantity === deleteRequest.quantity
-		&& listing.pricePerUnit === deleteRequest.pricePerUnit);
-	});
-
-	logger.warn(`${await recentData.updateOne(
+	logger.warn(`${await recentData.updateMany(
 		{ worldID, itemID },
 		{
-			$set: {
-				listings: newListings,
+			$pull: {
+				listings: {
+					retainerID: deleteRequest.retainerID,
+					quantity: deleteRequest.quantity,
+					pricePerUnit: deleteRequest.pricePerUnit,
+				} as MarketBoardItemListing,
 			},
 		},
 	)}`);
