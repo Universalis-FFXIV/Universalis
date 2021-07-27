@@ -22,9 +22,10 @@ namespace Universalis.DbAccess
             return Collection.InsertOneAsync(document);
         }
 
-        public Task<TDocument> Retrieve(TDocumentQuery query)
+        public async Task<TDocument> Retrieve(TDocumentQuery query)
         {
-            return Collection.Find(query.ToFilterDefinition()).FirstAsync();
+            var cursor = await Collection.FindAsync(query.ToFilterDefinition());
+            return await cursor.FirstAsync();
         }
 
         public async Task Update(TDocument document, TDocumentQuery query)

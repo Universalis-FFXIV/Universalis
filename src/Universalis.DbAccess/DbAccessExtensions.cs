@@ -6,6 +6,7 @@ namespace Universalis.DbAccess
     {
         public static void AddDbAccessServices(this IServiceCollection sc)
         {
+            sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
             sc.AddSingleton<ITaxRatesDbAccess, TaxRatesDbAccess>();
         }
     }

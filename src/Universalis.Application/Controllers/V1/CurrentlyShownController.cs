@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Common;
 using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1
 {
-    [Route("api/{itemId}/{worldOrDc}")]
+    [Route("api/{worldOrDc}/{itemIds}")]
     [ApiController]
     public class CurrentlyShownController : ControllerBase
     {
@@ -16,8 +17,11 @@ namespace Universalis.Application.Controllers.V1
         }
 
         [HttpGet]
-        public ActionResult<string> Get(uint itemId, string worldOrDc)
+        public ActionResult<string> Get(string itemIds, string worldOrDc)
         {
+            var itemIdsArray = itemIds.Split(',').Select(uint.Parse).ToArray();
+            var itemId = itemIdsArray[0];
+
             if (!_gameData.MarketableItemIds().Contains(itemId) || worldOrDc.Length == 0)
                 return NotFound();
 
