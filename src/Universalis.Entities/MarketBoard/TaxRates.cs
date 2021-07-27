@@ -5,30 +5,30 @@ namespace Universalis.Entities.MarketBoard
     public class TaxRates : ExtraData
     {
         [BsonElement("limsaLominsa")]
-        public byte LimsaLominsa { get; set; }
+        public byte LimsaLominsa { get; init; }
 
         [BsonElement("gridania")]
-        public byte Gridania { get; set; }
+        public byte Gridania { get; init; }
 
         [BsonElement("uldah")]
-        public byte Uldah { get; set; }
+        public byte Uldah { get; init; }
 
         [BsonElement("ishgard")]
-        public byte Ishgard { get; set; }
+        public byte Ishgard { get; init; }
 
         [BsonElement("kugane")]
-        public byte Kugane { get; set; }
+        public byte Kugane { get; init; }
 
         [BsonElement("crystarium")]
-        public byte Crystarium { get; set; }
+        public byte Crystarium { get; init; }
 
         [BsonElement("uploaderID")]
-        public string UploadIdHash { get; set; }
+        public string UploaderIdHash { get; init; }
 
         [BsonElement("worldID")]
-        public uint WorldId { get; set; }
+        public uint WorldId { get; init; }
 
         [BsonElement("sourceName")]
-        public string UploadApplicationName { get; set; }
+        public string UploadApplicationName { get; init; }
     }
 }

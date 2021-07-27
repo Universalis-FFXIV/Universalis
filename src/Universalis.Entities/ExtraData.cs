@@ -5,6 +5,6 @@ namespace Universalis.Entities
     public class ExtraData
     {
         [BsonElement("setName")]
-        public string SetName { get; set; }
+        public string SetName { get; init; }
     }
 }

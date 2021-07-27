@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Universalis.DbAccess;
 using Universalis.DbAccess.Queries;
+using Universalis.Entities.MarketBoard;
 using Universalis.Entities.Uploaders;
 using Universalis.GameData;
 
@@ -19,6 +20,8 @@ namespace Universalis.Application.Controllers.V1
         private readonly IGameDataProvider _gameData;
         private readonly ITrustedSourceDbAccess _trustedSourceDb;
         private readonly ICurrentlyShownDbAccess _currentlyShownDb;
+        private readonly IHistoryDbAccess _historyDb;
+        private readonly ITaxRatesDbAccess _taxRatesDb;
         private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
         private readonly IWorldUploadCountDbAccess _worldUploadCountDb;
         private readonly IRecentlyUpdatedItemsDbAccess _recentlyUpdatedItemsDb;
@@ -27,6 +30,8 @@ namespace Universalis.Application.Controllers.V1
             IGameDataProvider gameData,
             ITrustedSourceDbAccess trustedSourceDb,
             ICurrentlyShownDbAccess currentlyShownDb,
+            IHistoryDbAccess historyDb,
+            ITaxRatesDbAccess taxRatesDb,
             IFlaggedUploaderDbAccess flaggedUploaderDb,
             IWorldUploadCountDbAccess worldUploadCountDb,
             IRecentlyUpdatedItemsDbAccess recentlyUpdatedItemsDb)
@@ -34,6 +39,8 @@ namespace Universalis.Application.Controllers.V1
             _gameData = gameData;
             _trustedSourceDb = trustedSourceDb;
             _currentlyShownDb = currentlyShownDb;
+            _historyDb = historyDb;
+            _taxRatesDb = taxRatesDb;
             _flaggedUploaderDb = flaggedUploaderDb;
             _worldUploadCountDb = worldUploadCountDb;
             _recentlyUpdatedItemsDb = recentlyUpdatedItemsDb;
@@ -71,7 +78,7 @@ namespace Universalis.Application.Controllers.V1
                 return Ok("Success");
             }
 
-            // Metadata
+            // Store data
             if (parameters.WorldId != null)
             {
                 var worldName = _gameData.AvailableWorlds()[parameters.WorldId.Value];
@@ -81,6 +88,26 @@ namespace Universalis.Application.Controllers.V1
             if (parameters.ItemId != null)
             {
                 await _recentlyUpdatedItemsDb.Push(parameters.ItemId.Value);
+            }
+
+            if (parameters.WorldId != null && parameters.TaxRates != null)
+            {
+                await _taxRatesDb.Update(new TaxRates
+                {
+                    SetName = TaxRatesQuery.SetName,
+                    LimsaLominsa = parameters.TaxRates.LimsaLominsa,
+                    Gridania = parameters.TaxRates.Gridania,
+                    Uldah = parameters.TaxRates.Uldah,
+                    Ishgard = parameters.TaxRates.Ishgard,
+                    Kugane = parameters.TaxRates.Kugane,
+                    Crystarium = parameters.TaxRates.Crystarium,
+                    UploaderIdHash = parameters.UploaderId,
+                    WorldId = parameters.WorldId.Value,
+                    UploadApplicationName = source.Name,
+                }, new TaxRatesQuery
+                {
+                    WorldId = parameters.WorldId.Value,
+                });
             }
 
             return Ok(); // TODO
@@ -96,6 +123,30 @@ namespace Universalis.Application.Controllers.V1
 
             [JsonProperty("itemID")]
             public uint? ItemId { get; set; }
+
+            [JsonProperty("marketTaxRates")]
+            public MarketTaxRates TaxRates { get; set; }
+        }
+
+        public class MarketTaxRates
+        {
+            [JsonProperty("limsaLominsa")]
+            public byte LimsaLominsa { get; set; }
+
+            [JsonProperty("gridania")]
+            public byte Gridania { get; set; }
+
+            [JsonProperty("uldah")]
+            public byte Uldah { get; set; }
+
+            [JsonProperty("ishgard")]
+            public byte Ishgard { get; set; }
+
+            [JsonProperty("kugane")]
+            public byte Kugane { get; set; }
+
+            [JsonProperty("crystarium")]
+            public byte Crystarium { get; set; }
         }
     }
 }
