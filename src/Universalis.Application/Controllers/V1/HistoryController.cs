@@ -70,6 +70,7 @@ namespace Universalis.Application.Controllers.V1
                 return new NewtonsoftActionResult(historyView);
             }
 
+            // Multi-item handling
             var historyViewTasks = itemIdsArray
                 .Select(itemId => GetHistoryView(worldDc, worldIds, itemId))
                 .ToList();
