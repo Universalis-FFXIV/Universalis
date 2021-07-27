@@ -6,10 +6,10 @@ namespace Universalis.Application.Views
     public class CurrentlyShownView
     {
         [JsonProperty("listings")]
-        public IList<ListingView> Listings { get; set; }
+        public List<ListingView> Listings { get; set; }
 
         [JsonProperty("recentHistory")]
-        public IList<SaleView> RecentHistory { get; set; }
+        public List<SaleView> RecentHistory { get; set; }
 
         [JsonProperty("itemID")]
         public uint ItemId { get; set; }

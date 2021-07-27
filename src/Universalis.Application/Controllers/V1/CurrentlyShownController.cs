@@ -1,14 +1,13 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Common;
 using Universalis.Application.Views;
 using Universalis.DataTransformations;
 using Universalis.DbAccess;
 using Universalis.DbAccess.Queries;
-using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
 
@@ -142,6 +141,9 @@ namespace Universalis.Application.Controllers.V1
 
                 return agg;
             });
+
+            currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
+            currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
             var nqListings = currentlyShown.Listings.Where(l => !l.Hq).ToList();
             var hqListings = currentlyShown.Listings.Where(l => l.Hq).ToList();

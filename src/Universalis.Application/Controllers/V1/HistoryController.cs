@@ -36,7 +36,7 @@ namespace Universalis.Application.Controllers.V1
             {
                 return NotFound();
             }
-            
+
             if (!TryGetWorldIds(worldDc, out var worldIds))
             {
                 return NotFound();
