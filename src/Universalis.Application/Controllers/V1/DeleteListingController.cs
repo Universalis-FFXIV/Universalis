@@ -57,10 +57,11 @@ namespace Universalis.Application.Controllers.V1
             // Hash the uploader ID
             using (var sha256 = SHA256.Create())
             {
-                await using var uploaderIdStream = new MemoryStream(Encoding.UTF8.GetBytes(authorization));
+                await using var uploaderIdStream = new MemoryStream(Encoding.UTF8.GetBytes(parameters.UploaderId));
                 parameters.UploaderId = BitConverter.ToString(await sha256.ComputeHashAsync(uploaderIdStream));
             }
 
+            // Check if this uploader is flagged, cancel if they are
             if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery {UploaderId = parameters.UploaderId}) != null)
             {
                 return Ok("Success");
