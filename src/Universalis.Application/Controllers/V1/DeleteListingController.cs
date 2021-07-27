@@ -18,14 +18,17 @@ namespace Universalis.Application.Controllers.V1
     {
         private readonly ITrustedSourceDbAccess _trustedSourceDb;
         private readonly ICurrentlyShownDbAccess _currentlyShownDb;
+        private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
 
         public DeleteListingController(
             IGameDataProvider gameData,
             ITrustedSourceDbAccess trustedSourceDb,
-            ICurrentlyShownDbAccess currentlyShownDb) : base(gameData)
+            ICurrentlyShownDbAccess currentlyShownDb,
+            IFlaggedUploaderDbAccess flaggedUploaderDb) : base(gameData)
         {
             _trustedSourceDb = trustedSourceDb;
             _currentlyShownDb = currentlyShownDb;
+            _flaggedUploaderDb = flaggedUploaderDb;
         }
 
         [HttpPost]
@@ -58,8 +61,12 @@ namespace Universalis.Application.Controllers.V1
                 parameters.UploaderId = BitConverter.ToString(await sha256.ComputeHashAsync(uploaderIdStream));
             }
 
-            // TODO: blacklist check
+            if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery {UploaderId = parameters.UploaderId}) != null)
+            {
+                return Ok("Success");
+            }
 
+            // Remove the listing
             var itemData = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
             {
                 WorldId = worldDc.WorldId,
