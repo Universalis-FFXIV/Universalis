@@ -29,10 +29,8 @@ namespace Universalis.Application.Controllers.V1
         [HttpGet]
         public async Task<IActionResult> Get(string itemIds, string worldOrDc)
         {
-            var itemIdsArray = itemIds.Split(',')
+            var itemIdsArray = InputProcessing.ParseIdList(itemIds)
                 .Take(100)
-                .Where(itemIdStr => uint.TryParse(itemIdStr, out _))
-                .Select(uint.Parse)
                 .ToArray();
             if (worldOrDc.Length == 0)
                 return NotFound();
