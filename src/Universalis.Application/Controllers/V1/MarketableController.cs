@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Universalis.GameData;
 
-namespace Universalis.Application.Controllers.V1.Extra
+namespace Universalis.Application.Controllers.V1
 {
     [Route("api/marketable")]
     [ApiController]

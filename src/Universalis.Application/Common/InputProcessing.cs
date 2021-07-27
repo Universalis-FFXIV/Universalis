@@ -12,7 +12,9 @@ namespace Universalis.Application.Common
         /// <returns>An enumerable of parsed uints.</returns>
         public static IEnumerable<uint> ParseIdList(string idList)
         {
-            return idList.Split(',')
+            return idList
+                .Replace(" ", "")
+                .Split(',')
                 .Where(id => uint.TryParse(id, out _))
                 .Select(uint.Parse);
         }

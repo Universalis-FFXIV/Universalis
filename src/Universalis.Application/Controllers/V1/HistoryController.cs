@@ -25,7 +25,7 @@ namespace Universalis.Application.Controllers.V1
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get(string itemIds, string worldOrDc)
+        public async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery] string entriesToReturn)
         {
             // Parameter parsing
             var itemIdsArray = InputProcessing.ParseIdList(itemIds)
@@ -51,13 +51,13 @@ namespace Universalis.Application.Controllers.V1
                     return NotFound();
                 }
 
-                var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId);
+                var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entriesToReturn);
                 return new NewtonsoftActionResult(historyView);
             }
 
             // Multi-item handling
             var historyViewTasks = itemIdsArray
-                .Select(itemId => GetHistoryView(worldDc, worldIds, itemId))
+                .Select(itemId => GetHistoryView(worldDc, worldIds, itemId, entriesToReturn))
                 .ToList();
             var historyViews = await Task.WhenAll(historyViewTasks);
             var unresolvedItems = historyViews
@@ -74,7 +74,7 @@ namespace Universalis.Application.Controllers.V1
             });
         }
 
-        private async Task<(bool, HistoryView)> GetHistoryView(WorldDc worldDc, uint[] worldIds, uint itemId)
+        private async Task<(bool, HistoryView)> GetHistoryView(WorldDc worldDc, uint[] worldIds, uint itemId, string entriesToReturnStr)
         {
             var data = (await _historyDb.RetrieveMany(new HistoryManyQuery
             {
@@ -107,6 +107,11 @@ namespace Universalis.Application.Controllers.V1
 
                 return agg;
             });
+
+            history.Sales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+            history.Sales = int.TryParse(entriesToReturnStr, out var entriesToReturn)
+                ? history.Sales.Take(Math.Max(0, entriesToReturn)).ToList()
+                : history.Sales.Take(1800).ToList();
 
             var nqSales = history.Sales.Where(s => !s.Hq).ToList();
             var hqSales = history.Sales.Where(s => s.Hq).ToList();

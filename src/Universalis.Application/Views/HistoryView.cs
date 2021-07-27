@@ -6,7 +6,7 @@ namespace Universalis.Application.Views
     public class HistoryView
     {
         [JsonProperty("entries")]
-        public IList<MinimizedSaleView> Sales { get; set; }
+        public List<MinimizedSaleView> Sales { get; set; }
 
         [JsonProperty("itemID")]
         public uint ItemId { get; set; }
