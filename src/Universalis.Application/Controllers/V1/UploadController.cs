@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Universalis.DbAccess;
 using Universalis.DbAccess.Queries;
+using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
 using Universalis.Entities.Uploaders;
 using Universalis.GameData;
@@ -21,6 +22,7 @@ namespace Universalis.Application.Controllers.V1
         private readonly ITrustedSourceDbAccess _trustedSourceDb;
         private readonly ICurrentlyShownDbAccess _currentlyShownDb;
         private readonly IHistoryDbAccess _historyDb;
+        private readonly IContentDbAccess _contentDb;
         private readonly ITaxRatesDbAccess _taxRatesDb;
         private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
         private readonly IWorldUploadCountDbAccess _worldUploadCountDb;
@@ -31,6 +33,7 @@ namespace Universalis.Application.Controllers.V1
             ITrustedSourceDbAccess trustedSourceDb,
             ICurrentlyShownDbAccess currentlyShownDb,
             IHistoryDbAccess historyDb,
+            IContentDbAccess contentDb,
             ITaxRatesDbAccess taxRatesDb,
             IFlaggedUploaderDbAccess flaggedUploaderDb,
             IWorldUploadCountDbAccess worldUploadCountDb,
@@ -40,6 +43,7 @@ namespace Universalis.Application.Controllers.V1
             _trustedSourceDb = trustedSourceDb;
             _currentlyShownDb = currentlyShownDb;
             _historyDb = historyDb;
+            _contentDb = contentDb;
             _taxRatesDb = taxRatesDb;
             _flaggedUploaderDb = flaggedUploaderDb;
             _worldUploadCountDb = worldUploadCountDb;
@@ -110,6 +114,19 @@ namespace Universalis.Application.Controllers.V1
                 });
             }
 
+            if (!string.IsNullOrEmpty(parameters.ContentId) && !string.IsNullOrEmpty(parameters.CharacterName))
+            {
+                await _contentDb.Update(new Content
+                {
+                    ContentId = parameters.ContentId,
+                    ContentType = ContentKind.Player,
+                    CharacterName = parameters.CharacterName,
+                }, new ContentQuery
+                {
+                    ContentId = parameters.ContentId,
+                });
+            }
+
             return Ok(); // TODO
         }
 
@@ -126,6 +143,12 @@ namespace Universalis.Application.Controllers.V1
 
             [JsonProperty("marketTaxRates")]
             public MarketTaxRates TaxRates { get; set; }
+
+            [JsonProperty("contentID")]
+            public string ContentId { get; set; }
+
+            [JsonProperty("characterName")]
+            public string CharacterName { get; set; }
         }
 
         public class MarketTaxRates
