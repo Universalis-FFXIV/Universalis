@@ -42,7 +42,7 @@ namespace Universalis.Application.Controllers.V1
 
             var taxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = worldDc.WorldId });
 
-            return new NewtonsoftActionResult(new TaxRatesView
+            return Ok(new TaxRatesView
             {
                 LimsaLominsa = taxRates.LimsaLominsa,
                 Gridania = taxRates.Gridania,

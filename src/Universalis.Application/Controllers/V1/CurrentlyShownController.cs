@@ -52,7 +52,7 @@ namespace Universalis.Application.Controllers.V1
                 }
 
                 var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId);
-                return new NewtonsoftActionResult(currentlyShownView);
+                return Ok(currentlyShownView);
             }
 
             // Multi-item handling
@@ -64,7 +64,7 @@ namespace Universalis.Application.Controllers.V1
                 .Where(cs => !cs.Item1)
                 .Select(cs => cs.Item2.ItemId)
                 .ToArray();
-            return new NewtonsoftActionResult(new CurrentlyShownMultiView
+            return Ok(new CurrentlyShownMultiView
             {
                 ItemIds = itemIdsArray,
                 Items = currentlyShownViews.Select(cs => cs.Item2).ToList(),

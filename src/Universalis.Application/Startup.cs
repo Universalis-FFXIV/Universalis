@@ -1,4 +1,3 @@
-using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using System;
 using Universalis.Alerts;
 using Universalis.Application.Controllers;
 using Universalis.Application.Swagger;
@@ -33,7 +33,6 @@ namespace Universalis.Application
             services.AddControllers(options =>
             {
                 options.Conventions.Add(new GroupByNamespaceConvention());
-                options.InputFormatters.Insert(0, new NewtonsoftInputFormatter());
             });
 
             services.AddApiVersioning(options =>
@@ -60,6 +59,8 @@ namespace Universalis.Application
                     License = license,
                 });
             });
+
+            services.AddSwaggerGenNewtonsoftSupport();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

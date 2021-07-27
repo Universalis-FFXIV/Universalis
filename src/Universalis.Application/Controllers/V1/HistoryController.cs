@@ -52,7 +52,7 @@ namespace Universalis.Application.Controllers.V1
                 }
 
                 var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entriesToReturn);
-                return new NewtonsoftActionResult(historyView);
+                return Ok(historyView);
             }
 
             // Multi-item handling
@@ -64,7 +64,7 @@ namespace Universalis.Application.Controllers.V1
                 .Where(hv => !hv.Item1)
                 .Select(hv => hv.Item2.ItemId)
                 .ToArray();
-            return new NewtonsoftActionResult(new HistoryMultiView
+            return Ok(new HistoryMultiView
             {
                 ItemIds = itemIdsArray,
                 Items = historyViews.Select(hv => hv.Item2).ToList(),
