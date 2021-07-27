@@ -15,53 +15,38 @@ namespace Universalis.Application.Controllers.V1
 {
     [Route("api/history/{worldOrDc}/{itemIds}")]
     [ApiController]
-    public class HistoryController : ControllerBase
+    public class HistoryController : WorldDcControllerBase
     {
-        private readonly IGameDataProvider _gameData;
         private readonly IHistoryDbAccess _historyDb;
 
-        public HistoryController(IGameDataProvider gameData, IHistoryDbAccess historyDb)
+        public HistoryController(IGameDataProvider gameData, IHistoryDbAccess historyDb) : base(gameData)
         {
-            _gameData = gameData;
             _historyDb = historyDb;
         }
 
         [HttpGet]
         public async Task<IActionResult> Get(string itemIds, string worldOrDc)
         {
+            // Parameter parsing
             var itemIdsArray = InputProcessing.ParseIdList(itemIds)
                 .Take(100)
                 .ToArray();
-            if (worldOrDc.Length == 0)
-                return NotFound();
 
-            WorldDc worldDc;
-            try
-            {
-                worldDc = WorldDc.From(worldOrDc, _gameData);
-            }
-            catch (Exception)
+            if (!TryGetWorldDc(worldOrDc, out var worldDc))
             {
                 return NotFound();
             }
-
-            var worldIds = worldDc.IsWorld ? new[] { worldDc.WorldId } : Array.Empty<uint>();
-            if (worldDc.IsDc)
+            
+            if (!TryGetWorldIds(worldDc, out var worldIds))
             {
-                var dataCenter = _gameData.DataCenters().FirstOrDefault(dc => dc.Name == worldDc.DcName);
-                if (dataCenter == null)
-                {
-                    return NotFound();
-                }
-
-                worldIds = dataCenter.WorldIds;
+                return NotFound();
             }
 
             if (itemIdsArray.Length == 1)
             {
                 var itemId = itemIdsArray[0];
 
-                if (!_gameData.MarketableItemIds().Contains(itemId))
+                if (!GameData.MarketableItemIds().Contains(itemId))
                 {
                     return NotFound();
                 }
@@ -99,35 +84,38 @@ namespace Universalis.Application.Controllers.V1
 
             var resolved = data.Count > 0;
 
-            var history = data.Aggregate(new History(), (agg, next) =>
+            var worlds = GameData.AvailableWorlds();
+
+            var history = data.Aggregate(new HistoryView(), (agg, next) =>
             {
                 // Handle undefined arrays
                 next.Sales ??= new List<MinimizedSale>();
 
-                agg.Sales = agg.Sales.Concat(next.Sales).ToList();
-                agg.LastUploadTimeUnixMilliseconds = Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
-
-                return agg;
-            });
-
-            var worlds = _gameData.AvailableWorlds();
-            var nqSales = history.Sales.Where(s => !s.Hq).ToList();
-            var hqSales = history.Sales.Where(s => s.Hq).ToList();
-            return (resolved, new HistoryView
-            {
-                Sales = history.Sales
+                agg.Sales = next.Sales
                     .Select(s => new MinimizedSaleView
                     {
                         Hq = s.Hq,
                         PricePerUnit = s.PricePerUnit,
                         Quantity = s.Quantity,
                         TimestampUnixSeconds = s.SaleTimeUnixSeconds,
-                        WorldId = worldDc.IsDc ? history.WorldId : null,
-                        WorldName = worldDc.IsDc ? worlds[history.WorldId] : null,
+                        WorldId = worldDc.IsDc ? next.WorldId : null,
+                        WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
                     })
-                    .ToList(),
+                    .Concat(agg.Sales)
+                    .ToList();
+                agg.LastUploadTimeUnixMilliseconds = Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
+
+                return agg;
+            });
+
+            var nqSales = history.Sales.Where(s => !s.Hq).ToList();
+            var hqSales = history.Sales.Where(s => s.Hq).ToList();
+            return (resolved, new HistoryView
+            {
+                Sales = history.Sales,
                 ItemId = itemId,
                 WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
+                WorldName = worldDc.IsWorld ? worldDc.WorldName : null,
                 DcName = worldDc.IsDc ? worldDc.DcName : null,
                 LastUploadTimeUnixMilliseconds = history.LastUploadTimeUnixMilliseconds,
                 StackSizeHistogram = Statistics.GetDistribution(history.Sales
@@ -140,11 +128,11 @@ namespace Universalis.Application.Controllers.V1
                     .Select(s => s.Quantity)
                     .Select(q => (int)q)),
                 RegularSaleVelocity = Statistics.WeekVelocityPerDay(history.Sales
-                    .Select(s => (long)s.SaleTimeUnixSeconds * 1000)),
+                    .Select(s => (long)s.TimestampUnixSeconds * 1000)),
                 RegularSaleVelocityNq = Statistics.WeekVelocityPerDay(nqSales
-                    .Select(s => (long)s.SaleTimeUnixSeconds * 1000)),
+                    .Select(s => (long)s.TimestampUnixSeconds * 1000)),
                 RegularSaleVelocityHq = Statistics.WeekVelocityPerDay(hqSales
-                    .Select(s => (long)s.SaleTimeUnixSeconds * 1000)),
+                    .Select(s => (long)s.TimestampUnixSeconds * 1000)),
             });
         }
     }

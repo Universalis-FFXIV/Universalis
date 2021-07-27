@@ -10,6 +10,8 @@ namespace Universalis.Application.Common
 
         public uint WorldId { get; private init; }
 
+        public string WorldName { get; private init; }
+
         public bool IsDc { get; private init; }
 
         public string DcName { get; private init; }
@@ -49,6 +51,7 @@ namespace Universalis.Application.Common
             {
                 IsWorld = worldId != default,
                 WorldId = worldId,
+                WorldName = worldId != default ? gameData.AvailableWorlds()[worldId] : null,
                 IsDc = dcName != null,
                 DcName = dcName,
             };
