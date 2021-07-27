@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Universalis.Alerts;
+using Universalis.Application.Controllers;
 using Universalis.Application.Swagger;
 using Universalis.DbAccess;
 using Universalis.GameData;
@@ -32,6 +33,7 @@ namespace Universalis.Application
             services.AddControllers(options =>
             {
                 options.Conventions.Add(new GroupByNamespaceConvention());
+                options.InputFormatters.Insert(0, new NewtonsoftInputFormatter());
             });
 
             services.AddApiVersioning(options =>

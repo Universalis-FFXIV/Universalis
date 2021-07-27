@@ -9,6 +9,7 @@ namespace Universalis.DbAccess
             sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
             sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
             sc.AddSingleton<ITaxRatesDbAccess, TaxRatesDbAccess>();
+            sc.AddSingleton<ITrustedSourceDbAccess, TrustedSourceDbAccess>();
         }
     }
 }

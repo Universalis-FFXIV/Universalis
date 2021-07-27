@@ -25,7 +25,7 @@ namespace Universalis.DbAccess
         public async Task<TDocument> Retrieve(TDocumentQuery query)
         {
             var cursor = await Collection.FindAsync(query.ToFilterDefinition());
-            return await cursor.FirstAsync();
+            return await cursor.FirstOrDefaultAsync();
         }
 
         public async Task Update(TDocument document, TDocumentQuery query)
