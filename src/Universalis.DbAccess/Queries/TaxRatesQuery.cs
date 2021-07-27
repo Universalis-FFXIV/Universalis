@@ -5,7 +5,7 @@ namespace Universalis.DbAccess.Queries
 {
     public class TaxRatesQuery : DbAccessQuery<TaxRates>
     {
-        private const string SetName = "taxRates";
+        public const string SetName = "taxRates";
 
         public uint WorldId { get; init; }
 

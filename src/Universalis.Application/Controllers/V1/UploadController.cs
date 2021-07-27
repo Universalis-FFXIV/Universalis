@@ -20,17 +20,20 @@ namespace Universalis.Application.Controllers.V1
         private readonly ITrustedSourceDbAccess _trustedSourceDb;
         private readonly ICurrentlyShownDbAccess _currentlyShownDb;
         private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
+        private readonly IWorldUploadCountDbAccess _worldUploadCountDb;
 
         public UploadController(
             IGameDataProvider gameData,
             ITrustedSourceDbAccess trustedSourceDb,
             ICurrentlyShownDbAccess currentlyShownDb,
-            IFlaggedUploaderDbAccess flaggedUploaderDb)
+            IFlaggedUploaderDbAccess flaggedUploaderDb,
+            IWorldUploadCountDbAccess worldUploadCountDb)
         {
             _gameData = gameData;
             _trustedSourceDb = trustedSourceDb;
             _currentlyShownDb = currentlyShownDb;
             _flaggedUploaderDb = flaggedUploaderDb;
+            _worldUploadCountDb = worldUploadCountDb;
         }
 
         [HttpPost]
@@ -59,10 +62,16 @@ namespace Universalis.Application.Controllers.V1
             }
 
             // Check if this uploader is flagged, cancel if they are
-            if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery {UploaderId = parameters.UploaderId}) !=
+            if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderId = parameters.UploaderId }) !=
                 null)
             {
                 return Ok("Success");
+            }
+
+            if (parameters.WorldId != null)
+            {
+                var worldName = _gameData.AvailableWorlds()[parameters.WorldId.Value];
+                await _worldUploadCountDb.Increment(new WorldUploadCountQuery { WorldName = worldName });
             }
 
             return Ok(); // TODO
@@ -72,6 +81,9 @@ namespace Universalis.Application.Controllers.V1
         {
             [JsonProperty("uploaderID")]
             public string UploaderId { get; set; }
+
+            [JsonProperty("worldID")]
+            public uint? WorldId { get; set; }
         }
     }
 }
