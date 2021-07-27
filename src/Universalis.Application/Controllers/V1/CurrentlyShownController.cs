@@ -51,11 +51,28 @@ namespace Universalis.Application.Controllers.V1
                 {
                     return NotFound();
                 }
-                
-                return new NewtonsoftActionResult(1);
+
+                var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId);
+                return new NewtonsoftActionResult(currentlyShownView);
             }
 
-            return new NewtonsoftActionResult(1);
+            // Multi-item handling
+            var currentlyShownViewTasks = itemIdsArray
+                .Select(itemId => GetCurrentlyShownView(worldDc, worldIds, itemId))
+                .ToList();
+            var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
+            var unresolvedItems = currentlyShownViews
+                .Where(cs => !cs.Item1)
+                .Select(cs => cs.Item2.ItemId)
+                .ToArray();
+            return new NewtonsoftActionResult(new CurrentlyShownMultiView
+            {
+                ItemIds = itemIdsArray,
+                Items = currentlyShownViews.Select(cs => cs.Item2).ToList(),
+                WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
+                DcName = worldDc.IsDc ? worldDc.DcName : null,
+                UnresolvedItemIds = unresolvedItems,
+            });
         }
 
         private async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(WorldDc worldDc, uint[] worldIds, uint itemId)
