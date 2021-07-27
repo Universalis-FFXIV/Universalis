@@ -11,6 +11,8 @@ namespace Universalis.DbAccess
             sc.AddSingleton<ITaxRatesDbAccess, TaxRatesDbAccess>();
             sc.AddSingleton<ITrustedSourceDbAccess, TrustedSourceDbAccess>();
             sc.AddSingleton<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();
+            sc.AddSingleton<IWorldUploadCountDbAccess, WorldUploadCountDbAccess>();
+            sc.AddSingleton<IRecentlyUpdatedItemsDbAccess, RecentlyUpdatedItemsDbAccess>();
         }
     }
 }

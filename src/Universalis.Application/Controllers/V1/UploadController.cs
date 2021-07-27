@@ -21,19 +21,22 @@ namespace Universalis.Application.Controllers.V1
         private readonly ICurrentlyShownDbAccess _currentlyShownDb;
         private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
         private readonly IWorldUploadCountDbAccess _worldUploadCountDb;
+        private readonly IRecentlyUpdatedItemsDbAccess _recentlyUpdatedItemsDb;
 
         public UploadController(
             IGameDataProvider gameData,
             ITrustedSourceDbAccess trustedSourceDb,
             ICurrentlyShownDbAccess currentlyShownDb,
             IFlaggedUploaderDbAccess flaggedUploaderDb,
-            IWorldUploadCountDbAccess worldUploadCountDb)
+            IWorldUploadCountDbAccess worldUploadCountDb,
+            IRecentlyUpdatedItemsDbAccess recentlyUpdatedItemsDb)
         {
             _gameData = gameData;
             _trustedSourceDb = trustedSourceDb;
             _currentlyShownDb = currentlyShownDb;
             _flaggedUploaderDb = flaggedUploaderDb;
             _worldUploadCountDb = worldUploadCountDb;
+            _recentlyUpdatedItemsDb = recentlyUpdatedItemsDb;
         }
 
         [HttpPost]
@@ -68,10 +71,16 @@ namespace Universalis.Application.Controllers.V1
                 return Ok("Success");
             }
 
+            // Metadata
             if (parameters.WorldId != null)
             {
                 var worldName = _gameData.AvailableWorlds()[parameters.WorldId.Value];
                 await _worldUploadCountDb.Increment(new WorldUploadCountQuery { WorldName = worldName });
+            }
+
+            if (parameters.ItemId != null)
+            {
+                await _recentlyUpdatedItemsDb.Push(parameters.ItemId.Value);
             }
 
             return Ok(); // TODO
@@ -84,6 +93,9 @@ namespace Universalis.Application.Controllers.V1
 
             [JsonProperty("worldID")]
             public uint? WorldId { get; set; }
+
+            [JsonProperty("itemID")]
+            public uint? ItemId { get; set; }
         }
     }
 }
