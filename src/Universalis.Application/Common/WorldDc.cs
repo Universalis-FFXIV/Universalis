@@ -28,8 +28,11 @@ namespace Universalis.Application.Common
             _ = uint.TryParse(worldOrDc, out var worldId);
             if (worldId == default)
             {
-                // TODO: ensure this works with Chinese glyphs
                 var cleanWorldOrDc = char.ToUpperInvariant(worldOrDc[0]) + worldOrDc[1..].ToLowerInvariant();
+
+                // Effectively does nothing if the input doesn't refer to a Chinese world or DC
+                cleanWorldOrDc = ChineseServers.RomanizedToHanzi(cleanWorldOrDc);
+
                 _ = gameData.AvailableWorldsReversed().TryGetValue(cleanWorldOrDc, out worldId);
                 if (worldId == default)
                 {

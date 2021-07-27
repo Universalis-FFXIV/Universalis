@@ -1,38 +1,89 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Universalis.GameData
 {
     public static class ChineseServers
     {
         /// <summary>
-        /// Converts the provided data center name into its Hanzi form. If the provided data center name
-        /// is not a Chinese data center, an <see cref="ArgumentException" /> will be thrown.
+        /// Converts the provided romanized data center or world name into its Hanzi form.
         /// </summary>
-        /// <exception cref="ArgumentException">The provided data center is not a Chinese data center.</exception>
-        /// <param name="dataCenter">The data center name, romanized or already in Hanzi.</param>
-        /// <returns></returns>
-        public static string DataCenterToHanzi(string dataCenter)
-            => dataCenter switch
+        /// <param name="worldOrDc">The romanized name of the world or data center.</param>
+        /// <returns>The Hanzi form of the name, or the input data if it is already in Hanzi or no mapping exists.</returns>
+        public static string RomanizedToHanzi(string worldOrDc)
+            => worldOrDc switch
             {
                 "LuXingNiao" => "陆行鸟",
                 "MoGuLi" => "莫古力",
                 "MaoXiaoPang" => "猫小胖",
-                "陆行鸟" => "陆行鸟",
-                "莫古力" => "莫古力",
-                "猫小胖" => "猫小胖",
-                _ => throw new ArgumentException("No mapping for the provided data center was found."),
+                "HongYuHai" => "红玉海",
+                "ShenYiZhiDi" => "神意之地",
+                "LaNuoXiYa" => "拉诺西亚",
+                "HuanYingQunDao" => "幻影群岛",
+                "MengYaChi" => "萌芽池",
+                "YuZhouHeYin" => "宇宙和音",
+                "WoXianXiRan" => "沃仙曦染",
+                "ChenXiWangZuo" => "晨曦王座",
+                "BaiYinXiang" => "白银乡",
+                "BaiJinHuanXiang" => "白金幻象",
+                "ShenQuanHen" => "神拳痕",
+                "ChaoFengTing" => "潮风亭",
+                "LvRenZhanQiao" => "旅人栈桥",
+                "FuXiaoZhiJian" => "拂晓之间",
+                "Longchaoshendian" => "龙巢神殿",
+                "MengYuBaoJing" => "梦羽宝境",
+                "ZiShuiZhanQiao" => "紫水栈桥",
+                "YanXia" => "延夏",
+                "JingYuZhuangYuan" => "静语庄园",
+                "MoDuNa" => "摩杜纳",
+                "HaiMaoChaWu" => "海猫茶屋",
+                "RouFengHaiWan" => "柔风海湾",
+                "HuPoYuan" => "琥珀原",
+                _ => worldOrDc,
+            };
+
+        /// <summary>
+        /// Converts the provided Hanzi world or data center name into its romanized form.
+        /// </summary>
+        /// <param name="worldOrDc">The Hanzi name of the world or data center.</param>
+        /// <returns>The romanized form of the name, or the input data if it is already romanized or no mapping exists.</returns>
+        public static string HanziToRomanized(string worldOrDc)
+            => worldOrDc switch
+            {
+                "陆行鸟" => "LuXingNiao",
+                "莫古力" => "MoGuLi",
+                "猫小胖" => "MaoXiaoPang",
+                "红玉海" => "HongYuHai",
+                "神意之地" => "ShenYiZhiDi",
+                "拉诺西亚" => "LaNuoXiYa",
+                "幻影群岛" => "HuanYingQunDao",
+                "萌芽池" => "MengYaChi",
+                "宇宙和音" => "YuZhouHeYin",
+                "沃仙曦染" => "WoXianXiRan",
+                "晨曦王座" => "ChenXiWangZuo",
+                "白银乡" => "BaiYinXiang",
+                "白金幻象" => "BaiJinHuanXiang",
+                "神拳痕" => "ShenQuanHen",
+                "潮风亭" => "ChaoFengTing",
+                "旅人栈桥" => "LvRenZhanQiao",
+                "拂晓之间" => "FuXiaoZhiJian",
+                "龙巢神殿" => "Longchaoshendian",
+                "梦羽宝境" => "MengYuBaoJing",
+                "紫水栈桥" => "ZiShuiZhanQiao",
+                "延夏" => "YanXia",
+                "静语庄园" => "JingYuZhuangYuan",
+                "摩杜纳" => "MoDuNa",
+                "海猫茶屋" => "HaiMaoChaWu",
+                "柔风海湾" => "RouFengHaiWan",
+                "琥珀原" => "HuPoYuan",
+                _ => worldOrDc,
             };
 
         internal static IEnumerable<DataCenter> DataCenters()
             => new[]
             {
-                new DataCenter {Name = "LuXingNiao"},
-                new DataCenter {Name = "MoGuLi"},
-                new DataCenter {Name = "MaoXiaoPang"},
-                new DataCenter {Name = "陆行鸟"}, // LuXingNiao
-                new DataCenter {Name = "莫古力"}, // MoGuLi
-                new DataCenter {Name = "猫小胖"}, // MaoXiaoPang
+                new DataCenter {Name = "陆行鸟", WorldIds = new uint[]{ 1167, 1081, 1042, 1044, 1060, 1173, 1174, 1175 }},
+                new DataCenter {Name = "莫古力", WorldIds = new uint[]{ 1172, 1076, 1171, 1170, 1113, 1121, 1166, 1176 }},
+                new DataCenter {Name = "猫小胖", WorldIds = new uint[]{ 1043, 1169, 1106, 1045, 1177, 1178, 1179 }},
             };
 
         internal static IEnumerable<World> Worlds()

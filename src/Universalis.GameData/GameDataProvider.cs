@@ -126,14 +126,23 @@ namespace Universalis.GameData
         private IReadOnlyList<DataCenter> LoadDataCenters()
         {
             var dcs = _lumina.GetExcelSheet<WorldDCGroupType>();
-            if (dcs == null)
+            var worlds = _lumina.GetExcelSheet<LuminaWorld>();
+            if (dcs == null || worlds == null)
             {
                 throw new InvalidOperationException(ExcelLoadError);
             }
 
             return dcs
                 .Where(dc => dc.RowId is >= 1 and < 99)
-                .Select(dc => new DataCenter { Name = dc.Name })
+                .Select(dc => new DataCenter
+                {
+                    Name = dc.Name,
+                    WorldIds = worlds
+                        .Where(w => w.IsPublic)
+                        .Where(w => w.DataCenter.Row == dc.RowId)
+                        .Select(w => w.RowId)
+                        .ToArray(),
+                })
                 .Concat(ChineseServers.DataCenters())
                 .ToList();
         }
