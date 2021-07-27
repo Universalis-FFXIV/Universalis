@@ -29,10 +29,12 @@ namespace Universalis.Application.Controllers.V1
         [HttpGet]
         public async Task<IActionResult> Get(string itemIds, string worldOrDc)
         {
-            var itemIdsArray = itemIds.Split(',').Select(uint.Parse).ToArray();
-            var itemId = itemIdsArray[0];
-
-            if (!_gameData.MarketableItemIds().Contains(itemId) || worldOrDc.Length == 0)
+            var itemIdsArray = itemIds.Split(',')
+                .Take(100)
+                .Where(itemIdStr => uint.TryParse(itemIdStr, out _))
+                .Select(uint.Parse)
+                .ToArray();
+            if (worldOrDc.Length == 0)
                 return NotFound();
 
             WorldDc worldDc;
@@ -57,11 +59,46 @@ namespace Universalis.Application.Controllers.V1
                 worldIds = dataCenter.WorldIds;
             }
 
-            var data = await _historyDb.RetrieveMany(new HistoryManyQuery
+            if (itemIdsArray.Length == 1)
+            {
+                var itemId = itemIdsArray[0];
+
+                if (!_gameData.MarketableItemIds().Contains(itemId))
+                {
+                    return NotFound();
+                }
+
+                var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId);
+                return new NewtonsoftActionResult(historyView);
+            }
+
+            var historyViewTasks = itemIdsArray
+                .Select(itemId => GetHistoryView(worldDc, worldIds, itemId))
+                .ToList();
+            var historyViews = await Task.WhenAll(historyViewTasks);
+            var unresolvedItems = historyViews
+                .Where(hv => !hv.Item1)
+                .Select(hv => hv.Item2.ItemId)
+                .ToArray();
+            return new NewtonsoftActionResult(new HistoryMultiView
+            {
+                ItemIds = itemIdsArray,
+                Items = historyViews.Select(hv => hv.Item2).ToList(),
+                WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
+                DcName = worldDc.IsDc ? worldDc.DcName : null,
+                UnresolvedItemIds = unresolvedItems,
+            });
+        }
+
+        private async Task<(bool, HistoryView)> GetHistoryView(WorldDc worldDc, uint[] worldIds, uint itemId)
+        {
+            var data = (await _historyDb.RetrieveMany(new HistoryManyQuery
             {
                 WorldIds = worldIds,
                 ItemId = itemId,
-            });
+            })).ToList();
+
+            var resolved = data.Count > 0;
 
             var history = data.Aggregate(new History(), (agg, next) =>
             {
@@ -77,7 +114,7 @@ namespace Universalis.Application.Controllers.V1
             var worlds = _gameData.AvailableWorlds();
             var nqSales = history.Sales.Where(s => !s.Hq).ToList();
             var hqSales = history.Sales.Where(s => s.Hq).ToList();
-            return new NewtonsoftActionResult(new HistoryView
+            return (resolved, new HistoryView
             {
                 Sales = history.Sales
                     .Select(s => new MinimizedSaleView
