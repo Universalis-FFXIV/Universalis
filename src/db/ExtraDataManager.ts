@@ -101,45 +101,6 @@ export class ExtraDataManager {
 		}
 	}
 
-	/** Return the list of the most popular items, or a subset of them. */
-	public async getPopularItems(count?: number): Promise<MostPopularItems> {
-		if (count) count = Math.max(count, 0);
-		else count = Number.MAX_VALUE;
-
-		const query = { setName: "itemPopularity" };
-
-		const data: MostPopularItems = await this.extraDataCollection.findOne(
-			query,
-			{ projection: { _id: 0, setName: 0 } },
-		);
-
-		if (count && data)
-			data.items = data.items.slice(0, Math.min(count, data.items.length));
-
-		return data;
-	}
-
-	/** Increment the popular upload count for an item. */
-	public async incrementPopularUploads(itemID: number): Promise<void> {
-		const query = { setName: "itemPopularity", itemID };
-
-		const data = await this.extraDataCollection.findOne(query);
-
-		if (data) {
-			await this.extraDataCollection.updateOne(query, {
-				$inc: { "internal.uploadCount": 1 },
-			});
-		} else {
-			await this.extraDataCollection.insertOne({
-				internal: {
-					itemID,
-					uploadCount: 1,
-				},
-				setName: "itemPopularity",
-			} as MostPopularItems);
-		}
-	}
-
 	/** Return the list of the most recently updated items, or a subset of them. */
 	public async getRecentlyUpdatedItems(
 		count?: number,

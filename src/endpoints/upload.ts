@@ -79,7 +79,6 @@ export async function upload(parameters: UploadProcessParameters) {
 	}
 
 	if (uploadData.itemID) {
-		await extraDataManager.incrementPopularUploads(uploadData.itemID);
 		await extraDataManager.addRecentlyUpdatedItem(uploadData.itemID);
 	}
 
