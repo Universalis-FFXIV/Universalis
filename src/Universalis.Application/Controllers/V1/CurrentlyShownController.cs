@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using Universalis.Application.Common;
 using Universalis.Application.Views;
 using Universalis.DataTransformations;
-using Universalis.DbAccess;
-using Universalis.DbAccess.Queries;
+using Universalis.DbAccess.MarketBoard;
+using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
 

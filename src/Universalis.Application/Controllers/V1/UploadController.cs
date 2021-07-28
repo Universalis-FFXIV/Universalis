@@ -1,15 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Universalis.Application.UploadSchema;
 using Universalis.DbAccess;
+using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries;
+using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.DbAccess.Queries.Uploads;
+using Universalis.DbAccess.Uploads;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
-using Universalis.Entities.Uploaders;
+using Universalis.Entities.Uploads;
 using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1
@@ -128,48 +132,6 @@ namespace Universalis.Application.Controllers.V1
             }
 
             return Ok(); // TODO
-        }
-
-        public class UploadParameters
-        {
-            [JsonProperty("uploaderID")]
-            public string UploaderId { get; set; }
-
-            [JsonProperty("worldID")]
-            public uint? WorldId { get; set; }
-
-            [JsonProperty("itemID")]
-            public uint? ItemId { get; set; }
-
-            [JsonProperty("marketTaxRates")]
-            public MarketTaxRates TaxRates { get; set; }
-
-            [JsonProperty("contentID")]
-            public string ContentId { get; set; }
-
-            [JsonProperty("characterName")]
-            public string CharacterName { get; set; }
-        }
-
-        public class MarketTaxRates
-        {
-            [JsonProperty("limsaLominsa")]
-            public byte LimsaLominsa { get; set; }
-
-            [JsonProperty("gridania")]
-            public byte Gridania { get; set; }
-
-            [JsonProperty("uldah")]
-            public byte Uldah { get; set; }
-
-            [JsonProperty("ishgard")]
-            public byte Ishgard { get; set; }
-
-            [JsonProperty("kugane")]
-            public byte Kugane { get; set; }
-
-            [JsonProperty("crystarium")]
-            public byte Crystarium { get; set; }
         }
     }
 }

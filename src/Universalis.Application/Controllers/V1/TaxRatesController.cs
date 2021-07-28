@@ -4,8 +4,8 @@ using System;
 using System.Threading.Tasks;
 using Universalis.Application.Common;
 using Universalis.Application.Views;
-using Universalis.DbAccess;
-using Universalis.DbAccess.Queries;
+using Universalis.DbAccess.MarketBoard;
+using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1

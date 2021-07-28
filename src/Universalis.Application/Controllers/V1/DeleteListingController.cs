@@ -1,13 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Universalis.DbAccess;
-using Universalis.DbAccess.Queries;
-using Universalis.Entities.Uploaders;
+using Universalis.Application.UploadSchema;
+using Universalis.DbAccess.MarketBoard;
+using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.DbAccess.Queries.Uploads;
+using Universalis.DbAccess.Uploads;
+using Universalis.Entities.Uploads;
 using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1
@@ -62,7 +64,7 @@ namespace Universalis.Application.Controllers.V1
             }
 
             // Check if this uploader is flagged, cancel if they are
-            if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery {UploaderId = parameters.UploaderId}) != null)
+            if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderId = parameters.UploaderId }) != null)
             {
                 return Ok("Success");
             }
@@ -93,24 +95,6 @@ namespace Universalis.Application.Controllers.V1
             });
 
             return Ok("Success");
-        }
-
-        public class DeleteListingParameters
-        {
-            [JsonProperty("retainerID")]
-            public string RetainerId { get; set; }
-
-            [JsonProperty("listingID")]
-            public string ListingId { get; set; }
-
-            [JsonProperty("quantity")]
-            public uint Quantity { get; set; }
-
-            [JsonProperty("pricePerUnit")]
-            public uint PricePerUnit { get; set; }
-
-            [JsonProperty("uploaderID")]
-            public string UploaderId { get; set; }
         }
     }
 }

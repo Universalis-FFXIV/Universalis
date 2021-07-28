@@ -1,0 +1,19 @@
+﻿using MongoDB.Driver;
+using Universalis.Entities.Uploads;
+
+namespace Universalis.DbAccess.Queries.Uploads
+{
+    public class WorldUploadCountQuery : DbAccessQuery<WorldUploadCount>
+    {
+        public const string SetName = "worldUploadCount";
+
+        public string WorldName { get; init; }
+
+        internal override FilterDefinition<WorldUploadCount> ToFilterDefinition()
+        {
+            var filterBuilder = Builders<WorldUploadCount>.Filter;
+            var filter = filterBuilder.Eq(o => o.SetName, SetName) & filterBuilder.Eq(o => o.WorldName, WorldName);
+            return filter;
+        }
+    }
+}
