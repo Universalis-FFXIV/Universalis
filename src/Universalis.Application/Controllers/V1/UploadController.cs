@@ -102,7 +102,6 @@ namespace Universalis.Application.Controllers.V1
             {
                 await _taxRatesDb.Update(new TaxRates
                 {
-                    SetName = TaxRatesQuery.SetName,
                     LimsaLominsa = parameters.TaxRates.LimsaLominsa,
                     Gridania = parameters.TaxRates.Gridania,
                     Uldah = parameters.TaxRates.Uldah,

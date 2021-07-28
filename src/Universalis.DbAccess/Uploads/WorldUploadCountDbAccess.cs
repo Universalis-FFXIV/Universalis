@@ -16,7 +16,6 @@ namespace Universalis.DbAccess.Uploads
                 await Create(new WorldUploadCount
                 {
                     Count = 1,
-                    SetName = WorldUploadCountQuery.SetName,
                     WorldName = query.WorldName,
                 });
                 return;

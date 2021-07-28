@@ -4,10 +4,14 @@ namespace Universalis.Entities.Uploads
 {
     public class WorldUploadCount : ExtraData
     {
+        public const string DefaultSetName = "worldUploadCount";
+
         [BsonElement("count")]
         public uint Count { get; init; }
 
         [BsonElement("worldName")]
         public string WorldName { get; init; }
+
+        public WorldUploadCount() : base(DefaultSetName) { }
     }
 }

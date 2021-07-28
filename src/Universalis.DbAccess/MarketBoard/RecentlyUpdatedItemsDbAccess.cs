@@ -24,7 +24,6 @@ namespace Universalis.DbAccess.MarketBoard
                 await Create(new RecentlyUpdatedItems
                 {
                     Items = new List<uint> { itemId },
-                    SetName = WorldUploadCountQuery.SetName,
                 });
                 return;
             }
