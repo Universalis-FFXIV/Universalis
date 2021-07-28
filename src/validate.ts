@@ -71,7 +71,7 @@ export default {
 
 		return R.pipe(
 			entry,
-			R.pick(["hq", "pricePerUnit", "quantity", "timestamp", "worldName"]),
+			R.pick(["hq", "pricePerUnit", "quantity", "timestamp", "worldName", "worldID"]),
 			R.merge({
 				buyerName: removeUnsafeCharacters(entry.buyerName),
 				total: entry.pricePerUnit * entry.quantity,
@@ -155,6 +155,7 @@ export default {
 				"quantity",
 				"stainID",
 				"worldName",
+				"worldID",
 			]),
 			R.merge({
 				creatorName: removeUnsafeCharacters(listing.creatorName),
