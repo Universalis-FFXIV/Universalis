@@ -100,6 +100,10 @@ export async function parseListings(
 				item.listings = [];
 			}
 
+			if (item.recentHistory == null) {
+				item.recentHistory = [];
+			}
+
 			item.listings = item.listings.map((l) => {
 				l.worldName = worldName;
 				l.worldID = item.worldID;
