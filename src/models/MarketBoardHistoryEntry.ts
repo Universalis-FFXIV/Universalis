@@ -8,4 +8,5 @@ export interface MarketBoardHistoryEntry {
 	uploadApplication?: string;
 	onMannequin?: boolean;
 	worldName?: string;
+	worldID?: number;
 }

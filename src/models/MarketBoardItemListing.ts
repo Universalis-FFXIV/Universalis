@@ -5,5 +5,6 @@ export interface MarketBoardItemListing extends MarketBoardItemListingBase {
 	retainerCity: string | number;
 	total: number;
 	worldName?: string;
+	worldID?: number;
 	sourceName?: string;
 }
