@@ -144,6 +144,7 @@ namespace Universalis.Application.Controllers.V1
                 }
                 else
                 {
+                    // Remove duplicates
                     var head = existingHistory.Sales.FirstOrDefault();
                     for (var i = 0; i < minimizedSales.Count; i++)
                     {
