@@ -115,7 +115,7 @@ export async function parseListings(
 					e.worldID = item.worldID;
 				}
 
-				return l;
+				return e;
 			});
 
 			const otherItemOnDC: MarketBoardListingsEndpoint = data.items.find(
