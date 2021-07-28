@@ -109,20 +109,14 @@ export async function parseListings(
 			}
 			
 			item.listings = item.listings.map((l) => {
-				if (!l.worldName) {
-					l.worldName = worldName;
-					l.worldID = item.worldID;
-				}
-
+				l.worldName = worldName;
+				l.worldID = item.worldID;
 				return l;
 			});
 
 			item.recentHistory = item.recentHistory.map((e) => {
-				if (!e.worldName) {
-					e.worldName = worldName;
-					e.worldID = item.worldID;
-				}
-
+				e.worldName = worldName;
+				e.worldID = item.worldID;
 				return e;
 			});
 
