@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Universalis.Application.UploadSchema
 {
@@ -15,6 +17,9 @@ namespace Universalis.Application.UploadSchema
 
         [JsonProperty("marketTaxRates")]
         public MarketTaxRates TaxRates { get; set; }
+
+        [JsonProperty("entries")]
+        public IList<Sale> Sales { get; set; }
 
         [JsonProperty("contentID")]
         public string ContentId { get; set; }

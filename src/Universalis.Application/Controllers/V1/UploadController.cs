@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +17,7 @@ using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
 using Universalis.Entities.Uploads;
 using Universalis.GameData;
+using Sale = Universalis.Entities.MarketBoard.Sale;
 
 namespace Universalis.Application.Controllers.V1
 {
@@ -89,6 +92,9 @@ namespace Universalis.Application.Controllers.V1
             // Store data
             if (parameters.WorldId != null)
             {
+                if (!_gameData.AvailableWorldIds().Contains(parameters.WorldId.Value))
+                    return NotFound(parameters.WorldId);
+
                 var worldName = _gameData.AvailableWorlds()[parameters.WorldId.Value];
                 await _worldUploadCountDb.Increment(new WorldUploadCountQuery { WorldName = worldName });
             }
@@ -96,6 +102,74 @@ namespace Universalis.Application.Controllers.V1
             if (parameters.ItemId != null)
             {
                 await _recentlyUpdatedItemsDb.Push(parameters.ItemId.Value);
+            }
+
+            if (parameters.WorldId != null && parameters.ItemId != null && parameters.Sales != null)
+            {
+                if (Util.HasHtmlTags(JsonConvert.SerializeObject(parameters.Sales)))
+                {
+                    return BadRequest();
+                }
+
+                var cleanSales = parameters.Sales
+                    .Select(s => new Sale
+                    {
+                        Hq = Util.ParseUnusualBool(s.Hq),
+                        BuyerName = s.BuyerName,
+                        PricePerUnit = s.PricePerUnit,
+                        Quantity = s.Quantity,
+                        TimestampUnixSeconds = s.TimestampUnixSeconds,
+                        UploadApplicationName = source.Name,
+                        UploaderIdHash = parameters.UploaderId,
+                    })
+                    .ToList();
+                cleanSales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+
+                var existingHistory = await _historyDb.Retrieve(new HistoryQuery
+                {
+                    WorldId = parameters.WorldId.Value,
+                    ItemId = parameters.ItemId.Value,
+                });
+                var minimizedSales = cleanSales.Select(MinimizedSale.FromSale).ToList();
+
+                if (existingHistory == null)
+                {
+                    await _historyDb.Create(new History
+                    {
+                        WorldId = parameters.WorldId.Value,
+                        ItemId = parameters.ItemId.Value,
+                        LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
+                        Sales = minimizedSales,
+                    });
+                }
+                else
+                {
+                    var head = existingHistory.Sales.FirstOrDefault();
+                    for (var i = 0; i < minimizedSales.Count; i++)
+                    {
+                        if (minimizedSales.Count == 0) break;
+                        if (minimizedSales[0] == head)
+                        {
+                            break;
+                        }
+
+                        existingHistory.Sales.Insert(0, minimizedSales[i]);
+                        minimizedSales.RemoveAt(0);
+                    }
+
+                    await _historyDb.Update(new History
+                    {
+                        WorldId = parameters.WorldId.Value,
+                        ItemId = parameters.ItemId.Value,
+                        LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
+                        Sales = existingHistory.Sales,
+                    }, new HistoryQuery
+                    {
+                        WorldId = parameters.WorldId.Value,
+                        ItemId = parameters.ItemId.Value,
+                    });
+                }
+
             }
 
             if (parameters.WorldId != null && parameters.TaxRates != null)

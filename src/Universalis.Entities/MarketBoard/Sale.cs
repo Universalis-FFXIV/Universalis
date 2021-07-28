@@ -5,21 +5,24 @@ namespace Universalis.Entities.MarketBoard
     public class Sale
     {
         [BsonElement("hq")]
-        public bool Hq { get; set; }
+        public bool Hq { get; init; }
 
         [BsonElement("pricePerUnit")]
-        public uint PricePerUnit { get; set; }
+        public uint PricePerUnit { get; init; }
 
         [BsonElement("quantity")]
-        public uint Quantity { get; set; }
+        public uint Quantity { get; init; }
 
         [BsonElement("buyerName")]
-        public string BuyerName { get; set; }
+        public string BuyerName { get; init; }
 
         [BsonElement("timestamp")]
-        public uint TimestampUnixSeconds { get; set; }
+        public uint TimestampUnixSeconds { get; init; }
 
         [BsonElement("uploadApplication")]
-        public bool UploadApplicationName { get; set; }
+        public string UploadApplicationName { get; init; }
+
+        [BsonElement("uploaderID")]
+        public string UploaderIdHash { get; init; }
     }
 }
