@@ -1,7 +1,7 @@
 ![https://universalis.app/docs](https://img.shields.io/badge/docs-here-informational)
 
 # Universalis
-A crowdsourced market board aggregator for the game FINAL FANTASY XIV.
+A crowdsourced market board aggregator for the game FINAL FANTASY XIV. This branch is a rewrite in active development; the current live code is housed on the [master branch](https://github.com/Universalis-FFXIV/Universalis/tree/master).
 
 ## Endpoint Reference
 *   /api/:world/:item
