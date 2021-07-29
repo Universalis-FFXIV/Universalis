@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using MongoDB.Driver;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.Entities.Uploads;
 
@@ -19,6 +22,19 @@ namespace Universalis.DbAccess.Uploads
             var updateBuilder = MongoDB.Driver.Builders<TrustedSource>.Update;
             var update = updateBuilder.Inc(o => o.UploadCount, 1U);
             await Collection.UpdateOneAsync(query.ToFilterDefinition(), update);
+        }
+
+        public async Task<IEnumerable<TrustedSourceNoApiKey>> GetUploaderCounts()
+        {
+            var cursor = await Collection.FindAsync(o => true);
+            var results = cursor.ToEnumerable()
+                .Select(o => new TrustedSourceNoApiKey
+                {
+                    Name = o.Name,
+                    UploadCount = o.UploadCount,
+                })
+                .ToList();
+            return results;
         }
     }
 }
