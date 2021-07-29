@@ -16,4 +16,5 @@ export interface MarketBoardItemListingBase {
 	lastReviewTime: number;
 	stainID?: number;
 	worldName?: string;
+	worldID?: number;
 }
