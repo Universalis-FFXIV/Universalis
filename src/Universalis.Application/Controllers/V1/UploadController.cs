@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -17,6 +18,8 @@ using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
 using Universalis.Entities.Uploads;
 using Universalis.GameData;
+using Listing = Universalis.Entities.MarketBoard.Listing;
+using Materia = Universalis.Entities.Materia;
 using Sale = Universalis.Entities.MarketBoard.Sale;
 
 namespace Universalis.Application.Controllers.V1
@@ -104,6 +107,7 @@ namespace Universalis.Application.Controllers.V1
                 await _recentlyUpdatedItemsDb.Push(parameters.ItemId.Value);
             }
 
+            List<Sale> cleanSales = null;
             if (parameters.WorldId != null && parameters.ItemId != null && parameters.Sales != null)
             {
                 if (Util.HasHtmlTags(JsonConvert.SerializeObject(parameters.Sales)))
@@ -111,7 +115,7 @@ namespace Universalis.Application.Controllers.V1
                     return BadRequest();
                 }
 
-                var cleanSales = parameters.Sales
+                cleanSales = parameters.Sales
                     .Select(s => new Sale
                     {
                         Hq = Util.ParseUnusualBool(s.Hq),
@@ -132,15 +136,17 @@ namespace Universalis.Application.Controllers.V1
                 });
                 var minimizedSales = cleanSales.Select(MinimizedSale.FromSale).ToList();
 
+                var document = new History
+                {
+                    WorldId = parameters.WorldId.Value,
+                    ItemId = parameters.ItemId.Value,
+                    LastUploadTimeUnixMilliseconds = (uint) DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
+                };
+
                 if (existingHistory == null)
                 {
-                    await _historyDb.Create(new History
-                    {
-                        WorldId = parameters.WorldId.Value,
-                        ItemId = parameters.ItemId.Value,
-                        LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
-                        Sales = minimizedSales,
-                    });
+                    document.Sales = minimizedSales;
+                    await _historyDb.Create(document);
                 }
                 else
                 {
@@ -158,19 +164,93 @@ namespace Universalis.Application.Controllers.V1
                         minimizedSales.RemoveAt(0);
                     }
 
-                    await _historyDb.Update(new History
-                    {
-                        WorldId = parameters.WorldId.Value,
-                        ItemId = parameters.ItemId.Value,
-                        LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
-                        Sales = existingHistory.Sales,
-                    }, new HistoryQuery
+                    document.Sales = existingHistory.Sales;
+                    await _historyDb.Update(document, new HistoryQuery
                     {
                         WorldId = parameters.WorldId.Value,
                         ItemId = parameters.ItemId.Value,
                     });
                 }
+            }
 
+            if (parameters.WorldId != null && parameters.ItemId != null && parameters.Listings != null)
+            {
+                if (Util.HasHtmlTags(JsonConvert.SerializeObject(parameters.Listings)))
+                {
+                    return BadRequest();
+                }
+
+                var cleanListings = parameters.Listings
+                    .Select(l =>
+                    {
+                        using (var sha256 = SHA256.Create())
+                        {
+                            using var creatorIdStream = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId));
+                            l.CreatorId = BitConverter.ToString(sha256.ComputeHash(creatorIdStream));
+                        }
+
+                        using (var sha256 = SHA256.Create())
+                        {
+                            using var sellerIdStream = new MemoryStream(Encoding.UTF8.GetBytes(l.SellerId));
+                            l.SellerId = BitConverter.ToString(sha256.ComputeHash(sellerIdStream));
+                        }
+
+                        return new Listing
+                        {
+                            ListingId = l.ListingId,
+                            Hq = Util.ParseUnusualBool(l.Hq),
+                            OnMannequin = Util.ParseUnusualBool(l.OnMannequin),
+                            Materia = l.Materia.Select(s => new Materia
+                            {
+                                SlotId = s.SlotId,
+                                MateriaId = s.MateriaId,
+                            })
+                                .ToList(),
+                            PricePerUnit = l.PricePerUnit,
+                            Quantity = l.Quantity,
+                            DyeId = l.DyeId,
+                            CreatorIdHash = l.CreatorId,
+                            CreatorName = l.CreatorName,
+                            LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
+                            RetainerId = l.RetainerId,
+                            RetainerName = l.RetainerName,
+                            RetainerCityId = l.RetainerCityId,
+                            SellerIdHash = l.SellerId,
+                            UploadApplicationName = source.Name,
+                        };
+                    })
+                    .ToList();
+                cleanListings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
+
+                var existingCurrentlyShown = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
+                {
+                    WorldId = parameters.WorldId.Value,
+                    ItemId = parameters.ItemId.Value,
+                });
+
+                var document = new CurrentlyShown
+                {
+                    WorldId = parameters.WorldId.Value,
+                    ItemId = parameters.ItemId.Value,
+                    LastUploadTimeUnixMilliseconds = (uint) DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
+                    Listings = cleanListings,
+                    UploaderIdHash = parameters.UploaderId,
+                };
+
+                if (existingCurrentlyShown == null)
+                {
+                    document.RecentHistory = cleanSales ?? new List<Sale>();
+                    await _currentlyShownDb.Create(document);
+                }
+                else
+                {
+                    document.RecentHistory = cleanSales ?? existingCurrentlyShown.RecentHistory;
+                    await _currentlyShownDb.Update(document, new CurrentlyShownQuery
+                    {
+                        WorldId = parameters.WorldId.Value,
+                        ItemId = parameters.ItemId.Value,
+                    });
+                }
             }
 
             if (parameters.WorldId != null && parameters.TaxRates != null)
@@ -205,7 +285,7 @@ namespace Universalis.Application.Controllers.V1
                 });
             }
 
-            return Ok(); // TODO
+            return Ok("Success");
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Universalis.Application.UploadSchema
         public string BuyerName { get; set; }
         
         [JsonProperty("onMannequin")]
-        public bool? OnMannequin { get; set; }
+        public string OnMannequin { get; set; }
         
         [JsonProperty("sellerID")]
         public string SellerId { get; set; }

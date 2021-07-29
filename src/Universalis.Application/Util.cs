@@ -36,7 +36,7 @@ namespace Universalis.Application
         /// <returns>A boolean corresponding to the text.</returns>
         public static bool ParseUnusualBool(string b)
         {
-            b = b.ToLowerInvariant();
+            b = b?.ToLowerInvariant();
             return b switch
             {
                 "true" or "1" => true,

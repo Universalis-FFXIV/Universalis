@@ -27,7 +27,7 @@ namespace Universalis.Application.Views
         public uint Total { get; set; }
 
         [JsonProperty("stainID")]
-        public byte DyeId { get; set; }
+        public uint DyeId { get; set; }
 
         [JsonProperty("creatorID")]
         public string CreatorIdHash { get; set; }

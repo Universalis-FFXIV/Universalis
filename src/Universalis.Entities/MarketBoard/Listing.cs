@@ -9,45 +9,45 @@ namespace Universalis.Entities.MarketBoard
         public string ListingId { get; set; }
 
         [BsonElement("hq")]
-        public bool Hq { get; set; }
+        public bool Hq { get; init; }
 
         [BsonElement("onMannequin")]
-        public bool OnMannequin { get; set; }
+        public bool OnMannequin { get; init; }
 
         [BsonElement("materia")]
-        public List<Materia> Materia { get; set; }
+        public List<Materia> Materia { get; init; }
 
         [BsonElement("pricePerUnit")]
-        public uint PricePerUnit { get; set; }
+        public uint PricePerUnit { get; init; }
 
         [BsonElement("quantity")]
-        public uint Quantity { get; set; }
+        public uint Quantity { get; init; }
 
         [BsonElement("stainID")]
-        public byte DyeId { get; set; }
+        public uint DyeId { get; init; }
 
         [BsonElement("creatorID")]
-        public string CreatorIdHash { get; set; }
+        public string CreatorIdHash { get; init; }
 
         [BsonElement("creatorName")]
-        public string CreatorName { get; set; }
+        public string CreatorName { get; init; }
 
         [BsonElement("lastReviewTime")]
-        public uint LastReviewTimeUnixSeconds { get; set; }
+        public uint LastReviewTimeUnixSeconds { get; init; }
 
         [BsonElement("retainerID")]
-        public string RetainerId { get; set; }
+        public string RetainerId { get; init; }
 
         [BsonElement("retainerName")]
-        public string RetainerName { get; set; }
+        public string RetainerName { get; init; }
 
         [BsonElement("retainerCity")]
-        public byte RetainerCityId { get; set; }
+        public byte RetainerCityId { get; init; }
 
         [BsonElement("sellerID")]
-        public string SellerIdHash { get; set; }
+        public string SellerIdHash { get; init; }
 
         [BsonElement("sourceName")]
-        public byte UploadApplicationName { get; set; }
+        public string UploadApplicationName { get; init; }
     }
 }
