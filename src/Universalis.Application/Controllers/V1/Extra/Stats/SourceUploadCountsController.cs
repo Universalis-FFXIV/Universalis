@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Universalis.Application.Views;
 using Universalis.DbAccess.Uploads;
 
-namespace Universalis.Application.Controllers.V1
+namespace Universalis.Application.Controllers.V1.Extra.Stats
 {
     [ApiController]
     [Route("api/extra/stats/uploader-upload-counts")]
