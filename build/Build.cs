@@ -57,6 +57,7 @@ class Build : NukeBuild
             DotNetBuild(s => s
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
+                .SetOutputDirectory(ArtifactsDirectory)
                 .EnableNoRestore());
         });
 
