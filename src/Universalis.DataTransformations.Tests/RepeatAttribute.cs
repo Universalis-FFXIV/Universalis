@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Xunit.Sdk;
 
@@ -23,7 +22,13 @@ namespace Universalis.DataTransformations.Tests
 
         public override IEnumerable<object[]> GetData(MethodInfo testMethod)
         {
-            return Enumerable.Repeat(Array.Empty<object>(), _count);
+            var data = new List<object[]>();
+            for (var i = 0; i < _count; i++)
+            {
+                data.Add(new object[] { i });
+            }
+
+            return data;
         }
     }
 }

@@ -8,6 +8,7 @@ using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.DotNet;
+using Nuke.Common.Tools.Xunit;
 using Nuke.Common.Utilities.Collections;
 using static Nuke.Common.EnvironmentInfo;
 using static Nuke.Common.IO.FileSystemTasks;
@@ -50,6 +51,37 @@ class Build : NukeBuild
                 .SetProjectFile(Solution));
         });
 
+    Target Test => _ => _
+        .DependsOn(Restore)
+        .Executes(() =>
+        {
+            DotNetTest(s => s
+                .SetProjectFile(Solution)
+                .SetConfiguration(Configuration)
+                .EnableNoRestore());
+        });
+
+    Target TestNoGameData => _ => _
+        .DependsOn(Restore)
+        .Executes(() =>
+        {
+            var gameDataTests = Solution.Projects.First(p => p.Name == "Universalis.GameData.Tests");
+            Solution.RemoveProject(gameDataTests);
+
+            DotNetTest(s => s
+                .SetProjectFile(Solution)
+                .SetConfiguration(Configuration)
+                .EnableNoRestore());
+
+            Solution.AddProject(
+                gameDataTests.Name,
+                gameDataTests.TypeId,
+                gameDataTests.Path,
+                gameDataTests.ProjectId,
+                gameDataTests.Configurations,
+                gameDataTests.SolutionFolder);
+        });
+
     Target Compile => _ => _
         .DependsOn(Restore)
         .Executes(() =>
@@ -60,5 +92,4 @@ class Build : NukeBuild
                 .SetOutputDirectory(ArtifactsDirectory)
                 .EnableNoRestore());
         });
-
 }

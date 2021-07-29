@@ -61,8 +61,8 @@ namespace Universalis.DataTransformations.Tests
 
         [Theory]
         [Repeat(100)]
-        [SuppressMessage("Usage", "xUnit1006:Theory methods should have parameters", Justification = "TheoryAttribute is required for RepeatAttribute")]
-        public void WeekVelocityPerDay_IsCorrect1()
+        [SuppressMessage("Usage", "xUnit1026:Theory methods should use all of their parameters", Justification = "<Pending>")]
+        public void WeekVelocityPerDay_IsCorrect1(int i)
         {
             var rand = new Random();
             var timestampsInWeek = GetTimestampsInWeek(rand.Next(0, 100)).ToList();
