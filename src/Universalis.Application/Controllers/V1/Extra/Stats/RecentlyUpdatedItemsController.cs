@@ -17,6 +17,7 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
             _recentlyUpdatedItemsDb = recentlyUpdatedItemsDb;
         }
 
+        [HttpGet]
         public async Task<IEnumerable<uint>> Get()
         {
             return (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery())).Items;
