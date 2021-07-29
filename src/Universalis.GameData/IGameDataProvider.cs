@@ -27,6 +27,6 @@ namespace Universalis.GameData
         /// <summary>
         /// Returns a sorted set of all data centers.
         /// </summary>
-        public IReadOnlyList<DataCenter> DataCenters();
+        public IEnumerable<DataCenter> DataCenters();
     }
 }

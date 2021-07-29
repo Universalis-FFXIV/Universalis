@@ -45,7 +45,7 @@ namespace Universalis.GameData
         IReadOnlySet<uint> IGameDataProvider.MarketableItemIds()
             => _marketableItemIds.Value;
 
-        IReadOnlyList<DataCenter> IGameDataProvider.DataCenters()
+        IEnumerable<DataCenter> IGameDataProvider.DataCenters()
             => _dataCenters.Value;
 
         /// <summary>

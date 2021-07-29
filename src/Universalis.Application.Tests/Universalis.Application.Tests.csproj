@@ -26,4 +26,9 @@
     <ProjectReference Include="..\Universalis.Application\Universalis.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Controllers\V1\" />
+    <Folder Include="Mocks\DbAccess\" />
+  </ItemGroup>
+
 </Project>
