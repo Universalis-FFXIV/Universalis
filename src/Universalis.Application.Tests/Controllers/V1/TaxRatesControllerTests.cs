@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Universalis.Application.Tests.Controllers.V1
 {
-    public class TaxRatesControllerTest
+    public class TaxRatesControllerTests
     {
         [Theory]
         [InlineData("74")]
