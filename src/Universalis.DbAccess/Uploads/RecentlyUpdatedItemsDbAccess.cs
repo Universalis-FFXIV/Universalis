@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.MarketBoard;
-using Universalis.DbAccess.Queries.Uploads;
 using Universalis.Entities.Uploads;
 
-namespace Universalis.DbAccess.MarketBoard
+namespace Universalis.DbAccess.Uploads
 {
     public class RecentlyUpdatedItemsDbAccess : DbAccessService<RecentlyUpdatedItems, RecentlyUpdatedItemsQuery>, IRecentlyUpdatedItemsDbAccess
     {

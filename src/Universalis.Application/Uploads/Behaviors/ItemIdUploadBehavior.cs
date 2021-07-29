@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Universalis.Application.Uploads.Schema;
-using Universalis.DbAccess.MarketBoard;
+using Universalis.DbAccess.Uploads;
 using Universalis.Entities.Uploads;
 
 namespace Universalis.Application.Uploads.Behaviors

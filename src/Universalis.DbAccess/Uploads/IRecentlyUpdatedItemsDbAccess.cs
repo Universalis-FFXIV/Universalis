@@ -2,7 +2,7 @@
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.Uploads;
 
-namespace Universalis.DbAccess.MarketBoard
+namespace Universalis.DbAccess.Uploads
 {
     public interface IRecentlyUpdatedItemsDbAccess
     {
