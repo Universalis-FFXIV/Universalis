@@ -16,6 +16,7 @@ namespace Universalis.DbAccess
             sc.AddTransient<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();
             sc.AddTransient<IWorldUploadCountDbAccess, WorldUploadCountDbAccess>();
             sc.AddTransient<IRecentlyUpdatedItemsDbAccess, RecentlyUpdatedItemsDbAccess>();
+            sc.AddTransient<IUploadCountHistoryDbAccess, UploadCountHistoryDbAccess>();
         }
     }
 }
