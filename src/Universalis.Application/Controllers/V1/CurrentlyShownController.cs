@@ -74,7 +74,7 @@ namespace Universalis.Application.Controllers.V1
             });
         }
 
-        private async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(WorldDc worldDc, uint[] worldIds, uint itemId)
+        protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(WorldDc worldDc, uint[] worldIds, uint itemId)
         {
             var data = (await _currentlyShownDb.RetrieveMany(new CurrentlyShownManyQuery
             {

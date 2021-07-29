@@ -20,4 +20,22 @@ namespace Universalis.Application.Views
         [JsonProperty("unresolvedItems")]
         public uint[] UnresolvedItemIds { get; set; }
     }
+
+    public class CurrentlyShownMultiViewV2
+    {
+        [JsonProperty("itemIDs")]
+        public uint[] ItemIds { get; set; }
+
+        [JsonProperty("items")]
+        public Dictionary<uint, CurrentlyShownView> Items { get; set; }
+
+        [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore)]
+        public uint? WorldId { get; set; }
+
+        [JsonProperty("dcName", NullValueHandling = NullValueHandling.Ignore)]
+        public string DcName { get; set; }
+
+        [JsonProperty("unresolvedItems")]
+        public uint[] UnresolvedItemIds { get; set; }
+    }
 }

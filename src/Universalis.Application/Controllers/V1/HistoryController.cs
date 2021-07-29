@@ -74,7 +74,7 @@ namespace Universalis.Application.Controllers.V1
             });
         }
 
-        private async Task<(bool, HistoryView)> GetHistoryView(WorldDc worldDc, uint[] worldIds, uint itemId, string entriesToReturnStr)
+        protected async Task<(bool, HistoryView)> GetHistoryView(WorldDc worldDc, uint[] worldIds, uint itemId, string entriesToReturnStr)
         {
             var data = (await _historyDb.RetrieveMany(new HistoryManyQuery
             {
