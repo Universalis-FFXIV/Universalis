@@ -12,6 +12,8 @@ namespace Universalis.DbAccess.Uploads
 
         public Task Update(TrustedSource document, TrustedSourceQuery query);
 
+        public Task Increment(TrustedSourceQuery query);
+
         public Task Delete(TrustedSourceQuery query);
     }
 }
