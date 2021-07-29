@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.Entities.Uploads;
 
@@ -9,6 +10,8 @@ namespace Universalis.DbAccess.Uploads
         public Task Create(WorldUploadCount document);
 
         public Task<WorldUploadCount> Retrieve(WorldUploadCountQuery query);
+
+        public Task<IEnumerable<WorldUploadCount>> GetWorldUploadCounts();
 
         public Task Update(WorldUploadCount document, WorldUploadCountQuery query);
 

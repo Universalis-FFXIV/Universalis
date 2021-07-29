@@ -13,8 +13,8 @@ using Universalis.Entities.Uploads;
 
 namespace Universalis.Application.Controllers.V1
 {
-    [Route("api/upload/{apiKey}")]
     [ApiController]
+    [Route("api/upload/{apiKey}")]
     public class UploadController : ControllerBase
     {
         private readonly ITrustedSourceDbAccess _trustedSourceDb;

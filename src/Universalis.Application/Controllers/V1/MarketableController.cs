@@ -4,8 +4,8 @@ using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1
 {
-    [Route("api/marketable")]
     [ApiController]
+    [Route("api/marketable")]
     public class MarketableController : ControllerBase
     {
         private readonly IGameDataProvider _gameData;

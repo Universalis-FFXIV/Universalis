@@ -13,8 +13,8 @@ using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1
 {
-    [Route("api/{worldOrDc}/{itemIds}")]
     [ApiController]
+    [Route("api/{worldOrDc}/{itemIds}")]
     public class CurrentlyShownController : WorldDcControllerBase
     {
         private readonly ICurrentlyShownDbAccess _currentlyShownDb;

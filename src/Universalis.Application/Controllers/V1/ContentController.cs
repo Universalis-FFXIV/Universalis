@@ -6,8 +6,8 @@ using Universalis.DbAccess.Queries;
 
 namespace Universalis.Application.Controllers.V1
 {
-    [Route("api/extra/content/{contentId}")]
     [ApiController]
+    [Route("api/extra/content/{contentId}")]
     public class ContentController : ControllerBase
     {
         private readonly IContentDbAccess _contentDb;

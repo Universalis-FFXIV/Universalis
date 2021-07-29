@@ -1,4 +1,6 @@
 ﻿using MongoDB.Driver;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.Entities.Uploads;
@@ -24,6 +26,11 @@ namespace Universalis.DbAccess.Uploads
             var updateBuilder = Builders<WorldUploadCount>.Update;
             var update = updateBuilder.Inc(o => o.Count, 1U);
             await Collection.UpdateOneAsync(query.ToFilterDefinition(), update);
+        }
+
+        public async Task<IEnumerable<WorldUploadCount>> GetWorldUploadCounts()
+        {
+            return (await Collection.FindAsync(o => true)).ToEnumerable().ToList();
         }
     }
 }

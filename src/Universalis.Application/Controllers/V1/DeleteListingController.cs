@@ -14,8 +14,8 @@ using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1
 {
-    [Route("api/{itemId}/{world}/delete")]
     [ApiController]
+    [Route("api/{itemId}/{world}/delete")]
     public class DeleteListingController : WorldDcControllerBase
     {
         private readonly ITrustedSourceDbAccess _trustedSourceDb;

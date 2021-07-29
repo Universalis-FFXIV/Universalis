@@ -1,14 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Universalis.Application.Common;
 using Universalis.Application.Views;
-using Universalis.DataTransformations;
 using Universalis.DbAccess.MarketBoard;
-using Universalis.DbAccess.Queries.MarketBoard;
-using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V2

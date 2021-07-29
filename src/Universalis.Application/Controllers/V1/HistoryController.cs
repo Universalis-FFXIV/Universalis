@@ -13,8 +13,8 @@ using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1
 {
-    [Route("api/history/{worldOrDc}/{itemIds}")]
     [ApiController]
+    [Route("api/history/{worldOrDc}/{itemIds}")]
     public class HistoryController : WorldDcControllerBase
     {
         private readonly IHistoryDbAccess _historyDb;

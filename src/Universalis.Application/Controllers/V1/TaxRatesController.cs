@@ -10,8 +10,8 @@ using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1
 {
-    [Route("api/tax-rates")]
     [ApiController]
+    [Route("api/tax-rates")]
     public class TaxRatesController : ControllerBase
     {
         private readonly IGameDataProvider _gameData;

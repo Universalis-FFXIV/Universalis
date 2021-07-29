@@ -7,8 +7,8 @@ using Universalis.DbAccess.Uploads;
 
 namespace Universalis.Application.Controllers.V1
 {
-    [Route("api/extra/stats/uploader-upload-counts")]
     [ApiController]
+    [Route("api/extra/stats/uploader-upload-counts")]
     public class SourceUploadCountsController : ControllerBase
     {
         private readonly ITrustedSourceDbAccess _trustedSourceDb;
@@ -19,11 +19,11 @@ namespace Universalis.Application.Controllers.V1
         }
 
         [HttpGet]
-        public async Task<IEnumerable<SourceUploadCountsView>> Get()
+        public async Task<IEnumerable<SourceUploadCountView>> Get()
         {
             var data = await _trustedSourceDb.GetUploaderCounts();
             return data
-                .Select(d => new SourceUploadCountsView
+                .Select(d => new SourceUploadCountView
                 {
                     Name = d.Name,
                     UploadCount = d.UploadCount,
