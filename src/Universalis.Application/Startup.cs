@@ -7,8 +7,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System;
 using Universalis.Alerts;
-using Universalis.Application.Controllers;
 using Universalis.Application.Swagger;
+using Universalis.Application.Uploads.Behaviors;
 using Universalis.DbAccess;
 using Universalis.GameData;
 
@@ -29,7 +29,9 @@ namespace Universalis.Application
             services.AddDbAccessServices();
             services.AddGameData(Configuration);
             services.AddUserAlerts();
-
+            
+            services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Scoped);
+            
             services.AddControllers(options =>
             {
                 options.Conventions.Add(new GroupByNamespaceConvention());

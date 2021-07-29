@@ -8,14 +8,14 @@ namespace Universalis.DbAccess
     {
         public static void AddDbAccessServices(this IServiceCollection sc)
         {
-            sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
-            sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
-            sc.AddSingleton<IContentDbAccess, ContentDbAccess>();
-            sc.AddSingleton<ITaxRatesDbAccess, TaxRatesDbAccess>();
-            sc.AddSingleton<ITrustedSourceDbAccess, TrustedSourceDbAccess>();
-            sc.AddSingleton<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();
-            sc.AddSingleton<IWorldUploadCountDbAccess, WorldUploadCountDbAccess>();
-            sc.AddSingleton<IRecentlyUpdatedItemsDbAccess, RecentlyUpdatedItemsDbAccess>();
+            sc.AddTransient<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
+            sc.AddTransient<IHistoryDbAccess, HistoryDbAccess>();
+            sc.AddTransient<IContentDbAccess, ContentDbAccess>();
+            sc.AddTransient<ITaxRatesDbAccess, TaxRatesDbAccess>();
+            sc.AddTransient<ITrustedSourceDbAccess, TrustedSourceDbAccess>();
+            sc.AddTransient<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();
+            sc.AddTransient<IWorldUploadCountDbAccess, WorldUploadCountDbAccess>();
+            sc.AddTransient<IRecentlyUpdatedItemsDbAccess, RecentlyUpdatedItemsDbAccess>();
         }
     }
 }
