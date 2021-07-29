@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 
-namespace Universalis.Application.UploadSchema
+namespace Universalis.Application.Uploads.Schema
 {
     public class UploadParameters
     {

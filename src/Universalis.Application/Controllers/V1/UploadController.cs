@@ -7,7 +7,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Universalis.Application.UploadSchema;
+using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries;
@@ -140,7 +140,7 @@ namespace Universalis.Application.Controllers.V1
                 {
                     WorldId = parameters.WorldId.Value,
                     ItemId = parameters.ItemId.Value,
-                    LastUploadTimeUnixMilliseconds = (uint) DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
+                    LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
                 };
 
                 if (existingHistory == null)
@@ -232,7 +232,7 @@ namespace Universalis.Application.Controllers.V1
                 {
                     WorldId = parameters.WorldId.Value,
                     ItemId = parameters.ItemId.Value,
-                    LastUploadTimeUnixMilliseconds = (uint) DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
+                    LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
                     Listings = cleanListings,
                     UploaderIdHash = parameters.UploaderId,
                 };

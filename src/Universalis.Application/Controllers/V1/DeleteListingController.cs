@@ -4,7 +4,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Universalis.Application.UploadSchema;
+using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Queries.Uploads;

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Universalis.Application.UploadSchema
+namespace Universalis.Application.Uploads.Schema
 {
     public class Listing
     {
