@@ -19,12 +19,12 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
         }
 
         [HttpGet]
-        public async Task<IEnumerable<WorldUploadCountView>> Get()
+        public async Task<IDictionary<string, WorldUploadCountView>> Get()
         {
             var data = (await _worldUploadCountDb.GetWorldUploadCounts()).ToList();
             var sum = data.Sum(d => d.Count);
             return data
-                .Select(d => new WorldUploadCountView
+                .ToDictionary(d => d.WorldName, d => new WorldUploadCountView
                 {
                     Count = d.Count,
                     Proportion = (double)d.Count / sum,
