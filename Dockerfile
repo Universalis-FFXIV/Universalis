@@ -8,5 +8,5 @@ RUN ./build.cmd
 # Create run stage
 FROM mcr.microsoft.com/dotnet/aspnet:5.0
 WORKDIR /app
-COPY --from=build /artifacts .
+COPY --from=build-env /artifacts .
 ENTRYPOINT ["dotnet", "Universalis.Application.dll"]
