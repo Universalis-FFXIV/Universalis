@@ -116,7 +116,7 @@ export default {
 
 		const newListing = R.pipe(
 			listing,
-			R.pick(["uploaderID", "worldName"]),
+			R.pick(["uploaderID", "worldName", "worldID"]),
 			R.merge(securedFields),
 			R.merge(cleanedListing),
 			R.merge({
