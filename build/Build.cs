@@ -65,21 +65,10 @@ class Build : NukeBuild
         .DependsOn(Restore)
         .Executes(() =>
         {
-            var gameDataTests = Solution.Projects.First(p => p.Name == "Universalis.GameData.Tests");
-            Solution.RemoveProject(gameDataTests);
-
             DotNetTest(s => s
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
                 .EnableNoRestore());
-
-            Solution.AddProject(
-                gameDataTests.Name,
-                gameDataTests.TypeId,
-                gameDataTests.Path,
-                gameDataTests.ProjectId,
-                gameDataTests.Configurations,
-                gameDataTests.SolutionFolder);
         });
 
     Target Compile => _ => _

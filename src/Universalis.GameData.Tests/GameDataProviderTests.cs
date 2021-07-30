@@ -1,18 +1,26 @@
 using Xunit;
 
+#pragma warning disable xUnit1004 // Test methods should not be skipped
 namespace Universalis.GameData.Tests
 {
     public class GameDataProviderTests
     {
         private const string SqPack = @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack";
 
-        [Fact]
+        private const string Skip =
+#if !DEBUG
+            "This test is only run in the Debug configuration for build automation purposes.";
+#else
+            null;
+#endif
+
+        [Fact(Skip = Skip)]
         public void Provider_Must_Load()
         {
             ServiceUtils.CreateGameDataProvider(SqPack);
         }
 
-        [Theory]
+        [Theory(Skip = Skip)]
         [InlineData(44, "Anima")]
         [InlineData(74, "Coeurl")]
         [InlineData(82, "Mandragora")]
@@ -23,7 +31,7 @@ namespace Universalis.GameData.Tests
             Assert.Equal(expectedWorldName, actualWorldName);
         }
 
-        [Theory]
+        [Theory(Skip = Skip)]
         [InlineData("Anima", 44)]
         [InlineData("Coeurl", 74)]
         [InlineData("Mandragora", 82)]
@@ -34,7 +42,7 @@ namespace Universalis.GameData.Tests
             Assert.Equal(expectedWorldId, actualWorldId);
         }
 
-        [Theory]
+        [Theory(Skip = Skip)]
         [InlineData(44, true)]
         [InlineData(74, true)]
         [InlineData(0, false)]
@@ -47,7 +55,7 @@ namespace Universalis.GameData.Tests
             Assert.Equal(expectedToContain, actuallyContains);
         }
 
-        [Theory]
+        [Theory(Skip = Skip)]
         [InlineData(26165, true)]
         [InlineData(30759, true)]
         [InlineData(0, false)]
@@ -61,3 +69,4 @@ namespace Universalis.GameData.Tests
         }
     }
 }
+#pragma warning restore xUnit1004 // Test methods should not be skipped
