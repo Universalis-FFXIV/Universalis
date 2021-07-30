@@ -1,7 +1,7 @@
 # Build application
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build-env
 WORKDIR /source
-COPY * .
+COPY * ./
 RUN ./build.cmd --target TestNoGameData
 RUN ./build.cmd
 
