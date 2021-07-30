@@ -9,7 +9,7 @@ namespace Universalis.DbAccess.Uploads
 {
     public class RecentlyUpdatedItemsDbAccess : DbAccessService<RecentlyUpdatedItems, RecentlyUpdatedItemsQuery>, IRecentlyUpdatedItemsDbAccess
     {
-        private const int MaxItems = 200;
+        public static readonly int MaxItems = 200;
 
         public RecentlyUpdatedItemsDbAccess() : base("universalis", "extraData") { }
 

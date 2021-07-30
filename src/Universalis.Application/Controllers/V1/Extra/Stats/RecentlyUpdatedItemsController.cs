@@ -20,7 +20,7 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
         [HttpGet]
         public async Task<IEnumerable<uint>> Get()
         {
-            return (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery())).Items;
+            return (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery()))?.Items ?? new List<uint>();
         }
     }
 }

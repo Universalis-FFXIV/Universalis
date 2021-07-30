@@ -8,7 +8,7 @@ namespace Universalis.Entities.Uploads
         public static readonly string DefaultSetName = "recentlyUpdated";
 
         [BsonElement("items")]
-        public List<uint> Items { get; init; }
+        public List<uint> Items { get; set; }
 
         public RecentlyUpdatedItems() : base(DefaultSetName) { }
     }
