@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1.Extra.Stats;
-using Universalis.Application.Tests.Mocks.DbAccess;
+using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Views;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.Entities.Uploads;
@@ -31,7 +31,7 @@ namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats
 
             var result = await controller.Get();
             var counts = Assert.IsAssignableFrom<IEnumerable<SourceUploadCountView>>(result).ToList();
-            
+
             Assert.Single(counts);
             Assert.Equal(document.Name, counts.First().Name);
             Assert.Equal(1U, document.UploadCount + 1);

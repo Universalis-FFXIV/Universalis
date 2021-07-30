@@ -5,7 +5,7 @@ using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
 using Universalis.Entities.Uploads;
 
-namespace Universalis.Application.Tests.Mocks.DbAccess
+namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
 {
     public class MockUploadCountHistoryDbAccess : IUploadCountHistoryDbAccess
     {

@@ -4,7 +4,7 @@ using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
 
-namespace Universalis.Application.Tests.Mocks.DbAccess
+namespace Universalis.Application.Tests.Mocks.DbAccess.MarketBoard
 {
     public class MockTaxRatesDbAccess : ITaxRatesDbAccess
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1.Extra.Stats;
-using Universalis.Application.Tests.Mocks.DbAccess;
+using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Views;
 using Xunit;
 
@@ -31,7 +31,7 @@ namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats
         {
             var dbAccess = new MockUploadCountHistoryDbAccess();
             var controller = new UploadCountHistoryController(dbAccess);
-            
+
             var result = await controller.Get();
             var counts = Assert.IsType<UploadCountHistoryView>(result);
 

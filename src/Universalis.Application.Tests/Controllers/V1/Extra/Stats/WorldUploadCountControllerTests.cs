@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1.Extra.Stats;
-using Universalis.Application.Tests.Mocks.DbAccess;
+using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Views;
 using Universalis.DbAccess.Queries.Uploads;
 using Xunit;
@@ -38,7 +38,7 @@ namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats
         {
             var dbAccess = new MockWorldUploadCountDbAccess();
             var controller = new WorldUploadCountController(dbAccess);
-            
+
             var result = await controller.Get();
             var counts = Assert.IsAssignableFrom<IDictionary<string, WorldUploadCountView>>(result);
 
