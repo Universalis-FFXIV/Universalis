@@ -30,7 +30,7 @@ namespace Universalis.Application.Tests.Mocks.GameData
 
         public IReadOnlySet<uint> MarketableItemIds()
         {
-            return new SortedSet<uint>(new uint[] { 5333 });
+            return new SortedSet<uint>(new uint[] { 5333, 5 });
         }
 
         public IEnumerable<DataCenter> DataCenters()

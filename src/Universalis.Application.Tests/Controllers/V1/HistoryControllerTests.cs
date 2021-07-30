@@ -225,6 +225,30 @@ namespace Universalis.Application.Tests.Controllers.V1
         }
 
         [Theory]
+        [InlineData("74", "")]
+        [InlineData("Coeurl", " bingus4645")]
+        [InlineData("coEUrl", "50")]
+        public async Task Controller_Get_Succeeds_MultiItem_World_WhenNone(string worldOrDc, string entriesToReturn)
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockHistoryDbAccess();
+            var controller = new HistoryController(gameData, dbAccess);
+
+            var result = await controller.Get("5333,5", worldOrDc, entriesToReturn);
+
+            var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
+
+            Assert.Contains(5U, history.UnresolvedItemIds);
+            Assert.Contains(5333U, history.UnresolvedItemIds);
+            Assert.Contains(5U, history.ItemIds);
+            Assert.Contains(5333U, history.ItemIds);
+            Assert.Empty(history.Items);
+            Assert.Equal(74U,  history.WorldId);
+            Assert.Equal(gameData.AvailableWorlds()[74], history.WorldName);
+            Assert.Null(history.DcName);
+        }
+
+        [Theory]
         [InlineData("crystaL", "")]
         [InlineData("Crystal", "50")]
         public async Task Controller_Get_Succeeds_SingleItem_DataCenter_WhenNone(string worldOrDc, string entriesToReturn)
@@ -252,6 +276,28 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.Equal(0, history.SaleVelocity);
             Assert.Equal(0, history.SaleVelocityNq);
             Assert.Equal(0, history.SaleVelocityHq);
+        }
+
+        [Theory]
+        [InlineData("crystaL", "")]
+        [InlineData("Crystal", "50")]
+        public async Task Controller_Get_Succeeds_MultiItem_DataCenter_WhenNone(string worldOrDc, string entriesToReturn)
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockHistoryDbAccess();
+            var controller = new HistoryController(gameData, dbAccess);
+            
+            var result = await controller.Get("5333,5", worldOrDc, entriesToReturn);
+
+            var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
+
+            Assert.Contains(5U, history.UnresolvedItemIds);
+            Assert.Contains(5333U, history.UnresolvedItemIds);
+            Assert.Contains(5U, history.ItemIds);
+            Assert.Contains(5333U, history.ItemIds);
+            Assert.Empty(history.Items);
+            Assert.Equal("Crystal", history.DcName);
+            Assert.Null(history.WorldId);
         }
 
         [Fact]
@@ -311,6 +357,8 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             Assert.Contains(0U, history.UnresolvedItemIds);
             Assert.Contains(4294967295U, history.UnresolvedItemIds);
+            Assert.Contains(0U, history.ItemIds);
+            Assert.Contains(4294967295U, history.ItemIds);
             Assert.Empty(history.Items);
             Assert.Equal("Crystal", history.DcName);
             Assert.Null(history.WorldId);

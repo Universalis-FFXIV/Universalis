@@ -14,6 +14,9 @@ namespace Universalis.Application.Views
         [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore)]
         public uint? WorldId { get; set; }
 
+        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
+        public string WorldName { get; set; }
+
         [JsonProperty("dcName", NullValueHandling = NullValueHandling.Ignore)]
         public string DcName { get; set; }
 
@@ -31,6 +34,9 @@ namespace Universalis.Application.Views
 
         [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore)]
         public uint? WorldId { get; set; }
+
+        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
+        public string WorldName { get; set; }
 
         [JsonProperty("dcName", NullValueHandling = NullValueHandling.Ignore)]
         public string DcName { get; set; }

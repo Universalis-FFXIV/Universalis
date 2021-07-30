@@ -72,6 +72,7 @@ namespace Universalis.Application.Controllers.V1
                     .Select(hv => hv.Item2)
                     .ToList(),
                 WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
+                WorldName = worldDc.IsWorld ? worldDc.WorldName : null,
                 DcName = worldDc.IsDc ? worldDc.DcName : null,
                 UnresolvedItemIds = unresolvedItems,
             });
