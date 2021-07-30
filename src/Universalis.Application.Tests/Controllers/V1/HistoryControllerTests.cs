@@ -253,5 +253,67 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.Equal(0, history.SaleVelocityNq);
             Assert.Equal(0, history.SaleVelocityHq);
         }
+
+        [Fact]
+        public async Task Controller_Get_Fails_SingleItem_World_WhenNotMarketable()
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockHistoryDbAccess();
+            var controller = new HistoryController(gameData, dbAccess);
+
+            const uint itemId = 0;
+            var result = await controller.Get(itemId.ToString(), "74", "");
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task Controller_Get_Succeeds_MultiItem_World_WhenNotMarketable()
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockHistoryDbAccess();
+            var controller = new HistoryController(gameData, dbAccess);
+            
+            var result = await controller.Get("0, 4294967295", "74", "");
+
+            var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
+
+            Assert.Contains(0U, history.UnresolvedItemIds);
+            Assert.Contains(4294967295U, history.UnresolvedItemIds);
+            Assert.Empty(history.Items);
+            Assert.Equal(74U, history.WorldId);
+            Assert.Null(history.DcName);
+        }
+
+        [Fact]
+        public async Task Controller_Get_Fails_SingleItem__DataCenter_WhenNotMarketable()
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockHistoryDbAccess();
+            var controller = new HistoryController(gameData, dbAccess);
+
+            const uint itemId = 0;
+            var result = await controller.Get(itemId.ToString(), "Crystal", "");
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task Controller_Get_Succeeds_MultiItem_DataCenter_WhenNotMarketable()
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockHistoryDbAccess();
+            var controller = new HistoryController(gameData, dbAccess);
+
+            var result = await controller.Get("0 ,4294967295", "crystal", "");
+
+            var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
+
+            Assert.Contains(0U, history.UnresolvedItemIds);
+            Assert.Contains(4294967295U, history.UnresolvedItemIds);
+            Assert.Empty(history.Items);
+            Assert.Equal("Crystal", history.DcName);
+            Assert.Null(history.WorldId);
+        }
     }
 }

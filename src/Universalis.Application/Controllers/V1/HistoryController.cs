@@ -67,7 +67,10 @@ namespace Universalis.Application.Controllers.V1
             return Ok(new HistoryMultiView
             {
                 ItemIds = itemIdsArray,
-                Items = historyViews.Select(hv => hv.Item2).ToList(),
+                Items = historyViews
+                    .Where(hv => hv.Item1)
+                    .Select(hv => hv.Item2)
+                    .ToList(),
                 WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
                 DcName = worldDc.IsDc ? worldDc.DcName : null,
                 UnresolvedItemIds = unresolvedItems,

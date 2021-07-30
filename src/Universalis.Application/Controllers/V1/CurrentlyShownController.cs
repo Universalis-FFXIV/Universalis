@@ -67,7 +67,10 @@ namespace Universalis.Application.Controllers.V1
             return Ok(new CurrentlyShownMultiView
             {
                 ItemIds = itemIdsArray.ToList(),
-                Items = currentlyShownViews.Select(cs => cs.Item2).ToList(),
+                Items = currentlyShownViews
+                    .Where(cs => cs.Item1)
+                    .Select(cs => cs.Item2)
+                    .ToList(),
                 WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
                 DcName = worldDc.IsDc ? worldDc.DcName : null,
                 UnresolvedItemIds = unresolvedItems,
