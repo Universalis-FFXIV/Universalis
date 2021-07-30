@@ -7,5 +7,5 @@ RUN build.cmd --target TestNoGameData Compile
 # Create run stage
 FROM mcr.microsoft.com/dotnet/aspnet:5.0
 WORKDIR /app
-COPY --from=build-env /artifacts .
+COPY --from=build-env /artifacts/* ./
 ENTRYPOINT ["dotnet", "Universalis.Application.dll"]

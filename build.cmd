@@ -5,4 +5,9 @@
 
 @ECHO OFF
 set NUKE_TELEMETRY_OPTOUT="1"
-powershell -ExecutionPolicy ByPass -NoProfile -File "%~dp0build.ps1" %*
+
+where powershell >nul 2>&1 && (
+    powershell -ExecutionPolicy ByPass -NoProfile -File "%~dp0build.ps1" %*
+) || (
+    pwsh -ExecutionPolicy ByPass -NoProfile -File "%~dp0build.ps1" %*
+)
