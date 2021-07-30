@@ -153,7 +153,8 @@ namespace Universalis.Application.Controllers.V1
             var hqListings = currentlyShown.Listings.Where(l => l.Hq).ToList();
             var nqSales = currentlyShown.RecentHistory.Where(s => !s.Hq).ToList();
             var hqSales = currentlyShown.RecentHistory.Where(s => s.Hq).ToList();
-            return (resolved, new CurrentlyShownView
+
+            var view = new CurrentlyShownView
             {
                 Listings = currentlyShown.Listings,
                 RecentHistory = currentlyShown.RecentHistory,
@@ -162,37 +163,65 @@ namespace Universalis.Application.Controllers.V1
                 WorldName = worldDc.IsWorld ? worldDc.WorldName : null,
                 DcName = worldDc.IsDc ? worldDc.DcName : null,
                 LastUploadTimeUnixMilliseconds = currentlyShown.LastUploadTimeUnixMilliseconds,
-                CurrentAveragePrice = Filters.RemoveOutliers(currentlyShown.Listings.Select(l => (float)l.PricePerUnit), 3).Average(),
-                CurrentAveragePriceNq = Filters.RemoveOutliers(nqListings.Select(l => (float)l.PricePerUnit), 3).Average(),
-                CurrentAveragePriceHq = Filters.RemoveOutliers(hqListings.Select(l => (float)l.PricePerUnit), 3).Average(),
-                AveragePrice = Filters.RemoveOutliers(currentlyShown.RecentHistory.Select(s => (float)s.PricePerUnit), 3).Average(),
-                AveragePriceNq = Filters.RemoveOutliers(nqSales.Select(s => (float)s.PricePerUnit), 3).Average(),
-                AveragePriceHq = Filters.RemoveOutliers(hqSales.Select(s => (float)s.PricePerUnit), 3).Average(),
-                MinPrice = currentlyShown.Listings.Select(s => s.PricePerUnit).Min(),
-                MinPriceNq = nqListings.Select(s => s.PricePerUnit).Min(),
-                MinPriceHq = hqListings.Select(s => s.PricePerUnit).Min(),
-                MaxPrice = currentlyShown.Listings.Select(s => s.PricePerUnit).Max(),
-                MaxPriceNq = nqListings.Select(s => s.PricePerUnit).Max(),
-                MaxPriceHq = hqListings.Select(s => s.PricePerUnit).Max(),
                 StackSizeHistogram = Statistics.GetDistribution(currentlyShown.Listings
-                    .Select(s => s.Quantity)
-                    .Select(q => (int)q))
+                        .Select(s => s.Quantity)
+                        .Select(q => (int)q))
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
                 StackSizeHistogramNq = Statistics.GetDistribution(nqListings
-                    .Select(s => s.Quantity)
-                    .Select(q => (int)q))
+                        .Select(s => s.Quantity)
+                        .Select(q => (int) q))
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
                 StackSizeHistogramHq = Statistics.GetDistribution(hqListings
-                    .Select(s => s.Quantity)
-                    .Select(q => (int)q))
+                        .Select(s => s.Quantity)
+                        .Select(q => (int) q))
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
                 SaleVelocity = Statistics.WeekVelocityPerDay(currentlyShown.RecentHistory
-                    .Select(s => (long)s.TimestampUnixSeconds * 1000)),
+                    .Select(s => (long) s.TimestampUnixSeconds * 1000)),
                 SaleVelocityNq = Statistics.WeekVelocityPerDay(nqSales
-                    .Select(s => (long)s.TimestampUnixSeconds * 1000)),
+                    .Select(s => (long) s.TimestampUnixSeconds * 1000)),
                 SaleVelocityHq = Statistics.WeekVelocityPerDay(hqSales
-                    .Select(s => (long)s.TimestampUnixSeconds * 1000)),
-            });
+                    .Select(s => (long) s.TimestampUnixSeconds * 1000)),
+            };
+
+            if (currentlyShown.Listings.Any())
+            {
+                view.CurrentAveragePrice = Filters
+                    .RemoveOutliers(currentlyShown.Listings.Select(l => (float) l.PricePerUnit), 3)
+                    .Average();
+                view.MinPrice = currentlyShown.Listings.Select(s => s.PricePerUnit).Min();
+                view.MaxPrice = currentlyShown.Listings.Select(s => s.PricePerUnit).Max();
+            }
+
+            if (nqListings.Any())
+            {
+                view.CurrentAveragePriceNq = Filters.RemoveOutliers(nqListings.Select(l => (float)l.PricePerUnit), 3).Average();
+                view.MinPriceNq = nqListings.Select(s => s.PricePerUnit).Min();
+                view.MaxPriceNq = nqListings.Select(s => s.PricePerUnit).Max();
+            }
+
+            if (hqListings.Any())
+            {
+                view.CurrentAveragePriceHq = Filters.RemoveOutliers(hqListings.Select(l => (float) l.PricePerUnit), 3).Average();
+                view.MinPriceHq = hqListings.Select(s => s.PricePerUnit).Min();
+                view.MaxPriceHq = hqListings.Select(s => s.PricePerUnit).Max();
+            }
+
+            if (currentlyShown.RecentHistory.Any())
+            {
+                view.AveragePrice = Filters.RemoveOutliers(currentlyShown.RecentHistory.Select(s => (float)s.PricePerUnit), 3).Average();
+            }
+
+            if (nqSales.Any())
+            {
+                view.AveragePriceNq = Filters.RemoveOutliers(nqSales.Select(s => (float)s.PricePerUnit), 3).Average();
+            }
+
+            if (hqSales.Any())
+            {
+                view.AveragePriceHq = Filters.RemoveOutliers(hqSales.Select(s => (float)s.PricePerUnit), 3).Average();
+            }
+
+            return (resolved, view);
         }
     }
 }
