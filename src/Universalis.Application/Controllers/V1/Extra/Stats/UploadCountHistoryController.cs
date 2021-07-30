@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Views;
 using Universalis.DbAccess.Queries.Uploads;
@@ -23,7 +24,7 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
             var data = await _uploadCountHistoryDb.Retrieve(new UploadCountHistoryQuery());
             return new UploadCountHistoryView
             {
-                UploadCountByDay = data.UploadCountByDay,
+                UploadCountByDay = data?.UploadCountByDay ?? new List<uint>(),
             };
         }
     }
