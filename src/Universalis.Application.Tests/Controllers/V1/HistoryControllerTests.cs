@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Controllers.V1;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
@@ -168,7 +167,90 @@ namespace Universalis.Application.Tests.Controllers.V1
                 document1.LastUploadTimeUnixMilliseconds,
                 document2.LastUploadTimeUnixMilliseconds);
 
-            AssertHistoryValidDataCenter(document1, history, sales, lastUploadTime, worldOrDc, entriesToReturn);
+            AssertHistoryValidDataCenter(
+                document1,
+                history,
+                sales,
+                lastUploadTime,
+                worldOrDc,
+                entriesToReturn);
+        }
+
+        [Theory]
+        [InlineData("crystaL", "")]
+        [InlineData("Crystal", "50")]
+        public async Task Controller_Get_Succeeds_MultiItem_DataCenter(string worldOrDc, string entriesToReturn)
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockHistoryDbAccess();
+            var controller = new HistoryController(gameData, dbAccess);
+            var rand = new Random();
+
+            var document1 = new History
+            {
+                WorldId = 74,
+                ItemId = 5333,
+                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                Sales = Enumerable.Range(0, 100)
+                    .Select(i => new MinimizedSale
+                    {
+                        Hq = rand.NextDouble() > 0.5,
+                        PricePerUnit = (uint)rand.Next(100, 60000),
+                        Quantity = (uint)rand.Next(1, 999),
+                        SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
+                        UploaderIdHash = "2A",
+                    })
+                    .ToList(),
+            };
+            await dbAccess.Create(document1);
+
+            var document2 = new History
+            {
+                WorldId = 34,
+                ItemId = 5,
+                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                Sales = Enumerable.Range(0, 100)
+                    .Select(i => new MinimizedSale
+                    {
+                        Hq = rand.NextDouble() > 0.5,
+                        PricePerUnit = (uint)rand.Next(100, 60000),
+                        Quantity = (uint)rand.Next(1, 999),
+                        SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
+                        UploaderIdHash = "2A",
+                    })
+                    .ToList(),
+            };
+            await dbAccess.Create(document2);
+
+            var result = await controller.Get("5,5333", worldOrDc, entriesToReturn);
+            var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
+
+            Assert.Contains(5U, history.ItemIds);
+            Assert.Contains(5333U, history.ItemIds);
+            Assert.Empty(history.UnresolvedItemIds);
+            Assert.Equal(2, history.Items.Count);
+            Assert.Null(history.WorldId);
+            Assert.Null(history.WorldName);
+            Assert.Equal("Crystal", history.DcName);
+            
+            var lastUploadTime = Math.Max(
+                document1.LastUploadTimeUnixMilliseconds,
+                document2.LastUploadTimeUnixMilliseconds);
+
+            AssertHistoryValidDataCenter(
+                document1,
+                history.Items.First(item => item.ItemId == document1.ItemId),
+                document1.Sales,
+                lastUploadTime,
+                worldOrDc,
+                entriesToReturn);
+            AssertHistoryValidDataCenter(
+                document2,
+                history.Items.First(item => item.ItemId == document2.ItemId),
+                document2.Sales,
+                lastUploadTime,
+                worldOrDc,
+                entriesToReturn);
         }
 
         [Theory]
@@ -223,7 +305,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.Contains(5U, history.ItemIds);
             Assert.Contains(5333U, history.ItemIds);
             Assert.Empty(history.Items);
-            Assert.Equal(74U,  history.WorldId);
+            Assert.Equal(74U, history.WorldId);
             Assert.Equal(gameData.AvailableWorlds()[74], history.WorldName);
             Assert.Null(history.DcName);
         }
@@ -266,7 +348,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockHistoryDbAccess();
             var controller = new HistoryController(gameData, dbAccess);
-            
+
             var result = await controller.Get("5333,5", worldOrDc, entriesToReturn);
 
             var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
@@ -299,7 +381,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockHistoryDbAccess();
             var controller = new HistoryController(gameData, dbAccess);
-            
+
             var result = await controller.Get("0, 4294967295", "74", "");
 
             var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
@@ -403,8 +485,8 @@ namespace Universalis.Application.Tests.Controllers.V1
             var nqSales = sales.Where(s => !s.Hq).ToList();
             var hqSales = sales.Where(s => s.Hq).ToList();
 
-            Assert.Contains(history.Sales, s => s.WorldId == 74);
-            Assert.Contains(history.Sales, s => s.WorldId == 34);
+            Assert.Contains(history.Sales, s => s.WorldId != null);
+            Assert.Contains(history.Sales, s => s.WorldName != null);
 
             Assert.Equal(anyWorldDocument.ItemId, history.ItemId);
             Assert.Equal(char.ToUpperInvariant(worldOrDc[0]) + worldOrDc[1..].ToLowerInvariant(), history.DcName);
