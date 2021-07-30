@@ -27,10 +27,22 @@ namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats
             var counts = Assert.IsAssignableFrom<IDictionary<string, WorldUploadCountView>>(result);
 
             Assert.True(counts.ContainsKey(query.WorldName));
-            Assert.True(counts[query.WorldName].Count == 1);
+            Assert.Equal(1U, counts[query.WorldName].Count);
 
             // ReSharper disable once CompareOfFloatsByEqualityOperator
-            Assert.True(counts[query.WorldName].Proportion == 1);
+            Assert.Equal(1, counts[query.WorldName].Proportion);
+        }
+
+        [Fact]
+        public async Task Controller_Get_Succeeds_WhenNone()
+        {
+            var dbAccess = new MockWorldUploadCountDbAccess();
+            var controller = new WorldUploadCountController(dbAccess);
+            
+            var result = await controller.Get();
+            var counts = Assert.IsAssignableFrom<IDictionary<string, WorldUploadCountView>>(result);
+
+            Assert.Equal(0, counts.Count);
         }
     }
 }
