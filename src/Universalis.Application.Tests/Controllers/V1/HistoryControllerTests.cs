@@ -155,6 +155,9 @@ namespace Universalis.Application.Tests.Controllers.V1
             var nqSales = sales.Where(s => !s.Hq).ToList();
             var hqSales = sales.Where(s => s.Hq).ToList();
 
+            Assert.Contains(history.Sales, s => s.WorldId == 74);
+            Assert.Contains(history.Sales, s => s.WorldId == 34);
+
             Assert.Equal(document1.ItemId, history.ItemId);
             Assert.Equal(char.ToUpperInvariant(worldOrDc[0]) + worldOrDc[1..].ToLowerInvariant(), history.DcName);
             Assert.Null(history.WorldId);
