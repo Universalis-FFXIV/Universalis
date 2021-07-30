@@ -75,6 +75,119 @@ namespace Universalis.Application.Tests.Controllers.V1
             AssertCurrentlyShownValidWorld(document, currentlyShown, gameData);
         }
 
+        [Theory]
+        [InlineData("74")]
+        [InlineData("Coeurl")]
+        [InlineData("coEUrl")]
+        public async Task Controller_Get_Succeeds_SingleItem_World_WhenNone(string worldOrDc)
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockCurrentlyShownDbAccess();
+            var controller = new CurrentlyShownController(gameData, dbAccess);
+
+            const uint itemId = 5333;
+            var result = await controller.Get(itemId.ToString(), worldOrDc);
+
+            var history = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
+
+            Assert.Equal(itemId, history.ItemId);
+            Assert.Equal(74U, history.WorldId);
+            Assert.Equal("Coeurl", history.WorldName);
+            Assert.Null(history.DcName);
+            Assert.NotNull(history.Listings);
+            Assert.Empty(history.Listings);
+            Assert.NotNull(history.RecentHistory);
+            Assert.Empty(history.RecentHistory);
+            Assert.Equal(0U, history.LastUploadTimeUnixMilliseconds);
+            Assert.NotNull(history.StackSizeHistogram);
+            Assert.Empty(history.StackSizeHistogram);
+            Assert.NotNull(history.StackSizeHistogramNq);
+            Assert.Empty(history.StackSizeHistogramNq);
+            Assert.NotNull(history.StackSizeHistogramHq);
+            Assert.Empty(history.StackSizeHistogramHq);
+            Assert.Equal(0, history.SaleVelocity);
+            Assert.Equal(0, history.SaleVelocityNq);
+            Assert.Equal(0, history.SaleVelocityHq);
+        }
+
+        [Theory]
+        [InlineData("74")]
+        [InlineData("Coeurl")]
+        [InlineData("coEUrl")]
+        public async Task Controller_Get_Succeeds_MultiItem_World_WhenNone(string worldOrDc)
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockCurrentlyShownDbAccess();
+            var controller = new CurrentlyShownController(gameData, dbAccess);
+
+            var result = await controller.Get("5333,5", worldOrDc);
+
+            var history = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
+
+            Assert.Contains(5U, history.UnresolvedItemIds);
+            Assert.Contains(5333U, history.UnresolvedItemIds);
+            Assert.Contains(5U, history.ItemIds);
+            Assert.Contains(5333U, history.ItemIds);
+            Assert.Empty(history.Items);
+            Assert.Equal(74U, history.WorldId);
+            Assert.Equal(gameData.AvailableWorlds()[74], history.WorldName);
+            Assert.Null(history.DcName);
+        }
+
+        [Theory]
+        [InlineData("crystaL")]
+        [InlineData("Crystal")]
+        public async Task Controller_Get_Succeeds_SingleItem_DataCenter_WhenNone(string worldOrDc)
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockCurrentlyShownDbAccess();
+            var controller = new CurrentlyShownController(gameData, dbAccess);
+
+            const uint itemId = 5333;
+            var result = await controller.Get(itemId.ToString(), worldOrDc);
+
+            var history = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
+
+            Assert.Equal(itemId, history.ItemId);
+            Assert.Equal("Crystal", history.DcName);
+            Assert.NotNull(history.Listings);
+            Assert.Empty(history.Listings);
+            Assert.NotNull(history.RecentHistory);
+            Assert.Empty(history.RecentHistory);
+            Assert.Equal(0U, history.LastUploadTimeUnixMilliseconds);
+            Assert.NotNull(history.StackSizeHistogram);
+            Assert.Empty(history.StackSizeHistogram);
+            Assert.NotNull(history.StackSizeHistogramNq);
+            Assert.Empty(history.StackSizeHistogramNq);
+            Assert.NotNull(history.StackSizeHistogramHq);
+            Assert.Empty(history.StackSizeHistogramHq);
+            Assert.Equal(0, history.SaleVelocity);
+            Assert.Equal(0, history.SaleVelocityNq);
+            Assert.Equal(0, history.SaleVelocityHq);
+        }
+
+        [Theory]
+        [InlineData("crystaL")]
+        [InlineData("Crystal")]
+        public async Task Controller_Get_Succeeds_MultiItem_DataCenter_WhenNone(string worldOrDc)
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockCurrentlyShownDbAccess();
+            var controller = new CurrentlyShownController(gameData, dbAccess);
+
+            var result = await controller.Get("5333,5", worldOrDc);
+
+            var history = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
+
+            Assert.Contains(5U, history.UnresolvedItemIds);
+            Assert.Contains(5333U, history.UnresolvedItemIds);
+            Assert.Contains(5U, history.ItemIds);
+            Assert.Contains(5333U, history.ItemIds);
+            Assert.Empty(history.Items);
+            Assert.Equal("Crystal", history.DcName);
+            Assert.Null(history.WorldId);
+        }
+
         [Fact]
         public async Task Controller_Get_Fails_SingleItem_World_WhenNotMarketable()
         {
