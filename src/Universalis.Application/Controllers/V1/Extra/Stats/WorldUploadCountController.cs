@@ -9,11 +9,11 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
 {
     [ApiController]
     [Route("api/extra/stats/world-upload-counts")]
-    public class WorldUploadCountsController : ControllerBase
+    public class WorldUploadCountController : ControllerBase
     {
         private readonly IWorldUploadCountDbAccess _worldUploadCountDb;
 
-        public WorldUploadCountsController(IWorldUploadCountDbAccess worldUploadCountDb)
+        public WorldUploadCountController(IWorldUploadCountDbAccess worldUploadCountDb)
         {
             _worldUploadCountDb = worldUploadCountDb;
         }
