@@ -2,6 +2,6 @@
 {
     public static class ContentKind
     {
-        public const string Player = "player";
+        public static readonly string Player = "player";
     }
 }

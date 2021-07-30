@@ -5,7 +5,7 @@ namespace Universalis.Entities.Uploads
 {
     public class RecentlyUpdatedItems : ExtraData
     {
-        public const string DefaultSetName = "recentlyUpdated";
+        public static readonly string DefaultSetName = "recentlyUpdated";
 
         [BsonElement("items")]
         public List<uint> Items { get; init; }

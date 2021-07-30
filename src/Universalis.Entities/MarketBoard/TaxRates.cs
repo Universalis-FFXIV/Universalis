@@ -4,7 +4,7 @@ namespace Universalis.Entities.MarketBoard
 {
     public class TaxRates : ExtraData
     {
-        public const string DefaultSetName = "taxRates";
+        public static readonly string DefaultSetName = "taxRates";
 
         [BsonElement("limsaLominsa")]
         public byte LimsaLominsa { get; init; }

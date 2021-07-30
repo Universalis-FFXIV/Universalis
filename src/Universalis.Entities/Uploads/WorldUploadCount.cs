@@ -4,7 +4,7 @@ namespace Universalis.Entities.Uploads
 {
     public class WorldUploadCount : ExtraData
     {
-        public const string DefaultSetName = "worldUploadCount";
+        public static readonly string DefaultSetName = "worldUploadCount";
 
         [BsonElement("count")]
         public uint Count { get; init; }

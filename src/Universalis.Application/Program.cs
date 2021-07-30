@@ -3,7 +3,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Universalis.Application
 {
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {

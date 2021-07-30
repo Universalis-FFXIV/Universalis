@@ -24,7 +24,7 @@ namespace Universalis.Application.Common
         /// <returns>A <see cref="WorldDc"/> object with either the world or the DC populated.</returns>
         public static WorldDc From(string worldOrDc, IGameDataProvider gameData)
         {
-            if (worldOrDc == null) throw new NullReferenceException(nameof(worldOrDc));
+            if (worldOrDc == null) throw new ArgumentNullException(nameof(worldOrDc));
 
             string dcName = null;
             _ = uint.TryParse(worldOrDc, out var worldId);

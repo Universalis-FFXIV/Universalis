@@ -5,7 +5,7 @@ namespace Universalis.Entities.Uploads
 {
     public class UploadCountHistory : ExtraData
     {
-        public const string DefaultSetName = "uploadCountHistory";
+        public static readonly string DefaultSetName = "uploadCountHistory";
 
         [BsonElement("lastPush")]
         public uint LastPush { get; set; }

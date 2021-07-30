@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System;
 using System.Threading.Tasks;
-using Universalis.Application.Common;
 using Universalis.Application.Views;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -12,30 +10,24 @@ namespace Universalis.Application.Controllers.V1
 {
     [ApiController]
     [Route("api/tax-rates")]
-    public class TaxRatesController : ControllerBase
+    public class TaxRatesController : WorldDcControllerBase
     {
-        private readonly IGameDataProvider _gameData;
         private readonly ITaxRatesDbAccess _taxRatesDb;
 
-        public TaxRatesController(IGameDataProvider gameData, ITaxRatesDbAccess taxRatesDb)
+        public TaxRatesController(IGameDataProvider gameData, ITaxRatesDbAccess taxRatesDb) : base(gameData)
         {
-            _gameData = gameData;
             _taxRatesDb = taxRatesDb;
         }
 
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery, BindRequired] string world)
         {
-            WorldDc worldDc;
-            try
+            if (!TryGetWorldDc(world, out var worldDc))
             {
-                worldDc = WorldDc.From(world, _gameData);
-                if (!worldDc.IsWorld)
-                {
-                    return NotFound();
-                }
+                return NotFound();
             }
-            catch (Exception)
+
+            if (!worldDc.IsWorld)
             {
                 return NotFound();
             }

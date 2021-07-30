@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Universalis.Entities.MarketBoard
 {
-    public class MinimizedSale
+    public class MinimizedSale : IEquatable<MinimizedSale>
     {
         [BsonElement("hq")]
         public bool Hq { get; init; }
@@ -20,23 +20,6 @@ namespace Universalis.Entities.MarketBoard
         [BsonElement("uploaderID")]
         public string UploaderIdHash { get; init; }
 
-        protected bool Equals(MinimizedSale other)
-        {
-            return Hq == other.Hq && PricePerUnit == other.PricePerUnit && Quantity == other.Quantity && SaleTimeUnixSeconds == other.SaleTimeUnixSeconds && UploaderIdHash == other.UploaderIdHash;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is null) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == GetType() && Equals((MinimizedSale)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Hq, PricePerUnit, Quantity, SaleTimeUnixSeconds, UploaderIdHash);
-        }
-
         public static MinimizedSale FromSale(Sale s)
         {
             return new()
@@ -49,17 +32,27 @@ namespace Universalis.Entities.MarketBoard
             };
         }
 
-        public static bool operator ==(MinimizedSale lhs, MinimizedSale rhs)
+        public bool Equals(MinimizedSale other)
         {
-            return lhs?.Hq == rhs?.Hq
-                   && lhs?.PricePerUnit == rhs?.PricePerUnit
-                   && lhs?.Quantity == rhs?.Quantity
-                   && lhs?.SaleTimeUnixSeconds == rhs?.SaleTimeUnixSeconds;
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Hq == other.Hq
+                   && PricePerUnit == other.PricePerUnit
+                   && Quantity == other.Quantity
+                   && SaleTimeUnixSeconds == other.SaleTimeUnixSeconds;
         }
 
-        public static bool operator !=(MinimizedSale lhs, MinimizedSale rhs)
+        public override bool Equals(object obj)
         {
-            return !(lhs == rhs);
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((MinimizedSale) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Hq, PricePerUnit, Quantity, SaleTimeUnixSeconds, UploaderIdHash);
         }
     }
 }

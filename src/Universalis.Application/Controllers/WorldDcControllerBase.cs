@@ -30,6 +30,7 @@ namespace Universalis.Application.Controllers
             }
             catch (Exception)
             {
+                // TODO: Log a warning
                 return false;
             }
 
