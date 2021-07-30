@@ -185,12 +185,13 @@ namespace Universalis.Application.Tests.Controllers.V1
             var dbAccess = new MockHistoryDbAccess();
             var controller = new HistoryController(gameData, dbAccess);
             var rand = new Random();
+            var lastUploadTime = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             var document1 = new History
             {
                 WorldId = 74,
                 ItemId = 5333,
-                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                LastUploadTimeUnixMilliseconds = lastUploadTime,
                 Sales = Enumerable.Range(0, 100)
                     .Select(i => new MinimizedSale
                     {
@@ -208,7 +209,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             {
                 WorldId = 34,
                 ItemId = 5,
-                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                LastUploadTimeUnixMilliseconds = lastUploadTime,
                 Sales = Enumerable.Range(0, 100)
                     .Select(i => new MinimizedSale
                     {
@@ -232,10 +233,6 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.Null(history.WorldId);
             Assert.Null(history.WorldName);
             Assert.Equal("Crystal", history.DcName);
-            
-            var lastUploadTime = Math.Max(
-                document1.LastUploadTimeUnixMilliseconds,
-                document2.LastUploadTimeUnixMilliseconds);
 
             AssertHistoryValidDataCenter(
                 document1,
@@ -446,6 +443,9 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.NotNull(history.Sales);
             Assert.Equal(document.LastUploadTimeUnixMilliseconds, history.LastUploadTimeUnixMilliseconds);
 
+            Assert.All(history.Sales.Select(s => (object)s.WorldId), Assert.Null);
+            Assert.All(history.Sales.Select(s => s.WorldName), Assert.Null);
+
             Assert.Equal(Statistics.GetDistribution(document.Sales
                         .Select(s => s.Quantity)
                         .Select(q => (int)q))
@@ -484,9 +484,9 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             var nqSales = sales.Where(s => !s.Hq).ToList();
             var hqSales = sales.Where(s => s.Hq).ToList();
-
-            Assert.Contains(history.Sales, s => s.WorldId != null);
-            Assert.Contains(history.Sales, s => s.WorldName != null);
+            
+            Assert.All(history.Sales.Select(s => (object)s.WorldId), Assert.NotNull);
+            Assert.All(history.Sales.Select(s => s.WorldName), Assert.NotNull);
 
             Assert.Equal(anyWorldDocument.ItemId, history.ItemId);
             Assert.Equal(char.ToUpperInvariant(worldOrDc[0]) + worldOrDc[1..].ToLowerInvariant(), history.DcName);

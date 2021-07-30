@@ -20,7 +20,7 @@ namespace Universalis.Entities.MarketBoard
         [BsonElement("uploaderID")]
         public string UploaderIdHash { get; init; }
 
-        public static MinimizedSale FromSale(Sale s)
+        public static MinimizedSale FromSale(Sale s, string uploaderIdHash)
         {
             return new()
             {
@@ -28,7 +28,7 @@ namespace Universalis.Entities.MarketBoard
                 PricePerUnit = s.PricePerUnit,
                 Quantity = s.Quantity,
                 SaleTimeUnixSeconds = s.TimestampUnixSeconds,
-                UploaderIdHash = s.UploaderIdHash,
+                UploaderIdHash = uploaderIdHash,
             };
         }
 

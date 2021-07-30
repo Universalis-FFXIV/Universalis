@@ -21,8 +21,5 @@ namespace Universalis.Entities.MarketBoard
 
         [BsonElement("uploadApplication")]
         public string UploadApplicationName { get; init; }
-
-        [BsonElement("uploaderID")]
-        public string UploaderIdHash { get; init; }
     }
 }
