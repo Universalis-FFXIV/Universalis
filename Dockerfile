@@ -2,7 +2,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build-env
 WORKDIR /source
 COPY ./ ./
-RUN ./build.sh --target TestNoGameData Compile --configuration Release
+RUN ./build.sh --target Test Compile --configuration Release
 
 # Create run stage
 FROM mcr.microsoft.com/dotnet/aspnet:5.0

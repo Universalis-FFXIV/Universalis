@@ -61,16 +61,6 @@ class Build : NukeBuild
                 .EnableNoRestore());
         });
 
-    Target TestNoGameData => _ => _
-        .DependsOn(Restore)
-        .Executes(() =>
-        {
-            DotNetTest(s => s
-                .SetProjectFile(Solution)
-                .SetConfiguration(Configuration)
-                .EnableNoRestore());
-        });
-
     Target Compile => _ => _
         .DependsOn(Restore)
         .Executes(() =>
