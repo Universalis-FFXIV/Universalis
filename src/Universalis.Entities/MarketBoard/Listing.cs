@@ -6,7 +6,7 @@ namespace Universalis.Entities.MarketBoard
     public class Listing
     {
         [BsonElement("listingID")]
-        public string ListingId { get; set; }
+        public string ListingId { get; init; }
 
         [BsonElement("hq")]
         public bool Hq { get; init; }

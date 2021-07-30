@@ -36,13 +36,13 @@ namespace Universalis.Application.Views
         public float CurrentAveragePriceHq { get; set; }
 
         [JsonProperty("regularSaleVelocity")]
-        public float RegularSaleVelocity { get; set; }
+        public float SaleVelocity { get; set; }
 
         [JsonProperty("nqSaleVelocity")]
-        public float RegularSaleVelocityNq { get; set; }
+        public float SaleVelocityNq { get; set; }
 
         [JsonProperty("hqSaleVelocity")]
-        public float RegularSaleVelocityHq { get; set; }
+        public float SaleVelocityHq { get; set; }
 
         [JsonProperty("averagePrice")]
         public float AveragePrice { get; set; }

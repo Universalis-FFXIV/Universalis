@@ -168,29 +168,29 @@ namespace Universalis.Application.Controllers.V1
                 AveragePrice = Filters.RemoveOutliers(currentlyShown.RecentHistory.Select(s => (float)s.PricePerUnit), 3).Average(),
                 AveragePriceNq = Filters.RemoveOutliers(nqSales.Select(s => (float)s.PricePerUnit), 3).Average(),
                 AveragePriceHq = Filters.RemoveOutliers(hqSales.Select(s => (float)s.PricePerUnit), 3).Average(),
-                MinPrice = currentlyShown.RecentHistory.Select(s => s.PricePerUnit).Min(),
-                MinPriceNq = nqSales.Select(s => s.PricePerUnit).Min(),
-                MinPriceHq = hqSales.Select(s => s.PricePerUnit).Min(),
-                MaxPrice = currentlyShown.RecentHistory.Select(s => s.PricePerUnit).Max(),
-                MaxPriceNq = nqSales.Select(s => s.PricePerUnit).Max(),
-                MaxPriceHq = hqSales.Select(s => s.PricePerUnit).Max(),
-                StackSizeHistogram = Statistics.GetDistribution(currentlyShown.RecentHistory
+                MinPrice = currentlyShown.Listings.Select(s => s.PricePerUnit).Min(),
+                MinPriceNq = nqListings.Select(s => s.PricePerUnit).Min(),
+                MinPriceHq = hqListings.Select(s => s.PricePerUnit).Min(),
+                MaxPrice = currentlyShown.Listings.Select(s => s.PricePerUnit).Max(),
+                MaxPriceNq = nqListings.Select(s => s.PricePerUnit).Max(),
+                MaxPriceHq = hqListings.Select(s => s.PricePerUnit).Max(),
+                StackSizeHistogram = Statistics.GetDistribution(currentlyShown.Listings
                     .Select(s => s.Quantity)
                     .Select(q => (int)q))
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-                StackSizeHistogramNq = Statistics.GetDistribution(nqSales
+                StackSizeHistogramNq = Statistics.GetDistribution(nqListings
                     .Select(s => s.Quantity)
                     .Select(q => (int)q))
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-                StackSizeHistogramHq = Statistics.GetDistribution(hqSales
+                StackSizeHistogramHq = Statistics.GetDistribution(hqListings
                     .Select(s => s.Quantity)
                     .Select(q => (int)q))
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-                RegularSaleVelocity = Statistics.WeekVelocityPerDay(currentlyShown.RecentHistory
+                SaleVelocity = Statistics.WeekVelocityPerDay(currentlyShown.RecentHistory
                     .Select(s => (long)s.TimestampUnixSeconds * 1000)),
-                RegularSaleVelocityNq = Statistics.WeekVelocityPerDay(nqSales
+                SaleVelocityNq = Statistics.WeekVelocityPerDay(nqSales
                     .Select(s => (long)s.TimestampUnixSeconds * 1000)),
-                RegularSaleVelocityHq = Statistics.WeekVelocityPerDay(hqSales
+                SaleVelocityHq = Statistics.WeekVelocityPerDay(hqSales
                     .Select(s => (long)s.TimestampUnixSeconds * 1000)),
             });
         }

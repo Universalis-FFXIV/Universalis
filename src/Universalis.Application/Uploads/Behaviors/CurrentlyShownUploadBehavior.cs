@@ -58,7 +58,6 @@ namespace Universalis.Application.Uploads.Behaviors
                         Quantity = s.Quantity,
                         TimestampUnixSeconds = s.TimestampUnixSeconds,
                         UploadApplicationName = source.Name,
-                        UploaderIdHash = parameters.UploaderId,
                     })
                     .ToList();
                 cleanSales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
@@ -68,7 +67,7 @@ namespace Universalis.Application.Uploads.Behaviors
                     WorldId = worldId,
                     ItemId = itemId,
                 });
-                var minimizedSales = cleanSales.Select(MinimizedSale.FromSale).ToList();
+                var minimizedSales = cleanSales.Select(s => MinimizedSale.FromSale(s, parameters.UploaderId)).ToList();
 
                 var document = new History
                 {
