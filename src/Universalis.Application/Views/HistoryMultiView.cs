@@ -27,7 +27,7 @@ namespace Universalis.Application.Views
         public uint[] ItemIds { get; set; }
 
         [JsonProperty("items")]
-        public Dictionary<uint, HistoryView> Items { get; set; }
+        public Dictionary<uint, HistoryView> Items { get; set; } = new();
 
         [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore)]
         public uint? WorldId { get; set; }

@@ -66,7 +66,7 @@ namespace Universalis.Application.Controllers.V1
                 .ToArray();
             return Ok(new CurrentlyShownMultiView
             {
-                ItemIds = itemIdsArray,
+                ItemIds = itemIdsArray.ToList(),
                 Items = currentlyShownViews.Select(cs => cs.Item2).ToList(),
                 WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
                 DcName = worldDc.IsDc ? worldDc.DcName : null,
@@ -172,13 +172,16 @@ namespace Universalis.Application.Controllers.V1
                 MaxPriceHq = hqSales.Select(s => s.PricePerUnit).Max(),
                 StackSizeHistogram = Statistics.GetDistribution(currentlyShown.RecentHistory
                     .Select(s => s.Quantity)
-                    .Select(q => (int)q)),
+                    .Select(q => (int)q))
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
                 StackSizeHistogramNq = Statistics.GetDistribution(nqSales
                     .Select(s => s.Quantity)
-                    .Select(q => (int)q)),
+                    .Select(q => (int)q))
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
                 StackSizeHistogramHq = Statistics.GetDistribution(hqSales
                     .Select(s => s.Quantity)
-                    .Select(q => (int)q)),
+                    .Select(q => (int)q))
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
                 RegularSaleVelocity = Statistics.WeekVelocityPerDay(currentlyShown.RecentHistory
                     .Select(s => (long)s.TimestampUnixSeconds * 1000)),
                 RegularSaleVelocityNq = Statistics.WeekVelocityPerDay(nqSales

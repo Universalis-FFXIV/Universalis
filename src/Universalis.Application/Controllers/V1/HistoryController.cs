@@ -125,18 +125,21 @@ namespace Universalis.Application.Controllers.V1
                 LastUploadTimeUnixMilliseconds = history.LastUploadTimeUnixMilliseconds,
                 StackSizeHistogram = Statistics.GetDistribution(history.Sales
                     .Select(s => s.Quantity)
-                    .Select(q => (int)q)),
+                    .Select(q => (int)q))
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
                 StackSizeHistogramNq = Statistics.GetDistribution(nqSales
                     .Select(s => s.Quantity)
-                    .Select(q => (int)q)),
+                    .Select(q => (int)q))
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
                 StackSizeHistogramHq = Statistics.GetDistribution(hqSales
                     .Select(s => s.Quantity)
-                    .Select(q => (int)q)),
-                RegularSaleVelocity = Statistics.WeekVelocityPerDay(history.Sales
+                    .Select(q => (int)q))
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+                SaleVelocity = Statistics.WeekVelocityPerDay(history.Sales
                     .Select(s => (long)s.TimestampUnixSeconds * 1000)),
-                RegularSaleVelocityNq = Statistics.WeekVelocityPerDay(nqSales
+                SaleVelocityNq = Statistics.WeekVelocityPerDay(nqSales
                     .Select(s => (long)s.TimestampUnixSeconds * 1000)),
-                RegularSaleVelocityHq = Statistics.WeekVelocityPerDay(hqSales
+                SaleVelocityHq = Statistics.WeekVelocityPerDay(hqSales
                     .Select(s => (long)s.TimestampUnixSeconds * 1000)),
             });
         }

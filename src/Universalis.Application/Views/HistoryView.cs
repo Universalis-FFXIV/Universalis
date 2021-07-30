@@ -6,7 +6,7 @@ namespace Universalis.Application.Views
     public class HistoryView
     {
         [JsonProperty("entries")]
-        public List<MinimizedSaleView> Sales { get; set; }
+        public List<MinimizedSaleView> Sales { get; set; } = new();
 
         [JsonProperty("itemID")]
         public uint ItemId { get; set; }
@@ -24,21 +24,21 @@ namespace Universalis.Application.Views
         public uint LastUploadTimeUnixMilliseconds { get; set; }
 
         [JsonProperty("stackSizeHistogram")]
-        public IDictionary<int, int> StackSizeHistogram { get; set; }
+        public Dictionary<int, int> StackSizeHistogram { get; set; } = new();
 
         [JsonProperty("stackSizeHistogramNQ")]
-        public IDictionary<int, int> StackSizeHistogramNq { get; set; }
+        public Dictionary<int, int> StackSizeHistogramNq { get; set; } = new();
 
         [JsonProperty("stackSizeHistogramHQ")]
-        public IDictionary<int, int> StackSizeHistogramHq { get; set; }
+        public Dictionary<int, int> StackSizeHistogramHq { get; set; } = new();
 
         [JsonProperty("regularSaleVelocity")]
-        public float RegularSaleVelocity { get; set; }
+        public float SaleVelocity { get; set; }
 
         [JsonProperty("nqSaleVelocity")]
-        public float RegularSaleVelocityNq { get; set; }
+        public float SaleVelocityNq { get; set; }
 
         [JsonProperty("hqSaleVelocity")]
-        public float RegularSaleVelocityHq { get; set; }
+        public float SaleVelocityHq { get; set; }
     }
 }

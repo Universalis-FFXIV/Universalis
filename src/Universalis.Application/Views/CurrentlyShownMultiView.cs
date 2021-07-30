@@ -6,10 +6,10 @@ namespace Universalis.Application.Views
     public class CurrentlyShownMultiView
     {
         [JsonProperty("itemIDs")]
-        public uint[] ItemIds { get; set; }
+        public List<uint> ItemIds { get; set; } = new();
 
         [JsonProperty("items")]
-        public List<CurrentlyShownView> Items { get; set; }
+        public List<CurrentlyShownView> Items { get; set; } = new();
 
         [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore)]
         public uint? WorldId { get; set; }
@@ -27,7 +27,7 @@ namespace Universalis.Application.Views
         public uint[] ItemIds { get; set; }
 
         [JsonProperty("items")]
-        public Dictionary<uint, CurrentlyShownView> Items { get; set; }
+        public Dictionary<uint, CurrentlyShownView> Items { get; set; } = new();
 
         [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore)]
         public uint? WorldId { get; set; }

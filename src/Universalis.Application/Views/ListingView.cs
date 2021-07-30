@@ -15,7 +15,7 @@ namespace Universalis.Application.Views
         public bool OnMannequin { get; set; }
 
         [JsonProperty("materia")]
-        public List<MateriaView> Materia { get; set; }
+        public List<MateriaView> Materia { get; set; } = new();
 
         [JsonProperty("pricePerUnit")]
         public uint PricePerUnit { get; set; }

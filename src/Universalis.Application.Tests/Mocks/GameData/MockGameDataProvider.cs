@@ -10,6 +10,7 @@ namespace Universalis.Application.Tests.Mocks.GameData
             return new Dictionary<uint, string>
             {
                 {74, "Coeurl"},
+                {34, "Brynhildr"},
             };
         }
 
@@ -18,12 +19,13 @@ namespace Universalis.Application.Tests.Mocks.GameData
             return new Dictionary<string, uint>
             {
                 {"Coeurl", 74},
+                {"Brynhildr", 34},
             };
         }
 
         public IReadOnlySet<uint> AvailableWorldIds()
         {
-            return new SortedSet<uint>(new uint[] { 74 });
+            return new SortedSet<uint>(new uint[] { 74, 34 });
         }
 
         public IReadOnlySet<uint> MarketableItemIds()
@@ -38,7 +40,7 @@ namespace Universalis.Application.Tests.Mocks.GameData
                 new DataCenter
                 {
                     Name = "Crystal",
-                    WorldIds = new uint[] {74},
+                    WorldIds = new uint[] {74, 34},
                 }
             };
         }

@@ -6,10 +6,10 @@ namespace Universalis.Application.Views
     public class CurrentlyShownView
     {
         [JsonProperty("listings")]
-        public List<ListingView> Listings { get; set; }
+        public List<ListingView> Listings { get; set; } = new();
 
         [JsonProperty("recentHistory")]
-        public List<SaleView> RecentHistory { get; set; }
+        public List<SaleView> RecentHistory { get; set; } = new();
 
         [JsonProperty("itemID")]
         public uint ItemId { get; set; }
@@ -72,12 +72,12 @@ namespace Universalis.Application.Views
         public uint MaxPriceHq { get; set; }
 
         [JsonProperty("stackSizeHistogram")]
-        public IDictionary<int, int> StackSizeHistogram { get; set; }
+        public Dictionary<int, int> StackSizeHistogram { get; set; } = new();
 
         [JsonProperty("stackSizeHistogramNQ")]
-        public IDictionary<int, int> StackSizeHistogramNq { get; set; }
+        public Dictionary<int, int> StackSizeHistogramNq { get; set; } = new();
 
         [JsonProperty("stackSizeHistogramHQ")]
-        public IDictionary<int, int> StackSizeHistogramHq { get; set; }
+        public Dictionary<int, int> StackSizeHistogramHq { get; set; } = new();
     }
 }
