@@ -391,7 +391,7 @@ namespace Universalis.Application.Tests.Controllers.V1
         }
 
         [Fact]
-        public async Task Controller_Get_Fails_SingleItem__DataCenter_WhenNotMarketable()
+        public async Task Controller_Get_Fails_SingleItem_DataCenter_WhenNotMarketable()
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockHistoryDbAccess();
