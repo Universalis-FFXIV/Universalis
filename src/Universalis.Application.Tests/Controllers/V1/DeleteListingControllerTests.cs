@@ -106,6 +106,35 @@ namespace Universalis.Application.Tests.Controllers.V1
         }
 
         [Fact]
+        public async Task Controller_Post_Fails_WithNoUploaderId()
+        {
+            var gameData = new MockGameDataProvider();
+            var flaggedUploaders = new MockFlaggedUploaderDbAccess();
+            var currentlyShown = new MockCurrentlyShownDbAccess();
+            var trustedSources = new MockTrustedSourceDbAccess();
+            var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders);
+
+            const string key = "blah";
+            using (var sha256 = SHA256.Create())
+            {
+                await trustedSources.Create(new TrustedSource
+                {
+                    ApiKeySha256 = BitConverter.ToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(key))),
+                });
+            }
+
+            var result = await controller.Post(5333, 74.ToString(), key, new DeleteListingParameters
+            {
+                ListingId = "95448465132123465",
+                PricePerUnit = 300,
+                Quantity = 76,
+                RetainerId = "84984654567658768",
+            });
+
+            Assert.IsType<BadRequestResult>(result);
+        }
+
+        [Fact]
         public async Task Controller_Post_Fails_WhenWorldInvalid()
         {
             var gameData = new MockGameDataProvider();

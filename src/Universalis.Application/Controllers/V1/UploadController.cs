@@ -49,6 +49,11 @@ namespace Universalis.Application.Controllers.V1
                 return Forbid();
             }
 
+            if (string.IsNullOrEmpty(parameters.UploaderId))
+            {
+                return BadRequest();
+            }
+
             // Hash the uploader ID
             using (var sha256 = SHA256.Create())
             {
