@@ -343,3 +343,6 @@ healthchecksdb
 
 # Nuke temporary folder
 temp/
+
+# Coverlet output
+coveragereport/
