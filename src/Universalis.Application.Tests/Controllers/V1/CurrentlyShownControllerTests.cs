@@ -12,6 +12,7 @@ using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
 using Xunit;
+using Xunit.Sdk;
 
 namespace Universalis.Application.Tests.Controllers.V1
 {
@@ -73,6 +74,111 @@ namespace Universalis.Application.Tests.Controllers.V1
             var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
             AssertCurrentlyShownValidWorld(document, currentlyShown, gameData);
+        }
+
+        [Theory]
+        [InlineData("74")]
+        [InlineData("Coeurl")]
+        [InlineData("coEUrl")]
+        public async Task Controller_Get_Succeeds_MultiItem_World(string worldOrDc)
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockCurrentlyShownDbAccess();
+            var controller = new CurrentlyShownController(gameData, dbAccess);
+            var rand = new Random();
+            
+            var document1 = new CurrentlyShown
+            {
+                WorldId = 74,
+                ItemId = 5333,
+                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                Listings = Enumerable.Range(0, 100)
+                    .Select(i => new Listing
+                    {
+                        ListingId = "FB",
+                        Hq = rand.NextDouble() > 0.5,
+                        OnMannequin = rand.NextDouble() > 0.5,
+                        Materia = new List<Materia>(),
+                        PricePerUnit = (uint)rand.Next(100, 60000),
+                        Quantity = (uint)rand.Next(1, 999),
+                        DyeId = (byte)rand.Next(0, 255),
+                        CreatorIdHash = "3a5f66de",
+                        CreatorName = "Bingus Bongus",
+                        LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
+                        RetainerId = "54565458626446136554",
+                        RetainerName = "xpotato",
+                        RetainerCityId = 0xA,
+                        SellerIdHash = "3a5f66de",
+                        UploadApplicationName = "test runner",
+                    })
+                    .ToList(),
+                RecentHistory = Enumerable.Range(0, 100)
+                    .Select(i => new Sale
+                    {
+                        Hq = rand.NextDouble() > 0.5,
+                        PricePerUnit = (uint)rand.Next(100, 60000),
+                        Quantity = (uint)rand.Next(1, 999),
+                        BuyerName = "Someone Someone",
+                        TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
+                        UploadApplicationName = "test runner",
+                    })
+                    .ToList(),
+                UploaderIdHash = "2A",
+            };
+            await dbAccess.Create(document1);
+
+            var document2 = new CurrentlyShown
+            {
+                WorldId = 74,
+                ItemId = 5,
+                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                Listings = Enumerable.Range(0, 100)
+                    .Select(i => new Listing
+                    {
+                        ListingId = "FB",
+                        Hq = rand.NextDouble() > 0.5,
+                        OnMannequin = rand.NextDouble() > 0.5,
+                        Materia = new List<Materia>(),
+                        PricePerUnit = (uint)rand.Next(100, 60000),
+                        Quantity = (uint)rand.Next(1, 999),
+                        DyeId = (byte)rand.Next(0, 255),
+                        CreatorIdHash = "3a5f66de",
+                        CreatorName = "Bingus Bongus",
+                        LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
+                        RetainerId = "54565458626446136554",
+                        RetainerName = "xpotato",
+                        RetainerCityId = 0xA,
+                        SellerIdHash = "3a5f66de",
+                        UploadApplicationName = "test runner",
+                    })
+                    .ToList(),
+                RecentHistory = Enumerable.Range(0, 100)
+                    .Select(i => new Sale
+                    {
+                        Hq = rand.NextDouble() > 0.5,
+                        PricePerUnit = (uint)rand.Next(100, 60000),
+                        Quantity = (uint)rand.Next(1, 999),
+                        BuyerName = "Someone Someone",
+                        TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
+                        UploadApplicationName = "test runner",
+                    })
+                    .ToList(),
+                UploaderIdHash = "2A",
+            };
+            await dbAccess.Create(document2);
+
+            var result = await controller.Get("5, 5333", worldOrDc);
+            var currentlyShown = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
+
+            Assert.Empty(currentlyShown.UnresolvedItemIds);
+            Assert.Equal(2, currentlyShown.ItemIds.Count);
+            Assert.Equal(2, currentlyShown.Items.Count);
+            Assert.Equal(document1.WorldId, currentlyShown.WorldId);
+            Assert.Equal(gameData.AvailableWorlds()[document1.WorldId], currentlyShown.WorldName);
+            Assert.Null(currentlyShown.DcName);
+
+            AssertCurrentlyShownValidWorld(document1, currentlyShown.Items.First(item => item.ItemId == document1.ItemId), gameData);
+            AssertCurrentlyShownValidWorld(document2, currentlyShown.Items.First(item => item.ItemId == document2.ItemId), gameData);
         }
 
         [Theory]
