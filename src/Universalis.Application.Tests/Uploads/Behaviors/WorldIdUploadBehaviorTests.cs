@@ -1,22 +1,22 @@
-﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using System.Threading.Tasks;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
-using Universalis.DbAccess.Queries.MarketBoard;
 using Xunit;
 
 namespace Universalis.Application.Tests.Uploads.Behaviors
 {
-    public class ItemIdUploadBehaviorTests
+    public class WorldIdUploadBehaviorTests
     {
         [Fact]
-        public void Behavior_DoesNotRun_WithoutItemId()
+        public void Behavior_DoesNotRun_WithoutWorldId()
         {
             var gameData = new MockGameDataProvider();
-            var dbAccess = new MockRecentlyUpdatedItemsDbAccess();
-            var behavior = new ItemIdUploadBehavior(gameData, dbAccess);
+            var dbAccess = new MockWorldUploadCountDbAccess();
+            var behavior = new WorldIdUploadBehavior(gameData, dbAccess);
 
             var upload = new UploadParameters();
 
@@ -27,12 +27,12 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
         public async Task Behavior_Succeeds()
         {
             var gameData = new MockGameDataProvider();
-            var dbAccess = new MockRecentlyUpdatedItemsDbAccess();
-            var behavior = new ItemIdUploadBehavior(gameData, dbAccess);
+            var dbAccess = new MockWorldUploadCountDbAccess();
+            var behavior = new WorldIdUploadBehavior(gameData, dbAccess);
 
             var upload = new UploadParameters
             {
-                ItemId = 5333,
+                WorldId = 74,
             };
 
             Assert.True(behavior.ShouldExecute(upload));
@@ -40,22 +40,22 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
             var result = await behavior.Execute(null, upload);
             Assert.Null(result);
 
-            var data = await dbAccess.Retrieve(new RecentlyUpdatedItemsQuery());
+            var data = (await dbAccess.GetWorldUploadCounts()).ToList();
             Assert.NotNull(data);
-            Assert.Single(data.Items);
-            Assert.Equal(upload.ItemId.Value, data.Items[0]);
+            Assert.Single(data);
+            Assert.Equal(gameData.AvailableWorlds()[upload.WorldId.Value], data[0].WorldName);
         }
 
         [Fact]
-        public async Task Behavior_Fails_WhenNotMarketable()
+        public async Task Behavior_Fails_WhenWorldIdInvalid()
         {
             var gameData = new MockGameDataProvider();
-            var dbAccess = new MockRecentlyUpdatedItemsDbAccess();
-            var behavior = new ItemIdUploadBehavior(gameData, dbAccess);
+            var dbAccess = new MockWorldUploadCountDbAccess();
+            var behavior = new WorldIdUploadBehavior(gameData, dbAccess);
 
             var upload = new UploadParameters
             {
-                ItemId = 0,
+                WorldId = 0,
             };
 
             Assert.True(behavior.ShouldExecute(upload));
@@ -63,8 +63,8 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
             var result = await behavior.Execute(null, upload);
             Assert.IsType<NotFoundObjectResult>(result);
 
-            var data = await dbAccess.Retrieve(new RecentlyUpdatedItemsQuery());
-            Assert.Null(data);
+            var data = (await dbAccess.GetWorldUploadCounts()).ToList();
+            Assert.Empty(data);
         }
     }
 }
