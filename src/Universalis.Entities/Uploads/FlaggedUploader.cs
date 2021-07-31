@@ -5,6 +5,6 @@ namespace Universalis.Entities.Uploads
     public class FlaggedUploader
     {
         [BsonElement("uploaderID")]
-        public string UploaderId { get; init; }
+        public string UploaderIdHash { get; init; }
     }
 }

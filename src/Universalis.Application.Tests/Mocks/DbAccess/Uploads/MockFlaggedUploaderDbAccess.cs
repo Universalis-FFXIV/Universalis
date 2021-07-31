@@ -13,14 +13,14 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
 
         public Task Create(FlaggedUploader document)
         {
-            _collection.Add(document.UploaderId, document);
+            _collection.Add(document.UploaderIdHash, document);
             return Task.CompletedTask;
         }
 
         public Task<FlaggedUploader> Retrieve(FlaggedUploaderQuery query)
         {
             return Task.FromResult(_collection
-                .FirstOrDefault(s => s.Key == query.UploaderId).Value);
+                .FirstOrDefault(s => s.Key == query.UploaderIdHash).Value);
         }
 
         public async Task Update(FlaggedUploader document, FlaggedUploaderQuery query)
@@ -31,7 +31,7 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
 
         public Task Delete(FlaggedUploaderQuery query)
         {
-            _collection.Remove(query.UploaderId);
+            _collection.Remove(query.UploaderIdHash);
             return Task.CompletedTask;
         }
     }

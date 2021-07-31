@@ -64,7 +64,7 @@ namespace Universalis.Application.Controllers.V1
             }
 
             // Check if this uploader is flagged, cancel if they are
-            if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderId = parameters.UploaderId }) != null)
+            if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdHash = parameters.UploaderId }) != null)
             {
                 return Ok("Success");
             }

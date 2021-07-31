@@ -5,12 +5,12 @@ namespace Universalis.DbAccess.Queries.Uploads
 {
     public class FlaggedUploaderQuery : DbAccessQuery<FlaggedUploader>
     {
-        public string UploaderId { get; set; }
+        public string UploaderIdHash { get; set; }
 
         internal override FilterDefinition<FlaggedUploader> ToFilterDefinition()
         {
             var filterBuilder = Builders<FlaggedUploader>.Filter;
-            var filter = filterBuilder.Eq(o => o.UploaderId, UploaderId);
+            var filter = filterBuilder.Eq(o => o.UploaderIdHash, UploaderIdHash);
             return filter;
         }
     }
