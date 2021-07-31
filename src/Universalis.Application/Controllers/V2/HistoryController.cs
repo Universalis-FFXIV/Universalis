@@ -57,11 +57,13 @@ namespace Universalis.Application.Controllers.V2
                 .ToArray();
             return Ok(new HistoryMultiViewV2
             {
-                ItemIds = itemIdsArray,
+                ItemIds = itemIdsArray.ToList(),
                 Items = historyViews
+                    .Where(cs => cs.Item1)
                     .Select(hv => hv.Item2)
                     .ToDictionary(item => item.ItemId, item => item),
                 WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
+                WorldName = worldDc.IsWorld ? worldDc.WorldName : null,
                 DcName = worldDc.IsDc ? worldDc.DcName : null,
                 UnresolvedItemIds = unresolvedItems,
             });

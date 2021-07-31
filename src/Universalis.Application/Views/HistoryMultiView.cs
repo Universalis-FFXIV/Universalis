@@ -27,7 +27,7 @@ namespace Universalis.Application.Views
     public class HistoryMultiViewV2
     {
         [JsonProperty("itemIDs")]
-        public uint[] ItemIds { get; set; }
+        public List<uint> ItemIds { get; set; }
 
         [JsonProperty("items")]
         public Dictionary<uint, HistoryView> Items { get; set; } = new();

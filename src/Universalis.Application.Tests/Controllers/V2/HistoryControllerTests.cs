@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Universalis.Application.Controllers.V1;
+using Microsoft.AspNetCore.Mvc;
+using Universalis.Application.Controllers.V2;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views;
@@ -12,7 +12,7 @@ using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
 using Xunit;
 
-namespace Universalis.Application.Tests.Controllers.V1
+namespace Universalis.Application.Tests.Controllers.V2
 {
     public class HistoryControllerTests
     {
@@ -99,7 +99,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             await dbAccess.Create(document2);
 
             var result = await controller.Get("5,5333", worldOrDc, entriesToReturn);
-            var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
+            var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.Contains(5U, history.ItemIds);
             Assert.Contains(5333U, history.ItemIds);
@@ -109,8 +109,8 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.Equal(gameData.AvailableWorlds()[74], history.WorldName);
             Assert.Null(history.DcName);
 
-            AssertHistoryValidWorld(document1, history.Items.First(item => item.ItemId == document1.ItemId), gameData, entriesToReturn);
-            AssertHistoryValidWorld(document2, history.Items.First(item => item.ItemId == document2.ItemId), gameData, entriesToReturn);
+            AssertHistoryValidWorld(document1, history.Items.First(item => item.Key == document1.ItemId).Value, gameData, entriesToReturn);
+            AssertHistoryValidWorld(document2, history.Items.First(item => item.Key == document2.ItemId).Value, gameData, entriesToReturn);
         }
 
         [Theory]
@@ -224,7 +224,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             await dbAccess.Create(document2);
 
             var result = await controller.Get("5,5333", worldOrDc, entriesToReturn);
-            var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
+            var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.Contains(5U, history.ItemIds);
             Assert.Contains(5333U, history.ItemIds);
@@ -236,14 +236,14 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             AssertHistoryValidDataCenter(
                 document1,
-                history.Items.First(item => item.ItemId == document1.ItemId),
+                history.Items.First(item => item.Key == document1.ItemId).Value,
                 document1.Sales,
                 lastUploadTime,
                 worldOrDc,
                 entriesToReturn);
             AssertHistoryValidDataCenter(
                 document2,
-                history.Items.First(item => item.ItemId == document2.ItemId),
+                history.Items.First(item => item.Key == document2.ItemId).Value,
                 document2.Sales,
                 lastUploadTime,
                 worldOrDc,
@@ -295,7 +295,7 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             var result = await controller.Get("5333,5", worldOrDc, entriesToReturn);
 
-            var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
+            var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.Contains(5U, history.UnresolvedItemIds);
             Assert.Contains(5333U, history.UnresolvedItemIds);
@@ -348,7 +348,7 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             var result = await controller.Get("5333,5", worldOrDc, entriesToReturn);
 
-            var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
+            var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.Contains(5U, history.UnresolvedItemIds);
             Assert.Contains(5333U, history.UnresolvedItemIds);
@@ -381,7 +381,7 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             var result = await controller.Get("0, 4294967295", "74", "");
 
-            var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
+            var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.Contains(0U, history.UnresolvedItemIds);
             Assert.Contains(4294967295U, history.UnresolvedItemIds);
@@ -412,7 +412,7 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             var result = await controller.Get("0 ,4294967295", "crystal", "");
 
-            var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
+            var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.Contains(0U, history.UnresolvedItemIds);
             Assert.Contains(4294967295U, history.UnresolvedItemIds);

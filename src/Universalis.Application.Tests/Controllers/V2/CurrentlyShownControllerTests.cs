@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Universalis.Application.Controllers.V1;
+using Microsoft.AspNetCore.Mvc;
+using Universalis.Application.Controllers.V2;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views;
@@ -13,7 +13,7 @@ using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
 using Xunit;
 
-namespace Universalis.Application.Tests.Controllers.V1
+namespace Universalis.Application.Tests.Controllers.V2
 {
     public class CurrentlyShownControllerTests
     {
@@ -167,7 +167,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             await dbAccess.Create(document2);
 
             var result = await controller.Get("5, 5333", worldOrDc);
-            var currentlyShown = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
+            var currentlyShown = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.Empty(currentlyShown.UnresolvedItemIds);
             Assert.Equal(2, currentlyShown.ItemIds.Count);
@@ -176,8 +176,8 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.Equal(gameData.AvailableWorlds()[document1.WorldId], currentlyShown.WorldName);
             Assert.Null(currentlyShown.DcName);
 
-            AssertCurrentlyShownValidWorld(document1, currentlyShown.Items.First(item => item.ItemId == document1.ItemId), gameData);
-            AssertCurrentlyShownValidWorld(document2, currentlyShown.Items.First(item => item.ItemId == document2.ItemId), gameData);
+            AssertCurrentlyShownValidWorld(document1, currentlyShown.Items.First(item => item.Key == document1.ItemId).Value, gameData);
+            AssertCurrentlyShownValidWorld(document2, currentlyShown.Items.First(item => item.Key == document2.ItemId).Value, gameData);
         }
 
         [Theory]
@@ -376,7 +376,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             await dbAccess.Create(document2);
 
             var result = await controller.Get("5,5333", worldOrDc);
-            var currentlyShown = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
+            var currentlyShown = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.Contains(5U, currentlyShown.ItemIds);
             Assert.Contains(5333U, currentlyShown.ItemIds);
@@ -388,12 +388,12 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             AssertCurrentlyShownDataCenter(
                 document1,
-                currentlyShown.Items.First(item => item.ItemId == document1.ItemId),
+                currentlyShown.Items.First(item => item.Key == document1.ItemId).Value,
                 lastUploadTime,
                 worldOrDc);
             AssertCurrentlyShownDataCenter(
                 document2,
-                currentlyShown.Items.First(item => item.ItemId == document2.ItemId),
+                currentlyShown.Items.First(item => item.Key == document2.ItemId).Value,
                 lastUploadTime,
                 worldOrDc);
         }
@@ -445,7 +445,7 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             var result = await controller.Get("5333,5", worldOrDc);
 
-            var history = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
+            var history = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.Contains(5U, history.UnresolvedItemIds);
             Assert.Contains(5333U, history.UnresolvedItemIds);
@@ -500,7 +500,7 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             var result = await controller.Get("5333,5", worldOrDc);
 
-            var history = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
+            var history = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.Contains(5U, history.UnresolvedItemIds);
             Assert.Contains(5333U, history.UnresolvedItemIds);
@@ -533,7 +533,7 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             var result = await controller.Get("0, 4294967295", "74");
 
-            var history = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
+            var history = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.Contains(0U, history.UnresolvedItemIds);
             Assert.Contains(4294967295U, history.UnresolvedItemIds);
@@ -564,7 +564,7 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             var result = await controller.Get("0 ,4294967295", "crystal");
 
-            var history = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
+            var history = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.Contains(0U, history.UnresolvedItemIds);
             Assert.Contains(4294967295U, history.UnresolvedItemIds);
