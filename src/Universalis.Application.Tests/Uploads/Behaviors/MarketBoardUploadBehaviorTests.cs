@@ -64,7 +64,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
         }
 
         [Fact]
-        public async Task Behavior_DoesNotRun_WithoutUploaderId()
+        public void Behavior_DoesNotRun_WithoutUploaderId()
         {
             var currentlyShownDb = new MockCurrentlyShownDbAccess();
             var historyDb = new MockHistoryDbAccess();
