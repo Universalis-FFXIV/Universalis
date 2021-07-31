@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1;
@@ -179,6 +180,224 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             AssertCurrentlyShownValidWorld(document1, currentlyShown.Items.First(item => item.ItemId == document1.ItemId), gameData);
             AssertCurrentlyShownValidWorld(document2, currentlyShown.Items.First(item => item.ItemId == document2.ItemId), gameData);
+        }
+
+        [Theory]
+        [InlineData("crystaL")]
+        [InlineData("Crystal")]
+        public async Task Controller_Get_Succeeds_SingleItem_DataCenter(string worldOrDc)
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockCurrentlyShownDbAccess();
+            var controller = new CurrentlyShownController(gameData, dbAccess);
+            var rand = new Random();
+            var lastUploadTime = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+            var document1 = new CurrentlyShown
+            {
+                WorldId = 74,
+                ItemId = 5333,
+                LastUploadTimeUnixMilliseconds = lastUploadTime,
+                Listings = Enumerable.Range(0, 100)
+                    .Select(i => new Listing
+                    {
+                        ListingId = "FB",
+                        Hq = rand.NextDouble() > 0.5,
+                        OnMannequin = rand.NextDouble() > 0.5,
+                        Materia = new List<Materia>(),
+                        PricePerUnit = (uint)rand.Next(100, 60000),
+                        Quantity = (uint)rand.Next(1, 999),
+                        DyeId = (byte)rand.Next(0, 255),
+                        CreatorIdHash = "3a5f66de",
+                        CreatorName = "Bingus Bongus",
+                        LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
+                        RetainerId = "54565458626446136554",
+                        RetainerName = "xpotato",
+                        RetainerCityId = 0xA,
+                        SellerIdHash = "3a5f66de",
+                        UploadApplicationName = "test runner",
+                    })
+                    .ToList(),
+                RecentHistory = Enumerable.Range(0, 100)
+                    .Select(i => new Sale
+                    {
+                        Hq = rand.NextDouble() > 0.5,
+                        PricePerUnit = (uint)rand.Next(100, 60000),
+                        Quantity = (uint)rand.Next(1, 999),
+                        BuyerName = "Someone Someone",
+                        TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
+                        UploadApplicationName = "test runner",
+                    })
+                    .ToList(),
+                UploaderIdHash = "2A",
+            };
+            await dbAccess.Create(document1);
+
+            var document2 = new CurrentlyShown
+            {
+                WorldId = 34,
+                ItemId = 5333,
+                LastUploadTimeUnixMilliseconds = lastUploadTime,
+                Listings = Enumerable.Range(0, 100)
+                    .Select(i => new Listing
+                    {
+                        ListingId = "FB",
+                        Hq = rand.NextDouble() > 0.5,
+                        OnMannequin = rand.NextDouble() > 0.5,
+                        Materia = new List<Materia>(),
+                        PricePerUnit = (uint)rand.Next(100, 60000),
+                        Quantity = (uint)rand.Next(1, 999),
+                        DyeId = (byte)rand.Next(0, 255),
+                        CreatorIdHash = "3a5f66de",
+                        CreatorName = "Bingus Bongus",
+                        LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
+                        RetainerId = "54565458626446136554",
+                        RetainerName = "xpotato",
+                        RetainerCityId = 0xA,
+                        SellerIdHash = "3a5f66de",
+                        UploadApplicationName = "test runner",
+                    })
+                    .ToList(),
+                RecentHistory = Enumerable.Range(0, 100)
+                    .Select(i => new Sale
+                    {
+                        Hq = rand.NextDouble() > 0.5,
+                        PricePerUnit = (uint)rand.Next(100, 60000),
+                        Quantity = (uint)rand.Next(1, 999),
+                        BuyerName = "Someone Someone",
+                        TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
+                        UploadApplicationName = "test runner",
+                    })
+                    .ToList(),
+                UploaderIdHash = "2A",
+            };
+            await dbAccess.Create(document2);
+
+            var result = await controller.Get("5333", worldOrDc);
+            var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
+
+            document1.Listings = document1.Listings.Concat(document2.Listings).ToList();
+            document1.RecentHistory = document1.RecentHistory.Concat(document2.RecentHistory).ToList();
+
+            AssertCurrentlyShownDataCenter(
+                document1,
+                currentlyShown,
+                lastUploadTime,
+                worldOrDc);
+        }
+
+        [Theory]
+        [InlineData("crystaL")]
+        [InlineData("Crystal")]
+        public async Task Controller_Get_Succeeds_MultiItem_DataCenter(string worldOrDc)
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockCurrentlyShownDbAccess();
+            var controller = new CurrentlyShownController(gameData, dbAccess);
+            var rand = new Random();
+            var lastUploadTime = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+            var document1 = new CurrentlyShown
+            {
+                WorldId = 74,
+                ItemId = 5333,
+                LastUploadTimeUnixMilliseconds = lastUploadTime,
+                Listings = Enumerable.Range(0, 100)
+                    .Select(i => new Listing
+                    {
+                        ListingId = "FB",
+                        Hq = rand.NextDouble() > 0.5,
+                        OnMannequin = rand.NextDouble() > 0.5,
+                        Materia = new List<Materia>(),
+                        PricePerUnit = (uint)rand.Next(100, 60000),
+                        Quantity = (uint)rand.Next(1, 999),
+                        DyeId = (byte)rand.Next(0, 255),
+                        CreatorIdHash = "3a5f66de",
+                        CreatorName = "Bingus Bongus",
+                        LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
+                        RetainerId = "54565458626446136554",
+                        RetainerName = "xpotato",
+                        RetainerCityId = 0xA,
+                        SellerIdHash = "3a5f66de",
+                        UploadApplicationName = "test runner",
+                    })
+                    .ToList(),
+                RecentHistory = Enumerable.Range(0, 100)
+                    .Select(i => new Sale
+                    {
+                        Hq = rand.NextDouble() > 0.5,
+                        PricePerUnit = (uint)rand.Next(100, 60000),
+                        Quantity = (uint)rand.Next(1, 999),
+                        BuyerName = "Someone Someone",
+                        TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
+                        UploadApplicationName = "test runner",
+                    })
+                    .ToList(),
+                UploaderIdHash = "2A",
+            };
+            await dbAccess.Create(document1);
+
+            var document2 = new CurrentlyShown
+            {
+                WorldId = 34,
+                ItemId = 5,
+                LastUploadTimeUnixMilliseconds = lastUploadTime,
+                Listings = Enumerable.Range(0, 100)
+                    .Select(i => new Listing
+                    {
+                        ListingId = "FB",
+                        Hq = rand.NextDouble() > 0.5,
+                        OnMannequin = rand.NextDouble() > 0.5,
+                        Materia = new List<Materia>(),
+                        PricePerUnit = (uint)rand.Next(100, 60000),
+                        Quantity = (uint)rand.Next(1, 999),
+                        DyeId = (byte)rand.Next(0, 255),
+                        CreatorIdHash = "3a5f66de",
+                        CreatorName = "Bingus Bongus",
+                        LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
+                        RetainerId = "54565458626446136554",
+                        RetainerName = "xpotato",
+                        RetainerCityId = 0xA,
+                        SellerIdHash = "3a5f66de",
+                        UploadApplicationName = "test runner",
+                    })
+                    .ToList(),
+                RecentHistory = Enumerable.Range(0, 100)
+                    .Select(i => new Sale
+                    {
+                        Hq = rand.NextDouble() > 0.5,
+                        PricePerUnit = (uint)rand.Next(100, 60000),
+                        Quantity = (uint)rand.Next(1, 999),
+                        BuyerName = "Someone Someone",
+                        TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
+                        UploadApplicationName = "test runner",
+                    })
+                    .ToList(),
+                UploaderIdHash = "2A",
+            };
+            await dbAccess.Create(document2);
+
+            var result = await controller.Get("5,5333", worldOrDc);
+            var currentlyShown = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
+
+            Assert.Contains(5U, currentlyShown.ItemIds);
+            Assert.Contains(5333U, currentlyShown.ItemIds);
+            Assert.Empty(currentlyShown.UnresolvedItemIds);
+            Assert.Equal(2, currentlyShown.Items.Count);
+            Assert.Null(currentlyShown.WorldId);
+            Assert.Null(currentlyShown.WorldName);
+            Assert.Equal("Crystal", currentlyShown.DcName);
+
+            AssertCurrentlyShownDataCenter(
+                document1,
+                currentlyShown.Items.First(item => item.ItemId == document1.ItemId),
+                lastUploadTime,
+                worldOrDc);
+            AssertCurrentlyShownDataCenter(
+                document2,
+                currentlyShown.Items.First(item => item.ItemId == document2.ItemId),
+                lastUploadTime,
+                worldOrDc);
         }
 
         [Theory]
@@ -371,6 +590,8 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
             currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+            document.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
+            document.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
             Assert.All(currentlyShown.Listings.Select(l => (object)l.WorldId), Assert.Null);
             Assert.All(currentlyShown.Listings.Select(l => l.WorldName), Assert.Null);
@@ -378,13 +599,13 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.All(currentlyShown.RecentHistory.Select(s => (object)s.WorldId), Assert.Null);
             Assert.All(currentlyShown.RecentHistory.Select(s => s.WorldName), Assert.Null);
 
-            var nqListings = currentlyShown.Listings.Where(s => !s.Hq).ToList();
-            var hqListings = currentlyShown.Listings.Where(s => s.Hq).ToList();
+            var nqListings = document.Listings.Where(s => !s.Hq).ToList();
+            var hqListings = document.Listings.Where(s => s.Hq).ToList();
 
-            var nqHistory = currentlyShown.RecentHistory.Where(s => !s.Hq).ToList();
-            var hqHistory = currentlyShown.RecentHistory.Where(s => s.Hq).ToList();
+            var nqHistory = document.RecentHistory.Where(s => !s.Hq).ToList();
+            var hqHistory = document.RecentHistory.Where(s => s.Hq).ToList();
 
-            var currentAveragePrice = Filters.RemoveOutliers(currentlyShown.Listings.Select(s => (float)s.PricePerUnit), 3).Average();
+            var currentAveragePrice = Filters.RemoveOutliers(document.Listings.Select(s => (float)s.PricePerUnit), 3).Average();
             var currentAveragePriceNq = Filters.RemoveOutliers(nqListings.Select(s => (float)s.PricePerUnit), 3).Average();
             var currentAveragePriceHq = Filters.RemoveOutliers(hqListings.Select(s => (float)s.PricePerUnit), 3).Average();
 
@@ -392,7 +613,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.Equal(Round(currentAveragePriceNq), Round(currentlyShown.CurrentAveragePriceNq));
             Assert.Equal(Round(currentAveragePriceHq), Round(currentlyShown.CurrentAveragePriceHq));
 
-            var averagePrice = Filters.RemoveOutliers(currentlyShown.RecentHistory.Select(s => (float)s.PricePerUnit), 3).Average();
+            var averagePrice = Filters.RemoveOutliers(document.RecentHistory.Select(s => (float)s.PricePerUnit), 3).Average();
             var averagePriceNq = Filters.RemoveOutliers(nqHistory.Select(s => (float)s.PricePerUnit), 3).Average();
             var averagePriceHq = Filters.RemoveOutliers(hqHistory.Select(s => (float)s.PricePerUnit), 3).Average();
 
@@ -427,9 +648,89 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));
             Assert.Equal(Round(saleVelocityHq), Round(currentlyShown.SaleVelocityHq));
 
-            var stackSizeHistogram = Statistics.GetDistribution(currentlyShown.Listings.Select(l => (int)l.Quantity));
-            var stackSizeHistogramNq = Statistics.GetDistribution(nqListings.Select(l => (int)l.Quantity));
-            var stackSizeHistogramHq = Statistics.GetDistribution(hqListings.Select(l => (int)l.Quantity));
+            var stackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(document.Listings.Select(l => (int)l.Quantity)));
+            var stackSizeHistogramNq = new SortedDictionary<int, int>(Statistics.GetDistribution(nqListings.Select(l => (int)l.Quantity)));
+            var stackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqListings.Select(l => (int) l.Quantity)));
+
+            Assert.Equal(stackSizeHistogram, currentlyShown.StackSizeHistogram);
+            Assert.Equal(stackSizeHistogramNq, currentlyShown.StackSizeHistogramNq);
+            Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
+        }
+
+        private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, CurrentlyShownView currentlyShown, uint lastUploadTime, string worldOrDc)
+        {
+            Assert.Equal(anyWorldDocument.ItemId, currentlyShown.ItemId);
+            Assert.Equal(lastUploadTime, currentlyShown.LastUploadTimeUnixMilliseconds);
+            Assert.Equal(char.ToUpperInvariant(worldOrDc[0]) + worldOrDc[1..].ToLowerInvariant(), currentlyShown.DcName);
+            Assert.Null(currentlyShown.WorldId);
+            Assert.Null(currentlyShown.WorldName);
+
+            Assert.NotNull(currentlyShown.Listings);
+            Assert.NotNull(currentlyShown.RecentHistory);
+
+            currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
+            currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+            anyWorldDocument.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
+            anyWorldDocument.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+
+            Assert.All(currentlyShown.Listings.Select(l => (object)l.WorldId), Assert.NotNull);
+            Assert.All(currentlyShown.Listings.Select(l => l.WorldName), Assert.NotNull);
+
+            Assert.All(currentlyShown.RecentHistory.Select(s => (object)s.WorldId), Assert.NotNull);
+            Assert.All(currentlyShown.RecentHistory.Select(s => s.WorldName), Assert.NotNull);
+
+            var nqListings = anyWorldDocument.Listings.Where(s => !s.Hq).ToList();
+            var hqListings = anyWorldDocument.Listings.Where(s => s.Hq).ToList();
+
+            var nqHistory = anyWorldDocument.RecentHistory.Where(s => !s.Hq).ToList();
+            var hqHistory = anyWorldDocument.RecentHistory.Where(s => s.Hq).ToList();
+
+            var currentAveragePrice = Filters.RemoveOutliers(anyWorldDocument.Listings.Select(s => (float)s.PricePerUnit), 3).Average();
+            var currentAveragePriceNq = Filters.RemoveOutliers(nqListings.Select(s => (float)s.PricePerUnit), 3).Average();
+            var currentAveragePriceHq = Filters.RemoveOutliers(hqListings.Select(s => (float)s.PricePerUnit), 3).Average();
+
+            Assert.Equal(Round(currentAveragePrice), Round(currentlyShown.CurrentAveragePrice));
+            Assert.Equal(Round(currentAveragePriceNq), Round(currentlyShown.CurrentAveragePriceNq));
+            Assert.Equal(Round(currentAveragePriceHq), Round(currentlyShown.CurrentAveragePriceHq));
+
+            var averagePrice = Filters.RemoveOutliers(anyWorldDocument.RecentHistory.Select(s => (float)s.PricePerUnit), 3).Average();
+            var averagePriceNq = Filters.RemoveOutliers(nqHistory.Select(s => (float)s.PricePerUnit), 3).Average();
+            var averagePriceHq = Filters.RemoveOutliers(hqHistory.Select(s => (float)s.PricePerUnit), 3).Average();
+
+            Assert.Equal(Round(averagePrice), Round(currentlyShown.AveragePrice));
+            Assert.Equal(Round(averagePriceNq), Round(currentlyShown.AveragePriceNq));
+            Assert.Equal(Round(averagePriceHq), Round(currentlyShown.AveragePriceHq));
+
+            var minPrice = currentlyShown.Listings.Min(l => l.PricePerUnit);
+            var minPriceNq = nqListings.Min(l => l.PricePerUnit);
+            var minPriceHq = hqListings.Min(l => l.PricePerUnit);
+
+            Assert.Equal(minPrice, currentlyShown.MinPrice);
+            Assert.Equal(minPriceNq, currentlyShown.MinPriceNq);
+            Assert.Equal(minPriceHq, currentlyShown.MinPriceHq);
+
+            var maxPrice = currentlyShown.Listings.Max(l => l.PricePerUnit);
+            var maxPriceNq = nqListings.Max(l => l.PricePerUnit);
+            var maxPriceHq = hqListings.Max(l => l.PricePerUnit);
+
+            Assert.Equal(maxPrice, currentlyShown.MaxPrice);
+            Assert.Equal(maxPriceNq, currentlyShown.MaxPriceNq);
+            Assert.Equal(maxPriceHq, currentlyShown.MaxPriceHq);
+
+            var saleVelocity = Statistics.WeekVelocityPerDay(
+                currentlyShown.RecentHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
+            var saleVelocityNq = Statistics.WeekVelocityPerDay(
+                nqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
+            var saleVelocityHq = Statistics.WeekVelocityPerDay(
+                hqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
+
+            Assert.Equal(Round(saleVelocity), Round(currentlyShown.SaleVelocity));
+            Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));
+            Assert.Equal(Round(saleVelocityHq), Round(currentlyShown.SaleVelocityHq));
+
+            var stackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(anyWorldDocument.Listings.Select(l => (int)l.Quantity)));
+            var stackSizeHistogramNq = new SortedDictionary<int, int>(Statistics.GetDistribution(nqListings.Select(l => (int)l.Quantity)));
+            var stackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqListings.Select(l => (int)l.Quantity)));
 
             Assert.Equal(stackSizeHistogram, currentlyShown.StackSizeHistogram);
             Assert.Equal(stackSizeHistogramNq, currentlyShown.StackSizeHistogramNq);

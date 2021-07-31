@@ -127,18 +127,15 @@ namespace Universalis.Application.Controllers.V1
                 WorldName = worldDc.IsWorld ? worldDc.WorldName : null,
                 DcName = worldDc.IsDc ? worldDc.DcName : null,
                 LastUploadTimeUnixMilliseconds = history.LastUploadTimeUnixMilliseconds,
-                StackSizeHistogram = Statistics.GetDistribution(history.Sales
+                StackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(history.Sales
                     .Select(s => s.Quantity)
-                    .Select(q => (int)q))
-                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-                StackSizeHistogramNq = Statistics.GetDistribution(nqSales
+                    .Select(q => (int)q))),
+                StackSizeHistogramNq = new SortedDictionary<int, int>(Statistics.GetDistribution(nqSales
                     .Select(s => s.Quantity)
-                    .Select(q => (int)q))
-                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-                StackSizeHistogramHq = Statistics.GetDistribution(hqSales
+                    .Select(q => (int)q))),
+                StackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqSales
                     .Select(s => s.Quantity)
-                    .Select(q => (int)q))
-                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+                    .Select(q => (int)q))),
                 SaleVelocity = Statistics.WeekVelocityPerDay(history.Sales
                     .Select(s => (long)s.TimestampUnixSeconds * 1000)),
                 SaleVelocityNq = Statistics.WeekVelocityPerDay(nqSales

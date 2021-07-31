@@ -446,20 +446,17 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.All(history.Sales.Select(s => (object)s.WorldId), Assert.Null);
             Assert.All(history.Sales.Select(s => s.WorldName), Assert.Null);
 
-            Assert.Equal(Statistics.GetDistribution(document.Sales
+            Assert.Equal(new SortedDictionary<int, int>(Statistics.GetDistribution(document.Sales
                         .Select(s => s.Quantity)
-                        .Select(q => (int)q))
-                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+                        .Select(q => (int)q))),
                 history.StackSizeHistogram);
-            Assert.Equal(Statistics.GetDistribution(nqSales
+            Assert.Equal(new SortedDictionary<int, int>(Statistics.GetDistribution(nqSales
                         .Select(s => s.Quantity)
-                        .Select(q => (int)q))
-                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+                        .Select(q => (int)q))),
                 history.StackSizeHistogramNq);
-            Assert.Equal(Statistics.GetDistribution(hqSales
+            Assert.Equal(new SortedDictionary<int, int>(Statistics.GetDistribution(hqSales
                         .Select(s => s.Quantity)
-                        .Select(q => (int)q))
-                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+                        .Select(q => (int)q))),
                 history.StackSizeHistogramHq);
             Assert.Equal(Statistics.WeekVelocityPerDay(document.Sales
                     .Select(s => (long)s.SaleTimeUnixSeconds * 1000)),
@@ -495,21 +492,18 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.NotNull(history.Sales);
             Assert.Equal(lastUploadTime, history.LastUploadTimeUnixMilliseconds);
 
-            Assert.Equal(Statistics.GetDistribution(sales
+            Assert.Equal(new SortedDictionary<int, int>(Statistics.GetDistribution(sales
                         .Select(s => s.Quantity)
-                        .Select(q => (int)q))
-                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-                history.StackSizeHistogram);
-            Assert.Equal(Statistics.GetDistribution(nqSales
+                        .Select(q => (int)q))),
+                new SortedDictionary<int, int>(history.StackSizeHistogram));
+            Assert.Equal(new SortedDictionary<int, int>(Statistics.GetDistribution(nqSales
                         .Select(s => s.Quantity)
-                        .Select(q => (int)q))
-                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-                history.StackSizeHistogramNq);
-            Assert.Equal(Statistics.GetDistribution(hqSales
+                        .Select(q => (int)q))),
+                new SortedDictionary<int, int>(history.StackSizeHistogramNq));
+            Assert.Equal(new SortedDictionary<int, int>(Statistics.GetDistribution(hqSales
                         .Select(s => s.Quantity)
-                        .Select(q => (int)q))
-                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-                history.StackSizeHistogramHq);
+                        .Select(q => (int)q))),
+                new SortedDictionary<int, int>(history.StackSizeHistogramHq));
             Assert.Equal(Statistics.WeekVelocityPerDay(sales
                     .Select(s => (long)s.SaleTimeUnixSeconds * 1000)),
                 history.SaleVelocity);

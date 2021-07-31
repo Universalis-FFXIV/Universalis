@@ -24,13 +24,13 @@ namespace Universalis.Application.Views
         public uint LastUploadTimeUnixMilliseconds { get; set; }
 
         [JsonProperty("stackSizeHistogram")]
-        public Dictionary<int, int> StackSizeHistogram { get; set; } = new();
+        public SortedDictionary<int, int> StackSizeHistogram { get; set; } = new();
 
         [JsonProperty("stackSizeHistogramNQ")]
-        public Dictionary<int, int> StackSizeHistogramNq { get; set; } = new();
+        public SortedDictionary<int, int> StackSizeHistogramNq { get; set; } = new();
 
         [JsonProperty("stackSizeHistogramHQ")]
-        public Dictionary<int, int> StackSizeHistogramHq { get; set; } = new();
+        public SortedDictionary<int, int> StackSizeHistogramHq { get; set; } = new();
 
         [JsonProperty("regularSaleVelocity")]
         public float SaleVelocity { get; set; }
