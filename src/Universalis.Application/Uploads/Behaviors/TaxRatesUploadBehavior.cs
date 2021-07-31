@@ -19,7 +19,7 @@ namespace Universalis.Application.Uploads.Behaviors
 
         public bool ShouldExecute(UploadParameters parameters)
         {
-            return parameters.WorldId != null && parameters.TaxRates != null;
+            return parameters.WorldId != null && parameters.TaxRates != null && !string.IsNullOrEmpty(parameters.UploaderId);
         }
 
         public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters)
