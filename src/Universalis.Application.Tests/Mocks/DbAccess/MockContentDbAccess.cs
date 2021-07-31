@@ -18,7 +18,7 @@ namespace Universalis.Application.Tests.Mocks.DbAccess
 
         public Task<Content> Retrieve(ContentQuery query)
         {
-            return !_collection.TryGetValue(query.ContentId, out var taxRates)
+            return !_collection.TryGetValue(query.ContentId ?? "", out var taxRates)
                 ? Task.FromResult<Content>(null)
                 : Task.FromResult(taxRates);
         }
