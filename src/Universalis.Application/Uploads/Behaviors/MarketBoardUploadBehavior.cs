@@ -17,12 +17,12 @@ using Sale = Universalis.Entities.MarketBoard.Sale;
 
 namespace Universalis.Application.Uploads.Behaviors
 {
-    public class CurrentlyShownUploadBehavior : IUploadBehavior
+    public class MarketBoardUploadBehavior : IUploadBehavior
     {
         private readonly ICurrentlyShownDbAccess _currentlyShownDb;
         private readonly IHistoryDbAccess _historyDb;
 
-        public CurrentlyShownUploadBehavior(ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess historyDb)
+        public MarketBoardUploadBehavior(ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess historyDb)
         {
             _currentlyShownDb = currentlyShownDb;
             _historyDb = historyDb;
