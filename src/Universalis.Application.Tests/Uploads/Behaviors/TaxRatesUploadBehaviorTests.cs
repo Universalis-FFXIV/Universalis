@@ -11,7 +11,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
     public class TaxRatesUploadBehaviorTests
     {
         [Fact]
-        public void Behavior_Fails_WithoutTaxRates()
+        public void Behavior_DoesNotRun_WithoutTaxRates()
         {
             var dbAccess = new MockTaxRatesDbAccess();
             var behavior = new TaxRatesUploadBehavior(dbAccess);
@@ -25,7 +25,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
         }
 
         [Fact]
-        public void Behavior_Fails_WithoutUploaderId()
+        public void Behavior_DoesNotRun_WithoutUploaderId()
         {
             var dbAccess = new MockTaxRatesDbAccess();
             var behavior = new TaxRatesUploadBehavior(dbAccess);
@@ -47,7 +47,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
         }
 
         [Fact]
-        public void Behavior_Fails_WithoutWorldId()
+        public void Behavior_DoesNotRun_WithoutWorldId()
         {
             var dbAccess = new MockTaxRatesDbAccess();
             var behavior = new TaxRatesUploadBehavior(dbAccess);

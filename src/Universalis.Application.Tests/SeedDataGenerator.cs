@@ -71,5 +71,52 @@ namespace Universalis.Application.Tests
                     .ToList(),
             };
         }
+
+        public static (List<Application.Uploads.Schema.Listing>, List<Application.Uploads.Schema.Sale>) GetUploadListingsAndSales(uint worldId, uint itemId)
+        {
+            var seed = MakeCurrentlyShown(worldId, itemId);
+
+            var listings = seed.Listings
+                .Select(l => new Application.Uploads.Schema.Listing
+                {
+                    ListingId = l.ListingId,
+                    Hq = l.Hq.ToString(),
+                    PricePerUnit = l.PricePerUnit,
+                    Quantity = l.Quantity,
+                    RetainerName = l.RetainerName,
+                    RetainerId = l.RetainerId,
+                    RetainerCityId = l.RetainerCityId,
+                    CreatorName = l.CreatorName,
+                    OnMannequin = l.OnMannequin.ToString(),
+                    SellerId = l.SellerIdHash,
+                    CreatorId = l.CreatorIdHash,
+                    DyeId = l.DyeId,
+                    LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
+                    Materia = l.Materia
+                        .Select(m => new Application.Uploads.Schema.Materia
+                        {
+                            SlotId = m.SlotId,
+                            MateriaId = m.MateriaId,
+                        })
+                        .ToList(),
+                })
+                .ToList();
+
+            var sales = seed.RecentHistory
+                .Select(s => new Application.Uploads.Schema.Sale
+                {
+                    BuyerId = "",
+                    BuyerName = s.BuyerName,
+                    Hq = s.Hq.ToString(),
+                    OnMannequin = false.ToString(),
+                    PricePerUnit = s.PricePerUnit,
+                    Quantity = s.Quantity,
+                    SellerId = "",
+                    TimestampUnixSeconds = s.TimestampUnixSeconds,
+                })
+                .ToList();
+
+            return (listings, sales);
+        }
     }
 }

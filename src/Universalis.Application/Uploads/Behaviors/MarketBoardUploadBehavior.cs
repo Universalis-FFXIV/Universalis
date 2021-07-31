@@ -12,6 +12,7 @@ using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
 using Universalis.Entities.Uploads;
+using Listing = Universalis.Entities.MarketBoard.Listing;
 using Materia = Universalis.Entities.Materia;
 using Sale = Universalis.Entities.MarketBoard.Sale;
 
@@ -30,8 +31,10 @@ namespace Universalis.Application.Uploads.Behaviors
 
         public bool ShouldExecute(UploadParameters parameters)
         {
-            return parameters.WorldId != null && parameters.ItemId != null &&
-                   (parameters.Sales != null || parameters.Listings != null);
+            return parameters.WorldId != null
+                   && parameters.ItemId != null
+                   && !string.IsNullOrEmpty(parameters.UploaderId)
+                   && (parameters.Sales != null || parameters.Listings != null);
         }
 
         public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters)
@@ -69,7 +72,7 @@ namespace Universalis.Application.Uploads.Behaviors
                 });
                 var minimizedSales = cleanSales.Select(s => MinimizedSale.FromSale(s, parameters.UploaderId)).ToList();
 
-                var document = new History
+                var historyDocument = new History
                 {
                     WorldId = worldId,
                     ItemId = itemId,
@@ -78,8 +81,8 @@ namespace Universalis.Application.Uploads.Behaviors
 
                 if (existingHistory == null)
                 {
-                    document.Sales = minimizedSales;
-                    await _historyDb.Create(document);
+                    historyDocument.Sales = minimizedSales;
+                    await _historyDb.Create(historyDocument);
                 }
                 else
                 {
@@ -88,7 +91,7 @@ namespace Universalis.Application.Uploads.Behaviors
                     for (var i = 0; i < minimizedSales.Count; i++)
                     {
                         if (minimizedSales.Count == 0) break;
-                        if (minimizedSales[0] == head)
+                        if (minimizedSales[0].Equals(head))
                         {
                             break;
                         }
@@ -97,8 +100,8 @@ namespace Universalis.Application.Uploads.Behaviors
                         minimizedSales.RemoveAt(0);
                     }
 
-                    document.Sales = existingHistory.Sales;
-                    await _historyDb.Update(document, new HistoryQuery
+                    historyDocument.Sales = existingHistory.Sales;
+                    await _historyDb.Update(historyDocument, new HistoryQuery
                     {
                         WorldId = worldId,
                         ItemId = itemId,
@@ -106,6 +109,7 @@ namespace Universalis.Application.Uploads.Behaviors
                 }
             }
 
+            List<Listing> cleanListings = null;
             if (parameters.Listings != null)
             {
                 if (Util.HasHtmlTags(JsonConvert.SerializeObject(parameters.Listings)))
@@ -113,7 +117,7 @@ namespace Universalis.Application.Uploads.Behaviors
                     return new BadRequestResult();
                 }
 
-                var cleanListings = parameters.Listings
+                cleanListings = parameters.Listings
                     .Select(l =>
                     {
                         using (var sha256 = SHA256.Create())
@@ -154,37 +158,29 @@ namespace Universalis.Application.Uploads.Behaviors
                     })
                     .ToList();
                 cleanListings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
-
-                var existingCurrentlyShown = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
-                {
-                    WorldId = worldId,
-                    ItemId = itemId,
-                });
-
-                var document = new CurrentlyShown
-                {
-                    WorldId = worldId,
-                    ItemId = itemId,
-                    LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
-                    Listings = cleanListings,
-                    UploaderIdHash = parameters.UploaderId,
-                };
-
-                if (existingCurrentlyShown == null)
-                {
-                    document.RecentHistory = cleanSales ?? new List<Sale>();
-                    await _currentlyShownDb.Create(document);
-                }
-                else
-                {
-                    document.RecentHistory = cleanSales ?? existingCurrentlyShown.RecentHistory;
-                    await _currentlyShownDb.Update(document, new CurrentlyShownQuery
-                    {
-                        WorldId = worldId,
-                        ItemId = itemId,
-                    });
-                }
             }
+
+            var existingCurrentlyShown = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
+            {
+                WorldId = worldId,
+                ItemId = itemId,
+            });
+
+            var document = new CurrentlyShown
+            {
+                WorldId = worldId,
+                ItemId = itemId,
+                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
+                Listings = cleanListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>(),
+                RecentHistory = cleanSales ?? existingCurrentlyShown?.RecentHistory ?? new List<Sale>(),
+                UploaderIdHash = parameters.UploaderId,
+            };
+
+            await _currentlyShownDb.Update(document, new CurrentlyShownQuery
+            {
+                WorldId = worldId,
+                ItemId = itemId,
+            });
 
             return null;
         }
