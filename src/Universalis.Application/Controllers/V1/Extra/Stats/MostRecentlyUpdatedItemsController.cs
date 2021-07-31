@@ -37,7 +37,7 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
 
             if (!TryGetWorldDc(worldOrDc, out var worldDc))
             {
-                return NotFound(worldOrDc);
+                return NotFound();
             }
 
             if (!TryGetWorldIds(worldDc, out var worldIds))

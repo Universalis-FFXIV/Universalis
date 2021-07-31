@@ -26,47 +26,9 @@ namespace Universalis.Application.Tests.Controllers.V1
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
             var controller = new CurrentlyShownController(gameData, dbAccess);
-            var rand = new Random();
 
             const uint itemId = 5333;
-            var document = new CurrentlyShown
-            {
-                WorldId = 74,
-                ItemId = itemId,
-                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-                Listings = Enumerable.Range(0, 100)
-                    .Select(i => new Listing
-                    {
-                        ListingId = "FB",
-                        Hq = rand.NextDouble() > 0.5,
-                        OnMannequin = rand.NextDouble() > 0.5,
-                        Materia = new List<Materia>(),
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        DyeId = (byte)rand.Next(0, 255),
-                        CreatorIdHash = "3a5f66de",
-                        CreatorName = "Bingus Bongus",
-                        LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
-                        RetainerId = "54565458626446136554",
-                        RetainerName = "xpotato",
-                        RetainerCityId = 0xA,
-                        SellerIdHash = "3a5f66de",
-                        UploadApplicationName = "test runner",
-                    })
-                    .ToList(),
-                RecentHistory = Enumerable.Range(0, 100)
-                    .Select(i => new Sale
-                    {
-                        Hq = rand.NextDouble() > 0.5,
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        BuyerName = "Someone Someone",
-                        TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                        UploadApplicationName = "test runner",
-                    })
-                    .ToList(),
-                UploaderIdHash = "2A",
-            };
+            var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
             await dbAccess.Create(document);
 
             var result = await controller.Get(itemId.ToString(), worldOrDc);
@@ -84,86 +46,11 @@ namespace Universalis.Application.Tests.Controllers.V1
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
             var controller = new CurrentlyShownController(gameData, dbAccess);
-            var rand = new Random();
 
-            var document1 = new CurrentlyShown
-            {
-                WorldId = 74,
-                ItemId = 5333,
-                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-                Listings = Enumerable.Range(0, 100)
-                    .Select(i => new Listing
-                    {
-                        ListingId = "FB",
-                        Hq = rand.NextDouble() > 0.5,
-                        OnMannequin = rand.NextDouble() > 0.5,
-                        Materia = new List<Materia>(),
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        DyeId = (byte)rand.Next(0, 255),
-                        CreatorIdHash = "3a5f66de",
-                        CreatorName = "Bingus Bongus",
-                        LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
-                        RetainerId = "54565458626446136554",
-                        RetainerName = "xpotato",
-                        RetainerCityId = 0xA,
-                        SellerIdHash = "3a5f66de",
-                        UploadApplicationName = "test runner",
-                    })
-                    .ToList(),
-                RecentHistory = Enumerable.Range(0, 100)
-                    .Select(i => new Sale
-                    {
-                        Hq = rand.NextDouble() > 0.5,
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        BuyerName = "Someone Someone",
-                        TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                        UploadApplicationName = "test runner",
-                    })
-                    .ToList(),
-                UploaderIdHash = "2A",
-            };
+            var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
             await dbAccess.Create(document1);
 
-            var document2 = new CurrentlyShown
-            {
-                WorldId = 74,
-                ItemId = 5,
-                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-                Listings = Enumerable.Range(0, 100)
-                    .Select(i => new Listing
-                    {
-                        ListingId = "FB",
-                        Hq = rand.NextDouble() > 0.5,
-                        OnMannequin = rand.NextDouble() > 0.5,
-                        Materia = new List<Materia>(),
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        DyeId = (byte)rand.Next(0, 255),
-                        CreatorIdHash = "3a5f66de",
-                        CreatorName = "Bingus Bongus",
-                        LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
-                        RetainerId = "54565458626446136554",
-                        RetainerName = "xpotato",
-                        RetainerCityId = 0xA,
-                        SellerIdHash = "3a5f66de",
-                        UploadApplicationName = "test runner",
-                    })
-                    .ToList(),
-                RecentHistory = Enumerable.Range(0, 100)
-                    .Select(i => new Sale
-                    {
-                        Hq = rand.NextDouble() > 0.5,
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        BuyerName = "Someone Someone",
-                        TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                        UploadApplicationName = "test runner",
-                    })
-                    .ToList(),
-                UploaderIdHash = "2A",
-            };
+            var document2 = SeedDataGenerator.MakeCurrentlyShown(74, 5);
             await dbAccess.Create(document2);
 
             var result = await controller.Get("5, 5333", worldOrDc);
@@ -188,87 +75,12 @@ namespace Universalis.Application.Tests.Controllers.V1
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
             var controller = new CurrentlyShownController(gameData, dbAccess);
-            var rand = new Random();
             var lastUploadTime = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-            var document1 = new CurrentlyShown
-            {
-                WorldId = 74,
-                ItemId = 5333,
-                LastUploadTimeUnixMilliseconds = lastUploadTime,
-                Listings = Enumerable.Range(0, 100)
-                    .Select(i => new Listing
-                    {
-                        ListingId = "FB",
-                        Hq = rand.NextDouble() > 0.5,
-                        OnMannequin = rand.NextDouble() > 0.5,
-                        Materia = new List<Materia>(),
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        DyeId = (byte)rand.Next(0, 255),
-                        CreatorIdHash = "3a5f66de",
-                        CreatorName = "Bingus Bongus",
-                        LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
-                        RetainerId = "54565458626446136554",
-                        RetainerName = "xpotato",
-                        RetainerCityId = 0xA,
-                        SellerIdHash = "3a5f66de",
-                        UploadApplicationName = "test runner",
-                    })
-                    .ToList(),
-                RecentHistory = Enumerable.Range(0, 100)
-                    .Select(i => new Sale
-                    {
-                        Hq = rand.NextDouble() > 0.5,
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        BuyerName = "Someone Someone",
-                        TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                        UploadApplicationName = "test runner",
-                    })
-                    .ToList(),
-                UploaderIdHash = "2A",
-            };
+            var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, lastUploadTime);
             await dbAccess.Create(document1);
 
-            var document2 = new CurrentlyShown
-            {
-                WorldId = 34,
-                ItemId = 5333,
-                LastUploadTimeUnixMilliseconds = lastUploadTime,
-                Listings = Enumerable.Range(0, 100)
-                    .Select(i => new Listing
-                    {
-                        ListingId = "FB",
-                        Hq = rand.NextDouble() > 0.5,
-                        OnMannequin = rand.NextDouble() > 0.5,
-                        Materia = new List<Materia>(),
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        DyeId = (byte)rand.Next(0, 255),
-                        CreatorIdHash = "3a5f66de",
-                        CreatorName = "Bingus Bongus",
-                        LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
-                        RetainerId = "54565458626446136554",
-                        RetainerName = "xpotato",
-                        RetainerCityId = 0xA,
-                        SellerIdHash = "3a5f66de",
-                        UploadApplicationName = "test runner",
-                    })
-                    .ToList(),
-                RecentHistory = Enumerable.Range(0, 100)
-                    .Select(i => new Sale
-                    {
-                        Hq = rand.NextDouble() > 0.5,
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        BuyerName = "Someone Someone",
-                        TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                        UploadApplicationName = "test runner",
-                    })
-                    .ToList(),
-                UploaderIdHash = "2A",
-            };
+            var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5333, lastUploadTime);
             await dbAccess.Create(document2);
 
             var result = await controller.Get("5333", worldOrDc);
@@ -292,87 +104,12 @@ namespace Universalis.Application.Tests.Controllers.V1
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
             var controller = new CurrentlyShownController(gameData, dbAccess);
-            var rand = new Random();
             var lastUploadTime = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-            var document1 = new CurrentlyShown
-            {
-                WorldId = 74,
-                ItemId = 5333,
-                LastUploadTimeUnixMilliseconds = lastUploadTime,
-                Listings = Enumerable.Range(0, 100)
-                    .Select(i => new Listing
-                    {
-                        ListingId = "FB",
-                        Hq = rand.NextDouble() > 0.5,
-                        OnMannequin = rand.NextDouble() > 0.5,
-                        Materia = new List<Materia>(),
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        DyeId = (byte)rand.Next(0, 255),
-                        CreatorIdHash = "3a5f66de",
-                        CreatorName = "Bingus Bongus",
-                        LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
-                        RetainerId = "54565458626446136554",
-                        RetainerName = "xpotato",
-                        RetainerCityId = 0xA,
-                        SellerIdHash = "3a5f66de",
-                        UploadApplicationName = "test runner",
-                    })
-                    .ToList(),
-                RecentHistory = Enumerable.Range(0, 100)
-                    .Select(i => new Sale
-                    {
-                        Hq = rand.NextDouble() > 0.5,
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        BuyerName = "Someone Someone",
-                        TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                        UploadApplicationName = "test runner",
-                    })
-                    .ToList(),
-                UploaderIdHash = "2A",
-            };
+            var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, lastUploadTime);
             await dbAccess.Create(document1);
 
-            var document2 = new CurrentlyShown
-            {
-                WorldId = 34,
-                ItemId = 5,
-                LastUploadTimeUnixMilliseconds = lastUploadTime,
-                Listings = Enumerable.Range(0, 100)
-                    .Select(i => new Listing
-                    {
-                        ListingId = "FB",
-                        Hq = rand.NextDouble() > 0.5,
-                        OnMannequin = rand.NextDouble() > 0.5,
-                        Materia = new List<Materia>(),
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        DyeId = (byte)rand.Next(0, 255),
-                        CreatorIdHash = "3a5f66de",
-                        CreatorName = "Bingus Bongus",
-                        LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
-                        RetainerId = "54565458626446136554",
-                        RetainerName = "xpotato",
-                        RetainerCityId = 0xA,
-                        SellerIdHash = "3a5f66de",
-                        UploadApplicationName = "test runner",
-                    })
-                    .ToList(),
-                RecentHistory = Enumerable.Range(0, 100)
-                    .Select(i => new Sale
-                    {
-                        Hq = rand.NextDouble() > 0.5,
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        BuyerName = "Someone Someone",
-                        TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                        UploadApplicationName = "test runner",
-                    })
-                    .ToList(),
-                UploaderIdHash = "2A",
-            };
+            var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5, lastUploadTime);
             await dbAccess.Create(document2);
 
             var result = await controller.Get("5,5333", worldOrDc);

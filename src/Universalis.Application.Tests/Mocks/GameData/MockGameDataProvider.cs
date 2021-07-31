@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Universalis.GameData;
 
 namespace Universalis.Application.Tests.Mocks.GameData
@@ -30,7 +31,7 @@ namespace Universalis.Application.Tests.Mocks.GameData
 
         public IReadOnlySet<uint> MarketableItemIds()
         {
-            return new SortedSet<uint>(new uint[] { 5333, 5 });
+            return new SortedSet<uint>(Enumerable.Range(1, 35000).Select(n => (uint)n));
         }
 
         public IEnumerable<DataCenter> DataCenters()

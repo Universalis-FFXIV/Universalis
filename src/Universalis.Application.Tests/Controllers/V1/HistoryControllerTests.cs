@@ -25,24 +25,8 @@ namespace Universalis.Application.Tests.Controllers.V1
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockHistoryDbAccess();
             var controller = new HistoryController(gameData, dbAccess);
-            var rand = new Random();
 
-            var document = new History
-            {
-                WorldId = 74,
-                ItemId = 5333,
-                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-                Sales = Enumerable.Range(0, 100)
-                    .Select(i => new MinimizedSale
-                    {
-                        Hq = rand.NextDouble() > 0.5,
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                        UploaderIdHash = "2A",
-                    })
-                    .ToList(),
-            };
+            var document = SeedDataGenerator.MakeHistory(74, 5333);
             await dbAccess.Create(document);
 
             var result = await controller.Get("5333", worldOrDc, entriesToReturn);
@@ -60,42 +44,11 @@ namespace Universalis.Application.Tests.Controllers.V1
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockHistoryDbAccess();
             var controller = new HistoryController(gameData, dbAccess);
-            var rand = new Random();
 
-            var document1 = new History
-            {
-                WorldId = 74,
-                ItemId = 5333,
-                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-                Sales = Enumerable.Range(0, 100)
-                    .Select(i => new MinimizedSale
-                    {
-                        Hq = rand.NextDouble() > 0.5,
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                        UploaderIdHash = "2A",
-                    })
-                    .ToList(),
-            };
+            var document1 = SeedDataGenerator.MakeHistory(74, 5333);
             await dbAccess.Create(document1);
 
-            var document2 = new History
-            {
-                WorldId = 74,
-                ItemId = 5,
-                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-                Sales = Enumerable.Range(0, 100)
-                    .Select(i => new MinimizedSale
-                    {
-                        Hq = rand.NextDouble() > 0.5,
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                        UploaderIdHash = "2A",
-                    })
-                    .ToList(),
-            };
+            var document2 = SeedDataGenerator.MakeHistory(74, 5);
             await dbAccess.Create(document2);
 
             var result = await controller.Get("5,5333", worldOrDc, entriesToReturn);
@@ -121,42 +74,11 @@ namespace Universalis.Application.Tests.Controllers.V1
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockHistoryDbAccess();
             var controller = new HistoryController(gameData, dbAccess);
-            var rand = new Random();
 
-            var document1 = new History
-            {
-                WorldId = 74,
-                ItemId = 5333,
-                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-                Sales = Enumerable.Range(0, 100)
-                    .Select(i => new MinimizedSale
-                    {
-                        Hq = rand.NextDouble() > 0.5,
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                        UploaderIdHash = "2A",
-                    })
-                    .ToList(),
-            };
+            var document1 = SeedDataGenerator.MakeHistory(74, 5333);
             await dbAccess.Create(document1);
 
-            var document2 = new History
-            {
-                WorldId = 34,
-                ItemId = 5333,
-                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-                Sales = Enumerable.Range(0, 100)
-                    .Select(i => new MinimizedSale
-                    {
-                        Hq = rand.NextDouble() > 0.5,
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                        UploaderIdHash = "2A",
-                    })
-                    .ToList(),
-            };
+            var document2 = SeedDataGenerator.MakeHistory(34, 5333);
             await dbAccess.Create(document2);
 
             var result = await controller.Get("5333", worldOrDc, entriesToReturn);
@@ -184,43 +106,12 @@ namespace Universalis.Application.Tests.Controllers.V1
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockHistoryDbAccess();
             var controller = new HistoryController(gameData, dbAccess);
-            var rand = new Random();
             var lastUploadTime = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-            var document1 = new History
-            {
-                WorldId = 74,
-                ItemId = 5333,
-                LastUploadTimeUnixMilliseconds = lastUploadTime,
-                Sales = Enumerable.Range(0, 100)
-                    .Select(i => new MinimizedSale
-                    {
-                        Hq = rand.NextDouble() > 0.5,
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                        UploaderIdHash = "2A",
-                    })
-                    .ToList(),
-            };
+            var document1 = SeedDataGenerator.MakeHistory(74, 5333, lastUploadTime);
             await dbAccess.Create(document1);
 
-            var document2 = new History
-            {
-                WorldId = 34,
-                ItemId = 5,
-                LastUploadTimeUnixMilliseconds = lastUploadTime,
-                Sales = Enumerable.Range(0, 100)
-                    .Select(i => new MinimizedSale
-                    {
-                        Hq = rand.NextDouble() > 0.5,
-                        PricePerUnit = (uint)rand.Next(100, 60000),
-                        Quantity = (uint)rand.Next(1, 999),
-                        SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                        UploaderIdHash = "2A",
-                    })
-                    .ToList(),
-            };
+            var document2 = SeedDataGenerator.MakeHistory(34, 5, lastUploadTime);
             await dbAccess.Create(document2);
 
             var result = await controller.Get("5,5333", worldOrDc, entriesToReturn);
