@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -73,7 +75,8 @@ namespace Universalis.Application.Controllers.V1
             {
                 if (!uploadBehavior.ShouldExecute(parameters)) continue;
                 var actionResult = await uploadBehavior.Execute(source, parameters);
-                if (actionResult != null)
+                if (uploadBehavior.GetType().GetCustomAttribute<ValidatorAttribute>() != null
+                    && actionResult != null)
                 {
                     return actionResult;
                 }

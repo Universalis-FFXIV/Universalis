@@ -26,4 +26,8 @@
     <ProjectReference Include="..\Universalis.Application\Universalis.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Uploads\Behaviors\" />
+  </ItemGroup>
+
 </Project>

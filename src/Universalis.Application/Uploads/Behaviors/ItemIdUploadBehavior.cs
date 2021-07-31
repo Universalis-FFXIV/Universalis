@@ -7,6 +7,7 @@ using Universalis.GameData;
 
 namespace Universalis.Application.Uploads.Behaviors
 {
+    [Validator]
     public class ItemIdUploadBehavior : IUploadBehavior
     {
         private readonly IGameDataProvider _gameData;

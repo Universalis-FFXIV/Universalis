@@ -8,6 +8,7 @@ using Universalis.GameData;
 
 namespace Universalis.Application.Uploads.Behaviors
 {
+    [Validator]
     public class WorldIdUploadBehavior : IUploadBehavior
     {
         private readonly IGameDataProvider _gameData;
