@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Universalis.Application.Common;
@@ -33,6 +34,12 @@ namespace Universalis.Application.Controllers.V2
                 return NotFound();
             }
 
+            var entries = 1800;
+            if (int.TryParse(entriesToReturn, out var queryEntries))
+            {
+                entries = Math.Min(Math.Max(0, queryEntries), 999999);
+            }
+
             if (itemIdsArray.Length == 1)
             {
                 var itemId = itemIdsArray[0];
@@ -42,13 +49,13 @@ namespace Universalis.Application.Controllers.V2
                     return NotFound();
                 }
 
-                var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entriesToReturn);
+                var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entries);
                 return Ok(historyView);
             }
 
             // Multi-item handling
             var historyViewTasks = itemIdsArray
-                .Select(itemId => GetHistoryView(worldDc, worldIds, itemId, entriesToReturn))
+                .Select(itemId => GetHistoryView(worldDc, worldIds, itemId, entries))
                 .ToList();
             var historyViews = await Task.WhenAll(historyViewTasks);
             var unresolvedItems = historyViews

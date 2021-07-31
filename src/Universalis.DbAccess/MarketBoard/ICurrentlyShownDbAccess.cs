@@ -13,6 +13,9 @@ namespace Universalis.DbAccess.MarketBoard
 
         public Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query);
 
+        public Task<IEnumerable<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count,
+            UploadOrder order);
+
         public Task Update(CurrentlyShown document, CurrentlyShownQuery query);
 
         public Task Delete(CurrentlyShownQuery query);

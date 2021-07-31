@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Universalis.DbAccess.MarketBoard;
@@ -27,6 +28,28 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.MarketBoard
         {
             return Task.FromResult(_collection
                 .Where(d => d.ItemId == query.ItemId && query.WorldIds.Contains(d.WorldId)));
+        }
+
+        public Task<IEnumerable<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order)
+        {
+            var documents = _collection
+                .Where(o => query.WorldIds.Contains(o.WorldId))
+                .Select(o => new WorldItemUpload
+                {
+                    WorldId = o.WorldId,
+                    ItemId = o.ItemId,
+                    LastUploadTimeUnixMilliseconds = o.LastUploadTimeUnixMilliseconds,
+                })
+                .ToList();
+
+            documents.Sort((a, b) => order switch
+            {
+                UploadOrder.MostRecent => (int)b.LastUploadTimeUnixMilliseconds - (int)a.LastUploadTimeUnixMilliseconds,
+                UploadOrder.LeastRecent => (int)a.LastUploadTimeUnixMilliseconds - (int)b.LastUploadTimeUnixMilliseconds,
+                _ => throw new ArgumentException(nameof(order)),
+            });
+            
+            return Task.FromResult(documents.Take(count));
         }
 
         public async Task Update(CurrentlyShown document, CurrentlyShownQuery query)

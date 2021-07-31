@@ -25,7 +25,7 @@ namespace Universalis.Application.Controllers.V1
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery] string entriesToReturn)
+        public async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery(Name = "entries")] string entriesToReturn)
         {
             // Parameter parsing
             var itemIdsArray = InputProcessing.ParseIdList(itemIds)
@@ -42,6 +42,12 @@ namespace Universalis.Application.Controllers.V1
                 return NotFound();
             }
 
+            var entries = 1800;
+            if (int.TryParse(entriesToReturn, out var queryEntries))
+            {
+                entries = Math.Min(Math.Max(0, queryEntries), 999999);
+            }
+
             if (itemIdsArray.Length == 1)
             {
                 var itemId = itemIdsArray[0];
@@ -51,13 +57,13 @@ namespace Universalis.Application.Controllers.V1
                     return NotFound();
                 }
 
-                var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entriesToReturn);
+                var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entries);
                 return Ok(historyView);
             }
 
             // Multi-item handling
             var historyViewTasks = itemIdsArray
-                .Select(itemId => GetHistoryView(worldDc, worldIds, itemId, entriesToReturn))
+                .Select(itemId => GetHistoryView(worldDc, worldIds, itemId, entries))
                 .ToList();
             var historyViews = await Task.WhenAll(historyViewTasks);
             var unresolvedItems = historyViews
@@ -78,7 +84,7 @@ namespace Universalis.Application.Controllers.V1
             });
         }
 
-        protected async Task<(bool, HistoryView)> GetHistoryView(WorldDc worldDc, uint[] worldIds, uint itemId, string entriesToReturnStr)
+        protected async Task<(bool, HistoryView)> GetHistoryView(WorldDc worldDc, uint[] worldIds, uint itemId, int entries)
         {
             var data = (await _historyDb.RetrieveMany(new HistoryManyQuery
             {
@@ -113,9 +119,7 @@ namespace Universalis.Application.Controllers.V1
             });
 
             history.Sales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
-            history.Sales = int.TryParse(entriesToReturnStr, out var entriesToReturn)
-                ? history.Sales.Take(Math.Max(0, entriesToReturn)).ToList()
-                : history.Sales.Take(1800).ToList();
+            history.Sales = history.Sales.Take(entries).ToList();
 
             var nqSales = history.Sales.Where(s => !s.Hq).ToList();
             var hqSales = history.Sales.Where(s => s.Hq).ToList();
