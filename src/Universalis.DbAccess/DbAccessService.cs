@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson.Serialization.Conventions;
+using MongoDB.Driver;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries;
 
@@ -13,6 +14,8 @@ namespace Universalis.DbAccess
         protected DbAccessService(string databaseName, string collectionName)
         {
             var client = new MongoClient("mongodb://localhost:27017");
+            var conventionPack = new ConventionPack { new IgnoreExtraElementsConvention(true) };
+            ConventionRegistry.Register("IgnoreExtraElements", conventionPack, _ => true);
             var database = client.GetDatabase(databaseName);
             Collection = database.GetCollection<TDocument>(collectionName);
         }
