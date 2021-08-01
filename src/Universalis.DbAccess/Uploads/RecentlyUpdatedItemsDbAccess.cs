@@ -11,7 +11,7 @@ namespace Universalis.DbAccess.Uploads
     {
         public static readonly int MaxItems = 200;
 
-        public RecentlyUpdatedItemsDbAccess() : base("universalis", "extraData") { }
+        public RecentlyUpdatedItemsDbAccess() : base(Constants.DatabaseName, "extraData") { }
 
         public RecentlyUpdatedItemsDbAccess(string databaseName) : base(databaseName, "content") { }
 

@@ -8,7 +8,7 @@ namespace Universalis.DbAccess.Uploads
 {
     public class UploadCountHistoryDbAccess : DbAccessService<UploadCountHistory, UploadCountHistoryQuery>, IUploadCountHistoryDbAccess
     {
-        public UploadCountHistoryDbAccess() : base("universalis", "extraData") { }
+        public UploadCountHistoryDbAccess() : base(Constants.DatabaseName, "extraData") { }
 
         public UploadCountHistoryDbAccess(string databaseName) : base(databaseName, "content") { }
 

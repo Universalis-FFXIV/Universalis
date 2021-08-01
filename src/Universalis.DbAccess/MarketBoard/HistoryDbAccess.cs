@@ -8,7 +8,7 @@ namespace Universalis.DbAccess.MarketBoard
 {
     public class HistoryDbAccess : DbAccessService<History, HistoryQuery>, IHistoryDbAccess
     {
-        public HistoryDbAccess() : base("universalis", "extendedHistory") { }
+        public HistoryDbAccess() : base(Constants.DatabaseName, "extendedHistory") { }
 
         public HistoryDbAccess(string databaseName) : base(databaseName, "extendedHistory") { }
 

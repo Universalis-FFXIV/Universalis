@@ -9,7 +9,7 @@ namespace Universalis.DbAccess.Uploads
 {
     public class TrustedSourceDbAccess : DbAccessService<TrustedSource, TrustedSourceQuery>, ITrustedSourceDbAccess
     {
-        public TrustedSourceDbAccess() : base("universalis", "trustedSources") { }
+        public TrustedSourceDbAccess() : base(Constants.DatabaseName, "trustedSources") { }
 
         public TrustedSourceDbAccess(string databaseName) : base(databaseName, "content") { }
 

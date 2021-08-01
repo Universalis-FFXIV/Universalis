@@ -9,7 +9,7 @@ namespace Universalis.DbAccess.Uploads
 {
     public class WorldUploadCountDbAccess : DbAccessService<WorldUploadCount, WorldUploadCountQuery>, IWorldUploadCountDbAccess
     {
-        public WorldUploadCountDbAccess() : base("universalis", "extraData") { }
+        public WorldUploadCountDbAccess() : base(Constants.DatabaseName, "extraData") { }
 
         public WorldUploadCountDbAccess(string databaseName) : base(databaseName, "content") { }
 

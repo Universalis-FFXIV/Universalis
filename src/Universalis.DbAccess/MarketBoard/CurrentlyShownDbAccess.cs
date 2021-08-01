@@ -9,7 +9,7 @@ namespace Universalis.DbAccess.MarketBoard
 {
     public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyShownQuery>, ICurrentlyShownDbAccess
     {
-        public CurrentlyShownDbAccess() : base("universalis", "recentData") { }
+        public CurrentlyShownDbAccess() : base(Constants.DatabaseName, "recentData") { }
 
         public CurrentlyShownDbAccess(string databaseName) : base(databaseName, "recentData") { }
 
