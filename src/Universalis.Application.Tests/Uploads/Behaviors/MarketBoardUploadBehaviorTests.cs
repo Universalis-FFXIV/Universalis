@@ -70,13 +70,6 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
             var historyDb = new MockHistoryDbAccess();
             var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb);
 
-            var source = new TrustedSource
-            {
-                ApiKeySha256 = "2f44abe6",
-                Name = "test runner",
-                UploadCount = 0,
-            };
-
             var upload = new UploadParameters
             {
                 WorldId = 74,
