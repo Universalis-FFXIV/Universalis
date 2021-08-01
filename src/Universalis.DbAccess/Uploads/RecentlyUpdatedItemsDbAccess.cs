@@ -13,6 +13,8 @@ namespace Universalis.DbAccess.Uploads
 
         public RecentlyUpdatedItemsDbAccess() : base("universalis", "extraData") { }
 
+        public RecentlyUpdatedItemsDbAccess(string databaseName) : base(databaseName, "content") { }
+
         public async Task Push(uint itemId)
         {
             var query = new RecentlyUpdatedItemsQuery();

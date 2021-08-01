@@ -10,6 +10,8 @@ namespace Universalis.DbAccess.Uploads
     {
         public UploadCountHistoryDbAccess() : base("universalis", "extraData") { }
 
+        public UploadCountHistoryDbAccess(string databaseName) : base(databaseName, "content") { }
+
         public async Task Update(uint lastPush, List<uint> uploadCountByDay)
         {
             var filterBuilder = Builders<UploadCountHistory>.Filter;

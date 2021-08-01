@@ -11,6 +11,8 @@ namespace Universalis.DbAccess.Uploads
     {
         public TrustedSourceDbAccess() : base("universalis", "trustedSources") { }
 
+        public TrustedSourceDbAccess(string databaseName) : base(databaseName, "content") { }
+
         public async Task Increment(TrustedSourceQuery query)
         {
             if (await Retrieve(query) == null)

@@ -11,6 +11,8 @@ namespace Universalis.DbAccess.Uploads
     {
         public WorldUploadCountDbAccess() : base("universalis", "extraData") { }
 
+        public WorldUploadCountDbAccess(string databaseName) : base(databaseName, "content") { }
+
         public async Task Increment(WorldUploadCountQuery query)
         {
             if (await Retrieve(query) == null)

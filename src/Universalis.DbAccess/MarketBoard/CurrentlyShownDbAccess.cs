@@ -11,6 +11,8 @@ namespace Universalis.DbAccess.MarketBoard
     {
         public CurrentlyShownDbAccess() : base("universalis", "recentData") { }
 
+        public CurrentlyShownDbAccess(string databaseName) : base(databaseName, "recentData") { }
+
         public async Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query)
         {
             var cursor = await Collection.FindAsync(query.ToFilterDefinition());

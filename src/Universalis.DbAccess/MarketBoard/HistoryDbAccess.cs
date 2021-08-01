@@ -10,6 +10,8 @@ namespace Universalis.DbAccess.MarketBoard
     {
         public HistoryDbAccess() : base("universalis", "extendedHistory") { }
 
+        public HistoryDbAccess(string databaseName) : base(databaseName, "extendedHistory") { }
+
         public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query)
         {
             var cursor = await Collection.FindAsync(query.ToFilterDefinition());
