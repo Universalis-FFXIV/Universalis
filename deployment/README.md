@@ -1,6 +1,6 @@
 # Deployment
 To clone this folder independently, run the following commands:
-```
+```sh
 mkdir universalis
 cd universalis
 git init
