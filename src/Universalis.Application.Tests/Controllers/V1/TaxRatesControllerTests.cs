@@ -21,7 +21,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             var dbAccess = new MockTaxRatesDbAccess();
             var controller = new TaxRatesController(gameData, dbAccess);
 
-            var expectedTaxRates = GetTaxRatesSeed(74);
+            var expectedTaxRates = SeedDataGenerator.GetTaxRates(74);
             await dbAccess.Create(expectedTaxRates);
 
             var result = await controller.Get(world);
@@ -42,7 +42,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             var dbAccess = new MockTaxRatesDbAccess();
             var controller = new TaxRatesController(gameData, dbAccess);
 
-            await dbAccess.Create(GetTaxRatesSeed(74));
+            await dbAccess.Create(SeedDataGenerator.GetTaxRates(74));
 
             var result = await controller.Get("crystal");
             Assert.IsType<NotFoundResult>(result);
@@ -55,26 +55,10 @@ namespace Universalis.Application.Tests.Controllers.V1
             var dbAccess = new MockTaxRatesDbAccess();
             var controller = new TaxRatesController(gameData, dbAccess);
 
-            await dbAccess.Create(GetTaxRatesSeed(74));
+            await dbAccess.Create(SeedDataGenerator.GetTaxRates(74));
 
             var result = await controller.Get("50");
             Assert.IsType<NotFoundResult>(result);
-        }
-
-        private static TaxRates GetTaxRatesSeed(uint worldId)
-        {
-            return new()
-            {
-                WorldId = worldId,
-                UploaderIdHash = "",
-                UploadApplicationName = "test runner",
-                LimsaLominsa = 3,
-                Gridania = 3,
-                Uldah = 3,
-                Ishgard = 0,
-                Kugane = 0,
-                Crystarium = 5,
-            };
         }
     }
 }
