@@ -16,9 +16,7 @@ RUN apt-get update \
 RUN mkdir /data \
     && mkdir /data/db \
     && mkdir /data/log \
-    && chown mongodb /data \
-    && chown mongodb /data/db \
-    && chown mongodb /data/log
+    && chown mongodb /data -R
 
 RUN mongod --fork --logpath /var/log/mongod.log \
     && ./build.sh --target Test Compile --configuration Release
