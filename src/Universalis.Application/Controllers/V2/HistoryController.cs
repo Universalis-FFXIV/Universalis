@@ -10,14 +10,14 @@ using Universalis.GameData;
 namespace Universalis.Application.Controllers.V2
 {
     [ApiController]
-    [ApiVersion("2.0")]
-    [Route("api/{v:apiVersion}/history/{itemIds}/{worldOrDc}")]
-    public class HistoryController : V1.HistoryController
+    [ApiVersion("2")]
+    [Route("api/v2/history/{itemIds}/{worldOrDc}")]
+    public class HistoryController : HistoryControllerBase
     {
         public HistoryController(IGameDataProvider gameData, IHistoryDbAccess historyDb) : base(gameData, historyDb) { }
 
         [HttpGet]
-        public new async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery] string entriesToReturn)
+        public async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery] string entriesToReturn)
         {
             // Parameter parsing
             var itemIdsArray = InputProcessing.ParseIdList(itemIds)
