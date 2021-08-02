@@ -26,6 +26,6 @@ namespace Universalis.Application.Uploads.Schema
         public string BuyerId { get; set; }
         
         [JsonProperty("timestamp")]
-        public uint TimestampUnixSeconds { get; set; }
+        public double TimestampUnixSeconds { get; set; }
     }
 }

@@ -42,7 +42,7 @@ namespace Universalis.Application.Uploads.Schema
         public uint DyeId { get; set; }
 
         [JsonProperty("lastReviewTime")]
-        public uint LastReviewTimeUnixSeconds { get; set; }
+        public double LastReviewTimeUnixSeconds { get; set; }
         
         [JsonProperty("materia")]
         public List<Materia> Materia { get; set; }

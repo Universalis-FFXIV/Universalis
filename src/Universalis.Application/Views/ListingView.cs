@@ -39,7 +39,7 @@ namespace Universalis.Application.Views
         public bool IsCrafted { get; set; }
 
         [JsonProperty("lastReviewTime")]
-        public uint LastReviewTimeUnixSeconds { get; set; }
+        public double LastReviewTimeUnixSeconds { get; set; }
 
         [JsonProperty("retainerID")]
         public string RetainerId { get; set; }

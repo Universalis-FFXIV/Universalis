@@ -12,7 +12,7 @@ namespace Universalis.Entities.MarketBoard
         public uint WorldId { get; init; }
 
         [BsonElement("lastUploadTime")]
-        public uint LastUploadTimeUnixMilliseconds { get; init; }
+        public double LastUploadTimeUnixMilliseconds { get; init; }
 
         [BsonElement("uploaderID")]
         public string UploaderIdHash { get; init; }

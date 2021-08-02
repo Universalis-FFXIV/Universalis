@@ -469,7 +469,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                 history.SaleVelocityHq);
         }
 
-        private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<MinimizedSale> sales, uint lastUploadTime, string worldOrDc, string entriesToReturn)
+        private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<MinimizedSale> sales, double lastUploadTime, string worldOrDc, string entriesToReturn)
         {
             sales.Sort((a, b) => (int)b.SaleTimeUnixSeconds - (int)a.SaleTimeUnixSeconds);
             if (int.TryParse(entriesToReturn, out var entries))

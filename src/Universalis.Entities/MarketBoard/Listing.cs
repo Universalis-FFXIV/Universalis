@@ -35,7 +35,7 @@ namespace Universalis.Entities.MarketBoard
         public string CreatorName { get; init; }
 
         [BsonElement("lastReviewTime")]
-        public uint LastReviewTimeUnixSeconds { get; init; }
+        public double LastReviewTimeUnixSeconds { get; init; }
 
         [BsonElement("retainerID")]
         public string RetainerId { get; init; }

@@ -11,6 +11,6 @@ namespace Universalis.DbAccess.MarketBoard
         public uint WorldId { get; init; }
 
         [BsonElement("lastUploadTime")]
-        public uint LastUploadTimeUnixMilliseconds { get; init; }
+        public double LastUploadTimeUnixMilliseconds { get; init; }
     }
 }

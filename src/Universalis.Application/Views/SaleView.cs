@@ -20,7 +20,7 @@ namespace Universalis.Application.Views
         public string BuyerName { get; set; }
 
         [JsonProperty("timestamp")]
-        public uint TimestampUnixSeconds { get; set; }
+        public double TimestampUnixSeconds { get; set; }
 
         [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore)]
         public uint? WorldId { get; set; }

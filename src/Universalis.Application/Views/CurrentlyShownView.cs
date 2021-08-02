@@ -24,7 +24,7 @@ namespace Universalis.Application.Views
         public string DcName { get; set; }
 
         [JsonProperty("lastUploadTime")]
-        public uint LastUploadTimeUnixMilliseconds { get; set; }
+        public double LastUploadTimeUnixMilliseconds { get; set; }
 
         [JsonProperty("currentAveragePrice")]
         public float CurrentAveragePrice { get; set; }

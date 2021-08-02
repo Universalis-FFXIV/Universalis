@@ -8,7 +8,7 @@ namespace Universalis.Application.Views
         public uint ItemId { get; set; }
 
         [JsonProperty("lastUploadTime")]
-        public long LastUploadTimeUnixMilliseconds { get; set; }
+        public double LastUploadTimeUnixMilliseconds { get; set; }
 
         [JsonProperty("worldID")]
         public uint WorldId { get; set; }

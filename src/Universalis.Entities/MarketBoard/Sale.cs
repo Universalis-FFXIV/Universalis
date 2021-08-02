@@ -18,7 +18,7 @@ namespace Universalis.Entities.MarketBoard
         public string BuyerName { get; init; }
 
         [BsonElement("timestamp")]
-        public uint TimestampUnixSeconds { get; init; }
+        public double TimestampUnixSeconds { get; init; }
 
         [BsonElement("uploadApplication")]
         public string UploadApplicationName { get; init; }

@@ -14,7 +14,7 @@ namespace Universalis.Application.Views
         public uint Quantity { get; set; }
 
         [JsonProperty("timestamp")]
-        public uint TimestampUnixSeconds { get; set; }
+        public double TimestampUnixSeconds { get; set; }
 
         [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
         public string WorldName { get; set; }

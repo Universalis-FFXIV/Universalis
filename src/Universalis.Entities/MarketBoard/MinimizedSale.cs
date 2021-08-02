@@ -15,7 +15,7 @@ namespace Universalis.Entities.MarketBoard
         public uint Quantity { get; init; }
 
         [BsonElement("timestamp")]
-        public uint SaleTimeUnixSeconds { get; init; }
+        public double SaleTimeUnixSeconds { get; init; }
 
         [BsonElement("uploaderID")]
         public string UploaderIdHash { get; init; }
