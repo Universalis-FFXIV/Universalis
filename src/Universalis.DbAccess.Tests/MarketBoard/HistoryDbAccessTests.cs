@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using System.Linq;
 using System.Threading.Tasks;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -31,6 +32,15 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         }
 
         [Fact]
+        public async Task RetrieveMany_DoesNotThrow()
+        {
+            var db = new HistoryDbAccess(Constants.DatabaseName);
+            var output = await db.RetrieveMany(new HistoryManyQuery { WorldIds = new uint[] { 74 }, ItemId = 5333 });
+            Assert.NotNull(output);
+            Assert.Empty(output);
+        }
+
+        [Fact]
         public async Task Update_DoesNotThrow()
         {
             var db = new HistoryDbAccess(Constants.DatabaseName);
@@ -56,6 +66,23 @@ namespace Universalis.DbAccess.Tests.MarketBoard
 
             var output = await db.Retrieve(new HistoryQuery { WorldId = 74, ItemId = 5333 });
             Assert.NotNull(output);
+        }
+
+        [Fact]
+        public async Task RetrieveMany_ReturnsData()
+        {
+            var db = new HistoryDbAccess(Constants.DatabaseName);
+
+            var document = SeedDataGenerator.MakeHistory(74, 5333);
+            await db.Create(document);
+
+            var output = (await db.RetrieveMany(new HistoryManyQuery { WorldIds = new uint[] { 74 }, ItemId = 5333 }))?.ToList();
+            Assert.NotNull(output);
+            Assert.Single(output);
+            Assert.Equal(output[0].WorldId, document.WorldId);
+            Assert.Equal(output[0].ItemId, document.ItemId);
+            Assert.Equal(output[0].LastUploadTimeUnixMilliseconds, document.LastUploadTimeUnixMilliseconds);
+            Assert.Equal(output[0].Sales, document.Sales);
         }
     }
 }
