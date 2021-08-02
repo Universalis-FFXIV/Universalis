@@ -78,10 +78,10 @@ namespace Universalis.DbAccess.Tests.MarketBoard
             var output = (await db.RetrieveMany(new HistoryManyQuery { WorldIds = new[] { document.WorldId }, ItemId = document.ItemId }))?.ToList();
             Assert.NotNull(output);
             Assert.Single(output);
-            Assert.Equal(output[0].WorldId, document.WorldId);
-            Assert.Equal(output[0].ItemId, document.ItemId);
-            Assert.Equal(output[0].LastUploadTimeUnixMilliseconds, document.LastUploadTimeUnixMilliseconds);
-            Assert.Equal(output[0].Sales, document.Sales);
+            Assert.Equal(document.WorldId, output[0].WorldId);
+            Assert.Equal(document.ItemId, output[0].ItemId);
+            Assert.Equal(document.LastUploadTimeUnixMilliseconds, output[0].LastUploadTimeUnixMilliseconds);
+            Assert.Equal(document.Sales, output[0].Sales);
         }
     }
 }
