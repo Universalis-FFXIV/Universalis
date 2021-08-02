@@ -45,7 +45,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         {
             var db = new HistoryDbAccess(Constants.DatabaseName);
             var document = SeedDataGenerator.MakeHistory(74, 5333);
-            await db.Update(document, new HistoryQuery { WorldId = 74, ItemId = 5333 });
+            await db.Update(document, new HistoryQuery { WorldId = document.WorldId, ItemId = document.ItemId });
         }
 
         [Fact]
@@ -63,7 +63,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
             var document = SeedDataGenerator.MakeHistory(74, 5333);
             await db.Create(document);
 
-            var output = await db.Retrieve(new HistoryQuery { WorldId = 74, ItemId = 5333 });
+            var output = await db.Retrieve(new HistoryQuery { WorldId = document.WorldId, ItemId = document.ItemId });
             Assert.NotNull(output);
         }
 
@@ -75,7 +75,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
             var document = SeedDataGenerator.MakeHistory(74, 5333);
             await db.Create(document);
 
-            var output = (await db.RetrieveMany(new HistoryManyQuery { WorldIds = new uint[] { 74 }, ItemId = 5333 }))?.ToList();
+            var output = (await db.RetrieveMany(new HistoryManyQuery { WorldIds = new[] { document.WorldId }, ItemId = document.ItemId }))?.ToList();
             Assert.NotNull(output);
             Assert.Single(output);
             Assert.Equal(output[0].WorldId, document.WorldId);

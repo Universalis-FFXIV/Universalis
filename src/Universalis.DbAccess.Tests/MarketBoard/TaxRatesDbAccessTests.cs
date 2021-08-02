@@ -34,9 +34,8 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         public async Task Update_DoesNotThrow()
         {
             var db = new TaxRatesDbAccess(Constants.DatabaseName);
-
             var document = SeedDataGenerator.MakeTaxRates(74);
-            await db.Update(document, new TaxRatesQuery { WorldId = 74 });
+            await db.Update(document, new TaxRatesQuery { WorldId = document.WorldId });
         }
 
         [Fact]
@@ -50,11 +49,10 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         public async Task Create_DoesInsert()
         {
             var db = new TaxRatesDbAccess(Constants.DatabaseName);
-
             var document = SeedDataGenerator.MakeTaxRates(74);
             await db.Create(document);
 
-            var output = await db.Retrieve(new TaxRatesQuery { WorldId = 74 });
+            var output = await db.Retrieve(new TaxRatesQuery { WorldId = document.WorldId });
             Assert.NotNull(output);
             Assert.Equal(document.LimsaLominsa, output.LimsaLominsa);
             Assert.Equal(document.Gridania, output.Gridania);

@@ -23,4 +23,8 @@
     <ProjectReference Include="..\Universalis.DbAccess\Universalis.DbAccess.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Uploads\" />
+  </ItemGroup>
+
 </Project>

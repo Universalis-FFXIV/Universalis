@@ -45,7 +45,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         {
             var db = new CurrentlyShownDbAccess(Constants.DatabaseName);
             var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
-            await db.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+            await db.Update(document, new CurrentlyShownQuery { WorldId = document.WorldId, ItemId = document.ItemId });
         }
 
         [Fact]
@@ -63,7 +63,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
             var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
             await db.Create(document);
 
-            var output = await db.Retrieve(new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+            var output = await db.Retrieve(new CurrentlyShownQuery { WorldId = document.WorldId, ItemId = document.ItemId });
             Assert.NotNull(output);
         }
 
@@ -75,7 +75,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
             var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
             await db.Create(document);
 
-            var output = (await db.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = new uint[] { 74 }, ItemId = 5333 }))?.ToList();
+            var output = (await db.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = new[] { document.WorldId }, ItemId = document.ItemId }))?.ToList();
             Assert.NotNull(output);
             Assert.Single(output);
             Assert.Equal(output[0].WorldId, document.WorldId);

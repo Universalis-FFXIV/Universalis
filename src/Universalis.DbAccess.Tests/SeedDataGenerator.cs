@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
+using Universalis.Entities.Uploads;
 
 namespace Universalis.DbAccess.Tests
 {
@@ -86,6 +87,11 @@ namespace Universalis.DbAccess.Tests
                 Kugane = 0,
                 Crystarium = 5,
             };
+        }
+
+        public static FlaggedUploader MakeFlaggedUploader()
+        {
+            return new() { UploaderIdHash = "afffff" };
         }
     }
 }
