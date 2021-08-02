@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Universalis.Application\Universalis.Application.csproj" />
+    <ProjectReference Include="..\Universalis.DbAccess.Tests\Universalis.DbAccess.Tests.csproj" />
   </ItemGroup>
 
 </Project>

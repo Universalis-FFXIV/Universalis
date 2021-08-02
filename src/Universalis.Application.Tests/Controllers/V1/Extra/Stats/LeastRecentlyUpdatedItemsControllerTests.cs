@@ -1,13 +1,13 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Controllers.V1.Extra.Stats;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views;
 using Universalis.DbAccess.Queries.MarketBoard;
-using Universalis.Entities.MarketBoard;
+using Universalis.DbAccess.Tests;
 using Xunit;
 
 namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats

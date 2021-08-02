@@ -7,6 +7,7 @@ using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.DbAccess.Tests;
 using Xunit;
 
 namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats

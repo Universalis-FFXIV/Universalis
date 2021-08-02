@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Uploads.Behaviors;
@@ -87,7 +86,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
             var historyDb = new MockHistoryDbAccess();
             var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb);
 
-            var (listings, sales) = SeedDataGenerator.GetUploadListingsAndSales(74, 5333);
+            var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
 
             var source = new TrustedSource
             {
@@ -144,7 +143,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
             var historyDb = new MockHistoryDbAccess();
             var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb);
 
-            var (listings, _) = SeedDataGenerator.GetUploadListingsAndSales(74, 5333);
+            var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
 
             var source = new TrustedSource
             {
@@ -196,7 +195,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
             var historyDb = new MockHistoryDbAccess();
             var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb);
 
-            var (_, sales) = SeedDataGenerator.GetUploadListingsAndSales(74, 5333);
+            var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
 
             var source = new TrustedSource
             {

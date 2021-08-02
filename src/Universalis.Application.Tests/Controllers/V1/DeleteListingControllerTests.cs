@@ -8,6 +8,7 @@ using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Uploads.Schema;
+using Universalis.DbAccess.Tests;
 using Universalis.Entities.Uploads;
 using Xunit;
 
