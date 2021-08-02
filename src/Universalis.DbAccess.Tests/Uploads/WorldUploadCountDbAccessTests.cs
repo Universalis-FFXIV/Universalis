@@ -1,5 +1,5 @@
 ﻿using MongoDB.Driver;
-using System.Collections;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.Uploads;
@@ -9,18 +9,28 @@ using Xunit;
 
 namespace Universalis.DbAccess.Tests.Uploads
 {
-    public class WorldUploadCountDbAccessTests
+    public class WorldUploadCountDbAccessTests : IDisposable
     {
+        private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(WorldUploadCountDbAccessTests));
+
+        private readonly MongoClient _client;
+
         public WorldUploadCountDbAccessTests()
         {
-            var client = new MongoClient("mongodb://localhost:27017");
-            client.DropDatabase(Constants.DatabaseName);
+            _client = new MongoClient("mongodb://localhost:27017");
+            _client.DropDatabase(Database);
+        }
+
+        public void Dispose()
+        {
+            _client.DropDatabase(Database);
+            GC.SuppressFinalize(this);
         }
 
         [Fact]
         public async Task GetWorldUploadCounts_DoesNotThrow()
         {
-            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(Constants.DatabaseName);
+            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(Database);
             var output = await db.GetWorldUploadCounts();
             Assert.NotNull(output);
             Assert.Empty(output);
@@ -29,14 +39,14 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Increment_DoesNotThrow()
         {
-            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(Constants.DatabaseName);
+            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(Database);
             await db.Increment(new WorldUploadCountQuery { WorldName = "Coeurl" });
         }
 
         [Fact]
         public async Task Increment_DoesRetrieve()
         {
-            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(Constants.DatabaseName);
+            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(Database);
             await db.Increment(new WorldUploadCountQuery { WorldName = "Coeurl" });
             var output = (await db.GetWorldUploadCounts()).ToList();
             Assert.NotNull(output);

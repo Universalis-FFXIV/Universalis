@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.Uploads;
@@ -7,18 +8,28 @@ using Xunit;
 
 namespace Universalis.DbAccess.Tests.Uploads
 {
-    public class TrustedSourceDbAccessTests
+    public class TrustedSourceDbAccessTests : IDisposable
     {
+        private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(TrustedSourceDbAccessTests));
+
+        private readonly MongoClient _client;
+
         public TrustedSourceDbAccessTests()
         {
-            var client = new MongoClient("mongodb://localhost:27017");
-            client.DropDatabase(Constants.DatabaseName);
+            _client = new MongoClient("mongodb://localhost:27017");
+            _client.DropDatabase(Database);
+        }
+
+        public void Dispose()
+        {
+            _client.DropDatabase(Database);
+            GC.SuppressFinalize(this);
         }
 
         [Fact]
         public async Task Create_DoesNotThrow()
         {
-            var db = new TrustedSourceDbAccess(Constants.DatabaseName);
+            var db = new TrustedSourceDbAccess(Database);
             var document = SeedDataGenerator.MakeTrustedSource();
             await db.Create(document);
         }
@@ -26,7 +37,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Retrieve_DoesNotThrow()
         {
-            var db = new TrustedSourceDbAccess(Constants.DatabaseName);
+            var db = new TrustedSourceDbAccess(Database);
             var output = await db.Retrieve(new TrustedSourceQuery { ApiKeySha256 = "babaef32" });
             Assert.Null(output);
         }
@@ -34,7 +45,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Update_DoesNotThrow()
         {
-            var db = new TrustedSourceDbAccess(Constants.DatabaseName);
+            var db = new TrustedSourceDbAccess(Database);
             var document = SeedDataGenerator.MakeTrustedSource();
             await db.Update(document, new TrustedSourceQuery { ApiKeySha256 = document.ApiKeySha256 });
         }
@@ -42,14 +53,14 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Delete_DoesNotThrow()
         {
-            var db = new TrustedSourceDbAccess(Constants.DatabaseName);
+            var db = new TrustedSourceDbAccess(Database);
             await db.Delete(new TrustedSourceQuery { ApiKeySha256 = "babaef32" });
         }
 
         [Fact]
         public async Task Create_DoesInsert()
         {
-            var db = new TrustedSourceDbAccess(Constants.DatabaseName);
+            var db = new TrustedSourceDbAccess(Database);
             var document = SeedDataGenerator.MakeTrustedSource();
             await db.Create(document);
 
@@ -63,7 +74,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Increment_DoesNotCreateIfNone()
         {
-            var db = new TrustedSourceDbAccess(Constants.DatabaseName);
+            var db = new TrustedSourceDbAccess(Database);
             await db.Increment(new TrustedSourceQuery { ApiKeySha256 = "bbbbbbbb" });
             var output = await db.GetUploaderCounts();
             Assert.NotNull(output);
@@ -73,7 +84,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Increment_DoesPersist()
         {
-            var db = new TrustedSourceDbAccess(Constants.DatabaseName);
+            var db = new TrustedSourceDbAccess(Database);
             var document = SeedDataGenerator.MakeTrustedSource();
             await db.Create(document);
             await db.Increment(new TrustedSourceQuery { ApiKeySha256 = document.ApiKeySha256 });

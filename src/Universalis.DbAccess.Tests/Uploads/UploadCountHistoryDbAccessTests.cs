@@ -9,18 +9,28 @@ using Xunit;
 
 namespace Universalis.DbAccess.Tests.Uploads
 {
-    public class UploadCountHistoryDbAccessTests
+    public class UploadCountHistoryDbAccessTests : IDisposable
     {
+        private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(UploadCountHistoryDbAccessTests));
+
+        private readonly MongoClient _client;
+
         public UploadCountHistoryDbAccessTests()
         {
-            var client = new MongoClient("mongodb://localhost:27017");
-            client.DropDatabase(Constants.DatabaseName);
+            _client = new MongoClient("mongodb://localhost:27017");
+            _client.DropDatabase(Database);
+        }
+
+        public void Dispose()
+        {
+            _client.DropDatabase(Database);
+            GC.SuppressFinalize(this);
         }
 
         [Fact]
         public async Task Create_DoesNotThrow()
         {
-            var db = new UploadCountHistoryDbAccess(Constants.DatabaseName);
+            var db = new UploadCountHistoryDbAccess(Database);
             await db.Create(new UploadCountHistory
             {
                 LastPush = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
@@ -31,7 +41,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Retrieve_DoesNotThrow()
         {
-            var db = new UploadCountHistoryDbAccess(Constants.DatabaseName);
+            var db = new UploadCountHistoryDbAccess(Database);
             var output = await db.Retrieve(new UploadCountHistoryQuery());
             Assert.Null(output);
         }
@@ -39,7 +49,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Update_DoesNotThrow()
         {
-            var db = new UploadCountHistoryDbAccess(Constants.DatabaseName);
+            var db = new UploadCountHistoryDbAccess(Database);
             await db.Update(new UploadCountHistory
             {
                 LastPush = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
@@ -50,7 +60,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Create_DoesInsert()
         {
-            var db = new UploadCountHistoryDbAccess(Constants.DatabaseName);
+            var db = new UploadCountHistoryDbAccess(Database);
             var document = new UploadCountHistory
             {
                 LastPush = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
