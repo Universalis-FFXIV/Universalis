@@ -4,6 +4,8 @@ services:
     image: ghcr.io/universalis-ffxiv/universalis:latest
     environment:
       ASPNETCORE_URLS: http://+:4001
+    volumes:
+      - /home/universalis/sqpack:/sqpack
     network_mode: "host"
   watchtower:
     image: containrrr/watchtower
