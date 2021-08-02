@@ -18,7 +18,6 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         public async Task Create_DoesNotThrow()
         {
             var db = new TaxRatesDbAccess(Constants.DatabaseName);
-
             var document = SeedDataGenerator.GetTaxRates(74);
             await db.Create(document);
         }
