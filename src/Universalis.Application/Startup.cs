@@ -29,13 +29,13 @@ namespace Universalis.Application
             services.AddDbAccessServices();
             services.AddGameData(Configuration);
             services.AddUserAlerts();
-            
+
             services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Scoped);
-            
+
             services.AddControllers(options =>
             {
                 options.Conventions.Add(new GroupByNamespaceConvention());
-            });
+            }).AddNewtonsoftJson();
 
             services.AddApiVersioning(options =>
             {
