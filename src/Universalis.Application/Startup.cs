@@ -79,8 +79,6 @@ namespace Universalis.Application
                 });
             }
 
-            app.UseHttpsRedirection();
-
             app.UseRouting();
 
             app.UseAuthorization();
