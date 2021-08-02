@@ -23,8 +23,8 @@ namespace Universalis.Application.Tests
                     RetainerCityId = l.RetainerCityId,
                     CreatorName = l.CreatorName,
                     OnMannequin = l.OnMannequin.ToString(),
-                    SellerId = l.SellerIdHash,
-                    CreatorId = l.CreatorIdHash,
+                    SellerId = l.SellerId,
+                    CreatorId = l.CreatorId,
                     DyeId = l.DyeId,
                     LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
                     Materia = l.Materia

@@ -1,5 +1,4 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +29,7 @@ namespace Universalis.Entities.MarketBoard
         public uint DyeId { get; init; }
 
         [BsonElement("creatorID")]
-        public string CreatorIdHash { get; init; }
+        public string CreatorId { get; init; }
 
         [BsonElement("creatorName")]
         public string CreatorName { get; init; }
@@ -54,7 +53,7 @@ namespace Universalis.Entities.MarketBoard
                 : City.Dict[(string)RetainerCityIdInternal];
 
         [BsonElement("sellerID")]
-        public string SellerIdHash { get; init; }
+        public string SellerId { get; init; }
 
         [BsonElement("sourceName")]
         public string UploadApplicationName { get; init; }
@@ -72,12 +71,12 @@ namespace Universalis.Entities.MarketBoard
                    && PricePerUnit == other.PricePerUnit
                    && Quantity == other.Quantity
                    && DyeId == other.DyeId
-                   && CreatorIdHash == other.CreatorIdHash
+                   && CreatorId == other.CreatorId
                    && CreatorName == other.CreatorName
                    && LastReviewTimeUnixSeconds == other.LastReviewTimeUnixSeconds
                    && RetainerId == other.RetainerId && RetainerName == other.RetainerName
                    && RetainerCityId == other.RetainerCityId
-                   && SellerIdHash == other.SellerIdHash;
+                   && SellerId == other.SellerId;
         }
 
         public override bool Equals(object obj)
@@ -97,13 +96,13 @@ namespace Universalis.Entities.MarketBoard
             hashCode.Add(PricePerUnit);
             hashCode.Add(Quantity);
             hashCode.Add(DyeId);
-            hashCode.Add(CreatorIdHash);
+            hashCode.Add(CreatorId);
             hashCode.Add(CreatorName);
             hashCode.Add(LastReviewTimeUnixSeconds);
             hashCode.Add(RetainerId);
             hashCode.Add(RetainerName);
             hashCode.Add(RetainerCityId);
-            hashCode.Add(SellerIdHash);
+            hashCode.Add(SellerId);
             return hashCode.ToHashCode();
         }
     }

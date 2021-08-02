@@ -120,19 +120,7 @@ namespace Universalis.Application.Uploads.Behaviors
                 cleanListings = parameters.Listings
                     .Select(l =>
                     {
-                        using (var sha256 = SHA256.Create())
-                        {
-                            using var creatorIdStream = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId));
-                            l.CreatorId = BitConverter.ToString(sha256.ComputeHash(creatorIdStream));
-                        }
-
-                        using (var sha256 = SHA256.Create())
-                        {
-                            using var sellerIdStream = new MemoryStream(Encoding.UTF8.GetBytes(l.SellerId));
-                            l.SellerId = BitConverter.ToString(sha256.ComputeHash(sellerIdStream));
-                        }
-
-                        return new Entities.MarketBoard.Listing
+                        return new Listing
                         {
                             ListingId = l.ListingId,
                             Hq = Util.ParseUnusualBool(l.Hq),
@@ -146,13 +134,13 @@ namespace Universalis.Application.Uploads.Behaviors
                             PricePerUnit = l.PricePerUnit,
                             Quantity = l.Quantity,
                             DyeId = l.DyeId,
-                            CreatorIdHash = l.CreatorId,
+                            CreatorId = l.CreatorId,
                             CreatorName = l.CreatorName,
                             LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
                             RetainerId = l.RetainerId,
                             RetainerName = l.RetainerName,
                             RetainerCityIdInternal = l.RetainerCityId,
-                            SellerIdHash = l.SellerId,
+                            SellerId = l.SellerId,
                             UploadApplicationName = source.Name,
                         };
                     })

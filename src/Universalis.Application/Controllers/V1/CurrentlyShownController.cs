@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Universalis.Application.Common;
 using Universalis.Application.Views;
@@ -97,33 +100,43 @@ namespace Universalis.Application.Controllers.V1
                 next.RecentHistory ??= new List<Sale>();
 
                 agg.Listings = next.Listings
-                    .Select(s => new ListingView
+                    .Select(l =>
                     {
-                        ListingId = s.ListingId,
-                        Hq = s.Hq,
-                        OnMannequin = s.OnMannequin,
-                        Materia = s.Materia?
-                            .Select(m => new MateriaView
-                            {
-                                SlotId = m.SlotId,
-                                MateriaId = m.MateriaId,
-                            })
-                            .ToList() ?? new List<MateriaView>(),
-                        PricePerUnit = s.PricePerUnit,
-                        Quantity = s.Quantity,
-                        Total = s.PricePerUnit * s.Quantity,
-                        DyeId = s.DyeId,
-                        CreatorIdHash = s.CreatorIdHash,
-                        CreatorName = s.CreatorName,
-                        IsCrafted = !string.IsNullOrEmpty(s.CreatorName),
-                        LastReviewTimeUnixSeconds = s.LastReviewTimeUnixSeconds,
-                        RetainerId = s.RetainerId,
-                        RetainerName = s.RetainerName,
-                        RetainerCityId = s.RetainerCityId,
-                        SellerIdHash = s.SellerIdHash,
-                        WorldId = worldDc.IsDc ? next.WorldId : null,
-                        WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
+                        var listingView = new ListingView
+                        {
+                            ListingId = l.ListingId,
+                            Hq = l.Hq,
+                            OnMannequin = l.OnMannequin,
+                            Materia = l.Materia?
+                                .Select(m => new MateriaView
+                                {
+                                    SlotId = m.SlotId,
+                                    MateriaId = m.MateriaId,
+                                })
+                                .ToList() ?? new List<MateriaView>(),
+                            PricePerUnit = l.PricePerUnit,
+                            Quantity = l.Quantity,
+                            Total = l.PricePerUnit * l.Quantity,
+                            DyeId = l.DyeId,
+                            CreatorIdHash = l.CreatorId,
+                            CreatorName = l.CreatorName,
+                            IsCrafted = !string.IsNullOrEmpty(l.CreatorName),
+                            LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
+                            RetainerId = l.RetainerId,
+                            RetainerName = l.RetainerName,
+                            RetainerCityId = l.RetainerCityId,
+                            WorldId = worldDc.IsDc ? next.WorldId : null,
+                            WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
+                        };
 
+                        using var sha256 = SHA256.Create();
+                        using var dataStream1 = new MemoryStream(Encoding.UTF8.GetBytes(l.SellerId));
+                        listingView.SellerIdHash = BitConverter.ToString(sha256.ComputeHash(dataStream1));
+
+                        using var dataStream2 = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId));
+                        listingView.CreatorIdHash = BitConverter.ToString(sha256.ComputeHash(dataStream2));
+
+                        return listingView;
                     })
                     .Concat(agg.Listings)
                     .ToList();
