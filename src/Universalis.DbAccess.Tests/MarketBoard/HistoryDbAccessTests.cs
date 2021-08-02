@@ -44,7 +44,6 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         public async Task Update_DoesNotThrow()
         {
             var db = new HistoryDbAccess(Constants.DatabaseName);
-
             var document = SeedDataGenerator.MakeHistory(74, 5333);
             await db.Update(document, new HistoryQuery { WorldId = 74, ItemId = 5333 });
         }

@@ -34,6 +34,8 @@ namespace Universalis.Entities.MarketBoard
 
         public bool Equals(MinimizedSale other)
         {
+            // The uploader ID hash is not included in the equality check
+            // because it's metadata specific to Universalis, not the game.
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Hq == other.Hq
@@ -52,7 +54,7 @@ namespace Universalis.Entities.MarketBoard
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Hq, PricePerUnit, Quantity, SaleTimeUnixSeconds, UploaderIdHash);
+            return HashCode.Combine(Hq, PricePerUnit, Quantity, SaleTimeUnixSeconds);
         }
     }
 }

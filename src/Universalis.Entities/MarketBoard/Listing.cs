@@ -1,9 +1,11 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Universalis.Entities.MarketBoard
 {
-    public class Listing
+    public class Listing : IEquatable<Listing>
     {
         [BsonElement("listingID")]
         public string ListingId { get; init; }
@@ -49,5 +51,53 @@ namespace Universalis.Entities.MarketBoard
 
         [BsonElement("sourceName")]
         public string UploadApplicationName { get; init; }
+
+        public bool Equals(Listing other)
+        {
+            // The upload application is not included in the equality check
+            // because it's metadata specific to Universalis, not the game.
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return ListingId == other.ListingId
+                   && Hq == other.Hq
+                   && OnMannequin == other.OnMannequin
+                   && Materia.SequenceEqual(other.Materia)
+                   && PricePerUnit == other.PricePerUnit
+                   && Quantity == other.Quantity
+                   && DyeId == other.DyeId
+                   && CreatorIdHash == other.CreatorIdHash
+                   && CreatorName == other.CreatorName
+                   && LastReviewTimeUnixSeconds == other.LastReviewTimeUnixSeconds
+                   && RetainerId == other.RetainerId && RetainerName == other.RetainerName
+                   && RetainerCityId == other.RetainerCityId
+                   && SellerIdHash == other.SellerIdHash;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj.GetType() == GetType() && Equals((Listing)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = new HashCode();
+            hashCode.Add(ListingId);
+            hashCode.Add(Hq);
+            hashCode.Add(OnMannequin);
+            hashCode.Add(Materia);
+            hashCode.Add(PricePerUnit);
+            hashCode.Add(Quantity);
+            hashCode.Add(DyeId);
+            hashCode.Add(CreatorIdHash);
+            hashCode.Add(CreatorName);
+            hashCode.Add(LastReviewTimeUnixSeconds);
+            hashCode.Add(RetainerId);
+            hashCode.Add(RetainerName);
+            hashCode.Add(RetainerCityId);
+            hashCode.Add(SellerIdHash);
+            return hashCode.ToHashCode();
+        }
     }
 }
