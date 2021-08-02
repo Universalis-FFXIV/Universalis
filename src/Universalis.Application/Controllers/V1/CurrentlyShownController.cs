@@ -114,7 +114,7 @@ namespace Universalis.Application.Controllers.V1
                                     MateriaId = m.MateriaId,
                                 })
                                 .ToList() ?? new List<MateriaView>(),
-                            PricePerUnit = l.PricePerUnit,
+                            PricePerUnit = (uint)Math.Ceiling(l.PricePerUnit * 1.05),
                             Quantity = l.Quantity,
                             Total = l.PricePerUnit * l.Quantity,
                             DyeId = l.DyeId,
