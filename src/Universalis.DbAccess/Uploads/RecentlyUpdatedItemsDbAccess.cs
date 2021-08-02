@@ -30,8 +30,17 @@ namespace Universalis.DbAccess.Uploads
             }
 
             var newItems = existing.Items;
-            newItems.Insert(0, itemId);
-            newItems = existing.Items.Take(MaxItems).ToList();
+            var existingIndex = newItems.IndexOf(itemId);
+            if (existingIndex != -1)
+            {
+                newItems.RemoveAt(existingIndex);
+                newItems.Insert(0, itemId);
+            }
+            else
+            {
+                newItems.Insert(0, itemId);
+                newItems = existing.Items.Take(MaxItems).ToList();
+            }
 
             var updateBuilder = Builders<RecentlyUpdatedItems>.Update;
             var update = updateBuilder.Set(o => o.Items, newItems);

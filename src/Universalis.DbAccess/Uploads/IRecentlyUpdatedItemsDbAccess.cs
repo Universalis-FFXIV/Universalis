@@ -6,14 +6,8 @@ namespace Universalis.DbAccess.Uploads
 {
     public interface IRecentlyUpdatedItemsDbAccess
     {
-        public Task Create(RecentlyUpdatedItems document);
-
         public Task<RecentlyUpdatedItems> Retrieve(RecentlyUpdatedItemsQuery query);
 
-        public Task Update(RecentlyUpdatedItems document, RecentlyUpdatedItemsQuery query);
-
         public Task Push(uint itemId);
-
-        public Task Delete(RecentlyUpdatedItemsQuery query);
     }
 }
