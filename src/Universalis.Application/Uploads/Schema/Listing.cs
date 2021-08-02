@@ -24,7 +24,7 @@ namespace Universalis.Application.Uploads.Schema
         public string RetainerId { get; set; }
 
         [JsonProperty("retainerCity")]
-        public byte RetainerCityId { get; set; }
+        public int RetainerCityId { get; set; }
 
         [JsonProperty("creatorName")]
         public string CreatorName { get; set; }

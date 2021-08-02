@@ -48,7 +48,7 @@ namespace Universalis.Application.Views
         public string RetainerName { get; set; }
 
         [JsonProperty("retainerCity")]
-        public byte RetainerCityId { get; set; }
+        public int RetainerCityId { get; set; }
 
         [JsonProperty("sellerID")]
         public string SellerIdHash { get; set; }

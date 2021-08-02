@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MongoDB.Bson;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
 using Universalis.Entities.Uploads;
@@ -33,7 +32,7 @@ namespace Universalis.DbAccess.Tests
                         LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
                         RetainerId = "54565458626446136554",
                         RetainerName = "xpotato",
-                        RetainerCityIdInternal = BsonBinaryData.Create(0xA),
+                        RetainerCityIdInternal = 0xA,
                         SellerIdHash = "3a5f66de",
                         UploadApplicationName = "test runner",
                     })

@@ -45,13 +45,13 @@ namespace Universalis.Entities.MarketBoard
         public string RetainerName { get; init; }
 
         [BsonElement("retainerCity")]
-        public BsonBinaryData RetainerCityIdInternal { get; init; }
+        public object RetainerCityIdInternal { get; init; }
 
         [BsonIgnore]
-        public byte RetainerCityId =>
-            RetainerCityIdInternal.IsNumeric
-                ? (byte)RetainerCityIdInternal.AsInt32
-                : City.Dict[RetainerCityIdInternal.AsString];
+        public int RetainerCityId =>
+            RetainerCityIdInternal is int retainerCityIdInt
+                ? retainerCityIdInt
+                : City.Dict[(string)RetainerCityIdInternal];
 
         [BsonElement("sellerID")]
         public string SellerIdHash { get; init; }
