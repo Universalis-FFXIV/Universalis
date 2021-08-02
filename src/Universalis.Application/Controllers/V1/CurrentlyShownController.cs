@@ -159,7 +159,7 @@ namespace Universalis.Application.Controllers.V1
                 return agg;
             });
 
-            currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
+            currentlyShown.Listings.Sort((a, b) => (int)a.PricePerUnit - (int)b.PricePerUnit);
             currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
             var nqListings = currentlyShown.Listings.Where(l => !l.Hq).ToList();
