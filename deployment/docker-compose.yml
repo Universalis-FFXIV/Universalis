@@ -3,7 +3,7 @@ services:
   universalis:
     image: ghcr.io/universalis-ffxiv/universalis:latest
     environment:
-      ASPNETCORE_URLS: http://localhost:4001/
+      ASPNETCORE_URLS: http://*.4001;https://*.4002
     network_mode: "host"
   watchtower:
     image: containrrr/watchtower
