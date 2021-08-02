@@ -21,7 +21,7 @@ namespace Universalis.DbAccess.Uploads
                 return;
             }
 
-            var updateBuilder = MongoDB.Driver.Builders<TrustedSource>.Update;
+            var updateBuilder = Builders<TrustedSource>.Update;
             var update = updateBuilder.Inc(o => o.UploadCount, 1U);
             await Collection.UpdateOneAsync(query.ToFilterDefinition(), update);
         }

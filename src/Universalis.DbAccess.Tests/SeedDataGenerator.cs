@@ -93,5 +93,15 @@ namespace Universalis.DbAccess.Tests
         {
             return new() { UploaderIdHash = "afffff" };
         }
+
+        public static TrustedSource MakeTrustedSource()
+        {
+            return new()
+            {
+                ApiKeySha256 = "aefe32ee",
+                Name = "test runner",
+                UploadCount = 0,
+            };
+        }
     }
 }
