@@ -2,9 +2,8 @@ version: "3"
 services:
   universalis:
     image: ghcr.io/universalis-ffxiv/universalis:latest
-    ports:
-      - "5001:4002"
-      - "5000:4001"
+    environment:
+      ASPNETCORE_URLS: http://localhost:4001/
     network_mode: "host"
   watchtower:
     image: containrrr/watchtower
