@@ -20,7 +20,7 @@ namespace Universalis.Entities.MarketBoard
         public List<Materia> Materia { get; init; }
 
         [BsonElement("pricePerUnit")]
-        public uint PricePerUnit { get; init; }
+        public uint PricePerUnit { get; set; }
 
         [BsonElement("quantity")]
         public uint Quantity { get; init; }

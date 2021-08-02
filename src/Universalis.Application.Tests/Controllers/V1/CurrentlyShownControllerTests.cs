@@ -328,6 +328,12 @@ namespace Universalis.Application.Tests.Controllers.V1
             document.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
             document.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
+            document.Listings = document.Listings.Select(l =>
+            {
+                l.PricePerUnit = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
+                return l;
+            }).ToList();
+
             Assert.All(currentlyShown.Listings.Select(l => (object)l.WorldId), Assert.Null);
             Assert.All(currentlyShown.Listings.Select(l => l.WorldName), Assert.Null);
 
@@ -407,6 +413,12 @@ namespace Universalis.Application.Tests.Controllers.V1
             currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
             anyWorldDocument.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
             anyWorldDocument.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+
+            anyWorldDocument.Listings = anyWorldDocument.Listings.Select(l =>
+            {
+                l.PricePerUnit = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
+                return l;
+            }).ToList();
 
             Assert.All(currentlyShown.Listings.Select(l => (object)l.WorldId), Assert.NotNull);
             Assert.All(currentlyShown.Listings.Select(l => l.WorldName), Assert.NotNull);
