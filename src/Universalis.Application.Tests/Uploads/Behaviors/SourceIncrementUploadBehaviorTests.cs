@@ -27,7 +27,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
                 using (var sha256 = SHA256.Create())
                 {
                     await using var keyStream = new MemoryStream(Encoding.UTF8.GetBytes(key));
-                    keyHash = BitConverter.ToString(await sha256.ComputeHashAsync(keyStream));
+                    keyHash = Util.BytesToString(await sha256.ComputeHashAsync(keyStream));
                 }
 
                 var source = new TrustedSource

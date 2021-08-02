@@ -30,7 +30,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             {
                 await trustedSources.Create(new TrustedSource
                 {
-                    ApiKeySha256 = BitConverter.ToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(key))),
+                    ApiKeySha256 = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(key))),
                 });
             }
 
@@ -65,7 +65,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             {
                 await trustedSources.Create(new TrustedSource
                 {
-                    ApiKeySha256 = BitConverter.ToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(key))),
+                    ApiKeySha256 = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(key))),
                 });
             }
 
@@ -89,10 +89,10 @@ namespace Universalis.Application.Tests.Controllers.V1
             {
                 await trustedSources.Create(new TrustedSource
                 {
-                    ApiKeySha256 = BitConverter.ToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(key))),
+                    ApiKeySha256 = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(key))),
                 });
 
-                uploaderIdHash = BitConverter.ToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(uploaderId)));
+                uploaderIdHash = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(uploaderId)));
             }
 
             await flaggedUploaders.Create(new FlaggedUploader { UploaderIdHash = uploaderIdHash });
@@ -125,7 +125,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             {
                 await trustedSources.Create(new TrustedSource
                 {
-                    ApiKeySha256 = BitConverter.ToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(key))),
+                    ApiKeySha256 = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(key))),
                 });
             }
 

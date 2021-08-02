@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 
 namespace Universalis.Application
 {
@@ -8,6 +9,11 @@ namespace Universalis.Application
 
         private static readonly Regex UnsafeCharacters =
             new(@"[^a-zA-Z0-9'\- ·⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]", RegexOptions.Compiled);
+
+        public static string BytesToString(byte[] bytes)
+        {
+            return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
+        }
 
         /// <summary>
         /// Returns <see langword="true" /> if the provided input contains HTML tags.

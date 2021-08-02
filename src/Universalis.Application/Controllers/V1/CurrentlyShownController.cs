@@ -131,10 +131,10 @@ namespace Universalis.Application.Controllers.V1
 
                         using var sha256 = SHA256.Create();
                         using var dataStream1 = new MemoryStream(Encoding.UTF8.GetBytes(l.SellerId));
-                        listingView.SellerIdHash = BitConverter.ToString(sha256.ComputeHash(dataStream1));
+                        listingView.SellerIdHash = Util.BytesToString(sha256.ComputeHash(dataStream1));
 
                         using var dataStream2 = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId));
-                        listingView.CreatorIdHash = BitConverter.ToString(sha256.ComputeHash(dataStream2));
+                        listingView.CreatorIdHash = Util.BytesToString(sha256.ComputeHash(dataStream2));
 
                         return listingView;
                     })

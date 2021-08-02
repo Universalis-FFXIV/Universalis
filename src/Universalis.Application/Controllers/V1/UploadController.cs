@@ -42,7 +42,7 @@ namespace Universalis.Application.Controllers.V1
                 await using var authStream = new MemoryStream(Encoding.UTF8.GetBytes(apiKey));
                 source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
                 {
-                    ApiKeySha256 = BitConverter.ToString(await sha256.ComputeHashAsync(authStream)),
+                    ApiKeySha256 = Util.BytesToString(await sha256.ComputeHashAsync(authStream)),
                 });
             }
 
@@ -60,7 +60,7 @@ namespace Universalis.Application.Controllers.V1
             using (var sha256 = SHA256.Create())
             {
                 await using var uploaderIdStream = new MemoryStream(Encoding.UTF8.GetBytes(parameters.UploaderId));
-                parameters.UploaderId = BitConverter.ToString(await sha256.ComputeHashAsync(uploaderIdStream));
+                parameters.UploaderId = Util.BytesToString(await sha256.ComputeHashAsync(uploaderIdStream));
             }
 
             // Check if this uploader is flagged, cancel if they are
