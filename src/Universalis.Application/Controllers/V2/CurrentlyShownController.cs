@@ -10,7 +10,7 @@ namespace Universalis.Application.Controllers.V2
 {
     [ApiController]
     [ApiVersion("2")]
-    [Route("api/v2/{itemIds}/{worldOrDc}")]
+    [Route("api/v2/{worldOrDc}/{itemIds}")]
     public class CurrentlyShownController : CurrentlyShownControllerBase
     {
         public CurrentlyShownController(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb) : base(gameData, currentlyShownDb) { }

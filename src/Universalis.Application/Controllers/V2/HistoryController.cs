@@ -11,7 +11,7 @@ namespace Universalis.Application.Controllers.V2
 {
     [ApiController]
     [ApiVersion("2")]
-    [Route("api/v2/history/{itemIds}/{worldOrDc}")]
+    [Route("api/v2/history/{worldOrDc}/{itemIds}")]
     public class HistoryController : HistoryControllerBase
     {
         public HistoryController(IGameDataProvider gameData, IHistoryDbAccess historyDb) : base(gameData, historyDb) { }
