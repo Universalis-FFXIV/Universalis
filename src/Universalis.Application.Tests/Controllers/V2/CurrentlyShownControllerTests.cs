@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using Universalis.Application.Controllers.V2;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
@@ -49,7 +50,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                         LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
                         RetainerId = "54565458626446136554",
                         RetainerName = "xpotato",
-                        RetainerCityId = 0xA,
+                        RetainerCityIdInternal = BsonBinaryData.Create(0xA),
                         SellerIdHash = "3a5f66de",
                         UploadApplicationName = "test runner",
                     })
@@ -106,7 +107,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                         LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
                         RetainerId = "54565458626446136554",
                         RetainerName = "xpotato",
-                        RetainerCityId = 0xA,
+                        RetainerCityIdInternal = BsonBinaryData.Create(0xA),
                         SellerIdHash = "3a5f66de",
                         UploadApplicationName = "test runner",
                     })
@@ -146,7 +147,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                         LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
                         RetainerId = "54565458626446136554",
                         RetainerName = "xpotato",
-                        RetainerCityId = 0xA,
+                        RetainerCityIdInternal = BsonBinaryData.Create(0xA),
                         SellerIdHash = "3a5f66de",
                         UploadApplicationName = "test runner",
                     })
@@ -211,7 +212,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                         LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
                         RetainerId = "54565458626446136554",
                         RetainerName = "xpotato",
-                        RetainerCityId = 0xA,
+                        RetainerCityIdInternal = BsonBinaryData.Create(0xA),
                         SellerIdHash = "3a5f66de",
                         UploadApplicationName = "test runner",
                     })
@@ -251,7 +252,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                         LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
                         RetainerId = "54565458626446136554",
                         RetainerName = "xpotato",
-                        RetainerCityId = 0xA,
+                        RetainerCityIdInternal = BsonBinaryData.Create(0xA),
                         SellerIdHash = "3a5f66de",
                         UploadApplicationName = "test runner",
                     })
@@ -315,7 +316,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                         LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
                         RetainerId = "54565458626446136554",
                         RetainerName = "xpotato",
-                        RetainerCityId = 0xA,
+                        RetainerCityIdInternal = BsonBinaryData.Create(0xA),
                         SellerIdHash = "3a5f66de",
                         UploadApplicationName = "test runner",
                     })
@@ -355,7 +356,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                         LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
                         RetainerId = "54565458626446136554",
                         RetainerName = "xpotato",
-                        RetainerCityId = 0xA,
+                        RetainerCityIdInternal = BsonBinaryData.Create(0xA),
                         SellerIdHash = "3a5f66de",
                         UploadApplicationName = "test runner",
                     })

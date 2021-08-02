@@ -7,6 +7,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using MongoDB.Bson;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -151,7 +152,7 @@ namespace Universalis.Application.Uploads.Behaviors
                             LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
                             RetainerId = l.RetainerId,
                             RetainerName = l.RetainerName,
-                            RetainerCityId = l.RetainerCityId,
+                            RetainerCityIdInternal = BsonBinaryData.Create(l.RetainerCityId),
                             SellerIdHash = l.SellerId,
                             UploadApplicationName = source.Name,
                         };

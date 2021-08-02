@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,7 +45,13 @@ namespace Universalis.Entities.MarketBoard
         public string RetainerName { get; init; }
 
         [BsonElement("retainerCity")]
-        public byte RetainerCityId { get; init; }
+        public BsonBinaryData RetainerCityIdInternal { get; init; }
+
+        [BsonIgnore]
+        public byte RetainerCityId =>
+            RetainerCityIdInternal.IsNumeric
+                ? (byte)RetainerCityIdInternal.AsInt32
+                : City.Dict[RetainerCityIdInternal.AsString];
 
         [BsonElement("sellerID")]
         public string SellerIdHash { get; init; }
