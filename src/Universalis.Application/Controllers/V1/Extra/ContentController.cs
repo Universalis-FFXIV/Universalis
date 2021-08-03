@@ -17,7 +17,13 @@ namespace Universalis.Application.Controllers.V1.Extra
             _contentDb = contentDb;
         }
 
+        /// <summary>
+        /// Returns the content object associated with the provided content ID. Please note that this endpoint is largely untested,
+        /// and may return inconsistent data at times.
+        /// </summary>
+        /// <param name="contentId">The ID of the content object to retrieve.</param>
         [HttpGet]
+        [ProducesResponseType(typeof(ContentView), 200)]
         public async Task<IActionResult> Get(string contentId)
         {
             var content = await _contentDb.Retrieve(new ContentQuery { ContentId = contentId });
