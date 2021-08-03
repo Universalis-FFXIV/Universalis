@@ -14,7 +14,21 @@ namespace Universalis.Application.Controllers.V1
     {
         public CurrentlyShownController(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb) : base(gameData, currentlyShownDb) { }
 
+        /// <summary>
+        /// Retrieves the data currently shown on the market board for the requested item and world or data center.
+        /// Item IDs can be comma-separated in order to retrieve data for multiple items at once.
+        /// </summary>
+        /// <param name="itemIds">The item ID or comma-separated item IDs to retrieve data for.</param>
+        /// <param name="worldOrDc">The world or data center to retrieve data for. This may be an ID or a name.</param>
+        /// <response code="200">Data retrieved successfully.</response>
+        /// <response code="404">
+        /// The world/DC or item requested is invalid. When requesting multiple items at once, an invalid item ID
+        /// will not trigger this. Instead, the returned list of unresolved item IDs will contain the invalid item ID or IDs.
+        /// </response>
         [HttpGet]
+        [ProducesResponseType(typeof(CurrentlyShownView), 200)]
+        [ProducesResponseType(typeof(CurrentlyShownMultiView), 200)]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> Get(string itemIds, string worldOrDc)
         {
             // Parameter parsing

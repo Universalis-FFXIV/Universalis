@@ -1,8 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>Universalis.Application.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +23,12 @@
     <ProjectReference Include="..\Universalis.DbAccess\Universalis.DbAccess.csproj" />
     <ProjectReference Include="..\Universalis.Entities\Universalis.Entities.csproj" />
     <ProjectReference Include="..\Universalis.GameData\Universalis.GameData.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Universalis.Application.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

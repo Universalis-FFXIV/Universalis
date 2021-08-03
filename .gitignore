@@ -346,3 +346,6 @@ temp/
 
 # Coverlet output
 coveragereport/
+
+# Documentation XML
+Universalis.*.xml
