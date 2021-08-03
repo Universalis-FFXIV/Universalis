@@ -18,14 +18,16 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
             _worldUploadCountDb = worldUploadCountDb;
         }
 
+        /// <summary>
+        /// Returns the world upload counts and proportions of the total uploads for each world.
+        /// </summary>
         [HttpGet]
+        [ProducesResponseType(typeof(IDictionary<string, WorldUploadCountView>), 200)]
         public async Task<IDictionary<string, WorldUploadCountView>> Get()
         {
-            var data = (await _worldUploadCountDb.GetWorldUploadCounts())?.ToList();
-            if (data == null)
-            {
-                return new Dictionary<string, WorldUploadCountView>();
-            }
+            var data = (await _worldUploadCountDb.GetWorldUploadCounts())
+                .Where(d => !string.IsNullOrEmpty(d.WorldName))
+                .ToList();
 
             var sum = data.Sum(d => d.Count);
             return data
