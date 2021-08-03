@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -15,7 +14,7 @@ using Universalis.GameData;
 namespace Universalis.Application.Controllers.V1
 {
     [ApiController]
-    [Route("api/{itemId}/{world}/delete")]
+    [Route("api/{world}/{itemId}/delete")]
     public class DeleteListingController : WorldDcControllerBase
     {
         private readonly ITrustedSourceDbAccess _trustedSourceDb;
