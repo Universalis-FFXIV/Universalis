@@ -33,6 +33,7 @@ namespace Universalis.Application.Controllers.V1
         }
 
         [HttpPost]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> Post(string apiKey, [FromBody] UploadParameters parameters)
         {
             TrustedSource source;

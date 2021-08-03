@@ -19,7 +19,15 @@ namespace Universalis.Application.Controllers.V1
             _taxRatesDb = taxRatesDb;
         }
 
+        /// <summary>
+        /// Retrieves the current tax rate data for the specified world. This data is provided by the Retainer Vocate in each major city.
+        /// </summary>
+        /// <param name="world">The world or to retrieve data for. This may be an ID or a name.</param>
+        /// <response code="200">Data retrieved successfully.</response>
+        /// <response code="404">The world requested is invalid.</response>
         [HttpGet]
+        [ProducesResponseType(typeof(TaxRatesView), 200)]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> Get([FromQuery, BindRequired] string world)
         {
             if (!TryGetWorldDc(world, out var worldDc))

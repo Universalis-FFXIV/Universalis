@@ -33,6 +33,7 @@ namespace Universalis.Application.Controllers.V1
         }
 
         [HttpPost]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> Post(uint itemId, string world, [FromHeader] string authorization, [FromBody] DeleteListingParameters parameters)
         {
             TrustedSource source;

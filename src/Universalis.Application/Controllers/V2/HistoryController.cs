@@ -16,7 +16,21 @@ namespace Universalis.Application.Controllers.V2
     {
         public HistoryController(IGameDataProvider gameData, IHistoryDbAccess historyDb) : base(gameData, historyDb) { }
 
+        /// <summary>
+        /// Retrieves the history data for the requested item and world or data center.
+        /// Item IDs can be comma-separated in order to retrieve data for multiple items at once.
+        /// </summary>
+        /// <param name="itemIds">The item ID or comma-separated item IDs to retrieve data for.</param>
+        /// <param name="worldOrDc">The world or data center to retrieve data for. This may be an ID or a name.</param>
+        /// <param name="entriesToReturn">The number of entries to return. By default, this is set to 1800, but may be set to a maximum of 999999.</param>
+        /// <response code="200">Data retrieved successfully.</response>
+        /// <response code="404">
+        /// The world/DC or item requested is invalid. When requesting multiple items at once, an invalid item ID
+        /// will not trigger this. Instead, the returned list of unresolved item IDs will contain the invalid item ID or IDs.
+        /// </response>
         [HttpGet]
+        [ProducesResponseType(typeof(HistoryView), 200)]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery] string entriesToReturn)
         {
             // Parameter parsing
