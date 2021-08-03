@@ -50,5 +50,20 @@ namespace Universalis.Application
                 _ => false,
             };
         }
+
+        /// <summary>
+        /// Parses an ID that provided as a full ID or one with 0 as a sentinel for null into a null-if-absent string.
+        /// </summary>
+        /// <param name="id">The ID to parse.</param>
+        /// <returns>A string corresponding to the meaning of the ID.</returns>
+        public static string ParseUnusualId(string id)
+        {
+            return id switch
+            {
+                "0" => null,
+                { } => id,
+                _ => null,
+            };
+        }
     }
 }

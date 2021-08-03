@@ -2,10 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.MarketBoard;
@@ -76,7 +73,7 @@ namespace Universalis.Application.Uploads.Behaviors
                 {
                     WorldId = worldId,
                     ItemId = itemId,
-                    LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
+                    LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
                 };
 
                 if (existingHistory == null)
@@ -134,13 +131,13 @@ namespace Universalis.Application.Uploads.Behaviors
                             PricePerUnit = l.PricePerUnit,
                             Quantity = l.Quantity,
                             DyeId = l.DyeId,
-                            CreatorId = l.CreatorId,
+                            CreatorId = Util.ParseUnusualId(l.CreatorId),
                             CreatorName = l.CreatorName,
                             LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
-                            RetainerId = l.RetainerId,
+                            RetainerId = Util.ParseUnusualId(l.RetainerId),
                             RetainerName = l.RetainerName,
                             RetainerCityIdInternal = l.RetainerCityId,
-                            SellerId = l.SellerId,
+                            SellerId = Util.ParseUnusualId(l.SellerId),
                             UploadApplicationName = source.Name,
                         };
                     })
@@ -158,7 +155,7 @@ namespace Universalis.Application.Uploads.Behaviors
             {
                 WorldId = worldId,
                 ItemId = itemId,
-                LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
+                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
                 Listings = cleanListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>(),
                 RecentHistory = cleanSales ?? existingCurrentlyShown?.RecentHistory ?? new List<Sale>(),
                 UploaderIdHash = parameters.UploaderId,

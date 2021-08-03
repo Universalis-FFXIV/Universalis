@@ -73,10 +73,10 @@ namespace Universalis.Application.Controllers
                         };
 
                         using var sha256 = SHA256.Create();
-                        using var dataStream1 = new MemoryStream(Encoding.UTF8.GetBytes(l.SellerId));
+                        using var dataStream1 = new MemoryStream(Encoding.UTF8.GetBytes(l.SellerId ?? ""));
                         listingView.SellerIdHash = Util.BytesToString(sha256.ComputeHash(dataStream1));
 
-                        using var dataStream2 = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId));
+                        using var dataStream2 = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId ?? ""));
                         listingView.CreatorIdHash = Util.BytesToString(sha256.ComputeHash(dataStream2));
 
                         return listingView;
