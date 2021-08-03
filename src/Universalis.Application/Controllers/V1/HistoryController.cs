@@ -35,7 +35,7 @@ namespace Universalis.Application.Controllers.V1
             // Parameter parsing
             var itemIdsArray = InputProcessing.ParseIdList(itemIds)
                 .Take(100)
-                .ToArray();
+                .ToList();
 
             if (!TryGetWorldDc(worldOrDc, out var worldDc))
             {
@@ -53,7 +53,7 @@ namespace Universalis.Application.Controllers.V1
                 entries = Math.Min(Math.Max(0, queryEntries), 999999);
             }
 
-            if (itemIdsArray.Length == 1)
+            if (itemIdsArray.Count == 1)
             {
                 var itemId = itemIdsArray[0];
 
