@@ -46,14 +46,25 @@ namespace Universalis.Application
                 options.ReportApiVersions = true;
             });
 
-            var license = new OpenApiLicense { Name = "MIT", Url = new Uri("https://github.com/Universalis-FFXIV/Universalis/blob/master/LICENSE") };
             services.AddSwaggerGen(options =>
             {
+                var license = new OpenApiLicense { Name = "MIT", Url = new Uri("https://github.com/Universalis-FFXIV/Universalis/blob/master/LICENSE") };
+
+                var apiDescription = typeof(Startup).Assembly.GetManifestResourceStream("Universalis.Application.doc_description.html");
+                if (apiDescription == null)
+                {
+                    throw new FileNotFoundException(nameof(apiDescription));
+                }
+
+                using var sr = new StreamReader(apiDescription);
+                var description = sr.ReadToEnd();
+
                 options.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Title = "Universalis",
                     Version = "v1",
                     License = license,
+                    Description = description,
                 });
 
                 options.SwaggerDoc("v2", new OpenApiInfo
@@ -61,6 +72,7 @@ namespace Universalis.Application
                     Title = "Universalis",
                     Version = "v2",
                     License = license,
+                    Description = description,
                 });
 
                 var docsFilePath = Path.Combine(AppContext.BaseDirectory, "Universalis.Application.xml");

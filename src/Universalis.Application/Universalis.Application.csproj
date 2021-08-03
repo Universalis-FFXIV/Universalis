@@ -10,6 +10,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="doc_description.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="doc_description.html" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
 
