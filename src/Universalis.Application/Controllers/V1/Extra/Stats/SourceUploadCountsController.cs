@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,7 +19,11 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
             _trustedSourceDb = trustedSourceDb;
         }
 
+        /// <summary>
+        /// Returns the total upload counts for each client application that uploads data to Universalis.
+        /// </summary>
         [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<SourceUploadCountView>), 200)]
         public async Task<IEnumerable<SourceUploadCountView>> Get()
         {
             var data = await _trustedSourceDb.GetUploaderCounts();
@@ -27,7 +32,8 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
                 {
                     Name = d.Name,
                     UploadCount = d.UploadCount,
-                });
+                })
+                .ToList();
         }
     }
 }

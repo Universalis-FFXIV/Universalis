@@ -21,7 +21,17 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
             _currentlyShownDb = currentlyShownDb;
         }
 
+        /// <summary>
+        /// Get the most-recently updated items on the specified world or data center, along with the upload times for each item.
+        /// This endpoint is slow, which may require setting an especially long timeout when making requests to it.
+        /// </summary>
+        /// <param name="world">The world to request data for.</param>
+        /// <param name="dcName">The data center to request data for.</param>
+        /// <param name="entriesToReturn">The number of entries to return (default 50, max 200).</param>
+        /// <response code="404">The world/DC requested is invalid.</response>
         [HttpGet]
+        [ProducesResponseType(typeof(MostRecentlyUpdatedItemsView), 200)]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> Get([FromQuery] string world, [FromQuery] string dcName, [FromQuery(Name = "entries")] string entriesToReturn)
         {
             if (string.IsNullOrEmpty(world) && string.IsNullOrEmpty(dcName))

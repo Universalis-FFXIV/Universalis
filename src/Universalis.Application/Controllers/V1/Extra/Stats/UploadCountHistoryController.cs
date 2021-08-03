@@ -18,7 +18,11 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
             _uploadCountHistoryDb = uploadCountHistoryDb;
         }
 
+        /// <summary>
+        /// Returns the number of uploads per day over the past 30 days.
+        /// </summary>
         [HttpGet]
+        [ProducesResponseType(typeof(UploadCountHistoryView), 200)]
         public async Task<UploadCountHistoryView> Get()
         {
             var data = await _uploadCountHistoryDb.Retrieve(new UploadCountHistoryQuery());
