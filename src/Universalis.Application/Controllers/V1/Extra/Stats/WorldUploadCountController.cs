@@ -34,7 +34,7 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
                 .ToDictionary(d => d.WorldName, d => new WorldUploadCountView
                 {
                     Count = d.Count,
-                    Proportion = (double)d.Count / sum,
+                    Proportion = d.Count / sum,
                 });
         }
     }

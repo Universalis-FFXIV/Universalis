@@ -15,9 +15,8 @@ namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats
         {
             var dbAccess = new MockUploadCountHistoryDbAccess();
             var controller = new UploadCountHistoryController(dbAccess);
-
-            var now = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            await dbAccess.Update(now, new List<uint> { 1 });
+            
+            await dbAccess.Update(DateTimeOffset.Now.ToUnixTimeMilliseconds(), new List<double> { 1 });
 
             var result = await controller.Get();
             var counts = Assert.IsType<UploadCountHistoryView>(result);

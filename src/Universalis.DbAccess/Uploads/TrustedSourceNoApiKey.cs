@@ -4,6 +4,6 @@
     {
         public string Name { get; init; }
 
-        public uint UploadCount { get; init; }
+        public double UploadCount { get; init; }
     }
 }

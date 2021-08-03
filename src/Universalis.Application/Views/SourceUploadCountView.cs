@@ -8,6 +8,6 @@ namespace Universalis.Application.Views
         public string Name { get; set; }
 
         [JsonProperty("uploadCount")]
-        public uint UploadCount { get; set; }
+        public double UploadCount { get; set; }
     }
 }

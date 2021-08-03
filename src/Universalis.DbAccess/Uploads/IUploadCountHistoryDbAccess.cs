@@ -10,7 +10,7 @@ namespace Universalis.DbAccess.Uploads
         public Task Create(UploadCountHistory document);
 
         public Task<UploadCountHistory> Retrieve(UploadCountHistoryQuery query);
-        
-        public Task Update(uint lastPush, List<uint> uploadCountByDay);
+
+        public Task Update(double lastPush, List<double> uploadCountByDay);
     }
 }

@@ -28,7 +28,7 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
             var data = await _uploadCountHistoryDb.Retrieve(new UploadCountHistoryQuery());
             return new UploadCountHistoryView
             {
-                UploadCountByDay = data?.UploadCountByDay ?? new List<uint>(),
+                UploadCountByDay = data?.UploadCountByDay ?? new List<double>(),
             };
         }
     }

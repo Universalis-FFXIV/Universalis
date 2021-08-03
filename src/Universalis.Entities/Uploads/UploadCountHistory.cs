@@ -8,10 +8,10 @@ namespace Universalis.Entities.Uploads
         public static readonly string DefaultSetName = "uploadCountHistory";
 
         [BsonElement("lastPush")]
-        public uint LastPush { get; set; }
+        public double LastPush { get; set; }
 
         [BsonElement("uploadCountByDay")]
-        public List<uint> UploadCountByDay { get; set; }
+        public List<double> UploadCountByDay { get; set; }
 
         public UploadCountHistory() : base(DefaultSetName) { }
     }

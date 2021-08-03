@@ -8,7 +8,7 @@ namespace Universalis.Entities.Uploads
         public static readonly string DefaultSetName = "worldUploadCount";
 
         [BsonElement("count")]
-        public uint Count { get; init; }
+        public double Count { get; init; }
 
         [BsonElement("worldName")]
         public string WorldName { get; init; }

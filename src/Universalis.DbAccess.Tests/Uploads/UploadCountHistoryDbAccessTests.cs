@@ -34,7 +34,7 @@ namespace Universalis.DbAccess.Tests.Uploads
             await db.Create(new UploadCountHistory
             {
                 LastPush = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-                UploadCountByDay = new List<uint> { 1 },
+                UploadCountByDay = new List<double> { 1 },
             });
         }
 
@@ -52,8 +52,8 @@ namespace Universalis.DbAccess.Tests.Uploads
             var db = new UploadCountHistoryDbAccess(Database);
             await db.Update(new UploadCountHistory
             {
-                LastPush = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-                UploadCountByDay = new List<uint> { 1 },
+                LastPush = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                UploadCountByDay = new List<double> { 1 },
             }, new UploadCountHistoryQuery());
         }
 
@@ -63,8 +63,8 @@ namespace Universalis.DbAccess.Tests.Uploads
             var db = new UploadCountHistoryDbAccess(Database);
             var document = new UploadCountHistory
             {
-                LastPush = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-                UploadCountByDay = new List<uint> { 1 },
+                LastPush = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                UploadCountByDay = new List<double> { 1 },
             };
             await db.Create(document);
 

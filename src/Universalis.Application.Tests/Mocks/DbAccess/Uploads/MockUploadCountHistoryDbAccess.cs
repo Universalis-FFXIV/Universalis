@@ -28,7 +28,7 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
             await Create(document);
         }
 
-        public async Task Update(uint lastPush, List<uint> uploadCountByDay)
+        public async Task Update(double lastPush, List<double> uploadCountByDay)
         {
             var existing = await Retrieve(new UploadCountHistoryQuery());
             if (existing != null)

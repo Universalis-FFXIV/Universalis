@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using MongoDB.Driver;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using MongoDB.Driver;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.Entities.Uploads;
 
@@ -12,7 +12,7 @@ namespace Universalis.DbAccess.Uploads
 
         public UploadCountHistoryDbAccess(string databaseName) : base(databaseName, "content") { }
 
-        public async Task Update(uint lastPush, List<uint> uploadCountByDay)
+        public async Task Update(double lastPush, List<double> uploadCountByDay)
         {
             var filterBuilder = Builders<UploadCountHistory>.Filter;
             var filter = filterBuilder.Eq(o => o.SetName, UploadCountHistory.DefaultSetName);

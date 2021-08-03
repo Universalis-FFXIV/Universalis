@@ -33,7 +33,7 @@ namespace Universalis.Application.Uploads.Behaviors
                 await _uploadCountHistoryDb.Create(new UploadCountHistory
                 {
                     LastPush = now,
-                    UploadCountByDay = new List<uint> { 1 },
+                    UploadCountByDay = new List<double> { 1 },
                 });
 
                 return null;
@@ -42,7 +42,7 @@ namespace Universalis.Application.Uploads.Behaviors
             if (now - data.LastPush > 86400000)
             {
                 data.LastPush = now;
-                data.UploadCountByDay = new uint[] { 0 }.Concat(data.UploadCountByDay ?? new List<uint>()).Take(30).ToList();
+                data.UploadCountByDay = new double[] { 0 }.Concat(data.UploadCountByDay ?? new List<double>()).Take(30).ToList();
             }
 
             data.UploadCountByDay[0]++;
