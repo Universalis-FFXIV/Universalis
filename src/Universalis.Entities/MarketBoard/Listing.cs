@@ -1,7 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 namespace Universalis.Entities.MarketBoard
@@ -12,10 +11,7 @@ namespace Universalis.Entities.MarketBoard
         public object ListingIdInternal { get; init; }
 
         [BsonIgnore]
-        public string ListingId =>
-            ListingIdInternal is int listingIdInt
-                ? listingIdInt.ToString()
-                : (string)ListingIdInternal;
+        public string ListingId => DbCleaning.ReadAsString(ListingIdInternal);
 
         [BsonElement("hq")]
         public bool Hq { get; init; }
@@ -39,10 +35,7 @@ namespace Universalis.Entities.MarketBoard
         public object CreatorIdInternal { get; init; }
 
         [BsonIgnore]
-        public string CreatorId =>
-            CreatorIdInternal is double creatorIdInt
-                ? Math.Truncate(creatorIdInt).ToString(CultureInfo.InvariantCulture)
-                : (string)CreatorIdInternal;
+        public string CreatorId => DbCleaning.ReadAsString(CreatorIdInternal);
 
         [BsonElement("creatorName")]
         public string CreatorName { get; init; }
@@ -54,10 +47,7 @@ namespace Universalis.Entities.MarketBoard
         public object RetainerIdInternal { get; init; }
 
         [BsonIgnore]
-        public string RetainerId =>
-            RetainerIdInternal is int retainerIdInt
-                ? retainerIdInt.ToString()
-                : (string)RetainerIdInternal;
+        public string RetainerId => DbCleaning.ReadAsString(RetainerIdInternal);
 
         [BsonElement("retainerName")]
         public string RetainerName { get; init; }
@@ -66,19 +56,13 @@ namespace Universalis.Entities.MarketBoard
         public object RetainerCityIdInternal { get; init; }
 
         [BsonIgnore]
-        public int RetainerCityId =>
-            RetainerCityIdInternal is int retainerCityIdInt
-                ? retainerCityIdInt
-                : City.Dict[(string)RetainerCityIdInternal];
+        public int RetainerCityId => DbCleaning.ReadCityId(RetainerCityIdInternal);
 
         [BsonElement("sellerID")]
         public object SellerIdInternal { get; init; }
 
         [BsonIgnore]
-        public string SellerId =>
-            SellerIdInternal is double sellerIdInt
-                ? Math.Truncate(sellerIdInt).ToString(CultureInfo.InvariantCulture)
-                : (string)SellerIdInternal;
+        public string SellerId => DbCleaning.ReadAsString(SellerIdInternal);
 
         [BsonElement("sourceName")]
         public string UploadApplicationName { get; init; }
