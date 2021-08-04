@@ -10,6 +10,7 @@ namespace Universalis.Entities
             return o switch
             {
                 string s => s,
+                null => null,
                 double d => Math.Truncate(d).ToString(CultureInfo.InvariantCulture),
                 _ => o.ToString(),
             };
@@ -20,6 +21,7 @@ namespace Universalis.Entities
             return o switch
             {
                 int i => i,
+                null => 0,
                 _ => City.Dict[(string)o],
             };
         }
