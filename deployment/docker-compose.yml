@@ -3,7 +3,7 @@ services:
   universalis:
     image: ghcr.io/universalis-ffxiv/universalis:latest
     environment:
-      ASPNETCORE_URLS: http://+:4001
+      ASPNETCORE_URLS: http://+:4000
     volumes:
       - /home/universalis/sqpack:/sqpack
     network_mode: "host"
