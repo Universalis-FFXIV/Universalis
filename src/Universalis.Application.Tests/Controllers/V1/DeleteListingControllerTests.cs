@@ -26,11 +26,11 @@ namespace Universalis.Application.Tests.Controllers.V1
             var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders);
 
             const string key = "blah";
-            using (var sha256 = SHA256.Create())
+            using (var sha512 = SHA512.Create())
             {
                 await trustedSources.Create(new TrustedSource
                 {
-                    ApiKeySha256 = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(key))),
+                    ApiKeySha512 = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key))),
                 });
             }
 
@@ -65,11 +65,11 @@ namespace Universalis.Application.Tests.Controllers.V1
             var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders);
 
             const string key = "blah";
-            using (var sha256 = SHA256.Create())
+            using (var sha512 = SHA512.Create())
             {
                 await trustedSources.Create(new TrustedSource
                 {
-                    ApiKeySha256 = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(key))),
+                    ApiKeySha512 = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key))),
                 });
             }
 
@@ -116,11 +116,11 @@ namespace Universalis.Application.Tests.Controllers.V1
             var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders);
 
             const string key = "blah";
-            using (var sha256 = SHA256.Create())
+            using (var sha512 = SHA512.Create())
             {
                 await trustedSources.Create(new TrustedSource
                 {
-                    ApiKeySha256 = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(key))),
+                    ApiKeySha512 = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key))),
                 });
             }
 
@@ -145,11 +145,11 @@ namespace Universalis.Application.Tests.Controllers.V1
             var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders);
 
             const string key = "blah";
-            using (var sha256 = SHA256.Create())
+            using (var sha512 = SHA512.Create())
             {
                 await trustedSources.Create(new TrustedSource
                 {
-                    ApiKeySha256 = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(key))),
+                    ApiKeySha512 = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key))),
                 });
             }
 
@@ -176,14 +176,17 @@ namespace Universalis.Application.Tests.Controllers.V1
 
             const string key = "blah";
             const string uploaderId = "ffff";
-            string uploaderIdHash;
-            using (var sha256 = SHA256.Create())
+            using (var sha512 = SHA512.Create())
             {
                 await trustedSources.Create(new TrustedSource
                 {
-                    ApiKeySha256 = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(key))),
+                    ApiKeySha512 = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key))),
                 });
+            }
 
+            string uploaderIdHash;
+            using (var sha256 = SHA256.Create())
+            {
                 uploaderIdHash = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(uploaderId)));
             }
 

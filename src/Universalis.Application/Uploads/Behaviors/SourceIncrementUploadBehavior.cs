@@ -25,7 +25,7 @@ namespace Universalis.Application.Uploads.Behaviors
         {
             await _trustedSourceDb.Increment(new TrustedSourceQuery
             {
-                ApiKeySha256 = source.ApiKeySha256,
+                ApiKeySha512 = source.ApiKeySha512,
             });
 
             return null;

@@ -38,7 +38,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         public async Task Retrieve_DoesNotThrow()
         {
             var db = new TrustedSourceDbAccess(Database);
-            var output = await db.Retrieve(new TrustedSourceQuery { ApiKeySha256 = "babaef32" });
+            var output = await db.Retrieve(new TrustedSourceQuery { ApiKeySha512 = "babaef32" });
             Assert.Null(output);
         }
 
@@ -47,14 +47,14 @@ namespace Universalis.DbAccess.Tests.Uploads
         {
             var db = new TrustedSourceDbAccess(Database);
             var document = SeedDataGenerator.MakeTrustedSource();
-            await db.Update(document, new TrustedSourceQuery { ApiKeySha256 = document.ApiKeySha256 });
+            await db.Update(document, new TrustedSourceQuery { ApiKeySha512 = document.ApiKeySha512 });
         }
 
         [Fact]
         public async Task Delete_DoesNotThrow()
         {
             var db = new TrustedSourceDbAccess(Database);
-            await db.Delete(new TrustedSourceQuery { ApiKeySha256 = "babaef32" });
+            await db.Delete(new TrustedSourceQuery { ApiKeySha512 = "babaef32" });
         }
 
         [Fact]
@@ -64,9 +64,9 @@ namespace Universalis.DbAccess.Tests.Uploads
             var document = SeedDataGenerator.MakeTrustedSource();
             await db.Create(document);
 
-            var output = await db.Retrieve(new TrustedSourceQuery { ApiKeySha256 = document.ApiKeySha256 });
+            var output = await db.Retrieve(new TrustedSourceQuery { ApiKeySha512 = document.ApiKeySha512 });
             Assert.NotNull(output);
-            Assert.Equal(document.ApiKeySha256, output.ApiKeySha256);
+            Assert.Equal(document.ApiKeySha512, output.ApiKeySha512);
             Assert.Equal(document.Name, output.Name);
             Assert.Equal(document.UploadCount, output.UploadCount);
         }
@@ -75,7 +75,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         public async Task Increment_DoesNotCreateIfNone()
         {
             var db = new TrustedSourceDbAccess(Database);
-            await db.Increment(new TrustedSourceQuery { ApiKeySha256 = "bbbbbbbb" });
+            await db.Increment(new TrustedSourceQuery { ApiKeySha512 = "bbbbbbbb" });
             var output = await db.GetUploaderCounts();
             Assert.NotNull(output);
             Assert.Empty(output);
@@ -87,7 +87,7 @@ namespace Universalis.DbAccess.Tests.Uploads
             var db = new TrustedSourceDbAccess(Database);
             var document = SeedDataGenerator.MakeTrustedSource();
             await db.Create(document);
-            await db.Increment(new TrustedSourceQuery { ApiKeySha256 = document.ApiKeySha256 });
+            await db.Increment(new TrustedSourceQuery { ApiKeySha512 = document.ApiKeySha512 });
             var output = (await db.GetUploaderCounts())?.ToList();
             Assert.NotNull(output);
             Assert.Single(output);

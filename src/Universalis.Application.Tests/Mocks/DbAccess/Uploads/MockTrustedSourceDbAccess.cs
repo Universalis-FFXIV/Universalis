@@ -13,14 +13,14 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
 
         public Task Create(TrustedSource document)
         {
-            _collection.Add(document.ApiKeySha256, document);
+            _collection.Add(document.ApiKeySha512, document);
             return Task.CompletedTask;
         }
 
         public Task<TrustedSource> Retrieve(TrustedSourceQuery query)
         {
             return Task.FromResult(_collection
-                .FirstOrDefault(s => s.Key == query.ApiKeySha256).Value);
+                .FirstOrDefault(s => s.Key == query.ApiKeySha512).Value);
         }
 
         public Task<IEnumerable<TrustedSourceNoApiKey>> GetUploaderCounts()
@@ -49,7 +49,7 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
 
             await Update(new TrustedSource
             {
-                ApiKeySha256 = document.ApiKeySha256,
+                ApiKeySha512 = document.ApiKeySha512,
                 Name = document.Name,
                 UploadCount = document.UploadCount + 1,
             }, query);
@@ -57,7 +57,7 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
 
         public Task Delete(TrustedSourceQuery query)
         {
-            _collection.Remove(query.ApiKeySha256);
+            _collection.Remove(query.ApiKeySha512);
             return Task.CompletedTask;
         }
     }

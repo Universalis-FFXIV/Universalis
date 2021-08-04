@@ -20,13 +20,13 @@ namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats
 
             var document = new TrustedSource
             {
-                ApiKeySha256 = "2A",
+                ApiKeySha512 = "2A",
                 Name = "test runner",
                 UploadCount = 0,
             };
             await dbAccess.Create(document);
 
-            var query = new TrustedSourceQuery { ApiKeySha256 = document.ApiKeySha256 };
+            var query = new TrustedSourceQuery { ApiKeySha512 = document.ApiKeySha512 };
             await dbAccess.Increment(query);
 
             var result = await controller.Get();

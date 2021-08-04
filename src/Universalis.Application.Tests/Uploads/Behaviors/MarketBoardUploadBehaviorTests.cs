@@ -90,7 +90,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
 
             var source = new TrustedSource
             {
-                ApiKeySha256 = "2f44abe6",
+                ApiKeySha512 = "2f44abe6",
                 Name = "test runner",
                 UploadCount = 0,
             };
@@ -147,7 +147,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
 
             var source = new TrustedSource
             {
-                ApiKeySha256 = "2f44abe6",
+                ApiKeySha512 = "2f44abe6",
                 Name = "test runner",
                 UploadCount = 0,
             };
@@ -199,7 +199,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
 
             var source = new TrustedSource
             {
-                ApiKeySha256 = "2f44abe6",
+                ApiKeySha512 = "2f44abe6",
                 Name = "test runner",
                 UploadCount = 0,
             };

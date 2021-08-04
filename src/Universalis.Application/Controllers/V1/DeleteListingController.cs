@@ -42,7 +42,7 @@ namespace Universalis.Application.Controllers.V1
                 await using var authStream = new MemoryStream(Encoding.UTF8.GetBytes(authorization));
                 source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
                 {
-                    ApiKeySha256 = Util.BytesToString(await sha256.ComputeHashAsync(authStream)),
+                    ApiKeySha512 = Util.BytesToString(await sha256.ComputeHashAsync(authStream)),
                 });
             }
 

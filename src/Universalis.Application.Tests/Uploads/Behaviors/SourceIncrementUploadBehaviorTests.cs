@@ -32,7 +32,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
 
                 var source = new TrustedSource
                 {
-                    ApiKeySha256 = keyHash,
+                    ApiKeySha512 = keyHash,
                     Name = "test runner",
                     UploadCount = 0,
                 };
@@ -47,7 +47,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
 
                 var data = await dbAccess.Retrieve(new TrustedSourceQuery
                 {
-                    ApiKeySha256 = keyHash,
+                    ApiKeySha512 = keyHash,
                 });
 
                 Assert.NotNull(data);

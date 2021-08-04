@@ -98,7 +98,7 @@ namespace Universalis.DbAccess.Tests
         {
             return new()
             {
-                ApiKeySha256 = "aefe32ee",
+                ApiKeySha512 = "aefe32ee",
                 Name = "test runner",
                 UploadCount = 0,
             };

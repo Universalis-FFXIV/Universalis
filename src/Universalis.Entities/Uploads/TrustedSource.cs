@@ -8,7 +8,7 @@ namespace Universalis.Entities.Uploads
         public string Name { get; init; }
 
         [BsonElement("apiKey")]
-        public string ApiKeySha256 { get; init; } // There's no real reason for this to be hashed, but ~legacy~
+        public string ApiKeySha512 { get; init; } // There's no real reason for this to be hashed, but ~legacy~
 
         [BsonElement("uploadCount")]
         public double UploadCount { get; init; }
