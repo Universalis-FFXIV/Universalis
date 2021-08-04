@@ -3,7 +3,7 @@
 
 # Universalis
 
-A crowdsourced market board aggregator for the game FINAL FANTASY XIV. This branch is a rewrite in active development; the current live code is housed on the [master branch](https://github.com/Universalis-FFXIV/Universalis/tree/master).
+A crowdsourced market board aggregator for the game FINAL FANTASY XIV. This branch is a rewrite in active development; the current live code is housed on the [v1 branch](https://github.com/Universalis-FFXIV/Universalis/tree/v1).
 
 ## Endpoint Reference
 *   /api/:world/:item
