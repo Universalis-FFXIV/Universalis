@@ -137,7 +137,7 @@ namespace Universalis.Application.Uploads.Behaviors
                             RetainerIdInternal = Util.ParseUnusualId(l.RetainerId),
                             RetainerName = l.RetainerName,
                             RetainerCityIdInternal = l.RetainerCityId,
-                            SellerId = Util.ParseUnusualId(l.SellerId),
+                            SellerIdInternal = Util.ParseUnusualId(l.SellerId),
                             UploadApplicationName = source.Name,
                         };
                     })

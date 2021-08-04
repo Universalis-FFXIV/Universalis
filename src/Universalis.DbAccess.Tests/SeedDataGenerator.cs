@@ -33,7 +33,7 @@ namespace Universalis.DbAccess.Tests
                         RetainerIdInternal = "54565458626446136554",
                         RetainerName = "xpotato",
                         RetainerCityIdInternal = 0xA,
-                        SellerId = "54565458626446136553",
+                        SellerIdInternal = "54565458626446136553",
                         UploadApplicationName = "test runner",
                     })
                     .ToList(),

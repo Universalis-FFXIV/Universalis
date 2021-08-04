@@ -50,7 +50,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                         RetainerIdInternal = "54565458626446136554",
                         RetainerName = "xpotato",
                         RetainerCityIdInternal = 0xA,
-                        SellerId = "54565458626446136552",
+                        SellerIdInternal = "54565458626446136552",
                         UploadApplicationName = "test runner",
                     })
                     .ToList(),
@@ -107,7 +107,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                         RetainerIdInternal = "54565458626446136554",
                         RetainerName = "xpotato",
                         RetainerCityIdInternal = 0xA,
-                        SellerId = "54565458626446136552",
+                        SellerIdInternal = "54565458626446136552",
                         UploadApplicationName = "test runner",
                     })
                     .ToList(),
@@ -147,7 +147,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                         RetainerIdInternal = "54565458626446136554",
                         RetainerName = "xpotato",
                         RetainerCityIdInternal = 0xA,
-                        SellerId = "54565458626446136552",
+                        SellerIdInternal = "54565458626446136552",
                         UploadApplicationName = "test runner",
                     })
                     .ToList(),
@@ -212,7 +212,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                         RetainerIdInternal = "54565458626446136554",
                         RetainerName = "xpotato",
                         RetainerCityIdInternal = 0xA,
-                        SellerId = "54565458626446136552",
+                        SellerIdInternal = "54565458626446136552",
                         UploadApplicationName = "test runner",
                     })
                     .ToList(),
@@ -252,7 +252,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                         RetainerIdInternal = "54565458626446136554",
                         RetainerName = "xpotato",
                         RetainerCityIdInternal = 0xA,
-                        SellerId = "54565458626446136552",
+                        SellerIdInternal = "54565458626446136552",
                         UploadApplicationName = "test runner",
                     })
                     .ToList(),
@@ -316,7 +316,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                         RetainerIdInternal = "54565458626446136554",
                         RetainerName = "xpotato",
                         RetainerCityIdInternal = 0xA,
-                        SellerId = "54565458626446136552",
+                        SellerIdInternal = "54565458626446136552",
                         UploadApplicationName = "test runner",
                     })
                     .ToList(),
@@ -356,7 +356,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                         RetainerIdInternal = "54565458626446136554",
                         RetainerName = "xpotato",
                         RetainerCityIdInternal = 0xA,
-                        SellerId = "54565458626446136552",
+                        SellerIdInternal = "54565458626446136552",
                         UploadApplicationName = "test runner",
                     })
                     .ToList(),

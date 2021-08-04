@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Universalis.Entities.MarketBoard
@@ -65,7 +66,13 @@ namespace Universalis.Entities.MarketBoard
                 : City.Dict[(string)RetainerCityIdInternal];
 
         [BsonElement("sellerID")]
-        public string SellerId { get; init; }
+        public object SellerIdInternal { get; init; }
+
+        [BsonIgnore]
+        public string SellerId =>
+            SellerIdInternal is double sellerIdInt
+                ? Math.Truncate(sellerIdInt).ToString(CultureInfo.InvariantCulture)
+                : (string)SellerIdInternal;
 
         [BsonElement("sourceName")]
         public string UploadApplicationName { get; init; }
