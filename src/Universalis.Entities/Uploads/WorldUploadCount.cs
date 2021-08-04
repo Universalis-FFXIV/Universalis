@@ -19,7 +19,7 @@ namespace Universalis.Entities.Uploads
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Count == other.Count && WorldName == other.WorldName;
+            return Math.Abs(Count - other.Count) < 0.01 && WorldName == other.WorldName;
         }
 
         public override bool Equals(object obj)

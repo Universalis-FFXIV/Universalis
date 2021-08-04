@@ -2,7 +2,7 @@
 
 namespace Universalis.Entities
 {
-    internal class City
+    internal static class City
     {
         public static readonly Dictionary<string, byte> Dict = new()
         {

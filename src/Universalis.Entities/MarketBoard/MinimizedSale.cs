@@ -41,7 +41,7 @@ namespace Universalis.Entities.MarketBoard
             return Hq == other.Hq
                    && PricePerUnit == other.PricePerUnit
                    && Quantity == other.Quantity
-                   && SaleTimeUnixSeconds == other.SaleTimeUnixSeconds;
+                   && Math.Abs(SaleTimeUnixSeconds - other.SaleTimeUnixSeconds) < 0.01;
         }
 
         public override bool Equals(object obj)
