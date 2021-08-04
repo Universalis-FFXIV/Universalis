@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System;
 using System.IO;
+using Microsoft.AspNetCore.Authentication.Negotiate;
 using Universalis.Alerts;
 using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Behaviors;
@@ -32,6 +33,10 @@ namespace Universalis.Application
             services.AddUserAlerts();
 
             services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Scoped);
+
+            services
+                .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
+                .AddNegotiate();
 
             services.AddControllers(options =>
             {
