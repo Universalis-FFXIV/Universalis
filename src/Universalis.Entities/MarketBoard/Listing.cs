@@ -44,7 +44,13 @@ namespace Universalis.Entities.MarketBoard
         public double LastReviewTimeUnixSeconds { get; init; }
 
         [BsonElement("retainerID")]
-        public string RetainerId { get; init; }
+        public object RetainerIdInternal { get; init; }
+
+        [BsonIgnore]
+        public string RetainerId =>
+            RetainerIdInternal is int retainerIdInt
+                ? retainerIdInt.ToString()
+                : (string)RetainerIdInternal;
 
         [BsonElement("retainerName")]
         public string RetainerName { get; init; }
