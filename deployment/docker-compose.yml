@@ -6,6 +6,7 @@ services:
       ASPNETCORE_URLS: http://+:4000
     volumes:
       - /home/universalis/sqpack:/sqpack
+      - /home/universalis/DataProtection-Keys:/root/.aspnet/DataProtection-Keys
     network_mode: "host"
   watchtower:
     image: containrrr/watchtower
