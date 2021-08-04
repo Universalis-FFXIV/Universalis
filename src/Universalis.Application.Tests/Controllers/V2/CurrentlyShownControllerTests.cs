@@ -37,7 +37,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                 Listings = Enumerable.Range(0, 100)
                     .Select(i => new Listing
                     {
-                        ListingId = "FB",
+                        ListingIdInternal = "FB",
                         Hq = rand.NextDouble() > 0.5,
                         OnMannequin = rand.NextDouble() > 0.5,
                         Materia = new List<Materia>(),
@@ -94,7 +94,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                 Listings = Enumerable.Range(0, 100)
                     .Select(i => new Listing
                     {
-                        ListingId = "FB",
+                        ListingIdInternal = "FB",
                         Hq = rand.NextDouble() > 0.5,
                         OnMannequin = rand.NextDouble() > 0.5,
                         Materia = new List<Materia>(),
@@ -134,7 +134,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                 Listings = Enumerable.Range(0, 100)
                     .Select(i => new Listing
                     {
-                        ListingId = "FB",
+                        ListingIdInternal = "FB",
                         Hq = rand.NextDouble() > 0.5,
                         OnMannequin = rand.NextDouble() > 0.5,
                         Materia = new List<Materia>(),
@@ -199,7 +199,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                 Listings = Enumerable.Range(0, 100)
                     .Select(i => new Listing
                     {
-                        ListingId = "FB",
+                        ListingIdInternal = "FB",
                         Hq = rand.NextDouble() > 0.5,
                         OnMannequin = rand.NextDouble() > 0.5,
                         Materia = new List<Materia>(),
@@ -239,7 +239,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                 Listings = Enumerable.Range(0, 100)
                     .Select(i => new Listing
                     {
-                        ListingId = "FB",
+                        ListingIdInternal = "FB",
                         Hq = rand.NextDouble() > 0.5,
                         OnMannequin = rand.NextDouble() > 0.5,
                         Materia = new List<Materia>(),
@@ -303,7 +303,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                 Listings = Enumerable.Range(0, 100)
                     .Select(i => new Listing
                     {
-                        ListingId = "FB",
+                        ListingIdInternal = "FB",
                         Hq = rand.NextDouble() > 0.5,
                         OnMannequin = rand.NextDouble() > 0.5,
                         Materia = new List<Materia>(),
@@ -343,7 +343,7 @@ namespace Universalis.Application.Tests.Controllers.V2
                 Listings = Enumerable.Range(0, 100)
                     .Select(i => new Listing
                     {
-                        ListingId = "FB",
+                        ListingIdInternal = "FB",
                         Hq = rand.NextDouble() > 0.5,
                         OnMannequin = rand.NextDouble() > 0.5,
                         Materia = new List<Materia>(),

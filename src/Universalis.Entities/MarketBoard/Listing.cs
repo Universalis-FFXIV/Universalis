@@ -8,7 +8,13 @@ namespace Universalis.Entities.MarketBoard
     public class Listing : IEquatable<Listing>
     {
         [BsonElement("listingID")]
-        public string ListingId { get; init; }
+        public object ListingIdInternal { get; init; }
+
+        [BsonIgnore]
+        public string ListingId =>
+            ListingIdInternal is int listingIdInt
+                ? listingIdInt.ToString()
+                : (string)ListingIdInternal;
 
         [BsonElement("hq")]
         public bool Hq { get; init; }

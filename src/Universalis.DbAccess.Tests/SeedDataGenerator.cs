@@ -20,7 +20,7 @@ namespace Universalis.DbAccess.Tests
                 Listings = Enumerable.Range(0, 100)
                     .Select(i => new Listing
                     {
-                        ListingId = "FB",
+                        ListingIdInternal = "FB",
                         Hq = rand.NextDouble() > 0.5,
                         OnMannequin = rand.NextDouble() > 0.5,
                         Materia = new List<Materia>(),

@@ -119,7 +119,7 @@ namespace Universalis.Application.Uploads.Behaviors
                     {
                         return new Listing
                         {
-                            ListingId = l.ListingId,
+                            ListingIdInternal = l.ListingId,
                             Hq = Util.ParseUnusualBool(l.Hq),
                             OnMannequin = Util.ParseUnusualBool(l.OnMannequin),
                             Materia = l.Materia.Select(s => new Materia
