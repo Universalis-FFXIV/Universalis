@@ -16,6 +16,10 @@ git reset --hard
 git checkout origin/v2 -- deployment
 ````
 
+## Watchtower
+In order to send webhook notifications, the environment variable `ALERTS_CHANNEL_WEBHOOK` must be set.
+The format of this environment variable is `token@channel`.
+
 ## Lumina
 This application requires sheets from the game to be installed in `/home/universalis/sqpack`.
 Information about this is located [here](https://lumina.xiv.dev/docs/guides/basic-usage.html).
