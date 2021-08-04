@@ -11,7 +11,7 @@ services:
     image: containrrr/watchtower
     environment:
       WATCHTOWER_NOTIFICATIONS: shoutrrr
-      WATCHTOWER_NOTIFICATION_URL: "discord://${ALERTS_CHANNEL_WEBHOOK}"
+      WATCHTOWER_NOTIFICATION_URL: "discord://${ALERTS_CHANNEL_WEBHOOK}" # Format: token@channel
       WATCHTOWER_NOTIFICATION_TEMPLATE: "{{range .}}{{.Time.Format \"2006-01-02 15:04:05\"}} ({{.Level}}): {{.Message}}{{println}}{{end}}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
