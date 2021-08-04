@@ -30,7 +30,7 @@ namespace Universalis.DbAccess.Tests
                         CreatorId = "54565458626446136552",
                         CreatorName = "Bingus Bongus",
                         LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
-                        RetainerId = "54565458626446136554",
+                        RetainerIdInternal = "54565458626446136554",
                         RetainerName = "xpotato",
                         RetainerCityIdInternal = 0xA,
                         SellerId = "54565458626446136553",

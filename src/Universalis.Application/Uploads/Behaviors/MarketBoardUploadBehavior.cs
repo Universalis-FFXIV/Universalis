@@ -134,7 +134,7 @@ namespace Universalis.Application.Uploads.Behaviors
                             CreatorId = Util.ParseUnusualId(l.CreatorId),
                             CreatorName = l.CreatorName,
                             LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
-                            RetainerId = Util.ParseUnusualId(l.RetainerId),
+                            RetainerIdInternal = Util.ParseUnusualId(l.RetainerId),
                             RetainerName = l.RetainerName,
                             RetainerCityIdInternal = l.RetainerCityId,
                             SellerId = Util.ParseUnusualId(l.SellerId),
