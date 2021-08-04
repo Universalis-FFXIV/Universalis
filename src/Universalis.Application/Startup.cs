@@ -7,7 +7,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System;
 using System.IO;
-using System.Xml.XPath;
 using Universalis.Alerts;
 using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Behaviors;
@@ -97,6 +96,8 @@ namespace Universalis.Application
             }
 
             app.UseRouting();
+
+            app.UseAuthentication();
 
             app.UseEndpoints(endpoints =>
             {
