@@ -131,7 +131,7 @@ namespace Universalis.Application.Uploads.Behaviors
                             PricePerUnit = l.PricePerUnit,
                             Quantity = l.Quantity,
                             DyeId = l.DyeId,
-                            CreatorId = Util.ParseUnusualId(l.CreatorId),
+                            CreatorIdInternal = Util.ParseUnusualId(l.CreatorId),
                             CreatorName = l.CreatorName,
                             LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
                             RetainerIdInternal = Util.ParseUnusualId(l.RetainerId),

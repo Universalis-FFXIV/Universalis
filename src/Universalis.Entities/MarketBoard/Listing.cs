@@ -36,7 +36,13 @@ namespace Universalis.Entities.MarketBoard
         public uint DyeId { get; init; }
 
         [BsonElement("creatorID")]
-        public string CreatorId { get; init; }
+        public object CreatorIdInternal { get; init; }
+
+        [BsonIgnore]
+        public string CreatorId =>
+            CreatorIdInternal is double creatorIdInt
+                ? Math.Truncate(creatorIdInt).ToString(CultureInfo.InvariantCulture)
+                : (string)CreatorIdInternal;
 
         [BsonElement("creatorName")]
         public string CreatorName { get; init; }

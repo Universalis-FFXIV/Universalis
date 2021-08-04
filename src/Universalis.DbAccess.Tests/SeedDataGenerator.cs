@@ -27,7 +27,7 @@ namespace Universalis.DbAccess.Tests
                         PricePerUnit = (uint)rand.Next(100, 60000),
                         Quantity = (uint)rand.Next(1, 999),
                         DyeId = (byte)rand.Next(0, 255),
-                        CreatorId = "54565458626446136552",
+                        CreatorIdInternal = "54565458626446136552",
                         CreatorName = "Bingus Bongus",
                         LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
                         RetainerIdInternal = "54565458626446136554",
