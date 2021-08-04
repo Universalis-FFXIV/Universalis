@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Universalis.Application.Views;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Uploads;
 
@@ -22,10 +23,13 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
         /// is a legacy endpoint and does not include any data on which worlds or data centers the updates happened on.
         /// </summary>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<uint>), 200)]
-        public async Task<IEnumerable<uint>> Get()
+        [ProducesResponseType(typeof(RecentlyUpdatedItemsView), 200)]
+        public async Task<RecentlyUpdatedItemsView> Get()
         {
-            return (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery()))?.Items ?? new List<uint>();
+            var data = (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery()))?.Items;
+            return data == null
+                ? new RecentlyUpdatedItemsView { Items = new List<uint>() }
+                : new RecentlyUpdatedItemsView { Items = data };
         }
     }
 }

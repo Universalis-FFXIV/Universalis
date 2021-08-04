@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1.Extra.Stats;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
+using Universalis.Application.Views;
 using Xunit;
 
 namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats
@@ -18,7 +19,7 @@ namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats
             await dbAccess.Push(5333);
 
             var result = await controller.Get();
-            var counts = Assert.IsAssignableFrom<IEnumerable<uint>>(result).ToList();
+            var counts = Assert.IsAssignableFrom<RecentlyUpdatedItemsView>(result).Items;
 
             Assert.Single(counts);
             Assert.Equal(5333U, counts[0]);
@@ -31,7 +32,7 @@ namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats
             var controller = new RecentlyUpdatedItemsController(dbAccess);
 
             var result = await controller.Get();
-            var counts = Assert.IsAssignableFrom<IEnumerable<uint>>(result).ToList();
+            var counts = Assert.IsAssignableFrom<RecentlyUpdatedItemsView>(result).Items;
 
             Assert.Empty(counts);
         }
