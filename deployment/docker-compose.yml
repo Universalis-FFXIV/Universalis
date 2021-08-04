@@ -10,7 +10,7 @@ services:
   watchtower:
     image: containrrr/watchtower
     environment:
-      WATCHTOWER_NOTIFICATIONS: shoutrrr
+      WATCHTOWER_NOTIFICATIONS: slack
       WATCHTOWER_NOTIFICATION_URL: "${ALERTS_CHANNEL_WEBHOOK}/slack"
       WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: Watchtower
       WATCHTOWER_NOTIFICATION_TEMPLATE: "{{range .}}{{.Time.Format \"2006-01-02 15:04:05\"}} ({{.Level}}): {{.Message}}{{println}}{{end}}"
