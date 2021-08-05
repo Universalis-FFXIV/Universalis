@@ -61,11 +61,9 @@ namespace Universalis.Application.Controllers
                             Quantity = l.Quantity,
                             Total = l.PricePerUnit * l.Quantity,
                             DyeId = l.DyeId,
-                            CreatorIdHash = l.CreatorId,
                             CreatorName = l.CreatorName,
                             IsCrafted = !string.IsNullOrEmpty(l.CreatorName),
                             LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
-                            RetainerId = l.RetainerId,
                             RetainerName = l.RetainerName,
                             RetainerCityId = l.RetainerCityId,
                             WorldId = worldDc.IsDc ? next.WorldId : null,
@@ -78,6 +76,9 @@ namespace Universalis.Application.Controllers
 
                         using var dataStream2 = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId ?? ""));
                         listingView.CreatorIdHash = Util.BytesToString(sha256.ComputeHash(dataStream2));
+
+                        using var dataStream3 = new MemoryStream(Encoding.UTF8.GetBytes(l.RetainerId ?? ""));
+                        listingView.RetainerId = Util.BytesToString(sha256.ComputeHash(dataStream3));
 
                         return listingView;
                     })
