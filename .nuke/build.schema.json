@@ -74,8 +74,7 @@
               "Clean",
               "Compile",
               "Restore",
-              "Test",
-              "TestNoGameData"
+              "Test"
             ]
           }
         },
@@ -92,8 +91,7 @@
               "Clean",
               "Compile",
               "Restore",
-              "Test",
-              "TestNoGameData"
+              "Test"
             ]
           }
         },
