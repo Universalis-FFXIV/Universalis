@@ -10,11 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="doc_description.html" />
-    <None Remove="Universalis.Application.xml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Include="doc_description.html" />
     <EmbeddedResource Include="Universalis.Application.xml" />
   </ItemGroup>
