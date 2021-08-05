@@ -61,6 +61,7 @@ namespace Universalis.GameData
 
             return worlds
                 .Where(w => w.IsPublic)
+                .Where(w => w.RowId != 25) // Chaos (world)
                 .Select(w => new World { Name = w.Name, Id = w.RowId })
                 .Concat(ChineseServers.Worlds())
                 .ToDictionary(w => w.Id, w => w.Name);
@@ -79,6 +80,7 @@ namespace Universalis.GameData
 
             return worlds
                 .Where(w => w.IsPublic)
+                .Where(w => w.RowId != 25) // Chaos (world)
                 .Select(w => new World { Name = w.Name, Id = w.RowId })
                 .Concat(ChineseServers.Worlds())
                 .ToDictionary(w => w.Name, w => w.Id);
@@ -97,6 +99,7 @@ namespace Universalis.GameData
 
             return new SortedSet<uint>(worlds
                 .Where(w => w.IsPublic)
+                .Where(w => w.RowId != 25) // Chaos (world)
                 .Select(w => new World { Name = w.Name, Id = w.RowId })
                 .Concat(ChineseServers.Worlds())
                 .Select(w => w.Id)
@@ -139,6 +142,7 @@ namespace Universalis.GameData
                     Name = dc.Name,
                     WorldIds = worlds
                         .Where(w => w.IsPublic)
+                        .Where(w => w.RowId != 25) // Chaos (world)
                         .Where(w => w.DataCenter.Row == dc.RowId)
                         .Select(w => w.RowId)
                         .ToArray(),
