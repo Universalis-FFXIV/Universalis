@@ -92,13 +92,14 @@ namespace Universalis.Application
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(options =>
-                {
-                    options.SwaggerEndpoint("./v1/swagger.json", "Universalis v1");
-                    options.SwaggerEndpoint("./v2/swagger.json", "Universalis v2");
-                });
             }
+
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("./v1/swagger.json", "Universalis v1");
+                options.SwaggerEndpoint("./v2/swagger.json", "Universalis v2");
+            });
 
             app.UseRouting();
 
