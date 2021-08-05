@@ -37,12 +37,12 @@ namespace Universalis.Application.Controllers.V1
         public async Task<IActionResult> Post(uint itemId, string world, [FromHeader] string authorization, [FromBody] DeleteListingParameters parameters)
         {
             TrustedSource source;
-            using (var sha256 = SHA256.Create())
+            using (var sha512 = SHA512.Create())
             {
                 await using var authStream = new MemoryStream(Encoding.UTF8.GetBytes(authorization));
                 source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
                 {
-                    ApiKeySha512 = Util.BytesToString(await sha256.ComputeHashAsync(authStream)),
+                    ApiKeySha512 = Util.BytesToString(await sha512.ComputeHashAsync(authStream)),
                 });
             }
 
