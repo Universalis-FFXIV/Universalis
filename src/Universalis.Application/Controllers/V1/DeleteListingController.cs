@@ -86,6 +86,11 @@ namespace Universalis.Application.Controllers.V1
                 && listing.Quantity == parameters.Quantity
                 && listing.PricePerUnit == parameters.PricePerUnit);
 
+            if (listingIndex == -1)
+            {
+                return Ok("Success");
+            }
+
             itemData.Listings.RemoveAt(listingIndex);
 
             await _currentlyShownDb.Update(itemData, new CurrentlyShownQuery
