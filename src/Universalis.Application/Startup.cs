@@ -100,11 +100,19 @@ namespace Universalis.Application
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseSwagger();
+            app.UseSwagger(options =>
+            {
+                options.RouteTemplate = "/docs/swagger/{documentName}/swagger.json";
+            });
+
             app.UseSwaggerUI(options =>
             {
-                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Universalis v1");
-                options.SwaggerEndpoint("/swagger/v2/swagger.json", "Universalis v2");
+                // Relative paths
+                options.SwaggerEndpoint("swagger/v1/swagger.json", "Universalis v1");
+                options.SwaggerEndpoint("swagger/v2/swagger.json", "Universalis v2");
+
+                // Reverse proxy path
+                options.RoutePrefix = "docs";
             });
 
             app.UseRouting();
