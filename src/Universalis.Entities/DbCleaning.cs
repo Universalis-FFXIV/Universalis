@@ -5,6 +5,15 @@ namespace Universalis.Entities
 {
     internal static class DbCleaning
     {
+        public static string NullIfZeroString(string s)
+        {
+            return s switch
+            {
+                "0" => null,
+                _ => s,
+            };
+        }
+
         public static string ReadAsString(object o)
         {
             return o switch

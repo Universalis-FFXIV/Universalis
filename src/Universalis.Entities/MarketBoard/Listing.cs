@@ -11,7 +11,7 @@ namespace Universalis.Entities.MarketBoard
         public object ListingIdInternal { get; init; }
 
         [BsonIgnore]
-        public string ListingId => DbCleaning.ReadAsString(ListingIdInternal);
+        public string ListingId => DbCleaning.NullIfZeroString(DbCleaning.ReadAsString(ListingIdInternal));
 
         [BsonElement("hq")]
         public bool Hq { get; init; }
@@ -35,7 +35,7 @@ namespace Universalis.Entities.MarketBoard
         public object CreatorIdInternal { get; init; }
 
         [BsonIgnore]
-        public string CreatorId => DbCleaning.ReadAsString(CreatorIdInternal);
+        public string CreatorId => DbCleaning.NullIfZeroString(DbCleaning.ReadAsString(CreatorIdInternal));
 
         [BsonElement("creatorName")]
         public string CreatorName { get; init; }
@@ -47,7 +47,7 @@ namespace Universalis.Entities.MarketBoard
         public object RetainerIdInternal { get; init; }
 
         [BsonIgnore]
-        public string RetainerId => DbCleaning.ReadAsString(RetainerIdInternal);
+        public string RetainerId => DbCleaning.NullIfZeroString(DbCleaning.ReadAsString(RetainerIdInternal));
 
         [BsonElement("retainerName")]
         public string RetainerName { get; init; }
@@ -62,7 +62,7 @@ namespace Universalis.Entities.MarketBoard
         public object SellerIdInternal { get; init; }
 
         [BsonIgnore]
-        public string SellerId => DbCleaning.ReadAsString(SellerIdInternal);
+        public string SellerId => DbCleaning.NullIfZeroString(DbCleaning.ReadAsString(SellerIdInternal));
 
         [BsonElement("sourceName")]
         public string UploadApplicationName { get; init; }
