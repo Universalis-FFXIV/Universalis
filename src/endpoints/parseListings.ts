@@ -174,7 +174,7 @@ export async function parseListings(
 					if (
 						!listing.retainerID.length ||
 						!listing.sellerID.length ||
-						!(listing.creatorID != null || listing.creatorID.length)
+						(listing.creatorID != null && !listing.creatorID.length)
 					) {
 						listing = validation.cleanListing(
 							ctx,
