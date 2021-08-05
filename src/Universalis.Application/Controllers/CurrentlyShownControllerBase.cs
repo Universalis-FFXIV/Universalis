@@ -71,13 +71,13 @@ namespace Universalis.Application.Controllers
 
                         using var sha256 = SHA256.Create();
                         
-                        if (l.CreatorId != null)
+                        if (!string.IsNullOrEmpty(l.CreatorId))
                         {
                             using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId));
                             listingView.CreatorIdHash = Util.BytesToString(sha256.ComputeHash(dataStream));
                         }
 
-                        if (l.ListingId != null)
+                        if (!string.IsNullOrEmpty(l.ListingId))
                         {
                             using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.ListingId));
                             listingView.ListingId = Util.BytesToString(sha256.ComputeHash(dataStream));
