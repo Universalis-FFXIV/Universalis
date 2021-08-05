@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System;
 using System.IO;
+using System.Xml.XPath;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Universalis.Alerts;
 using Universalis.Application.Swagger;
@@ -60,8 +61,8 @@ namespace Universalis.Application
                     throw new FileNotFoundException(nameof(apiDescription));
                 }
 
-                using var sr = new StreamReader(apiDescription);
-                var description = sr.ReadToEnd();
+                using var apiDescriptionReader = new StreamReader(apiDescription);
+                var description = apiDescriptionReader.ReadToEnd();
 
                 options.SwaggerDoc("v1", new OpenApiInfo
                 {
@@ -79,8 +80,13 @@ namespace Universalis.Application
                     Description = description,
                 });
 
-                var docsFilePath = Path.Combine(AppContext.BaseDirectory, "Universalis.Application.xml");
-                options.IncludeXmlComments(docsFilePath);
+                var apiDocs = typeof(Startup).Assembly.GetManifestResourceStream("Universalis.Application.Universalis.Application.xml");
+                if (apiDocs == null)
+                {
+                    throw new FileNotFoundException(nameof(apiDocs));
+                }
+
+                options.IncludeXmlComments(() => new XPathDocument(apiDocs));
             });
 
             services.AddSwaggerGenNewtonsoftSupport();

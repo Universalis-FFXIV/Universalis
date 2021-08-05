@@ -11,10 +11,12 @@
 
   <ItemGroup>
     <None Remove="doc_description.html" />
+    <None Remove="Universalis.Application.xml" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="doc_description.html" />
+    <EmbeddedResource Include="Universalis.Application.xml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,12 +38,6 @@
     <ProjectReference Include="..\Universalis.DbAccess\Universalis.DbAccess.csproj" />
     <ProjectReference Include="..\Universalis.Entities\Universalis.Entities.csproj" />
     <ProjectReference Include="..\Universalis.GameData\Universalis.GameData.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Universalis.Application.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>
