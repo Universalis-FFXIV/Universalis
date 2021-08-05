@@ -47,7 +47,6 @@ namespace Universalis.Application.Controllers
                     {
                         var listingView = new ListingView
                         {
-                            ListingId = l.ListingId,
                             Hq = l.Hq,
                             OnMannequin = l.OnMannequin,
                             Materia = l.Materia?
@@ -77,9 +76,11 @@ namespace Universalis.Application.Controllers
                             using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId));
                             listingView.CreatorIdHash = Util.BytesToString(sha256.ComputeHash(dataStream));
                         }
-                        else
+
+                        if (l.ListingId != null)
                         {
-                            listingView.CreatorIdHash = l.CreatorId;
+                            using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.ListingId));
+                            listingView.ListingId = Util.BytesToString(sha256.ComputeHash(dataStream));
                         }
 
                         using var dataStream2 = new MemoryStream(Encoding.UTF8.GetBytes(l.SellerId ?? ""));
