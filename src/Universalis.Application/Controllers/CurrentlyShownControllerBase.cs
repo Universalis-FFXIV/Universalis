@@ -60,7 +60,7 @@ namespace Universalis.Application.Controllers
                             Quantity = l.Quantity,
                             Total = l.PricePerUnit * l.Quantity,
                             DyeId = l.DyeId,
-                            CreatorName = l.CreatorName,
+                            CreatorName = l.CreatorName ?? "",
                             IsCrafted = !string.IsNullOrEmpty(l.CreatorName),
                             LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
                             RetainerName = l.RetainerName,
