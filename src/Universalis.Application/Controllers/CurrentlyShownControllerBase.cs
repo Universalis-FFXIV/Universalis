@@ -62,7 +62,7 @@ namespace Universalis.Application.Controllers
                             DyeId = l.DyeId,
                             CreatorName = l.CreatorName ?? "",
                             IsCrafted = !string.IsNullOrEmpty(l.CreatorName),
-                            LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
+                            LastReviewTimeUnixSeconds = (long)l.LastReviewTimeUnixSeconds,
                             RetainerName = l.RetainerName,
                             RetainerCityId = l.RetainerCityId,
                             WorldId = worldDc.IsDc ? next.WorldId : null,
@@ -100,14 +100,14 @@ namespace Universalis.Application.Controllers
                         PricePerUnit = s.PricePerUnit,
                         Quantity = s.Quantity,
                         Total = s.PricePerUnit * s.Quantity,
-                        TimestampUnixSeconds = s.TimestampUnixSeconds,
+                        TimestampUnixSeconds = (long)s.TimestampUnixSeconds,
                         BuyerName = s.BuyerName,
                         WorldId = worldDc.IsDc ? next.WorldId : null,
                         WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
                     })
                     .Concat(agg.RecentHistory)
                     .ToList();
-                agg.LastUploadTimeUnixMilliseconds = Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
+                agg.LastUploadTimeUnixMilliseconds = (long)Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
 
                 return agg;
             });

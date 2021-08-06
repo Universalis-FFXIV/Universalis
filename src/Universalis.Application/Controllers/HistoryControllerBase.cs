@@ -44,13 +44,13 @@ namespace Universalis.Application.Controllers
                         Hq = s.Hq,
                         PricePerUnit = s.PricePerUnit,
                         Quantity = s.Quantity,
-                        TimestampUnixSeconds = s.SaleTimeUnixSeconds,
+                        TimestampUnixSeconds = (long)s.SaleTimeUnixSeconds,
                         WorldId = worldDc.IsDc ? next.WorldId : null,
                         WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
                     })
                     .Concat(agg.Sales)
                     .ToList();
-                agg.LastUploadTimeUnixMilliseconds = Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
+                agg.LastUploadTimeUnixMilliseconds = (long)Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
 
                 return agg;
             });

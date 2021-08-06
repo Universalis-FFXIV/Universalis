@@ -39,7 +39,7 @@ namespace Universalis.Application.Views
         /// The last upload time for this endpoint, in milliseconds since the UNIX epoch.
         /// </summary>
         [JsonProperty("lastUploadTime")]
-        public double LastUploadTimeUnixMilliseconds { get; set; }
+        public long LastUploadTimeUnixMilliseconds { get; set; }
 
         /// <summary>
         /// A map of quantities to sale counts, representing the number of sales of each quantity.

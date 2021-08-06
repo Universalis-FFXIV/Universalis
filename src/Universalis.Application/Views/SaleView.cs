@@ -38,7 +38,7 @@ namespace Universalis.Application.Views
         /// The sale time, in seconds since the UNIX epoch.
         /// </summary>
         [JsonProperty("timestamp")]
-        public double TimestampUnixSeconds { get; set; }
+        public long TimestampUnixSeconds { get; set; }
 
         /// <summary>
         /// The world ID, if applicable.

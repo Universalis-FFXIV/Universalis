@@ -45,7 +45,7 @@ namespace Universalis.Application.Views
         /// The last upload time for this endpoint, in milliseconds since the UNIX epoch.
         /// </summary>
         [JsonProperty("lastUploadTime")]
-        public double LastUploadTimeUnixMilliseconds { get; set; }
+        public long LastUploadTimeUnixMilliseconds { get; set; }
 
         /// <summary>
         /// The average listing price, with outliers removed beyond 3 standard deviations of the mean.

@@ -75,7 +75,7 @@ namespace Universalis.Application.Views
         /// The time that this listing was posted, in seconds since the UNIX epoch.
         /// </summary>
         [JsonProperty("lastReviewTime")]
-        public double LastReviewTimeUnixSeconds { get; set; }
+        public long LastReviewTimeUnixSeconds { get; set; }
 
         /// <summary>
         /// The retainer's ID.
