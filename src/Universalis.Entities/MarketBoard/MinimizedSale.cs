@@ -11,6 +11,7 @@ namespace Universalis.Entities.MarketBoard
         [BsonElement("pricePerUnit")]
         public uint PricePerUnit { get; init; }
 
+        // Quantities before December 2019 or so weren't stored here, and therefore will be null
         [BsonElement("quantity")]
         public uint? Quantity { get; init; }
 
