@@ -10,6 +10,7 @@ using System.IO;
 using System.Xml.XPath;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Universalis.Alerts;
+using Universalis.Application.Controllers;
 using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.DbAccess;
@@ -42,6 +43,7 @@ namespace Universalis.Application
             services.AddControllers(options =>
             {
                 options.Conventions.Add(new GroupByNamespaceConvention());
+                options.Filters.Add(new DecoderFallbackExceptionFilter());
             }).AddNewtonsoftJson();
 
             services.AddApiVersioning(options =>
