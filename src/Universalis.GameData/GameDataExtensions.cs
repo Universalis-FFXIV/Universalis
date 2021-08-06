@@ -7,8 +7,7 @@ namespace Universalis.GameData
     {
         public static void AddGameData(this IServiceCollection sc, IConfiguration config)
         {
-            sc.AddSingleton(_ => new Lumina.GameData(config["GameData:SqPack"]));
-            sc.AddSingleton<IGameDataProvider, GameDataProvider>();
+            sc.AddSingleton<IGameDataProvider>(_ => new GameDataProvider(config["GameData:SqPack"]));
         }
     }
 }

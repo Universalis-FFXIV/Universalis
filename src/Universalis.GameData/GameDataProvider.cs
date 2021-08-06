@@ -10,50 +10,48 @@ namespace Universalis.GameData
     {
         private const string ExcelLoadError = "Excel sheet could not be loaded!";
 
-        private readonly Lumina.GameData _lumina;
+        private readonly IReadOnlyDictionary<uint, string> _availableWorlds;
+        private readonly IReadOnlyDictionary<string, uint> _availableWorldsReversed;
+        private readonly IReadOnlySet<uint> _availableWorldIds;
 
-        private readonly Lazy<IReadOnlyDictionary<uint, string>> _availableWorlds;
-        private readonly Lazy<IReadOnlyDictionary<string, uint>> _availableWorldsReversed;
-        private readonly Lazy<IReadOnlySet<uint>> _availableWorldIds;
+        private readonly IReadOnlySet<uint> _marketableItemIds;
 
-        private readonly Lazy<IReadOnlySet<uint>> _marketableItemIds;
+        private readonly IReadOnlyList<DataCenter> _dataCenters;
 
-        private readonly Lazy<IReadOnlyList<DataCenter>> _dataCenters;
-
-        public GameDataProvider(Lumina.GameData lumina)
+        public GameDataProvider(string sqpack)
         {
-            _lumina = lumina;
+            var lumina = new Lumina.GameData(sqpack);
 
-            _availableWorlds = new Lazy<IReadOnlyDictionary<uint, string>>(LoadAvailableWorlds);
-            _availableWorldsReversed = new Lazy<IReadOnlyDictionary<string, uint>>(LoadAvailableWorldsReversed);
-            _availableWorldIds = new Lazy<IReadOnlySet<uint>>(LoadAvailableWorldIds);
+            _availableWorlds = LoadAvailableWorlds(lumina);
+            _availableWorldsReversed = LoadAvailableWorldsReversed(lumina);
+            _availableWorldIds = LoadAvailableWorldIds(lumina);
 
-            _marketableItemIds = new Lazy<IReadOnlySet<uint>>(LoadMarketableItems);
+            _marketableItemIds = LoadMarketableItems(lumina);
 
-            _dataCenters = new Lazy<IReadOnlyList<DataCenter>>(LoadDataCenters);
+            _dataCenters = LoadDataCenters(lumina);
         }
 
         IReadOnlyDictionary<uint, string> IGameDataProvider.AvailableWorlds()
-            => _availableWorlds.Value;
+            => _availableWorlds;
 
         IReadOnlyDictionary<string, uint> IGameDataProvider.AvailableWorldsReversed()
-            => _availableWorldsReversed.Value;
+            => _availableWorldsReversed;
 
         IReadOnlySet<uint> IGameDataProvider.AvailableWorldIds()
-            => _availableWorldIds.Value;
+            => _availableWorldIds;
 
         IReadOnlySet<uint> IGameDataProvider.MarketableItemIds()
-            => _marketableItemIds.Value;
+            => _marketableItemIds;
 
         IEnumerable<DataCenter> IGameDataProvider.DataCenters()
-            => _dataCenters.Value;
+            => _dataCenters;
 
         /// <summary>
-        /// Gets a read-only dictionary of all available worlds. Intended for use in the lazily-loaded member.
+        /// Gets a read-only dictionary of all available worlds.
         /// </summary>
-        private IReadOnlyDictionary<uint, string> LoadAvailableWorlds()
+        private static IReadOnlyDictionary<uint, string> LoadAvailableWorlds(Lumina.GameData lumina)
         {
-            var worlds = _lumina.GetExcelSheet<LuminaWorld>();
+            var worlds = lumina.GetExcelSheet<LuminaWorld>();
             if (worlds == null)
             {
                 throw new InvalidOperationException(ExcelLoadError);
@@ -68,11 +66,11 @@ namespace Universalis.GameData
         }
 
         /// <summary>
-        /// Gets a read-only dictionary of all available worlds. Intended for use in the lazily-loaded member.
+        /// Gets a read-only dictionary of all available worlds.
         /// </summary>
-        private IReadOnlyDictionary<string, uint> LoadAvailableWorldsReversed()
+        private static IReadOnlyDictionary<string, uint> LoadAvailableWorldsReversed(Lumina.GameData lumina)
         {
-            var worlds = _lumina.GetExcelSheet<LuminaWorld>();
+            var worlds = lumina.GetExcelSheet<LuminaWorld>();
             if (worlds == null)
             {
                 throw new InvalidOperationException(ExcelLoadError);
@@ -87,11 +85,11 @@ namespace Universalis.GameData
         }
 
         /// <summary>
-        /// Gets a read-only sorted set of all available world IDs. Intended for use in the lazily-loaded member.
+        /// Gets a read-only sorted set of all available world IDs.
         /// </summary>
-        private IReadOnlySet<uint> LoadAvailableWorldIds()
+        private static IReadOnlySet<uint> LoadAvailableWorldIds(Lumina.GameData lumina)
         {
-            var worlds = _lumina.GetExcelSheet<LuminaWorld>();
+            var worlds = lumina.GetExcelSheet<LuminaWorld>();
             if (worlds == null)
             {
                 throw new InvalidOperationException(ExcelLoadError);
@@ -109,9 +107,9 @@ namespace Universalis.GameData
         /// <summary>
         /// Gets a read-only sorted set of all marketable item IDs. Intended for use in the lazily-loaded member.
         /// </summary>
-        private IReadOnlySet<uint> LoadMarketableItems()
+        private static IReadOnlySet<uint> LoadMarketableItems(Lumina.GameData lumina)
         {
-            var items = _lumina.GetExcelSheet<Item>();
+            var items = lumina.GetExcelSheet<Item>();
             if (items == null)
             {
                 throw new InvalidOperationException(ExcelLoadError);
@@ -126,10 +124,10 @@ namespace Universalis.GameData
         /// <summary>
         /// Gets a list of all data centers. Intended for use in the lazily-loaded member.
         /// </summary>
-        private IReadOnlyList<DataCenter> LoadDataCenters()
+        private static IReadOnlyList<DataCenter> LoadDataCenters(Lumina.GameData lumina)
         {
-            var dcs = _lumina.GetExcelSheet<WorldDCGroupType>();
-            var worlds = _lumina.GetExcelSheet<LuminaWorld>();
+            var dcs = lumina.GetExcelSheet<WorldDCGroupType>();
+            var worlds = lumina.GetExcelSheet<LuminaWorld>();
             if (dcs == null || worlds == null)
             {
                 throw new InvalidOperationException(ExcelLoadError);
