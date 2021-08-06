@@ -20,7 +20,7 @@ namespace Universalis.Application.Views
         /// The stack size sold.
         /// </summary>
         [JsonProperty("quantity")]
-        public uint Quantity { get; set; }
+        public uint? Quantity { get; set; }
 
         /// <summary>
         /// The sale time, in seconds since the UNIX epoch.
