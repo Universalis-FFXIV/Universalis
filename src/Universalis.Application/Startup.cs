@@ -117,10 +117,10 @@ namespace Universalis.Application
                 options.RoutePrefix = "docs";
             });
 
+            app.UseCors();
+
             app.UseRouting();
-
             app.UseAuthentication();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
