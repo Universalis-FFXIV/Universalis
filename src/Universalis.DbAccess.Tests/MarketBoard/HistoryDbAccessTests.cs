@@ -56,7 +56,16 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         {
             var db = new HistoryDbAccess(Database);
             var document = SeedDataGenerator.MakeHistory(74, 5333);
-            await db.Update(document, new HistoryQuery { WorldId = document.WorldId, ItemId = document.ItemId });
+            var query = new HistoryQuery { WorldId = document.WorldId, ItemId = document.ItemId };
+
+            await db.Update(document, query);
+            await db.Update(document, query);
+
+            document.LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            await db.Update(document, query);
+
+            var retrieved = await db.Retrieve(query);
+            Assert.Equal(document.LastUploadTimeUnixMilliseconds, retrieved.LastUploadTimeUnixMilliseconds);
         }
 
         [Fact]

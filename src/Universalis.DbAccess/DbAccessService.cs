@@ -33,8 +33,37 @@ namespace Universalis.DbAccess
 
         public async Task Update(TDocument document, TDocumentQuery query)
         {
-            await Delete(query);
-            await Create(document);
+            // Create if non-existent
+            var existing = await Retrieve(query);
+            if (existing == null)
+            {
+                await Create(document);
+                return;
+            }
+
+            // Combine sets for each updated field
+            var updateBuilder = Builders<TDocument>.Update;
+            var properties = typeof(TDocument).GetProperties();
+
+            UpdateDefinition<TDocument> update = null;
+            foreach (var property in properties)
+            {
+                var existingValue = property.GetValue(existing);
+                var documentValue = property.GetValue(document);
+                if (documentValue != existingValue)
+                {
+                    var nextUpdate = updateBuilder.Set(property.Name, documentValue);
+                    update = update == null
+                        ? nextUpdate
+                        : updateBuilder.Combine(update, nextUpdate);
+                }
+            }
+
+            // Update if there are any changes
+            if (update != null)
+            {
+                await Collection.UpdateOneAsync(query.ToFilterDefinition(), update);
+            }
         }
 
         public Task Delete(TDocumentQuery query)

@@ -40,7 +40,10 @@ namespace Universalis.DbAccess.Tests.Uploads
         public async Task Increment_DoesNotThrow()
         {
             IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(Database);
-            await db.Increment(new WorldUploadCountQuery { WorldName = "Coeurl" });
+            var query = new WorldUploadCountQuery { WorldName = "Coeurl" };
+
+            await db.Increment(query);
+            await db.Increment(query);
         }
 
         [Fact]

@@ -47,6 +47,28 @@ namespace Universalis.DbAccess.Tests.MarketBoard
             var db = new TaxRatesDbAccess(Database);
             var document = SeedDataGenerator.MakeTaxRates(74);
             await db.Update(document, new TaxRatesQuery { WorldId = document.WorldId });
+            await db.Update(document, new TaxRatesQuery { WorldId = document.WorldId });
+
+            document = SeedDataGenerator.MakeTaxRates(74);
+            await db.Update(document, new TaxRatesQuery { WorldId = document.WorldId });
+        }
+
+        [Fact]
+        public async Task Update_DoesUpdate()
+        {
+            const uint worldId = 74;
+
+            var db = new TaxRatesDbAccess(Database);
+            var query = new TaxRatesQuery { WorldId = worldId };
+
+            var document1 = SeedDataGenerator.MakeTaxRates(worldId);
+            await db.Update(document1, query);
+
+            var document2 = SeedDataGenerator.MakeTaxRates(worldId);
+            await db.Update(document2, query);
+
+            var retrieved = await db.Retrieve(query);
+            Assert.Equal(document2, retrieved);
         }
 
         [Fact]

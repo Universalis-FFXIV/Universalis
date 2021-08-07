@@ -47,7 +47,13 @@ namespace Universalis.DbAccess.Tests.Uploads
         {
             var db = new TrustedSourceDbAccess(Database);
             var document = SeedDataGenerator.MakeTrustedSource();
-            await db.Update(document, new TrustedSourceQuery { ApiKeySha512 = document.ApiKeySha512 });
+            var query = new TrustedSourceQuery { ApiKeySha512 = document.ApiKeySha512 };
+
+            await db.Update(document, query);
+            await db.Update(document, query);
+
+            document.UploadCount = 74;
+            await db.Update(document, query);
         }
 
         [Fact]
@@ -69,6 +75,18 @@ namespace Universalis.DbAccess.Tests.Uploads
             Assert.Equal(document.ApiKeySha512, output.ApiKeySha512);
             Assert.Equal(document.Name, output.Name);
             Assert.Equal(document.UploadCount, output.UploadCount);
+        }
+
+        [Fact]
+        public async Task Increment_DoesNotThrow()
+        {
+            var db = new TrustedSourceDbAccess(Database);
+            var document = SeedDataGenerator.MakeTrustedSource();
+            var query = new TrustedSourceQuery { ApiKeySha512 = document.ApiKeySha512 };
+
+            await db.Create(document);
+            await db.Increment(query);
+            await db.Increment(query);
         }
 
         [Fact]
