@@ -28,7 +28,7 @@ namespace Universalis.DbAccess.Tests
         [Fact]
         public async Task Create_DoesNotThrow()
         {
-            var db = new ContentDbAccess(Database);
+            var db = new ContentDbAccess(_client, Database);
 
             var document = new Content
             {
@@ -42,7 +42,7 @@ namespace Universalis.DbAccess.Tests
         [Fact]
         public async Task Retrieve_DoesNotThrow()
         {
-            var db = new ContentDbAccess(Database);
+            var db = new ContentDbAccess(_client, Database);
             var output = await db.Retrieve(new ContentQuery { ContentId = "a" });
             Assert.Null(output);
         }
@@ -50,7 +50,7 @@ namespace Universalis.DbAccess.Tests
         [Fact]
         public async Task Update_DoesNotThrow()
         {
-            var db = new ContentDbAccess(Database);
+            var db = new ContentDbAccess(_client, Database);
 
             var document = new Content
             {
@@ -64,14 +64,14 @@ namespace Universalis.DbAccess.Tests
         [Fact]
         public async Task Delete_DoesNotThrow()
         {
-            var db = new ContentDbAccess(Database);
+            var db = new ContentDbAccess(_client, Database);
             await db.Delete(new ContentQuery { ContentId = "a" });
         }
 
         [Fact]
         public async Task Create_DoesInsert()
         {
-            var db = new ContentDbAccess(Database);
+            var db = new ContentDbAccess(_client, Database);
 
             var document = new Content
             {

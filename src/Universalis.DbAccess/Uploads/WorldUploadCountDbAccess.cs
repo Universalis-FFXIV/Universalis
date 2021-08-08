@@ -9,9 +9,9 @@ namespace Universalis.DbAccess.Uploads
 {
     public class WorldUploadCountDbAccess : DbAccessService<WorldUploadCount, WorldUploadCountQuery>, IWorldUploadCountDbAccess
     {
-        public WorldUploadCountDbAccess() : base(Constants.DatabaseName, "extraData") { }
+        public WorldUploadCountDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "extraData") { }
 
-        public WorldUploadCountDbAccess(string databaseName) : base(databaseName, "content") { }
+        public WorldUploadCountDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "content") { }
 
         public async Task Increment(WorldUploadCountQuery query)
         {

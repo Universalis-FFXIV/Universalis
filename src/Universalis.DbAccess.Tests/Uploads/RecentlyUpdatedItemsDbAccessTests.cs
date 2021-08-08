@@ -28,7 +28,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Retrieve_DoesNotThrow()
         {
-            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(Database);
+            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, Database);
             var output = await db.Retrieve(new RecentlyUpdatedItemsQuery());
             Assert.Null(output);
         }
@@ -36,14 +36,14 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Push_DoesNotThrow()
         {
-            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(Database);
+            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, Database);
             await db.Push(5333);
         }
 
         [Fact]
         public async Task Push_DoesRetrieve()
         {
-            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(Database);
+            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, Database);
             await db.Push(5333);
             var output = await db.Retrieve(new RecentlyUpdatedItemsQuery());
             Assert.NotNull(output);
@@ -54,7 +54,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task PushTwice_DoesRetrieve()
         {
-            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(Database);
+            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, Database);
             await db.Push(5333);
             await db.Push(5);
             var output = await db.Retrieve(new RecentlyUpdatedItemsQuery());
@@ -66,7 +66,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task PushSameTwice_DoesReorder()
         {
-            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(Database);
+            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, Database);
             await db.Push(5333);
             await db.Push(5);
             await db.Push(5333);

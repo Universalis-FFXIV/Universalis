@@ -8,9 +8,9 @@ namespace Universalis.DbAccess.MarketBoard
 {
     public class HistoryDbAccess : DbAccessService<History, HistoryQuery>, IHistoryDbAccess
     {
-        public HistoryDbAccess() : base(Constants.DatabaseName, "extendedHistory") { }
+        public HistoryDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "extendedHistory") { }
 
-        public HistoryDbAccess(string databaseName) : base(databaseName, "extendedHistory") { }
+        public HistoryDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "extendedHistory") { }
 
         public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query)
         {

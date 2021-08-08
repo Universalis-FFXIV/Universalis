@@ -11,9 +11,8 @@ namespace Universalis.DbAccess
     {
         protected IMongoCollection<TDocument> Collection { get; }
 
-        protected DbAccessService(string databaseName, string collectionName)
+        protected DbAccessService(IMongoClient client, string databaseName, string collectionName)
         {
-            var client = new MongoClient("mongodb://localhost:27017");
             var conventionPack = new ConventionPack { new IgnoreExtraElementsConvention(true) };
             ConventionRegistry.Register("IgnoreExtraElements", conventionPack, _ => true);
             var database = client.GetDatabase(databaseName);

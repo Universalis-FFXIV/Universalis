@@ -9,9 +9,9 @@ namespace Universalis.DbAccess.MarketBoard
 {
     public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyShownQuery>, ICurrentlyShownDbAccess
     {
-        public CurrentlyShownDbAccess() : base(Constants.DatabaseName, "recentData") { }
+        public CurrentlyShownDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "recentData") { }
 
-        public CurrentlyShownDbAccess(string databaseName) : base(databaseName, "recentData") { }
+        public CurrentlyShownDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "recentData") { }
 
         public async Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query)
         {

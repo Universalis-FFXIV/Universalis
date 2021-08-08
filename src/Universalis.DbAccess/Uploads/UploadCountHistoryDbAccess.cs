@@ -8,9 +8,9 @@ namespace Universalis.DbAccess.Uploads
 {
     public class UploadCountHistoryDbAccess : DbAccessService<UploadCountHistory, UploadCountHistoryQuery>, IUploadCountHistoryDbAccess
     {
-        public UploadCountHistoryDbAccess() : base(Constants.DatabaseName, "extraData") { }
+        public UploadCountHistoryDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "extraData") { }
 
-        public UploadCountHistoryDbAccess(string databaseName) : base(databaseName, "content") { }
+        public UploadCountHistoryDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "content") { }
 
         public async Task Update(double lastPush, List<double> uploadCountByDay)
         {

@@ -30,7 +30,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task GetWorldUploadCounts_DoesNotThrow()
         {
-            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(Database);
+            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(_client, Database);
             var output = await db.GetWorldUploadCounts();
             Assert.NotNull(output);
             Assert.Empty(output);
@@ -39,7 +39,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Increment_DoesNotThrow()
         {
-            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(Database);
+            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(_client, Database);
             var query = new WorldUploadCountQuery { WorldName = "Coeurl" };
 
             await db.Increment(query);
@@ -49,7 +49,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Increment_DoesRetrieve()
         {
-            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(Database);
+            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(_client, Database);
             await db.Increment(new WorldUploadCountQuery { WorldName = "Coeurl" });
             var output = (await db.GetWorldUploadCounts()).ToList();
             Assert.NotNull(output);

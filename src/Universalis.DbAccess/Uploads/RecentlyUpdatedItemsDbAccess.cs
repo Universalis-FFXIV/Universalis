@@ -11,9 +11,9 @@ namespace Universalis.DbAccess.Uploads
     {
         public static readonly int MaxItems = 200;
 
-        public RecentlyUpdatedItemsDbAccess() : base(Constants.DatabaseName, "extraData") { }
+        public RecentlyUpdatedItemsDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "extraData") { }
 
-        public RecentlyUpdatedItemsDbAccess(string databaseName) : base(databaseName, "content") { }
+        public RecentlyUpdatedItemsDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "content") { }
 
         public async Task Push(uint itemId)
         {

@@ -9,9 +9,9 @@ namespace Universalis.DbAccess.Uploads
 {
     public class TrustedSourceDbAccess : DbAccessService<TrustedSource, TrustedSourceQuery>, ITrustedSourceDbAccess
     {
-        public TrustedSourceDbAccess() : base(Constants.DatabaseName, "trustedSources") { }
+        public TrustedSourceDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "trustedSources") { }
 
-        public TrustedSourceDbAccess(string databaseName) : base(databaseName, "content") { }
+        public TrustedSourceDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "content") { }
 
         public async Task Increment(TrustedSourceQuery query)
         {
