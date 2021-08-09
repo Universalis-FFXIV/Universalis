@@ -12,12 +12,15 @@ namespace Universalis.DbAccess.Tests.Uploads
     {
         private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(TrustedSourceDbAccessTests));
 
-        private readonly MongoClient _client;
+        private readonly IMongoClient _client;
+        private readonly IConnectionThrottlingPipeline _throttler;
 
         public TrustedSourceDbAccessTests()
         {
             _client = new MongoClient("mongodb://localhost:27017");
             _client.DropDatabase(Database);
+
+            _throttler = new ConnectionThrottlingPipeline(_client);
         }
 
         public void Dispose()
@@ -29,7 +32,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Create_DoesNotThrow()
         {
-            var db = new TrustedSourceDbAccess(_client, Database);
+            var db = new TrustedSourceDbAccess(_client, _throttler, Database);
             var document = SeedDataGenerator.MakeTrustedSource();
             await db.Create(document);
         }
@@ -37,7 +40,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Retrieve_DoesNotThrow()
         {
-            var db = new TrustedSourceDbAccess(_client, Database);
+            var db = new TrustedSourceDbAccess(_client, _throttler, Database);
             var output = await db.Retrieve(new TrustedSourceQuery { ApiKeySha512 = "babaef32" });
             Assert.Null(output);
         }
@@ -45,7 +48,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Update_DoesNotThrow()
         {
-            var db = new TrustedSourceDbAccess(_client, Database);
+            var db = new TrustedSourceDbAccess(_client, _throttler, Database);
             var document = SeedDataGenerator.MakeTrustedSource();
             var query = new TrustedSourceQuery { ApiKeySha512 = document.ApiKeySha512 };
 
@@ -59,14 +62,14 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Delete_DoesNotThrow()
         {
-            var db = new TrustedSourceDbAccess(_client, Database);
+            var db = new TrustedSourceDbAccess(_client, _throttler, Database);
             await db.Delete(new TrustedSourceQuery { ApiKeySha512 = "babaef32" });
         }
 
         [Fact]
         public async Task Create_DoesInsert()
         {
-            var db = new TrustedSourceDbAccess(_client, Database);
+            var db = new TrustedSourceDbAccess(_client, _throttler, Database);
             var document = SeedDataGenerator.MakeTrustedSource();
             await db.Create(document);
 
@@ -80,7 +83,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Increment_DoesNotThrow()
         {
-            var db = new TrustedSourceDbAccess(_client, Database);
+            var db = new TrustedSourceDbAccess(_client, _throttler, Database);
             var document = SeedDataGenerator.MakeTrustedSource();
             var query = new TrustedSourceQuery { ApiKeySha512 = document.ApiKeySha512 };
 
@@ -92,7 +95,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Increment_DoesNotCreateIfNone()
         {
-            var db = new TrustedSourceDbAccess(_client, Database);
+            var db = new TrustedSourceDbAccess(_client, _throttler, Database);
             await db.Increment(new TrustedSourceQuery { ApiKeySha512 = "bbbbbbbb" });
             var output = await db.GetUploaderCounts();
             Assert.NotNull(output);
@@ -102,7 +105,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Increment_DoesPersist()
         {
-            var db = new TrustedSourceDbAccess(_client, Database);
+            var db = new TrustedSourceDbAccess(_client, _throttler, Database);
             var document = SeedDataGenerator.MakeTrustedSource();
             await db.Create(document);
             await db.Increment(new TrustedSourceQuery { ApiKeySha512 = document.ApiKeySha512 });

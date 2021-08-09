@@ -11,12 +11,15 @@ namespace Universalis.DbAccess.Tests.Uploads
     {
         private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(RecentlyUpdatedItemsDbAccessTests));
 
-        private readonly MongoClient _client;
+        private readonly IMongoClient _client;
+        private readonly IConnectionThrottlingPipeline _throttler;
 
         public RecentlyUpdatedItemsDbAccessTests()
         {
             _client = new MongoClient("mongodb://localhost:27017");
             _client.DropDatabase(Database);
+
+            _throttler = new ConnectionThrottlingPipeline(_client);
         }
 
         public void Dispose()
@@ -28,7 +31,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Retrieve_DoesNotThrow()
         {
-            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, Database);
+            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, _throttler, Database);
             var output = await db.Retrieve(new RecentlyUpdatedItemsQuery());
             Assert.Null(output);
         }
@@ -36,14 +39,14 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Push_DoesNotThrow()
         {
-            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, Database);
+            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, _throttler, Database);
             await db.Push(5333);
         }
 
         [Fact]
         public async Task Push_DoesRetrieve()
         {
-            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, Database);
+            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, _throttler, Database);
             await db.Push(5333);
             var output = await db.Retrieve(new RecentlyUpdatedItemsQuery());
             Assert.NotNull(output);
@@ -54,7 +57,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task PushTwice_DoesRetrieve()
         {
-            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, Database);
+            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, _throttler, Database);
             await db.Push(5333);
             await db.Push(5);
             var output = await db.Retrieve(new RecentlyUpdatedItemsQuery());
@@ -66,7 +69,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task PushSameTwice_DoesReorder()
         {
-            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, Database);
+            IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(_client, _throttler, Database);
             await db.Push(5333);
             await db.Push(5);
             await db.Push(5333);

@@ -11,12 +11,15 @@ namespace Universalis.DbAccess.Tests
     {
         private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(ContentDbAccessTests));
 
-        private readonly MongoClient _client;
+        private readonly IMongoClient _client;
+        private readonly IConnectionThrottlingPipeline _throttler;
 
         public ContentDbAccessTests()
         {
             _client = new MongoClient("mongodb://localhost:27017");
             _client.DropDatabase(Database);
+
+            _throttler = new ConnectionThrottlingPipeline(_client);
         }
 
         public void Dispose()
@@ -28,7 +31,7 @@ namespace Universalis.DbAccess.Tests
         [Fact]
         public async Task Create_DoesNotThrow()
         {
-            var db = new ContentDbAccess(_client, Database);
+            var db = new ContentDbAccess(_client, _throttler, Database);
 
             var document = new Content
             {
@@ -42,7 +45,7 @@ namespace Universalis.DbAccess.Tests
         [Fact]
         public async Task Retrieve_DoesNotThrow()
         {
-            var db = new ContentDbAccess(_client, Database);
+            var db = new ContentDbAccess(_client, _throttler, Database);
             var output = await db.Retrieve(new ContentQuery { ContentId = "a" });
             Assert.Null(output);
         }
@@ -50,7 +53,7 @@ namespace Universalis.DbAccess.Tests
         [Fact]
         public async Task Update_DoesNotThrow()
         {
-            var db = new ContentDbAccess(_client, Database);
+            var db = new ContentDbAccess(_client, _throttler, Database);
 
             var document = new Content
             {
@@ -64,14 +67,14 @@ namespace Universalis.DbAccess.Tests
         [Fact]
         public async Task Delete_DoesNotThrow()
         {
-            var db = new ContentDbAccess(_client, Database);
+            var db = new ContentDbAccess(_client, _throttler, Database);
             await db.Delete(new ContentQuery { ContentId = "a" });
         }
 
         [Fact]
         public async Task Create_DoesInsert()
         {
-            var db = new ContentDbAccess(_client, Database);
+            var db = new ContentDbAccess(_client, _throttler, Database);
 
             var document = new Content
             {

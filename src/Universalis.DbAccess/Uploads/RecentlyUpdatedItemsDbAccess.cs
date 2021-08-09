@@ -11,9 +11,9 @@ namespace Universalis.DbAccess.Uploads
     {
         public static readonly int MaxItems = 200;
 
-        public RecentlyUpdatedItemsDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "extraData") { }
+        public RecentlyUpdatedItemsDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler) : base(client, throttler, Constants.DatabaseName, "extraData") { }
 
-        public RecentlyUpdatedItemsDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "content") { }
+        public RecentlyUpdatedItemsDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler, string databaseName) : base(client, throttler, databaseName, "content") { }
 
         public async Task Push(uint itemId)
         {
@@ -44,7 +44,7 @@ namespace Universalis.DbAccess.Uploads
 
             var updateBuilder = Builders<RecentlyUpdatedItems>.Update;
             var update = updateBuilder.Set(o => o.Items, newItems);
-            await Collection.UpdateOneAsync(query.ToFilterDefinition(), update);
+            await Throttler.AddRequest(() => Collection.UpdateOneAsync(query.ToFilterDefinition(), update));
         }
     }
 }

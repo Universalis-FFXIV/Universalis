@@ -11,12 +11,15 @@ namespace Universalis.DbAccess.Tests.MarketBoard
     {
         private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(TaxRatesDbAccessTests));
 
-        private readonly MongoClient _client;
+        private readonly IMongoClient _client;
+        private readonly IConnectionThrottlingPipeline _throttler;
 
         public TaxRatesDbAccessTests()
         {
             _client = new MongoClient("mongodb://localhost:27017");
             _client.DropDatabase(Database);
+
+            _throttler = new ConnectionThrottlingPipeline(_client);
         }
 
         public void Dispose()
@@ -28,7 +31,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task Create_DoesNotThrow()
         {
-            var db = new TaxRatesDbAccess(_client, Database);
+            var db = new TaxRatesDbAccess(_client, _throttler, Database);
             var document = SeedDataGenerator.MakeTaxRates(74);
             await db.Create(document);
         }
@@ -36,7 +39,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task Retrieve_DoesNotThrow()
         {
-            var db = new TaxRatesDbAccess(_client, Database);
+            var db = new TaxRatesDbAccess(_client, _throttler, Database);
             var output = await db.Retrieve(new TaxRatesQuery { WorldId = 74 });
             Assert.Null(output);
         }
@@ -44,7 +47,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task Update_DoesNotThrow()
         {
-            var db = new TaxRatesDbAccess(_client, Database);
+            var db = new TaxRatesDbAccess(_client, _throttler, Database);
             var document = SeedDataGenerator.MakeTaxRates(74);
             await db.Update(document, new TaxRatesQuery { WorldId = document.WorldId });
             await db.Update(document, new TaxRatesQuery { WorldId = document.WorldId });
@@ -58,7 +61,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         {
             const uint worldId = 74;
 
-            var db = new TaxRatesDbAccess(_client, Database);
+            var db = new TaxRatesDbAccess(_client, _throttler, Database);
             var query = new TaxRatesQuery { WorldId = worldId };
 
             var document1 = SeedDataGenerator.MakeTaxRates(worldId);
@@ -74,14 +77,14 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task Delete_DoesNotThrow()
         {
-            var db = new TaxRatesDbAccess(_client, Database);
+            var db = new TaxRatesDbAccess(_client, _throttler, Database);
             await db.Delete(new TaxRatesQuery { WorldId = 74 });
         }
 
         [Fact]
         public async Task Create_DoesInsert()
         {
-            var db = new TaxRatesDbAccess(_client, Database);
+            var db = new TaxRatesDbAccess(_client, _throttler, Database);
             var document = SeedDataGenerator.MakeTaxRates(74);
             await db.Create(document);
 

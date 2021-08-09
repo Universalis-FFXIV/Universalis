@@ -8,11 +8,11 @@ namespace Universalis.DbAccess.Uploads
 {
     public class UploadCountHistoryDbAccess : DbAccessService<UploadCountHistory, UploadCountHistoryQuery>, IUploadCountHistoryDbAccess
     {
-        public UploadCountHistoryDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "extraData") { }
+        public UploadCountHistoryDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler) : base(client, throttler, Constants.DatabaseName, "extraData") { }
 
-        public UploadCountHistoryDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "content") { }
+        public UploadCountHistoryDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler, string databaseName) : base(client, throttler, databaseName, "content") { }
 
-        public async Task Update(double lastPush, List<double> uploadCountByDay)
+        public Task Update(double lastPush, List<double> uploadCountByDay)
         {
             var filterBuilder = Builders<UploadCountHistory>.Filter;
             var filter = filterBuilder.Eq(o => o.SetName, UploadCountHistory.DefaultSetName);
@@ -21,7 +21,7 @@ namespace Universalis.DbAccess.Uploads
             var update1 = updateBuilder.Set(o => o.LastPush, lastPush);
             var update2 = updateBuilder.Set(o => o.UploadCountByDay, uploadCountByDay);
 
-            await Collection.UpdateOneAsync(filter, updateBuilder.Combine(update1, update2));
+            return Throttler.AddRequest(() => Collection.UpdateOneAsync(filter, updateBuilder.Combine(update1, update2)));
         }
     }
 }

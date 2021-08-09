@@ -10,6 +10,9 @@ namespace Universalis.DbAccess
         public static void AddDbAccessServices(this IServiceCollection sc)
         {
             sc.AddSingleton<IMongoClient>(new MongoClient("mongodb://localhost:27017"));
+
+            sc.AddSingleton<IConnectionThrottlingPipeline, ConnectionThrottlingPipeline>();
+
             sc.AddTransient<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
             sc.AddTransient<IHistoryDbAccess, HistoryDbAccess>();
             sc.AddTransient<IContentDbAccess, ContentDbAccess>();

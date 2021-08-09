@@ -12,12 +12,15 @@ namespace Universalis.DbAccess.Tests.MarketBoard
     {
         private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(HistoryDbAccessTests));
 
-        private readonly MongoClient _client;
+        private readonly IMongoClient _client;
+        private readonly IConnectionThrottlingPipeline _throttler;
 
         public HistoryDbAccessTests()
         {
             _client = new MongoClient("mongodb://localhost:27017");
             _client.DropDatabase(Database);
+
+            _throttler = new ConnectionThrottlingPipeline(_client);
         }
 
         public void Dispose()
@@ -29,7 +32,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task Create_DoesNotThrow()
         {
-            var db = new HistoryDbAccess(_client, Database);
+            var db = new HistoryDbAccess(_client, _throttler, Database);
             var document = SeedDataGenerator.MakeHistory(74, 5333);
             await db.Create(document);
         }
@@ -37,7 +40,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task Retrieve_DoesNotThrow()
         {
-            var db = new HistoryDbAccess(_client, Database);
+            var db = new HistoryDbAccess(_client, _throttler, Database);
             var output = await db.Retrieve(new HistoryQuery { WorldId = 74, ItemId = 5333 });
             Assert.Null(output);
         }
@@ -45,7 +48,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task RetrieveMany_DoesNotThrow()
         {
-            var db = new HistoryDbAccess(_client, Database);
+            var db = new HistoryDbAccess(_client, _throttler, Database);
             var output = await db.RetrieveMany(new HistoryManyQuery { WorldIds = new uint[] { 74 }, ItemId = 5333 });
             Assert.NotNull(output);
             Assert.Empty(output);
@@ -54,7 +57,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task Update_DoesNotThrow()
         {
-            var db = new HistoryDbAccess(_client, Database);
+            var db = new HistoryDbAccess(_client, _throttler, Database);
             var document = SeedDataGenerator.MakeHistory(74, 5333);
             var query = new HistoryQuery { WorldId = document.WorldId, ItemId = document.ItemId };
 
@@ -71,14 +74,14 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task Delete_DoesNotThrow()
         {
-            var db = new HistoryDbAccess(_client, Database);
+            var db = new HistoryDbAccess(_client, _throttler, Database);
             await db.Delete(new HistoryQuery { WorldId = 74, ItemId = 5333 });
         }
 
         [Fact]
         public async Task Create_DoesInsert()
         {
-            var db = new HistoryDbAccess(_client, Database);
+            var db = new HistoryDbAccess(_client, _throttler, Database);
 
             var document = SeedDataGenerator.MakeHistory(74, 5333);
             await db.Create(document);
@@ -90,7 +93,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task RetrieveMany_ReturnsData()
         {
-            var db = new HistoryDbAccess(_client, Database);
+            var db = new HistoryDbAccess(_client, _throttler, Database);
 
             var document = SeedDataGenerator.MakeHistory(74, 5333);
             await db.Create(document);

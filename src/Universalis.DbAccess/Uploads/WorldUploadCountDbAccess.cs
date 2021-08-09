@@ -9,9 +9,9 @@ namespace Universalis.DbAccess.Uploads
 {
     public class WorldUploadCountDbAccess : DbAccessService<WorldUploadCount, WorldUploadCountQuery>, IWorldUploadCountDbAccess
     {
-        public WorldUploadCountDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "extraData") { }
+        public WorldUploadCountDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler) : base(client, throttler, Constants.DatabaseName, "extraData") { }
 
-        public WorldUploadCountDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "content") { }
+        public WorldUploadCountDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler, string databaseName) : base(client, throttler, databaseName, "content") { }
 
         public async Task Increment(WorldUploadCountQuery query)
         {
@@ -27,12 +27,13 @@ namespace Universalis.DbAccess.Uploads
 
             var updateBuilder = Builders<WorldUploadCount>.Update;
             var update = updateBuilder.Inc(o => o.Count, 1U);
-            await Collection.UpdateOneAsync(query.ToFilterDefinition(), update);
+            await Throttler.AddRequest(() => Collection.UpdateOneAsync(query.ToFilterDefinition(), update));
         }
 
         public async Task<IEnumerable<WorldUploadCount>> GetWorldUploadCounts()
         {
-            return (await Collection.FindAsync(o => true)).ToEnumerable().ToList();
+            return await Throttler.AddRequest(async () =>
+                (await Collection.FindAsync(o => true)).ToEnumerable().ToList());
         }
     }
 }

@@ -6,8 +6,8 @@ namespace Universalis.DbAccess
 {
     public class ContentDbAccess : DbAccessService<Content, ContentQuery>, IContentDbAccess
     {
-        public ContentDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "content") { }
+        public ContentDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler) : base(client, throttler, Constants.DatabaseName, "content") { }
 
-        public ContentDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "content") { }
+        public ContentDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler, string databaseName) : base(client, throttler, databaseName, "content") { }
     }
 }

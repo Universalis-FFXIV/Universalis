@@ -9,9 +9,9 @@ namespace Universalis.DbAccess.Uploads
 {
     public class TrustedSourceDbAccess : DbAccessService<TrustedSource, TrustedSourceQuery>, ITrustedSourceDbAccess
     {
-        public TrustedSourceDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "trustedSources") { }
+        public TrustedSourceDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler) : base(client, throttler, Constants.DatabaseName, "trustedSources") { }
 
-        public TrustedSourceDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "content") { }
+        public TrustedSourceDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler, string databaseName) : base(client, throttler, databaseName, "content") { }
 
         public async Task Increment(TrustedSourceQuery query)
         {
@@ -23,20 +23,23 @@ namespace Universalis.DbAccess.Uploads
 
             var updateBuilder = Builders<TrustedSource>.Update;
             var update = updateBuilder.Inc(o => o.UploadCount, 1U);
-            await Collection.UpdateOneAsync(query.ToFilterDefinition(), update);
+            await Throttler.AddRequest(() => Collection.UpdateOneAsync(query.ToFilterDefinition(), update));
         }
 
         public async Task<IEnumerable<TrustedSourceNoApiKey>> GetUploaderCounts()
         {
-            var cursor = await Collection.FindAsync(o => true);
-            var results = cursor.ToEnumerable()
-                .Select(o => new TrustedSourceNoApiKey
-                {
-                    Name = o.Name,
-                    UploadCount = o.UploadCount,
-                })
-                .ToList();
-            return results;
+            return await Throttler.AddRequest(async () =>
+            {
+                var cursor = await Collection.FindAsync(o => true);
+                var results = cursor.ToEnumerable()
+                    .Select(o => new TrustedSourceNoApiKey
+                    {
+                        Name = o.Name,
+                        UploadCount = o.UploadCount,
+                    })
+                    .ToList();
+                return results;
+            });
         }
     }
 }

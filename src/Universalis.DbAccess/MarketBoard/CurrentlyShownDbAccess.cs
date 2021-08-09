@@ -9,14 +9,17 @@ namespace Universalis.DbAccess.MarketBoard
 {
     public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyShownQuery>, ICurrentlyShownDbAccess
     {
-        public CurrentlyShownDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "recentData") { }
+        public CurrentlyShownDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler) : base(client, throttler, Constants.DatabaseName, "recentData") { }
 
-        public CurrentlyShownDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "recentData") { }
+        public CurrentlyShownDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler, string databaseName) : base(client, throttler, databaseName, "recentData") { }
 
-        public async Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query)
+        public Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query)
         {
-            var cursor = await Collection.FindAsync(query.ToFilterDefinition());
-            return cursor.ToEnumerable();
+            return Throttler.AddRequest(async () =>
+            {
+                var cursor = await Collection.FindAsync(query.ToFilterDefinition());
+                return cursor.ToEnumerable();
+            });
         }
 
         public async Task<IEnumerable<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order)
@@ -26,7 +29,7 @@ namespace Universalis.DbAccess.MarketBoard
             {
                 UploadOrder.MostRecent => sortBuilder.Descending(o => o.LastUploadTimeUnixMilliseconds),
                 UploadOrder.LeastRecent => sortBuilder.Ascending(o => o.LastUploadTimeUnixMilliseconds),
-                _ => throw new ArgumentException(nameof(order)),
+                _ => throw new ArgumentException("The ordering scheme provided was invalid.", nameof(order)),
             };
 
             var projectDefinition = Builders<CurrentlyShown>.Projection
@@ -34,12 +37,12 @@ namespace Universalis.DbAccess.MarketBoard
                 .Include(o => o.ItemId)
                 .Include(o => o.LastUploadTimeUnixMilliseconds);
 
-            return await Collection
+            return await Throttler.AddRequest(() => Collection
                 .Find(query.ToFilterDefinition())
                 .Project<WorldItemUpload>(projectDefinition)
                 .Sort(sortDefinition)
                 .Limit(count)
-                .ToListAsync();
+                .ToListAsync());
         }
     }
 }
