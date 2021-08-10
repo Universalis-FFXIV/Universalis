@@ -4,6 +4,11 @@ namespace Universalis.Application.Views
 {
     public class SaleView
     {
+        /*
+         * Note for anyone viewing this file: People rely on the field order (even though JSON is defined to be unordered).
+         * Please do not edit the field order unless it is unavoidable.
+         */
+
         /// <summary>
         /// Whether or not the item was high-quality.
         /// </summary>
@@ -23,22 +28,16 @@ namespace Universalis.Application.Views
         public uint Quantity { get; set; }
 
         /// <summary>
-        /// The total price.
-        /// </summary>
-        [JsonProperty("total")]
-        public uint Total { get; set; }
-
-        /// <summary>
-        /// The buyer name.
-        /// </summary>
-        [JsonProperty("buyerName")]
-        public string BuyerName { get; set; }
-
-        /// <summary>
         /// The sale time, in seconds since the UNIX epoch.
         /// </summary>
         [JsonProperty("timestamp")]
         public long TimestampUnixSeconds { get; set; }
+
+        /// <summary>
+        /// The world name, if applicable.
+        /// </summary>
+        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
+        public string WorldName { get; set; }
 
         /// <summary>
         /// The world ID, if applicable.
@@ -47,9 +46,15 @@ namespace Universalis.Application.Views
         public uint? WorldId { get; set; }
 
         /// <summary>
-        /// The world name, if applicable.
+        /// The buyer name.
         /// </summary>
-        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
-        public string WorldName { get; set; }
+        [JsonProperty("buyerName")]
+        public string BuyerName { get; set; }
+
+        /// <summary>
+        /// The total price.
+        /// </summary>
+        [JsonProperty("total")]
+        public uint Total { get; set; }
     }
 }
