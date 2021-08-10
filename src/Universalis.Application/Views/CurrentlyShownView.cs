@@ -5,154 +5,158 @@ namespace Universalis.Application.Views
 {
     public class CurrentlyShownView
     {
-        /// <summary>
-        /// The currently-shown listings.
-        /// </summary>
-        [JsonProperty("listings", Order = 4)]
-        public List<ListingView> Listings { get; set; } = new();
-
-        /// <summary>
-        /// The currently-shown sales.
-        /// </summary>
-        [JsonProperty("recentHistory", Order = 5)]
-        public List<SaleView> RecentHistory { get; set; } = new();
+        /* Note for anyone viewing this file: People rely on the field order (even though JSON is defined to be unordered).
+         * Please do not edit the field order.
+         */
 
         /// <summary>
         /// The item ID.
         /// </summary>
-        [JsonProperty("itemID", Order = 0)]
+        [JsonProperty("itemID")]
         public uint ItemId { get; set; }
 
         /// <summary>
         /// The world ID, if applicable.
         /// </summary>
-        [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore, Order = 1)]
+        [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore)]
         public uint? WorldId { get; set; }
-
-        /// <summary>
-        /// The world name, if applicable.
-        /// </summary>
-        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore, Order = 24)]
-        public string WorldName { get; set; }
-
-        /// <summary>
-        /// The DC name, if applicable.
-        /// </summary>
-        [JsonProperty("dcName", NullValueHandling = NullValueHandling.Ignore, Order = 2)]
-        public string DcName { get; set; }
 
         /// <summary>
         /// The last upload time for this endpoint, in milliseconds since the UNIX epoch.
         /// </summary>
-        [JsonProperty("lastUploadTime", Order = 3)]
+        [JsonProperty("lastUploadTime")]
         public long LastUploadTimeUnixMilliseconds { get; set; }
+
+        /// <summary>
+        /// The currently-shown listings.
+        /// </summary>
+        [JsonProperty("listings")]
+        public List<ListingView> Listings { get; set; } = new();
+
+        /// <summary>
+        /// The currently-shown sales.
+        /// </summary>
+        [JsonProperty("recentHistory")]
+        public List<SaleView> RecentHistory { get; set; } = new();
+
+        /// <summary>
+        /// The DC name, if applicable.
+        /// </summary>
+        [JsonProperty("dcName", NullValueHandling = NullValueHandling.Ignore)]
+        public string DcName { get; set; }
 
         /// <summary>
         /// The average listing price, with outliers removed beyond 3 standard deviations of the mean.
         /// </summary>
-        [JsonProperty("currentAveragePrice", Order = 6)]
+        [JsonProperty("currentAveragePrice")]
         public float CurrentAveragePrice { get; set; }
 
         /// <summary>
         /// The average NQ listing price, with outliers removed beyond 3 standard deviations of the mean.
         /// </summary>
-        [JsonProperty("currentAveragePriceNQ", Order = 7)]
+        [JsonProperty("currentAveragePriceNQ")]
         public float CurrentAveragePriceNq { get; set; }
 
         /// <summary>
         /// The average HQ listing price, with outliers removed beyond 3 standard deviations of the mean.
         /// </summary>
-        [JsonProperty("currentAveragePriceHQ", Order = 8)]
+        [JsonProperty("currentAveragePriceHQ")]
         public float CurrentAveragePriceHq { get; set; }
 
         /// <summary>
         /// The average number of sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).
         /// </summary>
-        [JsonProperty("regularSaleVelocity", Order = 9)]
+        [JsonProperty("regularSaleVelocity")]
         public float SaleVelocity { get; set; }
 
         /// <summary>
         /// The average number of NQ sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).
         /// </summary>
-        [JsonProperty("nqSaleVelocity", Order = 10)]
+        [JsonProperty("nqSaleVelocity")]
         public float SaleVelocityNq { get; set; }
 
         /// <summary>
         /// The average number of HQ sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).
         /// </summary>
-        [JsonProperty("hqSaleVelocity", Order = 11)]
+        [JsonProperty("hqSaleVelocity")]
         public float SaleVelocityHq { get; set; }
 
         /// <summary>
         /// The average sale price, with outliers removed beyond 3 standard deviations of the mean.
         /// </summary>
-        [JsonProperty("averagePrice", Order = 12)]
+        [JsonProperty("averagePrice")]
         public float AveragePrice { get; set; }
 
         /// <summary>
         /// The average NQ sale price, with outliers removed beyond 3 standard deviations of the mean.
         /// </summary>
-        [JsonProperty("averagePriceNQ", Order = 13)]
+        [JsonProperty("averagePriceNQ")]
         public float AveragePriceNq { get; set; }
 
         /// <summary>
         /// The average HQ sale price, with outliers removed beyond 3 standard deviations of the mean.
         /// </summary>
-        [JsonProperty("averagePriceHQ", Order = 14)]
+        [JsonProperty("averagePriceHQ")]
         public float AveragePriceHq { get; set; }
 
         /// <summary>
         /// The minimum listing price.
         /// </summary>
-        [JsonProperty("minPrice", Order = 15)]
+        [JsonProperty("minPrice")]
         public uint MinPrice { get; set; }
 
         /// <summary>
         /// The minimum NQ listing price.
         /// </summary>
-        [JsonProperty("minPriceNQ", Order = 16)]
+        [JsonProperty("minPriceNQ")]
         public uint MinPriceNq { get; set; }
 
         /// <summary>
         /// The minimum HQ listing price.
         /// </summary>
-        [JsonProperty("minPriceHQ", Order = 17)]
+        [JsonProperty("minPriceHQ")]
         public uint MinPriceHq { get; set; }
 
         /// <summary>
         /// The maximum listing price.
         /// </summary>
-        [JsonProperty("maxPrice", Order = 18)]
+        [JsonProperty("maxPrice")]
         public uint MaxPrice { get; set; }
 
         /// <summary>
         /// The maximum NQ listing price.
         /// </summary>
-        [JsonProperty("maxPriceNQ", Order = 19)]
+        [JsonProperty("maxPriceNQ")]
         public uint MaxPriceNq { get; set; }
 
         /// <summary>
         /// The maximum HQ listing price.
         /// </summary>
-        [JsonProperty("maxPriceHQ", Order = 20)]
+        [JsonProperty("maxPriceHQ")]
         public uint MaxPriceHq { get; set; }
 
         /// <summary>
         /// A map of quantities to listing counts, representing the number of listings of each quantity.
         /// </summary>
-        [JsonProperty("stackSizeHistogram", Order = 21)]
+        [JsonProperty("stackSizeHistogram")]
         public SortedDictionary<int, int> StackSizeHistogram { get; set; } = new();
 
         /// <summary>
         /// A map of quantities to NQ listing counts, representing the number of listings of each quantity.
         /// </summary>
-        [JsonProperty("stackSizeHistogramNQ", Order = 22)]
+        [JsonProperty("stackSizeHistogramNQ")]
         public SortedDictionary<int, int> StackSizeHistogramNq { get; set; } = new();
 
         /// <summary>
         /// A map of quantities to HQ listing counts, representing the number of listings of each quantity.
         /// </summary>
-        [JsonProperty("stackSizeHistogramHQ", Order = 23)]
+        [JsonProperty("stackSizeHistogramHQ")]
         public SortedDictionary<int, int> StackSizeHistogramHq { get; set; } = new();
+
+        /// <summary>
+        /// The world name, if applicable.
+        /// </summary>
+        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
+        public string WorldName { get; set; }
     }
 }
