@@ -3,6 +3,11 @@ using Newtonsoft.Json;
 
 namespace Universalis.Application.Views
 {
+    /*
+     * Note for anyone viewing this file: People rely on the field order (even though JSON is defined to be unordered).
+     * Please do not edit the field order unless it is unavoidable.
+     */
+
     public class CurrentlyShownMultiView
     {
         /// <summary>
@@ -25,12 +30,6 @@ namespace Universalis.Application.Views
         public uint? WorldId { get; set; }
 
         /// <summary>
-        /// The name of the world requested, if applicable.
-        /// </summary>
-        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
-        public string WorldName { get; set; }
-
-        /// <summary>
         /// The name of the DC requested, if applicable.
         /// </summary>
         [JsonProperty("dcName", NullValueHandling = NullValueHandling.Ignore)]
@@ -41,6 +40,12 @@ namespace Universalis.Application.Views
         /// </summary>
         [JsonProperty("unresolvedItems")]
         public uint[] UnresolvedItemIds { get; set; }
+
+        /// <summary>
+        /// The name of the world requested, if applicable.
+        /// </summary>
+        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
+        public string WorldName { get; set; }
     }
 
     public class CurrentlyShownMultiViewV2
@@ -64,12 +69,6 @@ namespace Universalis.Application.Views
         public uint? WorldId { get; set; }
 
         /// <summary>
-        /// The name of the world requested, if applicable.
-        /// </summary>
-        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
-        public string WorldName { get; set; }
-
-        /// <summary>
         /// The name of the DC requested, if applicable.
         /// </summary>
         [JsonProperty("dcName", NullValueHandling = NullValueHandling.Ignore)]
@@ -80,5 +79,11 @@ namespace Universalis.Application.Views
         /// </summary>
         [JsonProperty("unresolvedItems")]
         public uint[] UnresolvedItemIds { get; set; }
+
+        /// <summary>
+        /// The name of the world requested, if applicable.
+        /// </summary>
+        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
+        public string WorldName { get; set; }
     }
 }

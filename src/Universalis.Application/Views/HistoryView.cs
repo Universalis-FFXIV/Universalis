@@ -3,14 +3,13 @@ using System.Collections.Generic;
 
 namespace Universalis.Application.Views
 {
+    /*
+     * Note for anyone viewing this file: People rely on the field order (even though JSON is defined to be unordered).
+     * Please do not edit the field order unless it is unavoidable.
+     */
+
     public class HistoryView
     {
-        /// <summary>
-        /// The historical sales.
-        /// </summary>
-        [JsonProperty("entries")]
-        public List<MinimizedSaleView> Sales { get; set; } = new();
-
         /// <summary>
         /// The item ID.
         /// </summary>
@@ -24,22 +23,22 @@ namespace Universalis.Application.Views
         public uint? WorldId { get; set; }
 
         /// <summary>
-        /// The world name, if applicable.
+        /// The last upload time for this endpoint, in milliseconds since the UNIX epoch.
         /// </summary>
-        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
-        public string WorldName { get; set; }
+        [JsonProperty("lastUploadTime")]
+        public long LastUploadTimeUnixMilliseconds { get; set; }
+
+        /// <summary>
+        /// The historical sales.
+        /// </summary>
+        [JsonProperty("entries")]
+        public List<MinimizedSaleView> Sales { get; set; } = new();
 
         /// <summary>
         /// The DC name, if applicable.
         /// </summary>
         [JsonProperty("dcName", NullValueHandling = NullValueHandling.Ignore)]
         public string DcName { get; set; }
-
-        /// <summary>
-        /// The last upload time for this endpoint, in milliseconds since the UNIX epoch.
-        /// </summary>
-        [JsonProperty("lastUploadTime")]
-        public long LastUploadTimeUnixMilliseconds { get; set; }
 
         /// <summary>
         /// A map of quantities to sale counts, representing the number of sales of each quantity.
@@ -76,5 +75,11 @@ namespace Universalis.Application.Views
         /// </summary>
         [JsonProperty("hqSaleVelocity")]
         public float SaleVelocityHq { get; set; }
+
+        /// <summary>
+        /// The world name, if applicable.
+        /// </summary>
+        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
+        public string WorldName { get; set; }
     }
 }

@@ -2,6 +2,11 @@
 
 namespace Universalis.Application.Views
 {
+    /*
+     * Note for anyone viewing this file: People rely on the field order (even though JSON is defined to be unordered).
+     * Please do not edit the field order unless it is unavoidable.
+     */
+
     public class MinimizedSaleView
     {
         /// <summary>
@@ -29,15 +34,15 @@ namespace Universalis.Application.Views
         public long TimestampUnixSeconds { get; set; }
 
         /// <summary>
-        /// The world ID, if applicable.
-        /// </summary>
-        [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore)]
-        public uint? WorldId { get; set; }
-
-        /// <summary>
         /// The world name, if applicable.
         /// </summary>
         [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
         public string WorldName { get; set; }
+
+        /// <summary>
+        /// The world ID, if applicable.
+        /// </summary>
+        [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore)]
+        public uint? WorldId { get; set; }
     }
 }

@@ -2,13 +2,13 @@
 
 namespace Universalis.Application.Views
 {
+    /*
+     * Note for anyone viewing this file: People rely on the field order (even though JSON is defined to be unordered).
+     * Please do not edit the field order unless it is unavoidable.
+     */
+
     public class SaleView
     {
-        /*
-         * Note for anyone viewing this file: People rely on the field order (even though JSON is defined to be unordered).
-         * Please do not edit the field order unless it is unavoidable.
-         */
-
         /// <summary>
         /// Whether or not the item was high-quality.
         /// </summary>
