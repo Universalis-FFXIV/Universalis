@@ -8,6 +8,10 @@ services:
       - /home/universalis/sqpack:/sqpack
       - /home/universalis/DataProtection-Keys:/root/.aspnet/DataProtection-Keys
     network_mode: "host"
+    deploy:
+      resources:
+        limits:
+          memory: 3500m
   watchtower:
     image: containrrr/watchtower
     environment:
