@@ -97,6 +97,12 @@ namespace Universalis.Application.Uploads.Behaviors
                         minimizedSales.RemoveAt(0);
                     }
 
+                    // TODO: Make this not necessary, e.g. have a way to fix duplicates easily when they do slip in somehow
+                    existingHistory.Sales = existingHistory.Sales
+                        .Distinct()
+                        .ToList();
+                    existingHistory.Sales.Sort((a, b) => (int)Math.Truncate(b.SaleTimeUnixSeconds - a.SaleTimeUnixSeconds));
+
                     historyDocument.Sales = existingHistory.Sales;
                     await _historyDb.Update(historyDocument, new HistoryQuery
                     {

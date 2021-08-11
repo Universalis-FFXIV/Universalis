@@ -33,7 +33,7 @@ namespace Universalis.Entities.MarketBoard
                    && PricePerUnit == other.PricePerUnit
                    && Quantity == other.Quantity
                    && BuyerName == other.BuyerName
-                   && Math.Abs(TimestampUnixSeconds - other.TimestampUnixSeconds) < 0.01;
+                   && Math.Abs(TimestampUnixSeconds - other.TimestampUnixSeconds) < 0.1;
         }
 
         public override bool Equals(object obj)

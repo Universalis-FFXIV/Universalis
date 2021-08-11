@@ -82,7 +82,7 @@ namespace Universalis.Entities.MarketBoard
                    && DyeId == other.DyeId
                    && CreatorId == other.CreatorId
                    && CreatorName == other.CreatorName
-                   && Math.Abs(LastReviewTimeUnixSeconds - other.LastReviewTimeUnixSeconds) < 0.01
+                   && Math.Abs(LastReviewTimeUnixSeconds - other.LastReviewTimeUnixSeconds) < 0.1
                    && RetainerId == other.RetainerId && RetainerName == other.RetainerName
                    && RetainerCityId == other.RetainerCityId
                    && SellerId == other.SellerId;
