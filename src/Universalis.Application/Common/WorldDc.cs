@@ -22,7 +22,7 @@ namespace Universalis.Application.Common
         /// <param name="worldOrDc">The input string.</param>
         /// <param name="gameData">A game data provider.</param>
         /// <returns>A <see cref="WorldDc"/> object with either the world or the DC populated.</returns>
-        public static WorldDc From(string worldOrDc, IGameDataProvider gameData)
+        public static bool TryParse(string worldOrDc, IGameDataProvider gameData, out WorldDc worldDc)
         {
             if (worldOrDc == null) throw new ArgumentNullException(nameof(worldOrDc));
 
@@ -40,14 +40,15 @@ namespace Universalis.Application.Common
                 {
                     if (!gameData.DataCenters().Select(dc => dc.Name).Contains(cleanWorldOrDc))
                     {
-                        throw new ArgumentException("No world or DC matching the arguments was found.");
+                        worldDc = null;
+                        return false;
                     }
 
                     dcName = cleanWorldOrDc;
                 }
             }
 
-            return new WorldDc
+            worldDc = new WorldDc
             {
                 IsWorld = worldId != default,
                 WorldId = worldId,
@@ -55,6 +56,8 @@ namespace Universalis.Application.Common
                 IsDc = dcName != null,
                 DcName = dcName,
             };
+
+            return true;
         }
     }
 }

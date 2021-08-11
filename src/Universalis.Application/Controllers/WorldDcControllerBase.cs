@@ -23,18 +23,7 @@ namespace Universalis.Application.Controllers
         /// <returns><see langword="true" /> if the operation succeeded, otherwise <see langword="false" />.</returns>
         protected bool TryGetWorldDc(string worldOrDc, out WorldDc worldDc)
         {
-            worldDc = null;
-            try
-            {
-                worldDc = WorldDc.From(worldOrDc, GameData);
-            }
-            catch (Exception)
-            {
-                // TODO: Log a warning
-                return false;
-            }
-
-            return true;
+            return WorldDc.TryParse(worldOrDc, GameData, out worldDc);
         }
 
         /// <summary>
