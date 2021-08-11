@@ -9,11 +9,7 @@ namespace Universalis.DbAccess
     {
         public static void AddDbAccessServices(this IServiceCollection sc)
         {
-            sc.AddSingleton<IMongoClient>(new MongoClient(new MongoClientSettings
-            {
-                Server = new MongoServerAddress("mongodb://localhost", 27017),
-                MaxConnectionPoolSize = 500,
-            }));
+            sc.AddSingleton<IMongoClient>(new MongoClient("mongodb://localhost:27017"));
 
             sc.AddSingleton<IConnectionThrottlingPipeline, ConnectionThrottlingPipeline>();
 
