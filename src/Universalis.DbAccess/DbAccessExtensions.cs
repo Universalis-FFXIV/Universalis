@@ -11,7 +11,7 @@ namespace Universalis.DbAccess
         {
             sc.AddSingleton<IMongoClient>(new MongoClient(new MongoClientSettings
             {
-                Server = new MongoServerAddress("mongodb://localhost:27017"),
+                Server = new MongoServerAddress("mongodb://localhost", 27017),
                 MaxConnectionPoolSize = 500,
             }));
 
