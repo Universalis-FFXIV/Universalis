@@ -21,38 +21,53 @@ namespace Universalis.Application.Common
         /// </summary>
         /// <param name="worldOrDc">The input string.</param>
         /// <param name="gameData">A game data provider.</param>
-        /// <returns>A <see cref="WorldDc"/> object with either the world or the DC populated.</returns>
+        /// <param name="worldDc">A <see cref="WorldDc"/> object with either the world or the DC populated.</param>
+        /// <returns>Whether or not parsing succeeded.</returns>
         public static bool TryParse(string worldOrDc, IGameDataProvider gameData, out WorldDc worldDc)
         {
-            if (worldOrDc == null) throw new ArgumentNullException(nameof(worldOrDc));
+            worldDc = null;
 
+            if (worldOrDc == null)
+            {
+                return false;
+            }
+
+            string worldName = null;
             string dcName = null;
-            _ = uint.TryParse(worldOrDc, out var worldId);
-            if (worldId == default)
+            var worldIdParsed = uint.TryParse(worldOrDc, out var worldId);
+            if (!worldIdParsed)
             {
                 var cleanWorldOrDc = char.ToUpperInvariant(worldOrDc[0]) + worldOrDc[1..].ToLowerInvariant();
 
                 // Effectively does nothing if the input doesn't refer to a Chinese world or DC
                 cleanWorldOrDc = ChineseServers.RomanizedToHanzi(cleanWorldOrDc);
 
-                _ = gameData.AvailableWorldsReversed().TryGetValue(cleanWorldOrDc, out worldId);
-                if (worldId == default)
+                worldIdParsed = gameData.AvailableWorldsReversed().TryGetValue(cleanWorldOrDc, out worldId);
+                
+                if (!worldIdParsed)
                 {
                     if (!gameData.DataCenters().Select(dc => dc.Name).Contains(cleanWorldOrDc))
                     {
-                        worldDc = null;
                         return false;
                     }
 
                     dcName = cleanWorldOrDc;
                 }
+                else
+                {
+                    worldName = cleanWorldOrDc;
+                }
+            }
+            else if (!gameData.AvailableWorlds().TryGetValue(worldId, out worldName))
+            {
+                return false;
             }
 
             worldDc = new WorldDc
             {
-                IsWorld = worldId != default,
+                IsWorld = worldIdParsed,
                 WorldId = worldId,
-                WorldName = worldId != default ? gameData.AvailableWorlds()[worldId] : null,
+                WorldName = worldName,
                 IsDc = dcName != null,
                 DcName = dcName,
             };
