@@ -45,6 +45,7 @@ namespace Universalis.Application.Controllers
                 agg.Listings = next.Listings
                     .Select(l =>
                     {
+                        var ppuWithGst = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
                         var listingView = new ListingView
                         {
                             Hq = l.Hq,
@@ -56,9 +57,9 @@ namespace Universalis.Application.Controllers
                                     MateriaId = m.MateriaId,
                                 })
                                 .ToList() ?? new List<MateriaView>(),
-                            PricePerUnit = (uint)Math.Ceiling(l.PricePerUnit * 1.05),
+                            PricePerUnit = ppuWithGst,
                             Quantity = l.Quantity,
-                            Total = l.PricePerUnit * l.Quantity,
+                            Total = ppuWithGst * l.Quantity,
                             DyeId = l.DyeId,
                             CreatorName = l.CreatorName ?? "",
                             IsCrafted = !string.IsNullOrEmpty(l.CreatorName),
