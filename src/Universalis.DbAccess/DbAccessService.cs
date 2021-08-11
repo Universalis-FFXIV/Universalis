@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson.Serialization.Conventions;
+﻿using System.Collections;
+using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries;
@@ -62,7 +63,7 @@ namespace Universalis.DbAccess
                 {
                     var existingValue = property.GetValue(existing);
                     var documentValue = property.GetValue(document);
-                    if (documentValue != existingValue)
+                    if (property.PropertyType.IsAssignableFrom(typeof(IEnumerable)) || documentValue != existingValue)
                     {
                         var nextUpdate = updateBuilder.Set(property.Name, documentValue);
                         update = update == null
