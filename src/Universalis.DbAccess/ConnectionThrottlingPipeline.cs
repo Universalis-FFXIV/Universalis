@@ -18,7 +18,7 @@ namespace Universalis.DbAccess
 
         public Task<T> AddRequest<T>(Func<Task<T>> task)
         {
-            _openConnectionSemaphore.WaitOne();
+            _openConnectionSemaphore.WaitOne(15000);
             try
             {
                 return task();
@@ -31,7 +31,7 @@ namespace Universalis.DbAccess
 
         public Task AddRequest(Func<Task> task)
         {
-            _openConnectionSemaphore.WaitOne();
+            _openConnectionSemaphore.WaitOne(15000);
             try
             {
                 return task();
