@@ -1,22 +1,23 @@
-﻿using Newtonsoft.Json;
+﻿
+using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Uploads.Schema
 {
     public class DeleteListingParameters
     {
-        [JsonProperty("retainerID")]
+        [JsonPropertyName("retainerID")]
         public string RetainerId { get; set; }
 
-        [JsonProperty("listingID")]
+        [JsonPropertyName("listingID")]
         public string ListingId { get; set; }
 
-        [JsonProperty("quantity")]
+        [JsonPropertyName("quantity")]
         public uint Quantity { get; set; }
 
-        [JsonProperty("pricePerUnit")]
+        [JsonPropertyName("pricePerUnit")]
         public uint PricePerUnit { get; set; }
 
-        [JsonProperty("uploaderID")]
+        [JsonPropertyName("uploaderID")]
         public string UploaderId { get; set; }
     }
 }

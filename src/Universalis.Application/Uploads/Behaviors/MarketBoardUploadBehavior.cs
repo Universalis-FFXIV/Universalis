@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.MarketBoard;
@@ -44,7 +44,7 @@ namespace Universalis.Application.Uploads.Behaviors
             List<Sale> cleanSales = null;
             if (parameters.Sales != null)
             {
-                if (Util.HasHtmlTags(JsonConvert.SerializeObject(parameters.Sales)))
+                if (Util.HasHtmlTags(JsonSerializer.Serialize(parameters.Sales)))
                 {
                     return new BadRequestResult();
                 }
@@ -115,7 +115,7 @@ namespace Universalis.Application.Uploads.Behaviors
             List<Listing> cleanListings = null;
             if (parameters.Listings != null)
             {
-                if (Util.HasHtmlTags(JsonConvert.SerializeObject(parameters.Listings)))
+                if (Util.HasHtmlTags(JsonSerializer.Serialize(parameters.Listings)))
                 {
                     return new BadRequestResult();
                 }

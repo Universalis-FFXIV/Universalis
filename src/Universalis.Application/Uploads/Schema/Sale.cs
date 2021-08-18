@@ -1,31 +1,31 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Uploads.Schema
 {
     public class Sale
     {
-        [JsonProperty("hq")]
+        [JsonPropertyName("hq")]
         public string Hq { get; set; }
 
-        [JsonProperty("pricePerUnit")]
+        [JsonPropertyName("pricePerUnit")]
         public uint PricePerUnit { get; set; }
         
-        [JsonProperty("quantity")]
+        [JsonPropertyName("quantity")]
         public uint Quantity { get; set; }
         
-        [JsonProperty("buyerName")]
+        [JsonPropertyName("buyerName")]
         public string BuyerName { get; set; }
         
-        [JsonProperty("onMannequin")]
+        [JsonPropertyName("onMannequin")]
         public string OnMannequin { get; set; }
         
-        [JsonProperty("sellerID")]
+        [JsonPropertyName("sellerID")]
         public string SellerId { get; set; }
         
-        [JsonProperty("buyerID")]
+        [JsonPropertyName("buyerID")]
         public string BuyerId { get; set; }
         
-        [JsonProperty("timestamp")]
+        [JsonPropertyName("timestamp")]
         public double TimestampUnixSeconds { get; set; }
     }
 }

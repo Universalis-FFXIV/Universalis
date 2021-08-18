@@ -1,32 +1,32 @@
-﻿using Newtonsoft.Json;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Uploads.Schema
 {
     public class UploadParameters
     {
-        [JsonProperty("uploaderID")]
+        [JsonPropertyName("uploaderID")]
         public string UploaderId { get; set; }
 
-        [JsonProperty("worldID")]
+        [JsonPropertyName("worldID")]
         public uint? WorldId { get; set; }
 
-        [JsonProperty("itemID")]
+        [JsonPropertyName("itemID")]
         public uint? ItemId { get; set; }
 
-        [JsonProperty("marketTaxRates")]
+        [JsonPropertyName("marketTaxRates")]
         public MarketTaxRates TaxRates { get; set; }
 
-        [JsonProperty("listings")]
+        [JsonPropertyName("listings")]
         public IList<Listing> Listings { get; set; }
 
-        [JsonProperty("entries")]
+        [JsonPropertyName("entries")]
         public IList<Sale> Sales { get; set; }
 
-        [JsonProperty("contentID")]
+        [JsonPropertyName("contentID")]
         public string ContentId { get; set; }
 
-        [JsonProperty("characterName")]
+        [JsonPropertyName("characterName")]
         public string CharacterName { get; set; }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Views
 {
@@ -8,7 +8,7 @@ namespace Universalis.Application.Views
         /// <summary>
         /// A list of item IDs, with the most recent first.
         /// </summary>
-        [JsonProperty("items")]
-        public List<uint> Items { get; set; } = new();
+        [JsonPropertyName("items")]
+        public List<uint> Items { get; init; } = new();
     }
 }

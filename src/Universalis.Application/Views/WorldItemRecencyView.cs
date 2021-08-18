@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Views
 {
@@ -7,25 +7,25 @@ namespace Universalis.Application.Views
         /// <summary>
         /// The item ID.
         /// </summary>
-        [JsonProperty("itemID")]
-        public uint ItemId { get; set; }
+        [JsonPropertyName("itemID")]
+        public uint ItemId { get; init; }
 
         /// <summary>
         /// The last upload time for the item on the listed world.
         /// </summary>
-        [JsonProperty("lastUploadTime")]
-        public double LastUploadTimeUnixMilliseconds { get; set; }
+        [JsonPropertyName("lastUploadTime")]
+        public double LastUploadTimeUnixMilliseconds { get; init; }
 
         /// <summary>
         /// The world ID.
         /// </summary>
-        [JsonProperty("worldID")]
-        public uint WorldId { get; set; }
+        [JsonPropertyName("worldID")]
+        public uint WorldId { get; init; }
 
         /// <summary>
         /// The world name.
         /// </summary>
-        [JsonProperty("worldName")]
-        public string WorldName { get; set; }
+        [JsonPropertyName("worldName")]
+        public string WorldName { get; init; }
     }
 }

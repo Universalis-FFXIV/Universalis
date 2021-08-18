@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Views
 {
@@ -8,7 +8,7 @@ namespace Universalis.Application.Views
         /// <summary>
         /// The list of upload counts per day, over the past 30 days.
         /// </summary>
-        [JsonProperty("uploadCountByDay")]
-        public IList<double> UploadCountByDay { get; set; }
+        [JsonPropertyName("uploadCountByDay")]
+        public IList<double> UploadCountByDay { get; init; }
     }
 }

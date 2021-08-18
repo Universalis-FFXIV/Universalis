@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Views
 {
@@ -7,13 +7,13 @@ namespace Universalis.Application.Views
         /// <summary>
         /// The materia slot.
         /// </summary>
-        [JsonProperty("slotID")]
-        public uint SlotId { get; set; }
+        [JsonPropertyName("slotID")]
+        public uint SlotId { get; init; }
 
         /// <summary>
         /// The materia item ID.
         /// </summary>
-        [JsonProperty("materiaID")]
-        public uint MateriaId { get; set; }
+        [JsonPropertyName("materiaID")]
+        public uint MateriaId { get; init; }
     }
 }

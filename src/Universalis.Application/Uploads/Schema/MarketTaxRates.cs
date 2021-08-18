@@ -1,25 +1,25 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Uploads.Schema
 {
     public class MarketTaxRates
     {
-        [JsonProperty("limsaLominsa")]
+        [JsonPropertyName("limsaLominsa")]
         public byte LimsaLominsa { get; set; }
 
-        [JsonProperty("gridania")]
+        [JsonPropertyName("gridania")]
         public byte Gridania { get; set; }
 
-        [JsonProperty("uldah")]
+        [JsonPropertyName("uldah")]
         public byte Uldah { get; set; }
 
-        [JsonProperty("ishgard")]
+        [JsonPropertyName("ishgard")]
         public byte Ishgard { get; set; }
 
-        [JsonProperty("kugane")]
+        [JsonPropertyName("kugane")]
         public byte Kugane { get; set; }
 
-        [JsonProperty("crystarium")]
+        [JsonPropertyName("crystarium")]
         public byte Crystarium { get; set; }
     }
 }

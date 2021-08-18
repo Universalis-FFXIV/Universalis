@@ -44,7 +44,7 @@ namespace Universalis.Application
             {
                 options.Conventions.Add(new GroupByNamespaceConvention());
                 options.Filters.Add(new DecoderFallbackExceptionFilter());
-            }).AddNewtonsoftJson();
+            });
 
             services.AddApiVersioning(options =>
             {
@@ -90,8 +90,6 @@ namespace Universalis.Application
 
                 options.IncludeXmlComments(() => new XPathDocument(apiDocs));
             });
-
-            services.AddSwaggerGenNewtonsoftSupport();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

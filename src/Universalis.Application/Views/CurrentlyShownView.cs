@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Views
 {
@@ -13,55 +13,57 @@ namespace Universalis.Application.Views
         /// <summary>
         /// The item ID.
         /// </summary>
-        [JsonProperty("itemID")]
-        public uint ItemId { get; set; }
+        [JsonPropertyName("itemID")]
+        public uint ItemId { get; init; }
 
         /// <summary>
         /// The world ID, if applicable.
         /// </summary>
-        [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore)]
-        public uint? WorldId { get; set; }
+        [JsonPropertyName("worldID")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public uint? WorldId { get; init; }
 
         /// <summary>
         /// The last upload time for this endpoint, in milliseconds since the UNIX epoch.
         /// </summary>
-        [JsonProperty("lastUploadTime")]
+        [JsonPropertyName("lastUploadTime")]
         public long LastUploadTimeUnixMilliseconds { get; set; }
 
         /// <summary>
         /// The currently-shown listings.
         /// </summary>
-        [JsonProperty("listings")]
+        [JsonPropertyName("listings")]
         public List<ListingView> Listings { get; set; } = new();
 
         /// <summary>
         /// The currently-shown sales.
         /// </summary>
-        [JsonProperty("recentHistory")]
+        [JsonPropertyName("recentHistory")]
         public List<SaleView> RecentHistory { get; set; } = new();
 
         /// <summary>
         /// The DC name, if applicable.
         /// </summary>
-        [JsonProperty("dcName", NullValueHandling = NullValueHandling.Ignore)]
-        public string DcName { get; set; }
+        [JsonPropertyName("dcName")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string DcName { get; init; }
 
         /// <summary>
         /// The average listing price, with outliers removed beyond 3 standard deviations of the mean.
         /// </summary>
-        [JsonProperty("currentAveragePrice")]
+        [JsonPropertyName("currentAveragePrice")]
         public float CurrentAveragePrice { get; set; }
 
         /// <summary>
         /// The average NQ listing price, with outliers removed beyond 3 standard deviations of the mean.
         /// </summary>
-        [JsonProperty("currentAveragePriceNQ")]
+        [JsonPropertyName("currentAveragePriceNQ")]
         public float CurrentAveragePriceNq { get; set; }
 
         /// <summary>
         /// The average HQ listing price, with outliers removed beyond 3 standard deviations of the mean.
         /// </summary>
-        [JsonProperty("currentAveragePriceHQ")]
+        [JsonPropertyName("currentAveragePriceHQ")]
         public float CurrentAveragePriceHq { get; set; }
 
         /// <summary>
@@ -69,101 +71,102 @@ namespace Universalis.Application.Views
         /// This number will tend to be the same for every item, because the number of shown sales is the same and over the same period.
         /// This statistic is more useful in historical queries.
         /// </summary>
-        [JsonProperty("regularSaleVelocity")]
-        public float SaleVelocity { get; set; }
+        [JsonPropertyName("regularSaleVelocity")]
+        public float SaleVelocity { get; init; }
 
         /// <summary>
         /// The average number of NQ sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).
         /// This number will tend to be the same for every item, because the number of shown sales is the same and over the same period.
         /// This statistic is more useful in historical queries.
         /// </summary>
-        [JsonProperty("nqSaleVelocity")]
-        public float SaleVelocityNq { get; set; }
+        [JsonPropertyName("nqSaleVelocity")]
+        public float SaleVelocityNq { get; init; }
 
         /// <summary>
         /// The average number of HQ sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).
         /// This number will tend to be the same for every item, because the number of shown sales is the same and over the same period.
         /// This statistic is more useful in historical queries.
         /// </summary>
-        [JsonProperty("hqSaleVelocity")]
-        public float SaleVelocityHq { get; set; }
+        [JsonPropertyName("hqSaleVelocity")]
+        public float SaleVelocityHq { get; init; }
 
         /// <summary>
         /// The average sale price, with outliers removed beyond 3 standard deviations of the mean.
         /// </summary>
-        [JsonProperty("averagePrice")]
+        [JsonPropertyName("averagePrice")]
         public float AveragePrice { get; set; }
 
         /// <summary>
         /// The average NQ sale price, with outliers removed beyond 3 standard deviations of the mean.
         /// </summary>
-        [JsonProperty("averagePriceNQ")]
+        [JsonPropertyName("averagePriceNQ")]
         public float AveragePriceNq { get; set; }
 
         /// <summary>
         /// The average HQ sale price, with outliers removed beyond 3 standard deviations of the mean.
         /// </summary>
-        [JsonProperty("averagePriceHQ")]
+        [JsonPropertyName("averagePriceHQ")]
         public float AveragePriceHq { get; set; }
 
         /// <summary>
         /// The minimum listing price.
         /// </summary>
-        [JsonProperty("minPrice")]
+        [JsonPropertyName("minPrice")]
         public uint MinPrice { get; set; }
 
         /// <summary>
         /// The minimum NQ listing price.
         /// </summary>
-        [JsonProperty("minPriceNQ")]
+        [JsonPropertyName("minPriceNQ")]
         public uint MinPriceNq { get; set; }
 
         /// <summary>
         /// The minimum HQ listing price.
         /// </summary>
-        [JsonProperty("minPriceHQ")]
+        [JsonPropertyName("minPriceHQ")]
         public uint MinPriceHq { get; set; }
 
         /// <summary>
         /// The maximum listing price.
         /// </summary>
-        [JsonProperty("maxPrice")]
+        [JsonPropertyName("maxPrice")]
         public uint MaxPrice { get; set; }
 
         /// <summary>
         /// The maximum NQ listing price.
         /// </summary>
-        [JsonProperty("maxPriceNQ")]
+        [JsonPropertyName("maxPriceNQ")]
         public uint MaxPriceNq { get; set; }
 
         /// <summary>
         /// The maximum HQ listing price.
         /// </summary>
-        [JsonProperty("maxPriceHQ")]
+        [JsonPropertyName("maxPriceHQ")]
         public uint MaxPriceHq { get; set; }
 
         /// <summary>
         /// A map of quantities to listing counts, representing the number of listings of each quantity.
         /// </summary>
-        [JsonProperty("stackSizeHistogram")]
-        public SortedDictionary<int, int> StackSizeHistogram { get; set; } = new();
+        [JsonPropertyName("stackSizeHistogram")]
+        public SortedDictionary<int, int> StackSizeHistogram { get; init; } = new();
 
         /// <summary>
         /// A map of quantities to NQ listing counts, representing the number of listings of each quantity.
         /// </summary>
-        [JsonProperty("stackSizeHistogramNQ")]
-        public SortedDictionary<int, int> StackSizeHistogramNq { get; set; } = new();
+        [JsonPropertyName("stackSizeHistogramNQ")]
+        public SortedDictionary<int, int> StackSizeHistogramNq { get; init; } = new();
 
         /// <summary>
         /// A map of quantities to HQ listing counts, representing the number of listings of each quantity.
         /// </summary>
-        [JsonProperty("stackSizeHistogramHQ")]
-        public SortedDictionary<int, int> StackSizeHistogramHq { get; set; } = new();
+        [JsonPropertyName("stackSizeHistogramHQ")]
+        public SortedDictionary<int, int> StackSizeHistogramHq { get; init; } = new();
 
         /// <summary>
         /// The world name, if applicable.
         /// </summary>
-        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
-        public string WorldName { get; set; }
+        [JsonPropertyName("worldName")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string WorldName { get; init; }
     }
 }

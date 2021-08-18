@@ -1,13 +1,13 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Uploads.Schema
 {
     public class Materia
     {
-        [JsonProperty("slotID")]
+        [JsonPropertyName("slotID")]
         public uint SlotId { get; set; }
         
-        [JsonProperty("materiaID")]
+        [JsonPropertyName("materiaID")]
         public uint MateriaId { get; set; }
     }
 }

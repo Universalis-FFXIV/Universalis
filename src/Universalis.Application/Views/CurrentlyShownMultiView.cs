@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Views
 {
@@ -13,39 +13,42 @@ namespace Universalis.Application.Views
         /// <summary>
         /// The item IDs that were requested.
         /// </summary>
-        [JsonProperty("itemIDs")]
-        public List<uint> ItemIds { get; set; } = new();
+        [JsonPropertyName("itemIDs")]
+        public List<uint> ItemIds { get; init; } = new();
 
         /// <summary>
         /// The item data that was requested, as a list. Use the nested item IDs
         /// to pull the item you want, or consider using the v2 endpoint instead.
         /// </summary>
-        [JsonProperty("items")]
-        public List<CurrentlyShownView> Items { get; set; } = new();
+        [JsonPropertyName("items")]
+        public List<CurrentlyShownView> Items { get; init; } = new();
 
         /// <summary>
         /// The ID of the world requested, if applicable.
         /// </summary>
-        [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore)]
-        public uint? WorldId { get; set; }
+        [JsonPropertyName("worldID")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public uint? WorldId { get; init; }
 
         /// <summary>
         /// The name of the DC requested, if applicable.
         /// </summary>
-        [JsonProperty("dcName", NullValueHandling = NullValueHandling.Ignore)]
-        public string DcName { get; set; }
+        [JsonPropertyName("dcName")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string DcName { get; init; }
 
         /// <summary>
         /// A list of IDs that could not be resolved to any item data.
         /// </summary>
-        [JsonProperty("unresolvedItems")]
-        public uint[] UnresolvedItemIds { get; set; }
+        [JsonPropertyName("unresolvedItems")]
+        public uint[] UnresolvedItemIds { get; init; }
 
         /// <summary>
         /// The name of the world requested, if applicable.
         /// </summary>
-        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
-        public string WorldName { get; set; }
+        [JsonPropertyName("worldName")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string WorldName { get; init; }
     }
 
     public class CurrentlyShownMultiViewV2
@@ -53,37 +56,40 @@ namespace Universalis.Application.Views
         /// <summary>
         /// The item IDs that were requested.
         /// </summary>
-        [JsonProperty("itemIDs")]
-        public List<uint> ItemIds { get; set; } = new();
+        [JsonPropertyName("itemIDs")]
+        public List<uint> ItemIds { get; init; } = new();
 
         /// <summary>
         /// The item data that was requested, keyed on the item ID.
         /// </summary>
-        [JsonProperty("items")]
-        public Dictionary<uint, CurrentlyShownView> Items { get; set; } = new();
+        [JsonPropertyName("items")]
+        public Dictionary<uint, CurrentlyShownView> Items { get; init; } = new();
 
         /// <summary>
         /// The ID of the world requested, if applicable.
         /// </summary>
-        [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore)]
-        public uint? WorldId { get; set; }
+        [JsonPropertyName("worldID")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public uint? WorldId { get; init; }
 
         /// <summary>
         /// The name of the DC requested, if applicable.
         /// </summary>
-        [JsonProperty("dcName", NullValueHandling = NullValueHandling.Ignore)]
-        public string DcName { get; set; }
+        [JsonPropertyName("dcName")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string DcName { get; init; }
 
         /// <summary>
         /// A list of IDs that could not be resolved to any item data.
         /// </summary>
-        [JsonProperty("unresolvedItems")]
-        public uint[] UnresolvedItemIds { get; set; }
+        [JsonPropertyName("unresolvedItems")]
+        public uint[] UnresolvedItemIds { get; init; }
 
         /// <summary>
         /// The name of the world requested, if applicable.
         /// </summary>
-        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
-        public string WorldName { get; set; }
+        [JsonPropertyName("worldName")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string WorldName { get; init; }
     }
 }

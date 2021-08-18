@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Views
 {
@@ -7,13 +7,13 @@ namespace Universalis.Application.Views
         /// <summary>
         /// The name of the client application.
         /// </summary>
-        [JsonProperty("sourceName")]
-        public string Name { get; set; }
+        [JsonPropertyName("sourceName")]
+        public string Name { get; init; }
 
         /// <summary>
         /// The number of uploads originating from the client application.
         /// </summary>
-        [JsonProperty("uploadCount")]
-        public double UploadCount { get; set; }
+        [JsonPropertyName("uploadCount")]
+        public double UploadCount { get; init; }
     }
 }

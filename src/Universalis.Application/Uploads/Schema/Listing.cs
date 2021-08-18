@@ -1,50 +1,50 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Uploads.Schema
 {
     public class Listing
     {
-        [JsonProperty("listingID")]
+        [JsonPropertyName("listingID")]
         public string ListingId { get; set; }
         
-        [JsonProperty("hq")]
+        [JsonPropertyName("hq")]
         public string Hq { get; set; }
         
-        [JsonProperty("pricePerUnit")]
+        [JsonPropertyName("pricePerUnit")]
         public uint PricePerUnit { get; set; }
         
-        [JsonProperty("quantity")]
+        [JsonPropertyName("quantity")]
         public uint Quantity { get; set; }
         
-        [JsonProperty("retainerName")]
+        [JsonPropertyName("retainerName")]
         public string RetainerName { get; set; }
         
-        [JsonProperty("retainerID")]
+        [JsonPropertyName("retainerID")]
         public string RetainerId { get; set; }
 
-        [JsonProperty("retainerCity")]
+        [JsonPropertyName("retainerCity")]
         public int RetainerCityId { get; set; }
 
-        [JsonProperty("creatorName")]
+        [JsonPropertyName("creatorName")]
         public string CreatorName { get; set; }
         
-        [JsonProperty("onMannequin")]
+        [JsonPropertyName("onMannequin")]
         public string OnMannequin { get; set; }
         
-        [JsonProperty("sellerID")]
+        [JsonPropertyName("sellerID")]
         public string SellerId { get; set; }
         
-        [JsonProperty("creatorID")]
+        [JsonPropertyName("creatorID")]
         public string CreatorId { get; set; }
         
-        [JsonProperty("stainID")]
+        [JsonPropertyName("stainID")]
         public uint DyeId { get; set; }
 
-        [JsonProperty("lastReviewTime")]
+        [JsonPropertyName("lastReviewTime")]
         public double LastReviewTimeUnixSeconds { get; set; }
         
-        [JsonProperty("materia")]
+        [JsonPropertyName("materia")]
         public List<Materia> Materia { get; set; }
     }
 }

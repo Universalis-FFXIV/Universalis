@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Views
 {
@@ -12,49 +12,51 @@ namespace Universalis.Application.Views
         /// <summary>
         /// Whether or not the item was high-quality.
         /// </summary>
-        [JsonProperty("hq")]
-        public bool Hq { get; set; }
+        [JsonPropertyName("hq")]
+        public bool Hq { get; init; }
 
         /// <summary>
         /// The price per unit sold.
         /// </summary>
-        [JsonProperty("pricePerUnit")]
-        public uint PricePerUnit { get; set; }
+        [JsonPropertyName("pricePerUnit")]
+        public uint PricePerUnit { get; init; }
 
         /// <summary>
         /// The stack size sold.
         /// </summary>
-        [JsonProperty("quantity")]
-        public uint Quantity { get; set; }
+        [JsonPropertyName("quantity")]
+        public uint Quantity { get; init; }
 
         /// <summary>
         /// The sale time, in seconds since the UNIX epoch.
         /// </summary>
-        [JsonProperty("timestamp")]
-        public long TimestampUnixSeconds { get; set; }
+        [JsonPropertyName("timestamp")]
+        public long TimestampUnixSeconds { get; init; }
 
         /// <summary>
         /// The world name, if applicable.
         /// </summary>
-        [JsonProperty("worldName", NullValueHandling = NullValueHandling.Ignore)]
-        public string WorldName { get; set; }
+        [JsonPropertyName("worldName")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string WorldName { get; init; }
 
         /// <summary>
         /// The world ID, if applicable.
         /// </summary>
-        [JsonProperty("worldID", NullValueHandling = NullValueHandling.Ignore)]
-        public uint? WorldId { get; set; }
+        [JsonPropertyName("worldID")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public uint? WorldId { get; init; }
 
         /// <summary>
         /// The buyer name.
         /// </summary>
-        [JsonProperty("buyerName")]
-        public string BuyerName { get; set; }
+        [JsonPropertyName("buyerName")]
+        public string BuyerName { get; init; }
 
         /// <summary>
         /// The total price.
         /// </summary>
-        [JsonProperty("total")]
-        public uint Total { get; set; }
+        [JsonPropertyName("total")]
+        public uint Total { get; init; }
     }
 }

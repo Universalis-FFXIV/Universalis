@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Views
 {
@@ -7,19 +7,20 @@ namespace Universalis.Application.Views
         /// <summary>
         /// The content ID of the object.
         /// </summary>
-        [JsonProperty("contentID")]
-        public string ContentId { get; set; }
+        [JsonPropertyName("contentID")]
+        public string ContentId { get; init; }
 
         /// <summary>
         /// The content type of this object.
         /// </summary>
-        [JsonProperty("contentType")]
-        public string ContentType { get; set; }
+        [JsonPropertyName("contentType")]
+        public string ContentType { get; init; }
 
         /// <summary>
         /// The character name associated with this character object, if this is one.
         /// </summary>
-        [JsonProperty("characterName", NullValueHandling = NullValueHandling.Ignore)]
-        public string CharacterName { get; set; }
+        [JsonPropertyName("characterName")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string CharacterName { get; init; }
     }
 }

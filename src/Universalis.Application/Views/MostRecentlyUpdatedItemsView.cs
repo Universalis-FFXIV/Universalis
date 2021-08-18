@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Views
 {
@@ -8,7 +8,7 @@ namespace Universalis.Application.Views
         /// <summary>
         /// A list of item upload information in timestamp-descending order.
         /// </summary>
-        [JsonProperty("items")]
-        public List<WorldItemRecencyView> Items { get; set; } = new();
+        [JsonPropertyName("items")]
+        public List<WorldItemRecencyView> Items { get; init; } = new();
     }
 }

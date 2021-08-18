@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Views
 {
@@ -7,37 +7,37 @@ namespace Universalis.Application.Views
         /// <summary>
         /// The percent retainer tax in Limsa Lominsa.
         /// </summary>
-        [JsonProperty("Limsa Lominsa")]
-        public byte LimsaLominsa { get; set; }
+        [JsonPropertyName("Limsa Lominsa")]
+        public byte LimsaLominsa { get; init; }
 
         /// <summary>
         /// The percent retainer tax in Gridania.
         /// </summary>
-        [JsonProperty("Gridania")]
-        public byte Gridania { get; set; }
+        [JsonPropertyName("Gridania")]
+        public byte Gridania { get; init; }
 
         /// <summary>
         /// The percent retainer tax in Ul'dah.
         /// </summary>
-        [JsonProperty("Ul'dah")]
-        public byte Uldah { get; set; }
+        [JsonPropertyName("Ul'dah")]
+        public byte Uldah { get; init; }
 
         /// <summary>
         /// The percent retainer tax in Ishgard.
         /// </summary>
-        [JsonProperty("Ishgard")]
-        public byte Ishgard { get; set; }
+        [JsonPropertyName("Ishgard")]
+        public byte Ishgard { get; init; }
 
         /// <summary>
         /// The percent retainer tax in Kugane.
         /// </summary>
-        [JsonProperty("Kugane")]
-        public byte Kugane { get; set; }
+        [JsonPropertyName("Kugane")]
+        public byte Kugane { get; init; }
 
         /// <summary>
         /// The percent retainer tax in the Crystarium.
         /// </summary>
-        [JsonProperty("Crystarium")]
-        public byte Crystarium { get; set; }
+        [JsonPropertyName("Crystarium")]
+        public byte Crystarium { get; init; }
     }
 }
