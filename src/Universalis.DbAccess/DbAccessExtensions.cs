@@ -11,7 +11,7 @@ namespace Universalis.DbAccess
         {
             sc.AddSingleton<IMongoClient>(new MongoClient(new MongoClientSettings
             {
-                MaxConnectionPoolSize = 500,
+                MaxConnectionPoolSize = 2000,
             }));
 
             sc.AddSingleton<IConnectionThrottlingPipeline, ConnectionThrottlingPipeline>();
