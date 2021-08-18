@@ -9,7 +9,7 @@ namespace Universalis.Application.Uploads.Schema
         public string ListingId { get; set; }
         
         [JsonPropertyName("hq")]
-        public string Hq { get; set; }
+        public object Hq { get; set; }
         
         [JsonPropertyName("pricePerUnit")]
         public uint PricePerUnit { get; set; }
@@ -30,7 +30,7 @@ namespace Universalis.Application.Uploads.Schema
         public string CreatorName { get; set; }
         
         [JsonPropertyName("onMannequin")]
-        public string OnMannequin { get; set; }
+        public object OnMannequin { get; set; }
         
         [JsonPropertyName("sellerID")]
         public string SellerId { get; set; }
