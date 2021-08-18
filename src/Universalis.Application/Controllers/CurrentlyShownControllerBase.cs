@@ -36,14 +36,17 @@ namespace Universalis.Application.Controllers
 
             var worlds = GameData.AvailableWorlds();
 
-            var currentlyShown = data.Aggregate(new CurrentlyShownView(), (agg, next) =>
+            var currentlyShown = await data
+                .ToAsyncEnumerable()
+                .AggregateAwaitAsync(new CurrentlyShownView(), async (agg, next) =>
             {
                 // Handle undefined arrays
                 next.Listings ??= new List<Listing>();
                 next.RecentHistory ??= new List<Sale>();
 
-                agg.Listings = next.Listings
-                    .Select(l =>
+                agg.Listings = (await next.Listings
+                    .ToAsyncEnumerable()
+                    .SelectAwait(async l =>
                     {
                         var ppuWithGst = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
                         var listingView = new ListingView
@@ -71,29 +74,30 @@ namespace Universalis.Application.Controllers
                         };
 
                         using var sha256 = SHA256.Create();
-                        
+
                         if (!string.IsNullOrEmpty(l.CreatorId))
                         {
-                            using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId));
-                            listingView.CreatorIdHash = Util.BytesToString(sha256.ComputeHash(dataStream));
+                            await using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId));
+                            listingView.CreatorIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream));
                         }
 
                         if (!string.IsNullOrEmpty(l.ListingId))
                         {
-                            using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.ListingId));
-                            listingView.ListingId = Util.BytesToString(sha256.ComputeHash(dataStream));
+                            await using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.ListingId));
+                            listingView.ListingId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream));
                         }
 
-                        using var dataStream2 = new MemoryStream(Encoding.UTF8.GetBytes(l.SellerId ?? ""));
-                        listingView.SellerIdHash = Util.BytesToString(sha256.ComputeHash(dataStream2));
+                        await using var dataStream2 = new MemoryStream(Encoding.UTF8.GetBytes(l.SellerId ?? ""));
+                        listingView.SellerIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream2));
 
-                        using var dataStream3 = new MemoryStream(Encoding.UTF8.GetBytes(l.RetainerId ?? ""));
-                        listingView.RetainerId = Util.BytesToString(sha256.ComputeHash(dataStream3));
+                        await using var dataStream3 = new MemoryStream(Encoding.UTF8.GetBytes(l.RetainerId ?? ""));
+                        listingView.RetainerId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream3));
 
                         return listingView;
-                    })
+                    }).ToListAsync())
                     .Concat(agg.Listings)
                     .ToList();
+
                 agg.RecentHistory = next.RecentHistory
                     .Select(s => new SaleView
                     {
@@ -140,11 +144,11 @@ namespace Universalis.Application.Controllers
                         .Select(s => s.Quantity)
                         .Select(q => (int)q))),
                 SaleVelocity = Statistics.WeekVelocityPerDay(currentlyShown.RecentHistory
-                    .Select(s => (long)s.TimestampUnixSeconds * 1000)),
+                    .Select(s => s.TimestampUnixSeconds * 1000)),
                 SaleVelocityNq = Statistics.WeekVelocityPerDay(nqSales
-                    .Select(s => (long)s.TimestampUnixSeconds * 1000)),
+                    .Select(s => s.TimestampUnixSeconds * 1000)),
                 SaleVelocityHq = Statistics.WeekVelocityPerDay(hqSales
-                    .Select(s => (long)s.TimestampUnixSeconds * 1000)),
+                    .Select(s => s.TimestampUnixSeconds * 1000)),
             };
 
             if (currentlyShown.Listings.Any())
