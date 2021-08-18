@@ -37,13 +37,25 @@ namespace Universalis.Application
 
         /// <summary>
         /// Parses a bool that is provided as a string or a number into a proper boolean value.
+        /// This function exists because of unfortunate inconsistencies in how different
+        /// clients upload parsed values.
         /// </summary>
-        /// <param name="b">The input text.</param>
+        /// <param name="o">The input object.</param>
         /// <returns>A boolean corresponding to the text.</returns>
-        public static bool ParseUnusualBool(string b)
+        public static bool ParseUnusualBool(object o)
         {
-            b = b?.ToLowerInvariant();
-            return b switch
+            if (o is bool b)
+            {
+                return b;
+            }
+
+            if (o is not string s)
+            {
+                return false;
+            }
+
+            s = s.ToLowerInvariant();
+            return s switch
             {
                 "true" or "1" => true,
                 "false" or "0" => false,
