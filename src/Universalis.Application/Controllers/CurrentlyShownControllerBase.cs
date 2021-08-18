@@ -39,66 +39,67 @@ namespace Universalis.Application.Controllers
             var currentlyShown = await data
                 .ToAsyncEnumerable()
                 .AggregateAwaitAsync(new CurrentlyShownView(), async (agg, next) =>
-            {
-                // Handle undefined arrays
-                next.Listings ??= new List<Listing>();
-                next.RecentHistory ??= new List<Sale>();
+                {
+                    // Handle undefined arrays
+                    next.Listings ??= new List<Listing>();
+                    next.RecentHistory ??= new List<Sale>();
 
-                agg.Listings = (await next.Listings
+                    agg.Listings = await next.Listings
+                        .ToAsyncEnumerable()
+                        .SelectAwait(async l =>
+                        {
+                            var ppuWithGst = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
+                            var listingView = new ListingView
+                            {
+                                Hq = l.Hq,
+                                OnMannequin = l.OnMannequin,
+                                Materia = l.Materia?
+                                    .Select(m => new MateriaView
+                                    {
+                                        SlotId = m.SlotId,
+                                        MateriaId = m.MateriaId,
+                                    })
+                                    .ToList() ?? new List<MateriaView>(),
+                                PricePerUnit = ppuWithGst,
+                                Quantity = l.Quantity,
+                                Total = ppuWithGst * l.Quantity,
+                                DyeId = l.DyeId,
+                                CreatorName = l.CreatorName ?? "",
+                                IsCrafted = !string.IsNullOrEmpty(l.CreatorName),
+                                LastReviewTimeUnixSeconds = (long)l.LastReviewTimeUnixSeconds,
+                                RetainerName = l.RetainerName,
+                                RetainerCityId = l.RetainerCityId,
+                                WorldId = worldDc.IsDc ? next.WorldId : null,
+                                WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
+                            };
+
+                            using var sha256 = SHA256.Create();
+
+                            if (!string.IsNullOrEmpty(l.CreatorId))
+                            {
+                                await using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId));
+                                listingView.CreatorIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream));
+                            }
+
+                            if (!string.IsNullOrEmpty(l.ListingId))
+                            {
+                                await using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.ListingId));
+                                listingView.ListingId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream));
+                            }
+
+                            await using var dataStream2 = new MemoryStream(Encoding.UTF8.GetBytes(l.SellerId ?? ""));
+                            listingView.SellerIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream2));
+
+                            await using var dataStream3 = new MemoryStream(Encoding.UTF8.GetBytes(l.RetainerId ?? ""));
+                            listingView.RetainerId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream3));
+
+                            return listingView;
+                        })
+                        .Concat(agg.Listings.ToAsyncEnumerable())
+                        .ToListAsync();
+
+                agg.RecentHistory = await next.RecentHistory
                     .ToAsyncEnumerable()
-                    .SelectAwait(async l =>
-                    {
-                        var ppuWithGst = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
-                        var listingView = new ListingView
-                        {
-                            Hq = l.Hq,
-                            OnMannequin = l.OnMannequin,
-                            Materia = l.Materia?
-                                .Select(m => new MateriaView
-                                {
-                                    SlotId = m.SlotId,
-                                    MateriaId = m.MateriaId,
-                                })
-                                .ToList() ?? new List<MateriaView>(),
-                            PricePerUnit = ppuWithGst,
-                            Quantity = l.Quantity,
-                            Total = ppuWithGst * l.Quantity,
-                            DyeId = l.DyeId,
-                            CreatorName = l.CreatorName ?? "",
-                            IsCrafted = !string.IsNullOrEmpty(l.CreatorName),
-                            LastReviewTimeUnixSeconds = (long)l.LastReviewTimeUnixSeconds,
-                            RetainerName = l.RetainerName,
-                            RetainerCityId = l.RetainerCityId,
-                            WorldId = worldDc.IsDc ? next.WorldId : null,
-                            WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
-                        };
-
-                        using var sha256 = SHA256.Create();
-
-                        if (!string.IsNullOrEmpty(l.CreatorId))
-                        {
-                            await using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId));
-                            listingView.CreatorIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream));
-                        }
-
-                        if (!string.IsNullOrEmpty(l.ListingId))
-                        {
-                            await using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.ListingId));
-                            listingView.ListingId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream));
-                        }
-
-                        await using var dataStream2 = new MemoryStream(Encoding.UTF8.GetBytes(l.SellerId ?? ""));
-                        listingView.SellerIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream2));
-
-                        await using var dataStream3 = new MemoryStream(Encoding.UTF8.GetBytes(l.RetainerId ?? ""));
-                        listingView.RetainerId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream3));
-
-                        return listingView;
-                    }).ToListAsync())
-                    .Concat(agg.Listings)
-                    .ToList();
-
-                agg.RecentHistory = next.RecentHistory
                     .Select(s => new SaleView
                     {
                         Hq = s.Hq,
@@ -110,8 +111,8 @@ namespace Universalis.Application.Controllers
                         WorldId = worldDc.IsDc ? next.WorldId : null,
                         WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
                     })
-                    .Concat(agg.RecentHistory)
-                    .ToList();
+                    .Concat(agg.RecentHistory.ToAsyncEnumerable())
+                    .ToListAsync();
                 agg.LastUploadTimeUnixMilliseconds = (long)Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
 
                 return agg;

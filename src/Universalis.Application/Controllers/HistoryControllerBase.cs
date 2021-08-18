@@ -33,27 +33,30 @@ namespace Universalis.Application.Controllers
 
             var worlds = GameData.AvailableWorlds();
 
-            var history = data.Aggregate(new HistoryView(), (agg, next) =>
-            {
-                // Handle undefined arrays
-                next.Sales ??= new List<MinimizedSale>();
+            var history = await data
+                .ToAsyncEnumerable()
+                .AggregateAwaitAsync(new HistoryView(), async (agg, next) =>
+                {
+                    // Handle undefined arrays
+                    next.Sales ??= new List<MinimizedSale>();
 
-                agg.Sales = next.Sales
-                    .Select(s => new MinimizedSaleView
-                    {
-                        Hq = s.Hq,
-                        PricePerUnit = s.PricePerUnit,
-                        Quantity = s.Quantity,
-                        TimestampUnixSeconds = (long)s.SaleTimeUnixSeconds,
-                        WorldId = worldDc.IsDc ? next.WorldId : null,
-                        WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
-                    })
-                    .Concat(agg.Sales)
-                    .ToList();
-                agg.LastUploadTimeUnixMilliseconds = (long)Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
+                    agg.Sales = await next.Sales
+                            .ToAsyncEnumerable()
+                            .Select(s => new MinimizedSaleView
+                            {
+                                Hq = s.Hq,
+                                PricePerUnit = s.PricePerUnit,
+                                Quantity = s.Quantity,
+                                TimestampUnixSeconds = (long) s.SaleTimeUnixSeconds,
+                                WorldId = worldDc.IsDc ? next.WorldId : null,
+                                WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
+                            })
+                        .Concat(agg.Sales.ToAsyncEnumerable())
+                        .ToListAsync();
+                    agg.LastUploadTimeUnixMilliseconds = (long)Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
 
-                return agg;
-            });
+                    return agg;
+                });
 
             history.Sales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
             history.Sales = history.Sales.Take(entries).ToList();
