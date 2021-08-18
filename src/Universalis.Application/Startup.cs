@@ -36,8 +36,6 @@ namespace Universalis.Application
 
             services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Scoped);
 
-            services.AddSingleton<GrossCleanup>();
-
             services
                 .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
                 .AddNegotiate();
