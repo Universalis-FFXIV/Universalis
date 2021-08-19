@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Globalization;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace Universalis.Application
@@ -44,6 +46,16 @@ namespace Universalis.Application
         /// <returns>A boolean corresponding to the text.</returns>
         public static bool ParseUnusualBool(object o)
         {
+            // Conversions for System.Text.Json types
+            o = o switch
+            {
+                JsonElement { ValueKind: JsonValueKind.Number } e => e.GetDecimal().ToString(CultureInfo.InvariantCulture),
+                JsonElement { ValueKind: JsonValueKind.String } e => e.GetString(),
+                JsonElement { ValueKind: JsonValueKind.True } => true,
+                JsonElement { ValueKind: JsonValueKind.False } => false,
+                _ => o,
+            };
+
             if (o is bool b)
             {
                 return b;
