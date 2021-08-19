@@ -9,6 +9,10 @@
     <DocumentationFile>Universalis.Application.xml</DocumentationFile>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+  </PropertyGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="doc_description.html" />
     <EmbeddedResource Include="Universalis.Application.xml" />
