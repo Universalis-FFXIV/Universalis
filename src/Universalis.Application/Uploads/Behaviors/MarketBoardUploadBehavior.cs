@@ -98,9 +98,10 @@ namespace Universalis.Application.Uploads.Behaviors
                     }
 
                     // TODO: Make this not necessary, e.g. have a way to fix duplicates easily when they do slip in somehow
-                    existingHistory.Sales = existingHistory.Sales
+                    existingHistory.Sales = await existingHistory.Sales
+                        .ToAsyncEnumerable()
                         .Distinct()
-                        .ToList();
+                        .ToListAsync();
                     existingHistory.Sales.Sort((a, b) => (int)Math.Truncate(b.SaleTimeUnixSeconds - a.SaleTimeUnixSeconds));
 
                     historyDocument.Sales = existingHistory.Sales;
