@@ -103,7 +103,7 @@ namespace Universalis.Application.Uploads.Behaviors
                     // Trims out duplicates and any invalid data
                     existingHistory.Sales = await existingHistory.Sales
                         .ToAsyncEnumerable()
-                        //.Where(s => s.PricePerUnit > 0) // We check PPU and *not* quantity because there are entries from before quantity was tracked
+                        .Where(s => s.PricePerUnit > 0) // We check PPU and *not* quantity because there are entries from before quantity was tracked
                         .Distinct()
                         .ToListAsync();
                     existingHistory.Sales.Sort((a, b) => (int)Math.Truncate(b.SaleTimeUnixSeconds - a.SaleTimeUnixSeconds));
