@@ -59,6 +59,9 @@ namespace Universalis.Application.Uploads.Behaviors
                         TimestampUnixSeconds = s.TimestampUnixSeconds,
                         UploadApplicationName = source.Name,
                     })
+                    .Where(s => s.PricePerUnit > 0)
+                    .Where(s => s.Quantity > 0)
+                    .Where(s => s.TimestampUnixSeconds > 0)
                     .ToList();
                 cleanSales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
@@ -97,9 +100,10 @@ namespace Universalis.Application.Uploads.Behaviors
                         minimizedSales.RemoveAt(0);
                     }
 
-                    // TODO: Make this not necessary, e.g. have a way to fix duplicates easily when they do slip in somehow
+                    // Trims out duplicates and any invalid data
                     existingHistory.Sales = await existingHistory.Sales
                         .ToAsyncEnumerable()
+                        //.Where(s => s.PricePerUnit > 0) // We check PPU and *not* quantity because there are entries from before quantity was tracked
                         .Distinct()
                         .ToListAsync();
                     existingHistory.Sales.Sort((a, b) => (int)Math.Truncate(b.SaleTimeUnixSeconds - a.SaleTimeUnixSeconds));

@@ -111,6 +111,9 @@ namespace Universalis.Application.Controllers
                         WorldId = worldDc.IsDc ? next.WorldId : null,
                         WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
                     })
+                    .Where(s => s.PricePerUnit > 0)
+                    .Where(s => s.Quantity > 0)
+                    .Where(s => s.TimestampUnixSeconds > 0)
                     .Concat(agg.RecentHistory.ToAsyncEnumerable())
                     .ToListAsync();
                 agg.LastUploadTimeUnixMilliseconds = (long)Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
