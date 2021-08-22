@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Uploads;
