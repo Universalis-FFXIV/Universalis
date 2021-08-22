@@ -10,11 +10,7 @@ namespace Universalis.DbAccess
     {
         public static void AddDbAccessServices(this IServiceCollection sc)
         {
-            ThreadPool.GetMaxThreads(out var workerThreads, out var completionPortThreads);
-            sc.AddSingleton<IMongoClient>(new MongoClient(new MongoClientSettings
-            {
-                MaxConnectionPoolSize = workerThreads + completionPortThreads,
-            }));
+            sc.AddSingleton<IMongoClient>(new MongoClient($"mongodb://localhost:27017?maxpoolsize=10000"));
 
             sc.AddSingleton<IConnectionThrottlingPipeline, ConnectionThrottlingPipeline>();
 
