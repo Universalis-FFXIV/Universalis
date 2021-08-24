@@ -9,6 +9,7 @@ services:
       - /home/universalis/DataProtection-Keys:/root/.aspnet/DataProtection-Keys
     network_mode: "host"
     mem_limit: 2000m
+    restart: on-failure
   watchtower:
     image: containrrr/watchtower
     environment:
