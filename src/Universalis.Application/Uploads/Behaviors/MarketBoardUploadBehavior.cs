@@ -49,7 +49,8 @@ namespace Universalis.Application.Uploads.Behaviors
                     return new BadRequestResult();
                 }
 
-                cleanSales = parameters.Sales
+                cleanSales = await parameters.Sales
+                    .ToAsyncEnumerable()
                     .Select(s => new Sale
                     {
                         Hq = Util.ParseUnusualBool(s.Hq),
@@ -62,7 +63,7 @@ namespace Universalis.Application.Uploads.Behaviors
                     .Where(s => s.PricePerUnit > 0)
                     .Where(s => s.Quantity > 0)
                     .Where(s => s.TimestampUnixSeconds > 0)
-                    .ToList();
+                    .ToListAsync();
                 cleanSales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
                 var existingHistory = await _historyDb.Retrieve(new HistoryQuery
