@@ -49,8 +49,7 @@ namespace Universalis.Application.Uploads.Behaviors
                     return new BadRequestResult();
                 }
 
-                cleanSales = await parameters.Sales
-                    .ToAsyncEnumerable()
+                cleanSales = parameters.Sales
                     .Select(s => new Sale
                     {
                         Hq = Util.ParseUnusualBool(s.Hq),
@@ -63,7 +62,7 @@ namespace Universalis.Application.Uploads.Behaviors
                     .Where(s => s.PricePerUnit > 0)
                     .Where(s => s.Quantity > 0)
                     .Where(s => s.TimestampUnixSeconds > 0)
-                    .ToListAsync();
+                    .ToList();
                 cleanSales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
                 var existingHistory = await _historyDb.Retrieve(new HistoryQuery
@@ -71,10 +70,7 @@ namespace Universalis.Application.Uploads.Behaviors
                     WorldId = worldId,
                     ItemId = itemId,
                 });
-                var minimizedSales = await cleanSales
-                    .ToAsyncEnumerable()
-                    .Select(s => MinimizedSale.FromSale(s, parameters.UploaderId))
-                    .ToListAsync();
+                var minimizedSales = cleanSales.Select(s => MinimizedSale.FromSale(s, parameters.UploaderId)).ToList();
 
                 var historyDocument = new History
                 {
@@ -129,8 +125,7 @@ namespace Universalis.Application.Uploads.Behaviors
                     return new BadRequestResult();
                 }
 
-                cleanListings = await parameters.Listings
-                    .ToAsyncEnumerable()
+                cleanListings = parameters.Listings
                     .Select(l =>
                     {
                         return new Listing
@@ -157,7 +152,7 @@ namespace Universalis.Application.Uploads.Behaviors
                             UploadApplicationName = source.Name,
                         };
                     })
-                    .ToListAsync();
+                    .ToList();
                 cleanListings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
             }
 
