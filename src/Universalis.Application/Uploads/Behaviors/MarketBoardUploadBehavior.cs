@@ -71,7 +71,10 @@ namespace Universalis.Application.Uploads.Behaviors
                     WorldId = worldId,
                     ItemId = itemId,
                 });
-                var minimizedSales = cleanSales.Select(s => MinimizedSale.FromSale(s, parameters.UploaderId)).ToList();
+                var minimizedSales = await cleanSales
+                    .ToAsyncEnumerable()
+                    .Select(s => MinimizedSale.FromSale(s, parameters.UploaderId))
+                    .ToListAsync();
 
                 var historyDocument = new History
                 {
@@ -126,7 +129,8 @@ namespace Universalis.Application.Uploads.Behaviors
                     return new BadRequestResult();
                 }
 
-                cleanListings = parameters.Listings
+                cleanListings = await parameters.Listings
+                    .ToAsyncEnumerable()
                     .Select(l =>
                     {
                         return new Listing
@@ -153,7 +157,7 @@ namespace Universalis.Application.Uploads.Behaviors
                             UploadApplicationName = source.Name,
                         };
                     })
-                    .ToList();
+                    .ToListAsync();
                 cleanListings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
             }
 
