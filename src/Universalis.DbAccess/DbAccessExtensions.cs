@@ -11,15 +11,15 @@ namespace Universalis.DbAccess
         {
             sc.AddSingleton<IMongoClient>(new MongoClient("mongodb://localhost:27017?maxpoolsize=10000"));
 
-            sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
-            sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
-            sc.AddSingleton<IContentDbAccess, ContentDbAccess>();
-            sc.AddSingleton<ITaxRatesDbAccess, TaxRatesDbAccess>();
-            sc.AddSingleton<ITrustedSourceDbAccess, TrustedSourceDbAccess>();
-            sc.AddSingleton<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();
-            sc.AddSingleton<IWorldUploadCountDbAccess, WorldUploadCountDbAccess>();
-            sc.AddSingleton<IRecentlyUpdatedItemsDbAccess, RecentlyUpdatedItemsDbAccess>();
-            sc.AddSingleton<IUploadCountHistoryDbAccess, UploadCountHistoryDbAccess>();
+            sc.AddScoped<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
+            sc.AddScoped<IHistoryDbAccess, HistoryDbAccess>();
+            sc.AddScoped<IContentDbAccess, ContentDbAccess>();
+            sc.AddScoped<ITaxRatesDbAccess, TaxRatesDbAccess>();
+            sc.AddScoped<ITrustedSourceDbAccess, TrustedSourceDbAccess>();
+            sc.AddScoped<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();
+            sc.AddScoped<IWorldUploadCountDbAccess, WorldUploadCountDbAccess>();
+            sc.AddScoped<IRecentlyUpdatedItemsDbAccess, RecentlyUpdatedItemsDbAccess>();
+            sc.AddScoped<IUploadCountHistoryDbAccess, UploadCountHistoryDbAccess>();
         }
     }
 }
