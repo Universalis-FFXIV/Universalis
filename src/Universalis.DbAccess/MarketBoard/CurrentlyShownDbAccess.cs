@@ -9,17 +9,14 @@ namespace Universalis.DbAccess.MarketBoard
 {
     public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyShownQuery>, ICurrentlyShownDbAccess
     {
-        public CurrentlyShownDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler) : base(client, throttler, Constants.DatabaseName, "recentData") { }
+        public CurrentlyShownDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "recentData") { }
 
-        public CurrentlyShownDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler, string databaseName) : base(client, throttler, databaseName, "recentData") { }
+        public CurrentlyShownDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "recentData") { }
 
-        public Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query)
+        public async Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query)
         {
-            return Throttler.AddRequest(async () =>
-            {
-                var cursor = await Collection.FindAsync(query.ToFilterDefinition());
-                return cursor.ToEnumerable();
-            });
+            var cursor = await Collection.FindAsync(query.ToFilterDefinition());
+            return cursor.ToEnumerable();
         }
 
         public async Task<IEnumerable<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order)
@@ -37,12 +34,12 @@ namespace Universalis.DbAccess.MarketBoard
                 .Include(o => o.ItemId)
                 .Include(o => o.LastUploadTimeUnixMilliseconds);
 
-            return await Throttler.AddRequest(() => Collection
+            return await Collection
                 .Find(query.ToFilterDefinition())
                 .Project<WorldItemUpload>(projectDefinition)
                 .Sort(sortDefinition)
                 .Limit(count)
-                .ToListAsync());
+                .ToListAsync();
         }
     }
 }

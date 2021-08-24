@@ -12,14 +12,11 @@ namespace Universalis.DbAccess.Tests.Uploads
         private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(FlaggedUploaderDbAccessTests));
 
         private readonly IMongoClient _client;
-        private readonly IConnectionThrottlingPipeline _throttler;
-
+        
         public FlaggedUploaderDbAccessTests()
         {
             _client = new MongoClient("mongodb://localhost:27017");
             _client.DropDatabase(Database);
-
-            _throttler = new ConnectionThrottlingPipeline(_client);
         }
 
         public void Dispose()
@@ -31,7 +28,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Create_DoesNotThrow()
         {
-            var db = new FlaggedUploaderDbAccess(_client, _throttler, Database);
+            var db = new FlaggedUploaderDbAccess(_client, Database);
             var document = SeedDataGenerator.MakeFlaggedUploader();
             await db.Create(document);
         }
@@ -39,7 +36,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Retrieve_DoesNotThrow()
         {
-            var db = new FlaggedUploaderDbAccess(_client, _throttler, Database);
+            var db = new FlaggedUploaderDbAccess(_client, Database);
             var output = await db.Retrieve(new FlaggedUploaderQuery { UploaderIdHash = "affffe" });
             Assert.Null(output);
         }
@@ -47,7 +44,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Update_DoesNotThrow()
         {
-            var db = new FlaggedUploaderDbAccess(_client, _throttler, Database);
+            var db = new FlaggedUploaderDbAccess(_client, Database);
             var document = SeedDataGenerator.MakeFlaggedUploader();
             await db.Update(document, new FlaggedUploaderQuery { UploaderIdHash = document.UploaderIdHash });
         }
@@ -55,14 +52,14 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Delete_DoesNotThrow()
         {
-            var db = new FlaggedUploaderDbAccess(_client, _throttler, Database);
+            var db = new FlaggedUploaderDbAccess(_client, Database);
             await db.Delete(new FlaggedUploaderQuery { UploaderIdHash = "affffe" });
         }
 
         [Fact]
         public async Task Create_DoesInsert()
         {
-            var db = new FlaggedUploaderDbAccess(_client, _throttler, Database);
+            var db = new FlaggedUploaderDbAccess(_client, Database);
             var document = SeedDataGenerator.MakeFlaggedUploader();
             await db.Create(document);
 

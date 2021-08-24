@@ -6,8 +6,8 @@ namespace Universalis.DbAccess.MarketBoard
 {
     public class TaxRatesDbAccess : DbAccessService<TaxRates, TaxRatesQuery>, ITaxRatesDbAccess
     {
-        public TaxRatesDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler) : base(client, throttler, Constants.DatabaseName, "extraData") { }
+        public TaxRatesDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "extraData") { }
 
-        public TaxRatesDbAccess(IMongoClient client, IConnectionThrottlingPipeline throttler, string databaseName) : base(client, throttler, databaseName, "extraData") { }
+        public TaxRatesDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "extraData") { }
     }
 }

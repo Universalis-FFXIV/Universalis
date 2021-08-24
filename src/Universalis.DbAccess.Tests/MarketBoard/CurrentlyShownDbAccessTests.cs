@@ -13,14 +13,11 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(CurrentlyShownDbAccessTests));
 
         private readonly IMongoClient _client;
-        private readonly IConnectionThrottlingPipeline _throttler;
-
+        
         public CurrentlyShownDbAccessTests()
         {
             _client = new MongoClient("mongodb://localhost:27017");
             _client.DropDatabase(Database);
-
-            _throttler = new ConnectionThrottlingPipeline(_client);
         }
 
         public void Dispose()
@@ -32,7 +29,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task Create_DoesNotThrow()
         {
-            var db = new CurrentlyShownDbAccess(_client, _throttler, Database);
+            var db = new CurrentlyShownDbAccess(_client, Database);
             var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
             await db.Create(document);
         }
@@ -40,7 +37,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task Retrieve_DoesNotThrow()
         {
-            var db = new CurrentlyShownDbAccess(_client, _throttler, Database);
+            var db = new CurrentlyShownDbAccess(_client, Database);
             var output = await db.Retrieve(new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
             Assert.Null(output);
         }
@@ -48,7 +45,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task RetrieveMany_DoesNotThrow()
         {
-            var db = new CurrentlyShownDbAccess(_client, _throttler, Database);
+            var db = new CurrentlyShownDbAccess(_client, Database);
             var output = await db.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = new uint[] { 74 }, ItemId = 5333 });
             Assert.NotNull(output);
             Assert.Empty(output);
@@ -57,7 +54,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task Update_DoesNotThrow()
         {
-            var db = new CurrentlyShownDbAccess(_client, _throttler, Database);
+            var db = new CurrentlyShownDbAccess(_client, Database);
             var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
             var query = new CurrentlyShownQuery { WorldId = document.WorldId, ItemId = document.ItemId };
 
@@ -74,14 +71,14 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task Delete_DoesNotThrow()
         {
-            var db = new CurrentlyShownDbAccess(_client, _throttler, Database);
+            var db = new CurrentlyShownDbAccess(_client, Database);
             await db.Delete(new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
         }
 
         [Fact]
         public async Task Create_DoesInsert()
         {
-            var db = new CurrentlyShownDbAccess(_client, _throttler, Database);
+            var db = new CurrentlyShownDbAccess(_client, Database);
 
             var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
             await db.Create(document);
@@ -93,7 +90,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         [Fact]
         public async Task RetrieveMany_ReturnsData()
         {
-            var db = new CurrentlyShownDbAccess(_client, _throttler, Database);
+            var db = new CurrentlyShownDbAccess(_client, Database);
 
             var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
             await db.Create(document);

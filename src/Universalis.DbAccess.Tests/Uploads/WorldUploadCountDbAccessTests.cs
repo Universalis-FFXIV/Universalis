@@ -14,14 +14,11 @@ namespace Universalis.DbAccess.Tests.Uploads
         private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(WorldUploadCountDbAccessTests));
 
         private readonly IMongoClient _client;
-        private readonly IConnectionThrottlingPipeline _throttler;
-
+        
         public WorldUploadCountDbAccessTests()
         {
             _client = new MongoClient("mongodb://localhost:27017");
             _client.DropDatabase(Database);
-
-            _throttler = new ConnectionThrottlingPipeline(_client);
         }
 
         public void Dispose()
@@ -33,7 +30,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task GetWorldUploadCounts_DoesNotThrow()
         {
-            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(_client, _throttler, Database);
+            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(_client, Database);
             var output = await db.GetWorldUploadCounts();
             Assert.NotNull(output);
             Assert.Empty(output);
@@ -42,7 +39,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Increment_DoesNotThrow()
         {
-            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(_client, _throttler, Database);
+            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(_client, Database);
             var query = new WorldUploadCountQuery { WorldName = "Coeurl" };
 
             await db.Increment(query);
@@ -52,7 +49,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Increment_DoesRetrieve()
         {
-            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(_client, _throttler, Database);
+            IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(_client, Database);
             await db.Increment(new WorldUploadCountQuery { WorldName = "Coeurl" });
             var output = (await db.GetWorldUploadCounts()).ToList();
             Assert.NotNull(output);

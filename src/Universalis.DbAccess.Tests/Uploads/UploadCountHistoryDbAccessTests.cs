@@ -14,14 +14,11 @@ namespace Universalis.DbAccess.Tests.Uploads
         private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(UploadCountHistoryDbAccessTests));
 
         private readonly IMongoClient _client;
-        private readonly IConnectionThrottlingPipeline _throttler;
-
+        
         public UploadCountHistoryDbAccessTests()
         {
             _client = new MongoClient("mongodb://localhost:27017");
             _client.DropDatabase(Database);
-
-            _throttler = new ConnectionThrottlingPipeline(_client);
         }
 
         public void Dispose()
@@ -33,7 +30,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Create_DoesNotThrow()
         {
-            var db = new UploadCountHistoryDbAccess(_client, _throttler, Database);
+            var db = new UploadCountHistoryDbAccess(_client, Database);
             await db.Create(new UploadCountHistory
             {
                 LastPush = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
@@ -44,7 +41,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Retrieve_DoesNotThrow()
         {
-            var db = new UploadCountHistoryDbAccess(_client, _throttler, Database);
+            var db = new UploadCountHistoryDbAccess(_client, Database);
             var output = await db.Retrieve(new UploadCountHistoryQuery());
             Assert.Null(output);
         }
@@ -52,7 +49,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Update_DoesNotThrow()
         {
-            var db = new UploadCountHistoryDbAccess(_client, _throttler, Database);
+            var db = new UploadCountHistoryDbAccess(_client, Database);
             await db.Update(new UploadCountHistory
             {
                 LastPush = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
@@ -63,7 +60,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         [Fact]
         public async Task Create_DoesInsert()
         {
-            var db = new UploadCountHistoryDbAccess(_client, _throttler, Database);
+            var db = new UploadCountHistoryDbAccess(_client, Database);
             var document = new UploadCountHistory
             {
                 LastPush = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
