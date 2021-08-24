@@ -34,7 +34,7 @@ namespace Universalis.Application
             services.AddGameData(Configuration);
             services.AddUserAlerts();
 
-            services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Scoped);
+            services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
 
             services
                 .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
