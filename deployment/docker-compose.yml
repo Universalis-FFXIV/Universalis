@@ -10,6 +10,10 @@ services:
     network_mode: "host"
     mem_limit: 2000m
     restart: on-failure
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://localhost:4000/api/74/5" ]
+      timeout: 3s
+      interval: 10s
   watchtower:
     image: containrrr/watchtower
     environment:
