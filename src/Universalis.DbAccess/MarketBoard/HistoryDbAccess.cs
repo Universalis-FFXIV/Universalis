@@ -14,8 +14,7 @@ namespace Universalis.DbAccess.MarketBoard
 
         public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query)
         {
-            var cursor = await Collection.FindAsync(query.ToFilterDefinition());
-            return cursor.ToEnumerable();
+            return await Collection.Find(query.ToFilterDefinition()).ToListAsync();
         }
     }
 }
