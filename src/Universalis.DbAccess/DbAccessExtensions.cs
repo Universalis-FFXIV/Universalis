@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Uploads;
@@ -9,7 +10,8 @@ namespace Universalis.DbAccess
     {
         public static void AddDbAccessServices(this IServiceCollection sc)
         {
-            sc.AddSingleton<IMongoClient>(new MongoClient("mongodb://localhost:27017?maxpoolsize=15000"));
+            ThreadPool.GetMaxThreads(out var workerThreads, out var completionPortThreads);
+            sc.AddSingleton<IMongoClient>(new MongoClient($"mongodb://localhost:27017?maxpoolsize={workerThreads + completionPortThreads}"));
 
             sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
             sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
