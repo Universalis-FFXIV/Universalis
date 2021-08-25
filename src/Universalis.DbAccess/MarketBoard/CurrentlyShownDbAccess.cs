@@ -15,8 +15,7 @@ namespace Universalis.DbAccess.MarketBoard
 
         public async Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query)
         {
-            var cursor = await Collection.FindAsync(query.ToFilterDefinition());
-            return cursor.ToEnumerable();
+            return await Collection.Find(query.ToFilterDefinition()).ToListAsync();
         }
 
         public async Task<IEnumerable<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order)
