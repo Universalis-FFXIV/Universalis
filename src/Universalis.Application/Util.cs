@@ -80,12 +80,15 @@ namespace Universalis.Application
         /// </summary>
         /// <param name="id">The ID to parse.</param>
         /// <returns>A string corresponding to the meaning of the ID.</returns>
-        public static string ParseUnusualId(string id)
+        public static string ParseUnusualId(object id)
         {
             return id switch
             {
+                JsonElement { ValueKind: JsonValueKind.Number } e => e.GetDecimal().ToString(CultureInfo.InvariantCulture),
+                JsonElement { ValueKind: JsonValueKind.String } e => e.GetString(),
+
                 "0" => null,
-                { } => id,
+                string s => s,
                 _ => null,
             };
         }

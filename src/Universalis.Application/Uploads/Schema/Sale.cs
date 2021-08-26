@@ -20,11 +20,25 @@ namespace Universalis.Application.Uploads.Schema
         public object OnMannequin { get; set; }
         
         [JsonPropertyName("sellerID")]
-        public string SellerId { get; set; }
-        
+        public object SellerIdInternal { get; set; }
+
+        [JsonIgnore]
+        public string SellerId
+        {
+            get => Util.ParseUnusualId(SellerIdInternal);
+            set => SellerIdInternal = value;
+        }
+
         [JsonPropertyName("buyerID")]
-        public string BuyerId { get; set; }
-        
+        public object BuyerIdInternal { get; set; }
+
+        [JsonIgnore]
+        public string BuyerId
+        {
+            get => Util.ParseUnusualId(BuyerIdInternal);
+            set => BuyerIdInternal = value;
+        }
+
         [JsonPropertyName("timestamp")]
         public double TimestampUnixSeconds { get; set; }
     }

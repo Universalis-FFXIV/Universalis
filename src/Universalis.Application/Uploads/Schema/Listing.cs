@@ -6,8 +6,15 @@ namespace Universalis.Application.Uploads.Schema
     public class Listing
     {
         [JsonPropertyName("listingID")]
-        public string ListingId { get; set; }
-        
+        public object ListingIdInternal { get; set; }
+
+        [JsonIgnore]
+        public string ListingId
+        {
+            get => Util.ParseUnusualId(ListingIdInternal);
+            set => ListingIdInternal = value;
+        }
+
         [JsonPropertyName("hq")]
         public object Hq { get; set; }
         
@@ -21,7 +28,14 @@ namespace Universalis.Application.Uploads.Schema
         public string RetainerName { get; set; }
         
         [JsonPropertyName("retainerID")]
-        public string RetainerId { get; set; }
+        public object RetainerIdInternal { get; set; }
+
+        [JsonIgnore]
+        public string RetainerId
+        {
+            get => Util.ParseUnusualId(RetainerIdInternal);
+            set => RetainerIdInternal = value;
+        }
 
         [JsonPropertyName("retainerCity")]
         public int RetainerCityId { get; set; }
@@ -33,11 +47,25 @@ namespace Universalis.Application.Uploads.Schema
         public object OnMannequin { get; set; }
         
         [JsonPropertyName("sellerID")]
-        public string SellerId { get; set; }
-        
+        public object SellerIdInternal { get; set; }
+
+        [JsonIgnore]
+        public string SellerId
+        {
+            get => Util.ParseUnusualId(SellerIdInternal);
+            set => SellerIdInternal = value;
+        }
+
         [JsonPropertyName("creatorID")]
-        public string CreatorId { get; set; }
-        
+        public object CreatorIdInternal { get; set; }
+
+        [JsonIgnore]
+        public string CreatorId
+        {
+            get => Util.ParseUnusualId(CreatorIdInternal);
+            set => CreatorIdInternal = value;
+        }
+
         [JsonPropertyName("stainID")]
         public uint DyeId { get; set; }
 

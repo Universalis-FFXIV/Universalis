@@ -40,9 +40,10 @@ namespace Universalis.Application.Controllers.V1
             using (var sha512 = SHA512.Create())
             {
                 await using var authStream = new MemoryStream(Encoding.UTF8.GetBytes(apiKey));
+                var hash = await sha512.ComputeHashAsync(authStream);
                 source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
                 {
-                    ApiKeySha512 = Util.BytesToString(await sha512.ComputeHashAsync(authStream)),
+                    ApiKeySha512 = Util.BytesToString(hash),
                 });
             }
 
