@@ -18,7 +18,7 @@ namespace Universalis.DbAccess.MarketBoard
             return await Collection.Find(query.ToFilterDefinition()).ToListAsync();
         }
 
-        public async Task<IEnumerable<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order)
+        public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order)
         {
             var sortBuilder = Builders<CurrentlyShown>.Sort;
             var sortDefinition = order switch

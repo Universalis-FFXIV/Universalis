@@ -30,7 +30,7 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.MarketBoard
                 .Where(d => d.ItemId == query.ItemId && query.WorldIds.Contains(d.WorldId)));
         }
 
-        public Task<IEnumerable<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order)
+        public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order)
         {
             var documents = _collection
                 .Where(o => query.WorldIds.Contains(o.WorldId))
@@ -44,12 +44,12 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.MarketBoard
 
             documents.Sort((a, b) => order switch
             {
-                UploadOrder.MostRecent => (int)b.LastUploadTimeUnixMilliseconds - (int)a.LastUploadTimeUnixMilliseconds,
-                UploadOrder.LeastRecent => (int)a.LastUploadTimeUnixMilliseconds - (int)b.LastUploadTimeUnixMilliseconds,
+                UploadOrder.MostRecent => (int)(b.LastUploadTimeUnixMilliseconds - a.LastUploadTimeUnixMilliseconds),
+                UploadOrder.LeastRecent => (int)(a.LastUploadTimeUnixMilliseconds - b.LastUploadTimeUnixMilliseconds),
                 _ => throw new ArgumentException(nameof(order)),
             });
             
-            return Task.FromResult(documents.Take(count));
+            return await Task.FromResult(documents.Take(count).ToList());
         }
 
         public async Task Update(CurrentlyShown document, CurrentlyShownQuery query)
