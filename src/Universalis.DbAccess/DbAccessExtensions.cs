@@ -14,7 +14,7 @@ namespace Universalis.DbAccess
             ThreadPool.GetMaxThreads(out var workerThreads, out var completionPortThreads);
             var maxThreads = workerThreads + completionPortThreads;
 
-            sc.AddSingleton<IMongoClient>(new MongoClient($"mongodb://localhost:27017?socketTimeoutMS=120000&minPoolSize={Math.Min(10, maxThreads)}&maxPoolSize={maxThreads}"));
+            sc.AddSingleton<IMongoClient>(new MongoClient($"mongodb://localhost:27017?socketTimeoutMS=240000&minPoolSize={Math.Min(10, maxThreads)}&maxPoolSize={maxThreads}"));
 
             sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
             sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
