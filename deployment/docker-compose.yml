@@ -3,7 +3,7 @@ services:
   universalis:
     image: ghcr.io/universalis-ffxiv/universalis:latest
     environment:
-      ASPNETCORE_URLS: http://+:4000
+      ASPNETCORE_URLS: http://+:4002
     volumes:
       - /home/universalis/sqpack:/sqpack
       - /home/universalis/DataProtection-Keys:/root/.aspnet/DataProtection-Keys
@@ -11,7 +11,7 @@ services:
     mem_limit: 2000m
     restart: on-failure
     healthcheck:
-      test: [ "CMD", "curl", "--fail", "http://localhost:4000/api/74/5" ]
+      test: [ "CMD", "curl", "--fail", "http://localhost:4002/api/74/5" ]
       timeout: 3s
       interval: 10s
   watchtower:
