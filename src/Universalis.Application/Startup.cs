@@ -42,7 +42,7 @@ namespace Universalis.Application
 
             services.AddQueuePolicy(options =>
             {
-                options.MaxConcurrentRequests = 1000;
+                options.MaxConcurrentRequests = 700;
                 options.RequestQueueLimit = 10000;
             });
 
