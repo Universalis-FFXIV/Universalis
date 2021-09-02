@@ -40,7 +40,7 @@ namespace Universalis.Application
                 .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
                 .AddNegotiate();
 
-            services.AddQueuePolicy(options =>
+            services.AddStackPolicy(options =>
             {
                 options.MaxConcurrentRequests = 500;
                 options.RequestQueueLimit = 10000;
