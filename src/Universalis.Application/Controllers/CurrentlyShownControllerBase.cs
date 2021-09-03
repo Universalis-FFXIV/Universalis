@@ -21,7 +21,7 @@ namespace Universalis.Application.Controllers
     {
         protected readonly ICurrentlyShownDbAccess CurrentlyShown;
 
-        private static readonly RecyclableMemoryStreamManager memoryStreamPool = new();
+        private static readonly RecyclableMemoryStreamManager MemoryStreamPool = new();
 
         public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb) : base(gameData)
         {
@@ -82,7 +82,7 @@ namespace Universalis.Application.Controllers
                             if (!string.IsNullOrEmpty(l.CreatorId))
                             {
                                 var creatorIdBytes = Encoding.UTF8.GetBytes(l.CreatorId);
-                                await using var dataStream = memoryStreamPool.GetStream();
+                                await using var dataStream = MemoryStreamPool.GetStream();
                                 await dataStream.WriteAsync(creatorIdBytes.AsMemory(0, creatorIdBytes.Length), cancellationToken);
                                 listingView.CreatorIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
                             }
@@ -90,21 +90,21 @@ namespace Universalis.Application.Controllers
                             if (!string.IsNullOrEmpty(l.ListingId))
                             {
                                 var listingIdBytes = Encoding.UTF8.GetBytes(l.ListingId);
-                                await using var dataStream = memoryStreamPool.GetStream();
+                                await using var dataStream = MemoryStreamPool.GetStream();
                                 await dataStream.WriteAsync(listingIdBytes.AsMemory(0, listingIdBytes.Length), cancellationToken);
                                 listingView.ListingId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
                             }
 
                             {
                                 var sellerIdBytes = Encoding.UTF8.GetBytes(l.SellerId ?? "");
-                                await using var dataStream = memoryStreamPool.GetStream();
+                                await using var dataStream = MemoryStreamPool.GetStream();
                                 await dataStream.WriteAsync(sellerIdBytes.AsMemory(0, sellerIdBytes.Length), cancellationToken);
                                 listingView.SellerIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
                             }
 
                             {
                                 var retainerIdBytes = Encoding.UTF8.GetBytes(l.RetainerId ?? "");
-                                await using var dataStream = memoryStreamPool.GetStream();
+                                await using var dataStream = MemoryStreamPool.GetStream();
                                 await dataStream.WriteAsync(retainerIdBytes.AsMemory(0, retainerIdBytes.Length), cancellationToken);
                                 listingView.RetainerId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
                             }
