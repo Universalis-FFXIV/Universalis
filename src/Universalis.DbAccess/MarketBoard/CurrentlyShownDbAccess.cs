@@ -10,7 +10,7 @@ namespace Universalis.DbAccess.MarketBoard
 {
     public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyShownQuery>, ICurrentlyShownDbAccess
     {
-        private static readonly ConcurrentDictionary<UploadTimeQueryCallState, UploadTimeQueryResult> _uploadTimeQueryCache = new();
+        private static readonly ConcurrentDictionary<UploadTimeQueryCallState, UploadTimeQueryResult> UploadTimeQueryCache = new();
 
         public CurrentlyShownDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "recentData") { }
 
@@ -26,9 +26,9 @@ namespace Universalis.DbAccess.MarketBoard
             // This is a *very long* query right now, so we hold a static cache of all the responses
             // To mitigate potential thread pool starvation caused by this being requested repeatedly.
             var callState = new UploadTimeQueryCallState { WorldIds = query.WorldIds, Count = count, Order = order };
-            if (_uploadTimeQueryCache.ContainsKey(callState) && DateTime.Now - _uploadTimeQueryCache[callState].QueryTime < new TimeSpan(0, 10, 0))
+            if (UploadTimeQueryCache.ContainsKey(callState) && DateTime.Now - UploadTimeQueryCache[callState].QueryTime < new TimeSpan(0, 10, 0))
             {
-                return _uploadTimeQueryCache[callState].Uploads;
+                return UploadTimeQueryCache[callState].Uploads;
             }
 
             var sortBuilder = Builders<CurrentlyShown>.Sort;
@@ -51,7 +51,7 @@ namespace Universalis.DbAccess.MarketBoard
                 .Limit(count)
                 .ToListAsync();
 
-            _uploadTimeQueryCache[callState] = new UploadTimeQueryResult { QueryTime = DateTime.Now, Uploads = uploads };
+            UploadTimeQueryCache[callState] = new UploadTimeQueryResult { QueryTime = DateTime.Now, Uploads = uploads };
 
             return uploads;
         }
