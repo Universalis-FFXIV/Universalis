@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using System;
 using System.IO;
 using System.Xml.XPath;
+using Ben.Diagnostics;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Universalis.Alerts;
 using Universalis.Application.Controllers;
@@ -99,6 +100,8 @@ namespace Universalis.Application
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseBlockingDetection();
 
             app.UseSwagger(options =>
             {
