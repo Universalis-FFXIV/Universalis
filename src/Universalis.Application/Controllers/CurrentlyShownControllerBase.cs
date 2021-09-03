@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.IO;
 using Universalis.Application.Common;
 using Universalis.Application.Views;
 using Universalis.DataTransformations;
@@ -20,6 +21,8 @@ namespace Universalis.Application.Controllers
     {
         protected readonly ICurrentlyShownDbAccess CurrentlyShown;
 
+        private static readonly RecyclableMemoryStreamManager memoryStreamPool = new();
+
         public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb) : base(gameData)
         {
             CurrentlyShown = currentlyShownDb;
@@ -31,7 +34,7 @@ namespace Universalis.Application.Controllers
             {
                 WorldIds = worldIds,
                 ItemId = itemId,
-            })).ToList();
+            }, cancellationToken)).ToList();
 
             var resolved = data.Count > 0;
 
@@ -78,21 +81,33 @@ namespace Universalis.Application.Controllers
 
                             if (!string.IsNullOrEmpty(l.CreatorId))
                             {
-                                await using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId));
+                                var creatorIdBytes = Encoding.UTF8.GetBytes(l.CreatorId);
+                                await using var dataStream = memoryStreamPool.GetStream();
+                                await dataStream.WriteAsync(creatorIdBytes.AsMemory(0, creatorIdBytes.Length), cancellationToken);
                                 listingView.CreatorIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
                             }
 
                             if (!string.IsNullOrEmpty(l.ListingId))
                             {
-                                await using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.ListingId));
+                                var listingIdBytes = Encoding.UTF8.GetBytes(l.ListingId);
+                                await using var dataStream = memoryStreamPool.GetStream();
+                                await dataStream.WriteAsync(listingIdBytes.AsMemory(0, listingIdBytes.Length), cancellationToken);
                                 listingView.ListingId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
                             }
 
-                            await using var dataStream2 = new MemoryStream(Encoding.UTF8.GetBytes(l.SellerId ?? ""));
-                            listingView.SellerIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream2, cancellationToken));
+                            {
+                                var sellerIdBytes = Encoding.UTF8.GetBytes(l.SellerId ?? "");
+                                await using var dataStream = memoryStreamPool.GetStream();
+                                await dataStream.WriteAsync(sellerIdBytes.AsMemory(0, sellerIdBytes.Length), cancellationToken);
+                                listingView.SellerIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
+                            }
 
-                            await using var dataStream3 = new MemoryStream(Encoding.UTF8.GetBytes(l.RetainerId ?? ""));
-                            listingView.RetainerId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream3, cancellationToken));
+                            {
+                                var retainerIdBytes = Encoding.UTF8.GetBytes(l.RetainerId ?? "");
+                                await using var dataStream = memoryStreamPool.GetStream();
+                                await dataStream.WriteAsync(retainerIdBytes.AsMemory(0, retainerIdBytes.Length), cancellationToken);
+                                listingView.RetainerId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
+                            }
 
                             return listingView;
                         })
