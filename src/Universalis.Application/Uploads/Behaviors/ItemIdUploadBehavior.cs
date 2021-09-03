@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Threading;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Universalis.Application.Uploads.Attributes;
 using Universalis.Application.Uploads.Schema;
@@ -25,7 +26,7 @@ namespace Universalis.Application.Uploads.Behaviors
             return parameters.ItemId != null;
         }
 
-        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters)
+        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
         {
             // ReSharper disable once PossibleInvalidOperationException
             if (!_gameData.MarketableItemIds().Contains(parameters.ItemId.Value))
@@ -33,7 +34,7 @@ namespace Universalis.Application.Uploads.Behaviors
                 return new NotFoundObjectResult(parameters.ItemId);
             }
 
-            await _recentlyUpdatedItemsDb.Push(parameters.ItemId.Value);
+            await _recentlyUpdatedItemsDb.Push(parameters.ItemId.Value, cancellationToken);
             return null;
         }
     }

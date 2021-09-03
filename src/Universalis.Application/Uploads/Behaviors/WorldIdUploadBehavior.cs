@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Threading;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Universalis.Application.Uploads.Attributes;
 using Universalis.Application.Uploads.Schema;
@@ -26,7 +27,7 @@ namespace Universalis.Application.Uploads.Behaviors
             return parameters.WorldId != null;
         }
 
-        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters)
+        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
         {
             // ReSharper disable once PossibleInvalidOperationException
             var worldId = parameters.WorldId.Value;
@@ -35,7 +36,7 @@ namespace Universalis.Application.Uploads.Behaviors
                 return new NotFoundObjectResult(worldId);
 
             var worldName = _gameData.AvailableWorlds()[parameters.WorldId.Value];
-            await _worldUploadCountDb.Increment(new WorldUploadCountQuery { WorldName = worldName });
+            await _worldUploadCountDb.Increment(new WorldUploadCountQuery { WorldName = worldName }, cancellationToken);
 
             return null;
         }

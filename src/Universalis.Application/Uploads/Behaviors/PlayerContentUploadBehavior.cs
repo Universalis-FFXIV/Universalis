@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess;
@@ -22,7 +23,7 @@ namespace Universalis.Application.Uploads.Behaviors
             return !string.IsNullOrEmpty(parameters.ContentId) && !string.IsNullOrEmpty(parameters.CharacterName);
         }
 
-        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters)
+        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
         {
             await _contentDb.Update(new Content
             {
@@ -32,7 +33,7 @@ namespace Universalis.Application.Uploads.Behaviors
             }, new ContentQuery
             {
                 ContentId = parameters.ContentId,
-            });
+            }, cancellationToken);
 
             return null;
         }

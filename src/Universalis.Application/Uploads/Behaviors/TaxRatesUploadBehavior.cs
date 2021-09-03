@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.MarketBoard;
@@ -22,7 +23,7 @@ namespace Universalis.Application.Uploads.Behaviors
             return parameters.WorldId != null && parameters.TaxRates != null && !string.IsNullOrEmpty(parameters.UploaderId);
         }
 
-        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters)
+        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
         {
             await _taxRatesDb.Update(new TaxRates
             {
@@ -39,7 +40,7 @@ namespace Universalis.Application.Uploads.Behaviors
             }, new TaxRatesQuery
             {
                 WorldId = parameters.WorldId.Value,
-            });
+            }, cancellationToken);
 
             return null;
         }

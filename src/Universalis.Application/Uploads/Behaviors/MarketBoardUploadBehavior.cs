@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.MarketBoard;
@@ -34,7 +35,7 @@ namespace Universalis.Application.Uploads.Behaviors
                    && (parameters.Sales != null || parameters.Listings != null);
         }
 
-        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters)
+        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
         {
             // ReSharper disable PossibleInvalidOperationException
             var worldId = parameters.WorldId.Value;
@@ -63,18 +64,18 @@ namespace Universalis.Application.Uploads.Behaviors
                     .Where(s => s.PricePerUnit > 0)
                     .Where(s => s.Quantity > 0)
                     .Where(s => s.TimestampUnixSeconds > 0)
-                    .ToListAsync();
+                    .ToListAsync(cancellationToken);
                 cleanSales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
                 var existingHistory = await _historyDb.Retrieve(new HistoryQuery
                 {
                     WorldId = worldId,
                     ItemId = itemId,
-                });
+                }, cancellationToken);
                 var minimizedSales = await cleanSales
                     .ToAsyncEnumerable()
                     .Select(s => MinimizedSale.FromSale(s, parameters.UploaderId))
-                    .ToListAsync();
+                    .ToListAsync(cancellationToken);
 
                 var historyDocument = new History
                 {
@@ -86,7 +87,7 @@ namespace Universalis.Application.Uploads.Behaviors
                 if (existingHistory == null)
                 {
                     historyDocument.Sales = minimizedSales;
-                    await _historyDb.Create(historyDocument);
+                    await _historyDb.Create(historyDocument, cancellationToken);
                 }
                 else
                 {
@@ -109,7 +110,7 @@ namespace Universalis.Application.Uploads.Behaviors
                         .ToAsyncEnumerable()
                         .Where(s => s.PricePerUnit > 0) // We check PPU and *not* quantity because there are entries from before quantity was tracked
                         .Distinct()
-                        .ToListAsync();
+                        .ToListAsync(cancellationToken);
                     existingHistory.Sales.Sort((a, b) => (int)Math.Truncate(b.SaleTimeUnixSeconds - a.SaleTimeUnixSeconds));
 
                     historyDocument.Sales = existingHistory.Sales;
@@ -117,7 +118,7 @@ namespace Universalis.Application.Uploads.Behaviors
                     {
                         WorldId = worldId,
                         ItemId = itemId,
-                    });
+                    }, cancellationToken);
                 }
             }
 
@@ -157,7 +158,7 @@ namespace Universalis.Application.Uploads.Behaviors
                             UploadApplicationName = source.Name,
                         };
                     })
-                    .ToListAsync();
+                    .ToListAsync(cancellationToken);
                 cleanListings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
             }
 
@@ -165,7 +166,7 @@ namespace Universalis.Application.Uploads.Behaviors
             {
                 WorldId = worldId,
                 ItemId = itemId,
-            });
+            }, cancellationToken);
 
             var document = new CurrentlyShown
             {
@@ -181,7 +182,7 @@ namespace Universalis.Application.Uploads.Behaviors
             {
                 WorldId = worldId,
                 ItemId = itemId,
-            });
+            }, cancellationToken);
 
             return null;
         }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.Queries.Uploads;
@@ -24,17 +25,17 @@ namespace Universalis.Application.Uploads.Behaviors
             return true;
         }
 
-        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters)
+        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
         {
             var now = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(); // TODO
-            var data = await _uploadCountHistoryDb.Retrieve(new UploadCountHistoryQuery());
+            var data = await _uploadCountHistoryDb.Retrieve(new UploadCountHistoryQuery(), cancellationToken);
             if (data == null)
             {
                 await _uploadCountHistoryDb.Create(new UploadCountHistory
                 {
                     LastPush = now,
                     UploadCountByDay = new List<double> { 1 },
-                });
+                }, cancellationToken);
 
                 return null;
             }
@@ -46,7 +47,7 @@ namespace Universalis.Application.Uploads.Behaviors
             }
 
             data.UploadCountByDay[0]++;
-            await _uploadCountHistoryDb.Update(data.LastPush, data.UploadCountByDay);
+            await _uploadCountHistoryDb.Update(data.LastPush, data.UploadCountByDay, cancellationToken);
 
             return null;
         }
