@@ -76,7 +76,7 @@ namespace Universalis.Application.Controllers.V1
             foreach (var uploadBehavior in _uploadBehaviors)
             {
                 if (!uploadBehavior.ShouldExecute(parameters)) continue;
-                var actionResult = await uploadBehavior.Execute(source, parameters);
+                var actionResult = await uploadBehavior.Execute(source, parameters, cancellationToken);
                 if (uploadBehavior.GetType().GetCustomAttribute<ValidatorAttribute>() != null
                     && actionResult != null)
                 {
