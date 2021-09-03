@@ -82,30 +82,26 @@ namespace Universalis.Application.Controllers
                             if (!string.IsNullOrEmpty(l.CreatorId))
                             {
                                 var creatorIdBytes = Encoding.UTF8.GetBytes(l.CreatorId);
-                                await using var dataStream = MemoryStreamPool.GetStream();
-                                await dataStream.WriteAsync(creatorIdBytes.AsMemory(0, creatorIdBytes.Length), cancellationToken);
+                                await using var dataStream = MemoryStreamPool.GetStream(creatorIdBytes);
                                 listingView.CreatorIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
                             }
 
                             if (!string.IsNullOrEmpty(l.ListingId))
                             {
                                 var listingIdBytes = Encoding.UTF8.GetBytes(l.ListingId);
-                                await using var dataStream = MemoryStreamPool.GetStream();
-                                await dataStream.WriteAsync(listingIdBytes.AsMemory(0, listingIdBytes.Length), cancellationToken);
+                                await using var dataStream = MemoryStreamPool.GetStream(listingIdBytes);
                                 listingView.ListingId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
                             }
 
                             {
                                 var sellerIdBytes = Encoding.UTF8.GetBytes(l.SellerId ?? "");
-                                await using var dataStream = MemoryStreamPool.GetStream();
-                                await dataStream.WriteAsync(sellerIdBytes.AsMemory(0, sellerIdBytes.Length), cancellationToken);
+                                await using var dataStream = MemoryStreamPool.GetStream(sellerIdBytes);
                                 listingView.SellerIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
                             }
 
                             {
                                 var retainerIdBytes = Encoding.UTF8.GetBytes(l.RetainerId ?? "");
-                                await using var dataStream = MemoryStreamPool.GetStream();
-                                await dataStream.WriteAsync(retainerIdBytes.AsMemory(0, retainerIdBytes.Length), cancellationToken);
+                                await using var dataStream = MemoryStreamPool.GetStream(retainerIdBytes);
                                 listingView.RetainerId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
                             }
 
