@@ -37,16 +37,10 @@ namespace Universalis.Application.Controllers.V1
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> Post(string apiKey, /* This may cause issues in the LOH during garbage collection. */ [FromBody] UploadParameters parameters, CancellationToken cancellationToken = default)
         {
-            TrustedSource source;
-            using (var sha512 = SHA512.Create())
+            var source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
             {
-                await using var authStream = new MemoryStream(Encoding.UTF8.GetBytes(apiKey));
-                var hash = await sha512.ComputeHashAsync(authStream, cancellationToken);
-                source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
-                {
-                    ApiKeySha512 = Util.BytesToString(hash),
-                }, cancellationToken);
-            }
+                ApiKeySha512 = await TrustedSourceHashCache.GetHash(apiKey, _trustedSourceDb, cancellationToken),
+            }, cancellationToken);
 
             if (source == null)
             {

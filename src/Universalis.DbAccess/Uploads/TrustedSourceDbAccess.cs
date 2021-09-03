@@ -16,7 +16,7 @@ namespace Universalis.DbAccess.Uploads
 
         public async Task Increment(TrustedSourceQuery query, CancellationToken cancellationToken = default)
         {
-            if (await Retrieve(query) == null)
+            if (await Retrieve(query, cancellationToken) == null)
             {
                 // Sources can only be added manually, so we don't create one if none exists
                 return;
