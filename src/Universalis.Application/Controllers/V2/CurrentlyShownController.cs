@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Common;
 using Universalis.Application.Views;
@@ -21,6 +22,7 @@ namespace Universalis.Application.Controllers.V2
         /// </summary>
         /// <param name="itemIds">The item ID or comma-separated item IDs to retrieve data for.</param>
         /// <param name="worldOrDc">The world or data center to retrieve data for. This may be an ID or a name.</param>
+        /// <param name="cancellationToken"></param>
         /// <response code="200">Data retrieved successfully.</response>
         /// <response code="404">
         /// The world/DC or item requested is invalid. When requesting multiple items at once, an invalid item ID
@@ -29,7 +31,7 @@ namespace Universalis.Application.Controllers.V2
         [HttpGet]
         [ProducesResponseType(typeof(CurrentlyShownView), 200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> Get(string itemIds, string worldOrDc)
+        public async Task<IActionResult> Get(string itemIds, string worldOrDc, CancellationToken cancellationToken = default)
         {
             // Parameter parsing
             var itemIdsArray = InputProcessing.ParseIdList(itemIds)
@@ -55,13 +57,13 @@ namespace Universalis.Application.Controllers.V2
                     return NotFound();
                 }
 
-                var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId);
+                var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId, cancellationToken);
                 return Ok(currentlyShownView);
             }
 
             // Multi-item handling
             var currentlyShownViewTasks = itemIdsArray
-                .Select(itemId => GetCurrentlyShownView(worldDc, worldIds, itemId))
+                .Select(itemId => GetCurrentlyShownView(worldDc, worldIds, itemId, cancellationToken))
                 .ToList();
             var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
             var unresolvedItems = currentlyShownViews

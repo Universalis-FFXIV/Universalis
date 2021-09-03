@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Uploads.Attributes;
 using Universalis.Application.Uploads.Behaviors;
@@ -34,17 +35,17 @@ namespace Universalis.Application.Controllers.V1
 
         [HttpPost]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<IActionResult> Post(string apiKey, /* This may cause issues in the LOH during garbage collection. */ [FromBody] UploadParameters parameters)
+        public async Task<IActionResult> Post(string apiKey, /* This may cause issues in the LOH during garbage collection. */ [FromBody] UploadParameters parameters, CancellationToken cancellationToken = default)
         {
             TrustedSource source;
             using (var sha512 = SHA512.Create())
             {
                 await using var authStream = new MemoryStream(Encoding.UTF8.GetBytes(apiKey));
-                var hash = await sha512.ComputeHashAsync(authStream);
+                var hash = await sha512.ComputeHashAsync(authStream, cancellationToken);
                 source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
                 {
                     ApiKeySha512 = Util.BytesToString(hash),
-                });
+                }, cancellationToken);
             }
 
             if (source == null)
@@ -61,11 +62,11 @@ namespace Universalis.Application.Controllers.V1
             using (var sha256 = SHA256.Create())
             {
                 await using var uploaderIdStream = new MemoryStream(Encoding.UTF8.GetBytes(parameters.UploaderId));
-                parameters.UploaderId = Util.BytesToString(await sha256.ComputeHashAsync(uploaderIdStream));
+                parameters.UploaderId = Util.BytesToString(await sha256.ComputeHashAsync(uploaderIdStream, cancellationToken));
             }
 
             // Check if this uploader is flagged, cancel if they are
-            if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdHash = parameters.UploaderId }) !=
+            if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdHash = parameters.UploaderId }, cancellationToken) !=
                 null)
             {
                 return Ok("Success");

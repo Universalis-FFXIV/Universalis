@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Threading;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Threading.Tasks;
 using Universalis.Application.Views;
@@ -23,12 +24,13 @@ namespace Universalis.Application.Controllers.V1
         /// Retrieves the current tax rate data for the specified world. This data is provided by the Retainer Vocate in each major city.
         /// </summary>
         /// <param name="world">The world or to retrieve data for. This may be an ID or a name.</param>
+        /// <param name="cancellationToken"></param>
         /// <response code="200">Data retrieved successfully.</response>
         /// <response code="404">The world requested is invalid.</response>
         [HttpGet]
         [ProducesResponseType(typeof(TaxRatesView), 200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> Get([FromQuery, BindRequired] string world)
+        public async Task<IActionResult> Get([FromQuery, BindRequired] string world, CancellationToken cancellationToken = default)
         {
             if (!TryGetWorldDc(world, out var worldDc))
             {
@@ -40,7 +42,7 @@ namespace Universalis.Application.Controllers.V1
                 return NotFound();
             }
 
-            var taxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = worldDc.WorldId });
+            var taxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = worldDc.WorldId }, cancellationToken);
 
             return Ok(new TaxRatesView
             {

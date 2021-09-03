@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Common;
 using Universalis.Application.Views;
@@ -24,7 +25,7 @@ namespace Universalis.Application.Controllers
             CurrentlyShown = currentlyShownDb;
         }
 
-        protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(WorldDc worldDc, uint[] worldIds, uint itemId)
+        protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(WorldDc worldDc, uint[] worldIds, uint itemId, CancellationToken cancellationToken = default)
         {
             var data = (await CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery
             {
@@ -78,48 +79,48 @@ namespace Universalis.Application.Controllers
                             if (!string.IsNullOrEmpty(l.CreatorId))
                             {
                                 await using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.CreatorId));
-                                listingView.CreatorIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream));
+                                listingView.CreatorIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
                             }
 
                             if (!string.IsNullOrEmpty(l.ListingId))
                             {
                                 await using var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(l.ListingId));
-                                listingView.ListingId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream));
+                                listingView.ListingId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
                             }
 
                             await using var dataStream2 = new MemoryStream(Encoding.UTF8.GetBytes(l.SellerId ?? ""));
-                            listingView.SellerIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream2));
+                            listingView.SellerIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream2, cancellationToken));
 
                             await using var dataStream3 = new MemoryStream(Encoding.UTF8.GetBytes(l.RetainerId ?? ""));
-                            listingView.RetainerId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream3));
+                            listingView.RetainerId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream3, cancellationToken));
 
                             return listingView;
                         })
                         .Concat(agg.Listings.ToAsyncEnumerable())
-                        .ToListAsync();
+                        .ToListAsync(cancellationToken);
 
-                agg.RecentHistory = await next.RecentHistory
-                    .ToAsyncEnumerable()
-                    .Select(s => new SaleView
-                    {
-                        Hq = s.Hq,
-                        PricePerUnit = s.PricePerUnit,
-                        Quantity = s.Quantity,
-                        Total = s.PricePerUnit * s.Quantity,
-                        TimestampUnixSeconds = (long)s.TimestampUnixSeconds,
-                        BuyerName = s.BuyerName,
-                        WorldId = worldDc.IsDc ? next.WorldId : null,
-                        WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
-                    })
-                    .Where(s => s.PricePerUnit > 0)
-                    .Where(s => s.Quantity > 0)
-                    .Where(s => s.TimestampUnixSeconds > 0)
-                    .Concat(agg.RecentHistory.ToAsyncEnumerable())
-                    .ToListAsync();
-                agg.LastUploadTimeUnixMilliseconds = (long)Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
+                    agg.RecentHistory = await next.RecentHistory
+                        .ToAsyncEnumerable()
+                        .Select(s => new SaleView
+                        {
+                            Hq = s.Hq,
+                            PricePerUnit = s.PricePerUnit,
+                            Quantity = s.Quantity,
+                            Total = s.PricePerUnit * s.Quantity,
+                            TimestampUnixSeconds = (long)s.TimestampUnixSeconds,
+                            BuyerName = s.BuyerName,
+                            WorldId = worldDc.IsDc ? next.WorldId : null,
+                            WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
+                        })
+                        .Where(s => s.PricePerUnit > 0)
+                        .Where(s => s.Quantity > 0)
+                        .Where(s => s.TimestampUnixSeconds > 0)
+                        .Concat(agg.RecentHistory.ToAsyncEnumerable())
+                        .ToListAsync(cancellationToken);
+                    agg.LastUploadTimeUnixMilliseconds = (long)Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
 
-                return agg;
-            });
+                    return agg;
+                }, cancellationToken);
 
             currentlyShown.Listings.Sort((a, b) => (int)a.PricePerUnit - (int)b.PricePerUnit);
             currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);

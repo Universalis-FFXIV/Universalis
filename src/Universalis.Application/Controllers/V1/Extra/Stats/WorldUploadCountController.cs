@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Views;
 using Universalis.DbAccess.Uploads;
@@ -23,9 +24,9 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
         /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(IDictionary<string, WorldUploadCountView>), 200)]
-        public async Task<IDictionary<string, WorldUploadCountView>> Get()
+        public async Task<IDictionary<string, WorldUploadCountView>> Get(CancellationToken cancellationToken = default)
         {
-            var data = (await _worldUploadCountDb.GetWorldUploadCounts())
+            var data = (await _worldUploadCountDb.GetWorldUploadCounts(cancellationToken))
                 .Where(d => !string.IsNullOrEmpty(d.WorldName))
                 .ToList();
 

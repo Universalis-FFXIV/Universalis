@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Views;
@@ -28,11 +29,12 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
         /// <param name="world">The world to request data for.</param>
         /// <param name="dcName">The data center to request data for.</param>
         /// <param name="entriesToReturn">The number of entries to return (default 50, max 200).</param>
+        /// <param name="cancellationToken"></param>
         /// <response code="404">The world/DC requested is invalid.</response>
         [HttpGet]
         [ProducesResponseType(typeof(MostRecentlyUpdatedItemsView), 200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> Get([FromQuery] string world, [FromQuery] string dcName, [FromQuery(Name = "entries")] string entriesToReturn)
+        public async Task<IActionResult> Get([FromQuery] string world, [FromQuery] string dcName, [FromQuery(Name = "entries")] string entriesToReturn, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(world) && string.IsNullOrEmpty(dcName))
             {
@@ -64,7 +66,7 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
             var documents = await _currentlyShownDb.RetrieveByUploadTime(
                 new CurrentlyShownWorldIdsQuery { WorldIds = worldIds },
                 count,
-                UploadOrder.LeastRecent);
+                UploadOrder.LeastRecent, cancellationToken);
 
             var worlds = GameData.AvailableWorlds();
             return Ok(new LeastRecentlyUpdatedItemsView

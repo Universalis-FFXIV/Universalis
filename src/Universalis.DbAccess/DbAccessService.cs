@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Threading;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using System.Threading.Tasks;
@@ -23,23 +24,23 @@ namespace Universalis.DbAccess
             Collection = database.GetCollection<TDocument>(collectionName);
         }
 
-        public Task Create(TDocument document)
+        public Task Create(TDocument document, CancellationToken cancellationToken = default)
         {
-            return Collection.InsertOneAsync(document);
+            return Collection.InsertOneAsync(document, null, cancellationToken);
         }
 
-        public async Task<TDocument> Retrieve(TDocumentQuery query)
+        public async Task<TDocument> Retrieve(TDocumentQuery query, CancellationToken cancellationToken = default)
         {
-            return await Collection.Find(query.ToFilterDefinition()).FirstOrDefaultAsync();
+            return await Collection.Find(query.ToFilterDefinition()).FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task Update(TDocument document, TDocumentQuery query)
+        public async Task Update(TDocument document, TDocumentQuery query, CancellationToken cancellationToken = default)
         {
             // Create if non-existent
-            var existing = await Retrieve(query);
+            var existing = await Retrieve(query, cancellationToken);
             if (existing == null)
             {
-                await Create(document);
+                await Create(document, cancellationToken);
                 return;
             }
 
@@ -64,13 +65,13 @@ namespace Universalis.DbAccess
             // Update if there are any changes
             if (update != null)
             {
-                await Collection.UpdateOneAsync(query.ToFilterDefinition(), update);
+                await Collection.UpdateOneAsync(query.ToFilterDefinition(), update, cancellationToken: cancellationToken);
             }
         }
 
-        public Task Delete(TDocumentQuery query)
+        public Task Delete(TDocumentQuery query, CancellationToken cancellationToken = default)
         {
-            return Collection.DeleteManyAsync(query.ToFilterDefinition());
+            return Collection.DeleteManyAsync(query.ToFilterDefinition(), cancellationToken);
         }
     }
 }

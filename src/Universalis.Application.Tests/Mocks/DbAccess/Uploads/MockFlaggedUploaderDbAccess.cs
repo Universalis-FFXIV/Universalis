@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
@@ -11,25 +12,25 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
     {
         private readonly Dictionary<string, FlaggedUploader> _collection = new();
 
-        public Task Create(FlaggedUploader document)
+        public Task Create(FlaggedUploader document, CancellationToken cancellationToken = default)
         {
             _collection.Add(document.UploaderIdHash, document);
             return Task.CompletedTask;
         }
 
-        public Task<FlaggedUploader> Retrieve(FlaggedUploaderQuery query)
+        public Task<FlaggedUploader> Retrieve(FlaggedUploaderQuery query, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(_collection
                 .FirstOrDefault(s => s.Key == query.UploaderIdHash).Value);
         }
 
-        public async Task Update(FlaggedUploader document, FlaggedUploaderQuery query)
+        public async Task Update(FlaggedUploader document, FlaggedUploaderQuery query, CancellationToken cancellationToken = default)
         {
-            await Delete(query);
-            await Create(document);
+            await Delete(query, cancellationToken);
+            await Create(document, cancellationToken);
         }
 
-        public Task Delete(FlaggedUploaderQuery query)
+        public Task Delete(FlaggedUploaderQuery query, CancellationToken cancellationToken = default)
         {
             _collection.Remove(query.UploaderIdHash);
             return Task.CompletedTask;

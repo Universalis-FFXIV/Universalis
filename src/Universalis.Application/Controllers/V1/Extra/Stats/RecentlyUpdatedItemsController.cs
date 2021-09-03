@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Views;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -24,9 +25,9 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
         /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(RecentlyUpdatedItemsView), 200)]
-        public async Task<RecentlyUpdatedItemsView> Get()
+        public async Task<RecentlyUpdatedItemsView> Get(CancellationToken cancellationToken = default)
         {
-            var data = (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery()))?.Items;
+            var data = (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery(), cancellationToken))?.Items;
             return data == null
                 ? new RecentlyUpdatedItemsView { Items = new List<uint>() }
                 : new RecentlyUpdatedItemsView { Items = data };

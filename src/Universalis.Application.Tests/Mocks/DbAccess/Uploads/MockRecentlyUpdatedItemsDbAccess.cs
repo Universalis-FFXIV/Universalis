@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Uploads;
@@ -11,34 +12,34 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
     {
         private readonly List<RecentlyUpdatedItems> _collection = new();
 
-        public Task Create(RecentlyUpdatedItems document)
+        public Task Create(RecentlyUpdatedItems document, CancellationToken cancellationToken = default)
         {
             _collection.Add(document);
             return Task.CompletedTask;
         }
 
-        public Task<RecentlyUpdatedItems> Retrieve(RecentlyUpdatedItemsQuery query)
+        public Task<RecentlyUpdatedItems> Retrieve(RecentlyUpdatedItemsQuery query, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(_collection.FirstOrDefault());
         }
 
-        public async Task Update(RecentlyUpdatedItems document, RecentlyUpdatedItemsQuery query)
+        public async Task Update(RecentlyUpdatedItems document, RecentlyUpdatedItemsQuery query, CancellationToken cancellationToken = default)
         {
-            await Delete(query);
-            await Create(document);
+            await Delete(query, cancellationToken);
+            await Create(document, cancellationToken);
         }
 
-        public async Task Push(uint itemId)
+        public async Task Push(uint itemId, CancellationToken cancellationToken = default)
         {
             var query = new RecentlyUpdatedItemsQuery();
-            var existing = await Retrieve(query);
+            var existing = await Retrieve(query, cancellationToken);
 
             if (existing == null)
             {
                 await Create(new RecentlyUpdatedItems
                 {
                     Items = new List<uint> { itemId },
-                });
+                }, cancellationToken);
                 return;
             }
 
@@ -49,7 +50,7 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
             existing.Items = newItems;
         }
 
-        public Task Delete(RecentlyUpdatedItemsQuery query)
+        public Task Delete(RecentlyUpdatedItemsQuery query, CancellationToken cancellationToken = default)
         {
             _collection.Remove(_collection.FirstOrDefault());
             return Task.CompletedTask;

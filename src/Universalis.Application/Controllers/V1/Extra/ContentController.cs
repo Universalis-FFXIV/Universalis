@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Threading;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Universalis.Application.Views;
 using Universalis.DbAccess;
@@ -22,11 +23,12 @@ namespace Universalis.Application.Controllers.V1.Extra
         /// and may return inconsistent data at times.
         /// </summary>
         /// <param name="contentId">The ID of the content object to retrieve.</param>
+        /// <param name="cancellationToken"></param>
         [HttpGet]
         [ProducesResponseType(typeof(ContentView), 200)]
-        public async Task<IActionResult> Get(string contentId)
+        public async Task<IActionResult> Get(string contentId, CancellationToken cancellationToken = default)
         {
-            var content = await _contentDb.Retrieve(new ContentQuery { ContentId = contentId });
+            var content = await _contentDb.Retrieve(new ContentQuery { ContentId = contentId }, cancellationToken);
             if (content == null)
             {
                 return Ok(new ContentView());

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Common;
 using Universalis.Application.Views;
@@ -21,7 +22,7 @@ namespace Universalis.Application.Controllers
             History = historyDb;
         }
 
-        protected async Task<(bool, HistoryView)> GetHistoryView(WorldDc worldDc, uint[] worldIds, uint itemId, int entries)
+        protected async Task<(bool, HistoryView)> GetHistoryView(WorldDc worldDc, uint[] worldIds, uint itemId, int entries, CancellationToken cancellationToken = default)
         {
             var data = (await History.RetrieveMany(new HistoryManyQuery
             {
@@ -52,11 +53,11 @@ namespace Universalis.Application.Controllers
                                 WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
                             })
                         .Concat(agg.Sales.ToAsyncEnumerable())
-                        .ToListAsync();
+                        .ToListAsync(cancellationToken);
                     agg.LastUploadTimeUnixMilliseconds = (long)Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
 
                     return agg;
-                });
+                }, cancellationToken);
 
             history.Sales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
             history.Sales = history.Sales.Take(entries).ToList();

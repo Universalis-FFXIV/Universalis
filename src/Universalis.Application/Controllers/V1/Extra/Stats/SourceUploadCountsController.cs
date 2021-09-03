@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Views;
 using Universalis.DbAccess.Uploads;
@@ -24,9 +25,9 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
         /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<SourceUploadCountView>), 200)]
-        public async Task<IEnumerable<SourceUploadCountView>> Get()
+        public async Task<IEnumerable<SourceUploadCountView>> Get(CancellationToken cancellationToken = default)
         {
-            var data = await _trustedSourceDb.GetUploaderCounts();
+            var data = await _trustedSourceDb.GetUploaderCounts(cancellationToken);
             return data
                 .Select(d => new SourceUploadCountView
                 {

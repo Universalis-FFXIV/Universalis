@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Views;
@@ -23,9 +24,9 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
         /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(UploadCountHistoryView), 200)]
-        public async Task<UploadCountHistoryView> Get()
+        public async Task<UploadCountHistoryView> Get(CancellationToken cancellationToken = default)
         {
-            var data = await _uploadCountHistoryDb.Retrieve(new UploadCountHistoryQuery());
+            var data = await _uploadCountHistoryDb.Retrieve(new UploadCountHistoryQuery(), cancellationToken);
             return new UploadCountHistoryView
             {
                 UploadCountByDay = data?.UploadCountByDay ?? new List<double>(),

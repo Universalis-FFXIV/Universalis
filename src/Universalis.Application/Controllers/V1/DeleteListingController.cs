@@ -2,6 +2,7 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.MarketBoard;
@@ -34,7 +35,7 @@ namespace Universalis.Application.Controllers.V1
 
         [HttpPost]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<IActionResult> Post(uint itemId, string world, [FromHeader] string authorization, [FromBody] DeleteListingParameters parameters)
+        public async Task<IActionResult> Post(uint itemId, string world, [FromHeader] string authorization, [FromBody] DeleteListingParameters parameters, CancellationToken cancellationToken = default)
         {
             TrustedSource source;
             using (var sha512 = SHA512.Create())
@@ -42,8 +43,8 @@ namespace Universalis.Application.Controllers.V1
                 await using var authStream = new MemoryStream(Encoding.UTF8.GetBytes(authorization));
                 source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
                 {
-                    ApiKeySha512 = Util.BytesToString(await sha512.ComputeHashAsync(authStream)),
-                });
+                    ApiKeySha512 = Util.BytesToString(await sha512.ComputeHashAsync(authStream, cancellationToken)),
+                }, cancellationToken);
             }
 
             if (source == null)
@@ -60,11 +61,11 @@ namespace Universalis.Application.Controllers.V1
             using (var sha256 = SHA256.Create())
             {
                 await using var uploaderIdStream = new MemoryStream(Encoding.UTF8.GetBytes(parameters.UploaderId));
-                parameters.UploaderId = Util.BytesToString(await sha256.ComputeHashAsync(uploaderIdStream));
+                parameters.UploaderId = Util.BytesToString(await sha256.ComputeHashAsync(uploaderIdStream, cancellationToken));
             }
 
             // Check if this uploader is flagged, cancel if they are
-            if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdHash = parameters.UploaderId }) != null)
+            if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdHash = parameters.UploaderId }, cancellationToken) != null)
             {
                 return Ok("Success");
             }
@@ -74,7 +75,7 @@ namespace Universalis.Application.Controllers.V1
             {
                 WorldId = worldDc.WorldId,
                 ItemId = itemId,
-            });
+            }, cancellationToken);
 
             if (itemData == null)
             {
@@ -97,7 +98,7 @@ namespace Universalis.Application.Controllers.V1
             {
                 WorldId = worldDc.WorldId,
                 ItemId = itemId,
-            });
+            }, cancellationToken);
 
             return Ok("Success");
         }

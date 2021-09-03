@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
@@ -16,12 +17,12 @@ namespace Universalis.DbAccess.MarketBoard
 
         public CurrentlyShownDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "recentData") { }
 
-        public async Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query)
+        public async Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query, CancellationToken cancellationToken = default)
         {
-            return await Collection.Find(query.ToFilterDefinition()).ToListAsync();
+            return await Collection.Find(query.ToFilterDefinition()).ToListAsync(cancellationToken);
         }
 
-        public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order)
+        public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order, CancellationToken cancellationToken = default)
         {
             // This is a *very long* query right now, so we hold a static cache of all the responses
             // To mitigate potential thread pool starvation caused by this being requested repeatedly.
@@ -49,7 +50,7 @@ namespace Universalis.DbAccess.MarketBoard
                 .Project<WorldItemUpload>(projectDefinition)
                 .Sort(sortDefinition)
                 .Limit(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             UploadTimeQueryCache[callState] = new UploadTimeQueryResult { QueryTime = DateTime.Now, Uploads = uploads };
 

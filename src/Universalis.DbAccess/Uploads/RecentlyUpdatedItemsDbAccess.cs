@@ -1,6 +1,7 @@
 ﻿using MongoDB.Driver;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.Uploads;
@@ -15,17 +16,17 @@ namespace Universalis.DbAccess.Uploads
 
         public RecentlyUpdatedItemsDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "content") { }
 
-        public async Task Push(uint itemId)
+        public async Task Push(uint itemId, CancellationToken cancellationToken = default)
         {
             var query = new RecentlyUpdatedItemsQuery();
-            var existing = await Retrieve(query);
+            var existing = await Retrieve(query, cancellationToken);
 
             if (existing == null)
             {
                 await Create(new RecentlyUpdatedItems
                 {
                     Items = new List<uint> { itemId },
-                });
+                }, cancellationToken);
                 return;
             }
 
@@ -44,7 +45,7 @@ namespace Universalis.DbAccess.Uploads
 
             var updateBuilder = Builders<RecentlyUpdatedItems>.Update;
             var update = updateBuilder.Set(o => o.Items, newItems);
-            await Collection.UpdateOneAsync(query.ToFilterDefinition(), update);
+            await Collection.UpdateOneAsync(query.ToFilterDefinition(), update, cancellationToken: cancellationToken);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Common;
 using Universalis.Application.Views;
@@ -22,6 +23,7 @@ namespace Universalis.Application.Controllers.V1
         /// <param name="itemIds">The item ID or comma-separated item IDs to retrieve data for.</param>
         /// <param name="worldOrDc">The world or data center to retrieve data for. This may be an ID or a name.</param>
         /// <param name="entriesToReturn">The number of entries to return. By default, this is set to 1800, but may be set to a maximum of 999999.</param>
+        /// <param name="cancellationToken"></param>
         /// <response code="200">Data retrieved successfully.</response>
         /// <response code="404">
         /// The world/DC or item requested is invalid. When requesting multiple items at once, an invalid item ID
@@ -30,7 +32,7 @@ namespace Universalis.Application.Controllers.V1
         [HttpGet]
         [ProducesResponseType(typeof(HistoryView), 200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery(Name = "entries")] string entriesToReturn)
+        public async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery(Name = "entries")] string entriesToReturn, CancellationToken cancellationToken = default)
         {
             // Parameter parsing
             var itemIdsArray = InputProcessing.ParseIdList(itemIds)
@@ -62,13 +64,13 @@ namespace Universalis.Application.Controllers.V1
                     return NotFound();
                 }
 
-                var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entries);
+                var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entries, cancellationToken);
                 return Ok(historyView);
             }
 
             // Multi-item handling
             var historyViewTasks = itemIdsArray
-                .Select(itemId => GetHistoryView(worldDc, worldIds, itemId, entries))
+                .Select(itemId => GetHistoryView(worldDc, worldIds, itemId, entries, cancellationToken))
                 .ToList();
             var historyViews = await Task.WhenAll(historyViewTasks);
             var unresolvedItems = historyViews
