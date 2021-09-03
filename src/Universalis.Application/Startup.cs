@@ -44,7 +44,8 @@ namespace Universalis.Application
             services.AddControllers(options =>
             {
                 options.Conventions.Add(new GroupByNamespaceConvention());
-                options.Filters.Add(new DecoderFallbackExceptionFilter());
+                options.Filters.Add<DecoderFallbackExceptionFilter>();
+                options.Filters.Add<OperationCancelledExceptionFilter>();
             });
 
             services.AddApiVersioning(options =>
