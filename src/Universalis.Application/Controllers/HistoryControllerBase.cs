@@ -28,7 +28,7 @@ namespace Universalis.Application.Controllers
             {
                 WorldIds = worldIds,
                 ItemId = itemId,
-            })).ToList();
+            }, cancellationToken)).ToList();
 
             var resolved = data.Count > 0;
 

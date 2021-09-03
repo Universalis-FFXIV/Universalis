@@ -29,15 +29,13 @@ namespace Universalis.DbAccess.Uploads
 
         public async Task<IEnumerable<TrustedSourceNoApiKey>> GetUploaderCounts(CancellationToken cancellationToken = default)
         {
-            var cursor = await Collection.FindAsync(o => true, cancellationToken: cancellationToken);
-            var results = cursor.ToEnumerable()
-                .Select(o => new TrustedSourceNoApiKey
-                {
-                    Name = o.Name,
-                    UploadCount = o.UploadCount,
-                })
-                .ToList();
-            return results;
+            var projectDefinition = Builders<TrustedSource>.Projection
+                .Include(o => o.Name)
+                .Include(o => o.UploadCount);
+
+            return await Collection.Find(FilterDefinition<TrustedSource>.Empty)
+                .Project<TrustedSourceNoApiKey>(projectDefinition)
+                .ToListAsync(cancellationToken);
         }
     }
 }
