@@ -30,7 +30,7 @@ namespace Universalis.DbAccess
 
         public async Task<TDocument> Retrieve(TDocumentQuery query)
         {
-            var cursor = await Collection.FindAsync(query.ToFilterDefinition());
+            var cursor = Collection.Find(query.ToFilterDefinition());
             return await cursor.FirstOrDefaultAsync();
         }
 
