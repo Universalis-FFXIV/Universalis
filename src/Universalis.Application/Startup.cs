@@ -40,12 +40,6 @@ namespace Universalis.Application
                 .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
                 .AddNegotiate();
 
-            services.AddStackPolicy(options =>
-            {
-                options.MaxConcurrentRequests = 200;
-                options.RequestQueueLimit = 10000;
-            });
-
             services.AddControllers(options =>
             {
                 options.Conventions.Add(new GroupByNamespaceConvention());
@@ -105,8 +99,6 @@ namespace Universalis.Application
             {
                 app.UseDeveloperExceptionPage();
             }
-
-            app.UseConcurrencyLimiter();
 
             app.UseSwagger(options =>
             {
