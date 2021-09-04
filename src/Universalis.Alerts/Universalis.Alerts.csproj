@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="DSharpPlus" Version="4.1.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0-preview.7.21377.19" />
   </ItemGroup>
 
 </Project>
