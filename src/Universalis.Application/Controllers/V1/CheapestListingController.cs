@@ -18,7 +18,7 @@ namespace Universalis.Application.Controllers.V1
     {
         private readonly ICurrentlyShownDbAccess _currentlyShownDb;
 
-        protected CheapestListingController(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb) :
+        public CheapestListingController(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb) :
             base(gameData)
         {
             _currentlyShownDb = currentlyShownDb;
@@ -27,8 +27,8 @@ namespace Universalis.Application.Controllers.V1
         /// <summary>
         /// Retrieves the current cheapest listing for each of the requested items.
         /// </summary>
-        /// <param name="worldOrDc">The world or data center to retrieve data for. This may be an ID or a name.</param>
         /// <param name="itemIds">The item ID or comma-separated item IDs to retrieve data for.</param>
+        /// <param name="worldOrDc">The world or data center to retrieve data for. This may be an ID or a name.</param>
         /// <param name="cancellationToken"></param>
         /// <response code="200">Data retrieved successfully.</response>
         /// <response code="404">
@@ -39,7 +39,7 @@ namespace Universalis.Application.Controllers.V1
         [HttpGet]
         [ProducesResponseType(typeof(CheapestView), 200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> Get(string worldOrDc, string itemIds, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Get(string itemIds, string worldOrDc, CancellationToken cancellationToken = default)
         {
             // Parameter parsing
             var itemIdsArray = InputProcessing.ParseIdList(itemIds)
@@ -89,8 +89,6 @@ namespace Universalis.Application.Controllers.V1
                 {
                     // Handle undefined arrays
                     next.Listings ??= new List<Listing>();
-                    next.RecentHistory ??= new List<Sale>();
-
                     agg.Listings = await next.Listings
                         .ToAsyncEnumerable()
                         .SelectAwait(async l =>
@@ -101,7 +99,6 @@ namespace Universalis.Application.Controllers.V1
                             return listingView;
                         })
                         .ToListAsync(cancellationToken);
-
                     return agg;
                 }, cancellationToken);
             currentlyShown.Listings.Sort((a, b) => (int)a.PricePerUnit - (int)b.PricePerUnit);
