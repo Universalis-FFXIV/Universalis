@@ -11,6 +11,8 @@ Please refer to the [documentation](https://universalis.app/docs) for basic usag
 ## API Development
 Developing and testing the API server requires [Visual Studio 2022 Preview](https://docs.microsoft.com/en-us/visualstudio/releases/2022/release-notes-preview), as it targets .NET 6. It also requires [MongoDB Community Edition v4.2](https://docs.mongodb.com/manual/administration/install-community/) or higher.
 
+This application uses some F# code, which needs to be built before IntelliSense can navigate it. If you get any undefined references to F# code, just build the `Universalis.DataTransformations` project.
+
 ## Frontend Development
 The frontend is housed on our [mogboard fork](https://github.com/Universalis-FFXIV/mogboard), where contributions are welcome.
 
