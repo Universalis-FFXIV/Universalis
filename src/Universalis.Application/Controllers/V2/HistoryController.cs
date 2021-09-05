@@ -32,6 +32,7 @@ namespace Universalis.Application.Controllers.V2
         /// </response>
         [HttpGet]
         [ProducesResponseType(typeof(HistoryView), 200)]
+        [ProducesResponseType(typeof(HistoryMultiViewV2), 200)]
         [ProducesResponseType(404)]
         public async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery] string entriesToReturn, CancellationToken cancellationToken = default)
         {

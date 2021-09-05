@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.IO;
 
 namespace Universalis.Application
 {
@@ -11,6 +16,15 @@ namespace Universalis.Application
 
         private static readonly Regex UnsafeCharacters =
             new(@"[^a-zA-Z0-9'\- ·⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]", RegexOptions.Compiled);
+
+        private static readonly RecyclableMemoryStreamManager MemoryStreamPool = new();
+
+        public static async Task<string> Hash(HashAlgorithm hasher, string id, CancellationToken cancellationToken = default)
+        {
+            var idBytes = Encoding.UTF8.GetBytes(id ?? "");
+            await using var dataStream = MemoryStreamPool.GetStream(idBytes);
+            return Util.BytesToString(await hasher.ComputeHashAsync(dataStream, cancellationToken));
+        }
 
         public static string BytesToString(byte[] bytes)
         {

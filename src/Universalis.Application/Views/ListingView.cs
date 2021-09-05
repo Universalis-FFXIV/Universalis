@@ -1,6 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using Universalis.Application.Common;
+using Universalis.Entities.MarketBoard;
 
 namespace Universalis.Application.Views
 {
@@ -40,14 +46,14 @@ namespace Universalis.Application.Views
         /// </summary>
         [JsonPropertyName("worldName")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string WorldName { get; init; }
+        public string WorldName { get; set; }
 
         /// <summary>
         /// The world ID, if applicable.
         /// </summary>
         [JsonPropertyName("worldID")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public uint? WorldId { get; init; }
+        public uint? WorldId { get; set; }
 
         /// <summary>
         /// The creator's character name.
@@ -126,5 +132,48 @@ namespace Universalis.Application.Views
         /// </summary>
         [JsonPropertyName("total")]
         public uint Total { get; init; }
+
+        public static async Task<ListingView> FromListing(Listing l, CancellationToken cancellationToken = default)
+        {
+            var ppuWithGst = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
+            var listingView = new ListingView
+            {
+                Hq = l.Hq,
+                OnMannequin = l.OnMannequin,
+                Materia = l.Materia?
+                    .Select(m => new MateriaView
+                    {
+                        SlotId = m.SlotId,
+                        MateriaId = m.MateriaId,
+                    })
+                    .ToList() ?? new List<MateriaView>(),
+                PricePerUnit = ppuWithGst,
+                Quantity = l.Quantity,
+                Total = ppuWithGst * l.Quantity,
+                DyeId = l.DyeId,
+                CreatorName = l.CreatorName ?? "",
+                IsCrafted = !string.IsNullOrEmpty(l.CreatorName),
+                LastReviewTimeUnixSeconds = (long)l.LastReviewTimeUnixSeconds,
+                RetainerName = l.RetainerName,
+                RetainerCityId = l.RetainerCityId,
+            };
+
+            using var sha256 = SHA256.Create();
+
+            if (!string.IsNullOrEmpty(l.CreatorId))
+            {
+                listingView.CreatorIdHash = await Util.Hash(sha256, l.CreatorId, cancellationToken);
+            }
+
+            if (!string.IsNullOrEmpty(l.ListingId))
+            {
+                listingView.ListingId = await Util.Hash(sha256, l.ListingId, cancellationToken);
+            }
+
+            listingView.SellerIdHash = await Util.Hash(sha256, l.SellerId, cancellationToken);
+            listingView.RetainerId = await Util.Hash(sha256, l.RetainerId, cancellationToken);
+
+            return listingView;
+        }
     }
 }

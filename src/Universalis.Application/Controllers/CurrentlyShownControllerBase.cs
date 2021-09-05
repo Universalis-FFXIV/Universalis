@@ -6,7 +6,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.IO;
 using Universalis.Application.Common;
 using Universalis.Application.Views;
 using Universalis.DataTransformations;
@@ -20,8 +19,6 @@ namespace Universalis.Application.Controllers
     public class CurrentlyShownControllerBase : WorldDcControllerBase
     {
         protected readonly ICurrentlyShownDbAccess CurrentlyShown;
-
-        private static readonly RecyclableMemoryStreamManager MemoryStreamPool = new();
 
         public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb) : base(gameData)
         {
@@ -52,46 +49,9 @@ namespace Universalis.Application.Controllers
                         .ToAsyncEnumerable()
                         .SelectAwait(async l =>
                         {
-                            var ppuWithGst = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
-                            var listingView = new ListingView
-                            {
-                                Hq = l.Hq,
-                                OnMannequin = l.OnMannequin,
-                                Materia = l.Materia?
-                                    .Select(m => new MateriaView
-                                    {
-                                        SlotId = m.SlotId,
-                                        MateriaId = m.MateriaId,
-                                    })
-                                    .ToList() ?? new List<MateriaView>(),
-                                PricePerUnit = ppuWithGst,
-                                Quantity = l.Quantity,
-                                Total = ppuWithGst * l.Quantity,
-                                DyeId = l.DyeId,
-                                CreatorName = l.CreatorName ?? "",
-                                IsCrafted = !string.IsNullOrEmpty(l.CreatorName),
-                                LastReviewTimeUnixSeconds = (long)l.LastReviewTimeUnixSeconds,
-                                RetainerName = l.RetainerName,
-                                RetainerCityId = l.RetainerCityId,
-                                WorldId = worldDc.IsDc ? next.WorldId : null,
-                                WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
-                            };
-
-                            using var sha256 = SHA256.Create();
-
-                            if (!string.IsNullOrEmpty(l.CreatorId))
-                            {
-                                listingView.CreatorIdHash = await HashId(sha256, l.CreatorId, cancellationToken);
-                            }
-
-                            if (!string.IsNullOrEmpty(l.ListingId))
-                            {
-                                listingView.ListingId = await HashId(sha256, l.ListingId, cancellationToken);
-                            }
-
-                            listingView.SellerIdHash = await HashId(sha256, l.SellerId, cancellationToken);
-                            listingView.RetainerId = await HashId(sha256, l.RetainerId, cancellationToken);
-
+                            var listingView = await ListingView.FromListing(l, cancellationToken);
+                            listingView.WorldId = worldDc.IsDc ? next.WorldId : null;
+                            listingView.WorldName = worldDc.IsDc ? worlds[next.WorldId] : null;
                             return listingView;
                         })
                         .Concat(agg.Listings.ToAsyncEnumerable())
@@ -191,13 +151,6 @@ namespace Universalis.Application.Controllers
             return Statistics.GetDistribution(listings
                 .Select(s => s.Quantity)
                 .Select(q => (int)q));
-        }
-
-        private static async Task<string> HashId(HashAlgorithm hasher, string id, CancellationToken cancellationToken = default)
-        {
-            var idBytes = Encoding.UTF8.GetBytes(id ?? "");
-            await using var dataStream = MemoryStreamPool.GetStream(idBytes);
-            return Util.BytesToString(await hasher.ComputeHashAsync(dataStream, cancellationToken));
         }
     }
 }

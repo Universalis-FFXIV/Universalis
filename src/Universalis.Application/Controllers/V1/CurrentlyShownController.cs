@@ -29,6 +29,7 @@ namespace Universalis.Application.Controllers.V1
         /// </response>
         [HttpGet]
         [ProducesResponseType(typeof(CurrentlyShownView), 200)]
+        [ProducesResponseType(typeof(CurrentlyShownMultiView), 200)]
         [ProducesResponseType(404)]
         public async Task<IActionResult> Get(string itemIds, string worldOrDc, CancellationToken cancellationToken = default)
         {
