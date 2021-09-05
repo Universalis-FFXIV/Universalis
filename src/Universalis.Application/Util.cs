@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -7,6 +9,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.IO;
+using Universalis.Application.Views;
+using Universalis.Entities.MarketBoard;
 
 namespace Universalis.Application
 {
@@ -18,6 +22,49 @@ namespace Universalis.Application
             new(@"[^a-zA-Z0-9'\- ·⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]", RegexOptions.Compiled);
 
         private static readonly RecyclableMemoryStreamManager MemoryStreamPool = new();
+
+        public static async Task<ListingView> ListingToView(Listing l, CancellationToken cancellationToken = default)
+        {
+            var ppuWithGst = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
+            var listingView = new ListingView
+            {
+                Hq = l.Hq,
+                OnMannequin = l.OnMannequin,
+                Materia = l.Materia?
+                    .Select(m => new MateriaView
+                    {
+                        SlotId = m.SlotId,
+                        MateriaId = m.MateriaId,
+                    })
+                    .ToList() ?? new List<MateriaView>(),
+                PricePerUnit = ppuWithGst,
+                Quantity = l.Quantity,
+                Total = ppuWithGst * l.Quantity,
+                DyeId = l.DyeId,
+                CreatorName = l.CreatorName ?? "",
+                IsCrafted = !string.IsNullOrEmpty(l.CreatorName),
+                LastReviewTimeUnixSeconds = (long)l.LastReviewTimeUnixSeconds,
+                RetainerName = l.RetainerName,
+                RetainerCityId = l.RetainerCityId,
+            };
+
+            using var sha256 = SHA256.Create();
+
+            if (!string.IsNullOrEmpty(l.CreatorId))
+            {
+                listingView.CreatorIdHash = await Util.Hash(sha256, l.CreatorId, cancellationToken);
+            }
+
+            if (!string.IsNullOrEmpty(l.ListingId))
+            {
+                listingView.ListingId = await Util.Hash(sha256, l.ListingId, cancellationToken);
+            }
+
+            listingView.SellerIdHash = await Util.Hash(sha256, l.SellerId, cancellationToken);
+            listingView.RetainerId = await Util.Hash(sha256, l.RetainerId, cancellationToken);
+
+            return listingView;
+        }
 
         public static async Task<string> Hash(HashAlgorithm hasher, string id, CancellationToken cancellationToken = default)
         {

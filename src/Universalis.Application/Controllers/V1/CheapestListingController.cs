@@ -93,7 +93,7 @@ namespace Universalis.Application.Controllers.V1
                         .ToAsyncEnumerable()
                         .SelectAwait(async l =>
                         {
-                            var listingView = await ListingView.FromListing(l, cancellationToken);
+                            var listingView = await Util.ListingToView(l, cancellationToken);
                             listingView.WorldId = worldDc.IsDc ? next.WorldId : null;
                             listingView.WorldName = worldDc.IsDc ? worlds[next.WorldId] : null;
                             return listingView;
