@@ -33,7 +33,7 @@ namespace Universalis.Application.Controllers.V1
         /// <response code="200">Data retrieved successfully.</response>
         /// <response code="404">
         /// The world/DC or item requested is invalid. When requesting multiple items at once, an invalid item ID
-        /// will not trigger this. Instead, the returned data will simply contain <see langword="null" /> under the
+        /// will not trigger this. Instead, the returned data will simply contain null under the
         /// invalid item IDs.
         /// </response>
         [HttpGet]
