@@ -3,24 +3,13 @@
 
 # Universalis
 
-A crowdsourced market board aggregator for the game FINAL FANTASY XIV. This branch is a rewrite in active development; the current live code is housed on the [v1 branch](https://github.com/Universalis-FFXIV/Universalis/tree/v1).
-
-## Endpoint Reference
-*   /api/:world/:item
-*   /api/history/:world/:item
-*   /api/tax-rates
-*   /api/extra/content/:contentID
-*   /api/extra/stats/upload-history
-*   /api/extra/stats/recently-updated
-*   /api/extra/stats/least-recently-updated
-*   /api/extra/stats/world-upload-counts
-*   /upload/:apiKey
+A crowdsourced market board aggregator for the game FINAL FANTASY XIV.
 
 ## API Reference
 Please refer to the [documentation](https://universalis.app/docs) for basic usage information.
 
 ## API Development
-The API is currently being rewritten and may undergo drastic changes before it is re-released; please wait for the rewrite to be completed before considering contributions.
+Developing and testing the API server requires [Visual Studio 2022 Preview](https://docs.microsoft.com/en-us/visualstudio/releases/2022/release-notes-preview), as it targets .NET 6. It also requires [MongoDB Community Edition v4.2](https://docs.mongodb.com/manual/administration/install-community/) or higher.
 
 ## Frontend Development
 The frontend is housed on our [mogboard fork](https://github.com/Universalis-FFXIV/mogboard), where contributions are welcome.
