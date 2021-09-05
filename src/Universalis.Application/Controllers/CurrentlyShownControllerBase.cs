@@ -81,29 +81,16 @@ namespace Universalis.Application.Controllers
 
                             if (!string.IsNullOrEmpty(l.CreatorId))
                             {
-                                var creatorIdBytes = Encoding.UTF8.GetBytes(l.CreatorId);
-                                await using var dataStream = MemoryStreamPool.GetStream(creatorIdBytes);
-                                listingView.CreatorIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
+                                listingView.CreatorIdHash = await HashId(sha256, l.CreatorId, cancellationToken);
                             }
 
                             if (!string.IsNullOrEmpty(l.ListingId))
                             {
-                                var listingIdBytes = Encoding.UTF8.GetBytes(l.ListingId);
-                                await using var dataStream = MemoryStreamPool.GetStream(listingIdBytes);
-                                listingView.ListingId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
+                                listingView.ListingId = await HashId(sha256, l.ListingId, cancellationToken);
                             }
 
-                            {
-                                var sellerIdBytes = Encoding.UTF8.GetBytes(l.SellerId ?? "");
-                                await using var dataStream = MemoryStreamPool.GetStream(sellerIdBytes);
-                                listingView.SellerIdHash = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
-                            }
-
-                            {
-                                var retainerIdBytes = Encoding.UTF8.GetBytes(l.RetainerId ?? "");
-                                await using var dataStream = MemoryStreamPool.GetStream(retainerIdBytes);
-                                listingView.RetainerId = Util.BytesToString(await sha256.ComputeHashAsync(dataStream, cancellationToken));
-                            }
+                            listingView.SellerIdHash = await HashId(sha256, l.SellerId, cancellationToken);
+                            listingView.RetainerId = await HashId(sha256, l.RetainerId, cancellationToken);
 
                             return listingView;
                         })
@@ -150,62 +137,67 @@ namespace Universalis.Application.Controllers
                 WorldName = worldDc.IsWorld ? worldDc.WorldName : null,
                 DcName = worldDc.IsDc ? worldDc.DcName : null,
                 LastUploadTimeUnixMilliseconds = currentlyShown.LastUploadTimeUnixMilliseconds,
-                StackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(currentlyShown.Listings
-                        .Select(s => s.Quantity)
-                        .Select(q => (int)q))),
-                StackSizeHistogramNq = new SortedDictionary<int, int>(Statistics.GetDistribution(nqListings
-                        .Select(s => s.Quantity)
-                        .Select(q => (int)q))),
-                StackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqListings
-                        .Select(s => s.Quantity)
-                        .Select(q => (int)q))),
-                SaleVelocity = Statistics.WeekVelocityPerDay(currentlyShown.RecentHistory
-                    .Select(s => s.TimestampUnixSeconds * 1000)),
-                SaleVelocityNq = Statistics.WeekVelocityPerDay(nqSales
-                    .Select(s => s.TimestampUnixSeconds * 1000)),
-                SaleVelocityHq = Statistics.WeekVelocityPerDay(hqSales
-                    .Select(s => s.TimestampUnixSeconds * 1000)),
+                StackSizeHistogram = new SortedDictionary<int, int>(GetListingsDistribution(currentlyShown.Listings)),
+                StackSizeHistogramNq = new SortedDictionary<int, int>(GetListingsDistribution(nqListings)),
+                StackSizeHistogramHq = new SortedDictionary<int, int>(GetListingsDistribution(hqListings)),
+                SaleVelocity = GetSaleVelocity(currentlyShown.RecentHistory),
+                SaleVelocityNq = GetSaleVelocity(nqSales),
+                SaleVelocityHq = GetSaleVelocity(hqSales),
+                CurrentAveragePrice = GetAveragePricePerUnit(currentlyShown.Listings),
+                CurrentAveragePriceNq = GetAveragePricePerUnit(nqListings),
+                CurrentAveragePriceHq = GetAveragePricePerUnit(hqListings),
+                MinPrice = GetMinPricePerUnit(currentlyShown.Listings),
+                MinPriceNq = GetMinPricePerUnit(nqListings),
+                MinPriceHq = GetMinPricePerUnit(hqListings),
+                MaxPrice = GetMaxPricePerUnit(currentlyShown.Listings),
+                MaxPriceNq = GetMaxPricePerUnit(nqListings),
+                MaxPriceHq = GetMaxPricePerUnit(hqListings),
+                AveragePrice = GetAveragePricePerUnit(currentlyShown.RecentHistory),
+                AveragePriceNq = GetAveragePricePerUnit(nqSales),
+                AveragePriceHq = GetAveragePricePerUnit(hqSales),
             };
-
-            if (currentlyShown.Listings.Any())
-            {
-                view.CurrentAveragePrice = Filters
-                    .RemoveOutliers(currentlyShown.Listings.Select(l => (float)l.PricePerUnit), 3)
-                    .Average();
-                view.MinPrice = currentlyShown.Listings.Select(s => s.PricePerUnit).Min();
-                view.MaxPrice = currentlyShown.Listings.Select(s => s.PricePerUnit).Max();
-            }
-
-            if (nqListings.Any())
-            {
-                view.CurrentAveragePriceNq = Filters.RemoveOutliers(nqListings.Select(l => (float)l.PricePerUnit), 3).Average();
-                view.MinPriceNq = nqListings.Select(s => s.PricePerUnit).Min();
-                view.MaxPriceNq = nqListings.Select(s => s.PricePerUnit).Max();
-            }
-
-            if (hqListings.Any())
-            {
-                view.CurrentAveragePriceHq = Filters.RemoveOutliers(hqListings.Select(l => (float)l.PricePerUnit), 3).Average();
-                view.MinPriceHq = hqListings.Select(s => s.PricePerUnit).Min();
-                view.MaxPriceHq = hqListings.Select(s => s.PricePerUnit).Max();
-            }
-
-            if (currentlyShown.RecentHistory.Any())
-            {
-                view.AveragePrice = Filters.RemoveOutliers(currentlyShown.RecentHistory.Select(s => (float)s.PricePerUnit), 3).Average();
-            }
-
-            if (nqSales.Any())
-            {
-                view.AveragePriceNq = Filters.RemoveOutliers(nqSales.Select(s => (float)s.PricePerUnit), 3).Average();
-            }
-
-            if (hqSales.Any())
-            {
-                view.AveragePriceHq = Filters.RemoveOutliers(hqSales.Select(s => (float)s.PricePerUnit), 3).Average();
-            }
-
+            
             return (resolved, view);
+        }
+
+        private static uint GetMinPricePerUnit<TPriceable>(IList<TPriceable> items) where TPriceable : IPriceable
+        {
+            return !items.Any() ? 0 : items.Select(s => s.PricePerUnit).Min();
+        }
+
+        private static uint GetMaxPricePerUnit<TPriceable>(IList<TPriceable> items) where TPriceable : IPriceable
+        {
+            return !items.Any() ? 0 : items.Select(s => s.PricePerUnit).Max();
+        }
+
+        private static float GetAveragePricePerUnit<TPriceable>(IList<TPriceable> items) where TPriceable : IPriceable
+        {
+            if (!items.Any())
+            {
+                return 0;
+            }
+
+            return Filters.RemoveOutliers(items.Select(s => (float)s.PricePerUnit), 3).Average();
+        }
+
+        private static float GetSaleVelocity(IEnumerable<SaleView> sales)
+        {
+            return Statistics.WeekVelocityPerDay(sales
+                .Select(s => s.TimestampUnixSeconds * 1000));
+        }
+
+        private static IDictionary<int, int> GetListingsDistribution(IEnumerable<ListingView> listings)
+        {
+            return Statistics.GetDistribution(listings
+                .Select(s => s.Quantity)
+                .Select(q => (int)q));
+        }
+
+        private static async Task<string> HashId(HashAlgorithm hasher, string id, CancellationToken cancellationToken = default)
+        {
+            var idBytes = Encoding.UTF8.GetBytes(id ?? "");
+            await using var dataStream = MemoryStreamPool.GetStream(idBytes);
+            return Util.BytesToString(await hasher.ComputeHashAsync(dataStream, cancellationToken));
         }
     }
 }

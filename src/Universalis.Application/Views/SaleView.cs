@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Universalis.Application.Common;
 
 namespace Universalis.Application.Views
 {
@@ -7,7 +8,7 @@ namespace Universalis.Application.Views
      * Please do not edit the field order unless it is unavoidable.
      */
 
-    public class SaleView
+    public class SaleView : IPriceable
     {
         /// <summary>
         /// Whether or not the item was high-quality.
