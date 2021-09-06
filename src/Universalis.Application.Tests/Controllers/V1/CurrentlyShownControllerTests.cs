@@ -41,6 +41,52 @@ namespace Universalis.Application.Tests.Controllers.V1
         [InlineData("74")]
         [InlineData("Coeurl")]
         [InlineData("coEUrl")]
+        public async Task Controller_Get_ReturnsOne_WithListings(string worldOrDc)
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockCurrentlyShownDbAccess();
+            var controller = new CurrentlyShownController(gameData, dbAccess);
+
+            const uint itemId = 5333;
+            var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
+            await dbAccess.Create(document);
+
+            var result = await controller.Get(itemId.ToString(), worldOrDc, "1");
+            var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
+
+            Assert.NotNull(currentlyShown);
+            Assert.Single(currentlyShown.Listings);
+
+            Assert.True(currentlyShown.RecentHistory.Count > 1);
+        }
+
+        [Theory]
+        [InlineData("74")]
+        [InlineData("Coeurl")]
+        [InlineData("coEUrl")]
+        public async Task Controller_Get_ReturnsOne_WithEntries(string worldOrDc)
+        {
+            var gameData = new MockGameDataProvider();
+            var dbAccess = new MockCurrentlyShownDbAccess();
+            var controller = new CurrentlyShownController(gameData, dbAccess);
+
+            const uint itemId = 5333;
+            var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
+            await dbAccess.Create(document);
+
+            var result = await controller.Get(itemId.ToString(), worldOrDc, "1");
+            var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
+
+            Assert.NotNull(currentlyShown);
+            Assert.Single(currentlyShown.RecentHistory);
+
+            Assert.True(currentlyShown.Listings.Count > 1);
+        }
+
+        [Theory]
+        [InlineData("74")]
+        [InlineData("Coeurl")]
+        [InlineData("coEUrl")]
         public async Task Controller_Get_Succeeds_MultiItem_World(string worldOrDc)
         {
             var gameData = new MockGameDataProvider();
