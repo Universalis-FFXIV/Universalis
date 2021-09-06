@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,6 +23,8 @@ namespace Universalis.Application.Controllers.V2
         /// </summary>
         /// <param name="itemIds">The item ID or comma-separated item IDs to retrieve data for.</param>
         /// <param name="worldOrDc">The world or data center to retrieve data for. This may be an ID or a name.</param>
+        /// <param name="listingsToReturn">The number of listings to return. By default, all listings will be returned.</param>
+        /// <param name="entriesToReturn">The number of entries to return. By default, all entries will be returned.</param>
         /// <param name="cancellationToken"></param>
         /// <response code="200">Data retrieved successfully.</response>
         /// <response code="404">
@@ -32,7 +35,7 @@ namespace Universalis.Application.Controllers.V2
         [ProducesResponseType(typeof(CurrentlyShownView), 200)]
         [ProducesResponseType(typeof(CurrentlyShownMultiViewV2), 200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> Get(string itemIds, string worldOrDc, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery(Name = "listings")] string listingsToReturn = "", [FromQuery(Name = "entries")] string entriesToReturn = "", CancellationToken cancellationToken = default)
         {
             // Parameter parsing
             var itemIdsArray = InputProcessing.ParseIdList(itemIds)
@@ -49,6 +52,18 @@ namespace Universalis.Application.Controllers.V2
                 return NotFound();
             }
 
+            var nListings = int.MaxValue;
+            if (int.TryParse(listingsToReturn, out var queryListings))
+            {
+                nListings = Math.Max(0, queryListings);
+            }
+
+            var nEntries = int.MaxValue;
+            if (int.TryParse(entriesToReturn, out var queryEntries))
+            {
+                nEntries = Math.Max(0, queryEntries);
+            }
+
             if (itemIdsArray.Length == 1)
             {
                 var itemId = itemIdsArray[0];
@@ -58,13 +73,13 @@ namespace Universalis.Application.Controllers.V2
                     return NotFound();
                 }
 
-                var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId, cancellationToken);
+                var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, cancellationToken);
                 return Ok(currentlyShownView);
             }
 
             // Multi-item handling
             var currentlyShownViewTasks = itemIdsArray
-                .Select(itemId => GetCurrentlyShownView(worldDc, worldIds, itemId, cancellationToken))
+                .Select(itemId => GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, cancellationToken))
                 .ToList();
             var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
             var unresolvedItems = currentlyShownViews

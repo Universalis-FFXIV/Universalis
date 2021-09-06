@@ -25,7 +25,7 @@ namespace Universalis.Application.Controllers
             CurrentlyShown = currentlyShownDb;
         }
 
-        protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(WorldDc worldDc, uint[] worldIds, uint itemId, CancellationToken cancellationToken = default)
+        protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(WorldDc worldDc, uint[] worldIds, uint itemId, int nListings = int.MaxValue, int nEntries = int.MaxValue, CancellationToken cancellationToken = default)
         {
             var data = (await CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery
             {
@@ -82,6 +82,9 @@ namespace Universalis.Application.Controllers
 
             currentlyShown.Listings.Sort((a, b) => (int)a.PricePerUnit - (int)b.PricePerUnit);
             currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+
+            currentlyShown.Listings = currentlyShown.Listings.Take(nListings).ToList();
+            currentlyShown.RecentHistory = currentlyShown.RecentHistory.Take(nEntries).ToList();
 
             var nqListings = currentlyShown.Listings.Where(l => !l.Hq).ToList();
             var hqListings = currentlyShown.Listings.Where(l => l.Hq).ToList();
