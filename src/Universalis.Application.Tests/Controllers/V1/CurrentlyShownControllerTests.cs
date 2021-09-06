@@ -74,7 +74,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
             await dbAccess.Create(document);
 
-            var result = await controller.Get(itemId.ToString(), worldOrDc, "1");
+            var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: "1");
             var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.NotNull(currentlyShown);
