@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
+using Universalis.Entities.Uploads;
 
 namespace Universalis.Application.Tests.Mocks.DbAccess.MarketBoard
 {

@@ -1,40 +1,20 @@
-﻿using System.Collections;
+﻿using MongoDB.Driver;
+using System.Collections;
 using System.Threading;
-using MongoDB.Bson.Serialization.Conventions;
-using MongoDB.Driver;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries;
 
 namespace Universalis.DbAccess
 {
-    public abstract class DbAccessService<TDocument, TDocumentQuery>
+    public abstract class DbAccessService<TDocument, TDocumentQuery> : CappedDbAccessService<TDocument, TDocumentQuery>
         where TDocument : class
         where TDocumentQuery : DbAccessQuery<TDocument>
     {
-        protected IMongoCollection<TDocument> Collection { get; }
+        protected DbAccessService(IMongoClient client, string databaseName, string collectionName) : base(client, databaseName, collectionName) { }
 
-        protected DbAccessService(
-            IMongoClient client,
-            string databaseName,
-            string collectionName)
-        {
-            var conventionPack = new ConventionPack { new IgnoreExtraElementsConvention(true) };
-            ConventionRegistry.Register("IgnoreExtraElements", conventionPack, _ => true);
-            var database = client.GetDatabase(databaseName);
-            Collection = database.GetCollection<TDocument>(collectionName);
-        }
+        protected DbAccessService(IMongoClient client, string databaseName, string collectionName, CreateCollectionOptions options) : base(client, databaseName, collectionName, options) { }
 
-        public Task Create(TDocument document, CancellationToken cancellationToken = default)
-        {
-            return Collection.InsertOneAsync(document, null, cancellationToken);
-        }
-
-        public async Task<TDocument> Retrieve(TDocumentQuery query, CancellationToken cancellationToken = default)
-        {
-            return await Collection.Find(query.ToFilterDefinition()).FirstOrDefaultAsync(cancellationToken);
-        }
-
-        public async Task Update(TDocument document, TDocumentQuery query, CancellationToken cancellationToken = default)
+        public virtual async Task Update(TDocument document, TDocumentQuery query, CancellationToken cancellationToken = default)
         {
             // Create if non-existent
             var existing = await Retrieve(query, cancellationToken);
@@ -69,7 +49,7 @@ namespace Universalis.DbAccess
             }
         }
 
-        public Task Delete(TDocumentQuery query, CancellationToken cancellationToken = default)
+        public virtual Task Delete(TDocumentQuery query, CancellationToken cancellationToken = default)
         {
             return Collection.DeleteManyAsync(query.ToFilterDefinition(), cancellationToken);
         }

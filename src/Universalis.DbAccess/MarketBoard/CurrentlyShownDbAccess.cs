@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.DbAccess.Uploads;
 using Universalis.Entities.MarketBoard;
+using Universalis.Entities.Uploads;
 
 namespace Universalis.DbAccess.MarketBoard
 {
@@ -13,9 +15,19 @@ namespace Universalis.DbAccess.MarketBoard
     {
         private static readonly ConcurrentDictionary<UploadTimeQueryCallState, UploadTimeQueryResult> UploadTimeQueryCache = new();
 
-        public CurrentlyShownDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "recentData") { }
+        private readonly IMostRecentlyUpdatedDbAccess _mostRecentlyUpdatedDb;
 
-        public CurrentlyShownDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "recentData") { }
+        public CurrentlyShownDbAccess(IMostRecentlyUpdatedDbAccess mostRecentlyUpdatedDb, IMongoClient client) : base(
+            client, Constants.DatabaseName, "recentData")
+        {
+            _mostRecentlyUpdatedDb = mostRecentlyUpdatedDb;
+        }
+
+        public CurrentlyShownDbAccess(IMostRecentlyUpdatedDbAccess mostRecentlyUpdatedDb, IMongoClient client,
+            string databaseName) : base(client, databaseName, "recentData")
+        {
+            _mostRecentlyUpdatedDb = mostRecentlyUpdatedDb;
+        }
 
         public async Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query, CancellationToken cancellationToken = default)
         {
@@ -24,6 +36,11 @@ namespace Universalis.DbAccess.MarketBoard
 
         public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order, CancellationToken cancellationToken = default)
         {
+            if (order == UploadOrder.MostRecent)
+            {
+                return await _mostRecentlyUpdatedDb.RetrieveMany(count, cancellationToken);
+            }
+
             // This is a *very long* query right now, so we hold a static cache of all the responses
             // To mitigate potential thread pool starvation caused by this being requested repeatedly.
             var callState = new UploadTimeQueryCallState { WorldIds = query.WorldIds, Count = count, Order = order };
@@ -33,12 +50,7 @@ namespace Universalis.DbAccess.MarketBoard
             }
 
             var sortBuilder = Builders<CurrentlyShown>.Sort;
-            var sortDefinition = order switch
-            {
-                UploadOrder.MostRecent => sortBuilder.Descending(o => o.LastUploadTimeUnixMilliseconds),
-                UploadOrder.LeastRecent => sortBuilder.Ascending(o => o.LastUploadTimeUnixMilliseconds),
-                _ => throw new ArgumentException("The ordering scheme provided was invalid.", nameof(order)),
-            };
+            var sortDefinition = sortBuilder.Ascending(o => o.LastUploadTimeUnixMilliseconds);
 
             var projectDefinition = Builders<CurrentlyShown>.Projection
                 .Include(o => o.WorldId)
