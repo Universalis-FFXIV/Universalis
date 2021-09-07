@@ -10,24 +10,40 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
 {
     public class MockMostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
     {
-        private readonly List<WorldItemUpload> _store = new();
-
-        public Task Create(WorldItemUpload document, CancellationToken cancellationToken = default)
+        private readonly List<MostRecentlyUpdated> _store = new();
+        
+        public Task Create(MostRecentlyUpdated document, CancellationToken cancellationToken = default)
         {
-            if (_store.Any())
-                _store.RemoveAt(0);
             _store.Add(document);
             return Task.CompletedTask;
         }
 
-        public Task<WorldItemUpload> Retrieve(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
+        public async Task Push(uint worldId, WorldItemUpload document, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(_store.FirstOrDefault());
+            var query = new MostRecentlyUpdatedQuery();
+            var existing = await Retrieve(query, cancellationToken);
+
+            if (existing == null)
+            {
+                await Create(new MostRecentlyUpdated
+                {
+                    Uploads = new List<WorldItemUpload> { document },
+                }, cancellationToken);
+                return;
+            }
+            
+            existing.Uploads.Insert(0, document);
+            existing.Uploads = existing.Uploads.Take(MostRecentlyUpdatedDbAccess.MaxItems).ToList();
         }
 
-        public async Task<IList<WorldItemUpload>> RetrieveMany(int? count = null, CancellationToken cancellationToken = default)
+        public Task<MostRecentlyUpdated> Retrieve(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
         {
-            return count.HasValue ? _store.Take(count.Value).ToList() : _store;
+            return Task.FromResult(_store.FirstOrDefault(o => o.WorldId == query.WorldId));
+        }
+
+        public async Task<IList<MostRecentlyUpdated>> RetrieveMany(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
+        {
+            return _store.Where(o => query.WorldIds.Contains(o.WorldId)).ToList();
         }
     }
 }

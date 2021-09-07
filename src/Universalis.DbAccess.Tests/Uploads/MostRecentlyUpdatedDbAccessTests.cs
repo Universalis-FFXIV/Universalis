@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Threading;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using Universalis.DbAccess.Queries.Uploads;
@@ -40,11 +40,18 @@ namespace Universalis.DbAccess.Tests.Uploads
         public async Task Create_DoesNotThrow()
         {
             var db = new MostRecentlyUpdatedDbAccess(_client, Database);
-            await db.Create(new WorldItemUpload
+            await db.Create(new MostRecentlyUpdated
             {
-                ItemId = 5333,
                 WorldId = 74,
-                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                Uploads = new List<WorldItemUpload>
+                {
+                    new()
+                    {
+                        ItemId = 5333,
+                        WorldId = 74,
+                        LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                    },
+                },
             });
         }
 
@@ -60,14 +67,21 @@ namespace Universalis.DbAccess.Tests.Uploads
         public async Task Create_DoesInsert()
         {
             var db = new MostRecentlyUpdatedDbAccess(_client, Database);
-            await db.Create(new WorldItemUpload
+            await db.Create(new MostRecentlyUpdated
             {
-                ItemId = 5333,
                 WorldId = 74,
-                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                Uploads = new List<WorldItemUpload>
+                {
+                    new()
+                    {
+                        ItemId = 5333,
+                        WorldId = 74,
+                        LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                    },
+                },
             });
 
-            var output = await db.Retrieve(new MostRecentlyUpdatedQuery());
+            var output = await db.Retrieve(new MostRecentlyUpdatedQuery { WorldId = 74 });
             Assert.NotNull(output);
         }
 
@@ -75,9 +89,9 @@ namespace Universalis.DbAccess.Tests.Uploads
         public async Task Operations_RespectDocumentCap()
         {
             var db = new MostRecentlyUpdatedDbAccess(_client, Database);
-            for (var i = 0; i < MostRecentlyUpdatedDbAccess.MaxDocuments * 2; i++)
+            for (var i = 0; i < MostRecentlyUpdatedDbAccess.MaxItems * 2; i++)
             {
-                await db.Create(new WorldItemUpload
+                await db.Push(74, new WorldItemUpload
                 {
                     ItemId = 5333,
                     WorldId = 74,
@@ -85,8 +99,9 @@ namespace Universalis.DbAccess.Tests.Uploads
                 });
             }
 
-            var output = await db.RetrieveMany();
-            Assert.Equal(MostRecentlyUpdatedDbAccess.MaxDocuments, output.Count);
+            var output = await db.RetrieveMany(new MostRecentlyUpdatedManyQuery { WorldIds = new[] { 74U } });
+            Assert.Single(output);
+            Assert.Equal(MostRecentlyUpdatedDbAccess.MaxItems, output[0].Uploads.Count);
         }
     }
 }
