@@ -11,7 +11,7 @@ namespace Universalis.DbAccess
         {
             sc.AddSingleton<IMongoClient>(new MongoClient("mongodb://localhost:27017"));
 
-            sc.AddSingleton<IMostRecentlyUpdatedDbAccess, MostRecentlyUpdatedDbAccess>();
+            //sc.AddSingleton<IMostRecentlyUpdatedDbAccess, MostRecentlyUpdatedDbAccess>();
             sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
             sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
             sc.AddSingleton<IContentDbAccess, ContentDbAccess>();
