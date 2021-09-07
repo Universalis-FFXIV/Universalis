@@ -45,6 +45,11 @@ namespace Universalis.Application.Controllers
                     next.Listings ??= new List<Listing>();
                     next.RecentHistory ??= new List<Sale>();
 
+                    // Convert database entities into views. Separate classes are used for the entities
+                    // and the views in order to avoid any undesirable data leaking out into the public
+                    // API through inheritance and to allow separate purposes for the properties to be
+                    // described in the property names (e.g. CreatorIdHash in the view and CreatorId in
+                    // the database entity).
                     agg.Listings = await next.Listings
                         .ToAsyncEnumerable()
                         .SelectAwait(async l =>

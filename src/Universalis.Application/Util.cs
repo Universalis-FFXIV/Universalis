@@ -64,11 +64,11 @@ namespace Universalis.Application
 
             if (!string.IsNullOrEmpty(l.ListingId))
             {
-                listingView.ListingId = await Hash(sha256, l.ListingId, cancellationToken);
+                listingView.ListingIdHash = await Hash(sha256, l.ListingId, cancellationToken);
             }
 
             listingView.SellerIdHash = await Hash(sha256, l.SellerId, cancellationToken);
-            listingView.RetainerId = await Hash(sha256, l.RetainerId, cancellationToken);
+            listingView.RetainerIdHash = await Hash(sha256, l.RetainerId, cancellationToken);
 
             return listingView;
         }

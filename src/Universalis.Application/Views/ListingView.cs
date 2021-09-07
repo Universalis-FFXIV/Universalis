@@ -74,10 +74,10 @@ namespace Universalis.Application.Views
         public bool IsCrafted { get; init; }
 
         /// <summary>
-        /// The ID of this listing. Due to some current client-side bugs, this will almost always be null.
+        /// A SHA256 hash of the ID of this listing. Due to some current client-side bugs, this will almost always be null.
         /// </summary>
         [JsonPropertyName("listingID")]
-        public string ListingId { get; set; }
+        public string ListingIdHash { get; set; }
 
         /// <summary>
         /// The materia on this item.
@@ -104,10 +104,10 @@ namespace Universalis.Application.Views
         public int RetainerCityId { get; init; }
 
         /// <summary>
-        /// The retainer's ID.
+        /// A SHA256 hash of the retainer's ID.
         /// </summary>
         [JsonPropertyName("retainerID")]
-        public string RetainerId { get; set; }
+        public string RetainerIdHash { get; set; }
 
         /// <summary>
         /// The retainer's name.
