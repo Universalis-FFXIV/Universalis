@@ -17,14 +17,18 @@ namespace Universalis.DbAccess.MarketBoard
     {
         private static readonly ConcurrentDictionary<UploadTimeQueryCallState, UploadTimeQueryResult> UploadTimeQueryCache = new();
 
-        public CurrentlyShownDbAccess(IMongoClient client) : base(
+        private readonly IMostRecentlyUpdatedDbAccess _mostRecentlyUpdatedDb;
+
+        public CurrentlyShownDbAccess(IMostRecentlyUpdatedDbAccess mostRecentlyUpdatedDb, IMongoClient client) : base(
             client, Constants.DatabaseName, "recentData")
         {
+            _mostRecentlyUpdatedDb = mostRecentlyUpdatedDb;
         }
 
-        public CurrentlyShownDbAccess(IMongoClient client,
+        public CurrentlyShownDbAccess(IMostRecentlyUpdatedDbAccess mostRecentlyUpdatedDb, IMongoClient client,
             string databaseName) : base(client, databaseName, "recentData")
         {
+            _mostRecentlyUpdatedDb = mostRecentlyUpdatedDb;
         }
 
         public async Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query, CancellationToken cancellationToken = default)
@@ -34,6 +38,11 @@ namespace Universalis.DbAccess.MarketBoard
 
         public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order, CancellationToken cancellationToken = default)
         {
+            if (order == UploadOrder.MostRecent)
+            {
+                return await GetMostRecentlyUpdated(query, count);
+            }
+
             // This is a *very long* query right now, so we hold a static cache of all the responses
             // To mitigate potential thread pool starvation caused by this being requested repeatedly.
             var callState = new UploadTimeQueryCallState { WorldIds = query.WorldIds, Count = count, Order = order };
@@ -43,12 +52,7 @@ namespace Universalis.DbAccess.MarketBoard
             }
 
             var sortBuilder = Builders<CurrentlyShown>.Sort;
-            var sortDefinition = order switch
-            {
-                UploadOrder.MostRecent => sortBuilder.Descending(o => o.LastUploadTimeUnixMilliseconds),
-                UploadOrder.LeastRecent => sortBuilder.Ascending(o => o.LastUploadTimeUnixMilliseconds),
-                _ => throw new NotSupportedException("Sort direction is invalid."),
-            };
+            var sortDefinition = sortBuilder.Ascending(o => o.LastUploadTimeUnixMilliseconds);
 
             var projectDefinition = Builders<CurrentlyShown>.Projection
                 .Include(o => o.WorldId)
@@ -67,12 +71,11 @@ namespace Universalis.DbAccess.MarketBoard
             return uploads;
         }
 
-        private static async Task<IList<WorldItemUpload>> GetMostRecentlyUpdated(
-            IMostRecentlyUpdatedDbAccess mostRecentlyUpdatedDb,
+        private async Task<IList<WorldItemUpload>> GetMostRecentlyUpdated(
             CurrentlyShownWorldIdsQuery query,
             int count)
         {
-            var data = await mostRecentlyUpdatedDb.RetrieveMany(new MostRecentlyUpdatedManyQuery { WorldIds = query.WorldIds });
+            var data = await _mostRecentlyUpdatedDb.RetrieveMany(new MostRecentlyUpdatedManyQuery { WorldIds = query.WorldIds });
             var agg = await data.ToAsyncEnumerable()
                 .SelectMany(o => o.Uploads.ToAsyncEnumerable())
                 .ToListAsync();
