@@ -40,7 +40,7 @@ namespace Universalis.DbAccess.Uploads
             else
             {
                 newItems.Insert(0, itemId);
-                newItems = existing.Items.Take(MaxItems).ToList();
+                newItems = newItems.Take(MaxItems).ToList();
             }
 
             var updateBuilder = Builders<RecentlyUpdatedItems>.Update;
