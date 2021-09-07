@@ -18,6 +18,7 @@ namespace Universalis.Application
     {
         private static readonly Regex HtmlTags = new(@"<[\s\S]*?>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        // TODO: Implement tests to determine if this can be replaced with [^\p{L}\p{M}\p{N}'-]
         private static readonly Regex UnsafeCharacters =
             new(@"[^a-zA-Z0-9'\- ·⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]", RegexOptions.Compiled);
 
