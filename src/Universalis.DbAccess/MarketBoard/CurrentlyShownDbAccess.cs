@@ -38,6 +38,11 @@ namespace Universalis.DbAccess.MarketBoard
 
         public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order, CancellationToken cancellationToken = default)
         {
+            if (order == UploadOrder.MostRecent)
+            {
+                return await GetMostRecentlyUpdated(query, count);
+            }
+
             // This is a *very long* query right now, so we hold a static cache of all the responses
             // To mitigate potential thread pool starvation caused by this being requested repeatedly.
             var callState = new UploadTimeQueryCallState { WorldIds = query.WorldIds, Count = count, Order = order };
@@ -47,12 +52,7 @@ namespace Universalis.DbAccess.MarketBoard
             }
 
             var sortBuilder = Builders<CurrentlyShown>.Sort;
-            var sortDefinition = order switch
-            {
-                UploadOrder.MostRecent => sortBuilder.Descending(o => o.LastUploadTimeUnixMilliseconds),
-                UploadOrder.LeastRecent => sortBuilder.Ascending(o => o.LastUploadTimeUnixMilliseconds),
-                _ => throw new NotSupportedException("Sort direction not supported."),
-            };
+            var sortDefinition = sortBuilder.Ascending(o => o.LastUploadTimeUnixMilliseconds);
 
             var projectDefinition = Builders<CurrentlyShown>.Projection
                 .Include(o => o.WorldId)
