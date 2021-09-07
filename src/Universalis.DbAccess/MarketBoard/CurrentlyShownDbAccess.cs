@@ -40,6 +40,7 @@ namespace Universalis.DbAccess.MarketBoard
         {
             if (order == UploadOrder.MostRecent)
             {
+                Console.WriteLine("New MRU called.");
                 return await GetMostRecentlyUpdated(query, count);
             }
 
