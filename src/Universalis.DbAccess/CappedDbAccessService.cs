@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization.Conventions;
@@ -18,8 +19,6 @@ namespace Universalis.DbAccess
             string databaseName,
             string collectionName)
         {
-            var conventionPack = new ConventionPack { new IgnoreExtraElementsConvention(true) };
-            ConventionRegistry.Register("IgnoreExtraElements", conventionPack, _ => true);
             var database = client.GetDatabase(databaseName);
             Collection = database.GetCollection<TDocument>(collectionName);
         }
@@ -30,11 +29,12 @@ namespace Universalis.DbAccess
             string collectionName,
             CreateCollectionOptions options)
         {
-            var conventionPack = new ConventionPack { new IgnoreExtraElementsConvention(true) };
-            ConventionRegistry.Register("IgnoreExtraElements", conventionPack, _ => true);
             var database = client.GetDatabase(databaseName);
 
-            database.CreateCollection(collectionName, options);
+            if (database.ListCollectionNames().ToEnumerable().All(c => c != collectionName))
+            {
+                database.CreateCollection(collectionName, options);
+            }
 
             Collection = database.GetCollection<TDocument>(collectionName);
         }
