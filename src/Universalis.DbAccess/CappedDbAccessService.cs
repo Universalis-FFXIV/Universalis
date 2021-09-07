@@ -19,6 +19,8 @@ namespace Universalis.DbAccess
             string databaseName,
             string collectionName)
         {
+            var conventionPack = new ConventionPack { new IgnoreExtraElementsConvention(true) };
+            ConventionRegistry.Register("IgnoreExtraElements", conventionPack, _ => true);
             var database = client.GetDatabase(databaseName);
             Collection = database.GetCollection<TDocument>(collectionName);
         }
@@ -29,6 +31,8 @@ namespace Universalis.DbAccess
             string collectionName,
             CreateCollectionOptions options)
         {
+            var conventionPack = new ConventionPack { new IgnoreExtraElementsConvention(true) };
+            ConventionRegistry.Register("IgnoreExtraElements", conventionPack, _ => true);
             var database = client.GetDatabase(databaseName);
 
             if (database.ListCollectionNames().ToEnumerable().All(c => c != collectionName))
