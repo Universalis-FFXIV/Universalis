@@ -1,10 +1,12 @@
-﻿using MongoDB.Driver;
-using System;
+﻿using System;
+using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
+using MongoDB.Driver;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Uploads;
+using Universalis.Entities.Uploads;
 using Xunit;
 
 namespace Universalis.DbAccess.Tests.MarketBoard
@@ -14,7 +16,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
         private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(CurrentlyShownDbAccessTests));
 
         private readonly IMongoClient _client;
-        
+
         public CurrentlyShownDbAccessTests()
         {
             _client = new MongoClient("mongodb://localhost:27017");
@@ -98,13 +100,46 @@ namespace Universalis.DbAccess.Tests.MarketBoard
 
             var output = (await db.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = new[] { document.WorldId }, ItemId = document.ItemId }))?.ToList();
             Assert.NotNull(output);
-            Assert.Single(output);
+            Assert.Single((IEnumerable)output);
             Assert.Equal(document.WorldId, output[0].WorldId);
             Assert.Equal(document.ItemId, output[0].ItemId);
             Assert.Equal(document.LastUploadTimeUnixMilliseconds, output[0].LastUploadTimeUnixMilliseconds);
             Assert.Equal(document.Listings, output[0].Listings);
             Assert.Equal(document.RecentHistory, output[0].RecentHistory);
             Assert.Equal(document.UploaderIdHash, output[0].UploaderIdHash);
+        }
+
+        [Fact]
+        public async Task RetrieveByUploadTime_MostRecent_MultiWorld_Works()
+        {
+            var mru = new MostRecentlyUpdatedDbAccess(_client, Database);
+            var db = new CurrentlyShownDbAccess(mru, _client, Database);
+
+            await mru.Push(74, new WorldItemUpload
+            {
+                WorldId = 74,
+                ItemId = 5333,
+                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+            });
+
+            await mru.Push(34, new WorldItemUpload
+            {
+                WorldId = 34,
+                ItemId = 5335,
+                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+            });
+
+            var data = await db.RetrieveByUploadTime(
+                new CurrentlyShownWorldIdsQuery { WorldIds = new[] { 74U, 34U } }, 3,
+                UploadOrder.MostRecent);
+
+            var behe = data.FirstOrDefault(o => o.WorldId == 34);
+            Assert.NotNull(behe);
+            Assert.Equal(5335U, behe.ItemId);
+
+            var coeurl = data.FirstOrDefault(o => o.WorldId == 74);
+            Assert.NotNull(coeurl);
+            Assert.Equal(5333U, coeurl.ItemId);
         }
     }
 }
