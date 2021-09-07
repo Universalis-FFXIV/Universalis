@@ -27,6 +27,7 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
             {
                 await Create(new MostRecentlyUpdated
                 {
+                    WorldId = worldId,
                     Uploads = new List<WorldItemUpload> { document },
                 }, cancellationToken);
                 return;
