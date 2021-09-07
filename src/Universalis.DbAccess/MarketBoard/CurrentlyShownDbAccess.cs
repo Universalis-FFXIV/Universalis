@@ -40,8 +40,7 @@ namespace Universalis.DbAccess.MarketBoard
         {
             if (order == UploadOrder.MostRecent)
             {
-                Console.WriteLine("New MRU called.");
-                return await GetMostRecentlyUpdated(query, count);
+                return await GetMostRecentlyUpdated(query, count, cancellationToken);
             }
 
             // This is a *very long* query right now, so we hold a static cache of all the responses
@@ -74,12 +73,20 @@ namespace Universalis.DbAccess.MarketBoard
 
         private async Task<IList<WorldItemUpload>> GetMostRecentlyUpdated(
             CurrentlyShownWorldIdsQuery query,
-            int count)
+            int count,
+            CancellationToken cancellationToken = default)
         {
-            var data = await _mostRecentlyUpdatedDb.RetrieveMany(new MostRecentlyUpdatedManyQuery { WorldIds = query.WorldIds });
+            if (query.WorldIds.Length == 1)
+            {
+                var oneWorldData = await _mostRecentlyUpdatedDb.Retrieve(new MostRecentlyUpdatedQuery
+                    { WorldId = query.WorldIds[0] }, cancellationToken);
+                return oneWorldData.Uploads;
+            }
+
+            var data = await _mostRecentlyUpdatedDb.RetrieveMany(new MostRecentlyUpdatedManyQuery { WorldIds = query.WorldIds }, cancellationToken);
             var agg = await data.ToAsyncEnumerable()
                 .SelectMany(o => o.Uploads.ToAsyncEnumerable())
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
             agg.Sort((a, b) => (int)b.LastUploadTimeUnixMilliseconds - (int)a.LastUploadTimeUnixMilliseconds);
             return agg.Take(count).ToList();
         }
