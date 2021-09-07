@@ -58,7 +58,9 @@ namespace Universalis.Application
             {
                 var license = new OpenApiLicense { Name = "MIT", Url = new Uri("https://github.com/Universalis-FFXIV/Universalis/blob/master/LICENSE") };
 
-                var apiDescription = typeof(Startup).Assembly.GetManifestResourceStream("Universalis.Application.doc_description.html");
+                var apiDescription =
+                    typeof(Startup).Assembly.GetManifestResourceStream(
+                        new EmbeddedResourceName("doc_description.html"));
                 if (apiDescription == null)
                 {
                     throw new FileNotFoundException(nameof(apiDescription));
@@ -77,7 +79,8 @@ namespace Universalis.Application
                     .WithLicense(license)
                     .WithVersion(new Version(2, 0)));
 
-                var apiDocs = typeof(Startup).Assembly.GetManifestResourceStream("Universalis.Application.Universalis.Application.xml");
+                var apiDocs = typeof(Startup).Assembly.GetManifestResourceStream(
+                    new EmbeddedResourceName("Universalis.Application.xml"));
                 if (apiDocs == null)
                 {
                     throw new FileNotFoundException(nameof(apiDocs));
