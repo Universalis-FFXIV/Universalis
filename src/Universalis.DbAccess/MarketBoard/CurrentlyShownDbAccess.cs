@@ -14,19 +14,15 @@ namespace Universalis.DbAccess.MarketBoard
     public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyShownQuery>, ICurrentlyShownDbAccess
     {
         private static readonly ConcurrentDictionary<UploadTimeQueryCallState, UploadTimeQueryResult> UploadTimeQueryCache = new();
-
-        private readonly IMostRecentlyUpdatedDbAccess _mostRecentlyUpdatedDb;
-
-        public CurrentlyShownDbAccess(IMostRecentlyUpdatedDbAccess mostRecentlyUpdatedDb, IMongoClient client) : base(
+        
+        public CurrentlyShownDbAccess(IMongoClient client) : base(
             client, Constants.DatabaseName, "recentData")
         {
-            _mostRecentlyUpdatedDb = mostRecentlyUpdatedDb;
         }
 
-        public CurrentlyShownDbAccess(IMostRecentlyUpdatedDbAccess mostRecentlyUpdatedDb, IMongoClient client,
+        public CurrentlyShownDbAccess(IMongoClient client,
             string databaseName) : base(client, databaseName, "recentData")
         {
-            _mostRecentlyUpdatedDb = mostRecentlyUpdatedDb;
         }
 
         public async Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query, CancellationToken cancellationToken = default)
