@@ -93,7 +93,7 @@ namespace Universalis.DbAccess.Tests.Uploads
             {
                 await db.Push(74, new WorldItemUpload
                 {
-                    ItemId = 5333,
+                    ItemId = 5333 + (uint)i,
                     WorldId = 74,
                     LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
                 });

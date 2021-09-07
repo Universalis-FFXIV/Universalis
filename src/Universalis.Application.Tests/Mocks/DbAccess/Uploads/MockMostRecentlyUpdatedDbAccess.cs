@@ -43,7 +43,7 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
             else
             {
                 uploads.Insert(0, document);
-                uploads = existing.Uploads.Take(MostRecentlyUpdatedDbAccess.MaxItems).ToList();
+                existing.Uploads = existing.Uploads.Take(MostRecentlyUpdatedDbAccess.MaxItems).ToList();
             }
         }
 
