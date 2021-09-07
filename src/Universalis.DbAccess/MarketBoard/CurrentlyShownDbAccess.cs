@@ -76,9 +76,9 @@ namespace Universalis.DbAccess.MarketBoard
             int count)
         {
             var data = await _mostRecentlyUpdatedDb.RetrieveMany(new MostRecentlyUpdatedManyQuery { WorldIds = query.WorldIds });
-            var agg = data
-                .SelectMany(o => o.Uploads)
-                .ToList();
+            var agg = await data.ToAsyncEnumerable()
+                .SelectMany(o => o.Uploads.ToAsyncEnumerable())
+                .ToListAsync();
             agg.Sort((a, b) => (int)b.LastUploadTimeUnixMilliseconds - (int)a.LastUploadTimeUnixMilliseconds);
             return agg.Take(count).ToList();
         }
