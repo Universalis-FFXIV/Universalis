@@ -35,7 +35,7 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
 
             var uploads = existing.Uploads;
             var existingIndex = uploads.FindIndex(o => o.ItemId == document.ItemId);
-            if (existingIndex == -1)
+            if (existingIndex != -1)
             {
                 uploads.RemoveAt(existingIndex);
                 uploads.Insert(0, document);
