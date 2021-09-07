@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 
-namespace Universalis.Application.Controllers
+namespace Universalis.Application.ExceptionFilters
 {
     public class DecoderFallbackExceptionFilter : IExceptionFilter
     {
