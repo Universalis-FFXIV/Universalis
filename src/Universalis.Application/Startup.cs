@@ -67,21 +67,15 @@ namespace Universalis.Application
                 using var apiDescriptionReader = new StreamReader(apiDescription);
                 var description = apiDescriptionReader.ReadToEnd();
 
-                options.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Title = "Universalis",
-                    Version = "v1",
-                    License = license,
-                    Description = description,
-                });
+                options.SwaggerDoc("v1", new UniversalisApiInfo()
+                    .WithDescription(description)
+                    .WithLicense(license)
+                    .WithVersion(new Version(1, 0)));
 
-                options.SwaggerDoc("v2", new OpenApiInfo
-                {
-                    Title = "Universalis",
-                    Version = "v2",
-                    License = license,
-                    Description = description,
-                });
+                options.SwaggerDoc("v2", new UniversalisApiInfo()
+                    .WithDescription(description)
+                    .WithLicense(license)
+                    .WithVersion(new Version(2, 0)));
 
                 var apiDocs = typeof(Startup).Assembly.GetManifestResourceStream("Universalis.Application.Universalis.Application.xml");
                 if (apiDocs == null)
