@@ -5,7 +5,7 @@ namespace Universalis.Entities.Uploads
 {
     public class MostRecentlyUpdated
     {
-        [BsonElement("worldId")]
+        [BsonElement("worldID")]
         public uint WorldId { get; init; }
 
         [BsonElement("uploads")]
