@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -6,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Universalis.Application.Uploads.Attributes;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
@@ -22,15 +24,18 @@ namespace Universalis.Application.Controllers.V1
         private readonly ITrustedSourceDbAccess _trustedSourceDb;
         private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
         private readonly IEnumerable<IUploadBehavior> _uploadBehaviors;
+        private readonly ILogger<UploadController> _logger;
 
         public UploadController(
             ITrustedSourceDbAccess trustedSourceDb,
             IFlaggedUploaderDbAccess flaggedUploaderDb,
-            IEnumerable<IUploadBehavior> uploadBehaviors)
+            IEnumerable<IUploadBehavior> uploadBehaviors,
+            ILogger<UploadController> logger = null)
         {
             _trustedSourceDb = trustedSourceDb;
             _flaggedUploaderDb = flaggedUploaderDb;
             _uploadBehaviors = uploadBehaviors;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -69,12 +74,21 @@ namespace Universalis.Application.Controllers.V1
             // Execute upload behaviors
             foreach (var uploadBehavior in _uploadBehaviors)
             {
-                if (!uploadBehavior.ShouldExecute(parameters)) continue;
-                var actionResult = await uploadBehavior.Execute(source, parameters, cancellationToken);
-                if (uploadBehavior.GetType().GetCustomAttribute<ValidatorAttribute>() != null
-                    && actionResult != null)
+                var isValidator = uploadBehavior.GetType().GetCustomAttribute<ValidatorAttribute>() != null;
+
+                try
                 {
-                    return actionResult;
+                    if (!uploadBehavior.ShouldExecute(parameters)) continue;
+                    var actionResult = await uploadBehavior.Execute(source, parameters, cancellationToken);
+                    if (isValidator && actionResult != null)
+                    {
+                        return actionResult;
+                    }
+                }
+                catch (Exception e)
+                {
+                    if (isValidator) throw; // Cancel the request and log at the base level
+                    _logger.LogError(e, "Exception caught in upload procedure.");
                 }
             }
 
