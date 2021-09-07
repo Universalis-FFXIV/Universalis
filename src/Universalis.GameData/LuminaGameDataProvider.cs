@@ -6,7 +6,7 @@ using LuminaWorld = Lumina.Excel.GeneratedSheets.World;
 
 namespace Universalis.GameData
 {
-    internal class GameDataProvider : IGameDataProvider
+    internal class LuminaGameDataProvider : IGameDataProvider
     {
         private const string ExcelLoadError = "Excel sheet could not be loaded!";
 
@@ -18,7 +18,7 @@ namespace Universalis.GameData
 
         private readonly IReadOnlyList<DataCenter> _dataCenters;
 
-        public GameDataProvider(string sqpack)
+        public LuminaGameDataProvider(string sqpack)
         {
             var lumina = new Lumina.GameData(sqpack);
 
@@ -57,9 +57,7 @@ namespace Universalis.GameData
                 throw new InvalidOperationException(ExcelLoadError);
             }
 
-            return worlds
-                .Where(w => w.IsPublic)
-                .Where(w => w.RowId != 25) // Chaos (world)
+            return GetPublicWorlds(worlds)
                 .Select(w => new World { Name = w.Name, Id = w.RowId })
                 .Concat(ChineseServers.Worlds())
                 .ToDictionary(w => w.Id, w => w.Name);
@@ -76,9 +74,7 @@ namespace Universalis.GameData
                 throw new InvalidOperationException(ExcelLoadError);
             }
 
-            return worlds
-                .Where(w => w.IsPublic)
-                .Where(w => w.RowId != 25) // Chaos (world)
+            return GetPublicWorlds(worlds)
                 .Select(w => new World { Name = w.Name, Id = w.RowId })
                 .Concat(ChineseServers.Worlds())
                 .ToDictionary(w => w.Name, w => w.Id);
@@ -95,9 +91,7 @@ namespace Universalis.GameData
                 throw new InvalidOperationException(ExcelLoadError);
             }
 
-            return new SortedSet<uint>(worlds
-                .Where(w => w.IsPublic)
-                .Where(w => w.RowId != 25) // Chaos (world)
+            return new SortedSet<uint>(GetPublicWorlds(worlds)
                 .Select(w => new World { Name = w.Name, Id = w.RowId })
                 .Concat(ChineseServers.Worlds())
                 .Select(w => w.Id)
@@ -105,7 +99,7 @@ namespace Universalis.GameData
         }
 
         /// <summary>
-        /// Gets a read-only sorted set of all marketable item IDs. Intended for use in the lazily-loaded member.
+        /// Gets a read-only sorted set of all marketable item IDs.
         /// </summary>
         private static IReadOnlySet<uint> LoadMarketableItems(Lumina.GameData lumina)
         {
@@ -122,7 +116,7 @@ namespace Universalis.GameData
         }
 
         /// <summary>
-        /// Gets a list of all data centers. Intended for use in the lazily-loaded member.
+        /// Gets a list of all data centers.
         /// </summary>
         private static IReadOnlyList<DataCenter> LoadDataCenters(Lumina.GameData lumina)
         {
@@ -138,15 +132,20 @@ namespace Universalis.GameData
                 .Select(dc => new DataCenter
                 {
                     Name = dc.Name,
-                    WorldIds = worlds
-                        .Where(w => w.IsPublic)
-                        .Where(w => w.RowId != 25) // Chaos (world)
+                    WorldIds = GetPublicWorlds(worlds)
                         .Where(w => w.DataCenter.Row == dc.RowId)
                         .Select(w => w.RowId)
                         .ToArray(),
                 })
                 .Concat(ChineseServers.DataCenters())
                 .ToList();
+        }
+
+        private static IEnumerable<LuminaWorld> GetPublicWorlds(IEnumerable<LuminaWorld> worlds)
+        {
+            return worlds
+                .Where(w => w.IsPublic)
+                .Where(w => w.RowId != 25); // Chaos (world)
         }
     }
 }

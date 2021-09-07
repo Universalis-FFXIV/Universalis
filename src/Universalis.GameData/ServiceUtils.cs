@@ -4,7 +4,7 @@
     {
         public static IGameDataProvider CreateGameDataProvider(string sqpack)
         {
-            return new GameDataProvider(sqpack);
+            return new LuminaGameDataProvider(sqpack);
         }
     }
 }
