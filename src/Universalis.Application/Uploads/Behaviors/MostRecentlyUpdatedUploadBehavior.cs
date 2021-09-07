@@ -5,21 +5,26 @@ using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.Uploads;
 using Universalis.Entities.Uploads;
+using Universalis.GameData;
 
 namespace Universalis.Application.Uploads.Behaviors
 {
     public class MostRecentlyUpdatedUploadBehavior : IUploadBehavior
     {
+        private readonly IGameDataProvider _gameData;
         private readonly IMostRecentlyUpdatedDbAccess _mostRecentlyUpdatedDb;
 
-        public MostRecentlyUpdatedUploadBehavior(IMostRecentlyUpdatedDbAccess mostRecentlyUpdatedDb)
+        public MostRecentlyUpdatedUploadBehavior(IGameDataProvider gameData, IMostRecentlyUpdatedDbAccess mostRecentlyUpdatedDb)
         {
+            _gameData = gameData;
             _mostRecentlyUpdatedDb = mostRecentlyUpdatedDb;
         }
 
         public bool ShouldExecute(UploadParameters parameters)
         {
-            return parameters.ItemId.HasValue && parameters.WorldId.HasValue;
+            return parameters.ItemId.HasValue
+                   && parameters.WorldId.HasValue
+                   && _gameData.AvailableWorldIds().Contains(parameters.WorldId.Value);
         }
 
         public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
