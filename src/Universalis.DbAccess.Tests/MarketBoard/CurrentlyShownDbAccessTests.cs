@@ -119,27 +119,23 @@ namespace Universalis.DbAccess.Tests.MarketBoard
             {
                 WorldId = 74,
                 ItemId = 5333,
-                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                LastUploadTimeUnixMilliseconds = 10,
             });
 
             await mru.Push(34, new WorldItemUpload
             {
                 WorldId = 34,
                 ItemId = 5335,
-                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                LastUploadTimeUnixMilliseconds = 20,
             });
 
             var data = await db.RetrieveByUploadTime(
                 new CurrentlyShownWorldIdsQuery { WorldIds = new[] { 74U, 34U } }, 3,
                 UploadOrder.MostRecent);
 
-            var behe = data.FirstOrDefault(o => o.WorldId == 34);
-            Assert.NotNull(behe);
-            Assert.Equal(5335U, behe.ItemId);
-
-            var coeurl = data.FirstOrDefault(o => o.WorldId == 74);
-            Assert.NotNull(coeurl);
-            Assert.Equal(5333U, coeurl.ItemId);
+            Assert.Equal(34U, data[0].WorldId);
+            Assert.Equal(74U, data[1].WorldId);
+            Assert.Equal(2, data.Count);
         }
     }
 }

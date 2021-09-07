@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Priority_Queue;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
@@ -76,19 +77,47 @@ namespace Universalis.DbAccess.MarketBoard
             int count,
             CancellationToken cancellationToken = default)
         {
+            // Single world case
             if (query.WorldIds.Length == 1)
             {
                 var oneWorldData = await _mostRecentlyUpdatedDb.Retrieve(new MostRecentlyUpdatedQuery
                     { WorldId = query.WorldIds[0] }, cancellationToken);
-                return oneWorldData.Uploads;
+                return oneWorldData.Uploads.Take(count).ToList();
             }
 
-            var data = await _mostRecentlyUpdatedDb.RetrieveMany(new MostRecentlyUpdatedManyQuery { WorldIds = query.WorldIds }, cancellationToken);
-            var agg = await data.ToAsyncEnumerable()
-                .SelectMany(o => o.Uploads.ToAsyncEnumerable())
-                .ToListAsync(cancellationToken);
-            agg.Sort((a, b) => (int)b.LastUploadTimeUnixMilliseconds - (int)a.LastUploadTimeUnixMilliseconds);
-            return agg.Take(count).ToList();
+            // Data center case
+            var multiWorldData = await _mostRecentlyUpdatedDb.RetrieveMany(new MostRecentlyUpdatedManyQuery { WorldIds = query.WorldIds }, cancellationToken);
+            multiWorldData = multiWorldData.Where(d => d.Uploads.Any()).ToList();
+
+            var heap = new SimplePriorityQueue<MostRecentlyUpdated, double>(Comparer<double>.Create((a, b) => (int)(b - a)));
+            foreach (var d in multiWorldData)
+            {
+                // Build a heap with the first (most recent) element of each document as the priority
+                heap.Enqueue(d, d.Uploads[0].LastUploadTimeUnixMilliseconds);
+            }
+
+            var outData = new List<WorldItemUpload>();
+            while (outData.Count < count)
+            {
+                if (heap.Count == 0 || !heap.First.Uploads.Any()) break;
+
+                // Keep pulling off the first item of the top document
+                outData.Add(heap.First.Uploads[0]);
+                heap.First.Uploads.RemoveAt(0);
+
+                if (!heap.First.Uploads.Any())
+                {
+                    // Remove the top document
+                    heap.Dequeue();
+                }
+                else
+                {
+                    // Update the priority if the top document wasn't removed
+                    heap.UpdatePriority(heap.First, heap.First.Uploads[0].LastUploadTimeUnixMilliseconds);
+                }
+            }
+
+            return outData;
         }
 
         private class UploadTimeQueryCallState : IEquatable<UploadTimeQueryCallState>
