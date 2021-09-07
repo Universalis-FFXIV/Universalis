@@ -24,7 +24,8 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
 
         /// <summary>
         /// Get the least-recently updated items on the specified world or data center, along with the upload times for each item.
-        /// This endpoint is slow, which may require setting an especially long timeout when making requests to it.
+        /// This endpoint is slow, which may require setting an especially long timeout when making requests to it. Data on this
+        /// endpoint is cached for 10 minutes.
         /// </summary>
         /// <param name="world">The world to request data for.</param>
         /// <param name="dcName">The data center to request data for.</param>
