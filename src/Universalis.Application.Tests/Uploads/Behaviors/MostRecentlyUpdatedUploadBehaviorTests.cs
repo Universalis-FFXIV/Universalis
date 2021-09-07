@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Uploads.Behaviors;
@@ -72,7 +71,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
             var result = await behavior.Execute(null, upload);
             Assert.Null(result);
 
-            var data = await mostRecentlyUpdatedDb.RetrieveMany(new MostRecentlyUpdatedManyQuery{WorldIds = new[]{74U}});
+            var data = await mostRecentlyUpdatedDb.RetrieveMany(new MostRecentlyUpdatedManyQuery { WorldIds = new[] { 74U } });
             Assert.NotNull(data);
             Assert.Single(data);
             Assert.Equal(upload.ItemId.Value, data[0].Uploads[0].ItemId);
