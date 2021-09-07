@@ -1,10 +1,12 @@
-﻿using MongoDB.Driver;
-using System;
+﻿using System;
+using MongoDB.Driver;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
 using Universalis.Entities.MarketBoard;
 using Universalis.Entities.Uploads;
@@ -14,7 +16,7 @@ namespace Universalis.DbAccess.MarketBoard
     public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyShownQuery>, ICurrentlyShownDbAccess
     {
         private static readonly ConcurrentDictionary<UploadTimeQueryCallState, UploadTimeQueryResult> UploadTimeQueryCache = new();
-        
+
         public CurrentlyShownDbAccess(IMongoClient client) : base(
             client, Constants.DatabaseName, "recentData")
         {
@@ -63,6 +65,19 @@ namespace Universalis.DbAccess.MarketBoard
             UploadTimeQueryCache[callState] = new UploadTimeQueryResult { QueryTime = DateTime.Now, Uploads = uploads };
 
             return uploads;
+        }
+
+        private static async Task<IList<WorldItemUpload>> GetMostRecentlyUpdated(
+            IMostRecentlyUpdatedDbAccess mostRecentlyUpdatedDb,
+            CurrentlyShownWorldIdsQuery query,
+            int count)
+        {
+            var data = await mostRecentlyUpdatedDb.RetrieveMany(new MostRecentlyUpdatedManyQuery { WorldIds = query.WorldIds });
+            var agg = await data.ToAsyncEnumerable()
+                .SelectMany(o => o.Uploads.ToAsyncEnumerable())
+                .ToListAsync();
+            agg.Sort((a, b) => (int)b.LastUploadTimeUnixMilliseconds - (int)a.LastUploadTimeUnixMilliseconds);
+            return agg.Take(count).ToList();
         }
 
         private class UploadTimeQueryCallState : IEquatable<UploadTimeQueryCallState>
