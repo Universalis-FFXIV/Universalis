@@ -32,9 +32,19 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
                 }, cancellationToken);
                 return;
             }
-            
-            existing.Uploads.Insert(0, document);
-            existing.Uploads = existing.Uploads.Take(MostRecentlyUpdatedDbAccess.MaxItems).ToList();
+
+            var uploads = existing.Uploads;
+            var existingIndex = uploads.FindIndex(o => o.ItemId == document.ItemId);
+            if (existingIndex == -1)
+            {
+                uploads.RemoveAt(existingIndex);
+                uploads.Insert(0, document);
+            }
+            else
+            {
+                uploads.Insert(0, document);
+                uploads = existing.Uploads.Take(MostRecentlyUpdatedDbAccess.MaxItems).ToList();
+            }
         }
 
         public Task<MostRecentlyUpdated> Retrieve(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)

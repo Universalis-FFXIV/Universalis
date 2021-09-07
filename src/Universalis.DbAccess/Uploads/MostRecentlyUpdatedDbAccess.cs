@@ -32,8 +32,18 @@ namespace Universalis.DbAccess.Uploads
             }
 
             var uploads = existing.Uploads;
-            uploads.Insert(0, document);
-            uploads = existing.Uploads.Take(MaxItems).ToList();
+            var existingIndex = uploads.FindIndex(o => o.ItemId == document.ItemId);
+            if (existingIndex == -1)
+            {
+                uploads.RemoveAt(existingIndex);
+                uploads.Insert(0, document);
+            }
+            else
+            {
+                uploads.Insert(0, document);
+                uploads = existing.Uploads.Take(MaxItems).ToList();
+            }
+
             var updateBuilder = Builders<MostRecentlyUpdated>.Update;
             var update = updateBuilder.Set(o => o.Uploads, uploads);
             await Collection.UpdateOneAsync(query.ToFilterDefinition(), update, cancellationToken: cancellationToken);
