@@ -5,10 +5,10 @@ namespace Universalis.Entities.Uploads
 {
     public class MostRecentlyUpdated
     {
-        [BsonElement("worldID")]
+        [BsonElement("wId")]
         public uint WorldId { get; init; }
 
-        [BsonElement("uploads")]
+        [BsonElement("u")]
         public List<WorldItemUpload> Uploads { get; set; }
     }
 }

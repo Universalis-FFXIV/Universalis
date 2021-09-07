@@ -30,19 +30,15 @@ namespace Universalis.Application.Uploads.Behaviors
 
         public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
         {
-            await _mostRecentlyUpdatedDb.Create(new MostRecentlyUpdated()
+            // ReSharper disable once PossibleInvalidOperationException
+            var worldId = parameters.WorldId.Value;
+
+            await _mostRecentlyUpdatedDb.Push(worldId, new WorldItemUpload
             {
                 // ReSharper disable once PossibleInvalidOperationException
-                WorldId = parameters.WorldId.Value,
-                Uploads = new List<WorldItemUpload>
-                {
-                    new() {
-                        // ReSharper disable once PossibleInvalidOperationException
-                        ItemId = parameters.ItemId.Value,
-                        WorldId = parameters.WorldId.Value,
-                        LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-                    },
-                },
+                ItemId = parameters.ItemId.Value,
+                WorldId = worldId,
+                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
             }, cancellationToken);
 
             return null;
