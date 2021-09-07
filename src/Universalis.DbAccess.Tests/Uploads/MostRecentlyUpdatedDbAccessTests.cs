@@ -89,7 +89,7 @@ namespace Universalis.DbAccess.Tests.Uploads
         public async Task Operations_RespectDocumentCap()
         {
             var db = new MostRecentlyUpdatedDbAccess(_client, Database);
-            for (var i = 0; i < MostRecentlyUpdatedDbAccess.MaxItems * 2; i++)
+            for (var i = 0; i < MostRecentlyUpdatedDbAccess.MaxItems + 1; i++)
             {
                 await db.Push(74, new WorldItemUpload
                 {
@@ -102,6 +102,11 @@ namespace Universalis.DbAccess.Tests.Uploads
             var output = await db.RetrieveMany(new MostRecentlyUpdatedManyQuery { WorldIds = new[] { 74U } });
             Assert.Single(output);
             Assert.Equal(MostRecentlyUpdatedDbAccess.MaxItems, output[0].Uploads.Count);
+
+            for (var i = 0; i < MostRecentlyUpdatedDbAccess.MaxItems; i++)
+            {
+                Assert.Equal(5333 + MostRecentlyUpdatedDbAccess.MaxItems - (uint)i, output[0].Uploads[i].ItemId);
+            }
         }
     }
 }
