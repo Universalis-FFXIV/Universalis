@@ -82,10 +82,7 @@ namespace Universalis.Application.Controllers
 
             currentlyShown.Listings.Sort((a, b) => (int)a.PricePerUnit - (int)b.PricePerUnit);
             currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
-
-            currentlyShown.Listings = currentlyShown.Listings.Take(nListings).ToList();
-            currentlyShown.RecentHistory = currentlyShown.RecentHistory.Take(nEntries).ToList();
-
+            
             var nqListings = currentlyShown.Listings.Where(l => !l.Hq).ToList();
             var hqListings = currentlyShown.Listings.Where(l => l.Hq).ToList();
             var nqSales = currentlyShown.RecentHistory.Where(s => !s.Hq).ToList();
@@ -93,8 +90,8 @@ namespace Universalis.Application.Controllers
 
             var view = new CurrentlyShownView
             {
-                Listings = currentlyShown.Listings,
-                RecentHistory = currentlyShown.RecentHistory,
+                Listings = currentlyShown.Listings.Take(nListings).ToList(),
+                RecentHistory = currentlyShown.RecentHistory.Take(nEntries).ToList(),
                 ItemId = itemId,
                 WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
                 WorldName = worldDc.IsWorld ? worldDc.WorldName : null,
