@@ -32,17 +32,16 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads
                 }, cancellationToken);
                 return;
             }
-
-            var uploads = existing.Uploads;
-            var existingIndex = uploads.FindIndex(o => o.ItemId == document.ItemId);
+            
+            var existingIndex = existing.Uploads.FindIndex(o => o.ItemId == document.ItemId);
             if (existingIndex != -1)
             {
-                uploads.RemoveAt(existingIndex);
-                uploads.Insert(0, document);
+                existing.Uploads.RemoveAt(existingIndex);
+                existing.Uploads.Insert(0, document);
             }
             else
             {
-                uploads.Insert(0, document);
+                existing.Uploads.Insert(0, document);
                 existing.Uploads = existing.Uploads.Take(MostRecentlyUpdatedDbAccess.MaxItems).ToList();
             }
         }

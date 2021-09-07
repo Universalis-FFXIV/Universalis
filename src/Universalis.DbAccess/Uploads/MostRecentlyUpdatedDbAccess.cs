@@ -41,7 +41,7 @@ namespace Universalis.DbAccess.Uploads
             else
             {
                 uploads.Insert(0, document);
-                uploads = existing.Uploads.Take(MaxItems).ToList();
+                uploads = uploads.Take(MaxItems).ToList();
             }
 
             var updateBuilder = Builders<MostRecentlyUpdated>.Update;
