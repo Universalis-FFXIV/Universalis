@@ -1,7 +1,7 @@
 ﻿using System;
-using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -13,7 +13,6 @@ using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
-using Universalis.Entities.Uploads;
 
 namespace Universalis.Application.Controllers.V1
 {

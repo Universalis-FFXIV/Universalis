@@ -23,6 +23,12 @@ namespace Universalis.Application
 
         private static readonly RecyclableMemoryStreamManager MemoryStreamPool = new();
 
+        /// <summary>
+        /// Converts a database listing into a listing view to be returned to external clients.
+        /// </summary>
+        /// <param name="l">The database listing.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>A listing view associated with the provided listing.</returns>
         public static async Task<ListingView> ListingToView(Listing l, CancellationToken cancellationToken = default)
         {
             var ppuWithGst = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
@@ -52,27 +58,39 @@ namespace Universalis.Application
 
             if (!string.IsNullOrEmpty(l.CreatorId))
             {
-                listingView.CreatorIdHash = await Util.Hash(sha256, l.CreatorId, cancellationToken);
+                listingView.CreatorIdHash = await Hash(sha256, l.CreatorId, cancellationToken);
             }
 
             if (!string.IsNullOrEmpty(l.ListingId))
             {
-                listingView.ListingId = await Util.Hash(sha256, l.ListingId, cancellationToken);
+                listingView.ListingId = await Hash(sha256, l.ListingId, cancellationToken);
             }
 
-            listingView.SellerIdHash = await Util.Hash(sha256, l.SellerId, cancellationToken);
-            listingView.RetainerId = await Util.Hash(sha256, l.RetainerId, cancellationToken);
+            listingView.SellerIdHash = await Hash(sha256, l.SellerId, cancellationToken);
+            listingView.RetainerId = await Hash(sha256, l.RetainerId, cancellationToken);
 
             return listingView;
         }
 
-        public static async Task<string> Hash(HashAlgorithm hasher, string id, CancellationToken cancellationToken = default)
+        /// <summary>
+        /// Hashes the provided string asynchronously.
+        /// </summary>
+        /// <param name="hasher">The hashing algorithm to use.</param>
+        /// <param name="input">The input string.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>A hash representing the input string.</returns>
+        public static async Task<string> Hash(HashAlgorithm hasher, string input, CancellationToken cancellationToken = default)
         {
-            var idBytes = Encoding.UTF8.GetBytes(id ?? "");
+            var idBytes = Encoding.UTF8.GetBytes(input ?? "");
             await using var dataStream = MemoryStreamPool.GetStream(idBytes);
-            return Util.BytesToString(await hasher.ComputeHashAsync(dataStream, cancellationToken));
+            return BytesToString(await hasher.ComputeHashAsync(dataStream, cancellationToken));
         }
 
+        /// <summary>
+        /// Converts an array of bytes into a lowercase hexadecimal string.
+        /// </summary>
+        /// <param name="bytes">The input byte array.</param>
+        /// <returns>A lowercase hexadecimal string representing the provided byte array.</returns>
         public static string BytesToString(byte[] bytes)
         {
             return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
