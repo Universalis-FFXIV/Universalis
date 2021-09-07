@@ -28,6 +28,15 @@ namespace Universalis.DbAccess.Tests.Uploads
         }
 
         [Fact]
+        public void Constructor_CanBeCalledMultipleTimes()
+        {
+            for (var i = 0; i < 10; i++)
+            {
+                _ = new MostRecentlyUpdatedDbAccess(_client, Database);
+            }
+        }
+
+        [Fact]
         public async Task Create_DoesNotThrow()
         {
             var db = new MostRecentlyUpdatedDbAccess(_client, Database);
