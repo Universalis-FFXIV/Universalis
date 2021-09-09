@@ -168,5 +168,12 @@ namespace Universalis.Application.Views
         [JsonPropertyName("worldName")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string WorldName { get; init; }
+
+        /// <summary>
+        /// The last upload times in milliseconds since epoch for each world in the response, if this is a DC request.
+        /// </summary>
+        [JsonPropertyName("worldUploadTimes")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public Dictionary<uint, long> WorldUploadTimes { get; set; }
     }
 }

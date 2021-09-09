@@ -82,6 +82,12 @@ namespace Universalis.Application.Controllers
                         .ToListAsync(cancellationToken);
                     agg.LastUploadTimeUnixMilliseconds = (long)Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
 
+                    if (worldDc.IsDc)
+                    {
+                        agg.WorldUploadTimes ??= new Dictionary<uint, long>();
+                        agg.WorldUploadTimes[next.WorldId] = (long)next.LastUploadTimeUnixMilliseconds;
+                    }
+
                     return agg;
                 }, cancellationToken);
 
@@ -120,9 +126,22 @@ namespace Universalis.Application.Controllers
                 AveragePrice = GetAveragePricePerUnit(currentlyShown.RecentHistory),
                 AveragePriceNq = GetAveragePricePerUnit(nqSales),
                 AveragePriceHq = GetAveragePricePerUnit(hqSales),
+                WorldUploadTimes = worldDc.IsWorld ? null : currentlyShown.WorldUploadTimes ?? EmptyWorldDictionary<Dictionary<uint, long>, long>(worldIds),
             };
             
             return (resolved, view);
+        }
+
+        private static TDictionary EmptyWorldDictionary<TDictionary, T>(IEnumerable<uint> worldIds) where TDictionary : IDictionary<uint, T>
+        {
+            var dict = (TDictionary)Activator.CreateInstance(typeof(TDictionary));
+            foreach (var worldId in worldIds)
+            {
+                // ReSharper disable once PossibleNullReferenceException
+                dict[worldId] = default;
+            }
+
+            return dict;
         }
 
         private static uint GetMinPricePerUnit<TPriceable>(IList<TPriceable> items) where TPriceable : IPriceable
