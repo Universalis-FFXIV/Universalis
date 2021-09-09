@@ -25,7 +25,7 @@ namespace Universalis.Application.Controllers
             CurrentlyShown = currentlyShownDb;
         }
 
-        protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(WorldDc worldDc, uint[] worldIds, uint itemId, int nListings = int.MaxValue, int nEntries = int.MaxValue, CancellationToken cancellationToken = default)
+        protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(WorldDc worldDc, uint[] worldIds, uint itemId, int nListings = int.MaxValue, int nEntries = int.MaxValue, bool noGst = false, CancellationToken cancellationToken = default)
         {
             var data = (await CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery
             {
@@ -54,7 +54,7 @@ namespace Universalis.Application.Controllers
                         .ToAsyncEnumerable()
                         .SelectAwait(async l =>
                         {
-                            var listingView = await Util.ListingToView(l, cancellationToken);
+                            var listingView = await Util.ListingToView(l, noGst, cancellationToken);
                             listingView.WorldId = worldDc.IsDc ? next.WorldId : null;
                             listingView.WorldName = worldDc.IsDc ? worlds[next.WorldId] : null;
                             return listingView;

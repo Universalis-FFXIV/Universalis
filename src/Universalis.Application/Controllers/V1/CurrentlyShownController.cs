@@ -24,6 +24,11 @@ namespace Universalis.Application.Controllers.V1
         /// <param name="worldOrDc">The world or data center to retrieve data for. This may be an ID or a name.</param>
         /// <param name="listingsToReturn">The number of listings to return. By default, all listings will be returned.</param>
         /// <param name="entriesToReturn">The number of entries to return. By default, all entries will be returned.</param>
+        /// <param name="noGst">
+        /// If the result should not have Gil sales tax (GST) factored in. GST is applied to all
+        /// consumer purchases in-game, and is separate from the retainer city tax that impacts what sellers receive.
+        /// By default, GST is factored in. Set this parameter to true or 1 to prevent this.
+        /// </param>
         /// <param name="cancellationToken"></param>
         /// <response code="200">Data retrieved successfully.</response>
         /// <response code="404">
@@ -34,7 +39,7 @@ namespace Universalis.Application.Controllers.V1
         [ProducesResponseType(typeof(CurrentlyShownView), 200)]
         [ProducesResponseType(typeof(CurrentlyShownMultiView), 200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery(Name = "listings")] string listingsToReturn = "", [FromQuery(Name = "entries")] string entriesToReturn = "", CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery(Name = "listings")] string listingsToReturn = "", [FromQuery(Name = "entries")] string entriesToReturn = "", [FromQuery] string noGst = "", CancellationToken cancellationToken = default)
         {
             // Parameter parsing
             var itemIdsArray = InputProcessing.ParseIdList(itemIds)
@@ -63,6 +68,8 @@ namespace Universalis.Application.Controllers.V1
                 nEntries = Math.Max(0, queryEntries);
             }
 
+            var noGstBool = Util.ParseUnusualBool(noGst);
+
             if (itemIdsArray.Length == 1)
             {
                 var itemId = itemIdsArray[0];
@@ -72,13 +79,13 @@ namespace Universalis.Application.Controllers.V1
                     return NotFound();
                 }
 
-                var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, cancellationToken);
+                var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, cancellationToken);
                 return Ok(currentlyShownView);
             }
 
             // Multi-item handling
             var currentlyShownViewTasks = itemIdsArray
-                .Select(itemId => GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, cancellationToken))
+                .Select(itemId => GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, cancellationToken))
                 .ToList();
             var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
             var unresolvedItems = currentlyShownViews
