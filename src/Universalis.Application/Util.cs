@@ -28,11 +28,15 @@ namespace Universalis.Application
         /// Converts a database listing into a listing view to be returned to external clients.
         /// </summary>
         /// <param name="l">The database listing.</param>
+        /// <param name="noGst">
+        /// If the result should not have Gil sales tax (GST) factored in. GST is applied to all
+        /// consumer purchases in-game, and is separate from the retainer city tax that impacts what sellers receive.
+        /// </param>
         /// <param name="cancellationToken"></param>
         /// <returns>A listing view associated with the provided listing.</returns>
-        public static async Task<ListingView> ListingToView(Listing l, CancellationToken cancellationToken = default)
+        public static async Task<ListingView> ListingToView(Listing l, bool noGst, CancellationToken cancellationToken = default)
         {
-            var ppuWithGst = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
+            var ppu = noGst ? l.PricePerUnit : (uint)Math.Ceiling(l.PricePerUnit * 1.05);
             var listingView = new ListingView
             {
                 Hq = l.Hq,
@@ -44,9 +48,9 @@ namespace Universalis.Application
                         MateriaId = m.MateriaId,
                     })
                     .ToList() ?? new List<MateriaView>(),
-                PricePerUnit = ppuWithGst,
+                PricePerUnit = ppu,
                 Quantity = l.Quantity,
-                Total = ppuWithGst * l.Quantity,
+                Total = ppu * l.Quantity,
                 DyeId = l.DyeId,
                 CreatorName = l.CreatorName ?? "",
                 IsCrafted = !string.IsNullOrEmpty(l.CreatorName),
@@ -139,6 +143,11 @@ namespace Universalis.Application
             if (o is bool b)
             {
                 return b;
+            }
+
+            if (o is int i)
+            {
+                return i != 0;
             }
 
             if (o is not string s)
