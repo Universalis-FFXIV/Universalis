@@ -63,7 +63,7 @@ namespace Universalis.Application.Controllers.V2
                 nListings = Math.Max(0, queryListings);
             }
 
-            var nEntries = int.MaxValue;
+            var nEntries = 5;
             if (int.TryParse(entriesToReturn, out var queryEntries))
             {
                 nEntries = Math.Max(0, queryEntries);
