@@ -31,7 +31,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
             await dbAccess.Create(document);
 
-            var result = await controller.Get(itemId.ToString(), worldOrDc);
+            var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: int.MaxValue.ToString());
             var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
             AssertCurrentlyShownValidWorld(document, currentlyShown, gameData);
@@ -99,7 +99,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             var document2 = SeedDataGenerator.MakeCurrentlyShown(74, 5);
             await dbAccess.Create(document2);
 
-            var result = await controller.Get("5, 5333", worldOrDc);
+            var result = await controller.Get("5, 5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
             var currentlyShown = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.Empty(currentlyShown.UnresolvedItemIds);
@@ -129,7 +129,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5333, lastUploadTime);
             await dbAccess.Create(document2);
 
-            var result = await controller.Get("5333", worldOrDc);
+            var result = await controller.Get("5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
             var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
             document1.Listings = document1.Listings.Concat(document2.Listings).ToList();
@@ -158,7 +158,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5, lastUploadTime);
             await dbAccess.Create(document2);
 
-            var result = await controller.Get("5,5333", worldOrDc);
+            var result = await controller.Get("5,5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
             var currentlyShown = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
             Assert.Contains(5U, currentlyShown.ItemIds);

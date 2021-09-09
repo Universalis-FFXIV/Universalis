@@ -69,7 +69,7 @@ namespace Universalis.Application.Tests.Controllers.V2
             };
             await dbAccess.Create(document);
 
-            var result = await controller.Get(itemId.ToString(), worldOrDc);
+            var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: int.MaxValue.ToString());
             var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
             AssertCurrentlyShownValidWorld(document, currentlyShown, gameData);
@@ -166,9 +166,10 @@ namespace Universalis.Application.Tests.Controllers.V2
             };
             await dbAccess.Create(document2);
 
-            var result = await controller.Get("5, 5333", worldOrDc);
+            var result = await controller.Get("5, 5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
             var currentlyShown = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
+            Assert.NotNull(currentlyShown);
             Assert.Empty(currentlyShown.UnresolvedItemIds);
             Assert.Equal(2, currentlyShown.ItemIds.Count);
             Assert.Equal(2, currentlyShown.Items.Count);
@@ -271,7 +272,7 @@ namespace Universalis.Application.Tests.Controllers.V2
             };
             await dbAccess.Create(document2);
 
-            var result = await controller.Get("5333", worldOrDc);
+            var result = await controller.Get("5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
             var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
             document1.Listings = document1.Listings.Concat(document2.Listings).ToList();
@@ -375,9 +376,10 @@ namespace Universalis.Application.Tests.Controllers.V2
             };
             await dbAccess.Create(document2);
 
-            var result = await controller.Get("5,5333", worldOrDc);
+            var result = await controller.Get("5,5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
             var currentlyShown = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
+            Assert.NotNull(currentlyShown);
             Assert.Contains(5U, currentlyShown.ItemIds);
             Assert.Contains(5333U, currentlyShown.ItemIds);
             Assert.Empty(currentlyShown.UnresolvedItemIds);
