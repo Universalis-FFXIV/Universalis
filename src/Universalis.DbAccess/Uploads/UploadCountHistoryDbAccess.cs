@@ -11,7 +11,7 @@ namespace Universalis.DbAccess.Uploads
     {
         public UploadCountHistoryDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "extraData") { }
 
-        public UploadCountHistoryDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "content") { }
+        public UploadCountHistoryDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "extraData") { }
 
         public Task Update(double lastPush, List<double> uploadCountByDay, CancellationToken cancellationToken = default)
         {
