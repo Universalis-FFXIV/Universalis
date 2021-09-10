@@ -24,7 +24,7 @@ namespace Universalis.Application.Controllers.V2
         /// <param name="itemIds">The item ID or comma-separated item IDs to retrieve data for.</param>
         /// <param name="worldOrDc">The world or data center to retrieve data for. This may be an ID or a name.</param>
         /// <param name="listingsToReturn">The number of listings to return. By default, all listings will be returned.</param>
-        /// <param name="entriesToReturn">The number of entries to return. By default, all entries will be returned.</param>
+        /// <param name="entriesToReturn">The number of entries to return. By default, a maximum of 5 entries will be returned.</param>
         /// <param name="noGst">
         /// If the result should not have Gil sales tax (GST) factored in. GST is applied to all
         /// consumer purchases in-game, and is separate from the retainer city tax that impacts what sellers receive.
