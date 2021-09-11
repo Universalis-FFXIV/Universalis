@@ -71,6 +71,7 @@ namespace Universalis.Application.Controllers.V2
             }
 
             var noGstBool = Util.ParseUnusualBool(noGst);
+            var hqBool = Util.ParseUnusualBool(hq);
 
             if (itemIdsArray.Length == 1)
             {
@@ -81,13 +82,13 @@ namespace Universalis.Application.Controllers.V2
                     return NotFound();
                 }
 
-                var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, cancellationToken);
+                var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, cancellationToken);
                 return Ok(currentlyShownView);
             }
 
             // Multi-item handling
             var currentlyShownViewTasks = itemIdsArray
-                .Select(itemId => GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, cancellationToken))
+                .Select(itemId => GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, cancellationToken))
                 .ToList();
             var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
             var unresolvedItems = currentlyShownViews
