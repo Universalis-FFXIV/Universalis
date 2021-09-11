@@ -27,7 +27,7 @@ namespace Universalis.Application.Uploads.Behaviors
 
         public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
         {
-            var now = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(); // TODO
+            var now = (double)DateTimeOffset.Now.ToUnixTimeMilliseconds();
             var data = await _uploadCountHistoryDb.Retrieve(new UploadCountHistoryQuery(), cancellationToken);
             if (data == null)
             {
