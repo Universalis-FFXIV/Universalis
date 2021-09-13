@@ -35,7 +35,7 @@ namespace Universalis.Entities.MarketBoard
         public object CreatorIdInternal { get; init; }
 
         [BsonIgnore]
-        public string CreatorId => DbCleaning.NullIfZeroString(DbCleaning.ReadAsString(CreatorIdInternal));
+        public string CreatorId => string.IsNullOrEmpty(CreatorName) ? null : DbCleaning.NullIfZeroString(DbCleaning.ReadAsString(CreatorIdInternal));
 
         [BsonElement("creatorName")]
         public string CreatorName { get; init; }
