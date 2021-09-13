@@ -29,6 +29,7 @@ namespace Universalis.Application.Controllers.V1
         /// consumer purchases in-game, and is separate from the retainer city tax that impacts what sellers receive.
         /// By default, GST is factored in. Set this parameter to true or 1 to prevent this.
         /// </param>
+        /// <param name="hq">If the result should only include HQ listings and entries. By default, both HQ and NQ listings and entries will be returned.</param>
         /// <param name="cancellationToken"></param>
         /// <response code="200">Data retrieved successfully.</response>
         /// <response code="404">
@@ -39,7 +40,7 @@ namespace Universalis.Application.Controllers.V1
         [ProducesResponseType(typeof(CurrentlyShownView), 200)]
         [ProducesResponseType(typeof(CurrentlyShownMultiView), 200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery(Name = "listings")] string listingsToReturn = "", [FromQuery(Name = "entries")] string entriesToReturn = "", [FromQuery] string noGst = "", CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery(Name = "listings")] string listingsToReturn = "", [FromQuery(Name = "entries")] string entriesToReturn = "", [FromQuery] string noGst = "", [FromQuery] string hq = "", CancellationToken cancellationToken = default)
         {
             // Parameter parsing
             var itemIdsArray = InputProcessing.ParseIdList(itemIds)
@@ -69,6 +70,7 @@ namespace Universalis.Application.Controllers.V1
             }
 
             var noGstBool = Util.ParseUnusualBool(noGst);
+            var hqBool = Util.ParseUnusualBool(hq);
 
             if (itemIdsArray.Length == 1)
             {
@@ -79,13 +81,13 @@ namespace Universalis.Application.Controllers.V1
                     return NotFound();
                 }
 
-                var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, cancellationToken);
+                var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, cancellationToken);
                 return Ok(currentlyShownView);
             }
 
             // Multi-item handling
             var currentlyShownViewTasks = itemIdsArray
-                .Select(itemId => GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, cancellationToken))
+                .Select(itemId => GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, cancellationToken))
                 .ToList();
             var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
             var unresolvedItems = currentlyShownViews
