@@ -53,7 +53,7 @@ namespace Universalis.Application
                 Total = ppu * l.Quantity,
                 DyeId = l.DyeId,
                 CreatorName = l.CreatorName ?? "",
-                IsCrafted = !string.IsNullOrEmpty(l.CreatorName),
+                IsCrafted = !string.IsNullOrEmpty(l.CreatorId),
                 LastReviewTimeUnixSeconds = (long)l.LastReviewTimeUnixSeconds,
                 RetainerName = l.RetainerName,
                 RetainerCityId = l.RetainerCityId,
