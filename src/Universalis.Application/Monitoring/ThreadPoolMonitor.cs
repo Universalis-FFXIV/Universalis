@@ -1,19 +1,27 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
+using Microsoft.Extensions.Options;
 
 namespace Universalis.Application.Monitoring
 {
+    public class ThreadPoolMonitorOptions
+    {
+        public string Filename { get; set; }
+    }
+
     public class ThreadPoolMonitor : IDisposable
     {
         private readonly ILogger<ThreadPoolMonitor> _logger;
+        private readonly MonitoringLog<ThreadPoolInfo, ThreadPoolInfoMap> _log;
 
         private Thread _monitorThread;
         private bool _active;
 
-        public ThreadPoolMonitor(ILogger<ThreadPoolMonitor> logger)
+        public ThreadPoolMonitor(ILogger<ThreadPoolMonitor> logger, IOptions<ThreadPoolMonitorOptions> options)
         {
             _logger = logger;
+            _log = new MonitoringLog<ThreadPoolInfo, ThreadPoolInfoMap>(options.Value.Filename);
         }
 
         public void Start()
@@ -37,7 +45,23 @@ namespace Universalis.Application.Monitoring
                                        "Max completion port threads:\t{MaxCompletionPortThreads}",
                     DateTimeOffset.UtcNow, workerThreads, completionPortThreads, maxWorkerThreads, maxCompletionPortThreads);
 
-                Thread.Sleep(new TimeSpan(0, 0, 10));
+                try
+                {
+                    _log.Append(new ThreadPoolInfo
+                    {
+                        UnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                        WorkerThreads = workerThreads,
+                        CompletionPortThreads = completionPortThreads,
+                        MaxWorkerThreads = maxWorkerThreads,
+                        MaxCompletionPortThreads = maxCompletionPortThreads,
+                    });
+                }
+                catch (Exception e)
+                {
+                    _logger.LogWarning(e, "Exception while writing log line.");
+                }
+
+                Thread.Sleep(new TimeSpan(0, 1, 0));
             }
         }
 

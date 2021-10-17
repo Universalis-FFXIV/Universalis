@@ -349,3 +349,6 @@ coveragereport/
 
 # Documentation XML
 Universalis.*.xml
+
+# Monitoring logs
+*.csv

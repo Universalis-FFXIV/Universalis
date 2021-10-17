@@ -37,6 +37,7 @@ namespace Universalis.Application
 
             services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
 
+            services.Configure<ThreadPoolMonitorOptions>(Configuration.GetSection("ThreadPoolLog"));
             services.AddSingleton<ThreadPoolMonitor>();
 
             services
@@ -101,8 +102,6 @@ namespace Universalis.Application
                 app.UseDeveloperExceptionPage();
             }
 
-            app.ApplicationServices.GetRequiredService<ThreadPoolMonitor>().Start();
-
             app.UseSwagger(options =>
             {
                 options.RouteTemplate = "/docs/swagger/{documentName}/swagger.json";
@@ -117,6 +116,8 @@ namespace Universalis.Application
                 // Reverse proxy path
                 options.RoutePrefix = "docs";
             });
+
+            app.ApplicationServices.GetRequiredService<ThreadPoolMonitor>().Start();
 
             app.UseRouting();
             app.UseAuthentication();
