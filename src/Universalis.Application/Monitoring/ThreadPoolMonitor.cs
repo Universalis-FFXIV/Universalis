@@ -8,6 +8,8 @@ namespace Universalis.Application.Monitoring
     public class ThreadPoolMonitorOptions
     {
         public string Filename { get; set; }
+
+        public long MaxSizeBytes { get; set; }
     }
 
     public class ThreadPoolMonitor : IDisposable
@@ -20,8 +22,10 @@ namespace Universalis.Application.Monitoring
 
         public ThreadPoolMonitor(ILogger<ThreadPoolMonitor> logger, IOptions<ThreadPoolMonitorOptions> options)
         {
+            var opts = options.Value;
+
             _logger = logger;
-            _log = new MonitoringLog<ThreadPoolInfo, ThreadPoolInfoMap>(options.Value.Filename);
+            _log = new MonitoringLog<ThreadPoolInfo, ThreadPoolInfoMap>(opts.Filename, opts.MaxSizeBytes);
         }
 
         public void Start()

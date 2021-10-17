@@ -13,22 +13,32 @@ namespace Universalis.Application.Monitoring
         private const char Newline = '\n';
 
         private readonly string _filename;
+        private readonly long _maxFileSizeBytes;
 
-        public MonitoringLog(string filename)
+        public MonitoringLog(string filename, long maxFileSizeBytes)
         {
             _filename = filename ?? throw new ArgumentNullException(nameof(filename));
+            _maxFileSizeBytes = maxFileSizeBytes switch
+            {
+                0 => throw new ArgumentException("Max log file size may not be 0."),
+                _ => maxFileSizeBytes,
+            };
 
             // Write the file header if the file doesn't exist
             if (File.Exists(filename)) return;
-            using var writer = new StreamWriter(filename);
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture) { NewLine = Newline.ToString() };
-            using var csv = new CsvWriter(writer, config);
-            csv.Context.RegisterClassMap<TLineClassMap>();
-            csv.WriteHeader<TLine>();
+            CreateFile();
         }
 
         public void Append(TLine line)
         {
+            if (_maxFileSizeBytes > 0 && new FileInfo(_filename).Length > _maxFileSizeBytes)
+            {
+                var rotatedFileName =
+                    $"{Path.GetFileNameWithoutExtension(_filename)}-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}{Path.GetExtension(_filename)}";
+                File.Move(_filename, rotatedFileName);
+                CreateFile();
+            }
+
             var config = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 NewLine = Newline.ToString(),
@@ -41,6 +51,15 @@ namespace Universalis.Application.Monitoring
             using var csv = new CsvWriter(writer, config);
             csv.Context.RegisterClassMap<TLineClassMap>();
             csv.WriteRecord(line);
+        }
+
+        private void CreateFile()
+        {
+            using var writer = new StreamWriter(_filename);
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture) { NewLine = Newline.ToString() };
+            using var csv = new CsvWriter(writer, config);
+            csv.Context.RegisterClassMap<TLineClassMap>();
+            csv.WriteHeader<TLine>();
         }
     }
 }
