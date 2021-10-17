@@ -30,12 +30,12 @@ namespace Universalis.Application.Monitoring
                 ThreadPool.GetMaxThreads(out var maxWorkerThreads, out var maxCompletionPortThreads);
                 var (workerThreads, completionPortThreads) = GetActiveThreads();
 
-                _logger.LogInformation("ThreadPool information:\n" +
+                _logger.LogInformation("ThreadPool information ({Time}):\n" +
                                        "Worker threads:\t\t\t{WorkerThreads}\n" +
                                        "Completion port threads:\t\t{CompletionPortThreads}\n" +
                                        "Max worker threads:\t\t{MaxWorkerThreads}\n" +
                                        "Max completion port threads:\t{MaxCompletionPortThreads}",
-                    workerThreads, completionPortThreads, maxWorkerThreads, maxCompletionPortThreads);
+                    DateTimeOffset.UtcNow, workerThreads, completionPortThreads, maxWorkerThreads, maxCompletionPortThreads);
 
                 Thread.Sleep(new TimeSpan(0, 0, 10));
             }
