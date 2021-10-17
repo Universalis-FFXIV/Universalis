@@ -1,74 +1,79 @@
-﻿namespace Universalis.Application.Monitoring;
+﻿using Microsoft.Extensions.Logging;
+using System;
+using System.Threading;
 
-public class ThreadPoolMonitor : IDisposable
+namespace Universalis.Application.Monitoring
 {
-    private readonly ILogger<ThreadPoolMonitor> _logger;
-
-    private Thread _monitorThread;
-    private bool _active;
-
-    public ThreadPoolMonitor(ILogger<ThreadPoolMonitor> logger)
+    public class ThreadPoolMonitor : IDisposable
     {
-        _logger = logger;
-    }
+        private readonly ILogger<ThreadPoolMonitor> _logger;
 
-    public void Start()
-    {
-        _active = true;
-        _monitorThread = new Thread(MonitoringLoop);
-        _monitorThread.Start();
-    }
+        private Thread _monitorThread;
+        private bool _active;
 
-    private void MonitoringLoop()
-    {
-        while (_active)
+        public ThreadPoolMonitor(ILogger<ThreadPoolMonitor> logger)
         {
-            ThreadPool.GetMaxThreads(out var maxWorkerThreads, out var maxCompletionPortThreads);
-            var (workerThreads, completionPortThreads) = GetActiveThreads();
-
-            _logger.LogInformation("ThreadPool information:\n" +
-                                   "Worker threads:\t\t\t{WorkerThreads}\n" +
-                                   "Completion port threads:\t{CompletionPortThreads}\n" +
-                                   "Max worker threads:\t\t{MaxWorkerThreads}\n" +
-                                   "Max completion port threads:\t{MaxCompletionPortThreads}",
-                workerThreads, completionPortThreads, maxWorkerThreads, maxCompletionPortThreads);
-
-            Thread.Sleep(new TimeSpan(0, 0, 10));
+            _logger = logger;
         }
-    }
 
-    /// <summary>
-    /// Returns the number of active threads of each type owned by the default <see cref="ThreadPool"/>.
-    /// </summary>
-    private static ActiveThreadsInfo GetActiveThreads()
-    {
-        ThreadPool.GetMaxThreads(out var maxWorkerThreads, out var maxCompletionPortThreads);
-        ThreadPool.GetAvailableThreads(out var availableWorkerThreads, out var availableCompletionPortThreads);
-        return new ActiveThreadsInfo(
-            maxWorkerThreads - availableWorkerThreads,
-            maxCompletionPortThreads - availableCompletionPortThreads);
-    }
-
-    private record ActiveThreadsInfo(int WorkerThreads, int CompletionPortThreads);
-
-    public void Dispose()
-    {
-        _active = false;
-
-        try
+        public void Start()
         {
-            _monitorThread.Interrupt();
-            var joined = _monitorThread?.Join(new TimeSpan(0, 0, 5));
-            if (joined == false)
+            _active = true;
+            _monitorThread = new Thread(MonitoringLoop);
+            _monitorThread.Start();
+        }
+
+        private void MonitoringLoop()
+        {
+            while (_active)
             {
-                _logger.LogWarning("Failed to join ThreadPool monitoring thread.");
+                ThreadPool.GetMaxThreads(out var maxWorkerThreads, out var maxCompletionPortThreads);
+                var (workerThreads, completionPortThreads) = GetActiveThreads();
+
+                _logger.LogInformation("ThreadPool information:\n" +
+                                       "Worker threads:\t\t\t{WorkerThreads}\n" +
+                                       "Completion port threads:\t{CompletionPortThreads}\n" +
+                                       "Max worker threads:\t\t{MaxWorkerThreads}\n" +
+                                       "Max completion port threads:\t{MaxCompletionPortThreads}",
+                    workerThreads, completionPortThreads, maxWorkerThreads, maxCompletionPortThreads);
+
+                Thread.Sleep(new TimeSpan(0, 0, 10));
             }
         }
-        catch (ThreadStateException e)
+
+        /// <summary>
+        /// Returns the number of active threads of each type owned by the default <see cref="ThreadPool"/>.
+        /// </summary>
+        private static ActiveThreadsInfo GetActiveThreads()
         {
-            _logger.LogWarning(e, "Exception occurred when shutting down ThreadPool monitor.");
+            ThreadPool.GetMaxThreads(out var maxWorkerThreads, out var maxCompletionPortThreads);
+            ThreadPool.GetAvailableThreads(out var availableWorkerThreads, out var availableCompletionPortThreads);
+            return new ActiveThreadsInfo(
+                maxWorkerThreads - availableWorkerThreads,
+                maxCompletionPortThreads - availableCompletionPortThreads);
         }
 
-        GC.SuppressFinalize(this);
+        private record ActiveThreadsInfo(int WorkerThreads, int CompletionPortThreads);
+
+        public void Dispose()
+        {
+            _active = false;
+
+            try
+            {
+                _monitorThread.Interrupt();
+                var joined = _monitorThread?.Join(new TimeSpan(0, 0, 5));
+                if (joined == false)
+                {
+                    _logger.LogWarning("Failed to join ThreadPool monitoring thread.");
+                }
+            }
+            catch (ThreadStateException e)
+            {
+                _logger.LogWarning(e, "Exception occurred when shutting down ThreadPool monitor.");
+            }
+
+            GC.SuppressFinalize(this);
+        }
     }
 }
