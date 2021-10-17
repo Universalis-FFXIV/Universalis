@@ -32,7 +32,7 @@ namespace Universalis.Application.Monitoring
 
                 _logger.LogInformation("ThreadPool information:\n" +
                                        "Worker threads:\t\t\t{WorkerThreads}\n" +
-                                       "Completion port threads:\t{CompletionPortThreads}\n" +
+                                       "Completion port threads:\t\t{CompletionPortThreads}\n" +
                                        "Max worker threads:\t\t{MaxWorkerThreads}\n" +
                                        "Max completion port threads:\t{MaxCompletionPortThreads}",
                     workerThreads, completionPortThreads, maxWorkerThreads, maxCompletionPortThreads);
