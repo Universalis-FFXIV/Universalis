@@ -1,6 +1,8 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using System;
 using System.Globalization;
+using System.IO;
 
 namespace Universalis.Application.Monitoring
 {
@@ -15,7 +17,7 @@ namespace Universalis.Application.Monitoring
         public MonitoringLog(string filename)
         {
             _filename = filename ?? throw new ArgumentNullException(nameof(filename));
-            
+
             // Write the file header if the file doesn't exist
             if (File.Exists(filename)) return;
             using var writer = new StreamWriter(filename);
