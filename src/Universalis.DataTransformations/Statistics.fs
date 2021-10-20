@@ -30,9 +30,5 @@ type Statistics =
         if Seq.length filtered = 0 || period = 0L then
             0f
         else
-            let minTimestamp = Seq.min filtered
-            let nDays = single (unixNow - minTimestamp) / 86400000f
-            if nDays = 0f then
-                0f
-            else
-                single (Seq.length filtered) / nDays
+            let nDays = single period / 86400000f
+            single (Seq.length filtered) / nDays
