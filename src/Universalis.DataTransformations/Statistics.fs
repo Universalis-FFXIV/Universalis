@@ -26,10 +26,10 @@ type Statistics =
     /// <param name="unixNow">The current time in milliseconds since the UNIX epoch.</param>
     /// <param name="period">The period to calculate over.</param>
     static member VelocityPerDay(timestampsMs: seq<int64>, unixNow: int64, period: int64) =
-        if Seq.length timestampsMs = 0 || period = 0L then
+        let filtered = seq { for t in timestampsMs do if t >= unixNow - period then t }
+        if Seq.length filtered = 0 || period = 0L then
             0f
         else
-            let filtered = seq { for t in timestampsMs do if t >= unixNow - period then t }
             let minTimestamp = Seq.min filtered
             let maxTimestamp = Seq.max filtered
             let nDays = single (maxTimestamp - minTimestamp) / 86400000f
