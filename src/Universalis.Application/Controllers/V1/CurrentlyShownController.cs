@@ -81,13 +81,13 @@ namespace Universalis.Application.Controllers.V1
                     return NotFound();
                 }
 
-                var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, cancellationToken);
+                var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, 604800000, cancellationToken);
                 return Ok(currentlyShownView);
             }
 
             // Multi-item handling
             var currentlyShownViewTasks = itemIdsArray
-                .Select(itemId => GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, cancellationToken))
+                .Select(itemId => GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, 604800000, cancellationToken))
                 .ToList();
             var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
             var unresolvedItems = currentlyShownViews

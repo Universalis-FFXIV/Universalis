@@ -25,7 +25,7 @@ namespace Universalis.Application.Controllers
             CurrentlyShown = currentlyShownDb;
         }
 
-        protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(WorldDc worldDc, uint[] worldIds, uint itemId, int nListings = int.MaxValue, int nEntries = int.MaxValue, bool noGst = false, bool? onlyHq = null, CancellationToken cancellationToken = default)
+        protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(WorldDc worldDc, uint[] worldIds, uint itemId, int nListings = int.MaxValue, int nEntries = int.MaxValue, bool noGst = false, bool? onlyHq = null, long statsWithin = 604800000, CancellationToken cancellationToken = default)
         {
             var data = (await CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery
             {
