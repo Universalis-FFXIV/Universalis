@@ -760,7 +760,7 @@ namespace Universalis.Application.Tests.Controllers.V2
 
         private static double Round(double value)
         {
-            return Math.Round(value, 3);
+            return Math.Round(value, 2);
         }
     }
 }
