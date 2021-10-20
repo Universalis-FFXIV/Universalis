@@ -32,6 +32,7 @@ type Statistics =
         if Seq.length filtered = 0 || period = 0L then
             0f
         else
-            Console.WriteLine(Seq.length filtered)
+            if Seq.length timestampsMs < 20 then
+                Console.WriteLine(Seq.length filtered)
             let nDays = single period / 86400000f
             single (Seq.length filtered) / nDays
