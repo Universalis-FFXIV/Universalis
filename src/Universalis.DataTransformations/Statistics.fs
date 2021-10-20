@@ -33,7 +33,4 @@ type Statistics =
             0f
         else
             let nDays = single period / 86400000f
-            let res = single (Seq.length filtered) / nDays
-            if Seq.length timestampsMs = 7 then
-                Console.WriteLine(res)
-            res
+            single (Seq.length filtered) / nDays
