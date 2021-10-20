@@ -31,8 +31,7 @@ type Statistics =
             0f
         else
             let minTimestamp = Seq.min filtered
-            let maxTimestamp = Seq.max filtered
-            let nDays = single (maxTimestamp - minTimestamp) / 86400000f
+            let nDays = single (unixNow - minTimestamp) / 86400000f
             if nDays = 0f then
                 0f
             else
