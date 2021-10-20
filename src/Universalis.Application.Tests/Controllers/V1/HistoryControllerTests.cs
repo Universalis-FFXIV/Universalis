@@ -360,15 +360,17 @@ namespace Universalis.Application.Tests.Controllers.V1
                         .Select(s => s.Quantity)
                         .Select(q => (int)q))),
                 history.StackSizeHistogramHq);
-            Assert.Equal(Statistics.VelocityPerDay(document.Sales
-                    .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength),
-                history.SaleVelocity);
-            Assert.Equal(Statistics.VelocityPerDay(nqSales
-                    .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength),
-                history.SaleVelocityNq);
-            Assert.Equal(Statistics.VelocityPerDay(hqSales
-                    .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength),
-                history.SaleVelocityHq);
+
+            var saleVelocity = Statistics.VelocityPerDay(document.Sales
+                .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength);
+            var saleVelocityNq = Statistics.VelocityPerDay(nqSales
+                .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength);
+            var saleVelocityHq = Statistics.VelocityPerDay(hqSales
+                .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength);
+
+            Assert.Equal(Round(saleVelocity), Round(history.SaleVelocity));
+            Assert.Equal(Round(saleVelocityNq), Round(history.SaleVelocityNq));
+            Assert.Equal(Round(saleVelocityHq), Round(history.SaleVelocityHq));
         }
 
         private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<MinimizedSale> sales, long lastUploadTime, string worldOrDc, string entriesToReturn, long unixNowMs)
