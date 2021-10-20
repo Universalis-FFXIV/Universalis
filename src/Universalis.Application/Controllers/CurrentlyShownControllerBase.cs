@@ -25,7 +25,7 @@ namespace Universalis.Application.Controllers
             CurrentlyShown = currentlyShownDb;
         }
 
-        protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(WorldDc worldDc, uint[] worldIds, uint itemId, int nListings = int.MaxValue, int nEntries = int.MaxValue, bool noGst = false, bool onlyHq = false, CancellationToken cancellationToken = default)
+        protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(WorldDc worldDc, uint[] worldIds, uint itemId, int nListings = int.MaxValue, int nEntries = int.MaxValue, bool noGst = false, bool? onlyHq = null, CancellationToken cancellationToken = default)
         {
             var data = (await CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery
             {
@@ -101,8 +101,8 @@ namespace Universalis.Application.Controllers
 
             var view = new CurrentlyShownView
             {
-                Listings = currentlyShown.Listings.Where(l => !onlyHq || l.Hq).Take(nListings).ToList(),
-                RecentHistory = currentlyShown.RecentHistory.Where(l => !onlyHq || l.Hq).Take(nEntries).ToList(),
+                Listings = currentlyShown.Listings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings).ToList(),
+                RecentHistory = currentlyShown.RecentHistory.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nEntries).ToList(),
                 ItemId = itemId,
                 WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
                 WorldName = worldDc.IsWorld ? worldDc.WorldName : null,

@@ -30,7 +30,7 @@ namespace Universalis.Application.Controllers.V2
         /// consumer purchases in-game, and is separate from the retainer city tax that impacts what sellers receive.
         /// By default, GST is factored in. Set this parameter to true or 1 to prevent this.
         /// </param>
-        /// <param name="hq">If the result should only include HQ listings and entries. By default, both HQ and NQ listings and entries will be returned.</param>
+        /// <param name="hq">Filter for HQ listings and entries. By default, both HQ and NQ listings and entries will be returned.</param>
         /// <param name="cancellationToken"></param>
         /// <response code="200">Data retrieved successfully.</response>
         /// <response code="404">
@@ -71,7 +71,7 @@ namespace Universalis.Application.Controllers.V2
             }
 
             var noGstBool = Util.ParseUnusualBool(noGst);
-            var hqBool = Util.ParseUnusualBool(hq);
+            bool? hqBool = string.IsNullOrEmpty(hq) ? null : Util.ParseUnusualBool(hq);
 
             if (itemIdsArray.Length == 1)
             {
