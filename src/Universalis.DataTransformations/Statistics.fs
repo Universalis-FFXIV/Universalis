@@ -1,5 +1,7 @@
 ﻿namespace Universalis.DataTransformations
 
+open System
+
 [<AbstractClass; Sealed>]
 type Statistics =
     /// <summary>
@@ -30,5 +32,6 @@ type Statistics =
         if Seq.length filtered = 0 || period = 0L then
             0f
         else
+            Console.WriteLine(Seq.length filtered)
             let nDays = single period / 86400000f
             single (Seq.length filtered) / nDays
