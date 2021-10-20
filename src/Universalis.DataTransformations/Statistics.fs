@@ -33,4 +33,7 @@ type Statistics =
             let minTimestamp = Seq.min filtered
             let maxTimestamp = Seq.max filtered
             let nDays = single (maxTimestamp - minTimestamp) / 86400000f
-            single (Seq.length filtered) / nDays
+            if nDays = 0f then
+                0f
+            else
+                single (Seq.length filtered) / nDays
