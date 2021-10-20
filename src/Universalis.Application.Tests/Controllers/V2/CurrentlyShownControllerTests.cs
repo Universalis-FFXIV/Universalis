@@ -17,6 +17,8 @@ namespace Universalis.Application.Tests.Controllers.V2
 {
     public class CurrentlyShownControllerTests
     {
+        private const long WeekLength = 604800000L;
+
         [Theory]
         [InlineData("74")]
         [InlineData("Coeurl")]
@@ -72,7 +74,9 @@ namespace Universalis.Application.Tests.Controllers.V2
             var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: int.MaxValue.ToString());
             var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
-            AssertCurrentlyShownValidWorld(document, currentlyShown, gameData);
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+            AssertCurrentlyShownValidWorld(document, currentlyShown, gameData, now);
         }
 
         [Theory]
@@ -177,8 +181,10 @@ namespace Universalis.Application.Tests.Controllers.V2
             Assert.Equal(gameData.AvailableWorlds()[document1.WorldId], currentlyShown.WorldName);
             Assert.Null(currentlyShown.DcName);
 
-            AssertCurrentlyShownValidWorld(document1, currentlyShown.Items.First(item => item.Key == document1.ItemId).Value, gameData);
-            AssertCurrentlyShownValidWorld(document2, currentlyShown.Items.First(item => item.Key == document2.ItemId).Value, gameData);
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+            AssertCurrentlyShownValidWorld(document1, currentlyShown.Items.First(item => item.Key == document1.ItemId).Value, gameData, now);
+            AssertCurrentlyShownValidWorld(document2, currentlyShown.Items.First(item => item.Key == document2.ItemId).Value, gameData, now);
         }
 
         [Theory]
@@ -190,7 +196,7 @@ namespace Universalis.Application.Tests.Controllers.V2
             var dbAccess = new MockCurrentlyShownDbAccess();
             var controller = new CurrentlyShownController(gameData, dbAccess);
             var rand = new Random();
-            var lastUploadTime = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            var lastUploadTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             var document1 = new CurrentlyShown
             {
@@ -282,7 +288,8 @@ namespace Universalis.Application.Tests.Controllers.V2
                 document1,
                 currentlyShown,
                 lastUploadTime,
-                worldOrDc);
+                worldOrDc,
+                lastUploadTime);
         }
 
         [Theory]
@@ -294,7 +301,7 @@ namespace Universalis.Application.Tests.Controllers.V2
             var dbAccess = new MockCurrentlyShownDbAccess();
             var controller = new CurrentlyShownController(gameData, dbAccess);
             var rand = new Random();
-            var lastUploadTime = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            var lastUploadTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             var document1 = new CurrentlyShown
             {
@@ -392,12 +399,14 @@ namespace Universalis.Application.Tests.Controllers.V2
                 document1,
                 currentlyShown.Items.First(item => item.Key == document1.ItemId).Value,
                 lastUploadTime,
-                worldOrDc);
+                worldOrDc,
+                lastUploadTime);
             AssertCurrentlyShownDataCenter(
                 document2,
                 currentlyShown.Items.First(item => item.Key == document2.ItemId).Value,
                 lastUploadTime,
-                worldOrDc);
+                worldOrDc,
+                lastUploadTime);
         }
 
         [Theory]
@@ -577,7 +586,7 @@ namespace Universalis.Application.Tests.Controllers.V2
             Assert.Null(history.WorldId);
         }
 
-        private static void AssertCurrentlyShownValidWorld(CurrentlyShown document, CurrentlyShownView currentlyShown, IGameDataProvider gameData)
+        private static void AssertCurrentlyShownValidWorld(CurrentlyShown document, CurrentlyShownView currentlyShown, IGameDataProvider gameData, long unixNowMs)
         {
             Assert.Equal(document.ItemId, currentlyShown.ItemId);
             Assert.Equal(document.WorldId, currentlyShown.WorldId);
@@ -643,12 +652,12 @@ namespace Universalis.Application.Tests.Controllers.V2
             Assert.Equal(maxPriceNq, currentlyShown.MaxPriceNq);
             Assert.Equal(maxPriceHq, currentlyShown.MaxPriceHq);
 
-            var saleVelocity = Statistics.WeekVelocityPerDay(
-                currentlyShown.RecentHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
-            var saleVelocityNq = Statistics.WeekVelocityPerDay(
-                nqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
-            var saleVelocityHq = Statistics.WeekVelocityPerDay(
-                hqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
+            var saleVelocity = Statistics.VelocityPerDay(
+                currentlyShown.RecentHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
+            var saleVelocityNq = Statistics.VelocityPerDay(
+                nqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
+            var saleVelocityHq = Statistics.VelocityPerDay(
+                hqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
 
             Assert.Equal(Round(saleVelocity), Round(currentlyShown.SaleVelocity));
             Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));
@@ -663,7 +672,7 @@ namespace Universalis.Application.Tests.Controllers.V2
             Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
         }
 
-        private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, CurrentlyShownView currentlyShown, uint lastUploadTime, string worldOrDc)
+        private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc, long unixNowMs)
         {
             Assert.Equal(anyWorldDocument.ItemId, currentlyShown.ItemId);
             Assert.Equal(lastUploadTime, currentlyShown.LastUploadTimeUnixMilliseconds);
@@ -729,12 +738,12 @@ namespace Universalis.Application.Tests.Controllers.V2
             Assert.Equal(maxPriceNq, currentlyShown.MaxPriceNq);
             Assert.Equal(maxPriceHq, currentlyShown.MaxPriceHq);
 
-            var saleVelocity = Statistics.WeekVelocityPerDay(
-                currentlyShown.RecentHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
-            var saleVelocityNq = Statistics.WeekVelocityPerDay(
-                nqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
-            var saleVelocityHq = Statistics.WeekVelocityPerDay(
-                hqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
+            var saleVelocity = Statistics.VelocityPerDay(
+                currentlyShown.RecentHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
+            var saleVelocityNq = Statistics.VelocityPerDay(
+                nqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
+            var saleVelocityHq = Statistics.VelocityPerDay(
+                hqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
 
             Assert.Equal(Round(saleVelocity), Round(currentlyShown.SaleVelocity));
             Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));

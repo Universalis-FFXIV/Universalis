@@ -9,7 +9,7 @@ namespace Universalis.DbAccess.Tests
 {
     public static class SeedDataGenerator
     {
-        public static CurrentlyShown MakeCurrentlyShown(uint worldId, uint itemId, uint? lastUploadTime = null)
+        public static CurrentlyShown MakeCurrentlyShown(uint worldId, uint itemId, long? lastUploadTime = null)
         {
             var rand = new Random();
             return new CurrentlyShown
@@ -52,7 +52,7 @@ namespace Universalis.DbAccess.Tests
             };
         }
 
-        public static History MakeHistory(uint worldId, uint itemId, uint? lastUploadTime = null)
+        public static History MakeHistory(uint worldId, uint itemId, long? lastUploadTime = null)
         {
             var rand = new Random();
             return new History

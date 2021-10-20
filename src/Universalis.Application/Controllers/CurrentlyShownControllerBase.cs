@@ -25,7 +25,16 @@ namespace Universalis.Application.Controllers
             CurrentlyShown = currentlyShownDb;
         }
 
-        protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(WorldDc worldDc, uint[] worldIds, uint itemId, int nListings = int.MaxValue, int nEntries = int.MaxValue, bool noGst = false, bool? onlyHq = null, long statsWithin = 604800000, CancellationToken cancellationToken = default)
+        protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(
+            WorldDc worldDc,
+            uint[] worldIds,
+            uint itemId,
+            int nListings = int.MaxValue,
+            int nEntries = int.MaxValue,
+            bool noGst = false,
+            bool? onlyHq = null,
+            long statsWithin = 604800000,
+            CancellationToken cancellationToken = default)
         {
             var data = (await CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery
             {
@@ -99,6 +108,7 @@ namespace Universalis.Application.Controllers
             var nqSales = currentlyShown.RecentHistory.Where(s => !s.Hq).ToList();
             var hqSales = currentlyShown.RecentHistory.Where(s => s.Hq).ToList();
 
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             var view = new CurrentlyShownView
             {
                 Listings = currentlyShown.Listings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings).ToList(),
@@ -111,9 +121,9 @@ namespace Universalis.Application.Controllers
                 StackSizeHistogram = new SortedDictionary<int, int>(GetListingsDistribution(currentlyShown.Listings)),
                 StackSizeHistogramNq = new SortedDictionary<int, int>(GetListingsDistribution(nqListings)),
                 StackSizeHistogramHq = new SortedDictionary<int, int>(GetListingsDistribution(hqListings)),
-                SaleVelocity = GetSaleVelocity(currentlyShown.RecentHistory),
-                SaleVelocityNq = GetSaleVelocity(nqSales),
-                SaleVelocityHq = GetSaleVelocity(hqSales),
+                SaleVelocity = GetSaleVelocity(currentlyShown.RecentHistory, now, statsWithin),
+                SaleVelocityNq = GetSaleVelocity(nqSales, now, statsWithin),
+                SaleVelocityHq = GetSaleVelocity(hqSales, now, statsWithin),
                 CurrentAveragePrice = GetAveragePricePerUnit(currentlyShown.Listings),
                 CurrentAveragePriceNq = GetAveragePricePerUnit(nqListings),
                 CurrentAveragePriceHq = GetAveragePricePerUnit(hqListings),
@@ -164,10 +174,10 @@ namespace Universalis.Application.Controllers
             return Filters.RemoveOutliers(items.Select(s => (float)s.PricePerUnit), 3).Average();
         }
 
-        private static float GetSaleVelocity(IEnumerable<SaleView> sales)
+        private static float GetSaleVelocity(IEnumerable<SaleView> sales, long unixNowMs, long statsWithinMs)
         {
-            return Statistics.WeekVelocityPerDay(sales
-                .Select(s => s.TimestampUnixSeconds * 1000));
+            return Statistics.VelocityPerDay(sales
+                .Select(s => s.TimestampUnixSeconds * 1000), unixNowMs, statsWithinMs);
         }
 
         private static IDictionary<int, int> GetListingsDistribution(IEnumerable<ListingView> listings)

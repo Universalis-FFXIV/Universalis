@@ -17,6 +17,8 @@ namespace Universalis.Application.Tests.Controllers.V1
 {
     public class CurrentlyShownControllerTests
     {
+        private const long WeekLength = 604800000L;
+
         [Theory]
         [InlineData("74")]
         [InlineData("Coeurl")]
@@ -121,12 +123,12 @@ namespace Universalis.Application.Tests.Controllers.V1
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
             var controller = new CurrentlyShownController(gameData, dbAccess);
-            var lastUploadTime = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-            var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, lastUploadTime);
+            var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
             await dbAccess.Create(document1);
 
-            var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5333, lastUploadTime);
+            var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5333, unixNowMs);
             await dbAccess.Create(document2);
 
             var result = await controller.Get("5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
@@ -138,8 +140,9 @@ namespace Universalis.Application.Tests.Controllers.V1
             AssertCurrentlyShownDataCenter(
                 document1,
                 currentlyShown,
-                lastUploadTime,
-                worldOrDc);
+                unixNowMs,
+                worldOrDc,
+                unixNowMs);
         }
 
         [Theory]
@@ -150,12 +153,12 @@ namespace Universalis.Application.Tests.Controllers.V1
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
             var controller = new CurrentlyShownController(gameData, dbAccess);
-            var lastUploadTime = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-            var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, lastUploadTime);
+            var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
             await dbAccess.Create(document1);
 
-            var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5, lastUploadTime);
+            var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5, unixNowMs);
             await dbAccess.Create(document2);
 
             var result = await controller.Get("5,5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
@@ -172,13 +175,15 @@ namespace Universalis.Application.Tests.Controllers.V1
             AssertCurrentlyShownDataCenter(
                 document1,
                 currentlyShown.Items.First(item => item.ItemId == document1.ItemId),
-                lastUploadTime,
-                worldOrDc);
+                unixNowMs,
+                worldOrDc,
+                unixNowMs);
             AssertCurrentlyShownDataCenter(
                 document2,
                 currentlyShown.Items.First(item => item.ItemId == document2.ItemId),
-                lastUploadTime,
-                worldOrDc);
+                unixNowMs,
+                worldOrDc,
+                unixNowMs);
         }
 
         [Theory]
@@ -424,12 +429,13 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.Equal(maxPriceNq, currentlyShown.MaxPriceNq);
             Assert.Equal(maxPriceHq, currentlyShown.MaxPriceHq);
 
-            var saleVelocity = Statistics.WeekVelocityPerDay(
-                currentlyShown.RecentHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
-            var saleVelocityNq = Statistics.WeekVelocityPerDay(
-                nqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
-            var saleVelocityHq = Statistics.WeekVelocityPerDay(
-                hqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var saleVelocity = Statistics.VelocityPerDay(
+                currentlyShown.RecentHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), now, WeekLength);
+            var saleVelocityNq = Statistics.VelocityPerDay(
+                nqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), now, WeekLength);
+            var saleVelocityHq = Statistics.VelocityPerDay(
+                hqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), now, WeekLength);
 
             Assert.Equal(Round(saleVelocity), Round(currentlyShown.SaleVelocity));
             Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));
@@ -444,7 +450,7 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
         }
 
-        private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, CurrentlyShownView currentlyShown, uint lastUploadTime, string worldOrDc)
+        private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc, long unixNowMs)
         {
             Assert.Equal(anyWorldDocument.ItemId, currentlyShown.ItemId);
             Assert.Equal(lastUploadTime, currentlyShown.LastUploadTimeUnixMilliseconds);
@@ -510,12 +516,12 @@ namespace Universalis.Application.Tests.Controllers.V1
             Assert.Equal(maxPriceNq, currentlyShown.MaxPriceNq);
             Assert.Equal(maxPriceHq, currentlyShown.MaxPriceHq);
 
-            var saleVelocity = Statistics.WeekVelocityPerDay(
-                currentlyShown.RecentHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
-            var saleVelocityNq = Statistics.WeekVelocityPerDay(
-                nqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
-            var saleVelocityHq = Statistics.WeekVelocityPerDay(
-                hqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000));
+            var saleVelocity = Statistics.VelocityPerDay(
+                currentlyShown.RecentHistory.Select(s => s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
+            var saleVelocityNq = Statistics.VelocityPerDay(
+                nqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
+            var saleVelocityHq = Statistics.VelocityPerDay(
+                hqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
 
             Assert.Equal(Round(saleVelocity), Round(currentlyShown.SaleVelocity));
             Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));

@@ -1,7 +1,5 @@
 ﻿namespace Universalis.DataTransformations
 
-open System
-
 [<AbstractClass; Sealed>]
 type Statistics =
     /// <summary>
@@ -22,10 +20,17 @@ type Statistics =
         dict (Seq.countBy (fun n -> n) numbers)
 
     /// <summary>
-    /// Calculates the average number of timestamps per day, over the past week.
+    /// Calculates the average number of timestamps per day.
     /// </summary>
     /// <param name="timestampsMs">The sequence of millisecond timestamps to evaluate.</param>
-    static member WeekVelocityPerDay(timestampsMs: seq<int64>) =
-        let unixNow = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-        let filtered = seq { for t in timestampsMs do if t >= unixNow - 604800000L then t }
-        single (Seq.length filtered) / 7.0f
+    /// <param name="unixNow">The current time in milliseconds since the UNIX epoch.</param>
+    /// <param name="period">The period to calculate over.</param>
+    static member VelocityPerDay(timestampsMs: seq<int64>, unixNow: int64, period: int64) =
+        if Seq.length timestampsMs = 0 then
+            0f
+        else
+            let filtered = seq { for t in timestampsMs do if t >= unixNow - period then t }
+            let minTimestamp = Seq.min filtered
+            let maxTimestamp = Seq.max filtered
+            let nDays = single (maxTimestamp - minTimestamp) / 86400000f
+            single (Seq.length filtered) / nDays

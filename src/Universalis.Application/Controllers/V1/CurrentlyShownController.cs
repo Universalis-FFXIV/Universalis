@@ -24,6 +24,7 @@ namespace Universalis.Application.Controllers.V1
         /// <param name="worldOrDc">The world or data center to retrieve data for. This may be an ID or a name.</param>
         /// <param name="listingsToReturn">The number of listings to return. By default, all listings will be returned.</param>
         /// <param name="entriesToReturn">The number of entries to return. By default, a maximum of 5 entries will be returned.</param>
+        /// <param name="statsWithin">The amount of time before now to calculate stats over, in milliseconds. By default, this is 7 days.</param>
         /// <param name="noGst">
         /// If the result should not have Gil sales tax (GST) factored in. GST is applied to all
         /// consumer purchases in-game, and is separate from the retainer city tax that impacts what sellers receive.
@@ -40,7 +41,15 @@ namespace Universalis.Application.Controllers.V1
         [ProducesResponseType(typeof(CurrentlyShownView), 200)]
         [ProducesResponseType(typeof(CurrentlyShownMultiView), 200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> Get(string itemIds, string worldOrDc, [FromQuery(Name = "listings")] string listingsToReturn = "", [FromQuery(Name = "entries")] string entriesToReturn = "", [FromQuery] string noGst = "", [FromQuery] string hq = "", CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Get(
+            string itemIds,
+            string worldOrDc,
+            [FromQuery(Name = "listings")] string listingsToReturn = "",
+            [FromQuery(Name = "entries")] string entriesToReturn = "",
+            [FromQuery] string noGst = "",
+            [FromQuery] string hq = "",
+            [FromQuery] string statsWithin = "",
+            CancellationToken cancellationToken = default)
         {
             // Parameter parsing
             var itemIdsArray = InputProcessing.ParseIdList(itemIds)
@@ -69,6 +78,12 @@ namespace Universalis.Application.Controllers.V1
                 nEntries = Math.Max(0, queryEntries);
             }
 
+            var statsWithinMs = 604800000L;
+            if (long.TryParse(statsWithin, out var queryStatsWithinMs))
+            {
+                statsWithinMs = Math.Max(0, queryStatsWithinMs);
+            }
+
             var noGstBool = Util.ParseUnusualBool(noGst);
             bool? hqBool = string.IsNullOrEmpty(hq) || hq.ToLowerInvariant() == "null" ? null : Util.ParseUnusualBool(hq);
 
@@ -81,13 +96,15 @@ namespace Universalis.Application.Controllers.V1
                     return NotFound();
                 }
 
-                var (_, currentlyShownView) = await GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, 604800000, cancellationToken);
+                var (_, currentlyShownView) = await GetCurrentlyShownView(
+                    worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, cancellationToken);
                 return Ok(currentlyShownView);
             }
 
             // Multi-item handling
             var currentlyShownViewTasks = itemIdsArray
-                .Select(itemId => GetCurrentlyShownView(worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, 604800000, cancellationToken))
+                .Select(itemId => GetCurrentlyShownView(
+                    worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, cancellationToken))
                 .ToList();
             var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
             var unresolvedItems = currentlyShownViews

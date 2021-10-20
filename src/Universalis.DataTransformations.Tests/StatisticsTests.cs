@@ -8,6 +8,8 @@ namespace Universalis.DataTransformations.Tests
 {
     public class StatisticsTests
     {
+        private const long WeekLength = 604800000L;
+
         [Theory]
         [InlineData(0, new float[] { 3, 3, 3, 3 })]
         [InlineData(1.871, new float[] { 6, 2, 3, 1 })]
@@ -62,12 +64,14 @@ namespace Universalis.DataTransformations.Tests
         [Theory]
         [Repeat(100)]
         [SuppressMessage("Usage", "xUnit1026:Theory methods should use all of their parameters", Justification = "<Pending>")]
+        [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "<Pending>")]
         public void WeekVelocityPerDay_IsCorrect1(int i)
         {
+            var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             var rand = new Random();
-            var timestampsInWeek = GetTimestampsInWeek(rand.Next(0, 100)).ToList();
+            var timestampsInWeek = GetTimestampsInWeek(now, rand.Next(0, 100)).ToList();
             var timestampsBeforeWeek = GetTimestampsBeforeWeek(rand.Next(0, 100));
-            var velocity = Statistics.WeekVelocityPerDay(timestampsInWeek.Concat(timestampsBeforeWeek));
+            var velocity = Statistics.VelocityPerDay(timestampsInWeek.Concat(timestampsBeforeWeek), now, WeekLength);
             Assert.Equal(timestampsInWeek.Count / 7.0f, velocity);
         }
 
@@ -75,31 +79,33 @@ namespace Universalis.DataTransformations.Tests
         [InlineData(0, new long[] { })]
         public void WeekVelocityPerDay_IsCorrect2(int expected, long[] timestamps)
         {
-            var velocity = Statistics.WeekVelocityPerDay(timestamps);
+            var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            var velocity = Statistics.VelocityPerDay(timestamps, now, WeekLength);
             Assert.Equal(expected, velocity);
         }
 
-        private static IEnumerable<long> GetTimestampsInWeek(int count)
+        private static IEnumerable<long> GetTimestampsInWeek(long now, int count)
         {
-            const long weekLength = 604800000L;
-            var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            var startOfWeek = now - weekLength;
+            var startOfWeek = now - WeekLength;
             var rand = new Random();
 
             var timestamps = new List<long>();
-            for (var i = 0; i < count; i++)
+            for (var i = 0; i < count - 2; i++)
             {
-                timestamps.Add(startOfWeek + (long)Math.Truncate(rand.NextDouble() * weekLength));
+                timestamps.Add(startOfWeek + (long)Math.Truncate(rand.NextDouble() * WeekLength));
             }
+
+            // Ensure at least one timestamp exists for both the beginning and end of the week.
+            timestamps.Add(startOfWeek);
+            timestamps.Add(now);
 
             return timestamps;
         }
 
         private static IEnumerable<long> GetTimestampsBeforeWeek(int count)
         {
-            const long weekLength = 604800000L;
             var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            var startOfWeek = now - weekLength;
+            var startOfWeek = now - WeekLength;
             var rand = new Random();
 
             var timestamps = new List<long>();

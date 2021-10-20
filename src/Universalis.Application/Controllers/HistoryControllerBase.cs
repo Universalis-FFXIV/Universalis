@@ -22,7 +22,13 @@ namespace Universalis.Application.Controllers
             History = historyDb;
         }
 
-        protected async Task<(bool, HistoryView)> GetHistoryView(WorldDc worldDc, uint[] worldIds, uint itemId, int entries, CancellationToken cancellationToken = default)
+        protected async Task<(bool, HistoryView)> GetHistoryView(
+            WorldDc worldDc,
+            uint[] worldIds,
+            uint itemId,
+            int entries,
+            long statsWithin = 604800000,
+            CancellationToken cancellationToken = default)
         {
             var data = (await History.RetrieveMany(new HistoryManyQuery
             {
@@ -64,6 +70,8 @@ namespace Universalis.Application.Controllers
 
             var nqSales = history.Sales.Where(s => !s.Hq).ToList();
             var hqSales = history.Sales.Where(s => s.Hq).ToList();
+
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             return (resolved, new HistoryView
             {
                 Sales = history.Sales,
@@ -84,12 +92,12 @@ namespace Universalis.Application.Controllers
                     .Select(s => s.Quantity)
                     .Where(q => q != null)
                     .Select(q => (int)q))),
-                SaleVelocity = Statistics.WeekVelocityPerDay(history.Sales
-                    .Select(s => s.TimestampUnixSeconds * 1000)),
-                SaleVelocityNq = Statistics.WeekVelocityPerDay(nqSales
-                    .Select(s => s.TimestampUnixSeconds * 1000)),
-                SaleVelocityHq = Statistics.WeekVelocityPerDay(hqSales
-                    .Select(s => s.TimestampUnixSeconds * 1000)),
+                SaleVelocity = Statistics.VelocityPerDay(history.Sales
+                    .Select(s => s.TimestampUnixSeconds * 1000), now, statsWithin),
+                SaleVelocityNq = Statistics.VelocityPerDay(nqSales
+                    .Select(s => s.TimestampUnixSeconds * 1000), now, statsWithin),
+                SaleVelocityHq = Statistics.VelocityPerDay(hqSales
+                    .Select(s => s.TimestampUnixSeconds * 1000), now, statsWithin),
             });
         }
     }
