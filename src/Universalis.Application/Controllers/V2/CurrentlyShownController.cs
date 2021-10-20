@@ -71,7 +71,7 @@ namespace Universalis.Application.Controllers.V2
             }
 
             var noGstBool = Util.ParseUnusualBool(noGst);
-            bool? hqBool = string.IsNullOrEmpty(hq) ? null : Util.ParseUnusualBool(hq);
+            bool? hqBool = string.IsNullOrEmpty(hq) || hq.ToLowerInvariant() == "null" ? null : Util.ParseUnusualBool(hq);
 
             if (itemIdsArray.Length == 1)
             {
