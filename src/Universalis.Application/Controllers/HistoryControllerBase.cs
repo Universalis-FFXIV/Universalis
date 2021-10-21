@@ -66,7 +66,6 @@ namespace Universalis.Application.Controllers
                 }, cancellationToken);
 
             history.Sales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
-            history.Sales = history.Sales.Take(entries).ToList();
 
             var nqSales = history.Sales.Where(s => !s.Hq).ToList();
             var hqSales = history.Sales.Where(s => s.Hq).ToList();
@@ -74,7 +73,7 @@ namespace Universalis.Application.Controllers
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             return (resolved, new HistoryView
             {
-                Sales = history.Sales,
+                Sales = history.Sales.Take(entries).ToList(),
                 ItemId = itemId,
                 WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
                 WorldName = worldDc.IsWorld ? worldDc.WorldName : null,
