@@ -49,7 +49,7 @@ namespace Universalis.Application.Controllers
 
                     agg.Sales = await next.Sales
                             .ToAsyncEnumerable()
-                            .Where(s => entriesWithin < 0 || now - s.SaleTimeUnixSeconds - 1000 < entriesWithin)
+                            .Where(s => entriesWithin < 0 || now - s.SaleTimeUnixSeconds / 1000 < entriesWithin)
                             .Select(s => new MinimizedSaleView
                             {
                                 Hq = s.Hq,
