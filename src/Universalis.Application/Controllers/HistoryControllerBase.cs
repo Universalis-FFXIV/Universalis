@@ -53,10 +53,10 @@ namespace Universalis.Application.Controllers
                             {
                                 if (worldDc.IsWorld && worldDc.WorldId == 74 && itemId == 5)
                                 {
-                                    Console.WriteLine(now - s.SaleTimeUnixSeconds / 1000);
+                                    Console.WriteLine(now - s.SaleTimeUnixSeconds * 1000);
                                 }
 
-                                return entriesWithin < 0 || now - s.SaleTimeUnixSeconds / 1000 < entriesWithin;
+                                return entriesWithin < 0 || now - s.SaleTimeUnixSeconds * 1000 < entriesWithin;
                             })
                             .Select(s => new MinimizedSaleView
                             {
