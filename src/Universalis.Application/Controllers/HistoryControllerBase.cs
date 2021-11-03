@@ -40,6 +40,7 @@ namespace Universalis.Application.Controllers
             var worlds = GameData.AvailableWorlds();
 
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var nowSeconds = now / 1000;
             var history = await data
                 .ToAsyncEnumerable()
                 .AggregateAwaitAsync(new HistoryView(), async (agg, next) =>
@@ -49,15 +50,7 @@ namespace Universalis.Application.Controllers
 
                     agg.Sales = await next.Sales
                             .ToAsyncEnumerable()
-                            .Where(s =>
-                            {
-                                if (worldDc.IsWorld && worldDc.WorldId == 74 && itemId == 5)
-                                {
-                                    Console.WriteLine(now - s.SaleTimeUnixSeconds * 1000);
-                                }
-
-                                return entriesWithin < 0 || now - s.SaleTimeUnixSeconds * 1000 < entriesWithin;
-                            })
+                            .Where(s => entriesWithin < 0 || nowSeconds - s.SaleTimeUnixSeconds < entriesWithin)
                             .Select(s => new MinimizedSaleView
                             {
                                 Hq = s.Hq,
