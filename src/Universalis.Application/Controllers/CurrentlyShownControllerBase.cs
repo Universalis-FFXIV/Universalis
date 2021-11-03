@@ -34,6 +34,7 @@ namespace Universalis.Application.Controllers
             bool noGst = false,
             bool? onlyHq = null,
             long statsWithin = 604800000,
+            long entriesWithin = -1,
             CancellationToken cancellationToken = default)
         {
             var data = (await CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery
@@ -41,11 +42,11 @@ namespace Universalis.Application.Controllers
                 WorldIds = worldIds,
                 ItemId = itemId,
             }, cancellationToken)).ToList();
-
             var resolved = data.Count > 0;
-
             var worlds = GameData.AvailableWorlds();
 
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var nowSeconds = now / 1000;
             var currentlyShown = await data
                 .ToAsyncEnumerable()
                 .AggregateAwaitAsync(new CurrentlyShownView(), async (agg, next) =>
@@ -73,6 +74,7 @@ namespace Universalis.Application.Controllers
 
                     agg.RecentHistory = await next.RecentHistory
                         .ToAsyncEnumerable()
+                        .Where(s => entriesWithin < 0 || nowSeconds - s.TimestampUnixSeconds < entriesWithin)
                         .Select(s => new SaleView
                         {
                             Hq = s.Hq,
@@ -107,8 +109,7 @@ namespace Universalis.Application.Controllers
             var hqListings = currentlyShown.Listings.Where(l => l.Hq).ToList();
             var nqSales = currentlyShown.RecentHistory.Where(s => !s.Hq).ToList();
             var hqSales = currentlyShown.RecentHistory.Where(s => s.Hq).ToList();
-
-            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            
             var view = new CurrentlyShownView
             {
                 Listings = currentlyShown.Listings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings).ToList(),
