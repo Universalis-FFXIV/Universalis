@@ -15,6 +15,10 @@ services:
       test: [ "CMD", "curl", "--fail", "http://localhost:4002/api/74/5" ]
       timeout: 3s
       interval: 10s
+  lodestone:
+    image: ghcr.io/universalis-ffxiv/lodestone:latest
+    ports:
+      - 3999:3999
   watchtower:
     image: containrrr/watchtower
     environment:
