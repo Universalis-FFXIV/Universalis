@@ -20,10 +20,7 @@ namespace Universalis.GameData
 
         public LuminaGameDataProvider(string sqpack)
         {
-            var lumina = new Lumina.GameData(sqpack, new Lumina.LuminaOptions
-            {
-                PanicOnSheetChecksumMismatch = false,
-            });
+            var lumina = new Lumina.GameData(sqpack);
 
             _availableWorlds = LoadAvailableWorlds(lumina);
             _availableWorldsReversed = LoadAvailableWorldsReversed(lumina);
