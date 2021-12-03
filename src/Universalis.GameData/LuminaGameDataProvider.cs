@@ -144,7 +144,7 @@ namespace Universalis.GameData
         private static IEnumerable<LuminaWorld> GetPublicWorlds(IEnumerable<LuminaWorld> worlds)
         {
             return worlds
-                .Where(w => w.IsPublic)
+                .Where(w => w.IsPublic > 0)
                 .Where(w => w.RowId != 25); // Chaos (world)
         }
     }
