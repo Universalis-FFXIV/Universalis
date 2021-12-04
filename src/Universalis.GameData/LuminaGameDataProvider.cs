@@ -133,7 +133,7 @@ namespace Universalis.GameData
                 {
                     Name = dc.Name,
                     WorldIds = GetPublicWorlds(worlds)
-                        .Where(w => w.DataCenter.Row == dc.RowId)
+                        .Where(w => w.Unknown4 == dc.RowId)
                         .Select(w => w.RowId)
                         .ToArray(),
                 })
