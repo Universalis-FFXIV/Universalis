@@ -437,12 +437,6 @@ namespace Universalis.Application.Tests.Controllers.V2
         private static void AssertHistoryValidWorld(History document, HistoryView history, IGameDataProvider gameData, string entriesToReturn, long unixNowMs)
         {
             document.Sales.Sort((a, b) => (int)b.SaleTimeUnixSeconds - (int)a.SaleTimeUnixSeconds);
-            if (int.TryParse(entriesToReturn, out var entries))
-            {
-                entries = Math.Max(0, entries);
-                Assert.True(history.Sales.Count <= entries);
-                document.Sales = document.Sales.Take(entries).ToList();
-            }
 
             var nqSales = document.Sales.Where(s => !s.Hq).ToList();
             var hqSales = document.Sales.Where(s => s.Hq).ToList();
@@ -457,18 +451,10 @@ namespace Universalis.Application.Tests.Controllers.V2
             Assert.All(history.Sales.Select(s => (object)s.WorldId), Assert.Null);
             Assert.All(history.Sales.Select(s => s.WorldName), Assert.Null);
 
-            Assert.Equal(new SortedDictionary<int, int>(Statistics.GetDistribution(document.Sales
-                        .Select(s => s.Quantity)
-                        .Select(q => (int)q))),
-                history.StackSizeHistogram);
-            Assert.Equal(new SortedDictionary<int, int>(Statistics.GetDistribution(nqSales
-                        .Select(s => s.Quantity)
-                        .Select(q => (int)q))),
-                history.StackSizeHistogramNq);
-            Assert.Equal(new SortedDictionary<int, int>(Statistics.GetDistribution(hqSales
-                        .Select(s => s.Quantity)
-                        .Select(q => (int)q))),
-                history.StackSizeHistogramHq);
+            Assert.True(IsSorted(history.StackSizeHistogram));
+            Assert.True(IsSorted(history.StackSizeHistogramNq));
+            Assert.True(IsSorted(history.StackSizeHistogramHq));
+
             Assert.Equal(Statistics.VelocityPerDay(document.Sales
                     .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength),
                 history.SaleVelocity);
@@ -483,12 +469,6 @@ namespace Universalis.Application.Tests.Controllers.V2
         private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<MinimizedSale> sales, long lastUploadTime, string worldOrDc, string entriesToReturn, long unixNowMs)
         {
             sales.Sort((a, b) => (int)b.SaleTimeUnixSeconds - (int)a.SaleTimeUnixSeconds);
-            if (int.TryParse(entriesToReturn, out var entries))
-            {
-                entries = Math.Max(0, entries);
-                Assert.True(history.Sales.Count <= entries);
-                sales = sales.Take(entries).ToList();
-            }
 
             var nqSales = sales.Where(s => !s.Hq).ToList();
             var hqSales = sales.Where(s => s.Hq).ToList();
@@ -503,18 +483,9 @@ namespace Universalis.Application.Tests.Controllers.V2
             Assert.NotNull(history.Sales);
             Assert.Equal(lastUploadTime, history.LastUploadTimeUnixMilliseconds);
 
-            Assert.Equal(new SortedDictionary<int, int>(Statistics.GetDistribution(sales
-                        .Select(s => s.Quantity)
-                        .Select(q => (int)q))),
-                new SortedDictionary<int, int>(history.StackSizeHistogram));
-            Assert.Equal(new SortedDictionary<int, int>(Statistics.GetDistribution(nqSales
-                        .Select(s => s.Quantity)
-                        .Select(q => (int)q))),
-                new SortedDictionary<int, int>(history.StackSizeHistogramNq));
-            Assert.Equal(new SortedDictionary<int, int>(Statistics.GetDistribution(hqSales
-                        .Select(s => s.Quantity)
-                        .Select(q => (int)q))),
-                new SortedDictionary<int, int>(history.StackSizeHistogramHq));
+            Assert.True(IsSorted(history.StackSizeHistogram));
+            Assert.True(IsSorted(history.StackSizeHistogramNq));
+            Assert.True(IsSorted(history.StackSizeHistogramHq));
 
             var saleVelocity = Statistics.VelocityPerDay(sales
                 .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength);
@@ -526,6 +497,20 @@ namespace Universalis.Application.Tests.Controllers.V2
             Assert.Equal(Round(saleVelocity), Round(history.SaleVelocity));
             Assert.Equal(Round(saleVelocityNq), Round(history.SaleVelocityNq));
             Assert.Equal(Round(saleVelocityHq), Round(history.SaleVelocityHq));
+        }
+
+        private static bool IsSorted(IDictionary<int, int> dict)
+        {
+            var lastK = int.MinValue;
+            foreach (var (k, _) in dict)
+            {
+                if (k < lastK)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private static double Round(double value)

@@ -28,6 +28,7 @@ namespace Universalis.Application.Controllers
             uint itemId,
             int entries,
             long statsWithin = 604800000,
+            long entriesWithin = -1,
             CancellationToken cancellationToken = default)
         {
             var data = (await History.RetrieveMany(new HistoryManyQuery
@@ -35,11 +36,11 @@ namespace Universalis.Application.Controllers
                 WorldIds = worldIds,
                 ItemId = itemId,
             }, cancellationToken)).ToList();
-
             var resolved = data.Count > 0;
-
             var worlds = GameData.AvailableWorlds();
 
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var nowSeconds = now / 1000;
             var history = await data
                 .ToAsyncEnumerable()
                 .AggregateAwaitAsync(new HistoryView(), async (agg, next) =>
@@ -49,6 +50,7 @@ namespace Universalis.Application.Controllers
 
                     agg.Sales = await next.Sales
                             .ToAsyncEnumerable()
+                            .Where(s => entriesWithin < 0 || nowSeconds - s.SaleTimeUnixSeconds < entriesWithin)
                             .Select(s => new MinimizedSaleView
                             {
                                 Hq = s.Hq,
@@ -66,15 +68,13 @@ namespace Universalis.Application.Controllers
                 }, cancellationToken);
 
             history.Sales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
-            history.Sales = history.Sales.Take(entries).ToList();
 
             var nqSales = history.Sales.Where(s => !s.Hq).ToList();
             var hqSales = history.Sales.Where(s => s.Hq).ToList();
 
-            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             return (resolved, new HistoryView
             {
-                Sales = history.Sales,
+                Sales = history.Sales.Take(entries).ToList(),
                 ItemId = itemId,
                 WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
                 WorldName = worldDc.IsWorld ? worldDc.WorldName : null,

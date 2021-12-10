@@ -1,26 +1,17 @@
 using Xunit;
 
-#pragma warning disable xUnit1004 // Test methods should not be skipped
+#pragma warning disable xUnit1008 // Test data attribute should only be used on a Theory
 namespace Universalis.GameData.Tests
 {
     public class GameDataProviderTests
     {
         private const string SqPack = @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack";
-
-        private const string Skip =
-#if !DEBUG
-            "This test is only run in the Debug configuration for build automation purposes.";
-#else
-            null;
-#endif
-
-        [Fact(Skip = Skip)]
+        
         public void Provider_Must_Load()
         {
             ServiceUtils.CreateGameDataProvider(SqPack);
         }
-
-        [Theory(Skip = Skip)]
+        
         [InlineData(44, "Anima")]
         [InlineData(74, "Coeurl")]
         [InlineData(82, "Mandragora")]
@@ -30,8 +21,7 @@ namespace Universalis.GameData.Tests
             var actualWorldName = gameData.AvailableWorlds()[worldId];
             Assert.Equal(expectedWorldName, actualWorldName);
         }
-
-        [Theory(Skip = Skip)]
+        
         [InlineData("Anima", 44)]
         [InlineData("Coeurl", 74)]
         [InlineData("Mandragora", 82)]
@@ -41,8 +31,7 @@ namespace Universalis.GameData.Tests
             var actualWorldId = gameData.AvailableWorldsReversed()[worldName];
             Assert.Equal(expectedWorldId, actualWorldId);
         }
-
-        [Theory(Skip = Skip)]
+        
         [InlineData(44, true)]
         [InlineData(74, true)]
         [InlineData(0, false)]
@@ -54,8 +43,7 @@ namespace Universalis.GameData.Tests
             var actuallyContains = worldIds.Contains(worldId);
             Assert.Equal(expectedToContain, actuallyContains);
         }
-
-        [Theory(Skip = Skip)]
+        
         [InlineData(26165, true)]
         [InlineData(30759, true)]
         [InlineData(0, false)]
@@ -69,4 +57,4 @@ namespace Universalis.GameData.Tests
         }
     }
 }
-#pragma warning restore xUnit1004 // Test methods should not be skipped
+#pragma warning restore xUnit1008 // Test data attribute should only be used on a Theory

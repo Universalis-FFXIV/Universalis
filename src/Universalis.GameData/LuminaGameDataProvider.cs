@@ -133,7 +133,7 @@ namespace Universalis.GameData
                 {
                     Name = dc.Name,
                     WorldIds = GetPublicWorlds(worlds)
-                        .Where(w => w.DataCenter.Row == dc.RowId)
+                        .Where(w => w.Unknown4 == dc.RowId)
                         .Select(w => w.RowId)
                         .ToArray(),
                 })
@@ -144,7 +144,7 @@ namespace Universalis.GameData
         private static IEnumerable<LuminaWorld> GetPublicWorlds(IEnumerable<LuminaWorld> worlds)
         {
             return worlds
-                .Where(w => w.IsPublic)
+                .Where(w => w.Unknown5)
                 .Where(w => w.RowId != 25); // Chaos (world)
         }
     }

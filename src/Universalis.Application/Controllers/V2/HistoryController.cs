@@ -25,6 +25,7 @@ namespace Universalis.Application.Controllers.V2
         /// <param name="worldOrDc">The world or data center to retrieve data for. This may be an ID or a name.</param>
         /// <param name="entriesToReturn">The number of entries to return. By default, this is set to 1800, but may be set to a maximum of 999999.</param>
         /// <param name="statsWithin">The amount of time before now to calculate stats over, in milliseconds. By default, this is 7 days.</param>
+        /// <param name="entriesWithin">The amount of time before now to take entries within, in seconds. Negative values will be ignored.</param>
         /// <param name="cancellationToken"></param>
         /// <response code="200">Data retrieved successfully.</response>
         /// <response code="404">
@@ -40,6 +41,7 @@ namespace Universalis.Application.Controllers.V2
             string worldOrDc,
             [FromQuery] string entriesToReturn,
             [FromQuery] string statsWithin = "",
+            [FromQuery] string entriesWithin = "",
             CancellationToken cancellationToken = default)
         {
             // Parameter parsing
@@ -69,6 +71,12 @@ namespace Universalis.Application.Controllers.V2
                 statsWithinMs = Math.Max(0, queryStatsWithinMs);
             }
 
+            var entriesWithinSeconds = -1L;
+            if (long.TryParse(entriesWithin, out var queryEntriesWithinSeconds))
+            {
+                entriesWithinSeconds = Math.Max(0, queryEntriesWithinSeconds);
+            }
+
             if (itemIdsArray.Length == 1)
             {
                 var itemId = itemIdsArray[0];
@@ -78,13 +86,13 @@ namespace Universalis.Application.Controllers.V2
                     return NotFound();
                 }
 
-                var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entries, statsWithinMs, cancellationToken);
+                var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entries, statsWithinMs, entriesWithinSeconds, cancellationToken);
                 return Ok(historyView);
             }
 
             // Multi-item handling
             var historyViewTasks = itemIdsArray
-                .Select(itemId => GetHistoryView(worldDc, worldIds, itemId, entries, statsWithinMs, cancellationToken))
+                .Select(itemId => GetHistoryView(worldDc, worldIds, itemId, entries, statsWithinMs, entriesWithinSeconds, cancellationToken))
                 .ToList();
             var historyViews = await Task.WhenAll(historyViewTasks);
             var unresolvedItems = historyViews
