@@ -93,7 +93,8 @@ namespace Universalis.Application.Controllers.V1
 
                 if (!GameData.MarketableItemIds().Contains(itemId))
                 {
-                    return NotFound();
+                    // TODO: Remove belts
+                    return Ok(new CurrentlyShownView());
                 }
 
                 var (_, currentlyShownView) = await GetCurrentlyShownView(
