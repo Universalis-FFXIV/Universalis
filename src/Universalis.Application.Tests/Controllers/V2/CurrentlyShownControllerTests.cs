@@ -523,7 +523,7 @@ namespace Universalis.Application.Tests.Controllers.V2
         }
 
         [Fact]
-        public async Task Controller_Get_Fails_SingleItem_World_WhenNotMarketable()
+        public async Task Controller_Get_Succeeds_SingleItem_World_WhenNotMarketable()
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
@@ -532,7 +532,7 @@ namespace Universalis.Application.Tests.Controllers.V2
             const uint itemId = 0;
             var result = await controller.Get(itemId.ToString(), "74");
 
-            Assert.IsType<NotFoundResult>(result);
+            Assert.IsType<OkObjectResult>(result);
         }
 
         [Fact]
@@ -554,7 +554,7 @@ namespace Universalis.Application.Tests.Controllers.V2
         }
 
         [Fact]
-        public async Task Controller_Get_Fails_SingleItem_DataCenter_WhenNotMarketable()
+        public async Task Controller_Get_Succeeds_SingleItem_DataCenter_WhenNotMarketable()
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
@@ -563,7 +563,7 @@ namespace Universalis.Application.Tests.Controllers.V2
             const uint itemId = 0;
             var result = await controller.Get(itemId.ToString(), "Crystal");
 
-            Assert.IsType<NotFoundResult>(result);
+            Assert.IsType<OkObjectResult>(result);
         }
 
         [Fact]
