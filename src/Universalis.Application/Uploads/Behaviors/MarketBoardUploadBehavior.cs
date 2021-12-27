@@ -95,14 +95,12 @@ namespace Universalis.Application.Uploads.Behaviors
                     var head = existingHistory.Sales.FirstOrDefault();
                     for (var i = 0; i < minimizedSales.Count; i++)
                     {
-                        if (minimizedSales.Count == 0) break;
-                        if (minimizedSales[0].Equals(head))
+                        if (minimizedSales[i].Equals(head))
                         {
                             break;
                         }
 
                         existingHistory.Sales.Insert(0, minimizedSales[i]);
-                        minimizedSales.RemoveAt(0);
                     }
 
                     // Trims out duplicates and any invalid data
