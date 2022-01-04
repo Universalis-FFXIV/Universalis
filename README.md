@@ -36,15 +36,8 @@ CREATE DATABASE `dalamud`;
 CREATE USER 'dalamud'@localhost IDENTIFIED BY 'dalamud';
 ```
 
-Setup script:
+Setup script (mogboard):
 ```
-npm install -g yarn
-npm install
-git submodule init
-git submodule update
-cd mogboard
-git submodule init
-git submodule update
 composer install
 php bin/console doctrine:schema:create
 php bin/console PopulateGameDataCommand -vvv
