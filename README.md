@@ -19,3 +19,48 @@ The frontend is housed on our [mogboard fork](https://github.com/Universalis-FFX
 
 ## Upload Software Development
 Please see goat's [ACT plugin](https://github.com/goaaats/universalis_act_plugin) for an example of how to collect and upload market board data.
+
+## Development
+Requires .NET 6, [PHP](https://www.php.net/downloads.php), [MariaDB](https://mariadb.org/download/), [Redis](https://redis.io/download), [Composer](https://getcomposer.org/), and [MongoDB Community Edition](https://docs.mongodb.com/manual/administration/install-community/) v4.2 or higher.
+
+Also build a DataExports and an icon2x by running the exporter solution.
+
+Uncomment/add in php.ini:
+```
+extension=redis.so
+```
+
+MariaDB commands:
+```
+CREATE DATABASE `dalamud`;
+CREATE USER 'dalamud'@localhost IDENTIFIED BY 'dalamud';
+```
+
+Setup script (mogboard):
+```
+composer install
+php bin/console doctrine:schema:create
+php bin/console PopulateGameDataCommand -vvv
+php bin/console ImportTranslationsCommand -vvv
+yarn
+yarn dev
+symfony server:start -vvv --port 8000
+cd ..
+npm run build
+npm start
+```
+
+## To update
+Go to the mogboard/ folder, and execute the following commands after adding any new front-end data.
+```
+sudo rm -rf var/
+sudo redis-cli FLUSHALL
+sudo php bin/console PopulateGameDataCommand -vvv
+sudo php bin/console ImportTranslationsCommand -vvv
+sudo chmod 0777 var/ -R
+```
+
+### Single-line form
+```
+sudo rm -rf var/ && sudo redis-cli FLUSHALL && sudo php bin/console PopulateGameDataCommand -vvv && sudo php bin/console ImportTranslationsCommand -vvv && sudo chmod 0777 var/ -R
+```
