@@ -64,8 +64,8 @@ namespace Universalis.Application.Uploads.Behaviors
                     .Where(s => s.PricePerUnit > 0)
                     .Where(s => s.Quantity > 0)
                     .Where(s => s.TimestampUnixSeconds > 0)
+                    .OrderByDescending(s => s.TimestampUnixSeconds)
                     .ToListAsync(cancellationToken);
-                cleanSales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
                 var existingHistory = await _historyDb.Retrieve(new HistoryQuery
                 {
@@ -110,8 +110,8 @@ namespace Universalis.Application.Uploads.Behaviors
                         .ToAsyncEnumerable()
                         .Where(s => s.PricePerUnit > 0) // We check PPU and *not* quantity because there are entries from before quantity was tracked
                         .Distinct()
+                        .OrderByDescending(s => s.SaleTimeUnixSeconds)
                         .ToListAsync(cancellationToken);
-                    existingHistory.Sales.Sort((a, b) => (int)Math.Truncate(b.SaleTimeUnixSeconds - a.SaleTimeUnixSeconds));
 
                     historyDocument.Sales = existingHistory.Sales;
                     await _historyDb.Update(historyDocument, new HistoryQuery
@@ -158,8 +158,8 @@ namespace Universalis.Application.Uploads.Behaviors
                             UploadApplicationName = source.Name,
                         };
                     })
+                    .OrderBy(l => l.PricePerUnit)
                     .ToListAsync(cancellationToken);
-                cleanListings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
             }
 
             var existingCurrentlyShown = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
