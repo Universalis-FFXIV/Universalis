@@ -1,4 +1,6 @@
-﻿using System.Threading;
+﻿using System;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Uploads.Schema;
@@ -27,6 +29,17 @@ namespace Universalis.Application.Uploads.Behaviors
         {
             // ReSharper disable once PossibleInvalidOperationException
             var existingTaxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = parameters.WorldId.Value }, cancellationToken);
+
+            if (existingTaxRates == null)
+            {
+                Console.WriteLine("Existing tax rates are null");
+            }
+            else
+            {
+                Console.WriteLine(JsonSerializer.Serialize(existingTaxRates));
+            }
+
+            Console.WriteLine(JsonSerializer.Serialize(parameters.TaxRates));
 
             await _taxRatesDb.Update(new TaxRates
             {
