@@ -22,7 +22,7 @@ namespace Universalis.Application.Uploads.Schema
         [JsonPropertyName("crystarium")]
         public byte Crystarium { get; set; }
 
-        [JsonPropertyName("oldSharlayan")]
+        [JsonPropertyName("sharlayan")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public byte? OldSharlayan { get; set; }
     }
