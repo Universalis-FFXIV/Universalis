@@ -36,7 +36,7 @@ namespace Universalis.Application.Uploads.Behaviors
                 Ishgard = parameters.TaxRates.Ishgard,
                 Kugane = parameters.TaxRates.Kugane,
                 Crystarium = parameters.TaxRates.Crystarium,
-                OldSharlayan = parameters.TaxRates.OldSharlayan ?? existingTaxRates.OldSharlayan ?? 0,
+                OldSharlayan = parameters.TaxRates.OldSharlayan ?? existingTaxRates?.OldSharlayan ?? 0,
                 UploaderIdHash = parameters.UploaderId,
                 WorldId = parameters.WorldId.Value,
                 UploadApplicationName = source.Name,
