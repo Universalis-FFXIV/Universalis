@@ -25,6 +25,9 @@ namespace Universalis.Entities.MarketBoard
         [BsonElement("crystarium")]
         public byte Crystarium { get; init; }
 
+        [BsonElement("oldSharlayan")]
+        public byte? OldSharlayan { get; init; }
+
         [BsonElement("uploaderID")]
         public string UploaderIdHash { get; init; }
 
@@ -46,6 +49,7 @@ namespace Universalis.Entities.MarketBoard
                    && Ishgard == other.Ishgard
                    && Kugane == other.Kugane
                    && Crystarium == other.Crystarium
+                   && OldSharlayan == other.OldSharlayan
                    && WorldId == other.WorldId;
         }
 
@@ -65,6 +69,7 @@ namespace Universalis.Entities.MarketBoard
             hashCode.Add(Ishgard);
             hashCode.Add(Kugane);
             hashCode.Add(Crystarium);
+            hashCode.Add(OldSharlayan);
             hashCode.Add(WorldId);
             return hashCode.ToHashCode();
         }

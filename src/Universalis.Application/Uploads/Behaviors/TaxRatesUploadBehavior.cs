@@ -25,6 +25,9 @@ namespace Universalis.Application.Uploads.Behaviors
 
         public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
         {
+            // ReSharper disable once PossibleInvalidOperationException
+            var existingTaxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = parameters.WorldId.Value }, cancellationToken);
+
             await _taxRatesDb.Update(new TaxRates
             {
                 LimsaLominsa = parameters.TaxRates.LimsaLominsa,
@@ -33,8 +36,8 @@ namespace Universalis.Application.Uploads.Behaviors
                 Ishgard = parameters.TaxRates.Ishgard,
                 Kugane = parameters.TaxRates.Kugane,
                 Crystarium = parameters.TaxRates.Crystarium,
+                OldSharlayan = parameters.TaxRates.OldSharlayan ?? existingTaxRates.OldSharlayan ?? 0,
                 UploaderIdHash = parameters.UploaderId,
-                // ReSharper disable once PossibleInvalidOperationException
                 WorldId = parameters.WorldId.Value,
                 UploadApplicationName = source.Name,
             }, new TaxRatesQuery
