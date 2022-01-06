@@ -15,6 +15,7 @@ namespace Universalis.GameData
                 "luxingniao" => "陆行鸟",
                 "moguli" => "莫古力",
                 "maoxiaopang" => "猫小胖",
+                "doudouchai" => "豆豆柴",
                 "hongyuhai" => "红玉海",
                 "shenyizhidi" => "神意之地",
                 "lanuoxiya" => "拉诺西亚",
@@ -38,6 +39,14 @@ namespace Universalis.GameData
                 "haimaochawu" => "海猫茶屋",
                 "roufenghaiwan" => "柔风海湾",
                 "hupoyuan" => "琥珀原",
+                "shuijingta" => "水晶塔",
+                "yinleihu" => "银泪湖",
+                "taiyanghaian" => "太阳海岸",
+                "yixiujiade" => "伊修加德",
+                "hongchachuan" => "红茶川",
+                "huangjingu" => "黄金谷",
+                "yueyawan" => "月牙湾",
+                "xuesongyuan" => "雪松原",
                 _ => worldOrDc,
             };
 
@@ -52,6 +61,7 @@ namespace Universalis.GameData
                 "陆行鸟" => "LuXingNiao",
                 "莫古力" => "MoGuLi",
                 "猫小胖" => "MaoXiaoPang",
+                "豆豆柴" => "DouDouChai",
                 "红玉海" => "HongYuHai",
                 "神意之地" => "ShenYiZhiDi",
                 "拉诺西亚" => "LaNuoXiYa",
@@ -75,6 +85,14 @@ namespace Universalis.GameData
                 "海猫茶屋" => "HaiMaoChaWu",
                 "柔风海湾" => "RouFengHaiWan",
                 "琥珀原" => "HuPoYuan",
+                "水晶塔" => "ShuiJingTa",
+                "银泪湖" => "YinLeiHu",
+                "太阳海岸" => "TaiYangHaiAn",
+                "伊修加德" => "YiXiuJiaDe",
+                "红茶川" => "HongChaChuan",
+                "黄金谷" => "HuangJinGu",
+                "月牙湾" => "YueYaWan",
+                "雪松原" => "XueSongYuan",
                 _ => worldOrDc,
             };
 
@@ -84,6 +102,7 @@ namespace Universalis.GameData
                 new DataCenter {Name = "陆行鸟", WorldIds = new uint[]{ 1167, 1081, 1042, 1044, 1060, 1173, 1174, 1175 }},
                 new DataCenter {Name = "莫古力", WorldIds = new uint[]{ 1172, 1076, 1171, 1170, 1113, 1121, 1166, 1176 }},
                 new DataCenter {Name = "猫小胖", WorldIds = new uint[]{ 1043, 1169, 1106, 1045, 1177, 1178, 1179 }},
+                new DataCenter {Name = "豆豆柴", WorldIds = new uint[]{ 1192, 1183, 1180, 1186, 1193, 1068, 1064, 1187 }},
             };
 
         internal static IEnumerable<World> Worlds()
@@ -112,6 +131,14 @@ namespace Universalis.GameData
                 new World{Name = "海猫茶屋", Id = 1177},
                 new World{Name = "柔风海湾", Id = 1178},
                 new World{Name = "琥珀原", Id = 1179},
+                new World{Name = "水晶塔", Id = 1192},
+                new World{Name = "银泪湖", Id = 1183},
+                new World{Name = "太阳海岸", Id = 1180},
+                new World{Name = "伊修加德", Id = 1186},
+                new World{Name = "红茶川", Id = 1193},
+                new World{Name = "黄金谷", Id = 1068},
+                new World{Name = "月牙湾", Id = 1064},
+                new World{Name = "雪松原", Id = 1187},
             };
     }
 }
