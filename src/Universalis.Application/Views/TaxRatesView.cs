@@ -39,5 +39,11 @@ namespace Universalis.Application.Views
         /// </summary>
         [JsonPropertyName("Crystarium")]
         public byte Crystarium { get; init; }
+
+        /// <summary>
+        /// The percent retainer tax in Old Sharlayan.
+        /// </summary>
+        [JsonPropertyName("Old Sharlayan")]
+        public byte OldSharlayan { get; init; }
     }
 }

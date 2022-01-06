@@ -52,6 +52,7 @@ namespace Universalis.Application.Controllers.V1
                 Ishgard = taxRates.Ishgard,
                 Kugane = taxRates.Kugane,
                 Crystarium = taxRates.Crystarium,
+                OldSharlayan = taxRates.OldSharlayan ?? 0,
             });
         }
     }
