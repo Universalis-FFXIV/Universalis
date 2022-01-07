@@ -43,6 +43,10 @@ namespace Universalis.Application.Controllers.V1
             }
 
             var taxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = worldDc.WorldId }, cancellationToken);
+            if (taxRates == null)
+            {
+                return Ok(new TaxRatesView());
+            }
 
             return Ok(new TaxRatesView
             {
