@@ -162,15 +162,21 @@ namespace Universalis.GameData
             public uint RowId { get; set; }
 
             [Index(1)]
-            public string Name { get; set; }
+            public string InternalName { get; set; }
 
             [Index(2)]
-            public byte UserType { get; set; }
+            public string Name { get; set; }
 
             [Index(3)]
-            public int DataCenter { get; set; }
+            public byte Region { get; set; }
 
             [Index(4)]
+            public byte UserType { get; set; }
+
+            [Index(5)]
+            public int DataCenter { get; set; }
+
+            [Index(6)]
             public bool IsPublic { get; set; }
         }
 
