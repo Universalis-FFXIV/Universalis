@@ -21,7 +21,7 @@ The frontend is housed on our [mogboard fork](https://github.com/Universalis-FFX
 Please see goat's [ACT plugin](https://github.com/goaaats/universalis_act_plugin) for an example of how to collect and upload market board data.
 
 ## Development
-Requires .NET 6, [PHP](https://www.php.net/downloads.php), [MariaDB](https://mariadb.org/download/), [Redis](https://redis.io/download), [Composer](https://getcomposer.org/), and [MongoDB Community Edition](https://docs.mongodb.com/manual/administration/install-community/) v4.2 or higher.
+Requires .NET 6, [PHP 7.2](https://www.php.net/downloads.php), [MariaDB](https://mariadb.org/download/), [Redis](https://redis.io/download), [Composer 1](https://getcomposer.org/), and [MongoDB Community Edition](https://docs.mongodb.com/manual/administration/install-community/) v4.2 or higher.
 
 Also build a DataExports and an icon2x by running the exporter solution.
 
@@ -34,6 +34,8 @@ MariaDB commands:
 ```
 CREATE DATABASE `dalamud`;
 CREATE USER 'dalamud'@localhost IDENTIFIED BY 'dalamud';
+GRANT ALL PRIVILEGES ON `dalamud`.* TO 'dalamud'@localhost IDENTIFIED BY 'dalamud';
+FLUSH PRIVILEGES;
 ```
 
 Setup script (mogboard):
@@ -45,9 +47,6 @@ php bin/console ImportTranslationsCommand -vvv
 yarn
 yarn dev
 symfony server:start -vvv --port 8000
-cd ..
-npm run build
-npm start
 ```
 
 ## To update
