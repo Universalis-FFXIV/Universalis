@@ -12,6 +12,8 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
     private readonly IDictionary<TKey, int> _idMap;
     private readonly Stack<int> _freeEntries;
 
+    public int Capacity { get; }
+
     public MemoryCache(int size)
     {
         _lock = new ReaderWriterLockSlim();
@@ -19,6 +21,8 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         _idMap = new Dictionary<TKey, int>(size);
         _freeEntries = new Stack<int>(Enumerable.Range(0, size));
         _freeEntries.TrimExcess();
+
+        Capacity = size;
     }
 
     public void Set(TKey key, TValue value)

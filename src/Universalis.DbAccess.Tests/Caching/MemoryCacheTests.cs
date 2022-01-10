@@ -15,6 +15,15 @@ public class MemoryCacheTests
         {
             cache.Set(i, 1);
         }
+
+        var hits = 0;
+        for (var i = 0; i < 5; i++)
+        {
+            var j = cache.Get(i);
+            if (j is 1) hits++;
+        }
+
+        Assert.Equal(hits, cache.Capacity);
     }
 
     [Fact]
