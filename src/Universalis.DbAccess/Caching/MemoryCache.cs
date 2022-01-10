@@ -67,8 +67,8 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         _lock.EnterReadLock();
         try
         {
-            var val = _data[_idMap[key]];
-            if (val == null) return null;
+            if (!_idMap.TryGetValue(key, out var idx)) return null;
+            var val = _data[idx];
             val.Dirty = true;
             return val.Value;
         }
