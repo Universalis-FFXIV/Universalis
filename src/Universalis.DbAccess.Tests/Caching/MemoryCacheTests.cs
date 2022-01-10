@@ -31,30 +31,26 @@ public class MemoryCacheTests
     {
         var cache = new MemoryCache<CurrentlyShownQuery, object>(1);
 
-        var t1 = new Thread(() =>
+        var threads = new Thread[4];
+        for (var i = 0; i < threads.Length; i++)
         {
-            for (var i = 0U; i < 50000; i++)
+            var curI = i;
+            threads[i] = new Thread(() =>
             {
-                var query = new CurrentlyShownQuery { ItemId = i, WorldId = 0 };
-                cache.Get(query);
-                cache.Set(query, 1);
-            }
-        });
+                for (var j = curI * 50000; j < (curI + 1) * 50000; j++)
+                {
+                    var query = new CurrentlyShownQuery { ItemId = (uint)j, WorldId = 0 };
+                    cache.Get(query);
+                    cache.Set(query, 1);
+                }
+            });
 
-        var t2 = new Thread(() =>
-        {
-            for (var i = 50000U; i < 100000; i++)
-            {
-                var query = new CurrentlyShownQuery { ItemId = i, WorldId = 0 };
-                cache.Set(query, 1);
-                cache.Get(query);
-            }
-        });
+            threads[i].Start();
+        }
 
-        t1.Start();
-        t2.Start();
-
-        t1.Join(10000);
-        t2.Join(500);
+        threads[0].Join(10000);
+        threads[1].Join(500);
+        threads[2].Join(500);
+        threads[3].Join(500);
     }
 }
