@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
 namespace Universalis.DbAccess.Caching;
 
-public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TValue : class
+public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEquatable<TKey> where TValue : class
 {
     private readonly ReaderWriterLockSlim _lock;
     private readonly CacheEntry<TKey, TValue>[] _data;
