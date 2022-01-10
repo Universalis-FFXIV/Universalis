@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Caching\" />
     <Folder Include="Uploads\" />
   </ItemGroup>
 
