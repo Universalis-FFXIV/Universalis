@@ -1,9 +1,9 @@
 ﻿using System.Threading;
-using Universalis.DbAccess.Caching;
+using Universalis.Application.Caching;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Xunit;
 
-namespace Universalis.DbAccess.Tests.Caching;
+namespace Universalis.Application.Tests.Caching;
 
 public class MemoryCacheTests
 {

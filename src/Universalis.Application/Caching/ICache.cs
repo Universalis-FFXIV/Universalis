@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Universalis.DbAccess.Caching;
+namespace Universalis.Application.Caching;
 
 public interface ICache<in TKey, TValue> where TKey : IEquatable<TKey>
 {

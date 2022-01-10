@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 
-namespace Universalis.DbAccess.Caching;
+namespace Universalis.Application.Caching;
 
 public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEquatable<TKey> where TValue : class
 {
