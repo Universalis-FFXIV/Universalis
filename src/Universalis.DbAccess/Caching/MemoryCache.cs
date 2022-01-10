@@ -28,33 +28,50 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
 
     public void Set(TKey key, TValue value)
     {
-        _lock.EnterUpgradeableReadLock();
+        _lock.EnterWriteLock();
         try
         {
             // Check if this key already has an entry associated with it
             if (_idMap.TryGetValue(key, out var idx))
             {
-                _data[idx].Dirty = true;
+                _data[idx].Dirty = false;
                 _data[idx].Value = value;
                 return;
             }
 
+            // Get a data array index
+            if (!_freeEntries.TryPop(out var nextIdx))
+            {
+                nextIdx = Evict();
+            }
+
+            // Set the cache entry
+            _idMap[key] = nextIdx;
+            _data[nextIdx] = new CacheEntry<TKey, TValue>
+            {
+                Key = key,
+                Value = value,
+            };
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    public TValue Get(TKey key)
+    {
+        _lock.EnterUpgradeableReadLock();
+        try
+        {
+            if (!_idMap.TryGetValue(key, out var idx)) return null;
+
             _lock.EnterWriteLock();
             try
             {
-                // Get a data array index
-                if (!_freeEntries.TryPop(out var nextIdx))
-                {
-                    nextIdx = Evict();
-                }
-
-                // Set the cache entry
-                _idMap[key] = nextIdx;
-                _data[nextIdx] = new CacheEntry<TKey, TValue>
-                {
-                    Key = key,
-                    Value = value,
-                };
+                var val = _data[idx];
+                val.Dirty = true;
+                return JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(val.Value));
             }
             finally
             {
@@ -64,22 +81,6 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         finally
         {
             _lock.ExitUpgradeableReadLock();
-        }
-    }
-
-    public TValue Get(TKey key)
-    {
-        _lock.EnterReadLock();
-        try
-        {
-            if (!_idMap.TryGetValue(key, out var idx)) return null;
-            var val = _data[idx];
-            val.Dirty = true;
-            return JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(val.Value));
-        }
-        finally
-        {
-            _lock.ExitReadLock();
         }
     }
 
