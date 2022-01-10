@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Priority_Queue;
-using Universalis.DbAccess.Caching;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
@@ -20,84 +19,22 @@ namespace Universalis.DbAccess.MarketBoard
         private static readonly ConcurrentDictionary<UploadTimeQueryCallState, UploadTimeQueryResult> UploadTimeQueryCache = new();
 
         private readonly IMostRecentlyUpdatedDbAccess _mostRecentlyUpdatedDb;
-        private readonly ICache<CurrentlyShownQuery, CurrentlyShown> _cache;
 
         public CurrentlyShownDbAccess(IMostRecentlyUpdatedDbAccess mostRecentlyUpdatedDb, IMongoClient client) : base(
             client, Constants.DatabaseName, "recentData")
         {
             _mostRecentlyUpdatedDb = mostRecentlyUpdatedDb;
-            _cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShown>(58468);
         }
 
         public CurrentlyShownDbAccess(IMostRecentlyUpdatedDbAccess mostRecentlyUpdatedDb, IMongoClient client,
             string databaseName) : base(client, databaseName, "recentData")
         {
             _mostRecentlyUpdatedDb = mostRecentlyUpdatedDb;
-            _cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShown>(58468);
         }
-
-        #region Read-through/Write-through cache overrides
-
-        public override async Task Create(CurrentlyShown document, CancellationToken cancellationToken = default)
-        {
-            await base.Create(document, cancellationToken);
-            _cache.Set(new CurrentlyShownQuery { WorldId = document.WorldId, ItemId = document.ItemId }, document);
-        }
-
-        public override async Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
-        {
-            var cachedData = _cache.Get(query);
-            if (cachedData != null) return cachedData;
-
-            var document = await base.Retrieve(query, cancellationToken);
-            _cache.Set(query, document);
-            return document;
-        }
-
-        public override async Task Update(CurrentlyShown document, CurrentlyShownQuery query, CancellationToken cancellationToken = default)
-        {
-            await base.Update(document, query, cancellationToken);
-            _cache.Set(new CurrentlyShownQuery { WorldId = document.WorldId, ItemId = document.ItemId }, document);
-        }
-
-        public override async Task Delete(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
-        {
-            await base.Delete(query, cancellationToken);
-            _cache.Delete(query);
-        }
-
-        #endregion
 
         public async Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query, CancellationToken cancellationToken = default)
         {
-            var uncachedWorldIds = new List<uint>();
-            var cached = new List<CurrentlyShown>();
-            foreach (var worldId in query.WorldIds)
-            {
-                var cachedData = _cache.Get(new CurrentlyShownQuery { WorldId = worldId, ItemId = query.ItemId });
-                if (cachedData != null)
-                {
-                    cached.Add(cachedData);
-                }
-                else
-                {
-                    uncachedWorldIds.Add(worldId);
-                }
-            }
-
-            var documents = await Collection.Find(new CurrentlyShownManyQuery
-            {
-                ItemId = query.ItemId,
-                WorldIds = uncachedWorldIds.ToArray(),
-            }.ToFilterDefinition()).ToListAsync(cancellationToken);
-
-            foreach (var document in documents)
-            {
-                _cache.Set(new CurrentlyShownQuery { WorldId = document.WorldId, ItemId = document.ItemId }, document);
-            }
-
-            cached.AddRange(documents);
-            return cached;
+            return await Collection.Find(query.ToFilterDefinition()).ToListAsync(cancellationToken);
         }
 
         public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order, CancellationToken cancellationToken = default)
