@@ -24,7 +24,7 @@ public class MemoryCacheTests
     {
         var cache = new MemoryCache<int, Data>(1);
         var a = new Data(1);
-        cache.Set(1, new Data(1));
+        cache.Set(1, a);
         var b = cache.Get(1);
         Assert.False(ReferenceEquals(a, b));
     }
