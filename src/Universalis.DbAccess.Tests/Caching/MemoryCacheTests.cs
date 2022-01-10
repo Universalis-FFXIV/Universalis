@@ -34,7 +34,7 @@ public class MemoryCacheTests
 
         var t2 = new Thread(() =>
         {
-            for (var i = 0U; i < 50000; i++)
+            for (var i = 50000U; i < 100000; i++)
             {
                 var query = new CurrentlyShownQuery { ItemId = i, WorldId = 0 };
                 cache.Set(query, 1);
