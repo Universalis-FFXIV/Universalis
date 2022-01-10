@@ -48,7 +48,7 @@ namespace Universalis.DbAccess.MarketBoard
         {
             var cachedData = _cache.Get(query);
             if (cachedData != null) return cachedData;
-
+            
             var document = await base.Retrieve(query, cancellationToken);
             _cache.Set(query, document);
             return document;
@@ -70,34 +70,7 @@ namespace Universalis.DbAccess.MarketBoard
 
         public async Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query, CancellationToken cancellationToken = default)
         {
-            var uncachedWorldIds = new List<uint>();
-            var cached = new List<CurrentlyShown>();
-            foreach (var worldId in query.WorldIds)
-            {
-                var cachedData = _cache.Get(new CurrentlyShownQuery { WorldId = worldId, ItemId = query.ItemId });
-                if (cachedData != null)
-                {
-                    cached.Add(cachedData);
-                }
-                else
-                {
-                    uncachedWorldIds.Add(worldId);
-                }
-            }
-
-            var documents = await Collection.Find(new CurrentlyShownManyQuery
-            {
-                ItemId = query.ItemId,
-                WorldIds = uncachedWorldIds.ToArray(),
-            }.ToFilterDefinition()).ToListAsync(cancellationToken);
-
-            foreach (var document in documents)
-            {
-                _cache.Set(new CurrentlyShownQuery { WorldId = document.WorldId, ItemId = document.ItemId }, document);
-            }
-
-            cached.AddRange(documents);
-            return cached;
+            return await Collection.Find(query.ToFilterDefinition()).ToListAsync(cancellationToken);
         }
 
         public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order, CancellationToken cancellationToken = default)
