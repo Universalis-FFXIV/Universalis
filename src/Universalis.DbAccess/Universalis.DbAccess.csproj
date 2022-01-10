@@ -17,4 +17,8 @@
     <ProjectReference Include="..\Universalis.Entities\Universalis.Entities.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Caching\" />
+  </ItemGroup>
+
 </Project>
