@@ -25,6 +25,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TValue : cla
         _lock.EnterUpgradeableReadLock();
         try
         {
+            // Check if this key already has an entry associated with it
             if (_idMap.TryGetValue(key, out var idx))
             {
                 _data[idx].Dirty = true;
@@ -35,11 +36,13 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TValue : cla
             _lock.EnterWriteLock();
             try
             {
+                // Get a data array index
                 if (!_freeEntries.TryPop(out var nextIdx))
                 {
                     nextIdx = Evict();
                 }
 
+                // Set the cache entry
                 _idMap[key] = nextIdx;
                 _data[nextIdx] = new CacheEntry<TKey, TValue>
                 {
@@ -75,9 +78,8 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TValue : cla
     }
 
     /// <summary>
-    /// Evicts an entry from the cache, 
+    /// Evicts an entry from the cache, returning the evicted entry's index in the data array.
     /// </summary>
-    /// <returns></returns>
     private int Evict()
     {
         while (true)
