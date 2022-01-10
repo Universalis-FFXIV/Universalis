@@ -34,14 +34,13 @@ public class MemoryCacheTests
         var threads = new Thread[4];
         for (var i = 0; i < threads.Length; i++)
         {
-            var curI = i;
             threads[i] = new Thread(() =>
             {
-                for (var j = curI * 50000; j < (curI + 1) * 50000; j++)
+                for (var j = 0U; j < 50000U; j++)
                 {
-                    var query = new CurrentlyShownQuery { ItemId = (uint)j, WorldId = 0 };
-                    cache.Get(query);
+                    var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
                     cache.Set(query, 1);
+                    cache.Get(query);
                 }
             });
 
