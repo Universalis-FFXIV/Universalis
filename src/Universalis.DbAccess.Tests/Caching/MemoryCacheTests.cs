@@ -8,6 +8,18 @@ namespace Universalis.DbAccess.Tests.Caching;
 public class MemoryCacheTests
 {
     [Fact]
+    public void Cache_Delete_DoesRemove()
+    {
+        var cache = new MemoryCache<int, object>(1);
+        cache.Set(1, 1);
+        var j = cache.Get(1);
+        Assert.True(j is 1);
+        cache.Delete(1);
+        var k = cache.Get(1);
+        Assert.True(k is null);
+    }
+
+    [Fact]
     public void Cache_DoesEviction()
     {
         var cache = new MemoryCache<int, object>(4);
