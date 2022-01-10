@@ -78,6 +78,34 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         }
     }
 
+    public void Delete(TKey key)
+    {
+        _lock.EnterUpgradeableReadLock();
+        try
+        {
+            if (!_idMap.TryGetValue(key, out var idx))
+            {
+                return;
+            }
+
+            _lock.EnterWriteLock();
+            try
+            {
+                _idMap.Remove(key);
+                _freeEntries.Push(idx);
+                _data[idx] = null;
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
+        }
+        finally
+        {
+            _lock.ExitUpgradeableReadLock();
+        }
+    }
+
     /// <summary>
     /// Evicts an entry from the cache, returning the evicted entry's index in the data array.
     /// </summary>
