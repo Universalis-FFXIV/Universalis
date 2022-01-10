@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 
 namespace Universalis.DbAccess.Caching;
@@ -74,7 +75,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
             if (!_idMap.TryGetValue(key, out var idx)) return null;
             var val = _data[idx];
             val.Dirty = true;
-            return val.Value;
+            return JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(val.Value));
         }
         finally
         {
