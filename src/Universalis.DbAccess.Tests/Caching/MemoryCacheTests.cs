@@ -20,6 +20,16 @@ public class MemoryCacheTests
     }
 
     [Fact]
+    public void Cache_Get_ReturnsNewObject()
+    {
+        var cache = new MemoryCache<int, Data>(1);
+        var a = new Data(1);
+        cache.Set(1, new Data(1));
+        var b = cache.Get(1);
+        Assert.False(ReferenceEquals(a, b));
+    }
+
+    [Fact]
     public void Cache_DoesEviction()
     {
         var cache = new MemoryCache<int, Data>(4);
