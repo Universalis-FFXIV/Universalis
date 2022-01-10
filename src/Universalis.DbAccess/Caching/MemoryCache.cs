@@ -28,6 +28,8 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
 
     public void Set(TKey key, TValue value)
     {
+        var valCopy = JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(value));
+
         _lock.EnterWriteLock();
         try
         {
@@ -35,7 +37,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
             if (_idMap.TryGetValue(key, out var idx))
             {
                 _data[idx].Dirty = false;
-                _data[idx].Value = value;
+                _data[idx].Value = valCopy;
                 return;
             }
 
@@ -50,7 +52,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
             _data[nextIdx] = new CacheEntry<TKey, TValue>
             {
                 Key = key,
-                Value = value,
+                Value = valCopy,
             };
         }
         finally
