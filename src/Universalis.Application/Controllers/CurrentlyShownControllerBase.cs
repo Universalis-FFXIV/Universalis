@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Common;
@@ -104,12 +101,12 @@ namespace Universalis.Application.Controllers
 
             currentlyShown.Listings.Sort((a, b) => (int)a.PricePerUnit - (int)b.PricePerUnit);
             currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
-            
+
             var nqListings = currentlyShown.Listings.Where(l => !l.Hq).ToList();
             var hqListings = currentlyShown.Listings.Where(l => l.Hq).ToList();
             var nqSales = currentlyShown.RecentHistory.Where(s => !s.Hq).ToList();
             var hqSales = currentlyShown.RecentHistory.Where(s => s.Hq).ToList();
-            
+
             var view = new CurrentlyShownView
             {
                 Listings = currentlyShown.Listings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings).ToList(),
@@ -139,7 +136,7 @@ namespace Universalis.Application.Controllers
                 AveragePriceHq = GetAveragePricePerUnit(hqSales),
                 WorldUploadTimes = worldDc.IsWorld ? null : currentlyShown.WorldUploadTimes ?? EmptyWorldDictionary<Dictionary<uint, long>, long>(worldIds),
             };
-            
+
             return (resolved, view);
         }
 
