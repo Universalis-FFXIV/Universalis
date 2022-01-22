@@ -10,11 +10,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Universalis.Alerts;
+using Universalis.Application.Caching;
 using Universalis.Application.ExceptionFilters;
 using Universalis.Application.Monitoring;
 using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Behaviors;
+using Universalis.Application.Views;
 using Universalis.DbAccess;
+using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.GameData;
 
 namespace Universalis.Application
@@ -36,6 +39,8 @@ namespace Universalis.Application
             services.AddUserAlerts();
 
             services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
+
+            services.AddSingleton<ICache<CurrentlyShownQuery, CurrentlyShownView>, MemoryCache<CurrentlyShownQuery, CurrentlyShownView>>();
 
             services.Configure<ThreadPoolMonitorOptions>(Configuration.GetSection("ThreadPoolLog"));
             services.AddSingleton<ThreadPoolMonitor>();

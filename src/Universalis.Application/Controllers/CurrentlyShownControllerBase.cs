@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Universalis.Application.Caching;
 using Universalis.Application.Common;
 using Universalis.Application.Views;
 using Universalis.DataTransformations;
@@ -16,10 +17,12 @@ namespace Universalis.Application.Controllers
     public class CurrentlyShownControllerBase : WorldDcControllerBase
     {
         protected readonly ICurrentlyShownDbAccess CurrentlyShown;
+        protected readonly ICache<CurrentlyShownQuery, CurrentlyShownView> Cache;
 
-        public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb) : base(gameData)
+        public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, ICache<CurrentlyShownQuery, CurrentlyShownView> cache) : base(gameData)
         {
             CurrentlyShown = currentlyShownDb;
+            Cache = cache;
         }
 
         protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(
@@ -34,6 +37,15 @@ namespace Universalis.Application.Controllers
             long entriesWithin = -1,
             CancellationToken cancellationToken = default)
         {
+            if (worldIds.Length == 1)
+            {
+                var cachedData = Cache.Get(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldIds[0] });
+                if (cachedData != null)
+                {
+                    Ok(cachedData);
+                }
+            }
+
             var data = (await CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery
             {
                 WorldIds = worldIds,
@@ -136,6 +148,11 @@ namespace Universalis.Application.Controllers
                 AveragePriceHq = GetAveragePricePerUnit(hqSales),
                 WorldUploadTimes = worldDc.IsWorld ? null : currentlyShown.WorldUploadTimes ?? EmptyWorldDictionary<Dictionary<uint, long>, long>(worldIds),
             };
+
+            if (worldIds.Length == 1)
+            {
+                Cache.Set(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldIds[0] }, view);
+            }
 
             return (resolved, view);
         }

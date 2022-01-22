@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Universalis.Application.Caching;
 using Universalis.Application.Common;
 using Universalis.Application.Views;
 using Universalis.DbAccess.MarketBoard;
+using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1
@@ -14,7 +16,7 @@ namespace Universalis.Application.Controllers.V1
     [Route("api/{worldOrDc}/{itemIds}")]
     public class CurrentlyShownController : CurrentlyShownControllerBase
     {
-        public CurrentlyShownController(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb) : base(gameData, currentlyShownDb) { }
+        public CurrentlyShownController(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, ICache<CurrentlyShownQuery, CurrentlyShownView> cache) : base(gameData, currentlyShownDb, cache) { }
 
         /// <summary>
         /// Retrieves the data currently shown on the market board for the requested item and world or data center.

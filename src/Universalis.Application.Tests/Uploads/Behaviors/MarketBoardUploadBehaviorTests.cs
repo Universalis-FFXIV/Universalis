@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Universalis.Application.Caching;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
+using Universalis.Application.Views;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.Uploads;
 using Xunit;
@@ -17,7 +19,8 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
         {
             var currentlyShownDb = new MockCurrentlyShownDbAccess();
             var historyDb = new MockHistoryDbAccess();
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb);
+            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
+            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
 
             var upload = new UploadParameters
             {
@@ -34,7 +37,8 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
         {
             var currentlyShownDb = new MockCurrentlyShownDbAccess();
             var historyDb = new MockHistoryDbAccess();
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb);
+            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
+            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
 
             var upload = new UploadParameters
             {
@@ -51,7 +55,8 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
         {
             var currentlyShownDb = new MockCurrentlyShownDbAccess();
             var historyDb = new MockHistoryDbAccess();
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb);
+            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
+            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
 
             var upload = new UploadParameters
             {
@@ -67,7 +72,8 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
         {
             var currentlyShownDb = new MockCurrentlyShownDbAccess();
             var historyDb = new MockHistoryDbAccess();
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb);
+            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
+            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
 
             var upload = new UploadParameters
             {
@@ -84,7 +90,8 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
         {
             var currentlyShownDb = new MockCurrentlyShownDbAccess();
             var historyDb = new MockHistoryDbAccess();
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb);
+            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
+            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
 
             var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
 
@@ -141,7 +148,8 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
         {
             var currentlyShownDb = new MockCurrentlyShownDbAccess();
             var historyDb = new MockHistoryDbAccess();
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb);
+            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
+            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
 
             var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
 
@@ -193,7 +201,8 @@ namespace Universalis.Application.Tests.Uploads.Behaviors
         {
             var currentlyShownDb = new MockCurrentlyShownDbAccess();
             var historyDb = new MockHistoryDbAccess();
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb);
+            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
+            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
 
             var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
 
