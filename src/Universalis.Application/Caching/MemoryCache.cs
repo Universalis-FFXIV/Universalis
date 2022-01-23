@@ -6,9 +6,9 @@ using System.Threading;
 
 namespace Universalis.Application.Caching;
 
-public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEquatable<TKey> where TValue : class
+public class MemoryCache<TKey, TValue> : IDisposable, ICache<TKey, TValue> where TKey : IEquatable<TKey> where TValue : class
 {
-    private readonly Mutex _lock;
+    private readonly SemaphoreSlim _lock;
     private readonly CacheEntry<TKey, TValue>[] _data;
     private readonly IDictionary<TKey, int> _idMap;
     private readonly Stack<int> _freeEntries;
@@ -19,7 +19,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
 
     public MemoryCache(int size)
     {
-        _lock = new Mutex();
+        _lock = new SemaphoreSlim(1, 1);
         _data = new CacheEntry<TKey, TValue>[size];
         _idMap = new Dictionary<TKey, int>(size);
         _freeEntries = new Stack<int>(Enumerable.Range(0, size));
@@ -32,7 +32,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
     {
         var valCopy = JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(value));
 
-        _lock.WaitOne();
+        _lock.Wait();
         try
         {
             // Check if this key already has an entry associated with it
@@ -59,13 +59,13 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         }
         finally
         {
-            _lock.ReleaseMutex();
+            _lock.Release();
         }
     }
 
     public TValue Get(TKey key)
     {
-        _lock.WaitOne();
+        _lock.Wait();
         try
         {
             if (!_idMap.TryGetValue(key, out var idx)) return null;
@@ -76,13 +76,13 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         }
         finally
         {
-            _lock.ReleaseMutex();
+            _lock.Release();
         }
     }
 
     public void Delete(TKey key)
     {
-        _lock.WaitOne();
+        _lock.Wait();
         try
         {
             if (!_idMap.TryGetValue(key, out var idx))
@@ -96,7 +96,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         }
         finally
         {
-            _lock.ReleaseMutex();
+            _lock.Release();
         }
     }
 
@@ -131,5 +131,19 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         public TCacheKey Key;
 
         public TCacheValue Value;
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _lock.Dispose();
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 }

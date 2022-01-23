@@ -54,25 +54,54 @@ public class MemoryCacheTests
         var cache = new MemoryCache<CurrentlyShownQuery, Data>(1);
 
         var threads = new Thread[4];
-        for (var i = 0; i < threads.Length; i++)
+
+        threads[0] = new Thread(() =>
         {
-            threads[i] = new Thread(() =>
+            for (var j = 0U; j < 50000U; j++)
             {
-                for (var j = 0U; j < 50000U; j++)
-                {
-                    var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
-                    cache.Set(query, new Data(1));
-                    cache.Get(query);
-                }
-            });
+                var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
+                cache.Set(query, new Data(1));
+                cache.Get(query);
+            }
+        });
 
-            threads[i].Start();
-        }
+        threads[1] = new Thread(() =>
+        {
+            for (var j = 0U; j < 50000U; j++)
+            {
+                var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
+                cache.Get(query);
+                cache.Set(query, new Data(1));
+            }
+        });
 
-        threads[0].Join(10000);
-        threads[1].Join(500);
-        threads[2].Join(500);
-        threads[3].Join(500);
+        threads[2] = new Thread(() =>
+        {
+            for (var j = 0U; j < 50000U; j++)
+            {
+                var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
+                cache.Set(query, new Data(1));
+                cache.Get(query);
+            }
+        });
+
+        threads[3] = new Thread(() =>
+        {
+            for (var j = 0U; j < 50000U; j++)
+            {
+                var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
+                cache.Delete(query);
+            }
+        });
+
+        threads[0].Start();
+        threads[1].Start();
+        threads[2].Start();
+        threads[3].Start();
+        Assert.True(threads[0].Join(10000));
+        Assert.True(threads[1].Join(500));
+        Assert.True(threads[2].Join(500));
+        Assert.True(threads[3].Join(500));
     }
 
     private class Data
