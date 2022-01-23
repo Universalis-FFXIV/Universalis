@@ -8,7 +8,7 @@ namespace Universalis.Application.Caching;
 
 public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEquatable<TKey> where TValue : class
 {
-    private readonly ReaderWriterLockSlim _lock;
+    private readonly Mutex _lock;
     private readonly CacheEntry<TKey, TValue>[] _data;
     private readonly IDictionary<TKey, int> _idMap;
     private readonly Stack<int> _freeEntries;
@@ -19,7 +19,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
 
     public MemoryCache(int size)
     {
-        _lock = new ReaderWriterLockSlim();
+        _lock = new Mutex();
         _data = new CacheEntry<TKey, TValue>[size];
         _idMap = new Dictionary<TKey, int>(size);
         _freeEntries = new Stack<int>(Enumerable.Range(0, size));
@@ -32,13 +32,13 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
     {
         var valCopy = JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(value));
 
-        _lock.EnterWriteLock();
+        _lock.WaitOne();
         try
         {
             // Check if this key already has an entry associated with it
             if (_idMap.TryGetValue(key, out var idx))
             {
-                _data[idx].Dirty = false;
+                _data[idx].Referenced = false;
                 _data[idx].Value = valCopy;
                 return;
             }
@@ -59,38 +59,30 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         }
         finally
         {
-            _lock.ExitWriteLock();
+            _lock.ReleaseMutex();
         }
     }
 
     public TValue Get(TKey key)
     {
-        _lock.EnterUpgradeableReadLock();
+        _lock.WaitOne();
         try
         {
             if (!_idMap.TryGetValue(key, out var idx)) return null;
 
-            _lock.EnterWriteLock();
-            try
-            {
-                var val = _data[idx];
-                val.Dirty = true;
-                return JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(val.Value));
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
-            }
+            var val = _data[idx];
+            val.Referenced = true;
+            return JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(val.Value));
         }
         finally
         {
-            _lock.ExitUpgradeableReadLock();
+            _lock.ReleaseMutex();
         }
     }
 
     public void Delete(TKey key)
     {
-        _lock.EnterUpgradeableReadLock();
+        _lock.WaitOne();
         try
         {
             if (!_idMap.TryGetValue(key, out var idx))
@@ -98,21 +90,13 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
                 return;
             }
 
-            _lock.EnterWriteLock();
-            try
-            {
-                _idMap.Remove(key);
-                _freeEntries.Push(idx);
-                _data[idx] = null;
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
-            }
+            _idMap.Remove(key);
+            _freeEntries.Push(idx);
+            _data[idx] = null;
         }
         finally
         {
-            _lock.ExitUpgradeableReadLock();
+            _lock.ReleaseMutex();
         }
     }
 
@@ -127,7 +111,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
             {
                 if (_data[i] == null) continue;
 
-                if (!_data[i].Dirty)
+                if (!_data[i].Referenced)
                 {
                     _idMap.Remove(_data[i].Key);
                     _freeEntries.Push(i);
@@ -135,14 +119,14 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
                     return i;
                 }
 
-                _data[i].Dirty = false;
+                _data[i].Referenced = false;
             }
         }
     }
 
     private class CacheEntry<TCacheKey, TCacheValue>
     {
-        public bool Dirty;
+        public bool Referenced;
 
         public TCacheKey Key;
 
