@@ -15,8 +15,6 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
 
     public int Capacity { get; }
 
-    public MemoryCache() : this(500000) { }
-
     public MemoryCache(int size)
     {
         _lock = new ReaderWriterLockSlim();

@@ -3,13 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Universalis.Application.Caching;
 using Universalis.Application.Controllers.V2;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views;
 using Universalis.DataTransformations;
-using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
@@ -29,8 +27,7 @@ namespace Universalis.Application.Tests.Controllers.V2
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
-            var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+            var controller = new CurrentlyShownController(gameData, dbAccess);
             var rand = new Random();
 
             const uint itemId = 5333;
@@ -90,8 +87,7 @@ namespace Universalis.Application.Tests.Controllers.V2
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
-            var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+            var controller = new CurrentlyShownController(gameData, dbAccess);
             var rand = new Random();
 
             var document1 = new CurrentlyShown
@@ -198,8 +194,7 @@ namespace Universalis.Application.Tests.Controllers.V2
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
-            var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+            var controller = new CurrentlyShownController(gameData, dbAccess);
             var rand = new Random();
             var lastUploadTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
@@ -304,8 +299,7 @@ namespace Universalis.Application.Tests.Controllers.V2
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
-            var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+            var controller = new CurrentlyShownController(gameData, dbAccess);
             var rand = new Random();
             var lastUploadTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
@@ -423,8 +417,7 @@ namespace Universalis.Application.Tests.Controllers.V2
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
-            var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+            var controller = new CurrentlyShownController(gameData, dbAccess);
 
             const uint itemId = 5333;
             var result = await controller.Get(itemId.ToString(), worldOrDc);
@@ -459,8 +452,7 @@ namespace Universalis.Application.Tests.Controllers.V2
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
-            var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+            var controller = new CurrentlyShownController(gameData, dbAccess);
 
             var result = await controller.Get("5333,5", worldOrDc);
 
@@ -483,8 +475,7 @@ namespace Universalis.Application.Tests.Controllers.V2
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
-            var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+            var controller = new CurrentlyShownController(gameData, dbAccess);
 
             const uint itemId = 5333;
             var result = await controller.Get(itemId.ToString(), worldOrDc);
@@ -516,8 +507,7 @@ namespace Universalis.Application.Tests.Controllers.V2
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
-            var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+            var controller = new CurrentlyShownController(gameData, dbAccess);
 
             var result = await controller.Get("5333,5", worldOrDc);
 
@@ -537,8 +527,7 @@ namespace Universalis.Application.Tests.Controllers.V2
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
-            var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+            var controller = new CurrentlyShownController(gameData, dbAccess);
 
             const uint itemId = 0;
             var result = await controller.Get(itemId.ToString(), "74");
@@ -551,8 +540,7 @@ namespace Universalis.Application.Tests.Controllers.V2
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
-            var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+            var controller = new CurrentlyShownController(gameData, dbAccess);
 
             var result = await controller.Get("0, 4294967295", "74");
 
@@ -570,8 +558,7 @@ namespace Universalis.Application.Tests.Controllers.V2
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
-            var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+            var controller = new CurrentlyShownController(gameData, dbAccess);
 
             const uint itemId = 0;
             var result = await controller.Get(itemId.ToString(), "Crystal");
@@ -584,8 +571,7 @@ namespace Universalis.Application.Tests.Controllers.V2
         {
             var gameData = new MockGameDataProvider();
             var dbAccess = new MockCurrentlyShownDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>();
-            var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+            var controller = new CurrentlyShownController(gameData, dbAccess);
 
             var result = await controller.Get("0 ,4294967295", "crystal");
 
