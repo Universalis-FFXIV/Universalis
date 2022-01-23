@@ -5,7 +5,9 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Universalis.Application.Caching;
 using Universalis.Application.Uploads.Schema;
+using Universalis.Application.Views;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
@@ -20,11 +22,13 @@ namespace Universalis.Application.Uploads.Behaviors
     {
         private readonly ICurrentlyShownDbAccess _currentlyShownDb;
         private readonly IHistoryDbAccess _historyDb;
+        private readonly ICache<CurrentlyShownQuery, CurrentlyShownView> _cache;
 
-        public MarketBoardUploadBehavior(ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess historyDb)
+        public MarketBoardUploadBehavior(ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess historyDb, ICache<CurrentlyShownQuery, CurrentlyShownView> cache)
         {
             _currentlyShownDb = currentlyShownDb;
             _historyDb = historyDb;
+            _cache = cache;
         }
 
         public bool ShouldExecute(UploadParameters parameters)
@@ -175,6 +179,8 @@ namespace Universalis.Application.Uploads.Behaviors
                 RecentHistory = cleanSales ?? existingCurrentlyShown?.RecentHistory ?? new List<Sale>(),
                 UploaderIdHash = parameters.UploaderId,
             };
+
+            _cache.Delete(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId });
 
             await _currentlyShownDb.Update(document, new CurrentlyShownQuery
             {
