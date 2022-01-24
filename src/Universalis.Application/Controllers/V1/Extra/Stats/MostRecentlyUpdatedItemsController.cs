@@ -65,6 +65,7 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
             var documents = await _currentlyShownDb.RetrieveByUploadTime(
                 new CurrentlyShownWorldIdsQuery { WorldIds = worldIds },
                 count,
+                0,
                 UploadOrder.MostRecent, cancellationToken);
 
             var worlds = GameData.AvailableWorlds();

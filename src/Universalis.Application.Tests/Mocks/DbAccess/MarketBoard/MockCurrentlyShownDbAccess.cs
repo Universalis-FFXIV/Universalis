@@ -32,10 +32,11 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.MarketBoard
                 .Where(d => d.ItemId == query.ItemId && query.WorldIds.Contains(d.WorldId)));
         }
 
-        public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order, CancellationToken cancellationToken = default)
+        public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, int toSkip, UploadOrder order, CancellationToken cancellationToken = default)
         {
             var documents = _collection
                 .Where(o => query.WorldIds.Contains(o.WorldId))
+                .Skip(toSkip)
                 .Select(o => new WorldItemUpload
                 {
                     WorldId = o.WorldId,
