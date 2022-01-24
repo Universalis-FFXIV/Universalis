@@ -73,6 +73,7 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
             return Ok(new LeastRecentlyUpdatedItemsView
             {
                 Items = documents
+                    .Where(o => GameData.MarketableItemIds().Contains(o.ItemId))
                     .Select(o => new WorldItemRecencyView
                     {
                         WorldId = o.WorldId,
