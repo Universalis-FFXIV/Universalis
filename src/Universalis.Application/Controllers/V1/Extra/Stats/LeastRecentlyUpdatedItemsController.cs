@@ -75,7 +75,6 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
                     count - documents.Count,
                     toSkip,
                     UploadOrder.LeastRecent, cancellationToken);
-                if (!nextDocuments.Any()) break;
                 toSkip += nextDocuments.Count;
                 documents.AddRange(nextDocuments
                     .Where(o => documents.All(d => d.ItemId != o.ItemId))
