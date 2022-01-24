@@ -130,7 +130,7 @@ namespace Universalis.DbAccess.Tests.MarketBoard
             });
 
             var data = await db.RetrieveByUploadTime(
-                new CurrentlyShownWorldIdsQuery { WorldIds = new[] { 74U, 34U } }, 3,
+                new CurrentlyShownWorldIdsQuery { WorldIds = new[] { 74U, 34U } }, 3, 0,
                 UploadOrder.MostRecent);
 
             Assert.Equal(34U, data[0].WorldId);
