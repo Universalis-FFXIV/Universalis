@@ -37,7 +37,7 @@ namespace Universalis.DbAccess.MarketBoard
             return await Collection.Find(query.ToFilterDefinition()).ToListAsync(cancellationToken);
         }
 
-        public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, int toSkip, UploadOrder order, CancellationToken cancellationToken = default)
+        public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order, CancellationToken cancellationToken = default)
         {
             if (order == UploadOrder.MostRecent)
             {
@@ -64,7 +64,6 @@ namespace Universalis.DbAccess.MarketBoard
                 .Find(query.ToFilterDefinition())
                 .Project<WorldItemUpload>(projectDefinition)
                 .Sort(sortDefinition)
-                .Skip(toSkip)
                 .Limit(count)
                 .ToListAsync(cancellationToken);
 

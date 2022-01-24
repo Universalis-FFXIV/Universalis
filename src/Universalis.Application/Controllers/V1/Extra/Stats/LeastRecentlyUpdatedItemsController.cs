@@ -1,13 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Views;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
-using Universalis.Entities.Uploads;
 using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1.Extra.Stats
@@ -66,25 +64,16 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats
                 count = Math.Min(Math.Max(0, queryCount), 200);
             }
 
-            var documents = new List<WorldItemUpload>();
-            var toSkip = 0;
-            while (documents.Count < count)
-            {
-                var nextDocuments = await _currentlyShownDb.RetrieveByUploadTime(
-                    new CurrentlyShownWorldIdsQuery { WorldIds = worldIds },
-                    count - documents.Count,
-                    toSkip,
-                    UploadOrder.LeastRecent, cancellationToken);
-                toSkip += nextDocuments.Count;
-                documents.AddRange(nextDocuments
-                    .Where(o => documents.All(d => d.ItemId != o.ItemId))
-                    .Where(o => GameData.MarketableItemIds().Contains(o.ItemId)));
-            }
+            var documents = await _currentlyShownDb.RetrieveByUploadTime(
+                new CurrentlyShownWorldIdsQuery { WorldIds = worldIds },
+                count,
+                UploadOrder.LeastRecent, cancellationToken);
 
             var worlds = GameData.AvailableWorlds();
             return Ok(new LeastRecentlyUpdatedItemsView
             {
-                Items = documents                                        
+                Items = documents
+                    .Where(o => GameData.MarketableItemIds().Contains(o.ItemId))
                     .Select(o => new WorldItemRecencyView
                     {
                         WorldId = o.WorldId,
