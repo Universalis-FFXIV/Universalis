@@ -40,7 +40,7 @@ namespace Universalis.Application
 
             services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
 
-            services.AddSingleton<ICache<CurrentlyShownQuery, CurrentlyShownView>, MemoryCache<CurrentlyShownQuery, CurrentlyShownView>>();
+            services.AddSingleton<ICache<CurrentlyShownQuery, CurrentlyShownView>>(new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(58468));
 
             services.Configure<ThreadPoolMonitorOptions>(Configuration.GetSection("ThreadPoolLog"));
             services.AddSingleton<ThreadPoolMonitor>();

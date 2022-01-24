@@ -8,6 +8,22 @@ namespace Universalis.Application.Tests.Caching;
 public class MemoryCacheTests
 {
     [Fact]
+    public void Cache_KeyEqualityAssumptionCheck()
+    {
+        var q1 = new CurrentlyShownQuery { ItemId = 1, WorldId = 0 };
+        var q2 = new CurrentlyShownQuery { ItemId = 1, WorldId = 0 };
+        Assert.Equal(q1, q2);
+
+        var q3 = new CurrentlyShownQuery { ItemId = 1, WorldId = 2 };
+        var q4 = new CurrentlyShownQuery { ItemId = 1, WorldId = 3 };
+        Assert.NotEqual(q3, q4);
+
+        var q5 = new CurrentlyShownQuery { ItemId = 2, WorldId = 1 };
+        var q6 = new CurrentlyShownQuery { ItemId = 3, WorldId = 1 };
+        Assert.NotEqual(q5, q6);
+    }
+
+    [Fact]
     public void Cache_Delete_DoesRemove()
     {
         var cache = new MemoryCache<int, Data>(1);
@@ -48,46 +64,52 @@ public class MemoryCacheTests
         Assert.Equal(hits, cache.Capacity);
     }
 
-    [Fact]
-    public void Cache_IsThreadSafe()
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(50000)]
+    public void Cache_IsThreadSafe(int cacheSize)
     {
-        var cache = new MemoryCache<CurrentlyShownQuery, Data>(1);
+        const uint nIterations = 1000000U;
+
+        var cache = new MemoryCache<CurrentlyShownQuery, Data>(cacheSize);
 
         var threads = new Thread[4];
 
         threads[0] = new Thread(() =>
         {
-            for (var j = 0U; j < 50000U; j++)
+            for (var j = 0U; j < nIterations; j++)
             {
                 var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
-                cache.Set(query, new Data(1));
-                cache.Get(query);
+                cache.Set(query, new Data(j));
             }
         });
 
         threads[1] = new Thread(() =>
         {
-            for (var j = 0U; j < 50000U; j++)
+            for (var j = 0U; j < nIterations; j++)
             {
                 var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
-                cache.Get(query);
-                cache.Set(query, new Data(1));
+                var cached = cache.Get(query);
+                if (cached != null)
+                {
+                    Assert.Equal(j, cached.Value);
+                }
             }
         });
 
         threads[2] = new Thread(() =>
         {
-            for (var j = 0U; j < 50000U; j++)
+            for (var j = 0U; j < nIterations; j++)
             {
                 var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
-                cache.Set(query, new Data(1));
-                cache.Get(query);
+                cache.Set(query, new Data(j));
             }
         });
 
         threads[3] = new Thread(() =>
         {
-            for (var j = 0U; j < 50000U; j++)
+            for (var j = 0U; j < nIterations; j++)
             {
                 var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
                 cache.Delete(query);
@@ -98,17 +120,17 @@ public class MemoryCacheTests
         threads[1].Start();
         threads[2].Start();
         threads[3].Start();
-        Assert.True(threads[0].Join(10000));
-        Assert.True(threads[1].Join(500));
-        Assert.True(threads[2].Join(500));
-        Assert.True(threads[3].Join(500));
+        Assert.True(threads[0].Join(30000));
+        Assert.True(threads[1].Join(1000));
+        Assert.True(threads[2].Join(1000));
+        Assert.True(threads[3].Join(1000));
     }
 
     private class Data
     {
-        public int Value { get; }
+        public uint Value { get; }
 
-        public Data(int value)
+        public Data(uint value)
         {
             Value = value;
         }

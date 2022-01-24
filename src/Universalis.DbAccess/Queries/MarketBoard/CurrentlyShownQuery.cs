@@ -16,7 +16,7 @@ namespace Universalis.DbAccess.Queries.MarketBoard
             var filter = filterBuilder.Eq(o => o.WorldId, WorldId) & filterBuilder.Eq(o => o.ItemId, ItemId);
             return filter;
         }
-
+        
         public bool Equals(CurrentlyShownQuery other)
         {
             if (ReferenceEquals(null, other)) return false;

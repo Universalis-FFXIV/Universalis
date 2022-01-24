@@ -6,22 +6,20 @@ using System.Threading;
 
 namespace Universalis.Application.Caching;
 
-public class MemoryCache<TKey, TValue> : IDisposable, ICache<TKey, TValue> where TKey : IEquatable<TKey> where TValue : class
+public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEquatable<TKey> where TValue : class
 {
-    private readonly SemaphoreSlim _lock;
+    private readonly object _lock;
     private readonly CacheEntry<TKey, TValue>[] _data;
     private readonly IDictionary<TKey, int> _idMap;
     private readonly Stack<int> _freeEntries;
 
     public int Capacity { get; }
-
-    public MemoryCache() : this(500000) { }
-
+    
     public MemoryCache(int size)
     {
-        _lock = new SemaphoreSlim(1, 1);
+        _lock = new object();
         _data = new CacheEntry<TKey, TValue>[size];
-        _idMap = new Dictionary<TKey, int>(size);
+        _idMap = new Dictionary<TKey, int>();
         _freeEntries = new Stack<int>(Enumerable.Range(0, size));
         _freeEntries.TrimExcess();
 
@@ -30,59 +28,52 @@ public class MemoryCache<TKey, TValue> : IDisposable, ICache<TKey, TValue> where
 
     public void Set(TKey key, TValue value)
     {
+        var keyCopy = JsonSerializer.Deserialize<TKey>(JsonSerializer.Serialize(key));
         var valCopy = JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(value));
+        if (keyCopy == null || valCopy == null) throw new ArgumentException("key or value de/serialized to null.");
 
-        _lock.Wait();
+        Monitor.Enter(_lock);
         try
         {
             // Check if this key already has an entry associated with it
-            if (_idMap.TryGetValue(key, out var idx))
+            // that we can reuse
+            if (_idMap.TryGetValue(keyCopy, out var idx))
             {
                 _data[idx].Referenced = false;
                 _data[idx].Value = valCopy;
                 return;
             }
 
-            // Get a data array index
-            if (!_freeEntries.TryPop(out var nextIdx))
-            {
-                nextIdx = Evict();
-            }
-
-            // Set the cache entry
-            _idMap[key] = nextIdx;
-            _data[nextIdx] = new CacheEntry<TKey, TValue>
-            {
-                Key = key,
-                Value = valCopy,
-            };
+            CleanAdd(keyCopy, valCopy);
         }
         finally
         {
-            _lock.Release();
+            Monitor.Exit(_lock);
         }
     }
 
     public TValue Get(TKey key)
     {
-        _lock.Wait();
+        Monitor.Enter(_lock);
         try
         {
             if (!_idMap.TryGetValue(key, out var idx)) return null;
 
             var val = _data[idx];
             val.Referenced = true;
-            return JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(val.Value));
+
+            var valCopy = JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(val.Value));
+            return valCopy;
         }
         finally
         {
-            _lock.Release();
+            Monitor.Exit(_lock);
         }
     }
 
     public void Delete(TKey key)
     {
-        _lock.Wait();
+        Monitor.Enter(_lock);
         try
         {
             if (!_idMap.TryGetValue(key, out var idx))
@@ -90,21 +81,48 @@ public class MemoryCache<TKey, TValue> : IDisposable, ICache<TKey, TValue> where
                 return;
             }
 
-            _idMap.Remove(key);
-            _freeEntries.Push(idx);
-            _data[idx] = null;
+            CleanRemove(idx);
         }
         finally
         {
-            _lock.Release();
+            Monitor.Exit(_lock);
         }
     }
 
-    /// <summary>
-    /// Evicts an entry from the cache, returning the evicted entry's index in the data array.
-    /// </summary>
-    private int Evict()
+    private void CleanAdd(TKey key, TValue value)
     {
+        // Get a data array index
+        if (!_freeEntries.TryPop(out var nextIdx))
+        {
+            Evict();
+            nextIdx = _freeEntries.Pop();
+        }
+
+        // Set the cache entry
+        _idMap.Add(key, nextIdx);
+        _data[nextIdx] = new CacheEntry<TKey, TValue>
+        {
+            Key = key,
+            Value = value,
+        };
+    }
+
+    private void CleanRemove(int idx)
+    {
+        var val = _data[idx];
+
+        _data[idx] = null;
+        _idMap.Remove(val.Key);
+        _freeEntries.Push(idx);
+    }
+
+    /// <summary>
+    /// Evicts an entry from the cache, returning the evicted entry's index to the free entry stack.
+    /// </summary>
+    private void Evict()
+    {
+        // This loops at most once due to all of the reference booleans being
+        // flipped in the first iteration.
         while (true)
         {
             for (var i = 0; i < _data.Length; i++)
@@ -113,10 +131,8 @@ public class MemoryCache<TKey, TValue> : IDisposable, ICache<TKey, TValue> where
 
                 if (!_data[i].Referenced)
                 {
-                    _idMap.Remove(_data[i].Key);
-                    _freeEntries.Push(i);
-                    _data[i] = null;
-                    return i;
+                    CleanRemove(i);
+                    return;
                 }
 
                 _data[i].Referenced = false;
@@ -131,19 +147,5 @@ public class MemoryCache<TKey, TValue> : IDisposable, ICache<TKey, TValue> where
         public TCacheKey Key;
 
         public TCacheValue Value;
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _lock.Dispose();
-        }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
     }
 }
