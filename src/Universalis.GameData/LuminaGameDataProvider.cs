@@ -57,7 +57,7 @@ namespace Universalis.GameData
                 throw new InvalidOperationException(ExcelLoadError);
             }
 
-            return GetPublicWorlds(worlds)
+            return GetValidWorlds(worlds)
                 .Select(w => new World { Name = w.Name, Id = w.RowId })
                 .Concat(ChineseServers.Worlds())
                 .ToDictionary(w => w.Id, w => w.Name);
@@ -74,7 +74,7 @@ namespace Universalis.GameData
                 throw new InvalidOperationException(ExcelLoadError);
             }
 
-            return GetPublicWorlds(worlds)
+            return GetValidWorlds(worlds)
                 .Select(w => new World { Name = w.Name, Id = w.RowId })
                 .Concat(ChineseServers.Worlds())
                 .ToDictionary(w => w.Name, w => w.Id);
@@ -91,7 +91,7 @@ namespace Universalis.GameData
                 throw new InvalidOperationException(ExcelLoadError);
             }
 
-            return new SortedSet<uint>(GetPublicWorlds(worlds)
+            return new SortedSet<uint>(GetValidWorlds(worlds)
                 .Select(w => new World { Name = w.Name, Id = w.RowId })
                 .Concat(ChineseServers.Worlds())
                 .Select(w => w.Id)
@@ -132,7 +132,7 @@ namespace Universalis.GameData
                 .Select(dc => new DataCenter
                 {
                     Name = dc.Name,
-                    WorldIds = GetPublicWorlds(worlds)
+                    WorldIds = GetValidWorlds(worlds)
                         .Where(w => w.DataCenter.Row == dc.RowId)
                         .Select(w => w.RowId)
                         .ToArray(),
@@ -141,10 +141,10 @@ namespace Universalis.GameData
                 .ToList();
         }
 
-        private static IEnumerable<LuminaWorld> GetPublicWorlds(IEnumerable<LuminaWorld> worlds)
+        private static IEnumerable<LuminaWorld> GetValidWorlds(IEnumerable<LuminaWorld> worlds)
         {
             return worlds
-                .Where(w => w.IsPublic)
+                .Where(w => w.DataCenter.Row is >= 1 and < 99)
                 .Where(w => w.RowId != 25); // Chaos (world)
         }
     }
