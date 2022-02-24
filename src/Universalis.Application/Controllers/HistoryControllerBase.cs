@@ -55,7 +55,7 @@ namespace Universalis.Application.Controllers
                             {
                                 Hq = s.Hq,
                                 PricePerUnit = s.PricePerUnit,
-                                Quantity = s.Quantity,
+                                Quantity = s.Quantity ?? 1,
                                 TimestampUnixSeconds = (long) s.SaleTimeUnixSeconds,
                                 WorldId = worldDc.IsDc ? next.WorldId : null,
                                 WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
