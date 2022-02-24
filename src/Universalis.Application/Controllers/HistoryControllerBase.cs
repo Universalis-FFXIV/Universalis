@@ -51,11 +51,12 @@ namespace Universalis.Application.Controllers
                     agg.Sales = await next.Sales
                             .ToAsyncEnumerable()
                             .Where(s => entriesWithin < 0 || nowSeconds - s.SaleTimeUnixSeconds < entriesWithin)
+                            .Where(s => s.Quantity is not null)
                             .Select(s => new MinimizedSaleView
                             {
                                 Hq = s.Hq,
                                 PricePerUnit = s.PricePerUnit,
-                                Quantity = s.Quantity ?? 1,
+                                Quantity = s.Quantity ?? 0, // This should never be 0 since we're filtering out null quantities
                                 TimestampUnixSeconds = (long) s.SaleTimeUnixSeconds,
                                 WorldId = worldDc.IsDc ? next.WorldId : null,
                                 WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
