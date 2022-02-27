@@ -19,12 +19,16 @@ services:
     volumes:
       - /home/universalis/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
   grafana:
-    image: grafana/grafana:7.5.15
+    image: grafana/grafana:8.4.2
     network_mode: "host"
     volumes:
       - /home/universalis/grafana/data:/var/lib/grafana
+      - /etc/letsencrypt/live/monitor.universalis.app/:/cert
     environment:
       GF_SERVER_ROOT_URL: https://monitor.universalis.app
+      GF_SERVER_PROTOCOL: https
+      GF_SERVER_CERT_FILE: /cert/fullchain.pem
+      GF_SERVER_CERT_KEY: /cert/privkey.pem
     user: '104'
   watchtower:
     image: containrrr/watchtower
