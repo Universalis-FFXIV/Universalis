@@ -8,16 +8,21 @@ services:
       - /home/universalis/sqpack:/sqpack
       - /home/universalis/DataProtection-Keys:/root/.aspnet/DataProtection-Keys
       - /home/universalis/universalis-logs:/logs
-    network_mode: "host"
-    restart: on-failure
-    healthcheck:
-      test: [ "CMD", "curl", "--fail", "http://localhost:4002/api/74/5" ]
-      timeout: 3s
-      interval: 10s
+    network_mode: "host" # TODO: Containerize MongoDB so this can be changed
   lodestone:
     image: ghcr.io/universalis-ffxiv/lodestone:latest
     ports:
       - 3999:3999
+  prometheus:
+    image: prom/prometheus:v2.33.4
+    network_mode: "host"
+    volumes:
+      - /home/universalis/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  grafana:
+    image: grafana/grafana:8.4.2
+    network_mode: "host"
+    volumes:
+      - /home/universalis/grafana/data:/var/lib/grafana
   watchtower:
     image: containrrr/watchtower
     environment:

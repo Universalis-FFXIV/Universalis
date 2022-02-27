@@ -18,4 +18,4 @@ scrape_configs:
   scheme: http
   static_configs:
   - targets:
-    - host.docker.internal:5000
+    - localhost:4002
