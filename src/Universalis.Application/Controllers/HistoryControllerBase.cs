@@ -83,15 +83,12 @@ namespace Universalis.Application.Controllers
                 LastUploadTimeUnixMilliseconds = history.LastUploadTimeUnixMilliseconds,
                 StackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(history.Sales
                     .Select(s => s.Quantity)
-                    .Where(q => q != null)
                     .Select(q => (int)q))),
                 StackSizeHistogramNq = new SortedDictionary<int, int>(Statistics.GetDistribution(nqSales
                     .Select(s => s.Quantity)
-                    .Where(q => q != null)
                     .Select(q => (int)q))),
                 StackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqSales
                     .Select(s => s.Quantity)
-                    .Where(q => q != null)
                     .Select(q => (int)q))),
                 SaleVelocity = Statistics.VelocityPerDay(history.Sales
                     .Select(s => s.TimestampUnixSeconds * 1000), now, statsWithin),
