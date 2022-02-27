@@ -23,7 +23,7 @@ services:
     network_mode: "host"
     volumes:
       - /home/universalis/grafana/data:/var/lib/grafana
-      - /etc/letsencrypt/live/monitor.universalis.app/:/cert
+      - /etc/letsencrypt/live/monitor.universalis.app:/cert
     environment:
       GF_SERVER_ROOT_URL: https://monitor.universalis.app
       GF_SERVER_PROTOCOL: https
