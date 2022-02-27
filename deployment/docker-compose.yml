@@ -23,6 +23,8 @@ services:
     network_mode: "host"
     volumes:
       - /home/universalis/grafana/data:/var/lib/grafana
+    environment:
+      GF_server_root_url: monitor.universalis.app
     user: '104'
   watchtower:
     image: containrrr/watchtower
