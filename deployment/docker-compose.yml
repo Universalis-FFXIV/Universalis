@@ -19,7 +19,7 @@ services:
     volumes:
       - /home/universalis/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
   grafana:
-    image: grafana/grafana:8.4.2
+    image: grafana/grafana:7.5.15
     network_mode: "host"
     volumes:
       - /home/universalis/grafana/data:/var/lib/grafana
