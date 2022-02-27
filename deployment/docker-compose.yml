@@ -24,7 +24,7 @@ services:
     volumes:
       - /home/universalis/grafana/data:/var/lib/grafana
     environment:
-      GF_server_root_url: monitor.universalis.app
+      GF_SERVER_ROOT_URL: monitor.universalis.app
     user: '104'
   watchtower:
     image: containrrr/watchtower
