@@ -26,9 +26,9 @@ services:
       - /etc/letsencrypt/archive/monitor.universalis.app:/cert
     environment:
       GF_SERVER_ROOT_URL: https://monitor.universalis.app
-      GF_SERVER_PROTOCOL: https
-      GF_SERVER_CERT_FILE: /cert/fullchain.pem
-      GF_SERVER_CERT_KEY: /cert/privkey.pem
+      #GF_SERVER_PROTOCOL: https
+      #GF_SERVER_CERT_FILE: /cert/fullchain.pem
+      #GF_SERVER_CERT_KEY: /cert/privkey.pem
     user: '104'
   watchtower:
     image: containrrr/watchtower
