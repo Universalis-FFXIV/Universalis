@@ -25,7 +25,6 @@ services:
       - /home/universalis/grafana/data:/var/lib/grafana
     environment:
       GF_SERVER_ROOT_URL: https://monitor.universalis.app
-      GF_LIVE_ALLOWED_ORIGINS: https://monitor.universalis.app
     user: '104'
   watchtower:
     image: containrrr/watchtower
