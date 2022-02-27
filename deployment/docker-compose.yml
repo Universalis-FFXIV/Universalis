@@ -23,6 +23,7 @@ services:
     network_mode: "host"
     volumes:
       - /home/universalis/grafana/data:/var/lib/grafana
+    user: '104'
   watchtower:
     image: containrrr/watchtower
     environment:
