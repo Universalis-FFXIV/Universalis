@@ -1,0 +1,20 @@
+version: '3.4'
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.21.0
+    volumes:
+      - ../.prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana:7.3.6
+    ports:
+      - 3000:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ../.grafana/data:/var/lib/grafana

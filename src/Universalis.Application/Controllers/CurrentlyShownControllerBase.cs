@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Prometheus;
 using Universalis.Application.Caching;
 using Universalis.Application.Common;
 using Universalis.Application.Views;
@@ -18,6 +19,9 @@ namespace Universalis.Application.Controllers
     {
         protected readonly ICurrentlyShownDbAccess CurrentlyShown;
         protected readonly ICache<CurrentlyShownQuery, CurrentlyShownView> Cache;
+
+        private static readonly Counter CacheHits = Metrics.CreateCounter("universalis_cache_hits", "Cache Hits");
+        private static readonly Counter CacheMisses = Metrics.CreateCounter("universalis_cache_misses", "Cache Misses");
 
         public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, ICache<CurrentlyShownQuery, CurrentlyShownView> cache) : base(gameData)
         {
@@ -42,8 +46,11 @@ namespace Universalis.Application.Controllers
                 var cachedData = Cache.Get(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldIds[0] });
                 if (cachedData != null)
                 {
+                    CacheHits.Inc();
                     Ok(cachedData);
                 }
+
+                CacheMisses.Inc();
             }
 
             var data = (await CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery

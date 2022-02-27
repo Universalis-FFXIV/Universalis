@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31321.278
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Application", "Universalis.Application\Universalis.Application.csproj", "{A1FB4209-5085-42DE-A1B4-2ABF990A6BCC}"
 EndProject
@@ -41,6 +41,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{787839FD-3CAA-4856-85EF-5C3A83227A72}"
 	ProjectSection(SolutionItems) = preProject
 		..\README.md = ..\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Monitoring", "Monitoring", "{2A82961C-F187-4316-8A4E-19FAECE6EFCE}"
+	ProjectSection(SolutionItems) = preProject
+		..\monitoring\docker-compose.yml = ..\monitoring\docker-compose.yml
+		..\.prometheus\prometheus.yml = ..\.prometheus\prometheus.yml
 	EndProjectSection
 EndProject
 Global
