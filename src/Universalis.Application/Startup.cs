@@ -13,7 +13,6 @@ using System.Xml.XPath;
 using Universalis.Alerts;
 using Universalis.Application.Caching;
 using Universalis.Application.ExceptionFilters;
-using Universalis.Application.Monitoring;
 using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Views;
@@ -42,9 +41,6 @@ namespace Universalis.Application
             services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
 
             services.AddSingleton<ICache<CurrentlyShownQuery, CurrentlyShownView>>(new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(58468));
-
-            services.Configure<ThreadPoolMonitorOptions>(Configuration.GetSection("ThreadPoolLog"));
-            services.AddSingleton<ThreadPoolMonitor>();
 
             services
                 .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
@@ -122,8 +118,6 @@ namespace Universalis.Application
                 // Reverse proxy path
                 options.RoutePrefix = "docs";
             });
-
-            app.ApplicationServices.GetRequiredService<ThreadPoolMonitor>().Start();
 
             app.UseRouting();
             app.UseHttpMetrics();
