@@ -23,3 +23,7 @@ The format of this environment variable is `token@channel`.
 ## Lumina
 This application requires sheets from the game to be installed in `/home/universalis/sqpack`.
 Information about this is located [here](https://lumina.xiv.dev/docs/guides/basic-usage.html).
+
+## Grafana
+Grafana requires a specific NGINX setup in order to proxy WebSocket connections to it. That process is
+described [here](https://grafana.com/tutorials/run-grafana-behind-a-proxy/#configure-nginx).

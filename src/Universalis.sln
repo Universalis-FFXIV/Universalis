@@ -37,6 +37,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deployment", "Deployment", 
 	ProjectSection(SolutionItems) = preProject
 		..\deployment\docker-compose.yml = ..\deployment\docker-compose.yml
 		..\deployment\prometheus.yml = ..\deployment\prometheus.yml
+		..\deployment\README.md = ..\deployment\README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{787839FD-3CAA-4856-85EF-5C3A83227A72}"
