@@ -7,7 +7,6 @@ services:
     volumes:
       - /home/universalis/sqpack:/sqpack
       - /home/universalis/DataProtection-Keys:/root/.aspnet/DataProtection-Keys
-      - /home/universalis/universalis-logs:/logs
     network_mode: "host" # TODO: Containerize MongoDB so this can be changed
   lodestone:
     image: ghcr.io/universalis-ffxiv/lodestone:latest
