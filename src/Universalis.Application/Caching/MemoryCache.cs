@@ -14,7 +14,8 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
     private readonly Stack<int> _freeEntries;
 
     public int Capacity { get; }
-    
+    public int Count => GetCount();
+
     public MemoryCache(int size)
     {
         _lock = new object();
@@ -82,6 +83,19 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
             }
 
             CleanRemove(idx);
+        }
+        finally
+        {
+            Monitor.Exit(_lock);
+        }
+    }
+
+    private int GetCount()
+    {
+        Monitor.Enter(_lock);
+        try
+        {
+            return _idMap.Count;
         }
         finally
         {

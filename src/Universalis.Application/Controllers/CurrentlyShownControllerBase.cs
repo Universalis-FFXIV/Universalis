@@ -22,6 +22,7 @@ namespace Universalis.Application.Controllers
 
         private static readonly Counter CacheHits = Metrics.CreateCounter("universalis_cache_hits", "Cache Hits");
         private static readonly Counter CacheMisses = Metrics.CreateCounter("universalis_cache_misses", "Cache Misses");
+        private static readonly Gauge CacheEntries = Metrics.CreateGauge("universalis_cache_entries", "Cache Entries");
 
         public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, ICache<CurrentlyShownQuery, CurrentlyShownView> cache) : base(gameData)
         {
@@ -159,6 +160,7 @@ namespace Universalis.Application.Controllers
             if (worldIds.Length == 1)
             {
                 Cache.Set(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldIds[0] }, view);
+                CacheEntries.Set(Cache.Count);
             }
 
             return (resolved, view);
