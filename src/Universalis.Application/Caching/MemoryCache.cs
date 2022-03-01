@@ -72,17 +72,19 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         }
     }
 
-    public void Delete(TKey key)
+    public bool Delete(TKey key)
     {
         Monitor.Enter(_lock);
         try
         {
             if (!_idMap.TryGetValue(key, out var idx))
             {
-                return;
+                return false;
             }
 
             CleanRemove(idx);
+
+            return true;
         }
         finally
         {

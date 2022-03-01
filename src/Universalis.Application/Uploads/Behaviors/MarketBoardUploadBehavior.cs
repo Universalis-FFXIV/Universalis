@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Prometheus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Prometheus;
 using Universalis.Application.Caching;
 using Universalis.Application.Uploads.Schema;
 using Universalis.Application.Views;
@@ -177,14 +177,16 @@ namespace Universalis.Application.Uploads.Behaviors
             {
                 WorldId = worldId,
                 ItemId = itemId,
-                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
+                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
                 Listings = cleanListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>(),
                 RecentHistory = cleanSales ?? existingCurrentlyShown?.RecentHistory ?? new List<Sale>(),
                 UploaderIdHash = parameters.UploaderId,
             };
 
-            _cache.Delete(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId });
-            CacheDeletes.Inc();
+            if (_cache.Delete(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId }))
+            {
+                CacheDeletes.Inc();
+            }
 
             await _currentlyShownDb.Update(document, new CurrentlyShownQuery
             {

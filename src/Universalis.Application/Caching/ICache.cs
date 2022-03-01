@@ -10,5 +10,5 @@ public interface ICache<in TKey, TValue> where TKey : IEquatable<TKey>
 
     public TValue Get(TKey key);
 
-    public void Delete(TKey key);
+    public bool Delete(TKey key);
 }
