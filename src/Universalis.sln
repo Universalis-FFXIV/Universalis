@@ -51,6 +51,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Monitoring", "Monitoring", 
 		..\.prometheus\prometheus.yml = ..\.prometheus\prometheus.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Universalis.Mogboard", "Universalis.Mogboard\Universalis.Mogboard.csproj", "{F052C920-4B91-4F68-B67D-0119CA25FEC9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -103,6 +105,10 @@ Global
 		{D0E5294E-C692-4AEC-9561-EFFF7BE28E68}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0E5294E-C692-4AEC-9561-EFFF7BE28E68}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0E5294E-C692-4AEC-9561-EFFF7BE28E68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F052C920-4B91-4F68-B67D-0119CA25FEC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F052C920-4B91-4F68-B67D-0119CA25FEC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F052C920-4B91-4F68-B67D-0119CA25FEC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F052C920-4B91-4F68-B67D-0119CA25FEC9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
