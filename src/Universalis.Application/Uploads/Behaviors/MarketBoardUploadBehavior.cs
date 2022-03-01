@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Prometheus;
 using Universalis.Application.Caching;
 using Universalis.Application.Uploads.Schema;
 using Universalis.Application.Views;
@@ -23,6 +24,8 @@ namespace Universalis.Application.Uploads.Behaviors
         private readonly ICurrentlyShownDbAccess _currentlyShownDb;
         private readonly IHistoryDbAccess _historyDb;
         private readonly ICache<CurrentlyShownQuery, CurrentlyShownView> _cache;
+
+        private static readonly Counter CacheDeletes = Metrics.CreateCounter("universalis_cache_deletes", "Cache Deletes");
 
         public MarketBoardUploadBehavior(ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess historyDb, ICache<CurrentlyShownQuery, CurrentlyShownView> cache)
         {
@@ -181,6 +184,7 @@ namespace Universalis.Application.Uploads.Behaviors
             };
 
             _cache.Delete(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId });
+            CacheDeletes.Inc();
 
             await _currentlyShownDb.Update(document, new CurrentlyShownQuery
             {
