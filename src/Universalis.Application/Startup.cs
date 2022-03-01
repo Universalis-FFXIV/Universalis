@@ -40,7 +40,8 @@ namespace Universalis.Application
 
             services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
 
-            services.AddSingleton<ICache<CurrentlyShownQuery, CurrentlyShownView>>(new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(58468));
+            var cacheSize = int.Parse(Configuration["MarketCurrentDataCacheSize"]);
+            services.AddSingleton<ICache<CurrentlyShownQuery, CurrentlyShownView>>(new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(cacheSize));
 
             services
                 .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
