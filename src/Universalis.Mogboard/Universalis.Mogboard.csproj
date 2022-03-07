@@ -10,7 +10,7 @@
     <PackageReference Include="FastMember" Version="1.5.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
-    <PackageReference Include="MySqlConnector" Version="2.1.7" />
+    <PackageReference Include="MySqlConnector" Version="2.1.8" />
   </ItemGroup>
 
   <ItemGroup>
