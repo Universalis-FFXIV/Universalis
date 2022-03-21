@@ -1,0 +1,32 @@
+version: "3.4"
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.33.4
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana:8.4.2
+    ports:
+      - 3000:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./data:/var/lib/grafana
+
+  mariadb:
+    image: mariadb:10.3.32
+    ports:
+      - 4003:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: dalamud
+      MYSQL_USER: dalamud
+      MYSQL_PASSWORD: dalamud
+    volumes:
+      - ./sqlinit:/docker-entrypoint-initdb.d

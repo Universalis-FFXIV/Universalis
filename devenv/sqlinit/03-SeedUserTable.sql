@@ -1,0 +1,27 @@
+USE `dalamud`;
+INSERT INTO `users` (id, added, last_online, is_banned, notes, sso, username, email, avatar, patron, patron_benefit_user, permissions, admin, alerts_max, alerts_expiry, alerts_update, sso_discord_id, sso_discord_avatar, sso_discord_token_expires, sso_discord_token_access, sso_discord_token_refresh, api_public_key, api_analytics_key, api_rate_limit) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  1593908274,
+  1647894207,
+  0,
+  NULL,
+  'discord',
+  'dalamud',
+  'dalamud@universalis.app',
+  'http://xivapi.com/img-misc/chat_messengericon_goldsaucer.png',
+  0,
+  NULL,
+  NULL,
+  0,
+  5,
+  259200,
+  0,
+  '000000000000000000',
+  '00000000000000000000000000000000',
+  '1648499007',
+  '000000000000000000000000000000',
+  '000000000000000000000000000000',
+  '0000000000000000000000000000000000000000000000000000000000000000',
+  NULL,
+  20
+);

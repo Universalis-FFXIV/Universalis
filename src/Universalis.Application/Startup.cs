@@ -19,6 +19,7 @@ using Universalis.Application.Views;
 using Universalis.DbAccess;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.GameData;
+using Universalis.Mogboard;
 
 namespace Universalis.Application
 {
@@ -42,6 +43,8 @@ namespace Universalis.Application
 
             var cacheSize = int.Parse(Configuration["MarketCurrentDataCacheSize"]);
             services.AddSingleton<ICache<CurrentlyShownQuery, CurrentlyShownView>>(new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(cacheSize));
+
+            services.AddMogboard(Configuration);
 
             services
                 .AddAuthentication(NegotiateDefaults.AuthenticationScheme)

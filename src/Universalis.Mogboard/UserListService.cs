@@ -1,4 +1,6 @@
-﻿using MySqlConnector;
+﻿using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
+using MySqlConnector;
 using Universalis.Mogboard.Entities;
 
 namespace Universalis.Mogboard;
@@ -8,23 +10,27 @@ public class UserListService
     private readonly string _username;
     private readonly string _password;
     private readonly string _database;
+    private readonly int _port;
 
-    public UserListService(string username, string password, string database)
+    public UserListService(string username, string password, string database, int port)
     {
         _username = username;
         _password = password;
         _database = database;
+        _port = port;
     }
 
-    public UserList? Get(string id)
+    public UserList? Get(UserListId id)
     {
-        using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database}");
+        using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Port={_port}");
         db.Open();
 
-        using var command = new MySqlCommand("select * from dalamud.users_lists where id='@id' limit 1;", db);
-        command.Parameters.AddWithValue("id", id);
+        using var command = db.CreateCommand();
+        command.CommandText = "select * from dalamud.users_lists where id=@id limit 1;";
+        command.Parameters.Add("@id", MySqlDbType.VarChar);
+        command.Parameters["@id"].Value = id.ToString();
 
         using var reader = command.ExecuteReader();
-        return reader.Read() ? reader.ConvertToObject<UserList>() : null;
+        return reader.Read() ? UserList.FromReader(reader) : null;
     }
 }
