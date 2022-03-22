@@ -33,4 +33,14 @@ public readonly struct UserId
     public static explicit operator UserId(Guid id) => new(id);
 
     public static explicit operator Guid(UserId id) => id._id;
+
+    public static bool operator ==(UserId left, UserId right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(UserId left, UserId right)
+    {
+        return !(left == right);
+    }
 }
