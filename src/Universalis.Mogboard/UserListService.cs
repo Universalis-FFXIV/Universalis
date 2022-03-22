@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using Microsoft.Extensions.Logging;
-using MySqlConnector;
+﻿using MySqlConnector;
 using Universalis.Mogboard.Entities;
 
 namespace Universalis.Mogboard;
