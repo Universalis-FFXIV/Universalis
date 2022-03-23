@@ -16,6 +16,7 @@ namespace Universalis.Mogboard
                 return;
             }
 
+            sc.AddSingleton(new UserService(username, password, database, port));
             sc.AddSingleton(new UserListService(username, password, database, port));
         }
     }
