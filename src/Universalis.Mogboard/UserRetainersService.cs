@@ -1,4 +1,5 @@
-﻿using Universalis.Mogboard.Entities;
+﻿using MySqlConnector;
+using Universalis.Mogboard.Entities;
 using Universalis.Mogboard.Entities.Id;
 
 namespace Universalis.Mogboard;
@@ -18,8 +19,17 @@ public class UserRetainersService : IMogboardTable<UserRetainer, UserRetainerId>
         _port = port;
     }
 
-    public UserRetainer Get(UserRetainerId id)
+    public UserRetainer? Get(UserRetainerId id)
     {
-        throw new NotImplementedException();
+        using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Port={_port}");
+        db.Open();
+
+        using var command = db.CreateCommand();
+        command.CommandText = "select * from dalamud.users_retainers where id=@id limit 1;";
+        command.Parameters.Add("@id", MySqlDbType.VarChar);
+        command.Parameters["@id"].Value = id.ToString();
+
+        using var reader = command.ExecuteReader();
+        return reader.Read() ? UserRetainer.FromReader(reader) : null;
     }
 }
