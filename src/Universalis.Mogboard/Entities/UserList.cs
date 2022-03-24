@@ -8,7 +8,7 @@ public class UserList
 {
     public UserListId Id { get; set; }
     
-    public UserId UserId { get; set; }
+    public UserId? UserId { get; set; }
     
     public DateTimeOffset Added { get; set; }
 
@@ -24,15 +24,17 @@ public class UserList
 
     public static UserList FromReader(MySqlDataReader reader)
     {
+        var userId = reader["user_id"];
+        var customType = reader["custom_type"];
         return new UserList
         {
             Id = new UserListId((Guid)reader["id"]),
-            UserId = new UserId((Guid)reader["user_id"]),
+            UserId = userId == DBNull.Value ? null : new UserId((Guid)userId),
             Added = DateTimeOffset.FromUnixTimeSeconds((int)reader["added"]),
             Updated = DateTimeOffset.FromUnixTimeSeconds((int)reader["updated"]),
             Name = (string)reader["name"],
             Custom = (bool)reader["custom"],
-            CustomType = (int)reader["custom_type"],
+            CustomType = (int?)(customType == DBNull.Value ? null : customType),
             Items = DoctrineArray<int>.Parse((string)reader["items"]),
         };
     }

@@ -1,4 +1,5 @@
-﻿using Universalis.Mogboard.Entities;
+﻿using MySqlConnector;
+using Universalis.Mogboard.Entities;
 using Universalis.Mogboard.Entities.Id;
 
 namespace Universalis.Mogboard;
@@ -18,8 +19,17 @@ public class UserCharactersService : IMogboardTable<UserCharacter, UserCharacter
         _port = port;
     }
 
-    public UserCharacter Get(UserCharacterId id)
+    public UserCharacter? Get(UserCharacterId id)
     {
-        throw new NotImplementedException();
+        using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Port={_port}");
+        db.Open();
+
+        using var command = db.CreateCommand();
+        command.CommandText = "select * from dalamud.users_characters where id=@id limit 1;";
+        command.Parameters.Add("@id", MySqlDbType.VarChar);
+        command.Parameters["@id"].Value = id.ToString();
+
+        using var reader = command.ExecuteReader();
+        return reader.Read() ? UserCharacter.FromReader(reader) : null;
     }
 }
