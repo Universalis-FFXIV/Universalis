@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Universalis.Mogboard.Entities;
+using Universalis.Mogboard.Entities.Id;
 
 namespace Universalis.Mogboard
 {
@@ -16,8 +18,14 @@ namespace Universalis.Mogboard
                 return;
             }
 
-            sc.AddSingleton(new UserService(username, password, database, port));
-            sc.AddSingleton(new UserListService(username, password, database, port));
+            sc.AddSingleton<IMogboardTable<User, UserId>>(new UsersService(username, password, database, port));
+            sc.AddSingleton<IMogboardTable<UserList, UserListId>>(new UserListsService(username, password, database, port));
+            sc.AddSingleton<IMogboardTable<UserRetainer, UserRetainerId>>(new UserRetainersService(username, password, database, port));
+            sc.AddSingleton<IMogboardTable<UserCharacter, UserCharacterId>>(new UserCharactersService(username, password, database, port));
+            sc.AddSingleton<IMogboardTable<UserSession, UserSessionId>>(new UserSessionsService(username, password, database, port));
+            sc.AddSingleton<IMogboardTable<UserAlert, UserAlertId>>(new UserAlertsService(username, password, database, port));
+            sc.AddSingleton<IMogboardTable<UserAlertEvent, UserAlertEventId>>(new UserAlertEventsService(username, password, database, port));
+            sc.AddSingleton<IMogboardTable<UserReport, UserReportId>>(new UserReportsService(username, password, database, port));
         }
     }
 }

@@ -1,10 +1,10 @@
-﻿namespace Universalis.Mogboard.Entities;
+﻿namespace Universalis.Mogboard.Entities.Id;
 
 public readonly struct UserId
 {
-    private readonly Guid _id;
+    private readonly System.Guid _id;
 
-    public UserId(Guid id)
+    public UserId(System.Guid id)
     {
         _id = id;
     }
@@ -26,13 +26,13 @@ public readonly struct UserId
 
     public static UserId Parse(string id)
     {
-        var guid = Guid.Parse(id);
+        var guid = System.Guid.Parse(id);
         return new UserId(guid);
     }
 
-    public static explicit operator UserId(Guid id) => new(id);
+    public static explicit operator UserId(System.Guid id) => new(id);
 
-    public static explicit operator Guid(UserId id) => id._id;
+    public static explicit operator System.Guid(UserId id) => id._id;
 
     public static bool operator ==(UserId left, UserId right)
     {

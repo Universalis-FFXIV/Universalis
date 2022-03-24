@@ -1,5 +1,6 @@
 ﻿using MySqlConnector;
 using Universalis.Mogboard.Doctrine;
+using Universalis.Mogboard.Entities.Id;
 
 namespace Universalis.Mogboard.Entities;
 

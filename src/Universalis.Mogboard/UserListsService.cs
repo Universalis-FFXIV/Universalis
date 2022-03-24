@@ -1,16 +1,17 @@
 ﻿using MySqlConnector;
 using Universalis.Mogboard.Entities;
+using Universalis.Mogboard.Entities.Id;
 
 namespace Universalis.Mogboard;
 
-public class UserListService
+public class UserListsService : IMogboardTable<UserList, UserListId>
 {
     private readonly string _username;
     private readonly string _password;
     private readonly string _database;
     private readonly int _port;
 
-    public UserListService(string username, string password, string database, int port)
+    public UserListsService(string username, string password, string database, int port)
     {
         _username = username;
         _password = password;
