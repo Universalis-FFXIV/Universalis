@@ -1,0 +1,25 @@
+USE `dalamud`;
+INSERT INTO `users_alerts` (id, user_id, uniq, item_id, added, active_time, last_checked, name, server, expiry, trigger_conditions, trigger_type, trigger_last_sent, triggers_sent, trigger_action, trigger_data_center, trigger_hq, trigger_nq, trigger_active, notified_via_email, notified_via_discord, keep_updated) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  '00000000-0000-0000-0000-000000000000',
+  'UNIQTEXT',
+  7200,
+  1638144268,
+  1638144268,
+  1658144268,
+  'Some Character',
+  'Coeurl',
+  1658144268,
+  'a:1:{i:0;s:21:"Prices_Added,4,500000";}',
+  'Prices',
+  1658144268,
+  9999,
+  'continue',
+  1,
+  1,
+  0,
+  1,
+  0,
+  1,
+  0
+);
