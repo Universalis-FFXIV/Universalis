@@ -77,4 +77,15 @@ public class DoctrineArrayTests
         var s = arr.ToString();
         Assert.Equal(data, s);
     }
+
+    [Fact]
+    public void Array_Parsing_Works_String()
+    {
+        const string data = "a:1:{i:0;s:21:\"Prices_Added,4,500000\";}";
+        var arr = DoctrineArray<string>.Parse(data);
+        Assert.Single(arr);
+        Assert.Equal("Prices_Added,4,500000", arr[0]);
+        var s = arr.ToString();
+        Assert.Equal(data, s);
+    }
 }

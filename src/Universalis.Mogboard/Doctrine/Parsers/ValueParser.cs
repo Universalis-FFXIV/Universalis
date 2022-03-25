@@ -24,6 +24,7 @@ internal static class ValueParser
         {
             'a' => ArrayParser.Parse(buf),
             'i' => IntParser.Parse(buf),
+            's' => StringParser.Parse(buf),
             _ => throw new InvalidOperationException($"Unknown type specifier \"{buf[0]}\"."),
         };
     }
