@@ -17,7 +17,7 @@ namespace Universalis.Application.Controllers.V2;
 public class UserController : ControllerBase
 {
     /// <summary>
-    /// Retrieves the current user. Requires the mogboard_session cookie to be set correctly.
+    /// Retrieves the current user. Requires the session cookie to be set correctly.
     /// </summary>
     /// <response code="200">Data retrieved successfully.</response>
     /// <response code="403">No session information was set, or the corresponding user was missing.</response>
@@ -33,7 +33,7 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves the current user. Requires the mogboard_session cookie to be set correctly.
+    /// Retrieves the current user. Requires the session cookie to be set correctly.
     /// </summary>
     /// <response code="200">Data retrieved successfully.</response>
     /// <response code="403">No session information was set, or the corresponding user was missing.</response>

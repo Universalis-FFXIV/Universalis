@@ -25,7 +25,7 @@ public class RequireMogboardAuthorizationFilter : IAsyncActionFilter
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         // Get the session cookie
-        var cookie = context.HttpContext.Request.Cookies["mogboard_session"];
+        var cookie = context.HttpContext.Request.Cookies["session"];
         if (cookie == null)
         {
             context.Result = new ForbidResult();
