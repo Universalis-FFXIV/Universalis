@@ -21,7 +21,7 @@ public class UserRetainersService : IMogboardTable<UserRetainer, UserRetainerId>
 
     public async Task<UserRetainer?> Get(UserRetainerId id, CancellationToken cancellationToken = default)
     {
-        await using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Port={_port}");
+        await using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Server=localhost;Port={_port}");
         await db.OpenAsync(cancellationToken);
 
         await using var command = db.CreateCommand();

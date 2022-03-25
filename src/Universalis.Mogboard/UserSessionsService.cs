@@ -21,7 +21,7 @@ public class UserSessionsService : IMogboardTable<UserSession, UserSessionId>
 
     public async Task<UserSession?> Get(UserSessionId id, CancellationToken cancellationToken = default)
     {
-        await using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Port={_port}");
+        await using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Server=localhost;Port={_port}");
         await db.OpenAsync(cancellationToken);
 
         await using var command = db.CreateCommand();

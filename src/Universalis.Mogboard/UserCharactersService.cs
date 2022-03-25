@@ -21,7 +21,7 @@ public class UserCharactersService : IMogboardTable<UserCharacter, UserCharacter
 
     public async Task<UserCharacter?> Get(UserCharacterId id, CancellationToken cancellationToken = default)
     {
-        await using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Port={_port}");
+        await using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Server=localhost;Port={_port}");
         await db.OpenAsync(cancellationToken);
 
         await using var command = db.CreateCommand();
