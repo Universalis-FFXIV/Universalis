@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Universalis.Application.Views.Extra;
+namespace Universalis.Application.Views.V1.Extra;
 
 public class ContentView
 {

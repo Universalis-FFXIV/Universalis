@@ -16,6 +16,7 @@ using Universalis.Application.ExceptionFilters;
 using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Views;
+using Universalis.Application.Views.V1;
 using Universalis.DbAccess;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.GameData;

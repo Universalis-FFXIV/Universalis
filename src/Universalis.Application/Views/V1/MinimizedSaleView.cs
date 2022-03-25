@@ -1,13 +1,12 @@
 ﻿using System.Text.Json.Serialization;
-using Universalis.Application.Common;
 
-namespace Universalis.Application.Views;
+namespace Universalis.Application.Views.V1;
 /*
  * Note for anyone viewing this file: People rely on the field order (even though JSON is defined to be unordered).
  * Please do not edit the field order unless it is unavoidable.
  */
 
-public class SaleView : IPriceable
+public class MinimizedSaleView
 {
     /// <summary>
     /// Whether or not the item was high-quality.
@@ -46,16 +45,4 @@ public class SaleView : IPriceable
     [JsonPropertyName("worldID")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public uint? WorldId { get; init; }
-
-    /// <summary>
-    /// The buyer name.
-    /// </summary>
-    [JsonPropertyName("buyerName")]
-    public string BuyerName { get; init; }
-
-    /// <summary>
-    /// The total price.
-    /// </summary>
-    [JsonPropertyName("total")]
-    public uint Total { get; init; }
 }

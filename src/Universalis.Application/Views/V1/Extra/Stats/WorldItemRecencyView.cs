@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Universalis.Application.Views.Extra.Stats;
+namespace Universalis.Application.Views.V1.Extra.Stats;
 
 public class WorldItemRecencyView
 {

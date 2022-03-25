@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Universalis.Application.Views;
+namespace Universalis.Application.Views.V1;
 /*
  * Note for anyone viewing this file: People rely on the field order (even though JSON is defined to be unordered).
  * Please do not edit the field order unless it is unavoidable.

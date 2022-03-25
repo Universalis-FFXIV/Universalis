@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1.Extra;
 using Universalis.Application.Tests.Mocks.DbAccess;
-using Universalis.Application.Views.Extra;
+using Universalis.Application.Views.V1.Extra;
 using Universalis.Entities;
 using Xunit;
 

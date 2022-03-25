@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Universalis.Application.Views.Extra.Stats;
+using Universalis.Application.Views.V1.Extra.Stats;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.GameData;

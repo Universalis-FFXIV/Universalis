@@ -5,6 +5,7 @@ using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
 using Universalis.Application.Views;
+using Universalis.Application.Views.V1;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.Uploads;
 using Xunit;

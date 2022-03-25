@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-using Universalis.Application.Views.Extra;
+using Universalis.Application.Views.V1.Extra;
 using Universalis.DbAccess;
 using Universalis.DbAccess.Queries;
 

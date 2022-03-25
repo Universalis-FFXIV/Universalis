@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Universalis.Application.Views;
+namespace Universalis.Application.Views.V1;
 
 public class MateriaView
 {

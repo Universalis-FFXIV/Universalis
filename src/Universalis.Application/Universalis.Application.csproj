@@ -38,4 +38,8 @@
     <ProjectReference Include="..\Universalis.Mogboard\Universalis.Mogboard.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Views\V1\" />
+  </ItemGroup>
+
 </Project>

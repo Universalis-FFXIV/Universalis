@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1.Extra.Stats;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
-using Universalis.Application.Views.Extra.Stats;
+using Universalis.Application.Views.V1.Extra.Stats;
 using Xunit;
 
 namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats;

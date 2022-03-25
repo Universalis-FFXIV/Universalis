@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Universalis.Application.Views.Extra.Stats;
+using Universalis.Application.Views.V1.Extra.Stats;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
 

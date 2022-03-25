@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1.Extra.Stats;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
-using Universalis.Application.Views.Extra.Stats;
+using Universalis.Application.Views.V1.Extra.Stats;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.Entities.Uploads;
 using Xunit;
