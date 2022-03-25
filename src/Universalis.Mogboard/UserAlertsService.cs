@@ -19,17 +19,17 @@ public class UserAlertsService : IMogboardTable<UserAlert, UserAlertId>
         _port = port;
     }
 
-    public async Task<UserAlert?> Get(UserAlertId id)
+    public async Task<UserAlert?> Get(UserAlertId id, CancellationToken cancellationToken = default)
     {
         await using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Port={_port}");
-        db.Open();
+        await db.OpenAsync(cancellationToken);
 
         await using var command = db.CreateCommand();
         command.CommandText = "select * from dalamud.users_alerts where id=@id limit 1;";
         command.Parameters.Add("@id", MySqlDbType.VarChar);
         command.Parameters["@id"].Value = id.ToString();
 
-        await using var reader = await command.ExecuteReaderAsync();
-        return reader.Read() ? UserAlert.FromReader(reader) : null;
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken) ? UserAlert.FromReader(reader) : null;
     }
 }

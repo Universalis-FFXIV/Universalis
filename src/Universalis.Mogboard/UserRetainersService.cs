@@ -19,17 +19,17 @@ public class UserRetainersService : IMogboardTable<UserRetainer, UserRetainerId>
         _port = port;
     }
 
-    public async Task<UserRetainer?> Get(UserRetainerId id)
+    public async Task<UserRetainer?> Get(UserRetainerId id, CancellationToken cancellationToken = default)
     {
         await using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Port={_port}");
-        db.Open();
+        await db.OpenAsync(cancellationToken);
 
         await using var command = db.CreateCommand();
         command.CommandText = "select * from dalamud.users_retainers where id=@id limit 1;";
         command.Parameters.Add("@id", MySqlDbType.VarChar);
         command.Parameters["@id"].Value = id.ToString();
 
-        await using var reader = await command.ExecuteReaderAsync();
-        return reader.Read() ? UserRetainer.FromReader(reader) : null;
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken) ? UserRetainer.FromReader(reader) : null;
     }
 }
