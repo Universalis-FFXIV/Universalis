@@ -9,7 +9,9 @@ using Microsoft.OpenApi.Models;
 using Prometheus;
 using System;
 using System.IO;
+using System.Linq;
 using System.Xml.XPath;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using Universalis.Alerts;
 using Universalis.Application.Caching;
 using Universalis.Application.ExceptionFilters;
@@ -90,6 +92,27 @@ public class Startup
 
             options.OperationFilter<RemoveVersionParameterFilter>();
             options.DocumentFilter<ReplaceVersionWithExactFilter>();
+
+            options.DocInclusionPredicate((version, desc) =>
+            {
+                var versions = desc.CustomAttributes()
+                    .OfType<ApiVersionAttribute>()
+                    .SelectMany(attr => attr.Versions)
+                    .ToList();
+
+                if (version == "v1" && !versions.Any())
+                {
+                    return true;
+                }
+
+                var maps = desc.CustomAttributes()
+                    .OfType<MapToApiVersionAttribute>()
+                    .SelectMany(attr => attr.Versions)
+                    .ToArray();
+
+                return versions.Any(v => $"v{v}" == version)
+                       && (!maps.Any() || maps.Any(v => $"v{v}" == version));
+            });
 
             var apiDocs = typeof(Startup).Assembly.GetManifestResourceStream(
                 new EmbeddedResourceName("Universalis.Application.xml"));
