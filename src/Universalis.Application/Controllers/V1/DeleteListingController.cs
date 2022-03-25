@@ -15,6 +15,7 @@ namespace Universalis.Application.Controllers.V1;
 
 [ApiController]
 [ApiVersion("1")]
+[ApiExplorerSettings(IgnoreApi = true)]
 [Route("api/{world}/{itemId}/delete")]
 public class DeleteListingController : WorldDcControllerBase
 {

@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1.Extra.Stats;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -32,6 +33,7 @@ public class MostRecentlyUpdatedItemsController : WorldDcControllerBase
     /// <param name="cancellationToken"></param>
     /// <response code="404">The world/DC requested is invalid.</response>
     [HttpGet]
+    [ApiTag("Most-recently updated items")]
     [ProducesResponseType(typeof(MostRecentlyUpdatedItemsView), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> Get([FromQuery] string world, [FromQuery] string dcName, [FromQuery(Name = "entries")] string entriesToReturn, CancellationToken cancellationToken = default)

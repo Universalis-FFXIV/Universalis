@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Threading;
 using System.Threading.Tasks;
+using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -29,6 +30,7 @@ public class TaxRatesController : WorldDcControllerBase
     /// <response code="200">Data retrieved successfully.</response>
     /// <response code="404">The world requested is invalid.</response>
     [HttpGet]
+    [ApiTag("Market tax rates")]
     [ProducesResponseType(typeof(TaxRatesView), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> Get([FromQuery, BindRequired] string world, CancellationToken cancellationToken = default)

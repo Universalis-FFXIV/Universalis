@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1.Extra;
 using Universalis.DbAccess;
 using Universalis.DbAccess.Queries;
@@ -26,6 +27,7 @@ public class ContentController : ControllerBase
     /// <param name="contentId">The ID of the content object to retrieve.</param>
     /// <param name="cancellationToken"></param>
     [HttpGet]
+    [ApiTag("Game entities")]
     [ProducesResponseType(typeof(ContentView), 200)]
     public async Task<IActionResult> Get(string contentId, CancellationToken cancellationToken = default)
     {

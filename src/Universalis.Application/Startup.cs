@@ -10,6 +10,7 @@ using Prometheus;
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Xml.XPath;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Universalis.Alerts;
@@ -92,6 +93,15 @@ public class Startup
 
             options.OperationFilter<RemoveVersionParameterFilter>();
             options.DocumentFilter<ReplaceVersionWithExactFilter>();
+
+            options.TagActionsBy(api =>
+            {
+                if (!api.TryGetMethodInfo(out var mi))
+                    return new[] { api.HttpMethod };
+
+                var attr = (ApiTagAttribute)mi.GetCustomAttribute(typeof(ApiTagAttribute));
+                return attr == null ? new[] { api.HttpMethod } : new[] { attr.Tag };
+            });
 
             options.DocInclusionPredicate((version, desc) =>
             {

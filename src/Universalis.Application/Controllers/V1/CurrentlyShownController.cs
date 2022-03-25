@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
 using Universalis.Application.Common;
+using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -42,6 +43,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
     /// will not trigger this. Instead, the returned list of unresolved item IDs will contain the invalid item ID or IDs.
     /// </response>
     [HttpGet]
+    [ApiTag("Market board listings")]
     [ProducesResponseType(typeof(CurrentlyShownView), 200)]
     [ProducesResponseType(typeof(CurrentlyShownMultiView), 200)]
     [ProducesResponseType(404)]

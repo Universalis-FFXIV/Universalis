@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1.Extra.Stats;
 using Universalis.DbAccess.Uploads;
 
@@ -24,6 +25,7 @@ public class SourceUploadCountsController : ControllerBase
     /// Returns the total upload counts for each client application that uploads data to Universalis.
     /// </summary>
     [HttpGet]
+    [ApiTag("Upload counts by upload application")]
     [ProducesResponseType(typeof(IEnumerable<SourceUploadCountView>), 200)]
     public async Task<IEnumerable<SourceUploadCountView>> Get(CancellationToken cancellationToken = default)
     {

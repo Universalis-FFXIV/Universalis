@@ -18,6 +18,7 @@ namespace Universalis.Application.Controllers.V1;
 
 [ApiController]
 [ApiVersion("1")]
+[ApiExplorerSettings(IgnoreApi = true)]
 [Route("upload/{apiKey}")]
 public class UploadController : ControllerBase
 {
@@ -39,7 +40,6 @@ public class UploadController : ControllerBase
     }
 
     [HttpPost]
-    [ApiExplorerSettings(IgnoreApi = true)]
     public async Task<IActionResult> Post(string apiKey, /* This may cause issues in the LOH during garbage collection. */ [FromBody] UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         var source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery

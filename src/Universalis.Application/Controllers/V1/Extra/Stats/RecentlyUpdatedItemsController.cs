@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1.Extra.Stats;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Uploads;
@@ -25,6 +26,7 @@ public class RecentlyUpdatedItemsController : ControllerBase
     /// is a legacy endpoint and does not include any data on which worlds or data centers the updates happened on.
     /// </summary>
     [HttpGet]
+    [ApiTag("Recently updated items")]
     [ProducesResponseType(typeof(RecentlyUpdatedItemsView), 200)]
     public async Task<RecentlyUpdatedItemsView> Get(CancellationToken cancellationToken = default)
     {

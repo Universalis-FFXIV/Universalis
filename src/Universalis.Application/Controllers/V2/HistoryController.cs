@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Common;
+using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1;
 using Universalis.Application.Views.V2;
 using Universalis.DbAccess.MarketBoard;
@@ -34,6 +35,7 @@ public class HistoryController : HistoryControllerBase
     /// will not trigger this. Instead, the returned list of unresolved item IDs will contain the invalid item ID or IDs.
     /// </response>
     [HttpGet]
+    [ApiTag("Market board sales")]
     [ProducesResponseType(typeof(HistoryView), 200)]
     [ProducesResponseType(typeof(HistoryMultiViewV2), 200)]
     [ProducesResponseType(404)]

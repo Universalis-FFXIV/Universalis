@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1.Extra.Stats;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
@@ -24,6 +25,7 @@ public class UploadCountHistoryController : ControllerBase
     /// Returns the number of uploads per day over the past 30 days.
     /// </summary>
     [HttpGet]
+    [ApiTag("Uploads per day")]
     [ProducesResponseType(typeof(UploadCountHistoryView), 200)]
     public async Task<UploadCountHistoryView> Get(CancellationToken cancellationToken = default)
     {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1.Extra.Stats;
 using Universalis.DbAccess.Uploads;
 
@@ -24,6 +25,7 @@ public class WorldUploadCountController : ControllerBase
     /// Returns the world upload counts and proportions of the total uploads for each world.
     /// </summary>
     [HttpGet]
+    [ApiTag("Upload counts by world")]
     [ProducesResponseType(typeof(IDictionary<string, WorldUploadCountView>), 200)]
     public async Task<IDictionary<string, WorldUploadCountView>> Get(CancellationToken cancellationToken = default)
     {
