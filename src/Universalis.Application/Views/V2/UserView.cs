@@ -14,13 +14,13 @@ public class UserView
     /// The user's creation time, in milliseconds since the UNIX epoch.
     /// </summary>
     [JsonPropertyName("created")]
-    public long CreatedTimestampMs { get; set; }
+    public string CreatedTimestampMs { get; set; }
 
     /// <summary>
     /// The user's last time online, in milliseconds since the UNIX epoch.
     /// </summary>
     [JsonPropertyName("lastOnline")]
-    public long LastOnlineTimestampMs { get; set; }
+    public string LastOnlineTimestampMs { get; set; }
 
     /// <summary>
     /// The user's username.

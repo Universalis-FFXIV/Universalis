@@ -65,8 +65,8 @@ public class UserController : ControllerBase
         var userView = new UserView
         {
             Id = user.GetId().ToString(),
-            CreatedTimestampMs = user.GetCreationTime().ToUnixTimeMilliseconds(),
-            LastOnlineTimestampMs = user.GetLastOnlineTime().ToUnixTimeMilliseconds(),
+            CreatedTimestampMs = user.GetCreationTime().ToUnixTimeMilliseconds().ToString(),
+            LastOnlineTimestampMs = user.GetLastOnlineTime().ToUnixTimeMilliseconds().ToString(),
             Username = user.GetUsername(),
             Email = user.GetEmail(),
             Avatar = user.GetAvatar(),
