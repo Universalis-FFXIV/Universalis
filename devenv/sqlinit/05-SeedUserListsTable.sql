@@ -1,6 +1,6 @@
 USE `dalamud`;
 INSERT INTO `users_lists` (id, user_id, added, updated, name, custom, custom_type, items) VALUES (
-  '04b8630c-a63a-4c3f-b339-6285e287721e',
+  '00000000-0000-0000-0000-000000000000',
   '00000000-0000-0000-0000-000000000000',
   1594141956,
   1643519917,

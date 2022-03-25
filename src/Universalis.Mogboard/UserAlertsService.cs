@@ -4,7 +4,7 @@ using Universalis.Mogboard.Entities.Id;
 
 namespace Universalis.Mogboard;
 
-public class UserAlertsService : IMogboardTable<UserAlert, UserAlertId>
+internal class UserAlertsService : IMogboardTable<UserAlert, UserAlertId>
 {
     private readonly string _username;
     private readonly string _password;

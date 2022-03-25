@@ -4,7 +4,7 @@ using Universalis.Mogboard.Entities.Id;
 
 namespace Universalis.Mogboard;
 
-public class UserRetainersService : IMogboardTable<UserRetainer, UserRetainerId>
+internal class UserRetainersService : IMogboardTable<UserRetainer, UserRetainerId>
 {
     private readonly string _username;
     private readonly string _password;
