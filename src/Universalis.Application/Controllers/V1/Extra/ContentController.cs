@@ -8,6 +8,7 @@ using Universalis.DbAccess.Queries;
 namespace Universalis.Application.Controllers.V1.Extra;
 
 [ApiController]
+[ApiVersion("1")]
 [Route("api/extra/content/{contentId}")]
 public class ContentController : ControllerBase
 {

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Common;
-using Universalis.Application.Views;
 using Universalis.Application.Views.V1;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.GameData;
@@ -12,6 +11,7 @@ using Universalis.GameData;
 namespace Universalis.Application.Controllers.V1;
 
 [ApiController]
+[ApiVersion("1")]
 [Route("api/history/{worldOrDc}/{itemIds}")]
 public class HistoryController : HistoryControllerBase
 {

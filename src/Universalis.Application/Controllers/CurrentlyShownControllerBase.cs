@@ -1,12 +1,11 @@
-﻿using System;
+﻿using Prometheus;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Prometheus;
 using Universalis.Application.Caching;
 using Universalis.Application.Common;
-using Universalis.Application.Views;
 using Universalis.Application.Views.V1;
 using Universalis.DataTransformations;
 using Universalis.DbAccess.MarketBoard;

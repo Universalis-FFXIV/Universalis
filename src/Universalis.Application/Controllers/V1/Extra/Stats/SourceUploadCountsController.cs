@@ -9,6 +9,7 @@ using Universalis.DbAccess.Uploads;
 namespace Universalis.Application.Controllers.V1.Extra.Stats;
 
 [ApiController]
+[ApiVersion("1")]
 [Route("api/extra/stats/uploader-upload-counts")]
 public class SourceUploadCountsController : ControllerBase
 {

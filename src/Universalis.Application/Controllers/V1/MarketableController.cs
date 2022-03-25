@@ -5,6 +5,7 @@ using Universalis.GameData;
 namespace Universalis.Application.Controllers.V1;
 
 [ApiController]
+[ApiVersion("1")]
 [Route("api/marketable")]
 public class MarketableController : ControllerBase
 {

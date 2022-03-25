@@ -1,8 +1,7 @@
-﻿using System.Threading;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.Threading;
 using System.Threading.Tasks;
-using Universalis.Application.Views;
 using Universalis.Application.Views.V1;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -11,6 +10,7 @@ using Universalis.GameData;
 namespace Universalis.Application.Controllers.V1;
 
 [ApiController]
+[ApiVersion("1")]
 [Route("api/tax-rates")]
 public class TaxRatesController : WorldDcControllerBase
 {

@@ -52,7 +52,6 @@ public class Startup
 
         services.AddControllers(options =>
         {
-            options.Conventions.Add(new GroupByNamespaceConvention());
             options.Filters.Add<DecoderFallbackExceptionFilter>();
             options.Filters.Add<OperationCancelledExceptionFilter>();
         });

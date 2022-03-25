@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Common;
-using Universalis.Application.Views;
 using Universalis.Application.Views.V1;
 using Universalis.DataTransformations;
 using Universalis.DbAccess.MarketBoard;
@@ -58,7 +57,7 @@ public class HistoryControllerBase : WorldDcControllerBase
                         Hq = s.Hq,
                         PricePerUnit = s.PricePerUnit,
                         Quantity = s.Quantity ?? 0, // This should never be 0 since we're filtering out null quantities
-                        TimestampUnixSeconds = (long) s.SaleTimeUnixSeconds,
+                        TimestampUnixSeconds = (long)s.SaleTimeUnixSeconds,
                         WorldId = worldDc.IsDc ? next.WorldId : null,
                         WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
                     })

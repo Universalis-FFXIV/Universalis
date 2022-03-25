@@ -9,6 +9,7 @@ using Universalis.DbAccess.Uploads;
 namespace Universalis.Application.Controllers.V1.Extra.Stats;
 
 [ApiController]
+[ApiVersion("1")]
 [Route("api/extra/stats/recently-updated")]
 public class RecentlyUpdatedItemsController : ControllerBase
 {

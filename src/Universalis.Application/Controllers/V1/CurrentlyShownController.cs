@@ -1,11 +1,10 @@
-﻿using System;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
 using Universalis.Application.Common;
-using Universalis.Application.Views;
 using Universalis.Application.Views.V1;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -14,6 +13,7 @@ using Universalis.GameData;
 namespace Universalis.Application.Controllers.V1;
 
 [ApiController]
+[ApiVersion("1")]
 [Route("api/{worldOrDc}/{itemIds}")]
 public class CurrentlyShownController : CurrentlyShownControllerBase
 {
