@@ -19,17 +19,17 @@ public class UserListsService : IMogboardTable<UserList, UserListId>
         _port = port;
     }
 
-    public UserList? Get(UserListId id)
+    public async Task<UserList?> Get(UserListId id)
     {
-        using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Port={_port}");
+        await using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Port={_port}");
         db.Open();
 
-        using var command = db.CreateCommand();
+        await using var command = db.CreateCommand();
         command.CommandText = "select * from dalamud.users_lists where id=@id limit 1;";
         command.Parameters.Add("@id", MySqlDbType.VarChar);
         command.Parameters["@id"].Value = id.ToString();
 
-        using var reader = command.ExecuteReader();
+        await using var reader = await command.ExecuteReaderAsync();
         return reader.Read() ? UserList.FromReader(reader) : null;
     }
 }
