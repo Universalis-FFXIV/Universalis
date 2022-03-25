@@ -6,54 +6,53 @@ using MongoDB.Driver;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.Entities.Uploads;
 
-namespace Universalis.DbAccess.Uploads
+namespace Universalis.DbAccess.Uploads;
+
+public class MostRecentlyUpdatedDbAccess : DbAccessService<MostRecentlyUpdated, MostRecentlyUpdatedQuery>, IMostRecentlyUpdatedDbAccess
 {
-    public class MostRecentlyUpdatedDbAccess : DbAccessService<MostRecentlyUpdated, MostRecentlyUpdatedQuery>, IMostRecentlyUpdatedDbAccess
-    {
-        public static readonly int MaxItems = 200;
+    public static readonly int MaxItems = 200;
         
-        public MostRecentlyUpdatedDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "mostRecentlyUpdated") { }
+    public MostRecentlyUpdatedDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "mostRecentlyUpdated") { }
 
-        public MostRecentlyUpdatedDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "mostRecentlyUpdated") { }
+    public MostRecentlyUpdatedDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "mostRecentlyUpdated") { }
 
-        public async Task Push(uint worldId, WorldItemUpload document, CancellationToken cancellationToken = default)
+    public async Task Push(uint worldId, WorldItemUpload document, CancellationToken cancellationToken = default)
+    {
+        var query = new MostRecentlyUpdatedQuery { WorldId = worldId };
+        var existing = await Retrieve(query, cancellationToken);
+
+        if (existing == null)
         {
-            var query = new MostRecentlyUpdatedQuery { WorldId = worldId };
-            var existing = await Retrieve(query, cancellationToken);
-
-            if (existing == null)
+            await Create(new MostRecentlyUpdated
             {
-                await Create(new MostRecentlyUpdated
-                {
-                    WorldId = worldId,
-                    Uploads = new List<WorldItemUpload> { document },
-                }, cancellationToken);
-                return;
-            }
-
-            var uploads = existing.Uploads;
-            var existingIndex = uploads.FindIndex(o => o.ItemId == document.ItemId);
-            if (existingIndex != -1)
-            {
-                uploads.RemoveAt(existingIndex);
-                uploads.Insert(0, document);
-            }
-            else
-            {
-                uploads.Insert(0, document);
-                uploads = uploads.Take(MaxItems).ToList();
-            }
-
-            var updateBuilder = Builders<MostRecentlyUpdated>.Update;
-            var update = updateBuilder.Set(o => o.Uploads, uploads);
-            await Collection.UpdateOneAsync(query.ToFilterDefinition(), update,
-                cancellationToken: cancellationToken);
+                WorldId = worldId,
+                Uploads = new List<WorldItemUpload> { document },
+            }, cancellationToken);
+            return;
         }
 
-        public async Task<IList<MostRecentlyUpdated>> RetrieveMany(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
+        var uploads = existing.Uploads;
+        var existingIndex = uploads.FindIndex(o => o.ItemId == document.ItemId);
+        if (existingIndex != -1)
         {
-            return await Collection.Find(query.ToFilterDefinition())
-                .ToListAsync(cancellationToken);
+            uploads.RemoveAt(existingIndex);
+            uploads.Insert(0, document);
         }
+        else
+        {
+            uploads.Insert(0, document);
+            uploads = uploads.Take(MaxItems).ToList();
+        }
+
+        var updateBuilder = Builders<MostRecentlyUpdated>.Update;
+        var update = updateBuilder.Set(o => o.Uploads, uploads);
+        await Collection.UpdateOneAsync(query.ToFilterDefinition(), update,
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task<IList<MostRecentlyUpdated>> RetrieveMany(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
+    {
+        return await Collection.Find(query.ToFilterDefinition())
+            .ToListAsync(cancellationToken);
     }
 }

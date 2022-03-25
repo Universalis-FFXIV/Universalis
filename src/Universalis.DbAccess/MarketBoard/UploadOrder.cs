@@ -1,8 +1,7 @@
-﻿namespace Universalis.DbAccess.MarketBoard
+﻿namespace Universalis.DbAccess.MarketBoard;
+
+public enum UploadOrder
 {
-    public enum UploadOrder
-    {
-        MostRecent,
-        LeastRecent,
-    }
+    MostRecent,
+    LeastRecent,
 }

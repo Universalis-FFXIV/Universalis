@@ -3,23 +3,22 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using System;
 
-namespace Universalis.Application.ExceptionFilters
+namespace Universalis.Application.ExceptionFilters;
+
+public class OperationCancelledExceptionFilter : IExceptionFilter
 {
-    public class OperationCancelledExceptionFilter : IExceptionFilter
+    private readonly ILogger _logger;
+
+    public OperationCancelledExceptionFilter(ILoggerFactory loggerFactory)
     {
-        private readonly ILogger _logger;
+        _logger = loggerFactory.CreateLogger<OperationCancelledExceptionFilter>();
+    }
 
-        public OperationCancelledExceptionFilter(ILoggerFactory loggerFactory)
-        {
-            _logger = loggerFactory.CreateLogger<OperationCancelledExceptionFilter>();
-        }
-
-        public void OnException(ExceptionContext context)
-        {
-            if (context.Exception is not OperationCanceledException) return;
-            _logger.LogInformation("Request was cancelled");
-            context.ExceptionHandled = true;
-            context.Result = new StatusCodeResult(400);
-        }
+    public void OnException(ExceptionContext context)
+    {
+        if (context.Exception is not OperationCanceledException) return;
+        _logger.LogInformation("Request was cancelled");
+        context.ExceptionHandled = true;
+        context.Result = new StatusCodeResult(400);
     }
 }

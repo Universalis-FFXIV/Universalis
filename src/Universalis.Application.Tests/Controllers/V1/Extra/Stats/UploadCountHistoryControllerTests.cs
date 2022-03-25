@@ -3,38 +3,37 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1.Extra.Stats;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
-using Universalis.Application.Views;
+using Universalis.Application.Views.Extra.Stats;
 using Xunit;
 
-namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats
+namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats;
+
+public class UploadCountHistoryControllerTests
 {
-    public class UploadCountHistoryControllerTests
+    [Fact]
+    public async Task Controller_Get_Succeeds()
     {
-        [Fact]
-        public async Task Controller_Get_Succeeds()
-        {
-            var dbAccess = new MockUploadCountHistoryDbAccess();
-            var controller = new UploadCountHistoryController(dbAccess);
+        var dbAccess = new MockUploadCountHistoryDbAccess();
+        var controller = new UploadCountHistoryController(dbAccess);
             
-            await dbAccess.Update(DateTimeOffset.Now.ToUnixTimeMilliseconds(), new List<double> { 1 });
+        await dbAccess.Update(DateTimeOffset.Now.ToUnixTimeMilliseconds(), new List<double> { 1 });
 
-            var result = await controller.Get();
-            var counts = Assert.IsType<UploadCountHistoryView>(result);
+        var result = await controller.Get();
+        var counts = Assert.IsType<UploadCountHistoryView>(result);
 
-            Assert.Equal(1, counts.UploadCountByDay.Count);
-            Assert.Equal(1U, counts.UploadCountByDay[0]);
-        }
+        Assert.Equal(1, counts.UploadCountByDay.Count);
+        Assert.Equal(1U, counts.UploadCountByDay[0]);
+    }
 
-        [Fact]
-        public async Task Controller_Get_Succeeds_WhenNone()
-        {
-            var dbAccess = new MockUploadCountHistoryDbAccess();
-            var controller = new UploadCountHistoryController(dbAccess);
+    [Fact]
+    public async Task Controller_Get_Succeeds_WhenNone()
+    {
+        var dbAccess = new MockUploadCountHistoryDbAccess();
+        var controller = new UploadCountHistoryController(dbAccess);
 
-            var result = await controller.Get();
-            var counts = Assert.IsType<UploadCountHistoryView>(result);
+        var result = await controller.Get();
+        var counts = Assert.IsType<UploadCountHistoryView>(result);
 
-            Assert.Equal(0, counts.UploadCountByDay.Count);
-        }
+        Assert.Equal(0, counts.UploadCountByDay.Count);
     }
 }

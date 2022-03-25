@@ -1,7 +1,6 @@
-﻿namespace Universalis.Entities
+﻿namespace Universalis.Entities;
+
+public static class ContentKind
 {
-    public static class ContentKind
-    {
-        public static readonly string Player = "player";
-    }
+    public static readonly string Player = "player";
 }

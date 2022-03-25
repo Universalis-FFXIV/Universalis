@@ -1,7 +1,6 @@
-﻿namespace Universalis.Application.Common
+﻿namespace Universalis.Application.Common;
+
+public interface IPriceable
 {
-    public interface IPriceable
-    {
-        public uint PricePerUnit { get; }
-    }
+    public uint PricePerUnit { get; }
 }

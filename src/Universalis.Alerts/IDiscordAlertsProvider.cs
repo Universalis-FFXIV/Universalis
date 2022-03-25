@@ -1,6 +1,5 @@
-﻿namespace Universalis.Alerts
+﻿namespace Universalis.Alerts;
+
+public interface IDiscordAlertsProvider
 {
-    public interface IDiscordAlertsProvider
-    {
-    }
 }

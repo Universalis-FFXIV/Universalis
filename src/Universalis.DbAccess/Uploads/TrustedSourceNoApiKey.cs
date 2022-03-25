@@ -1,13 +1,12 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
-namespace Universalis.DbAccess.Uploads
+namespace Universalis.DbAccess.Uploads;
+
+public class TrustedSourceNoApiKey
 {
-    public class TrustedSourceNoApiKey
-    {
-        [BsonElement("sourceName")]
-        public string Name { get; init; }
+    [BsonElement("sourceName")]
+    public string Name { get; init; }
         
-        [BsonElement("uploadCount")]
-        public double UploadCount { get; init; }
-    }
+    [BsonElement("uploadCount")]
+    public double UploadCount { get; init; }
 }

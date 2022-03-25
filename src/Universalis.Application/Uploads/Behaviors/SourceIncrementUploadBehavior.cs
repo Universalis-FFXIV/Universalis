@@ -6,30 +6,29 @@ using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
 using Universalis.Entities.Uploads;
 
-namespace Universalis.Application.Uploads.Behaviors
+namespace Universalis.Application.Uploads.Behaviors;
+
+public class SourceIncrementUploadBehavior : IUploadBehavior
 {
-    public class SourceIncrementUploadBehavior : IUploadBehavior
+    private readonly ITrustedSourceDbAccess _trustedSourceDb;
+
+    public SourceIncrementUploadBehavior(ITrustedSourceDbAccess trustedSourceDb)
     {
-        private readonly ITrustedSourceDbAccess _trustedSourceDb;
+        _trustedSourceDb = trustedSourceDb;
+    }
 
-        public SourceIncrementUploadBehavior(ITrustedSourceDbAccess trustedSourceDb)
+    public bool ShouldExecute(UploadParameters parameters)
+    {
+        return true;
+    }
+
+    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    {
+        await _trustedSourceDb.Increment(new TrustedSourceQuery
         {
-            _trustedSourceDb = trustedSourceDb;
-        }
+            ApiKeySha512 = source.ApiKeySha512,
+        }, cancellationToken);
 
-        public bool ShouldExecute(UploadParameters parameters)
-        {
-            return true;
-        }
-
-        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
-        {
-            await _trustedSourceDb.Increment(new TrustedSourceQuery
-            {
-                ApiKeySha512 = source.ApiKeySha512,
-            }, cancellationToken);
-
-            return null;
-        }
+        return null;
     }
 }

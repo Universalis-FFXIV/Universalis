@@ -1,12 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace Universalis.Alerts
+namespace Universalis.Alerts;
+
+public static class AlertExtensions
 {
-    public static class AlertExtensions
+    public static void AddUserAlerts(this IServiceCollection sc)
     {
-        public static void AddUserAlerts(this IServiceCollection sc)
-        {
-            sc.AddSingleton<IDiscordAlertsProvider, DiscordAlertsProvider>();
-        }
+        sc.AddSingleton<IDiscordAlertsProvider, DiscordAlertsProvider>();
     }
 }

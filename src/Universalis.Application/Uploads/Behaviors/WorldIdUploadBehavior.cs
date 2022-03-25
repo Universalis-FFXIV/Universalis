@@ -8,37 +8,36 @@ using Universalis.DbAccess.Uploads;
 using Universalis.Entities.Uploads;
 using Universalis.GameData;
 
-namespace Universalis.Application.Uploads.Behaviors
+namespace Universalis.Application.Uploads.Behaviors;
+
+[Validator]
+public class WorldIdUploadBehavior : IUploadBehavior
 {
-    [Validator]
-    public class WorldIdUploadBehavior : IUploadBehavior
+    private readonly IGameDataProvider _gameData;
+    private readonly IWorldUploadCountDbAccess _worldUploadCountDb;
+
+    public WorldIdUploadBehavior(IGameDataProvider gameData, IWorldUploadCountDbAccess worldUploadCountDb)
     {
-        private readonly IGameDataProvider _gameData;
-        private readonly IWorldUploadCountDbAccess _worldUploadCountDb;
+        _gameData = gameData;
+        _worldUploadCountDb = worldUploadCountDb;
+    }
 
-        public WorldIdUploadBehavior(IGameDataProvider gameData, IWorldUploadCountDbAccess worldUploadCountDb)
-        {
-            _gameData = gameData;
-            _worldUploadCountDb = worldUploadCountDb;
-        }
+    public bool ShouldExecute(UploadParameters parameters)
+    {
+        return parameters.WorldId != null;
+    }
 
-        public bool ShouldExecute(UploadParameters parameters)
-        {
-            return parameters.WorldId != null;
-        }
+    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    {
+        // ReSharper disable once PossibleInvalidOperationException
+        var worldId = parameters.WorldId.Value;
 
-        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
-        {
-            // ReSharper disable once PossibleInvalidOperationException
-            var worldId = parameters.WorldId.Value;
+        if (!_gameData.AvailableWorldIds().Contains(worldId))
+            return new NotFoundObjectResult(worldId);
 
-            if (!_gameData.AvailableWorldIds().Contains(worldId))
-                return new NotFoundObjectResult(worldId);
+        var worldName = _gameData.AvailableWorlds()[parameters.WorldId.Value];
+        await _worldUploadCountDb.Increment(new WorldUploadCountQuery { WorldName = worldName }, cancellationToken);
 
-            var worldName = _gameData.AvailableWorlds()[parameters.WorldId.Value];
-            await _worldUploadCountDb.Increment(new WorldUploadCountQuery { WorldName = worldName }, cancellationToken);
-
-            return null;
-        }
+        return null;
     }
 }

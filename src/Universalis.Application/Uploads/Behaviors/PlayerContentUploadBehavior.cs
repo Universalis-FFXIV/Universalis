@@ -7,35 +7,34 @@ using Universalis.DbAccess.Queries;
 using Universalis.Entities;
 using Universalis.Entities.Uploads;
 
-namespace Universalis.Application.Uploads.Behaviors
+namespace Universalis.Application.Uploads.Behaviors;
+
+public class PlayerContentUploadBehavior : IUploadBehavior
 {
-    public class PlayerContentUploadBehavior : IUploadBehavior
+    private readonly IContentDbAccess _contentDb;
+
+    public PlayerContentUploadBehavior(IContentDbAccess contentDb)
     {
-        private readonly IContentDbAccess _contentDb;
+        _contentDb = contentDb;
+    }
 
-        public PlayerContentUploadBehavior(IContentDbAccess contentDb)
+    public bool ShouldExecute(UploadParameters parameters)
+    {
+        return !string.IsNullOrEmpty(parameters.ContentId) && !string.IsNullOrEmpty(parameters.CharacterName);
+    }
+
+    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    {
+        await _contentDb.Update(new Content
         {
-            _contentDb = contentDb;
-        }
-
-        public bool ShouldExecute(UploadParameters parameters)
+            ContentId = parameters.ContentId,
+            ContentType = ContentKind.Player,
+            CharacterName = parameters.CharacterName,
+        }, new ContentQuery
         {
-            return !string.IsNullOrEmpty(parameters.ContentId) && !string.IsNullOrEmpty(parameters.CharacterName);
-        }
+            ContentId = parameters.ContentId,
+        }, cancellationToken);
 
-        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
-        {
-            await _contentDb.Update(new Content
-            {
-                ContentId = parameters.ContentId,
-                ContentType = ContentKind.Player,
-                CharacterName = parameters.CharacterName,
-            }, new ContentQuery
-            {
-                ContentId = parameters.ContentId,
-            }, cancellationToken);
-
-            return null;
-        }
+        return null;
     }
 }

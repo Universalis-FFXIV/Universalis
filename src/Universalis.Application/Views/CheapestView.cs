@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Universalis.Application.Views
+namespace Universalis.Application.Views;
+
+public class CheapestView
 {
-    public class CheapestView
-    {
-        [JsonPropertyName("items")]
-        public SortedDictionary<uint, ListingView> Items { get; init; }
-    }
+    [JsonPropertyName("items")]
+    public SortedDictionary<uint, ListingView> Items { get; init; }
 }

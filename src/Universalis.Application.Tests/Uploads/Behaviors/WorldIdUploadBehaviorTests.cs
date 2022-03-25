@@ -7,64 +7,63 @@ using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
 using Xunit;
 
-namespace Universalis.Application.Tests.Uploads.Behaviors
+namespace Universalis.Application.Tests.Uploads.Behaviors;
+
+public class WorldIdUploadBehaviorTests
 {
-    public class WorldIdUploadBehaviorTests
+    [Fact]
+    public void Behavior_DoesNotRun_WithoutWorldId()
     {
-        [Fact]
-        public void Behavior_DoesNotRun_WithoutWorldId()
+        var gameData = new MockGameDataProvider();
+        var dbAccess = new MockWorldUploadCountDbAccess();
+        var behavior = new WorldIdUploadBehavior(gameData, dbAccess);
+
+        var upload = new UploadParameters();
+
+        Assert.False(behavior.ShouldExecute(upload));
+    }
+
+    [Fact]
+    public async Task Behavior_Succeeds()
+    {
+        var gameData = new MockGameDataProvider();
+        var dbAccess = new MockWorldUploadCountDbAccess();
+        var behavior = new WorldIdUploadBehavior(gameData, dbAccess);
+
+        var upload = new UploadParameters
         {
-            var gameData = new MockGameDataProvider();
-            var dbAccess = new MockWorldUploadCountDbAccess();
-            var behavior = new WorldIdUploadBehavior(gameData, dbAccess);
+            WorldId = 74,
+        };
 
-            var upload = new UploadParameters();
+        Assert.True(behavior.ShouldExecute(upload));
 
-            Assert.False(behavior.ShouldExecute(upload));
-        }
+        var result = await behavior.Execute(null, upload);
+        Assert.Null(result);
 
-        [Fact]
-        public async Task Behavior_Succeeds()
+        var data = (await dbAccess.GetWorldUploadCounts()).ToList();
+        Assert.NotNull(data);
+        Assert.Single(data);
+        Assert.Equal(gameData.AvailableWorlds()[upload.WorldId.Value], data[0].WorldName);
+    }
+
+    [Fact]
+    public async Task Behavior_Fails_WhenWorldIdInvalid()
+    {
+        var gameData = new MockGameDataProvider();
+        var dbAccess = new MockWorldUploadCountDbAccess();
+        var behavior = new WorldIdUploadBehavior(gameData, dbAccess);
+
+        var upload = new UploadParameters
         {
-            var gameData = new MockGameDataProvider();
-            var dbAccess = new MockWorldUploadCountDbAccess();
-            var behavior = new WorldIdUploadBehavior(gameData, dbAccess);
+            WorldId = 0,
+        };
 
-            var upload = new UploadParameters
-            {
-                WorldId = 74,
-            };
+        Assert.True(behavior.ShouldExecute(upload));
 
-            Assert.True(behavior.ShouldExecute(upload));
+        var result = await behavior.Execute(null, upload);
+        Assert.IsType<NotFoundObjectResult>(result);
 
-            var result = await behavior.Execute(null, upload);
-            Assert.Null(result);
-
-            var data = (await dbAccess.GetWorldUploadCounts()).ToList();
-            Assert.NotNull(data);
-            Assert.Single(data);
-            Assert.Equal(gameData.AvailableWorlds()[upload.WorldId.Value], data[0].WorldName);
-        }
-
-        [Fact]
-        public async Task Behavior_Fails_WhenWorldIdInvalid()
-        {
-            var gameData = new MockGameDataProvider();
-            var dbAccess = new MockWorldUploadCountDbAccess();
-            var behavior = new WorldIdUploadBehavior(gameData, dbAccess);
-
-            var upload = new UploadParameters
-            {
-                WorldId = 0,
-            };
-
-            Assert.True(behavior.ShouldExecute(upload));
-
-            var result = await behavior.Execute(null, upload);
-            Assert.IsType<NotFoundObjectResult>(result);
-
-            var data = (await dbAccess.GetWorldUploadCounts()).ToList();
-            Assert.Empty(data);
-        }
+        var data = (await dbAccess.GetWorldUploadCounts()).ToList();
+        Assert.Empty(data);
     }
 }

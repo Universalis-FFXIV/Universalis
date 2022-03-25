@@ -1,38 +1,37 @@
 ﻿using System;
 using System.Globalization;
 
-namespace Universalis.Entities
+namespace Universalis.Entities;
+
+internal static class DbCleaning
 {
-    internal static class DbCleaning
+    public static string NullIfZeroString(string s)
     {
-        public static string NullIfZeroString(string s)
+        return s switch
         {
-            return s switch
-            {
-                "0" => null,
-                _ => s,
-            };
-        }
+            "0" => null,
+            _ => s,
+        };
+    }
 
-        public static string ReadAsString(object o)
+    public static string ReadAsString(object o)
+    {
+        return o switch
         {
-            return o switch
-            {
-                string s => s,
-                null => null,
-                double d => Math.Truncate(d).ToString(CultureInfo.InvariantCulture),
-                _ => o.ToString(),
-            };
-        }
+            string s => s,
+            null => null,
+            double d => Math.Truncate(d).ToString(CultureInfo.InvariantCulture),
+            _ => o.ToString(),
+        };
+    }
 
-        public static int ReadCityId(object o)
+    public static int ReadCityId(object o)
+    {
+        return o switch
         {
-            return o switch
-            {
-                int i => i,
-                null => 0,
-                _ => City.Dict[(string)o],
-            };
-        }
+            int i => i,
+            null => 0,
+            _ => City.Dict[(string)o],
+        };
     }
 }

@@ -1,13 +1,12 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Universalis.Application.Uploads.Schema
+namespace Universalis.Application.Uploads.Schema;
+
+public class Materia
 {
-    public class Materia
-    {
-        [JsonPropertyName("slotID")]
-        public uint SlotId { get; set; }
+    [JsonPropertyName("slotID")]
+    public uint SlotId { get; set; }
         
-        [JsonPropertyName("materiaID")]
-        public uint MateriaId { get; set; }
-    }
+    [JsonPropertyName("materiaID")]
+    public uint MateriaId { get; set; }
 }

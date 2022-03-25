@@ -1,8 +1,7 @@
 ﻿using System;
 
-namespace Universalis.Application.Uploads.Attributes
+namespace Universalis.Application.Uploads.Attributes;
+
+public class ValidatorAttribute : Attribute
 {
-    public class ValidatorAttribute : Attribute
-    {
-    }
 }

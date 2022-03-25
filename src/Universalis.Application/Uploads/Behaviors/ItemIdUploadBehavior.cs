@@ -7,35 +7,34 @@ using Universalis.DbAccess.Uploads;
 using Universalis.Entities.Uploads;
 using Universalis.GameData;
 
-namespace Universalis.Application.Uploads.Behaviors
+namespace Universalis.Application.Uploads.Behaviors;
+
+[Validator]
+public class ItemIdUploadBehavior : IUploadBehavior
 {
-    [Validator]
-    public class ItemIdUploadBehavior : IUploadBehavior
+    private readonly IGameDataProvider _gameData;
+    private readonly IRecentlyUpdatedItemsDbAccess _recentlyUpdatedItemsDb;
+
+    public ItemIdUploadBehavior(IGameDataProvider gameData, IRecentlyUpdatedItemsDbAccess recentlyUpdatedItemsDb)
     {
-        private readonly IGameDataProvider _gameData;
-        private readonly IRecentlyUpdatedItemsDbAccess _recentlyUpdatedItemsDb;
+        _gameData = gameData;
+        _recentlyUpdatedItemsDb = recentlyUpdatedItemsDb;
+    }
 
-        public ItemIdUploadBehavior(IGameDataProvider gameData, IRecentlyUpdatedItemsDbAccess recentlyUpdatedItemsDb)
+    public bool ShouldExecute(UploadParameters parameters)
+    {
+        return parameters.ItemId != null;
+    }
+
+    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    {
+        // ReSharper disable once PossibleInvalidOperationException
+        if (!_gameData.MarketableItemIds().Contains(parameters.ItemId.Value))
         {
-            _gameData = gameData;
-            _recentlyUpdatedItemsDb = recentlyUpdatedItemsDb;
+            return new NotFoundObjectResult(parameters.ItemId);
         }
 
-        public bool ShouldExecute(UploadParameters parameters)
-        {
-            return parameters.ItemId != null;
-        }
-
-        public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
-        {
-            // ReSharper disable once PossibleInvalidOperationException
-            if (!_gameData.MarketableItemIds().Contains(parameters.ItemId.Value))
-            {
-                return new NotFoundObjectResult(parameters.ItemId);
-            }
-
-            await _recentlyUpdatedItemsDb.Push(parameters.ItemId.Value, cancellationToken);
-            return null;
-        }
+        await _recentlyUpdatedItemsDb.Push(parameters.ItemId.Value, cancellationToken);
+        return null;
     }
 }

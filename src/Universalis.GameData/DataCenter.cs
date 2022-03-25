@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
+﻿namespace Universalis.GameData;
 
-namespace Universalis.GameData
+public class DataCenter
 {
-    public class DataCenter
-    {
-        public string Name { get; init; }
+    public string Name { get; init; }
 
-        public uint[] WorldIds { get; init; }
-    }
+    public uint[] WorldIds { get; init; }
 }

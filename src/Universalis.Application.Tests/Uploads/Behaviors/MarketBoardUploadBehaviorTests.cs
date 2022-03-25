@@ -10,245 +10,244 @@ using Universalis.Entities.Uploads;
 using Xunit;
 using Listing = Universalis.Application.Uploads.Schema.Listing;
 
-namespace Universalis.Application.Tests.Uploads.Behaviors
+namespace Universalis.Application.Tests.Uploads.Behaviors;
+
+public class MarketBoardUploadBehaviorTests
 {
-    public class MarketBoardUploadBehaviorTests
+    [Fact]
+    public void Behavior_DoesNotRun_WithoutWorldId()
     {
-        [Fact]
-        public void Behavior_DoesNotRun_WithoutWorldId()
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
+        var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+
+        var upload = new UploadParameters
         {
-            var currentlyShownDb = new MockCurrentlyShownDbAccess();
-            var historyDb = new MockHistoryDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+            ItemId = 5333,
+            Listings = new List<Listing>(),
+            Sales = new List<Sale>(),
+            UploaderId = "5627384655756342554",
+        };
+        Assert.False(behavior.ShouldExecute(upload));
+    }
 
-            var upload = new UploadParameters
-            {
-                ItemId = 5333,
-                Listings = new List<Listing>(),
-                Sales = new List<Sale>(),
-                UploaderId = "5627384655756342554",
-            };
-            Assert.False(behavior.ShouldExecute(upload));
-        }
+    [Fact]
+    public void Behavior_DoesNotRun_WithoutItemId()
+    {
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
+        var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
 
-        [Fact]
-        public void Behavior_DoesNotRun_WithoutItemId()
+        var upload = new UploadParameters
         {
-            var currentlyShownDb = new MockCurrentlyShownDbAccess();
-            var historyDb = new MockHistoryDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+            WorldId = 74,
+            Listings = new List<Listing>(),
+            Sales = new List<Sale>(),
+            UploaderId = "5627384655756342554",
+        };
+        Assert.False(behavior.ShouldExecute(upload));
+    }
 
-            var upload = new UploadParameters
-            {
-                WorldId = 74,
-                Listings = new List<Listing>(),
-                Sales = new List<Sale>(),
-                UploaderId = "5627384655756342554",
-            };
-            Assert.False(behavior.ShouldExecute(upload));
-        }
+    [Fact]
+    public void Behavior_DoesNotRun_WithoutListingsOrSales()
+    {
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
+        var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
 
-        [Fact]
-        public void Behavior_DoesNotRun_WithoutListingsOrSales()
+        var upload = new UploadParameters
         {
-            var currentlyShownDb = new MockCurrentlyShownDbAccess();
-            var historyDb = new MockHistoryDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+            WorldId = 74,
+            ItemId = 5333,
+            UploaderId = "5627384655756342554",
+        };
+        Assert.False(behavior.ShouldExecute(upload));
+    }
 
-            var upload = new UploadParameters
-            {
-                WorldId = 74,
-                ItemId = 5333,
-                UploaderId = "5627384655756342554",
-            };
-            Assert.False(behavior.ShouldExecute(upload));
-        }
+    [Fact]
+    public void Behavior_DoesNotRun_WithoutUploaderId()
+    {
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
+        var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
 
-        [Fact]
-        public void Behavior_DoesNotRun_WithoutUploaderId()
+        var upload = new UploadParameters
         {
-            var currentlyShownDb = new MockCurrentlyShownDbAccess();
-            var historyDb = new MockHistoryDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+            WorldId = 74,
+            ItemId = 5333,
+            Listings = new List<Listing>(),
+            Sales = new List<Sale>(),
+        };
+        Assert.False(behavior.ShouldExecute(upload));
+    }
 
-            var upload = new UploadParameters
-            {
-                WorldId = 74,
-                ItemId = 5333,
-                Listings = new List<Listing>(),
-                Sales = new List<Sale>(),
-            };
-            Assert.False(behavior.ShouldExecute(upload));
-        }
+    [Fact]
+    public async Task Behavior_Succeeds_ListingsAndSales()
+    {
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
+        var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
 
-        [Fact]
-        public async Task Behavior_Succeeds_ListingsAndSales()
+        var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
+
+        var source = new TrustedSource
         {
-            var currentlyShownDb = new MockCurrentlyShownDbAccess();
-            var historyDb = new MockHistoryDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+            ApiKeySha512 = "2f44abe6",
+            Name = "test runner",
+            UploadCount = 0,
+        };
 
-            var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
-
-            var source = new TrustedSource
-            {
-                ApiKeySha512 = "2f44abe6",
-                Name = "test runner",
-                UploadCount = 0,
-            };
-
-            var upload = new UploadParameters
-            {
-                WorldId = 74,
-                ItemId = 5333,
-                Listings = listings,
-                Sales = sales,
-                UploaderId = "5627384655756342554",
-            };
-            Assert.True(behavior.ShouldExecute(upload));
-
-            var result = await behavior.Execute(source, upload);
-            Assert.Null(result);
-
-            var currentlyShown = await currentlyShownDb.Retrieve(new CurrentlyShownQuery
-            {
-                WorldId = upload.WorldId.Value,
-                ItemId = upload.ItemId.Value,
-            });
-
-            Assert.NotNull(currentlyShown);
-            Assert.Equal(upload.WorldId.Value, currentlyShown.WorldId);
-            Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
-            Assert.Equal(upload.UploaderId, currentlyShown.UploaderIdHash);
-            Assert.NotNull(currentlyShown.Listings);
-            Assert.NotEmpty(currentlyShown.Listings);
-            Assert.NotNull(currentlyShown.RecentHistory);
-            Assert.NotEmpty(currentlyShown.RecentHistory);
-
-            var history = await historyDb.Retrieve(new HistoryQuery
-            {
-                WorldId = upload.WorldId.Value,
-                ItemId = upload.ItemId.Value,
-            });
-
-            Assert.NotNull(history);
-            Assert.Equal(upload.WorldId.Value, history.WorldId);
-            Assert.Equal(upload.ItemId.Value, history.ItemId);
-            Assert.NotNull(history.Sales);
-            Assert.NotEmpty(history.Sales);
-        }
-
-        [Fact]
-        public async Task Behavior_Succeeds_Listings()
+        var upload = new UploadParameters
         {
-            var currentlyShownDb = new MockCurrentlyShownDbAccess();
-            var historyDb = new MockHistoryDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+            WorldId = 74,
+            ItemId = 5333,
+            Listings = listings,
+            Sales = sales,
+            UploaderId = "5627384655756342554",
+        };
+        Assert.True(behavior.ShouldExecute(upload));
 
-            var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
+        var result = await behavior.Execute(source, upload);
+        Assert.Null(result);
 
-            var source = new TrustedSource
-            {
-                ApiKeySha512 = "2f44abe6",
-                Name = "test runner",
-                UploadCount = 0,
-            };
-
-            var upload = new UploadParameters
-            {
-                WorldId = 74,
-                ItemId = 5333,
-                Listings = listings,
-                UploaderId = "5627384655756342554",
-            };
-            Assert.True(behavior.ShouldExecute(upload));
-
-            var result = await behavior.Execute(source, upload);
-            Assert.Null(result);
-
-            var currentlyShown = await currentlyShownDb.Retrieve(new CurrentlyShownQuery
-            {
-                WorldId = upload.WorldId.Value,
-                ItemId = upload.ItemId.Value,
-            });
-
-            Assert.NotNull(currentlyShown);
-            Assert.Equal(upload.WorldId.Value, currentlyShown.WorldId);
-            Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
-            Assert.Equal(upload.UploaderId, currentlyShown.UploaderIdHash);
-            Assert.NotNull(currentlyShown.Listings);
-            Assert.NotEmpty(currentlyShown.Listings);
-            Assert.NotNull(currentlyShown.RecentHistory);
-            Assert.Empty(currentlyShown.RecentHistory);
-
-            var history = await historyDb.Retrieve(new HistoryQuery
-            {
-                WorldId = upload.WorldId.Value,
-                ItemId = upload.ItemId.Value,
-            });
-
-            Assert.Null(history);
-        }
-
-        [Fact]
-        public async Task Behavior_Succeeds_Sales()
+        var currentlyShown = await currentlyShownDb.Retrieve(new CurrentlyShownQuery
         {
-            var currentlyShownDb = new MockCurrentlyShownDbAccess();
-            var historyDb = new MockHistoryDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+            WorldId = upload.WorldId.Value,
+            ItemId = upload.ItemId.Value,
+        });
 
-            var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
+        Assert.NotNull(currentlyShown);
+        Assert.Equal(upload.WorldId.Value, currentlyShown.WorldId);
+        Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
+        Assert.Equal(upload.UploaderId, currentlyShown.UploaderIdHash);
+        Assert.NotNull(currentlyShown.Listings);
+        Assert.NotEmpty(currentlyShown.Listings);
+        Assert.NotNull(currentlyShown.RecentHistory);
+        Assert.NotEmpty(currentlyShown.RecentHistory);
 
-            var source = new TrustedSource
-            {
-                ApiKeySha512 = "2f44abe6",
-                Name = "test runner",
-                UploadCount = 0,
-            };
+        var history = await historyDb.Retrieve(new HistoryQuery
+        {
+            WorldId = upload.WorldId.Value,
+            ItemId = upload.ItemId.Value,
+        });
 
-            var upload = new UploadParameters
-            {
-                WorldId = 74,
-                ItemId = 5333,
-                Sales = sales,
-                UploaderId = "5627384655756342554",
-            };
-            Assert.True(behavior.ShouldExecute(upload));
+        Assert.NotNull(history);
+        Assert.Equal(upload.WorldId.Value, history.WorldId);
+        Assert.Equal(upload.ItemId.Value, history.ItemId);
+        Assert.NotNull(history.Sales);
+        Assert.NotEmpty(history.Sales);
+    }
 
-            var result = await behavior.Execute(source, upload);
-            Assert.Null(result);
+    [Fact]
+    public async Task Behavior_Succeeds_Listings()
+    {
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
+        var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
 
-            var currentlyShown = await currentlyShownDb.Retrieve(new CurrentlyShownQuery
-            {
-                WorldId = upload.WorldId.Value,
-                ItemId = upload.ItemId.Value,
-            });
+        var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
 
-            Assert.NotNull(currentlyShown);
-            Assert.Equal(upload.WorldId.Value, currentlyShown.WorldId);
-            Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
-            Assert.Equal(upload.UploaderId, currentlyShown.UploaderIdHash);
-            Assert.NotNull(currentlyShown.Listings);
-            Assert.Empty(currentlyShown.Listings);
-            Assert.NotNull(currentlyShown.RecentHistory);
-            Assert.NotEmpty(currentlyShown.RecentHistory);
+        var source = new TrustedSource
+        {
+            ApiKeySha512 = "2f44abe6",
+            Name = "test runner",
+            UploadCount = 0,
+        };
 
-            var history = await historyDb.Retrieve(new HistoryQuery
-            {
-                WorldId = upload.WorldId.Value,
-                ItemId = upload.ItemId.Value,
-            });
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Listings = listings,
+            UploaderId = "5627384655756342554",
+        };
+        Assert.True(behavior.ShouldExecute(upload));
 
-            Assert.NotNull(history);
-            Assert.NotNull(history.Sales);
-            Assert.NotEmpty(history.Sales);
-        }
+        var result = await behavior.Execute(source, upload);
+        Assert.Null(result);
+
+        var currentlyShown = await currentlyShownDb.Retrieve(new CurrentlyShownQuery
+        {
+            WorldId = upload.WorldId.Value,
+            ItemId = upload.ItemId.Value,
+        });
+
+        Assert.NotNull(currentlyShown);
+        Assert.Equal(upload.WorldId.Value, currentlyShown.WorldId);
+        Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
+        Assert.Equal(upload.UploaderId, currentlyShown.UploaderIdHash);
+        Assert.NotNull(currentlyShown.Listings);
+        Assert.NotEmpty(currentlyShown.Listings);
+        Assert.NotNull(currentlyShown.RecentHistory);
+        Assert.Empty(currentlyShown.RecentHistory);
+
+        var history = await historyDb.Retrieve(new HistoryQuery
+        {
+            WorldId = upload.WorldId.Value,
+            ItemId = upload.ItemId.Value,
+        });
+
+        Assert.Null(history);
+    }
+
+    [Fact]
+    public async Task Behavior_Succeeds_Sales()
+    {
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
+        var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+
+        var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
+
+        var source = new TrustedSource
+        {
+            ApiKeySha512 = "2f44abe6",
+            Name = "test runner",
+            UploadCount = 0,
+        };
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Sales = sales,
+            UploaderId = "5627384655756342554",
+        };
+        Assert.True(behavior.ShouldExecute(upload));
+
+        var result = await behavior.Execute(source, upload);
+        Assert.Null(result);
+
+        var currentlyShown = await currentlyShownDb.Retrieve(new CurrentlyShownQuery
+        {
+            WorldId = upload.WorldId.Value,
+            ItemId = upload.ItemId.Value,
+        });
+
+        Assert.NotNull(currentlyShown);
+        Assert.Equal(upload.WorldId.Value, currentlyShown.WorldId);
+        Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
+        Assert.Equal(upload.UploaderId, currentlyShown.UploaderIdHash);
+        Assert.NotNull(currentlyShown.Listings);
+        Assert.Empty(currentlyShown.Listings);
+        Assert.NotNull(currentlyShown.RecentHistory);
+        Assert.NotEmpty(currentlyShown.RecentHistory);
+
+        var history = await historyDb.Retrieve(new HistoryQuery
+        {
+            WorldId = upload.WorldId.Value,
+            ItemId = upload.ItemId.Value,
+        });
+
+        Assert.NotNull(history);
+        Assert.NotNull(history.Sales);
+        Assert.NotEmpty(history.Sales);
     }
 }

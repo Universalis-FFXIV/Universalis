@@ -1,7 +1,6 @@
-﻿namespace Universalis.DbAccess
+﻿namespace Universalis.DbAccess;
+
+internal static class Constants
 {
-    internal static class Constants
-    {
-        public const string DatabaseName = "universalis";
-    }
+    public const string DatabaseName = "universalis";
 }

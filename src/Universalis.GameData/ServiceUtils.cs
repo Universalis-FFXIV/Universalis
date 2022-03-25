@@ -1,16 +1,15 @@
 ﻿using System.Net.Http;
 
-namespace Universalis.GameData
+namespace Universalis.GameData;
+
+public static class ServiceUtils
 {
-    public static class ServiceUtils
+    public static IGameDataProvider CreateGameDataProvider(string sqpack)
     {
-        public static IGameDataProvider CreateGameDataProvider(string sqpack)
+        return new RobustGameDataProvider(new RobustGameDataProviderParams
         {
-            return new RobustGameDataProvider(new RobustGameDataProviderParams
-            {
-                Http = new HttpClient(),
-                SqPack = sqpack,
-            });
-        }
+            Http = new HttpClient(),
+            SqPack = sqpack,
+        });
     }
 }

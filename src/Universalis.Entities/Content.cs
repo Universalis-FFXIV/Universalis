@@ -1,16 +1,15 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
-namespace Universalis.Entities
+namespace Universalis.Entities;
+
+public class Content
 {
-    public class Content
-    {
-        [BsonElement("contentID")]
-        public string ContentId { get; init; }
+    [BsonElement("contentID")]
+    public string ContentId { get; init; }
 
-        [BsonElement("contentType")]
-        public string ContentType { get; init; }
+    [BsonElement("contentType")]
+    public string ContentType { get; init; }
 
-        [BsonElement("characterName")]
-        public string CharacterName { get; init; }
-    }
+    [BsonElement("characterName")]
+    public string CharacterName { get; init; }
 }
