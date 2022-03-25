@@ -36,6 +36,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deployment", "Deployment", "{8BB061B0-B276-4B4E-B102-11DF81A5FB64}"
 	ProjectSection(SolutionItems) = preProject
 		..\deployment\docker-compose.yml = ..\deployment\docker-compose.yml
+		..\Dockerfile = ..\Dockerfile
 		..\deployment\prometheus.yml = ..\deployment\prometheus.yml
 		..\deployment\README.md = ..\deployment\README.md
 	EndProjectSection
@@ -53,7 +54,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Monitoring", "Monitoring", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Mogboard", "Universalis.Mogboard\Universalis.Mogboard.csproj", "{F052C920-4B91-4F68-B67D-0119CA25FEC9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Universalis.Mogboard.Tests", "Universalis.Mogboard.Tests\Universalis.Mogboard.Tests.csproj", "{AEBCC549-4DF0-4FFF-A7F7-3142A69BFE6A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Mogboard.Tests", "Universalis.Mogboard.Tests\Universalis.Mogboard.Tests.csproj", "{AEBCC549-4DF0-4FFF-A7F7-3142A69BFE6A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
