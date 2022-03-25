@@ -156,6 +156,8 @@ public class Startup
 
             // Reverse proxy path
             options.RoutePrefix = "docs";
+
+            options.DocumentTitle = "Universalis Documentation";
         });
 
         app.UseRouting();
