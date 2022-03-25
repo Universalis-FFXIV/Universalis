@@ -15,7 +15,6 @@ using Universalis.Application.Caching;
 using Universalis.Application.ExceptionFilters;
 using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Behaviors;
-using Universalis.Application.Views;
 using Universalis.Application.Views.V1;
 using Universalis.DbAccess;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -89,6 +88,9 @@ public class Startup
                 .WithDescription(description)
                 .WithLicense(license)
                 .WithVersion(new Version(2, 0)));
+
+            options.OperationFilter<RemoveVersionParameterFilter>();
+            options.DocumentFilter<ReplaceVersionWithExactFilter>();
 
             var apiDocs = typeof(Startup).Assembly.GetManifestResourceStream(
                 new EmbeddedResourceName("Universalis.Application.xml"));
