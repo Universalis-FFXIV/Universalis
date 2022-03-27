@@ -70,7 +70,7 @@ public class UserRetainerController : ControllerBase
         var userRetainerView = new UserRetainerView
         {
             Id = retainer.Id.ToString(),
-            CreatedTimestampMs = retainer.Added.ToUnixTimeMilliseconds().ToString(),
+            AddedTimestampMs = retainer.Added.ToUnixTimeMilliseconds().ToString(),
             UpdatedTimestampMs = retainer.Updated.ToUnixTimeMilliseconds().ToString(),
             Name = retainer.Name,
             Server = retainer.Server,
