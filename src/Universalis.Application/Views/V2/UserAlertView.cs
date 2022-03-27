@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Universalis.Application.Views.V2;
 
@@ -50,7 +51,7 @@ public class UserAlertView
     /// The trigger conditions for this alert.
     /// </summary>
     [JsonPropertyName("triggerConditions")]
-    public string[] TriggerConditions { get; set; }
+    public IList<string> TriggerConditions { get; set; }
 
     /// <summary>
     /// The trigger type of this alert.

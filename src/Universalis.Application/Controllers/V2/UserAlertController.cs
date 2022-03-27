@@ -77,7 +77,7 @@ public class UserAlertController : ControllerBase
             Name = alert.Name,
             Server = alert.Server,
             ExpiryTimestampMs = alert.Expiry.ToUnixTimeMilliseconds().ToString(),
-            TriggerConditions = alert.TriggerConditions!.ToArray(),
+            TriggerConditions = alert.TriggerConditions!.ToList(),
             TriggerType = alert.TriggerType,
             TriggerLastSentTimestampMs = alert.TriggerLastSent.ToUnixTimeMilliseconds().ToString(),
             TriggerDataCenter = alert.TriggerDataCenter,
