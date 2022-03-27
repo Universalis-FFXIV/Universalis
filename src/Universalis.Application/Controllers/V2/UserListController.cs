@@ -70,6 +70,7 @@ public class UserListController : ControllerBase
 
         var userListView = new UserListView
         {
+            Id = userList.Id.ToString(),
             CreatedTimestampMs = userList.Added.ToUnixTimeMilliseconds().ToString(),
             UpdatedTimestampMs = userList.Updated.ToUnixTimeMilliseconds().ToString(),
             Name = userList.Name ?? string.Empty,

@@ -6,6 +6,12 @@ namespace Universalis.Application.Views.V2;
 public class UserListView
 {
     /// <summary>
+    /// The list's ID.
+    /// </summary>
+    [JsonPropertyName("id")]
+    public string Id { get; set; }
+
+    /// <summary>
     /// The time that this list was created, in milliseconds since the UNIX epoch.
     /// </summary>
     [JsonPropertyName("created")]
@@ -14,7 +20,7 @@ public class UserListView
     /// <summary>
     /// The time that this list was updated, in milliseconds since the UNIX epoch.
     /// </summary>
-    [JsonPropertyName("updated")] 
+    [JsonPropertyName("updated")]
     public string UpdatedTimestampMs { get; set; }
 
     /// <summary>
