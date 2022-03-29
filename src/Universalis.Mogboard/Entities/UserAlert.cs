@@ -52,55 +52,56 @@ public class UserAlert
     
     public void IntoCommand(MySqlCommand command, string table)
     {
-        var userId = UserId?.ToString() ?? "NULL";
-        command.CommandText = "insert into @table (@id, @userId, @uniq, @itemId, @added, @activeTime, @lastChecked, @name, " +
-                              "@server, @expiry, @triggerConditions, @triggerType, @triggerLastSent, @triggersSent, @triggerAction, " +
-                              "@triggerDataCenter, @triggerHq, @triggerNq, @triggerActive, @notifiedViaEmail, @notifiedViaDiscord, " +
-                              "@keepUpdated)";
-        command.Parameters.Add("@table", MySqlDbType.String);
-        command.Parameters["@table"].Value = table;
-        command.Parameters.Add("@id", MySqlDbType.VarChar);
-        command.Parameters["@id"].Value = Id.ToString();
-        command.Parameters.Add("@userId", MySqlDbType.VarChar);
-        command.Parameters["@userId"].Value = userId;
-        command.Parameters.Add("@itemId", MySqlDbType.Int64);
-        command.Parameters["@itemId"].Value = ItemId;
-        command.Parameters.Add("@added", MySqlDbType.Int64);
-        command.Parameters["@added"].Value = Added.ToUnixTimeSeconds();
-        command.Parameters.Add("@activeTime", MySqlDbType.Int64);
-        command.Parameters["@activeTime"].Value = ActiveTime.ToUnixTimeSeconds();
-        command.Parameters.Add("@lastChecked", MySqlDbType.Int64);
-        command.Parameters["@lastChecked"].Value = LastChecked.ToUnixTimeSeconds();
-        command.Parameters.Add("@name", MySqlDbType.VarChar);
-        command.Parameters["@name"].Value = Name;
-        command.Parameters.Add("@server", MySqlDbType.VarChar);
-        command.Parameters["@server"].Value = Server;
-        command.Parameters.Add("@expiry", MySqlDbType.Int64);
-        command.Parameters["@expiry"].Value = Expiry.ToUnixTimeSeconds();
-        command.Parameters.Add("@triggerConditions", MySqlDbType.VarChar);
-        command.Parameters["@triggerConditions"].Value = TriggerConditions;
-        command.Parameters.Add("@triggerType", MySqlDbType.VarChar);
-        command.Parameters["@triggerType"].Value = TriggerType;
-        command.Parameters.Add("@triggerLastSent", MySqlDbType.Int64);
-        command.Parameters["@triggerLastSent"].Value = TriggerLastSent.ToUnixTimeSeconds();
-        command.Parameters.Add("@triggersSent", MySqlDbType.Int64);
-        command.Parameters["@triggersSent"].Value = TriggersSent;
-        command.Parameters.Add("@triggerAction", MySqlDbType.VarChar);
-        command.Parameters["@triggerAction"].Value = TriggerAction;
-        command.Parameters.Add("@triggerDataCenter", MySqlDbType.Int64);
-        command.Parameters["@triggerDataCenter"].Value = TriggerDataCenter;
-        command.Parameters.Add("@triggerHq", MySqlDbType.Int64);
-        command.Parameters["@triggerHq"].Value = TriggerHq;
-        command.Parameters.Add("@triggerNq", MySqlDbType.Int64);
-        command.Parameters["@triggerNq"].Value = TriggerNq;
-        command.Parameters.Add("@triggerActive", MySqlDbType.Int64);
-        command.Parameters["@triggerActive"].Value = TriggerActive;
-        command.Parameters.Add("@notifiedViaEmail", MySqlDbType.Int64);
-        command.Parameters["@notifiedViaEmail"].Value = NotifiedViaEmail;
-        command.Parameters.Add("@notifiedViaDiscord", MySqlDbType.Int64);
-        command.Parameters["@notifiedViaDiscord"].Value = NotifiedViaDiscord;
-        command.Parameters.Add("@keepUpdated", MySqlDbType.Int64);
-        command.Parameters["@keepUpdated"].Value = KeepUpdated;
+        command.CommandText = "insert into @Table (@Id, @UserId, @Uniq, @ItemId, @Added, @ActiveTime, @LastChecked, @Name, " +
+                              "@Server, @Expiry, @TriggerConditions, @TriggerType, @TriggerLastSent, @TriggersSent, @TriggerAction, " +
+                              "@TriggerDataCenter, @TriggerHq, @TriggerNq, @TriggerActive, @NotifiedViaEmail, @NotifiedViaDiscord, " +
+                              "@KeepUpdated)";
+        command.Parameters.Add("@Table", MySqlDbType.String);
+        command.Parameters["@Table"].Value = table;
+        command.Parameters.Add("@Id", MySqlDbType.VarChar);
+        command.Parameters["@Id"].Value = Id.ToString();
+        command.Parameters.Add("@UserId", MySqlDbType.VarChar);
+        command.Parameters["@UserId"].Value = UserId?.ToString();
+        command.Parameters.Add("@Uniq", MySqlDbType.VarChar);
+        command.Parameters["@Uniq"].Value = Uniq;
+        command.Parameters.Add("@ItemId", MySqlDbType.Int64);
+        command.Parameters["@ItemId"].Value = ItemId;
+        command.Parameters.Add("@Added", MySqlDbType.Int64);
+        command.Parameters["@Added"].Value = Added.ToUnixTimeSeconds();
+        command.Parameters.Add("@ActiveTime", MySqlDbType.Int64);
+        command.Parameters["@ActiveTime"].Value = ActiveTime.ToUnixTimeSeconds();
+        command.Parameters.Add("@LastChecked", MySqlDbType.Int64);
+        command.Parameters["@LastChecked"].Value = LastChecked.ToUnixTimeSeconds();
+        command.Parameters.Add("@Name", MySqlDbType.VarChar);
+        command.Parameters["@Name"].Value = Name;
+        command.Parameters.Add("@Server", MySqlDbType.VarChar);
+        command.Parameters["@Server"].Value = Server;
+        command.Parameters.Add("@Expiry", MySqlDbType.Int64);
+        command.Parameters["@Expiry"].Value = Expiry.ToUnixTimeSeconds();
+        command.Parameters.Add("@TriggerConditions", MySqlDbType.VarChar);
+        command.Parameters["@TriggerConditions"].Value = TriggerConditions;
+        command.Parameters.Add("@TriggerType", MySqlDbType.VarChar);
+        command.Parameters["@TriggerType"].Value = TriggerType;
+        command.Parameters.Add("@TriggerLastSent", MySqlDbType.Int64);
+        command.Parameters["@TriggerLastSent"].Value = TriggerLastSent.ToUnixTimeSeconds();
+        command.Parameters.Add("@TriggersSent", MySqlDbType.Int64);
+        command.Parameters["@TriggersSent"].Value = TriggersSent;
+        command.Parameters.Add("@TriggerAction", MySqlDbType.VarChar);
+        command.Parameters["@TriggerAction"].Value = TriggerAction;
+        command.Parameters.Add("@TriggerDataCenter", MySqlDbType.Bool);
+        command.Parameters["@TriggerDataCenter"].Value = TriggerDataCenter;
+        command.Parameters.Add("@TriggerHq", MySqlDbType.Bool);
+        command.Parameters["@TriggerHq"].Value = TriggerHq;
+        command.Parameters.Add("@TriggerNq", MySqlDbType.Bool);
+        command.Parameters["@TriggerNq"].Value = TriggerNq;
+        command.Parameters.Add("@TriggerActive", MySqlDbType.Bool);
+        command.Parameters["@TriggerActive"].Value = TriggerActive;
+        command.Parameters.Add("@NotifiedViaEmail", MySqlDbType.Bool);
+        command.Parameters["@NotifiedViaEmail"].Value = NotifiedViaEmail;
+        command.Parameters.Add("@NotifiedViaDiscord", MySqlDbType.Bool);
+        command.Parameters["@NotifiedViaDiscord"].Value = NotifiedViaDiscord;
+        command.Parameters.Add("@KeepUpdated", MySqlDbType.Bool);
+        command.Parameters["@KeepUpdated"].Value = KeepUpdated;
     }
 
     public static UserAlert FromReader(MySqlDataReader reader)

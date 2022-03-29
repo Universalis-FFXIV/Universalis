@@ -27,6 +27,35 @@ public class UserRetainer
 
     public string? ApiRetainerId { get; set; }
 
+    public void IntoCommand(MySqlCommand command, string table)
+    {
+        command.CommandText = "insert into @Table (@Id, @UserId, @Name, @Server, @Avatar, @Confirmed, @ConfirmItem, @ConfirmPrice, @Updated, @Added, @ApiRetainerId)";
+        command.Parameters.Add("@Table", MySqlDbType.String);
+        command.Parameters["@Table"].Value = table;
+        command.Parameters.Add("@Id", MySqlDbType.VarChar);
+        command.Parameters["@Id"].Value = Id.ToString();
+        command.Parameters.Add("@UserId", MySqlDbType.VarChar);
+        command.Parameters["@UserId"].Value = UserId?.ToString();
+        command.Parameters.Add("@Name", MySqlDbType.VarChar);
+        command.Parameters["@Name"].Value = Name;
+        command.Parameters.Add("@Server", MySqlDbType.VarChar);
+        command.Parameters["@Server"].Value = Server;
+        command.Parameters.Add("@Avatar", MySqlDbType.VarChar);
+        command.Parameters["@Avatar"].Value = Avatar;
+        command.Parameters.Add("@Confirmed", MySqlDbType.Bool);
+        command.Parameters["@Confirmed"].Value = Confirmed;
+        command.Parameters.Add("@ConfirmItem", MySqlDbType.Int64);
+        command.Parameters["@ConfirmItem"].Value = ConfirmItem;
+        command.Parameters.Add("@ConfirmPrice", MySqlDbType.Int64);
+        command.Parameters["@ConfirmPrice"].Value = ConfirmPrice;
+        command.Parameters.Add("@Updated", MySqlDbType.Int64);
+        command.Parameters["@Updated"].Value = Updated.ToUnixTimeSeconds();
+        command.Parameters.Add("@Added", MySqlDbType.Int64);
+        command.Parameters["@Added"].Value = Added.ToUnixTimeSeconds();
+        command.Parameters.Add("@ApiRetainerId", MySqlDbType.VarChar);
+        command.Parameters["@ApiRetainerId"].Value = ApiRetainerId;
+    }
+
     public static UserRetainer FromReader(MySqlDataReader reader)
     {
         var userId = reader["user_id"];

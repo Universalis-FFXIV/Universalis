@@ -25,31 +25,27 @@ public class UserCharacter
     
     public void IntoCommand(MySqlCommand command, string table)
     {
-        var userId = UserId?.ToString() ?? "NULL";
-        var name = Name ?? "NULL";
-        var server = Server ?? "NULL";
-        var avatar = Avatar ?? "NULL";
-        command.CommandText = "insert into @table (@id, @userId, @lodestoneId, @name, @server, @avatar, @main, @confirmed, @updated)";
-        command.Parameters.Add("@table", MySqlDbType.String);
-        command.Parameters["@table"].Value = table;
-        command.Parameters.Add("@id", MySqlDbType.VarChar);
-        command.Parameters["@id"].Value = Id.ToString();
-        command.Parameters.Add("@userId", MySqlDbType.VarChar);
-        command.Parameters["@userId"].Value = userId;
-        command.Parameters.Add("@lodestoneId", MySqlDbType.Int64);
-        command.Parameters["@lodestoneId"].Value = LodestoneId;
-        command.Parameters.Add("@name", MySqlDbType.VarChar);
-        command.Parameters["@name"].Value = name;
-        command.Parameters.Add("@server", MySqlDbType.VarChar);
-        command.Parameters["@server"].Value = server;
-        command.Parameters.Add("@avatar", MySqlDbType.VarChar);
-        command.Parameters["@avatar"].Value = avatar;
-        command.Parameters.Add("@main", MySqlDbType.Int64);
-        command.Parameters["@main"].Value = Main;
-        command.Parameters.Add("@confirmed", MySqlDbType.Int64);
-        command.Parameters["@confirmed"].Value = Confirmed;
-        command.Parameters.Add("@updated", MySqlDbType.Int64);
-        command.Parameters["@updated"].Value = Updated.ToUnixTimeSeconds();
+        command.CommandText = "insert into @Table (@Id, @UserId, @LodestoneId, @Name, @Server, @Avatar, @Main, @Confirmed, @Updated)";
+        command.Parameters.Add("@Table", MySqlDbType.String);
+        command.Parameters["@Table"].Value = table;
+        command.Parameters.Add("@Id", MySqlDbType.VarChar);
+        command.Parameters["@Id"].Value = Id.ToString();
+        command.Parameters.Add("@UserId", MySqlDbType.VarChar);
+        command.Parameters["@UserId"].Value = UserId?.ToString();
+        command.Parameters.Add("@LodestoneId", MySqlDbType.Int64);
+        command.Parameters["@LodestoneId"].Value = LodestoneId;
+        command.Parameters.Add("@Name", MySqlDbType.VarChar);
+        command.Parameters["@Name"].Value = Name;
+        command.Parameters.Add("@Server", MySqlDbType.VarChar);
+        command.Parameters["@Server"].Value = Server;
+        command.Parameters.Add("@Avatar", MySqlDbType.VarChar);
+        command.Parameters["@Avatar"].Value = Avatar;
+        command.Parameters.Add("@Main", MySqlDbType.Bool);
+        command.Parameters["@Main"].Value = Main;
+        command.Parameters.Add("@Confirmed", MySqlDbType.Bool);
+        command.Parameters["@Confirmed"].Value = Confirmed;
+        command.Parameters.Add("@Updated", MySqlDbType.Int64);
+        command.Parameters["@Updated"].Value = Updated.ToUnixTimeSeconds();
     }
 
     public static UserCharacter FromReader(MySqlDataReader reader)

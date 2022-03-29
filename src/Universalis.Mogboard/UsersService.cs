@@ -25,9 +25,9 @@ internal class UsersService : IMogboardTable<User, UserId>
         await db.OpenAsync(cancellationToken);
 
         await using var command = db.CreateCommand();
-        command.CommandText = "select * from dalamud.users where id=@id limit 1;";
-        command.Parameters.Add("@id", MySqlDbType.VarChar);
-        command.Parameters["@id"].Value = id.ToString();
+        command.CommandText = "select * from dalamud.users where id=@Id limit 1;";
+        command.Parameters.Add("@Id", MySqlDbType.VarChar);
+        command.Parameters["@Id"].Value = id.ToString();
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         return await reader.ReadAsync(cancellationToken) ? User.FromReader(reader) : null;
@@ -39,7 +39,7 @@ internal class UsersService : IMogboardTable<User, UserId>
         await db.OpenAsync(cancellationToken);
 
         await using var command = db.CreateCommand();
-        command.CommandText = "";
+        entity.IntoCommand(command, "dalamud.users");
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }

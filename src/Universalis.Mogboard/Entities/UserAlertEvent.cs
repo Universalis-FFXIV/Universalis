@@ -17,20 +17,19 @@ public class UserAlertEvent
 
     public void IntoCommand(MySqlCommand command, string table)
     {
-        var alertId = AlertId?.ToString() ?? "NULL";
-        command.CommandText = "insert into @table (@id, @alertId, @userId, @added, @data)";
-        command.Parameters.Add("@table", MySqlDbType.String);
-        command.Parameters["@table"].Value = table;
-        command.Parameters.Add("@id", MySqlDbType.VarChar);
-        command.Parameters["@id"].Value = Id.ToString();
-        command.Parameters.Add("@alertId", MySqlDbType.VarChar);
-        command.Parameters["@alertId"].Value = alertId;
-        command.Parameters.Add("@userId", MySqlDbType.VarChar);
-        command.Parameters["@userId"].Value = UserId.ToString();
-        command.Parameters.Add("@added", MySqlDbType.Int64);
-        command.Parameters["@added"].Value = Added.ToUnixTimeSeconds();
+        command.CommandText = "insert into @Table (@Id, @AlertId, @UserId, @Added, @Data)";
+        command.Parameters.Add("@Table", MySqlDbType.String);
+        command.Parameters["@Table"].Value = table;
+        command.Parameters.Add("@Id", MySqlDbType.VarChar);
+        command.Parameters["@Id"].Value = Id.ToString();
+        command.Parameters.Add("@AlertId", MySqlDbType.VarChar);
+        command.Parameters["@AlertId"].Value = AlertId?.ToString();
+        command.Parameters.Add("@UserId", MySqlDbType.VarChar);
+        command.Parameters["@UserId"].Value = UserId.ToString();
+        command.Parameters.Add("@Added", MySqlDbType.Int64);
+        command.Parameters["@Added"].Value = Added.ToUnixTimeSeconds();
         command.Parameters.Add("@data", MySqlDbType.VarChar);
-        command.Parameters["@data"].Value = Data;
+        command.Parameters["@Data"].Value = Data;
     }
 
     public static UserAlertEvent FromReader(MySqlDataReader reader)
