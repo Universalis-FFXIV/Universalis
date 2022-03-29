@@ -23,6 +23,15 @@ public class UserCharacter
 
     public DateTimeOffset Updated { get; set; }
 
+    public string ToInsertStatement(string table)
+    {
+        var userId = UserId?.ToString() ?? "NULL";
+        var name = Name ?? "NULL";
+        var server = Server ?? "NULL";
+        var avatar = Avatar ?? "NULL";
+        return $"insert into {table} ('{Id}', '{userId}', {LodestoneId}, '{name}', '{server}', '{avatar}', {(Main ? 1 : 0)}, {(Confirmed ? 1 : 0)})";
+    }
+
     public static UserCharacter FromReader(MySqlDataReader reader)
     {
         var userId = reader["user_id"];
