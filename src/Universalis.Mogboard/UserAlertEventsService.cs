@@ -32,4 +32,15 @@ internal class UserAlertEventsService : IMogboardTable<UserAlertEvent, UserAlert
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         return await reader.ReadAsync(cancellationToken) ? UserAlertEvent.FromReader(reader) : null;
     }
+
+    public async Task Create(UserAlertEvent entity, CancellationToken cancellationToken = default)
+    {
+        await using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Server=localhost;Port={_port}");
+        await db.OpenAsync(cancellationToken);
+
+        await using var command = db.CreateCommand();
+        command.CommandText = "";
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
 }

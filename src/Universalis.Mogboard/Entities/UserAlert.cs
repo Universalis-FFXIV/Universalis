@@ -50,6 +50,16 @@ public class UserAlert
 
     public bool KeepUpdated { get; set; }
 
+    public string ToInsertStatement(string table)
+    {
+        var userId = UserId?.ToString() ?? "NULL";
+        return $"insert into {table} values ('{Id}', '{userId}', '{Uniq}', {ItemId}, {Added.ToUnixTimeSeconds()}," +
+               $"{ActiveTime.ToUnixTimeSeconds()}, {LastChecked.ToUnixTimeSeconds()}, '{Name}', '{Server}', {Expiry.ToUnixTimeSeconds()}," +
+               $"'{TriggerConditions}', '{TriggerType}', {TriggerLastSent.ToUnixTimeSeconds()}, {TriggersSent}, '{TriggerAction}', {(TriggerDataCenter ? 1 : 0)}," +
+               $"{(TriggerHq ? 1 : 0)}, {(TriggerNq ? 1 : 0)}, {(TriggerActive ? 1 : 0)}, {(NotifiedViaEmail ? 1 : 0)}," +
+               $"{(NotifiedViaDiscord ? 1 : 0)}, {(KeepUpdated ? 1 : 0)})";
+    }
+
     public static UserAlert FromReader(MySqlDataReader reader)
     {
         var userId = reader["user_id"];

@@ -32,4 +32,15 @@ internal class UserAlertsService : IMogboardTable<UserAlert, UserAlertId>
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         return await reader.ReadAsync(cancellationToken) ? UserAlert.FromReader(reader) : null;
     }
+
+    public async Task Create(UserAlert entity, CancellationToken cancellationToken = default)
+    {
+        await using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Server=localhost;Port={_port}");
+        await db.OpenAsync(cancellationToken);
+
+        await using var command = db.CreateCommand();
+        command.CommandText = entity.ToInsertStatement("dalamud.users_alerts");
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
 }
