@@ -15,6 +15,12 @@ public class UserAlertEvent
 
     public string? Data { get; set; }
 
+    public string ToInsertStatement(string table)
+    {
+        var alertId = AlertId?.ToString() ?? "NULL";
+        return $"insert into {table} ('{Id}', '{alertId}', '{UserId}', {Added.ToUnixTimeSeconds()}, '{Data}')";
+    }
+
     public static UserAlertEvent FromReader(MySqlDataReader reader)
     {
         var alertId = reader["event_id"];
