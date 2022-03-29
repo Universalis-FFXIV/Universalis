@@ -39,7 +39,7 @@ internal class UserAlertEventsService : IMogboardTable<UserAlertEvent, UserAlert
         await db.OpenAsync(cancellationToken);
 
         await using var command = db.CreateCommand();
-        command.CommandText = entity.ToInsertStatement("dalamud.users_alerts_events");
+        entity.IntoCommand(command, "dalamud.users_alerts_events");
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }

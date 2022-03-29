@@ -22,14 +22,34 @@ public class UserCharacter
     public bool Confirmed { get; set; }
 
     public DateTimeOffset Updated { get; set; }
-
-    public string ToInsertStatement(string table)
+    
+    public void IntoCommand(MySqlCommand command, string table)
     {
         var userId = UserId?.ToString() ?? "NULL";
         var name = Name ?? "NULL";
         var server = Server ?? "NULL";
         var avatar = Avatar ?? "NULL";
-        return $"insert into {table} ('{Id}', '{userId}', {LodestoneId}, '{name}', '{server}', '{avatar}', {(Main ? 1 : 0)}, {(Confirmed ? 1 : 0)})";
+        command.CommandText = "insert into @table (@id, @userId, @lodestoneId, @name, @server, @avatar, @main, @confirmed, @updated)";
+        command.Parameters.Add("@table", MySqlDbType.String);
+        command.Parameters["@table"].Value = table;
+        command.Parameters.Add("@id", MySqlDbType.VarChar);
+        command.Parameters["@id"].Value = Id.ToString();
+        command.Parameters.Add("@userId", MySqlDbType.VarChar);
+        command.Parameters["@userId"].Value = userId;
+        command.Parameters.Add("@lodestoneId", MySqlDbType.Int64);
+        command.Parameters["@lodestoneId"].Value = LodestoneId;
+        command.Parameters.Add("@name", MySqlDbType.VarChar);
+        command.Parameters["@name"].Value = name;
+        command.Parameters.Add("@server", MySqlDbType.VarChar);
+        command.Parameters["@server"].Value = server;
+        command.Parameters.Add("@avatar", MySqlDbType.VarChar);
+        command.Parameters["@avatar"].Value = avatar;
+        command.Parameters.Add("@main", MySqlDbType.Int64);
+        command.Parameters["@main"].Value = Main;
+        command.Parameters.Add("@confirmed", MySqlDbType.Int64);
+        command.Parameters["@confirmed"].Value = Confirmed;
+        command.Parameters.Add("@updated", MySqlDbType.Int64);
+        command.Parameters["@updated"].Value = Updated.ToUnixTimeSeconds();
     }
 
     public static UserCharacter FromReader(MySqlDataReader reader)

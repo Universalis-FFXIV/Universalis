@@ -39,7 +39,7 @@ internal class UserCharactersService : IMogboardTable<UserCharacter, UserCharact
         await db.OpenAsync(cancellationToken);
 
         await using var command = db.CreateCommand();
-        command.CommandText = entity.ToInsertStatement("dalamud.users_characters");
+        entity.IntoCommand(command, "dalamud.users_characters");
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }

@@ -15,10 +15,22 @@ public class UserAlertEvent
 
     public string? Data { get; set; }
 
-    public string ToInsertStatement(string table)
+    public void IntoCommand(MySqlCommand command, string table)
     {
         var alertId = AlertId?.ToString() ?? "NULL";
-        return $"insert into {table} ('{Id}', '{alertId}', '{UserId}', {Added.ToUnixTimeSeconds()}, '{Data}')";
+        command.CommandText = "insert into @table (@id, @alertId, @userId, @added, @data)";
+        command.Parameters.Add("@table", MySqlDbType.String);
+        command.Parameters["@table"].Value = table;
+        command.Parameters.Add("@id", MySqlDbType.VarChar);
+        command.Parameters["@id"].Value = Id.ToString();
+        command.Parameters.Add("@alertId", MySqlDbType.VarChar);
+        command.Parameters["@alertId"].Value = alertId;
+        command.Parameters.Add("@userId", MySqlDbType.VarChar);
+        command.Parameters["@userId"].Value = UserId.ToString();
+        command.Parameters.Add("@added", MySqlDbType.Int64);
+        command.Parameters["@added"].Value = Added.ToUnixTimeSeconds();
+        command.Parameters.Add("@data", MySqlDbType.VarChar);
+        command.Parameters["@data"].Value = Data;
     }
 
     public static UserAlertEvent FromReader(MySqlDataReader reader)
