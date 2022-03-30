@@ -6,8 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V2;
 using Universalis.Mogboard;
+using Universalis.Mogboard.Doctrine;
 using Universalis.Mogboard.Entities;
 using Universalis.Mogboard.Entities.Id;
+using Universalis.Mogboard.Identity;
 
 namespace Universalis.Application.Controllers.V2;
 
@@ -74,11 +76,11 @@ public class UserAlertController : ControllerBase
             ItemId = alert.ItemId,
             CreatedTimestampMs = alert.Added.ToUnixTimeMilliseconds().ToString(),
             LastCheckedTimestampMs = alert.Added.ToUnixTimeMilliseconds().ToString(),
-            Name = alert.Name,
-            Server = alert.Server,
+            Name = alert.Name!,
+            Server = alert.Server!,
             ExpiryTimestampMs = alert.Expiry.ToUnixTimeMilliseconds().ToString(),
             TriggerConditions = alert.TriggerConditions!.ToList(),
-            TriggerType = alert.TriggerType,
+            TriggerType = alert.TriggerType!,
             TriggerLastSentTimestampMs = alert.TriggerLastSent.ToUnixTimeMilliseconds().ToString(),
             TriggerDataCenter = alert.TriggerDataCenter,
             TriggerNq = alert.TriggerNq,
@@ -87,5 +89,71 @@ public class UserAlertController : ControllerBase
         };
 
         return Ok(userAlertView);
+    }
+
+    /// <summary>
+    /// Creates a new user alert.
+    /// </summary>
+    /// <param name="create">The alert parameters.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    [HttpPost]
+    [MapToApiVersion("1")]
+    [Route("alerts")]
+    [ApiTag("User alerts")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
+    public Task<IActionResult> Post([FromBody] UserAlertCreateView create,
+        CancellationToken cancellationToken = default)
+    {
+        return PostV2(create, cancellationToken);
+    }
+
+    /// <summary>
+    /// Creates a new user alert.
+    /// </summary>
+    /// <param name="create">The alert parameters.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    [HttpPost]
+    [MapToApiVersion("2")]
+    [Route("v{version:apiVersion}/alerts")]
+    [ApiTag("User alerts")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> PostV2([FromBody] UserAlertCreateView create,
+        CancellationToken cancellationToken = default)
+    {
+        var user = (MogboardUser?)HttpContext.Items["user"];
+        if (user == null) throw new ArgumentNullException(nameof(user));
+
+        await _alerts.Create(new UserAlert
+        {
+            Id = new UserAlertId(new Guid()),
+            UserId = user.GetId(),
+            Uniq = "",
+            ItemId = create.AlertItemId ?? throw new ArgumentNullException(),
+            Added = DateTimeOffset.UtcNow,
+            ActiveTime = DateTimeOffset.UtcNow,
+            LastChecked = DateTimeOffset.FromUnixTimeSeconds(0),
+            Name = create.AlertName ?? throw new ArgumentNullException(),
+            Expiry = DateTimeOffset.UtcNow + new TimeSpan(30, 0, 0, 0),
+            TriggerConditions = new DoctrineArray<string>(create.AlertTriggers ?? throw new ArgumentNullException()),
+            TriggerType = "",
+            TriggerLastSent = DateTimeOffset.FromUnixTimeSeconds(0),
+            TriggersSent = 0,
+            TriggerAction = "continue",
+            TriggerDataCenter = create.AlertDc ?? false,
+            TriggerHq = create.AlertHq ?? false,
+            TriggerNq = create.AlertNq ?? false,
+            TriggerActive = true,
+            NotifiedViaEmail = create.AlertNotifyEmail ?? false,
+            NotifiedViaDiscord = create.AlertNotifyDiscord ?? false,
+            KeepUpdated = false,
+        }, cancellationToken);
+
+        return Ok();
     }
 }
