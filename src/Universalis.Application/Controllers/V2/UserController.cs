@@ -45,10 +45,10 @@ public class UserController : ControllerBase
     [ProducesResponseType(403)]
     public IActionResult GetV2()
     {
-        var user = (MogboardUser)HttpContext.Items["user"];
+        var user = (MogboardUser?)HttpContext.Items["user"];
         if (user == null) throw new ArgumentNullException(nameof(user));
 
-        UserView.SsoView ssoView = null;
+        UserView.SsoView? ssoView = null;
 
         var discordSso = user.GetDiscordSso();
         if (discordSso != null)
@@ -57,8 +57,8 @@ public class UserController : ControllerBase
             ssoView ??= new UserView.SsoView();
             ssoView.Discord = new UserView.SsoView.DiscordSsoView
             {
-                Id = discordSso.Id,
-                Avatar = discordSso.Avatar,
+                Id = discordSso.Id!,
+                Avatar = discordSso.Avatar!,
             };
         }
 
@@ -69,8 +69,8 @@ public class UserController : ControllerBase
             LastOnlineTimestampMs = user.GetLastOnlineTime().ToUnixTimeMilliseconds().ToString(),
             Username = user.GetUsername(),
             Email = user.GetEmail(),
-            Avatar = user.GetAvatar(),
-            Sso = ssoView,
+            Avatar = user.GetAvatar()!,
+            Sso = ssoView!,
         };
 
         return Ok(userView);
