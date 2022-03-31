@@ -2,9 +2,14 @@
 
 public readonly struct UserAlertId
 {
-    private readonly System.Guid _id;
+    private readonly Guid _id;
 
-    public UserAlertId(System.Guid id)
+    public UserAlertId()
+    {
+        _id = new Guid();
+    }
+
+    public UserAlertId(Guid id)
     {
         _id = id;
     }
@@ -26,13 +31,13 @@ public readonly struct UserAlertId
 
     public static UserAlertId Parse(string id)
     {
-        var guid = System.Guid.Parse(id);
+        var guid = Guid.Parse(id);
         return new UserAlertId(guid);
     }
 
-    public static explicit operator UserAlertId(System.Guid id) => new(id);
+    public static explicit operator UserAlertId(Guid id) => new(id);
 
-    public static explicit operator System.Guid(UserAlertId id) => id._id;
+    public static explicit operator Guid(UserAlertId id) => id._id;
 
     public static bool operator ==(UserAlertId left, UserAlertId right)
     {

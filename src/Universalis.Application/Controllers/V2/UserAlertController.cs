@@ -131,7 +131,7 @@ public class UserAlertController : ControllerBase
 
         await _alerts.Create(new UserAlert
         {
-            Id = new UserAlertId(new Guid()),
+            Id = new UserAlertId(),
             UserId = user.GetId(),
             Uniq = "",
             ItemId = create.AlertItemId ?? throw new ArgumentNullException(),

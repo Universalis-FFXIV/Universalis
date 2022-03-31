@@ -2,9 +2,14 @@
 
 public readonly struct UserRetainerId
 {
-    private readonly System.Guid _id;
+    private readonly Guid _id;
 
-    public UserRetainerId(System.Guid id)
+    public UserRetainerId()
+    {
+        _id = new Guid();
+    }
+
+    public UserRetainerId(Guid id)
     {
         _id = id;
     }
@@ -26,13 +31,13 @@ public readonly struct UserRetainerId
 
     public static UserRetainerId Parse(string id)
     {
-        var guid = System.Guid.Parse(id);
+        var guid = Guid.Parse(id);
         return new UserRetainerId(guid);
     }
 
-    public static explicit operator UserRetainerId(System.Guid id) => new(id);
+    public static explicit operator UserRetainerId(Guid id) => new(id);
 
-    public static explicit operator System.Guid(UserRetainerId id) => id._id;
+    public static explicit operator Guid(UserRetainerId id) => id._id;
 
     public static bool operator ==(UserRetainerId left, UserRetainerId right)
     {

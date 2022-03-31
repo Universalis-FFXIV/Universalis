@@ -2,9 +2,14 @@
 
 public readonly struct UserCharacterId
 {
-    private readonly System.Guid _id;
+    private readonly Guid _id;
 
-    public UserCharacterId(System.Guid id)
+    public UserCharacterId()
+    {
+        _id = new Guid();
+    }
+
+    public UserCharacterId(Guid id)
     {
         _id = id;
     }
@@ -26,13 +31,13 @@ public readonly struct UserCharacterId
 
     public static UserCharacterId Parse(string id)
     {
-        var guid = System.Guid.Parse(id);
+        var guid = Guid.Parse(id);
         return new UserCharacterId(guid);
     }
 
-    public static explicit operator UserCharacterId(System.Guid id) => new(id);
+    public static explicit operator UserCharacterId(Guid id) => new(id);
 
-    public static explicit operator System.Guid(UserCharacterId id) => id._id;
+    public static explicit operator Guid(UserCharacterId id) => id._id;
 
     public static bool operator ==(UserCharacterId left, UserCharacterId right)
     {
