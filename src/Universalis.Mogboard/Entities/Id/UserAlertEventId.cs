@@ -6,7 +6,7 @@ public readonly struct UserAlertEventId
 
     public UserAlertEventId()
     {
-        _id = new Guid();
+        _id = Guid.NewGuid();
     }
 
     public UserAlertEventId(Guid id)

@@ -6,7 +6,7 @@ public readonly struct UserRetainerId
 
     public UserRetainerId()
     {
-        _id = new Guid();
+        _id = Guid.NewGuid();
     }
 
     public UserRetainerId(Guid id)

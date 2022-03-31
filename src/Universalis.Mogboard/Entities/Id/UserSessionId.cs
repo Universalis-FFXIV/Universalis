@@ -6,7 +6,7 @@ public readonly struct UserSessionId
 
     public UserSessionId()
     {
-        _id = new Guid();
+        _id = Guid.NewGuid();
     }
 
     public UserSessionId(Guid id)

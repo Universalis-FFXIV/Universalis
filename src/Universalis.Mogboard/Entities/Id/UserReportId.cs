@@ -6,7 +6,7 @@ public readonly struct UserReportId
 
     public UserReportId()
     {
-        _id = new Guid();
+        _id = Guid.NewGuid();
     }
 
     public UserReportId(Guid id)
