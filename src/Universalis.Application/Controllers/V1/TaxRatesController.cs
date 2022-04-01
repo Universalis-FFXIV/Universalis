@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Swagger;
@@ -33,7 +32,7 @@ public class TaxRatesController : WorldDcControllerBase
     [ApiTag("Market tax rates")]
     [ProducesResponseType(typeof(TaxRatesView), 200)]
     [ProducesResponseType(404)]
-    public async Task<IActionResult> Get([FromQuery, BindRequired] string world, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Get([FromQuery] string world, CancellationToken cancellationToken = default)
     {
         if (!TryGetWorldDc(world, out var worldDc))
         {

@@ -38,7 +38,7 @@ public class LeastRecentlyUpdatedItemsController : WorldDcControllerBase
     [ApiTag("Least-recently updated items")]
     [ProducesResponseType(typeof(MostRecentlyUpdatedItemsView), 200)]
     [ProducesResponseType(404)]
-    public async Task<IActionResult> Get([FromQuery] string world, [FromQuery] string dcName, [FromQuery(Name = "entries")] string entriesToReturn, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Get([FromQuery] string? world, [FromQuery] string? dcName, [FromQuery(Name = "entries")] string? entriesToReturn, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(world) && string.IsNullOrEmpty(dcName))
         {
