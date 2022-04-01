@@ -15,7 +15,6 @@ using System.Reflection;
 using System.Xml.XPath;
 using Universalis.Alerts;
 using Universalis.Application.Caching;
-using Universalis.Application.Controllers;
 using Universalis.Application.ExceptionFilters;
 using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Behaviors;
@@ -60,14 +59,14 @@ public class Startup
             options.Filters.Add<OperationCancelledExceptionFilter>();
         });
 
+        services.AddRazorPages();
+
         services.AddApiVersioning(options =>
         {
             options.DefaultApiVersion = new ApiVersion(1, 0);
             options.AssumeDefaultVersionWhenUnspecified = true;
             options.ReportApiVersions = true;
         });
-
-        services.AddRazorPages();
 
         services.AddSwaggerGen(options =>
         {

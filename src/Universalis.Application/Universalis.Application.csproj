@@ -36,6 +36,7 @@
     <ProjectReference Include="..\Universalis.DbAccess\Universalis.DbAccess.csproj" />
     <ProjectReference Include="..\Universalis.Entities\Universalis.Entities.csproj" />
     <ProjectReference Include="..\Universalis.GameData\Universalis.GameData.csproj" />
+    <ProjectReference Include="..\Universalis.Mogboard.WebUI\Universalis.Mogboard.WebUI.csproj" />
     <ProjectReference Include="..\Universalis.Mogboard\Universalis.Mogboard.csproj" />
   </ItemGroup>
 
