@@ -7,6 +7,7 @@ public static class MogboardWebUIExtensions
 {
     public static void AddMogboardWebUI(this IServiceCollection sc)
     {
-        sc.AddScoped<ITranslationService, TranslationService>();
+        sc.AddSingleton<ITranslationService, TranslationService>();
+        sc.AddSingleton<ISearchIconService, SearchIconService>();
     }
 }
