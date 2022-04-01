@@ -1,5 +1,7 @@
 ﻿@page
+@using Universalis.Mogboard.WebUI.Services
 @model Universalis.Mogboard.WebUI.Pages.IndexModel
+@inject ITranslationService _localize
 @{
 }
 
@@ -8,7 +10,7 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>Index</title>
+    <title>@_localize.Translate("generic_index", "Index")</title>
 </head>
 <body>
 </body>

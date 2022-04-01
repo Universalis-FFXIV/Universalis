@@ -8,7 +8,29 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Translations\Chinese_simplified.json" />
+    <Content Remove="Translations\French.json" />
+    <Content Remove="Translations\German.json" />
+    <Content Remove="Translations\Japanese.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Translations\Chinese_simplified.json" />
+    <EmbeddedResource Include="Translations\French.json" />
+    <EmbeddedResource Include="Translations\German.json" />
+    <EmbeddedResource Include="Translations\Japanese.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Universalis.Mogboard\Universalis.Mogboard.csproj" />
   </ItemGroup>
 
 

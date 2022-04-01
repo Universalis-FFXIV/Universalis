@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,7 @@ using Universalis.DbAccess;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.GameData;
 using Universalis.Mogboard;
+using Universalis.Mogboard.WebUI;
 
 namespace Universalis.Application;
 
@@ -47,8 +49,6 @@ public class Startup
         var cacheSize = int.Parse(Configuration["MarketCurrentDataCacheSize"]);
         services.AddSingleton<ICache<CurrentlyShownQuery, CurrentlyShownView>>(new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(cacheSize));
 
-        services.AddMogboard(Configuration);
-
         services
             .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
             .AddNegotiate();
@@ -58,8 +58,6 @@ public class Startup
             options.Filters.Add<DecoderFallbackExceptionFilter>();
             options.Filters.Add<OperationCancelledExceptionFilter>();
         });
-
-        services.AddRazorPages();
 
         services.AddApiVersioning(options =>
         {
@@ -135,6 +133,11 @@ public class Startup
 
             options.IncludeXmlComments(() => new XPathDocument(apiDocs));
         });
+
+        services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+        services.AddMogboard(Configuration);
+        services.AddMogboardWebUI();
+        services.AddRazorPages();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
