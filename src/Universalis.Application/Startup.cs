@@ -67,6 +67,8 @@ public class Startup
             options.ReportApiVersions = true;
         });
 
+        services.AddRazorPages();
+
         services.AddSwaggerGen(options =>
         {
             var license = new OpenApiLicense { Name = "MIT", Url = new Uri("https://github.com/Universalis-FFXIV/Universalis/blob/master/LICENSE") };
@@ -100,7 +102,7 @@ public class Startup
                 if (!api.TryGetMethodInfo(out var mi))
                     return new[] { api.HttpMethod };
 
-                var attr = (ApiTagAttribute)mi.GetCustomAttribute(typeof(ApiTagAttribute));
+                var attr = (ApiTagAttribute?)mi.GetCustomAttribute(typeof(ApiTagAttribute));
                 return attr == null ? new[] { api.HttpMethod } : new[] { attr.Tag };
             });
 
@@ -143,6 +145,10 @@ public class Startup
         {
             app.UseDeveloperExceptionPage();
         }
+        else
+        {
+            app.UseExceptionHandler("/error");
+        }
 
         app.UseSwagger(options =>
         {
@@ -164,8 +170,10 @@ public class Startup
         app.UseRouting();
         app.UseHttpMetrics();
         app.UseAuthentication();
+        app.UseStaticFiles();
         app.UseEndpoints(endpoints =>
         {
+            endpoints.MapRazorPages();
             endpoints.MapControllers();
             endpoints.MapMetrics();
         });
