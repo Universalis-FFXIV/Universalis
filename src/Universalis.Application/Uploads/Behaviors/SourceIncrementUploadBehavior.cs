@@ -22,7 +22,7 @@ public class SourceIncrementUploadBehavior : IUploadBehavior
         return true;
     }
 
-    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult?> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         await _trustedSourceDb.Increment(new TrustedSourceQuery
         {

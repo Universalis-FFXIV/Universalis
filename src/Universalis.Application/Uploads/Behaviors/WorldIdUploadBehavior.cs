@@ -27,10 +27,9 @@ public class WorldIdUploadBehavior : IUploadBehavior
         return parameters.WorldId != null;
     }
 
-    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult?> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
-        // ReSharper disable once PossibleInvalidOperationException
-        var worldId = parameters.WorldId.Value;
+        var worldId = parameters.WorldId!.Value;
 
         if (!_gameData.AvailableWorldIds().Contains(worldId))
             return new NotFoundObjectResult(worldId);

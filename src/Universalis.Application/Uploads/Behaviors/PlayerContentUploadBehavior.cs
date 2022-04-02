@@ -23,7 +23,7 @@ public class PlayerContentUploadBehavior : IUploadBehavior
         return !string.IsNullOrEmpty(parameters.ContentId) && !string.IsNullOrEmpty(parameters.CharacterName);
     }
 
-    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult?> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         await _contentDb.Update(new Content
         {

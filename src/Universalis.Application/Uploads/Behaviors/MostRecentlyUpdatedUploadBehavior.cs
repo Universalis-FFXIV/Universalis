@@ -27,15 +27,13 @@ public class MostRecentlyUpdatedUploadBehavior : IUploadBehavior
                && _gameData.AvailableWorldIds().Contains(parameters.WorldId.Value);
     }
 
-    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult?> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
-        // ReSharper disable once PossibleInvalidOperationException
-        var worldId = parameters.WorldId.Value;
+        var worldId = parameters.WorldId!.Value;
 
         await _mostRecentlyUpdatedDb.Push(worldId, new WorldItemUpload
         {
-            // ReSharper disable once PossibleInvalidOperationException
-            ItemId = parameters.ItemId.Value,
+            ItemId = parameters.ItemId!.Value,
             WorldId = worldId,
             LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
         }, cancellationToken);

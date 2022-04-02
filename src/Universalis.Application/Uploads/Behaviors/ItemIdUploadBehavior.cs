@@ -26,10 +26,9 @@ public class ItemIdUploadBehavior : IUploadBehavior
         return parameters.ItemId != null;
     }
 
-    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult?> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
-        // ReSharper disable once PossibleInvalidOperationException
-        if (!_gameData.MarketableItemIds().Contains(parameters.ItemId.Value))
+        if (!_gameData.MarketableItemIds().Contains(parameters.ItemId!.Value))
         {
             return new NotFoundObjectResult(parameters.ItemId);
         }

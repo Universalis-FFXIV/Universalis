@@ -64,9 +64,9 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 {
                     Hq = Util.ParseUnusualBool(s.Hq),
                     BuyerName = s.BuyerName,
-                    PricePerUnit = s.PricePerUnit,
-                    Quantity = s.Quantity,
-                    TimestampUnixSeconds = s.TimestampUnixSeconds,
+                    PricePerUnit = s.PricePerUnit ?? 0,
+                    Quantity = s.Quantity ?? 0,
+                    TimestampUnixSeconds = s.TimestampUnixSeconds ?? 0,
                     UploadApplicationName = source.Name,
                 })
                 .Where(s => s.PricePerUnit > 0)
@@ -145,18 +145,20 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                         ListingIdInternal = l.ListingId,
                         Hq = Util.ParseUnusualBool(l.Hq),
                         OnMannequin = Util.ParseUnusualBool(l.OnMannequin),
-                        Materia = l.Materia.Select(s => new Materia
+                        Materia = l.Materia?
+                            .Where(s => s.SlotId != null && s.MateriaId != null)
+                            .Select(s => new Materia
                             {
-                                SlotId = s.SlotId,
-                                MateriaId = s.MateriaId,
+                                SlotId = (uint)s.SlotId!,
+                                MateriaId = (uint)s.MateriaId!,
                             })
-                            .ToList(),
-                        PricePerUnit = l.PricePerUnit,
-                        Quantity = l.Quantity,
-                        DyeId = l.DyeId,
+                            .ToList() ?? new List<Materia>(),
+                        PricePerUnit = l.PricePerUnit ?? 0,
+                        Quantity = l.Quantity ?? 0,
+                        DyeId = l.DyeId ?? 0,
                         CreatorIdInternal = Util.ParseUnusualId(l.CreatorId),
                         CreatorName = l.CreatorName,
-                        LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
+                        LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds ?? 0,
                         RetainerIdInternal = Util.ParseUnusualId(l.RetainerId),
                         RetainerName = l.RetainerName,
                         RetainerCityIdInternal = l.RetainerCityId,
@@ -164,6 +166,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                         UploadApplicationName = source.Name,
                     };
                 })
+                .Where(l => l.PricePerUnit > 0)
+                .Where(l => l.Quantity > 0)
                 .OrderBy(l => l.PricePerUnit)
                 .ToListAsync(cancellationToken);
         }
