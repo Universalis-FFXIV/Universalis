@@ -6,10 +6,10 @@ namespace Universalis.Application.Uploads.Schema;
 public class UploadParameters
 {
     [JsonPropertyName("uploaderID")]
-    public object UploaderIdInternal { get; set; }
+    public object? UploaderIdInternal { get; set; }
 
     [JsonIgnore]
-    public string UploaderId
+    public string? UploaderId
     {
         get => Util.ParseUnusualId(UploaderIdInternal);
         set => UploaderIdInternal = value;
@@ -22,24 +22,24 @@ public class UploadParameters
     public uint? ItemId { get; set; }
 
     [JsonPropertyName("marketTaxRates")]
-    public MarketTaxRates TaxRates { get; set; }
+    public MarketTaxRates? TaxRates { get; set; }
 
     [JsonPropertyName("listings")]
-    public IList<Listing> Listings { get; set; }
+    public IList<Listing>? Listings { get; set; }
 
     [JsonPropertyName("entries")]
-    public IList<Sale> Sales { get; set; }
+    public IList<Sale>? Sales { get; set; }
 
     [JsonPropertyName("contentID")]
-    public object ContentIdInternal { get; set; }
+    public object? ContentIdInternal { get; set; }
 
     [JsonIgnore]
-    public string ContentId
+    public string? ContentId
     {
         get => Util.ParseUnusualId(ContentIdInternal);
         set => ContentIdInternal = value;
     }
 
     [JsonPropertyName("characterName")]
-    public string CharacterName { get; set; }
+    public string? CharacterName { get; set; }
 }

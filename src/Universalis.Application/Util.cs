@@ -129,7 +129,7 @@ public static class Util
     /// </summary>
     /// <param name="o">The input object.</param>
     /// <returns>A boolean corresponding to the text.</returns>
-    public static bool ParseUnusualBool(object o)
+    public static bool ParseUnusualBool(object? o)
     {
         // Conversions for System.Text.Json types
         o = o switch
@@ -170,7 +170,7 @@ public static class Util
     /// </summary>
     /// <param name="id">The ID to parse.</param>
     /// <returns>A string corresponding to the meaning of the ID.</returns>
-    public static string ParseUnusualId(object id)
+    public static string? ParseUnusualId(object? id)
     {
         return id switch
         {

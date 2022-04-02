@@ -127,20 +127,20 @@ public class UserAlertController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         var user = (MogboardUser?)HttpContext.Items["user"];
-        if (user == null) throw new ArgumentNullException(nameof(user));
+        if (user == null) throw new InvalidOperationException();
 
         await _alerts.Create(new UserAlert
         {
             Id = new UserAlertId(),
             UserId = user.GetId(),
             Uniq = "",
-            ItemId = create.AlertItemId ?? throw new ArgumentNullException(),
+            ItemId = create.AlertItemId ?? throw new InvalidOperationException(),
             Added = DateTimeOffset.UtcNow,
             ActiveTime = DateTimeOffset.UtcNow,
             LastChecked = DateTimeOffset.FromUnixTimeSeconds(0),
-            Name = create.AlertName ?? throw new ArgumentNullException(),
+            Name = create.AlertName ?? throw new InvalidOperationException(),
             Expiry = DateTimeOffset.UtcNow + new TimeSpan(30, 0, 0, 0),
-            TriggerConditions = new DoctrineArray<string>(create.AlertTriggers ?? throw new ArgumentNullException()),
+            TriggerConditions = new DoctrineArray<string>(create.AlertTriggers ?? throw new InvalidOperationException()),
             TriggerType = "",
             TriggerLastSent = DateTimeOffset.FromUnixTimeSeconds(0),
             TriggersSent = 0,
