@@ -39,14 +39,14 @@ public static class ChineseServers
             "haimaochawu" => "海猫茶屋",
             "roufenghaiwan" => "柔风海湾",
             "hupoyuan" => "琥珀原",
-            "shuijingta" => "水晶塔",
-            "yinleihu" => "银泪湖",
+            "shuijingta" or "shuijingta2" => "水晶塔",
+            "yinleihu" or "yinleihu2" => "银泪湖",
             "taiyanghaian" or "taiyanghaian2" => "太阳海岸",
             "yixiujiade" or "yixiujiade2" => "伊修加德",
-            "hongchachuan" => "红茶川",
+            "hongchachuan" or "hongchachuan2" => "红茶川",
             "huangjingu" => "黄金谷",
             "yueyawan" => "月牙湾",
-            "xuesongyuan" => "雪松原",
+            "xuesongyuan" or "xuesongyuan2" => "雪松原",
             _ => worldOrDc,
         };
 
