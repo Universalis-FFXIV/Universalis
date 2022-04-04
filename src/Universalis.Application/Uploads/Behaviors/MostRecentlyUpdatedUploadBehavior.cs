@@ -27,7 +27,7 @@ public class MostRecentlyUpdatedUploadBehavior : IUploadBehavior
                && _gameData.AvailableWorldIds().Contains(parameters.WorldId.Value);
     }
 
-    public async Task<IActionResult?> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         var worldId = parameters.WorldId!.Value;
 

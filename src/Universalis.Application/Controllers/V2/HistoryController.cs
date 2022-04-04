@@ -42,9 +42,9 @@ public class HistoryController : HistoryControllerBase
     public async Task<IActionResult> Get(
         string itemIds,
         string worldOrDc,
-        [FromQuery] string? entriesToReturn,
-        [FromQuery] string? statsWithin = "",
-        [FromQuery] string? entriesWithin = "",
+        [FromQuery] string entriesToReturn,
+        [FromQuery] string statsWithin = "",
+        [FromQuery] string entriesWithin = "",
         CancellationToken cancellationToken = default)
     {
         // Parameter parsing

@@ -45,10 +45,10 @@ public class UserController : ControllerBase
     [ProducesResponseType(403)]
     public IActionResult GetV2()
     {
-        var user = (MogboardUser?)HttpContext.Items["user"];
+        var user = (MogboardUser)HttpContext.Items["user"];
         if (user == null) throw new ArgumentNullException(nameof(user));
 
-        UserView.SsoView? ssoView = null;
+        UserView.SsoView ssoView = null;
 
         var discordSso = user.GetDiscordSso();
         if (discordSso != null)

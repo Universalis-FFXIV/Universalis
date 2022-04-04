@@ -7,7 +7,6 @@
 
   <PropertyGroup>
     <DocumentationFile>Universalis.Application.xml</DocumentationFile>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

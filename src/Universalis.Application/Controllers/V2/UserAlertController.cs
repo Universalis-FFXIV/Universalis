@@ -126,7 +126,7 @@ public class UserAlertController : ControllerBase
     public async Task<IActionResult> PostV2([FromBody] UserAlertCreateView create,
         CancellationToken cancellationToken = default)
     {
-        var user = (MogboardUser?)HttpContext.Items["user"];
+        var user = (MogboardUser)HttpContext.Items["user"];
         if (user == null) throw new InvalidOperationException();
 
         await _alerts.Create(new UserAlert

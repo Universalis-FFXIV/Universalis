@@ -50,12 +50,12 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
     public async Task<IActionResult> Get(
         string itemIds,
         string worldOrDc,
-        [FromQuery(Name = "listings")] string? listingsToReturn = "",
-        [FromQuery(Name = "entries")] string? entriesToReturn = "",
-        [FromQuery] string? noGst = "",
-        [FromQuery] string? hq = "",
-        [FromQuery] string? statsWithin = "",
-        [FromQuery] string? entriesWithin = "",
+        [FromQuery(Name = "listings")] string listingsToReturn = "",
+        [FromQuery(Name = "entries")] string entriesToReturn = "",
+        [FromQuery] string noGst = "",
+        [FromQuery] string hq = "",
+        [FromQuery] string statsWithin = "",
+        [FromQuery] string entriesWithin = "",
         CancellationToken cancellationToken = default)
     {
         // Parameter parsing

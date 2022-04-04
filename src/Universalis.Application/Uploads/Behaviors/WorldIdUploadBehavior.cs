@@ -27,7 +27,7 @@ public class WorldIdUploadBehavior : IUploadBehavior
         return parameters.WorldId != null;
     }
 
-    public async Task<IActionResult?> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         var worldId = parameters.WorldId!.Value;
 

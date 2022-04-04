@@ -25,7 +25,7 @@ public class DailyUploadIncrementUploadBehavior : IUploadBehavior
         return true;
     }
 
-    public async Task<IActionResult?> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         var now = (double)DateTimeOffset.Now.ToUnixTimeMilliseconds();
         var data = await _uploadCountHistoryDb.Retrieve(new UploadCountHistoryQuery(), cancellationToken);
