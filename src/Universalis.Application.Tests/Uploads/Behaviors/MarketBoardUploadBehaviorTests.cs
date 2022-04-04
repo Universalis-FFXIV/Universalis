@@ -4,7 +4,6 @@ using Universalis.Application.Caching;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
-using Universalis.Application.Views;
 using Universalis.Application.Views.V1;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.Uploads;
@@ -69,7 +68,7 @@ public class MarketBoardUploadBehaviorTests
     }
 
     [Fact]
-    public void Behavior_DoesNotRun_WithoutUploaderId()
+    public void Behavior_Runs_WithoutUploaderId()
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
@@ -83,7 +82,7 @@ public class MarketBoardUploadBehaviorTests
             Listings = new List<Listing>(),
             Sales = new List<Sale>(),
         };
-        Assert.False(behavior.ShouldExecute(upload));
+        Assert.True(behavior.ShouldExecute(upload));
     }
 
     [Fact]
