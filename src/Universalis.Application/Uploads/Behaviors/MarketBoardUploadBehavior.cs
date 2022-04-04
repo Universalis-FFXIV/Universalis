@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
 using Universalis.Application.Uploads.Schema;
-using Universalis.Application.Views;
 using Universalis.Application.Views.V1;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -39,7 +38,6 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     {
         return parameters.WorldId != null
                && parameters.ItemId != null
-               && !string.IsNullOrEmpty(parameters.UploaderId)
                && (parameters.Sales != null || parameters.Listings != null);
     }
 
