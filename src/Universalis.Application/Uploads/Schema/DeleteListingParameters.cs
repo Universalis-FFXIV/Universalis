@@ -5,10 +5,10 @@ namespace Universalis.Application.Uploads.Schema;
 public class DeleteListingParameters
 {
     [JsonPropertyName("retainerID")]
-    public string? RetainerId { get; set; }
+    public string RetainerId { get; set; }
 
     [JsonPropertyName("listingID")]
-    public string? ListingId { get; set; }
+    public string ListingId { get; set; }
 
     [JsonPropertyName("quantity")]
     public uint? Quantity { get; set; }
@@ -17,5 +17,5 @@ public class DeleteListingParameters
     public uint? PricePerUnit { get; set; }
 
     [JsonPropertyName("uploaderID")]
-    public string? UploaderId { get; set; }
+    public string UploaderId { get; set; }
 }

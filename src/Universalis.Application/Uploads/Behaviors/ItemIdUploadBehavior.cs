@@ -26,7 +26,7 @@ public class ItemIdUploadBehavior : IUploadBehavior
         return parameters.ItemId != null;
     }
 
-    public async Task<IActionResult?> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         if (!_gameData.MarketableItemIds().Contains(parameters.ItemId!.Value))
         {

@@ -99,7 +99,7 @@ public class Startup
                 if (!api.TryGetMethodInfo(out var mi))
                     return new[] { api.HttpMethod };
 
-                var attr = (ApiTagAttribute?)mi.GetCustomAttribute(typeof(ApiTagAttribute));
+                var attr = (ApiTagAttribute)mi.GetCustomAttribute(typeof(ApiTagAttribute));
                 return attr == null ? new[] { api.HttpMethod } : new[] { attr.Tag };
             });
 

@@ -14,7 +14,7 @@ public class UserAlertCreateView
     /// The alert name.
     /// </summary>
     [JsonPropertyName("alert_name")]
-    public string? AlertName { get; set; }
+    public string AlertName { get; set; }
 
     /// <summary>
     /// Whether or not this alert should apply to NQ items.
@@ -50,11 +50,11 @@ public class UserAlertCreateView
     /// The alert triggers.
     /// </summary>
     [JsonPropertyName("alert_triggers")]
-    public string[]? AlertTriggers { get; set; }
+    public string[] AlertTriggers { get; set; }
 
     /// <summary>
     /// The type of the alert.
     /// </summary>
     [JsonPropertyName("alert_type")]
-    public string? AlertType { get; set; }
+    public string AlertType { get; set; }
 }
