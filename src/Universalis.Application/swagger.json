@@ -1,0 +1,1295 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Universalis",
+    "description": "Welcome to the Universalis documentation page.\r\n<br />\r\n<br />\r\nThere is a rate limit of 20 req/s (40 req/s burst) on the API, and 10 req/s (20 req/s burst) on the website itself, if you're scraping instead.\r\nThe number of simultaneous connections per IP is capped to 8.\r\n\r\nTo map item IDs to item names or vice versa, use <a href=\"https://xivapi.com/docs/Search#search\">XIVAPI</a>.\r\nIn addition to XIVAPI, you can also get item ID mappings from <a href=\"https://lumina.xiv.dev/docs/intro.html\">Lumina</a>,\r\n<a href=\"https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/Item.csv\">this sheet</a>, or\r\n<a href=\"https://raw.githubusercontent.com/ffxiv-teamcraft/ffxiv-teamcraft/master/apps/client/src/assets/data/items.json\">this</a> pre-made dump.\r\n\r\nTo get a mapping of world IDs to world names, use <a href=\"https://xivapi.com/World\">XIVAPI</a> or\r\n<a href=\"https://github.com/xivapi/ffxiv-datamining/blob/master/csv/World.csv\">this sheet</a>.\r\nThe <code>key</code> column represents the world ID, and the <code>Name</code> column represents the world name.\r\nNote that not all listed worlds are available to be used &#8212; many of the worlds in this sheet are test worlds,\r\nor Korean worlds (Korea is unsupported at this time).\r\n\r\n<br />\r\n<br />\r\nIf you use this API heavily for your projects, please consider supporting the website on\r\n<a href=\"https://liberapay.com/karashiiro\">Liberapay</a>, <a href=\"https://ko-fi.com/karashiiro\">Ko-fi</a>, or\r\n<a href=\"https://patreon.com/universalis\">Patreon</a>, or making a one-time donation on\r\n<a href=\"https://ko-fi.com/karashiiro\">Ko-fi</a>. Any support is appreciated!\r\n",
+    "license": {
+      "name": "MIT",
+      "url": "https://github.com/Universalis-FFXIV/Universalis/blob/master/LICENSE"
+    },
+    "version": "v2"
+  },
+  "paths": {
+    "/api/v2/users/@me": {
+      "get": {
+        "tags": [
+          "Current user"
+        ],
+        "summary": "Retrieves the current user. Requires the session cookie to be set correctly.",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/UserView"
+            }
+          },
+          "403": {
+            "description": "No session information was set, or the corresponding user was missing.",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/{worldOrDc}/{itemIds}": {
+      "get": {
+        "tags": [
+          "Market board listings"
+        ],
+        "summary": "Retrieves the data currently shown on the market board for the requested item and world or data center.\r\nItem IDs can be comma-separated in order to retrieve data for multiple items at once.",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "itemIds",
+            "description": "The item ID or comma-separated item IDs to retrieve data for.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "worldOrDc",
+            "description": "The world or data center to retrieve data for. This may be an ID or a name.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "listings",
+            "description": "The number of listings to return. By default, all listings will be returned.",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "in": "query",
+            "name": "entries",
+            "description": "The number of entries to return. By default, a maximum of 5 entries will be returned.",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "in": "query",
+            "name": "noGst",
+            "description": "If the result should not have Gil sales tax (GST) factored in. GST is applied to all\r\nconsumer purchases in-game, and is separate from the retainer city tax that impacts what sellers receive.\r\nBy default, GST is factored in. Set this parameter to true or 1 to prevent this.",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "in": "query",
+            "name": "hq",
+            "description": "Filter for HQ listings and entries. By default, both HQ and NQ listings and entries will be returned.",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "in": "query",
+            "name": "statsWithin",
+            "description": "The amount of time before now to calculate stats over, in milliseconds. By default, this is 7 days.",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "in": "query",
+            "name": "entriesWithin",
+            "description": "The amount of time before now to take entries within, in seconds. Negative values will be ignored.",
+            "type": "string",
+            "default": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/CurrentlyShownMultiViewV2"
+            }
+          },
+          "404": {
+            "description": "The world/DC or item requested is invalid. When requesting multiple items at once, an invalid item ID\r\nwill not trigger this. Instead, the returned list of unresolved item IDs will contain the invalid item ID or IDs.",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/history/{worldOrDc}/{itemIds}": {
+      "get": {
+        "tags": [
+          "Market board sales"
+        ],
+        "summary": "Retrieves the history data for the requested item and world or data center.\r\nItem IDs can be comma-separated in order to retrieve data for multiple items at once.",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "itemIds",
+            "description": "The item ID or comma-separated item IDs to retrieve data for.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "worldOrDc",
+            "description": "The world or data center to retrieve data for. This may be an ID or a name.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "entriesToReturn",
+            "description": "The number of entries to return. By default, this is set to 1800, but may be set to a maximum of 999999.",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "statsWithin",
+            "description": "The amount of time before now to calculate stats over, in milliseconds. By default, this is 7 days.",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "in": "query",
+            "name": "entriesWithin",
+            "description": "The amount of time before now to take entries within, in seconds. Negative values will be ignored.",
+            "type": "string",
+            "default": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/HistoryMultiViewV2"
+            }
+          },
+          "404": {
+            "description": "The world/DC or item requested is invalid. When requesting multiple items at once, an invalid item ID\r\nwill not trigger this. Instead, the returned list of unresolved item IDs will contain the invalid item ID or IDs.",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/alert-events/{id}": {
+      "get": {
+        "tags": [
+          "User alert events"
+        ],
+        "summary": "Retrieves an alert event. Requires the session cookie to be set correctly.",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/UserAlertEventView"
+            }
+          },
+          "403": {
+            "description": "No session information was set, or the corresponding user was missing.",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          },
+          "404": {
+            "description": "The alert event could not be found.",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/alerts/{id}": {
+      "get": {
+        "tags": [
+          "User alerts"
+        ],
+        "summary": "Retrieves an alert. Requires the session cookie to be set correctly.",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/UserAlertView"
+            }
+          },
+          "403": {
+            "description": "No session information was set, or the corresponding user was missing.",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          },
+          "404": {
+            "description": "The alert could not be found.",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/alerts": {
+      "post": {
+        "tags": [
+          "User alerts"
+        ],
+        "summary": "Creates a new user alert.",
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "The alert parameters.",
+            "schema": {
+              "$ref": "#/definitions/UserAlertCreateView"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/characters/{id}": {
+      "get": {
+        "tags": [
+          "User characters"
+        ],
+        "summary": "Retrieves a characters. Requires the session cookie to be set correctly.",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/UserCharacterView"
+            }
+          },
+          "403": {
+            "description": "No session information was set, or the corresponding user was missing.",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          },
+          "404": {
+            "description": "The character could not be found.",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/lists/{listId}": {
+      "get": {
+        "tags": [
+          "User lists"
+        ],
+        "summary": "Retrieves a user list.",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listId",
+            "description": "The ID of the list to retrieve.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/UserListView"
+            }
+          },
+          "404": {
+            "description": "The list requested does not exist.",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/reports/{id}": {
+      "get": {
+        "tags": [
+          "User reports"
+        ],
+        "summary": "Retrieves a user report. Requires the session cookie to be set correctly.",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/UserReportView"
+            }
+          },
+          "403": {
+            "description": "No session information was set, or the corresponding user was missing.",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          },
+          "404": {
+            "description": "The report could not be found.",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/retainers/{id}": {
+      "get": {
+        "tags": [
+          "User retainers"
+        ],
+        "summary": "Retrieves a retainer. Requires the session cookie to be set correctly.",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/UserRetainerView"
+            }
+          },
+          "403": {
+            "description": "No session information was set, or the corresponding user was missing.",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          },
+          "404": {
+            "description": "The retainer could not be found.",
+            "schema": {
+              "$ref": "#/definitions/ProblemDetails"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "CurrentlyShownMultiViewV2": {
+      "type": "object",
+      "properties": {
+        "itemIDs": {
+          "description": "The item IDs that were requested.",
+          "type": "array",
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "items": {
+          "description": "The item data that was requested, keyed on the item ID.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/CurrentlyShownView"
+          }
+        },
+        "worldID": {
+          "format": "int32",
+          "description": "The ID of the world requested, if applicable.",
+          "type": "integer"
+        },
+        "dcName": {
+          "description": "The name of the DC requested, if applicable.",
+          "type": "string"
+        },
+        "unresolvedItems": {
+          "description": "A list of IDs that could not be resolved to any item data.",
+          "type": "array",
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "worldName": {
+          "description": "The name of the world requested, if applicable.",
+          "type": "string"
+        }
+      }
+    },
+    "CurrentlyShownView": {
+      "type": "object",
+      "properties": {
+        "itemID": {
+          "format": "int32",
+          "description": "The item ID.",
+          "type": "integer"
+        },
+        "worldID": {
+          "format": "int32",
+          "description": "The world ID, if applicable.",
+          "type": "integer"
+        },
+        "lastUploadTime": {
+          "format": "int64",
+          "description": "The last upload time for this endpoint, in milliseconds since the UNIX epoch.",
+          "type": "integer"
+        },
+        "listings": {
+          "description": "The currently-shown listings.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ListingView"
+          }
+        },
+        "recentHistory": {
+          "description": "The currently-shown sales.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SaleView"
+          }
+        },
+        "dcName": {
+          "description": "The DC name, if applicable.",
+          "type": "string"
+        },
+        "currentAveragePrice": {
+          "format": "float",
+          "description": "The average listing price, with outliers removed beyond 3 standard deviations of the mean.",
+          "type": "number"
+        },
+        "currentAveragePriceNQ": {
+          "format": "float",
+          "description": "The average NQ listing price, with outliers removed beyond 3 standard deviations of the mean.",
+          "type": "number"
+        },
+        "currentAveragePriceHQ": {
+          "format": "float",
+          "description": "The average HQ listing price, with outliers removed beyond 3 standard deviations of the mean.",
+          "type": "number"
+        },
+        "regularSaleVelocity": {
+          "format": "float",
+          "description": "The average number of sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).\r\nThis number will tend to be the same for every item, because the number of shown sales is the same and over the same period.\r\nThis statistic is more useful in historical queries.",
+          "type": "number"
+        },
+        "nqSaleVelocity": {
+          "format": "float",
+          "description": "The average number of NQ sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).\r\nThis number will tend to be the same for every item, because the number of shown sales is the same and over the same period.\r\nThis statistic is more useful in historical queries.",
+          "type": "number"
+        },
+        "hqSaleVelocity": {
+          "format": "float",
+          "description": "The average number of HQ sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).\r\nThis number will tend to be the same for every item, because the number of shown sales is the same and over the same period.\r\nThis statistic is more useful in historical queries.",
+          "type": "number"
+        },
+        "averagePrice": {
+          "format": "float",
+          "description": "The average sale price, with outliers removed beyond 3 standard deviations of the mean.",
+          "type": "number"
+        },
+        "averagePriceNQ": {
+          "format": "float",
+          "description": "The average NQ sale price, with outliers removed beyond 3 standard deviations of the mean.",
+          "type": "number"
+        },
+        "averagePriceHQ": {
+          "format": "float",
+          "description": "The average HQ sale price, with outliers removed beyond 3 standard deviations of the mean.",
+          "type": "number"
+        },
+        "minPrice": {
+          "format": "int32",
+          "description": "The minimum listing price.",
+          "type": "integer"
+        },
+        "minPriceNQ": {
+          "format": "int32",
+          "description": "The minimum NQ listing price.",
+          "type": "integer"
+        },
+        "minPriceHQ": {
+          "format": "int32",
+          "description": "The minimum HQ listing price.",
+          "type": "integer"
+        },
+        "maxPrice": {
+          "format": "int32",
+          "description": "The maximum listing price.",
+          "type": "integer"
+        },
+        "maxPriceNQ": {
+          "format": "int32",
+          "description": "The maximum NQ listing price.",
+          "type": "integer"
+        },
+        "maxPriceHQ": {
+          "format": "int32",
+          "description": "The maximum HQ listing price.",
+          "type": "integer"
+        },
+        "stackSizeHistogram": {
+          "description": "A map of quantities to listing counts, representing the number of listings of each quantity.",
+          "type": "object",
+          "additionalProperties": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "stackSizeHistogramNQ": {
+          "description": "A map of quantities to NQ listing counts, representing the number of listings of each quantity.",
+          "type": "object",
+          "additionalProperties": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "stackSizeHistogramHQ": {
+          "description": "A map of quantities to HQ listing counts, representing the number of listings of each quantity.",
+          "type": "object",
+          "additionalProperties": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "worldName": {
+          "description": "The world name, if applicable.",
+          "type": "string"
+        },
+        "worldUploadTimes": {
+          "description": "The last upload times in milliseconds since epoch for each world in the response, if this is a DC request.",
+          "type": "object",
+          "additionalProperties": {
+            "format": "int64",
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "DiscordSsoView": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The user's Discord ID.",
+          "type": "string"
+        },
+        "avatar": {
+          "description": "The user's Discord avatar.",
+          "type": "string"
+        }
+      }
+    },
+    "HistoryMultiViewV2": {
+      "type": "object",
+      "properties": {
+        "itemIDs": {
+          "description": "The item IDs that were requested.",
+          "type": "array",
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "items": {
+          "description": "The item data that was requested, keyed on the item ID.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/HistoryView"
+          }
+        },
+        "worldID": {
+          "format": "int32",
+          "description": "The ID of the world requested, if applicable.",
+          "type": "integer"
+        },
+        "dcName": {
+          "description": "The name of the DC requested, if applicable.",
+          "type": "string"
+        },
+        "unresolvedItems": {
+          "description": "A list of IDs that could not be resolved to any item data.",
+          "type": "array",
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "worldName": {
+          "description": "The name of the world requested, if applicable.",
+          "type": "string"
+        }
+      }
+    },
+    "HistoryView": {
+      "type": "object",
+      "properties": {
+        "itemID": {
+          "format": "int32",
+          "description": "The item ID.",
+          "type": "integer"
+        },
+        "worldID": {
+          "format": "int32",
+          "description": "The world ID, if applicable.",
+          "type": "integer"
+        },
+        "lastUploadTime": {
+          "format": "int64",
+          "description": "The last upload time for this endpoint, in milliseconds since the UNIX epoch.",
+          "type": "integer"
+        },
+        "entries": {
+          "description": "The historical sales.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MinimizedSaleView"
+          }
+        },
+        "dcName": {
+          "description": "The DC name, if applicable.",
+          "type": "string"
+        },
+        "stackSizeHistogram": {
+          "description": "A map of quantities to sale counts, representing the number of sales of each quantity.",
+          "type": "object",
+          "additionalProperties": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "stackSizeHistogramNQ": {
+          "description": "A map of quantities to NQ sale counts, representing the number of sales of each quantity.",
+          "type": "object",
+          "additionalProperties": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "stackSizeHistogramHQ": {
+          "description": "A map of quantities to HQ sale counts, representing the number of sales of each quantity.",
+          "type": "object",
+          "additionalProperties": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "regularSaleVelocity": {
+          "format": "float",
+          "description": "The average number of sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).",
+          "type": "number"
+        },
+        "nqSaleVelocity": {
+          "format": "float",
+          "description": "The average number of NQ sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).",
+          "type": "number"
+        },
+        "hqSaleVelocity": {
+          "format": "float",
+          "description": "The average number of HQ sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).",
+          "type": "number"
+        },
+        "worldName": {
+          "description": "The world name, if applicable.",
+          "type": "string"
+        }
+      }
+    },
+    "ListingView": {
+      "type": "object",
+      "properties": {
+        "lastReviewTime": {
+          "format": "int64",
+          "description": "The time that this listing was posted, in seconds since the UNIX epoch.",
+          "type": "integer"
+        },
+        "pricePerUnit": {
+          "format": "int32",
+          "description": "The price per unit sold.",
+          "type": "integer"
+        },
+        "quantity": {
+          "format": "int32",
+          "description": "The stack size sold.",
+          "type": "integer"
+        },
+        "stainID": {
+          "format": "int32",
+          "description": "The ID of the dye on this item.",
+          "type": "integer"
+        },
+        "worldName": {
+          "description": "The world name, if applicable.",
+          "type": "string"
+        },
+        "worldID": {
+          "format": "int32",
+          "description": "The world ID, if applicable.",
+          "type": "integer"
+        },
+        "creatorName": {
+          "description": "The creator's character name.",
+          "type": "string"
+        },
+        "creatorID": {
+          "description": "A SHA256 hash of the creator's ID.",
+          "type": "string"
+        },
+        "hq": {
+          "description": "Whether or not the item is high-quality.",
+          "type": "boolean"
+        },
+        "isCrafted": {
+          "description": "Whether or not the item is crafted.",
+          "type": "boolean"
+        },
+        "listingID": {
+          "description": "A SHA256 hash of the ID of this listing. Due to some current client-side bugs, this will almost always be null.",
+          "type": "string"
+        },
+        "materia": {
+          "description": "The materia on this item.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MateriaView"
+          }
+        },
+        "onMannequin": {
+          "description": "Whether or not the item is being sold on a mannequin.",
+          "type": "boolean"
+        },
+        "retainerCity": {
+          "format": "int32",
+          "description": "The city ID of the retainer.\r\nLimsa Lominsa = 1\r\nGridania = 2\r\nUl'dah = 3\r\nIshgard = 4\r\nKugane = 7\r\nCrystarium = 10",
+          "type": "integer"
+        },
+        "retainerID": {
+          "description": "A SHA256 hash of the retainer's ID.",
+          "type": "string"
+        },
+        "retainerName": {
+          "description": "The retainer's name.",
+          "type": "string"
+        },
+        "sellerID": {
+          "description": "A SHA256 hash of the seller's ID.",
+          "type": "string"
+        },
+        "total": {
+          "format": "int32",
+          "description": "The total price.",
+          "type": "integer"
+        }
+      }
+    },
+    "MateriaView": {
+      "type": "object",
+      "properties": {
+        "slotID": {
+          "format": "int32",
+          "description": "The materia slot.",
+          "type": "integer"
+        },
+        "materiaID": {
+          "format": "int32",
+          "description": "The materia item ID.",
+          "type": "integer"
+        }
+      }
+    },
+    "MinimizedSaleView": {
+      "type": "object",
+      "properties": {
+        "hq": {
+          "description": "Whether or not the item was high-quality.",
+          "type": "boolean"
+        },
+        "pricePerUnit": {
+          "format": "int32",
+          "description": "The price per unit sold.",
+          "type": "integer"
+        },
+        "quantity": {
+          "format": "int32",
+          "description": "The stack size sold.",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "int64",
+          "description": "The sale time, in seconds since the UNIX epoch.",
+          "type": "integer"
+        },
+        "worldName": {
+          "description": "The world name, if applicable.",
+          "type": "string"
+        },
+        "worldID": {
+          "format": "int32",
+          "description": "The world ID, if applicable.",
+          "type": "integer"
+        }
+      }
+    },
+    "ProblemDetails": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "instance": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": { }
+    },
+    "SaleView": {
+      "type": "object",
+      "properties": {
+        "hq": {
+          "description": "Whether or not the item was high-quality.",
+          "type": "boolean"
+        },
+        "pricePerUnit": {
+          "format": "int32",
+          "description": "The price per unit sold.",
+          "type": "integer"
+        },
+        "quantity": {
+          "format": "int32",
+          "description": "The stack size sold.",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "int64",
+          "description": "The sale time, in seconds since the UNIX epoch.",
+          "type": "integer"
+        },
+        "worldName": {
+          "description": "The world name, if applicable.",
+          "type": "string"
+        },
+        "worldID": {
+          "format": "int32",
+          "description": "The world ID, if applicable.",
+          "type": "integer"
+        },
+        "buyerName": {
+          "description": "The buyer name.",
+          "type": "string"
+        },
+        "total": {
+          "format": "int32",
+          "description": "The total price.",
+          "type": "integer"
+        }
+      }
+    },
+    "SsoView": {
+      "type": "object",
+      "properties": {
+        "discord": {
+          "$ref": "#/definitions/DiscordSsoView"
+        }
+      }
+    },
+    "UserAlertCreateView": {
+      "type": "object",
+      "properties": {
+        "alert_item_id": {
+          "format": "int32",
+          "description": "The ID of the item that the new alert should apply to.",
+          "type": "integer"
+        },
+        "alert_name": {
+          "description": "The alert name.",
+          "type": "string"
+        },
+        "alert_nq": {
+          "description": "Whether or not this alert should apply to NQ items.",
+          "type": "boolean"
+        },
+        "alert_hq": {
+          "description": "Whether or not this alert should apply to HQ items.",
+          "type": "boolean"
+        },
+        "alert_dc": {
+          "description": "Whether or not this alert should apply to data on all worlds on the data center.",
+          "type": "boolean"
+        },
+        "alert_notify_discord": {
+          "description": "Whether or not this alert should send notifications via Discord.",
+          "type": "boolean"
+        },
+        "alert_notify_email": {
+          "description": "Whether or not this alert should send notifications via email.",
+          "type": "boolean"
+        },
+        "alert_triggers": {
+          "description": "The alert triggers.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "alert_type": {
+          "description": "The type of the alert.",
+          "type": "string"
+        }
+      }
+    },
+    "UserAlertEventView": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The alert event's ID.",
+          "type": "string"
+        },
+        "alertID": {
+          "description": "The ID of the alert corresponding to this event.",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "The alert event's timestamp, in milliseconds since the UNIX epoch.",
+          "type": "string"
+        },
+        "data": {
+          "description": "The alert event's payload.",
+          "type": "string"
+        }
+      }
+    },
+    "UserAlertView": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The alert's ID.",
+          "type": "string"
+        },
+        "itemID": {
+          "format": "int32",
+          "description": "The alert's item ID.",
+          "type": "integer"
+        },
+        "created": {
+          "description": "The time that this alert was created, in milliseconds since the UNIX epoch.",
+          "type": "string"
+        },
+        "lastChecked": {
+          "description": "The last time that this alert was checked, in milliseconds since the UNIX epoch.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The alert's name.",
+          "type": "string"
+        },
+        "server": {
+          "description": "The alert's server.",
+          "type": "string"
+        },
+        "expiry": {
+          "description": "The expiry time of this alert, in milliseconds since the UNIX epoch.",
+          "type": "string"
+        },
+        "triggerConditions": {
+          "description": "The trigger conditions for this alert.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "triggerType": {
+          "description": "The trigger type of this alert.",
+          "type": "string"
+        },
+        "triggerLastSent": {
+          "description": "The last time this alert was triggered, in milliseconds since the UNIX epoch.",
+          "type": "string"
+        },
+        "triggerDataCenter": {
+          "description": "Whether or not this alert should trigger on the entire data center.",
+          "type": "boolean"
+        },
+        "triggerHQ": {
+          "description": "Whether or not this alert should trigger on HQ items.",
+          "type": "boolean"
+        },
+        "triggerNQ": {
+          "description": "Whether or not this alert should trigger on NQ items.",
+          "type": "boolean"
+        },
+        "triggerActive": {
+          "description": "Whether or not this alert is active.",
+          "type": "boolean"
+        }
+      }
+    },
+    "UserCharacterView": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The ID of this character.",
+          "type": "string"
+        },
+        "lodestoneID": {
+          "description": "The Lodestone ID of this character.",
+          "type": "string"
+        },
+        "updated": {
+          "description": "The time that this character was updated, in milliseconds since the UNIX epoch.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The name of this character.",
+          "type": "string"
+        },
+        "server": {
+          "description": "The server of this character.",
+          "type": "string"
+        },
+        "avatar": {
+          "description": "The avatar for this character.",
+          "type": "string"
+        },
+        "main": {
+          "description": "Whether or not this character is the user's main character.",
+          "type": "boolean"
+        },
+        "confirmed": {
+          "description": "Whether or not ownership of this character has been confirmed.",
+          "type": "boolean"
+        }
+      }
+    },
+    "UserListView": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The list's ID.",
+          "type": "string"
+        },
+        "created": {
+          "description": "The time that this list was created, in milliseconds since the UNIX epoch.",
+          "type": "string"
+        },
+        "updated": {
+          "description": "The time that this list was updated, in milliseconds since the UNIX epoch.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The name of this list.",
+          "type": "string"
+        },
+        "itemIDs": {
+          "description": "The IDs of the list items.",
+          "type": "array",
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "UserReportView": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The report's ID.",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "The timestamp of the report.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The report's name.",
+          "type": "string"
+        },
+        "items": {
+          "description": "The report's items.",
+          "type": "array",
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "UserRetainerView": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The retainer's ID.",
+          "type": "string"
+        },
+        "added": {
+          "description": "The time that this retainer was added, in milliseconds since the UNIX epoch.",
+          "type": "string"
+        },
+        "updated": {
+          "description": "The time that this retainer was updated, in milliseconds since the UNIX epoch.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The name of this retainer.",
+          "type": "string"
+        },
+        "server": {
+          "description": "The server of this retainer.",
+          "type": "string"
+        },
+        "avatar": {
+          "description": "The avatar for this retainer.",
+          "type": "string"
+        },
+        "confirmed": {
+          "description": "Whether or not ownership of this retainer has been confirmed.",
+          "type": "boolean"
+        }
+      }
+    },
+    "UserView": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The user's ID.",
+          "type": "string"
+        },
+        "created": {
+          "description": "The user's creation time, in milliseconds since the UNIX epoch.",
+          "type": "string"
+        },
+        "lastOnline": {
+          "description": "The user's last time online, in milliseconds since the UNIX epoch.",
+          "type": "string"
+        },
+        "username": {
+          "description": "The user's username.",
+          "type": "string"
+        },
+        "email": {
+          "description": "The user's email address.",
+          "type": "string"
+        },
+        "avatar": {
+          "description": "The user's avatar.",
+          "type": "string"
+        },
+        "sso": {
+          "$ref": "#/definitions/SsoView"
+        }
+      }
+    }
+  }
+}
