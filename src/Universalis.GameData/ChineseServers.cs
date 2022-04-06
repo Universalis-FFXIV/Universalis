@@ -4,6 +4,8 @@ namespace Universalis.GameData;
 
 public static class ChineseServers
 {
+    // TODO: This should be structured in a less redundant way.
+
     /// <summary>
     /// Converts the provided romanized data center or world name into its Hanzi form.
     /// </summary>
@@ -102,7 +104,7 @@ public static class ChineseServers
             new DataCenter {Name = "陆行鸟", WorldIds = new uint[]{ 1167, 1081, 1042, 1044, 1060, 1173, 1174, 1175 }},
             new DataCenter {Name = "莫古力", WorldIds = new uint[]{ 1172, 1076, 1171, 1170, 1113, 1121, 1166, 1176 }},
             new DataCenter {Name = "猫小胖", WorldIds = new uint[]{ 1043, 1169, 1106, 1045, 1177, 1178, 1179 }},
-            new DataCenter {Name = "豆豆柴", WorldIds = new uint[]{ 1192, 1183, 1180, 1186, 1193, 1068, 1064, 1187 }},
+            new DataCenter {Name = "豆豆柴", WorldIds = new uint[]{ 1192, 1183, 1180, 1186, 1201, 1068, 1064, 1187 }},
         };
 
     internal static IEnumerable<World> Worlds()
@@ -135,7 +137,7 @@ public static class ChineseServers
             new World{Name = "银泪湖", Id = 1183},
             new World{Name = "太阳海岸", Id = 1180},
             new World{Name = "伊修加德", Id = 1186},
-            new World{Name = "红茶川", Id = 1193},
+            new World{Name = "红茶川", Id = 1201},
             new World{Name = "黄金谷", Id = 1068},
             new World{Name = "月牙湾", Id = 1064},
             new World{Name = "雪松原", Id = 1187},
