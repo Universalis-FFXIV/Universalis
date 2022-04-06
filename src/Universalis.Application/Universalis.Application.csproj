@@ -49,8 +49,9 @@
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="dotnet tool restore" />
-		<Exec Command="dotnet swagger tofile --serializeasv2 --output $(ProjectDir)swagger.json $(OutputPath)\$(ProjectName).dll v2" />
+		<Exec Command="dotnet swagger tofile --basepath https://universalis.app/ --serializeasv2 --output $(ProjectDir)swagger.json $(OutputPath)\$(ProjectName).dll v2" />
 		<Exec Command="docker run -v $(SolutionDir):/source swaggerapi/swagger-codegen-cli generate -l csharp -o /source/Universalis.Clients/csharp -i /source/Universalis.Application/swagger.json" />
+		<Exec Command="docker run -v $(SolutionDir):/source swaggerapi/swagger-codegen-cli generate -l python -o /source/Universalis.Clients/python -i /source/Universalis.Application/swagger.json" />
 	</Target>
 
 </Project>

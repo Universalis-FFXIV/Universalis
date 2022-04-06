@@ -9,6 +9,10 @@
     },
     "version": "v2"
   },
+  "host": "universalis.app",
+  "schemes": [
+    "https"
+  ],
   "paths": {
     "/api/v2/users/@me": {
       "get": {

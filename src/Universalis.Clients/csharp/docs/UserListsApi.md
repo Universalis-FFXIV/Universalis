@@ -1,6 +1,6 @@
 # IO.Swagger.Api.UserListsApi
 
-All URIs are relative to *https://localhost*
+All URIs are relative to *https://universalis.app*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
