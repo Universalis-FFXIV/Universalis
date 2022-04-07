@@ -34,7 +34,7 @@ COPY --from=build-env /source/swagger.json /clients/swagger.json
 
 # Create clients
 RUN swagger-codegen generate -l python -o /clients/python -i /clients/swagger.json
-
+RUN swagger-codegen generate -l javascript -o /clients/javascript -i /clients/swagger.json
 
 # Run stage
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
