@@ -23,7 +23,7 @@ Please see goat's [ACT plugin](https://github.com/goaaats/universalis_act_plugin
 ## Development
 Requires .NET 6, [PHP 7.2](https://www.php.net/downloads.php), [MariaDB](https://mariadb.org/download/), [Redis](https://redis.io/download), [Composer 1](https://getcomposer.org/), and [MongoDB Community Edition](https://docs.mongodb.com/manual/administration/install-community/) v4.2 or higher.
 
-To compile SCSS in the new web project, install the `Web Compiler` extension in Visual Studio.
+To compile web assets in the new web project, install the `WebPack Task Runner` extension in Visual Studio.
 
 Also build a DataExports and an icon2x by running the exporter solution.
 
