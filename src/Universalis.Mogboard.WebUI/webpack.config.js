@@ -1,18 +1,55 @@
-let Encore = require('@symfony/webpack-encore');
+const path = require('path');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
-Encore
-    .disableSingleRuntimeChunk()
-    .setOutputPath('public/ui/')
-    .setPublicPath('/ui')
-    .addEntry('app', './wwwroot/js/App.js')
-    .addStyleEntry('ui', './wwwroot/SCSS/app.scss')
-    .enableSassLoader(function(options) {}, {
-        resolveUrlLoader: false
-    })
-;
-
-let config = Encore.getWebpackConfig();
-config.output.library = 'mogboard';
-config.output.libraryExport = "default";
-config.output.libraryTarget = 'var';
-module.exports = config;
+module.exports = [
+    {
+        name: 'app',
+        entry: './Shared/JS/App.js',
+        output: {
+            filename: 'app.js',
+            path: path.resolve(__dirname, 'wwwroot', 'ui'),
+        },
+        module: {
+            rules: [
+                {
+                    test: /\.m?js$/,
+                    exclude: /(node_modules|bower_components)/,
+                    use: {
+                        loader: 'babel-loader',
+                        options: {
+                            presets: ['@babel/preset-env'],
+                        },
+                    },
+                },
+            ],
+        },
+    },
+    {
+        name: 'ui',
+        plugins: [new MiniCssExtractPlugin({
+            filename: 'ui.css',
+        })],
+        entry: './Shared/SCSS/app.scss',
+        output: {
+            filename: 'ui.css.js',
+            path: path.resolve(__dirname, 'wwwroot', 'ui'),
+        },
+        module: {
+            rules: [
+                {
+                    test: /\.s[ac]ss$/i,
+                    use: [
+                        MiniCssExtractPlugin.loader,
+                        'css-loader',
+                        'sass-loader',
+                    ],
+                },
+            ],
+        },
+        resolve: {
+            alias: {
+                '/i': path.resolve(__dirname, 'wwwroot', 'i'),
+            },
+        },
+    },
+];
