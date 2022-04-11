@@ -9,11 +9,7 @@
     <DocumentationFile>Universalis.Application.xml</DocumentationFile>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="Uploads\Behaviors\MarketBoardUploadBehavior.cs~RF1cec3de6.TMP" />
-  </ItemGroup>
-
-  <ItemGroup>
+	<ItemGroup>
     <EmbeddedResource Include="doc_description.html" />
     <EmbeddedResource Include="Universalis.Application.xml" />
   </ItemGroup>

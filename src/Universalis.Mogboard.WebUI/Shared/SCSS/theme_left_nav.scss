@@ -1,0 +1,214 @@
+.site-container {
+    min-height: 100vh;
+}
+
+.site {
+    margin-left: 250px;
+    position: relative;
+
+    &.left-nav-off {
+        margin-left: 0;
+    }
+
+
+    @include mq($until: wide) {
+        margin-left: 0;
+    }
+}
+
+aside {
+    min-height: 100vh;
+    background-color: var(--color5);
+    z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 250px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px #000;
+
+    @include mq($until: desktop) {
+        display: none;
+    }
+
+    > div {
+        height: 100%;
+    }
+
+    hr {
+        margin: 2px 0;
+        opacity: 0.3;
+    }
+
+    .nav-gap {
+        display: block;
+        width: 100%;
+        height: 150px;
+    }
+
+    .nav-home {
+        display: block;
+        padding: 20px 0;
+        text-align: center;
+
+        background: rgb(48, 68, 87);
+        background: -moz-linear-gradient(top, rgb(125, 171, 214) 0%, rgb(90, 106, 122) 100%);
+        background: -webkit-linear-gradient(top, rgb(125, 171, 214) 0%, rgb(90, 106, 122) 100%);
+        background: linear-gradient(to bottom, rgb(125, 171, 214) 0%, rgb(90, 106, 122) 100%);
+        border-bottom: solid 1px #000;
+
+        img {
+            height: 30px;
+            filter: drop-shadow(0 2px 70px white) drop-shadow(0 2px 20px white);
+        }
+    }
+
+    .nav-box {
+        .nav-heading {
+            width: 100%;
+            display: block;
+            background-color: var(--default);
+            color: #fff;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            padding: 0 6px;
+            margin: 0;
+            cursor: pointer;
+            outline: none;
+            line-height: 32px;
+            height: 32px;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+
+            &:hover {
+                background-color: var(--color2);
+            }
+        }
+
+        > div {
+            > button {
+                width: 100%;
+                background-color: transparent;
+                color: #fff;
+                border: none;
+                font-size: 13px;
+                text-align: left;
+                cursor: pointer;
+                outline: none;
+
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                &.type-weapons {
+                    color: #fff8ac;
+                }
+
+                &.type-armor {
+                    color: #cfd5d8;
+                }
+
+                &.type-items {
+                    color: #ecd0a5;
+                }
+
+                &.type-housing {
+                    color: #9bc0cc;
+                }
+
+                &:hover {
+                    background-color: var(--color1);
+                    color: #fff;
+                }
+
+                i {
+                    flex: 1 1 22px;
+                    vertical-align: middle;
+                    font-size: 22px;
+                    padding: 6px;
+                    line-height: 0;
+                }
+
+                span {
+                    flex: 0 1 calc(100% - 22px);
+                    padding: 6px;
+                }
+            }
+        }
+    }
+}
+
+.market-category-view {
+    min-height: 100vh;
+    background-color: var(--table-color-4x);
+    box-shadow: 0 0 4px #000;
+    position: fixed;
+    z-index: 500;
+    width: 400px;
+    top: 0;
+    bottom: 0;
+    left: 250px;
+    display: none;
+
+    &.open {
+        display: block;
+    }
+
+    > div {
+        height: 100%;
+
+        .gap {
+            display: block;
+            height: 65px;
+        }
+
+        a {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 6px 6px 15px;
+
+            &:hover {
+                background-color: rgba(0,0,0,0.5)
+            }
+
+            > span:first-of-type {
+                flex: 1 1 32px;
+
+                img {
+                    border-radius: 3px;
+                    box-shadow: 0 1px 2px #000;
+                    width: 32px;
+                    height: 32px;
+                    background-color: var(--color5);
+                    vertical-align: middle;
+                    display: inline-table;
+                }
+            }
+
+            > span:last-of-type {
+                flex: 0 1 calc(100% - 32px);
+                padding-left: 10px;
+
+                .item-level {
+                    display: inline-block;
+                    margin: 0 6px 0 0;
+                    color: var(--highlight);
+                }
+
+                small {
+                    font-size: 13px;
+                    font-weight: bold;
+                    text-shadow: none;
+                    text-transform: uppercase;
+                    color: var(--default-2x);
+                }
+            }
+        }
+    }
+}

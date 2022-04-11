@@ -1,0 +1,146 @@
+.page-retainer {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+
+    background: rgb(39,42,51);
+    background: -moz-linear-gradient(top, rgba(39,42,51,1) 0%, rgba(29,32,39,1) 100%);
+    background: -webkit-linear-gradient(top, rgba(39,42,51,1) 0%,rgba(29,32,39,1) 100%);
+    background: linear-gradient(to bottom, rgba(39,42,51,1) 0%,rgba(29,32,39,1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#272a33', endColorstr='#1d2027',GradientType=0 );
+
+    border: solid 1px #000;
+    box-shadow: 0 1px 3px #000;
+    border-radius: 6px;
+    padding: 20px;
+
+    @include mq($until: tablet) {
+        padding: 5px;
+    }
+
+    h1 {
+        font-size: 36px;
+        text-align: center;
+        margin: 25px 0 10px 0;
+    }
+
+    small {
+        opacity: 0.7;
+        text-align: center;
+        display: block;
+        margin: 0 0 20px 0;
+    }
+
+    ul {
+        list-style: none;
+        margin: 10px 0;
+
+        li {
+            margin-bottom: 10px;
+            height: 36px;
+            line-height: 36px;
+            border-radius: 5px;
+            padding: 0 15px 0 0;
+            overflow: hidden;
+
+            &:hover {
+                background-color: rgba(20,20,20,0.3);
+            }
+
+            small {
+                display: inline-block;
+                float: right;
+                opacity: 0.6;
+            }
+
+            img {
+                width: 36px;
+                height: 36px;
+                border-radius: 6px;
+                vertical-align: middle;
+                display: inline-table;
+                margin-right: 20px;
+            }
+        }
+    }
+}
+
+.page-footer {
+    padding: 30px;
+
+    h4 {
+        font-size: 20px;
+    }
+}
+
+.page-retainer-store {
+    padding: 30px;
+
+    @include mq($until: tablet) {
+        padding: 10px;
+    }
+
+    .retainer-item {
+        margin-bottom: 10px;
+        height: 36px;
+        line-height: 36px;
+    }
+
+    .retainer-item-details {
+        position: relative;
+
+        a {
+            font-size: 20px;
+            display: inline-block;
+            margin: 0 20px 0 0;
+        }
+    }
+
+    .retainer-item-info {
+        color: #888;
+        display: inline-block;
+        margin-right: 15px;
+    }
+
+    .retainer-item-icon {
+        img {
+            height: 72px;
+            width: 72px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px #000;
+        }
+
+        @include mq($until: tablet) {
+            display: none;
+        }
+    }
+
+    .retainer-item-updated {
+        font-size: 13px;
+    }
+}
+
+.retainer_remove {
+    color: var(--red);
+    font-weight: bold;
+    float: right;
+    margin: 0 0 0 20px;
+    opacity: 0.5;
+
+    &:hover {
+        opacity: 1;
+    }
+}
+
+.character_remove {
+    color: var(--red);
+    font-weight: bold;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    opacity: 0.5;
+
+    &:hover {
+        opacity: 1;
+    }
+}

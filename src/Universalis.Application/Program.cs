@@ -21,6 +21,14 @@ public static class Program
             })
             .ConfigureWebHostDefaults(webBuilder =>
             {
-                webBuilder.UseStartup<Startup>();
+                webBuilder
+                    .UseStartup<Startup>()
+                    .UseWebRoot(
+#if DEBUG
+                        "../Universalis.Mogboard.WebUI/wwwroot"
+#else
+                        "wwwroot/_content/Universalis.Mogboard.WebUI"
+#endif
+                        );
             });
 }

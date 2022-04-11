@@ -14,6 +14,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.XPath;
+using Microsoft.AspNetCore.Hosting.StaticWebAssets;
+using Microsoft.AspNetCore.StaticFiles.Infrastructure;
+using Microsoft.Extensions.FileProviders;
 using Universalis.Alerts;
 using Universalis.Application.Caching;
 using Universalis.Application.ExceptionFilters;
@@ -25,6 +28,7 @@ using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.GameData;
 using Universalis.Mogboard;
 using Universalis.Mogboard.WebUI;
+using Universalis.Mogboard.WebUI.Pages;
 
 namespace Universalis.Application;
 
@@ -168,11 +172,13 @@ public class Startup
 
             options.DocumentTitle = "Universalis Documentation";
         });
+        
+        app.UseStaticFiles();
 
         app.UseRouting();
         app.UseHttpMetrics();
         app.UseAuthentication();
-        app.UseStaticFiles();
+
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapRazorPages();

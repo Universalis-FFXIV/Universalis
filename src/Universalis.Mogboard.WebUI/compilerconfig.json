@@ -1,0 +1,9 @@
+﻿[
+  {
+    "outputFile": "wwwroot/ui/ui.css",
+    "inputFile": "Shared/SCSS/app.scss",
+    "minify": {
+      "enabled": false
+    }
+  }
+]

@@ -6,6 +6,7 @@ namespace Universalis.Mogboard.WebUI.Pages
     {
         public void OnGet()
         {
+            ViewData["Title"] = "Error";
         }
     }
 }
