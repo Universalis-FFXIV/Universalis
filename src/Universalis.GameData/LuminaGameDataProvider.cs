@@ -1,4 +1,5 @@
-﻿using Lumina.Excel.GeneratedSheets;
+using Lumina;
+using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
 
     public LuminaGameDataProvider(string sqpack)
     {
-        var lumina = new Lumina.GameData(sqpack);
+        var lumina = new Lumina.GameData(sqpack, new LuminaOptions { PanicOnSheetChecksumMismatch = false });
 
         _availableWorlds = LoadAvailableWorlds(lumina);
         _availableWorldsReversed = LoadAvailableWorldsReversed(lumina);
