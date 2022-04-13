@@ -1,4 +1,4 @@
-import Popup from './Popup';
+import Popup from "./Popup";
 
 class Ajax
 {
@@ -7,7 +7,7 @@ class Ajax
      */
     get(url, data, success, complete, error)
     {
-        this.handleAjax('GET', url, data, success, complete, error);
+        this.handleAjax("GET", url, data, success, complete, error);
     }
 
     /**
@@ -15,7 +15,7 @@ class Ajax
      */
     post(url, data, success, complete, error)
     {
-        this.handleAjax('GET', url, data, success, complete, error);
+        this.handleAjax("GET", url, data, success, complete, error);
     }
 
     /**

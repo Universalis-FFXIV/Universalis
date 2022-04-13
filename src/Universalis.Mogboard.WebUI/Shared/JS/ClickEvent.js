@@ -5,9 +5,9 @@ class ClickEvent
      */
     watchForMenuClassToggle(button, menu)
     {
-        button.on('click', event => {
+        button.on("click", event => {
             window.scrollTo(0,0);
-            menu.toggleClass('open');
+            menu.toggleClass("open");
         });
     }
 
@@ -19,8 +19,8 @@ class ClickEvent
         $(document).mouseup(event => {
             // if the target of the click isn't the container nor a descendant of the container
             if (!view.is(event.target) && view.has(event.target).length === 0) {
-                view.removeClass('open');
-                return typeof callback == 'undefined' ? null : callback();
+                view.removeClass("open");
+                return typeof callback == "undefined" ? null : callback();
             }
         });
     }

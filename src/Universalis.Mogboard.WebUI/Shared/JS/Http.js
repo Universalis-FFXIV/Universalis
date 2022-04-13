@@ -8,9 +8,9 @@ class Http
      */
     getItemCategories(language, callback)
     {
-        const url = '/data/categories_[lang].js'.replace('[lang]', language);
+        const url = "/data/categories_[lang].js".replace("[lang]", language);
 
-        fetch(url, { mode: 'cors' })
+        fetch(url, { mode: "cors" })
             .then(response => response.json())
             .then(callback);
     }
@@ -24,9 +24,9 @@ class Http
      */
     getItemPrices(server, itemId, callback)
     {
-        const url = mog.url_item_price.replace('-server-', server).replace('-id-', itemId);
+        const url = mog.url_item_price.replace("-server-", server).replace("-id-", itemId);
 
-        fetch(url, { mode: 'cors' })
+        fetch(url, { mode: "cors" })
             .then(response => response.text())
             .then(callback);
     }
@@ -40,9 +40,9 @@ class Http
      */
     getItemHistory(server, itemId, callback)
     {
-        const url = mog.url_item_history.replace('-server-', server).replace('-id-', itemId);
+        const url = mog.url_item_history.replace("-server-", server).replace("-id-", itemId);
 
-        fetch(url, { mode: 'cors' })
+        fetch(url, { mode: "cors" })
             .then(response => response.text())
             .then(callback);
     }
@@ -57,9 +57,9 @@ class Http
      */
     getItemPricesCrossWorld(server, itemId, callback)
     {
-        const url = mog.url_item_cross_world.replace('-server-', server).replace('-id-', itemId);
+        const url = mog.url_item_cross_world.replace("-server-", server).replace("-id-", itemId);
 
-        fetch(url, { mode: 'cors' })
+        fetch(url, { mode: "cors" })
             .then(response => response.text())
             .then(callback);
     }

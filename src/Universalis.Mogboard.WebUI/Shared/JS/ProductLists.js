@@ -8,11 +8,11 @@ class ProductLists
 {
     constructor()
     {
-        this.uiModal       = $('.list_modal');
-        this.uiModalButton = $('.btn_addto_list');
-        this.uiFaveButton  = $('.btn_addto_fave');
-        this.uiCreateForm  = $('.create_list_form');
-        this.uiListsView   = $('.user_lists');
+        this.uiModal       = $(".list_modal");
+        this.uiModalButton = $(".btn_addto_list");
+        this.uiFaveButton  = $(".btn_addto_fave");
+        this.uiCreateForm  = $(".create_list_form");
+        this.uiListsView   = $(".user_lists");
 
     }
 
@@ -25,25 +25,25 @@ class ProductLists
         this.loadLists();
 
         // on submitting a new
-        this.uiCreateForm.on('submit', event => {
+        this.uiCreateForm.on("submit", event => {
             event.preventDefault();
 
             this.create(
-                this.uiCreateForm.find('#list_name').val().trim(),
+                this.uiCreateForm.find("#list_name").val().trim(),
                 itemId
             );
         });
 
         // on adding to an existing list
-        this.uiCreateForm.on('click', '.user_list_existing_button', event => {
-            const listId = $(event.currentTarget).attr('data-id');
-            const action = $(event.currentTarget).attr('data-action');
+        this.uiCreateForm.on("click", ".user_list_existing_button", event => {
+            const listId = $(event.currentTarget).attr("data-id");
+            const action = $(event.currentTarget).attr("data-action");
 
-            action == 'add' ? this.addItem(listId, itemId) : this.removeItem(listId, itemId);
+            action == "add" ? this.addItem(listId, itemId) : this.removeItem(listId, itemId);
         });
 
         // on fave clicking
-        this.uiFaveButton.on('click', event => {
+        this.uiFaveButton.on("click", event => {
             this.addToFavourite();
         });
     }
@@ -76,13 +76,13 @@ class ProductLists
         };
 
         const success = response => {
-            response.state ? this.uiFaveButton.addClass('on') : this.uiFaveButton.removeClass('on');
+            response.state ? this.uiFaveButton.addClass("on") : this.uiFaveButton.removeClass("on");
 
-            this.uiFaveButton.find('span').text(response.state ? 'Faved' : 'Favourite');
+            this.uiFaveButton.find("span").text(response.state ? "Faved" : "Favourite");
             Modals.close(this.uiModal);
             Popup.success(
-                response.state ? 'Added to Favourites' : 'Removed from Favourites',
-                response.state ? 'Added to your favourites.' : 'Removed from your favourites.'
+                response.state ? "Added to Favourites" : "Removed from Favourites",
+                response.state ? "Added to your favourites." : "Removed from your favourites."
             );
 
             this.loadLists();
@@ -104,7 +104,7 @@ class ProductLists
         ButtonLoading.start($button);
 
         if (name.length < 3) {
-            Popup.error('name too short', 'Your list name is a bit too short, please enter in a name to create a list!');
+            Popup.error("name too short", "Your list name is a bit too short, please enter in a name to create a list!");
             return;
         }
 
@@ -117,8 +117,8 @@ class ProductLists
             this.loadLists();
             Modals.close(this.uiModal);
             Popup.success(
-                'Created list',
-                'Your new list has been created and the item added to it!'
+                "Created list",
+                "Your new list has been created and the item added to it!"
             );
         };
 
@@ -144,12 +144,12 @@ class ProductLists
             this.loadLists();
             Modals.close(this.uiModal);
             Popup.success(
-                'Added to list',
-                'Your item has been saved to this list!'
+                "Added to list",
+                "Your item has been saved to this list!"
             );
         };
 
-        Ajax.post(mog.urls.lists.addItem.replace('-id-', listId), data, success, null, Errors.lists.couldNotAddItem);
+        Ajax.post(mog.urls.lists.addItem.replace("-id-", listId), data, success, null, Errors.lists.couldNotAddItem);
     }
 
     /**
@@ -167,12 +167,12 @@ class ProductLists
             this.loadLists();
             Modals.close(this.uiModal);
             Popup.success(
-                'Removed from list',
-                'Item has been removed from the list.'
+                "Removed from list",
+                "Item has been removed from the list."
             );
         };
 
-        Ajax.post(mog.urls.lists.removeItem.replace('-id-', listId), data, success, null, Errors.lists.couldNotRemoveItem);
+        Ajax.post(mog.urls.lists.removeItem.replace("-id-", listId), data, success, null, Errors.lists.couldNotRemoveItem);
     }
 }
 

@@ -2,15 +2,15 @@ class HeaderUser
 {
     constructor()
     {
-        this.uiButton = $('.user-btn');
-        this.uiMenu = $('.user-menu');
+        this.uiButton = $(".user-btn");
+        this.uiMenu = $(".user-menu");
     }
 
     watch()
     {
 
-        this.uiButton.on('click', event => {
-            this.uiMenu.toggleClass('open');
+        this.uiButton.on("click", event => {
+            this.uiMenu.toggleClass("open");
         });
 
         $(document).mouseup(event => {
@@ -21,7 +21,7 @@ class HeaderUser
             if (!buttons.is(event.target) && buttons.has(event.target).length === 0
                 && !nav.is(event.target) && nav.has(event.target).length === 0) {
 
-                this.uiMenu.removeClass('open');
+                this.uiMenu.removeClass("open");
             }
         });
     }

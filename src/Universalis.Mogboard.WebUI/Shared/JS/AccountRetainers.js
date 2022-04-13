@@ -1,6 +1,6 @@
-import xivapi from './XIVAPI';
-import Popup from './Popup';
-import ButtonLoading from './ButtonLoading';
+import xivapi from "./XIVAPI";
+import Popup from "./Popup";
+import ButtonLoading from "./ButtonLoading";
 
 class AccountRetainers
 {
@@ -8,13 +8,13 @@ class AccountRetainers
     {
         this.stateAdding = false;
 
-        this.uiAddRetainerResponse = $('.retainer_add_response');
-        this.uiItemSearchResponse = $('.retainer_item_search_response');
+        this.uiAddRetainerResponse = $(".retainer_add_response");
+        this.uiItemSearchResponse = $(".retainer_item_search_response");
     }
 
     watch()
     {
-        if (mog.path != 'account') {
+        if (mog.path != "account") {
             return;
         }
 
@@ -25,28 +25,28 @@ class AccountRetainers
 
     watchRetainerConfirmation()
     {
-        const $button = $('.retainer_confirm');
+        const $button = $(".retainer_confirm");
 
-        $button.on('click', event => {
+        $button.on("click", event => {
             ButtonLoading.start($button);
-            const id = $(event.currentTarget).attr('data-id');
+            const id = $(event.currentTarget).attr("data-id");
 
             $.ajax({
-                url: mog.urls.retainers.confirm.replace('-id-', id),
+                url: mog.urls.retainers.confirm.replace("-id-", id),
                 success: response => {
                     let status = response[0];
                     let message = response[1];
 
                     if (message.trim().length < 1) {
-                        message = 'Could not add your retainer, the Companion Servers may be having issues. Please try again soon or contact the discord';
+                        message = "Could not add your retainer, the Companion Servers may be having issues. Please try again soon or contact the discord";
                     }
 
                     if (status == false) {
-                        Popup.error('Not yet!', message);
+                        Popup.error("Not yet!", message);
                         return;
                     }
 
-                    Popup.success('Retainer Confirmed!', 'You are all good to go, the retainer is yours! <br> The site will refresh in 3 seconds.');
+                    Popup.success("Retainer Confirmed!", "You are all good to go, the retainer is yours! <br> The site will refresh in 3 seconds.");
                     Popup.setForcedOpen(true);
                     setTimeout(() => {
                         location.reload();
@@ -68,11 +68,11 @@ class AccountRetainers
      */
     watchItemSearchInput()
     {
-        const $input = $('.retainer_item_search');
+        const $input = $(".retainer_item_search");
         let timeout = null;
         let searched = null;
 
-        $input.on('keyup', event => {
+        $input.on("keyup", event => {
             const string = $input.val().trim();
             clearTimeout(timeout);
 
@@ -86,11 +86,11 @@ class AccountRetainers
                 xivapi.searchLimited(string, response => {
                     searched = string;
                     if (response == null || response.Pagination.Results == 0) {
-                        this.uiItemSearchResponse.html('<p>Could not find an item</p>');
+                        this.uiItemSearchResponse.html("<p>Could not find an item</p>");
                         return;
                     }
 
-                    this.uiItemSearchResponse.html('');
+                    this.uiItemSearchResponse.html("");
                     response.Results.forEach(item => {
                         this.uiItemSearchResponse.append(
                             `<button class="item_button" data-id="${item.ID}">${item.Name}</button>`
@@ -100,15 +100,15 @@ class AccountRetainers
             }, 250);
         });
 
-        this.uiItemSearchResponse.on('click', 'button', event => {
-            const itemId = $(event.currentTarget).attr('data-id');
+        this.uiItemSearchResponse.on("click", "button", event => {
+            const itemId = $(event.currentTarget).attr("data-id");
             const name   = $(event.currentTarget).text();
 
-            $('.retainer_item_search').val(name);
-            $('.retainer_add').prop('disabled', false);
-            $('#retainer_item').val(itemId);
+            $(".retainer_item_search").val(name);
+            $(".retainer_add").prop("disabled", false);
+            $("#retainer_item").val(itemId);
 
-            this.uiItemSearchResponse.html('');
+            this.uiItemSearchResponse.html("");
         })
     }
 
@@ -117,23 +117,23 @@ class AccountRetainers
      */
     handleNewRetainerAdd()
     {
-        const $button = $('.retainer_add');
+        const $button = $(".retainer_add");
 
         // add retainer clicked
-        $button.on('click', event => {
+        $button.on("click", event => {
             if (this.stateAdding) {
                 return;
             }
 
             // grab entered info
             const retainer = {
-                name: $('#retainer_string').val().trim(),
-                server: $('#retainer_server').val().trim(),
-                itemId: $('#retainer_item').val().trim(),
+                name: $("#retainer_string").val().trim(),
+                server: $("#retainer_server").val().trim(),
+                itemId: $("#retainer_item").val().trim(),
             };
 
             if (retainer.name.length < 2) {
-                Popup.error('No name?', 'is your retainer name really below 2 characters?');
+                Popup.error("No name?", "is your retainer name really below 2 characters?");
                 return;
             }
 
@@ -145,7 +145,7 @@ class AccountRetainers
                 data: retainer,
                 success: response => {
                     if (response === true) {
-                        Popup.success('Retainer Added!', 'Your retainer has been added, the page will refresh in 3 seconds.');
+                        Popup.success("Retainer Added!", "Your retainer has been added, the page will refresh in 3 seconds.");
                         Popup.setForcedOpen(true);
                         setTimeout(() => {
                             location.reload();
@@ -154,15 +154,15 @@ class AccountRetainers
                         return;
                     }
 
-                    Popup.error('Retainer failed to add', `Error: ${response.Message}`);
+                    Popup.error("Retainer failed to add", `Error: ${response.Message}`);
                 },
                 error: (a,b,c) => {
-                    Popup.error('Something Broke (code 148)', 'Could not add your retainer, please hop on discord!');
+                    Popup.error("Something Broke (code 148)", "Could not add your retainer, please hop on discord!");
                     console.error(a,b,c);
                 },
                 complete: () => {
                     this.stateAdding = false;
-                    this.uiAddRetainerResponse.html('');
+                    this.uiAddRetainerResponse.html("");
                     ButtonLoading.finish($button);
                 }
             })

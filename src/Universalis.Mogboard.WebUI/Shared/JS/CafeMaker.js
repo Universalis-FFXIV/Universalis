@@ -5,12 +5,12 @@ class CafeMaker // For some crazy reason this can't extend the XIVAPI class, it 
         queries = queries ? queries : {};
         
         let query = Object.keys(queries)
-            .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(queries[k]))
-            .join('&');
+            .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(queries[k]))
+            .join("&");
 
-        endpoint = endpoint +'?'+ query;
+        endpoint = endpoint +"?"+ query;
 
-        fetch(`https://cafemaker.wakingsands.com${endpoint}`, { mode: 'cors' })
+        fetch(`https://cafemaker.wakingsands.com${endpoint}`, { mode: "cors" })
             .then(response => response.json())
             .then(callback)
     }
@@ -49,13 +49,13 @@ class CafeMaker // For some crazy reason this can't extend the XIVAPI class, it 
         const fusedCb = this.fuse(callback);
 
         const params1 = {
-            indexes:     'item',
-            filters:     'ItemSearchCategory.ID>=1',
-            columns:     'ID,Icon,Name,LevelItem,Rarity,ItemSearchCategory.Name,ItemSearchCategory.ID,ItemKind.Name',
+            indexes:     "item",
+            filters:     "ItemSearchCategory.ID>=1",
+            columns:     "ID,Icon,Name,LevelItem,Rarity,ItemSearchCategory.Name,ItemSearchCategory.ID,ItemKind.Name",
             string:      string.trim(),
             limit:        100,
-            sort_field:  'LevelItem',
-            sort_order:  'desc'
+            sort_field:  "LevelItem",
+            sort_order:  "desc"
         };
 
         const params2 = {...params1}; // For some reason it needs to be set up the same way as XIVAPI; this should just be an implementation detail, TODO debug
@@ -71,9 +71,9 @@ class CafeMaker // For some crazy reason this can't extend the XIVAPI class, it 
         const fusedCb = this.fuse(callback);
 
         const params1 = {
-            indexes:     'item',
-            filters:     'ItemSearchCategory.ID>=1',
-            columns:     'ID,Name',
+            indexes:     "item",
+            filters:     "ItemSearchCategory.ID>=1",
+            columns:     "ID,Name",
             string:      string.trim(),
             limit:       10,
         };
@@ -121,7 +121,7 @@ class CafeMaker // For some crazy reason this can't extend the XIVAPI class, it 
      * Get a list of servers grouped by their data center
      */
     getServerList(callback) {
-        fetch(`https://universalis.app/json/dc.json`, { mode: 'cors' })
+        fetch(`https://universalis.app/json/dc.json`, { mode: "cors" })
             .then(response => response.json())
             .then(callback)
     }
@@ -132,7 +132,7 @@ class CafeMaker // For some crazy reason this can't extend the XIVAPI class, it 
     getMarketPrices(itemId, server, callback)
     {
         const options = {
-            columns: 'Prices,Item',
+            columns: "Prices,Item",
             servers: server,
         };
 

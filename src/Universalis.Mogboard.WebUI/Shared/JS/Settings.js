@@ -1,29 +1,29 @@
 import Popup from "./Popup";
 
-const Cookie = require('js-cookie');
-import Modals from './Modals';
+const Cookie = require("js-cookie");
+import Modals from "./Modals";
 
 class Settings
 {
     constructor()
     {
-        this.uiModal              = $('.modal_settings');
-        this.uiModalButton        = $('.btn-settings');
+        this.uiModal              = $(".modal_settings");
+        this.uiModalButton        = $(".btn-settings");
 
-        this.defaultLanguage      = 'en';
+        this.defaultLanguage      = "en";
         this.defaultTimezone      = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        this.defaultLeftNav       = 'off';
-        this.defaultHomeWorld     = 'no';
+        this.defaultLeftNav       = "off";
+        this.defaultHomeWorld     = "no";
 
-        if (this.defaultTimezone === 'undefined') {
-            this.defaultTimezone = 'Europe/London';
+        if (this.defaultTimezone === "undefined") {
+            this.defaultTimezone = "Europe/London";
         }
 
-        this.storageKeyServer     = 'mogboard_server';
-        this.storageKeyLanguage   = 'mogboard_language';
-        this.storageKeyTimezone   = 'mogboard_timezone';
-        this.storageKeyLeftNav    = 'mogboard_leftnav';
-        this.storageKeyHomeWorld  = 'mogboard_homeworld';
+        this.storageKeyServer     = "mogboard_server";
+        this.storageKeyLanguage   = "mogboard_language";
+        this.storageKeyTimezone   = "mogboard_timezone";
+        this.storageKeyLeftNav    = "mogboard_leftnav";
+        this.storageKeyHomeWorld  = "mogboard_homeworld";
 
         this.server               = this.getServer();
         this.language             = this.getLanguage();
@@ -48,7 +48,7 @@ class Settings
         // if not set, ask to set
         if (server === null || server.length === 0) {
             setTimeout(() => {
-                this.uiModalButton.trigger('click');
+                this.uiModalButton.trigger("click");
             }, 500);
         } else {
             this.setServer(server);
@@ -60,11 +60,11 @@ class Settings
         this.setHomeWorld(homeworld);
 
         // set selected items
-        this.uiModal.find('select.servers').val(server);
-        this.uiModal.find('select.languages').val(language);
-        this.uiModal.find('select.timezones').val(timezone);
-        this.uiModal.find('select.leftnav').val(leftnav);
-        this.uiModal.find('select.homeworld').val(homeworld);
+        this.uiModal.find("select.servers").val(server);
+        this.uiModal.find("select.languages").val(language);
+        this.uiModal.find("select.timezones").val(timezone);
+        this.uiModal.find("select.leftnav").val(leftnav);
+        this.uiModal.find("select.homeworld").val(homeworld);
     }
 
     watch()
@@ -72,33 +72,33 @@ class Settings
         Modals.add(this.uiModal, this.uiModalButton);
 
         // server select
-        this.uiModal.find('.servers').on('change', event => {
+        this.uiModal.find(".servers").on("change", event => {
             this.setServer($(event.currentTarget).val());
         });
 
         // language select
-        this.uiModal.find('.languages').on('change', event => {
+        this.uiModal.find(".languages").on("change", event => {
             this.setLanguage($(event.currentTarget).val());
         });
 
         // timezone select
-        this.uiModal.find('.timezones').on('change', event => {
+        this.uiModal.find(".timezones").on("change", event => {
             this.setTimezone($(event.currentTarget).val());
         });
 
         // left-nav select
-        this.uiModal.find('.leftnav').on('change', event => {
+        this.uiModal.find(".leftnav").on("change", event => {
             this.setLeftNav($(event.currentTarget).val());
         });
 
         // home world tab select
-        this.uiModal.find('.homeworld').on('change', event => {
+        this.uiModal.find(".homeworld").on("change", event => {
             this.setHomeWorld($(event.currentTarget).val());
         });
 
         // click save
-        this.uiModal.find('.btn-green').on('click', event => {
-            Popup.success('Settings Saved', 'Refreshing site, please wait...');
+        this.uiModal.find(".btn-green").on("click", event => {
+            Popup.success("Settings Saved", "Refreshing site, please wait...");
             location.reload(true);
         })
     }
@@ -117,7 +117,7 @@ class Settings
     setLocalStorageSetting(key, value)
     {
         localStorage.setItem(key, value);
-        Cookie.set(key, value, { expires: 365, path: '/', sameSite: 'none', secure: true });
+        Cookie.set(key, value, { expires: 365, path: "/", sameSite: "none", secure: true });
     }
 
     setServer(server)
@@ -142,10 +142,10 @@ class Settings
 
     getGameDataSource()
     {
-        if (this.getLanguage() === 'chs') {
-            return 'https://cafemaker.wakingsands.com';
+        if (this.getLanguage() === "chs") {
+            return "https://cafemaker.wakingsands.com";
         }
-        return 'https://xivapi.com';
+        return "https://xivapi.com";
     }
 
     setTimezone(timezone)

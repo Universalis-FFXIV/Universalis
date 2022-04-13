@@ -5,10 +5,10 @@ class UniversalisApi
         queries = queries ? queries : {};
         
         let query = Object.keys(queries)
-            .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(queries[k]))
-            .join('&');
+            .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(queries[k]))
+            .join("&");
 
-        endpoint = endpoint +'?'+ query;
+        endpoint = endpoint +"?"+ query;
 
         fetch(`https://universalis.app/api${endpoint}`)
             .then(response => response.json())

@@ -4,8 +4,8 @@ class Header
 {
     constructor()
     {
-        this.uiButtonMenu = $('.btn-menu');
-        this.uiViewMenu   = $('.site-menu')
+        this.uiButtonMenu = $(".btn-menu");
+        this.uiViewMenu   = $(".site-menu")
     }
 
     watch()

@@ -11,16 +11,16 @@ class ProductAlerts
         this.editId = null;
         this.alert = this.getAlertTemplate();
 
-        this.uiForm          = $('.alert_form');
-        this.uiTriggers      = $('.alert_entries');
-        this.uiAlerts        = $('.alerts_table');
-        this.uiDeleteConfirm = $('.btn_alert_delete_confirm');
+        this.uiForm          = $(".alert_form");
+        this.uiTriggers      = $(".alert_entries");
+        this.uiAlerts        = $(".alerts_table");
+        this.uiDeleteConfirm = $(".btn_alert_delete_confirm");
     }
 
     getAlertTemplate()
     {
         return {
-            alert_item_id: mog.path == 'market' ? itemId : null,
+            alert_item_id: mog.path == "market" ? itemId : null,
             alert_name: null,
             alert_nq: null,
             alert_hq: null,
@@ -34,24 +34,24 @@ class ProductAlerts
 
     watch()
     {
-        if (mog.path != 'market') {
+        if (mog.path != "market") {
             return;
         }
 
-        this.uiForm.on('click', '.alert_trigger_add', event => { this.addCustomTrigger(event) });
-        this.uiForm.on('click', '.alert_trigger_remove', event => { this.removeCustomTrigger(event) });
-        this.uiForm.on('click', '.btn_create_alert', event => { this.saveAlert(event) });
-        this.uiForm.on('click', '.btn_new_alert', event => { this.newAlert(event) });
-        this.uiAlerts.on('click', '.btn_alert_delete', event => { this.deleteAlert(event) });
-        this.uiAlerts.on('click', '.btn_alert_edit', event => { this.editAlert(event) });
+        this.uiForm.on("click", ".alert_trigger_add", event => { this.addCustomTrigger(event) });
+        this.uiForm.on("click", ".alert_trigger_remove", event => { this.removeCustomTrigger(event) });
+        this.uiForm.on("click", ".btn_create_alert", event => { this.saveAlert(event) });
+        this.uiForm.on("click", ".btn_new_alert", event => { this.newAlert(event) });
+        this.uiAlerts.on("click", ".btn_alert_delete", event => { this.deleteAlert(event) });
+        this.uiAlerts.on("click", ".btn_alert_edit", event => { this.editAlert(event) });
 
         this.loadAlerts();
 
-        this.uiDeleteConfirm.on('click', event => { this.deleteAlertConfirmation() });
+        this.uiDeleteConfirm.on("click", event => { this.deleteAlertConfirmation() });
 
         Modals.add(
-            $('.alert_info'),
-            $('.alert_info_button button')
+            $(".alert_info"),
+            $(".alert_info_button button")
         );
     }
 
@@ -63,15 +63,15 @@ class ProductAlerts
         event.preventDefault();
 
         if (this.alert.alert_triggers.length >= this.maxTriggers) {
-            Popup.error('Max Triggers Reached', `You can add a maximum of ${this.maxTriggers} to a single alert. Sorry!`);
+            Popup.error("Max Triggers Reached", `You can add a maximum of ${this.maxTriggers} to a single alert. Sorry!`);
             return;
         }
 
         const trigger = {
             id: Math.floor((Math.random() * 99999) + 1),
-            alert_trigger_field: this.uiForm.find('#alert_trigger_field').val().trim(),
-            alert_trigger_op:    this.uiForm.find('#alert_trigger_op').val().trim(),
-            alert_trigger_value: this.uiForm.find('#alert_trigger_value').val().trim(),
+            alert_trigger_field: this.uiForm.find("#alert_trigger_field").val().trim(),
+            alert_trigger_op:    this.uiForm.find("#alert_trigger_op").val().trim(),
+            alert_trigger_value: this.uiForm.find("#alert_trigger_value").val().trim(),
         };
 
         this.addCustomTriggerVisual(trigger, true);
@@ -84,30 +84,30 @@ class ProductAlerts
     {
         // check a trigger exists
         if (trigger.alert_trigger_value.length === 0) {
-            Popup.error('Invalid Condition Value', 'The triggers condition value is empty.');
+            Popup.error("Invalid Condition Value", "The triggers condition value is empty.");
             return;
         }
 
         // the type of triggers must match
-        const alertType = trigger.alert_trigger_field.split('_')[0];
+        const alertType = trigger.alert_trigger_field.split("_")[0];
 
         if (isButtonPress) {
             if (this.alert.alert_type == null) {
                 this.alert.alert_type = alertType;
             } else if (alertType != this.alert.alert_type) {
-                Popup.error('Mismatch Data Types', 'You cannot mix Prices or History triggers in the same alert.');
+                Popup.error("Mismatch Data Types", "You cannot mix Prices or History triggers in the same alert.");
                 return;
             }
 
             // check bool type
-            if (['Prices_IsCrafted', 'Prices_IsHQ', 'Prices_HasMateria', 'History_IsHQ'].indexOf(trigger.alert_trigger_field) > -1) {
-                if (['0', '1'].indexOf(trigger.alert_trigger_value) === -1) {
-                    Popup.error('Invalid Condition Value', 'For the selected trigger field, <br> your trigger value must either be: <br> a 0 (False/No) OR a 1 (True/Yes).');
+            if (["Prices_IsCrafted", "Prices_IsHQ", "Prices_HasMateria", "History_IsHQ"].indexOf(trigger.alert_trigger_field) > -1) {
+                if (["0", "1"].indexOf(trigger.alert_trigger_value) === -1) {
+                    Popup.error("Invalid Condition Value", "For the selected trigger field, <br> your trigger value must either be: <br> a 0 (False/No) OR a 1 (True/Yes).");
                     return;
                 }
 
-                if (['5', '6'].indexOf(trigger.alert_trigger_op) === -1) {
-                    Popup.error('Invalid Operator', 'For the selected trigger field, <br> your trigger operator must be either: <br> = Equal-to OR != Not equal-to')
+                if (["5", "6"].indexOf(trigger.alert_trigger_op) === -1) {
+                    Popup.error("Invalid Operator", "For the selected trigger field, <br> your trigger operator must be either: <br> = Equal-to OR != Not equal-to")
                     return;
                 }
             }
@@ -137,7 +137,7 @@ class ProductAlerts
      */
     removeCustomTrigger(event)
     {
-        const id = $(event.currentTarget).attr('data-id');
+        const id = $(event.currentTarget).attr("data-id");
 
         // remove row
         this.uiForm.find(`#custom_trigger_${id}`).remove();
@@ -163,43 +163,43 @@ class ProductAlerts
     {
         event.preventDefault();
 
-        this.alert.alert_name = this.uiForm.find('#alert_name').val().trim();
-        this.alert.alert_nq = this.uiForm.find('#alert_nq').prop('checked');
-        this.alert.alert_hq = this.uiForm.find('#alert_hq').prop('checked');
-        this.alert.alert_dc = this.uiForm.find('#alert_dc').prop('checked');
-        this.alert.alert_notify_discord = this.uiForm.find('#alert_notify_discord').prop('checked');
-        this.alert.alert_notify_email = this.uiForm.find('#alert_notify_email').prop('checked');
-        this.alert.alert_dps_perk = this.uiForm.find('#alert_dps_perk').prop('checked');
+        this.alert.alert_name = this.uiForm.find("#alert_name").val().trim();
+        this.alert.alert_nq = this.uiForm.find("#alert_nq").prop("checked");
+        this.alert.alert_hq = this.uiForm.find("#alert_hq").prop("checked");
+        this.alert.alert_dc = this.uiForm.find("#alert_dc").prop("checked");
+        this.alert.alert_notify_discord = this.uiForm.find("#alert_notify_discord").prop("checked");
+        this.alert.alert_notify_email = this.uiForm.find("#alert_notify_email").prop("checked");
+        this.alert.alert_dps_perk = this.uiForm.find("#alert_dps_perk").prop("checked");
 
         if (this.alert.alert_name.length < 3 || this.alert.alert_name.length > 100) {
-            Popup.error('Name Length', 'Please keep your alert name <br> between 4 and 100 characters');
+            Popup.error("Name Length", "Please keep your alert name <br> between 4 and 100 characters");
             return;
         }
 
         if (this.alert.alert_hq === false && this.alert.alert_nq === false) {
-            Popup.error('Error: HQ/NQ', 'You must choose either: <br> Normal Quality, High-Quality or Both.');
+            Popup.error("Error: HQ/NQ", "You must choose either: <br> Normal Quality, High-Quality or Both.");
             return;
         }
 
         if (this.alert.alert_notify_discord === false && this.alert.alert_notify_email === false) {
-            Popup.error('Error: Notification', 'You must choose to be notified <br> either by discord or by email.');
+            Popup.error("Error: Notification", "You must choose to be notified <br> either by discord or by email.");
             return;
         }
 
         if (this.alert.alert_triggers.length === 0) {
-            Popup.error('No Triggers', 'You have not set any triggers <br> on your alert, fix that!');
+            Popup.error("No Triggers", "You have not set any triggers <br> on your alert, fix that!");
             return;
         }
 
-        const submitButton = this.uiForm.find('.btn_create_alert');
+        const submitButton = this.uiForm.find(".btn_create_alert");
         ButtonLoading.start(submitButton);
 
         // build edit url
-        const url = this.editId ? mog.urls.alerts.update.replace('-id-', this.editId) : mog.urls.alerts.create;
+        const url = this.editId ? mog.urls.alerts.update.replace("-id-", this.editId) : mog.urls.alerts.create;
 
         $.ajax({
             url: url,
-            type: 'POST',
+            type: "POST",
             dataType: "json",
             data: JSON.stringify(this.alert),
             contentType: "application/json",
@@ -214,16 +214,16 @@ class ProductAlerts
                 }
 
                 if (state) {
-                    Popup.success('Alert Saved', message);
+                    Popup.success("Alert Saved", message);
                     this.loadAlerts();
                     return;
                 }
 
-                Popup.success('Alert not created', `Could not create alert, reason: ${message}`);
+                Popup.success("Alert not created", `Could not create alert, reason: ${message}`);
             },
             error: (a,b,c) => {
-                Popup.error('Error 23', 'Could not create the alert. Ask Vek why!');
-                console.log('--- ERROR ---');
+                Popup.error("Error 23", "Could not create the alert. Ask Vek why!");
+                console.log("--- ERROR ---");
                 console.log(a,b,c)
             },
             complete: () => {
@@ -242,18 +242,18 @@ class ProductAlerts
         }
 
         $.ajax({
-            url: mog.urls.alerts.renderForItem.replace('-id-', itemId),
+            url: mog.urls.alerts.renderForItem.replace("-id-", itemId),
             success: response => {
                 this.uiAlerts.html(response);
 
                 Modals.add(
-                    $('.alert_delete_confirmation_modal'),
-                    $('.btn_alert_delete')
+                    $(".alert_delete_confirmation_modal"),
+                    $(".btn_alert_delete")
                 );
             },
             error: (a,b,c) => {
                 this.uiAlerts.html('<div class="alert-red">Could not load any alerts for this item.</div>');
-                console.log('--- ERROR ---');
+                console.log("--- ERROR ---");
                 console.log(a,b,c)
             }
         })
@@ -268,23 +268,23 @@ class ProductAlerts
         this.newAlert();
 
         const button = $(event.currentTarget);
-        this.editId  = button.attr('data-id');
+        this.editId  = button.attr("data-id");
 
         ButtonLoading.start(button);
         this.toggleAlertFormLoading(true);
 
         $.ajax({
-            url: mog.urls.alerts.edit.replace('-id-', this.editId),
-            type: 'GET',
+            url: mog.urls.alerts.edit.replace("-id-", this.editId),
+            type: "GET",
             success: response => {
                 this.editId = response.id;
-                this.uiForm.find('#alert_name').val(response.alert_name);
-                this.uiForm.find('#alert_nq').prop('checked', response.alert_nq);
-                this.uiForm.find('#alert_hq').prop('checked', response.alert_hq);
-                this.uiForm.find('#alert_dc').prop('checked', response.alert_dc);
-                this.uiForm.find('#alert_notify_discord').prop('checked', response.alert_notify_discord);
-                this.uiForm.find('#alert_notify_email').prop('checked', response.alert_notify_email);
-                this.uiForm.find('#alert_dps_perk').prop('checked', response.alert_dps_perk);
+                this.uiForm.find("#alert_name").val(response.alert_name);
+                this.uiForm.find("#alert_nq").prop("checked", response.alert_nq);
+                this.uiForm.find("#alert_hq").prop("checked", response.alert_hq);
+                this.uiForm.find("#alert_dc").prop("checked", response.alert_dc);
+                this.uiForm.find("#alert_notify_discord").prop("checked", response.alert_notify_discord);
+                this.uiForm.find("#alert_notify_email").prop("checked", response.alert_notify_email);
+                this.uiForm.find("#alert_dps_perk").prop("checked", response.alert_dps_perk);
 
                 this.alert.alert_name = response.alert_name;
                 this.alert.alert_nq = response.alert_nq;
@@ -304,11 +304,11 @@ class ProductAlerts
                     })
                 });
 
-                $('.alert_form').addClass('edit_mode');
+                $(".alert_form").addClass("edit_mode");
             },
             error: (a,b,c) => {
-                Popup.error('Error 8456', 'Could not fetch alert to edit.');
-                console.log('--- ERROR ---');
+                Popup.error("Error 8456", "Could not fetch alert to edit.");
+                console.log("--- ERROR ---");
                 console.log(a,b,c);
             },
             complete: () => {
@@ -323,11 +323,11 @@ class ProductAlerts
      */
     deleteAlert(event)
     {
-        this.deleteId = $(event.currentTarget).attr('data-id');
+        this.deleteId = $(event.currentTarget).attr("data-id");
 
-        const alertName = $(event.currentTarget).parents('tr').attr('data-name');
-        const confirmModal = $('.alert_delete_confirmation_modal');
-        confirmModal.find('h1').html(alertName);
+        const alertName = $(event.currentTarget).parents("tr").attr("data-name");
+        const confirmModal = $(".alert_delete_confirmation_modal");
+        confirmModal.find("h1").html(alertName);
     }
 
     /**
@@ -335,7 +335,7 @@ class ProductAlerts
      */
     deleteAlertConfirmation()
     {
-        const url = mog.urls.alerts.delete.replace('-id-', this.deleteId);
+        const url = mog.urls.alerts.delete.replace("-id-", this.deleteId);
         ButtonLoading.start(this.uiDeleteConfirm);
 
         // reset
@@ -343,20 +343,20 @@ class ProductAlerts
 
         $.ajax({
             url: url,
-            type: 'GET',
+            type: "GET",
             success: response => {
                 this.loadAlerts();
-                Popup.success('Alert Deleted', 'This alert has been deleted');
+                Popup.success("Alert Deleted", "This alert has been deleted");
             },
             error: (a,b,c) => {
-                Popup.error('Error 75', 'Could not delete alert.');
-                console.log('--- ERROR ---');
+                Popup.error("Error 75", "Could not delete alert.");
+                console.log("--- ERROR ---");
                 console.log(a,b,c)
             },
             complete: () => {
                 ButtonLoading.finish(this.uiDeleteConfirm);
                 Modals.close(
-                    $('.alert_delete_confirmation_modal')
+                    $(".alert_delete_confirmation_modal")
                 );
             }
         });
@@ -367,25 +367,25 @@ class ProductAlerts
      */
     newAlert()
     {
-        $('.alert_form').removeClass('edit_mode');
+        $(".alert_form").removeClass("edit_mode");
 
         this.deleteId = null;
         this.editId = null;
         this.alert = this.getAlertTemplate();
 
-        this.uiForm.find('#alert_name').val('');
-        this.uiForm.find('#alert_nq').prop('checked', false);
-        this.uiForm.find('#alert_hq').prop('checked', false);
-        this.uiForm.find('#alert_dc').prop('checked', false);
-        this.uiForm.find('#alert_notify_discord').prop('checked', false);
-        this.uiForm.find('#alert_notify_email').prop('checked', false);
-        this.uiForm.find('#alert_dps_perk').prop('checked', false);
+        this.uiForm.find("#alert_name").val("");
+        this.uiForm.find("#alert_nq").prop("checked", false);
+        this.uiForm.find("#alert_hq").prop("checked", false);
+        this.uiForm.find("#alert_dc").prop("checked", false);
+        this.uiForm.find("#alert_notify_discord").prop("checked", false);
+        this.uiForm.find("#alert_notify_email").prop("checked", false);
+        this.uiForm.find("#alert_dps_perk").prop("checked", false);
 
-        this.uiTriggers.html('');
+        this.uiTriggers.html("");
 
-        this.uiForm.find('#alert_trigger_field option:first').prop('selected',true);
-        this.uiForm.find('#alert_trigger_op option:first').prop('selected',true);
-        this.uiForm.find('#alert_trigger_value').val('');
+        this.uiForm.find("#alert_trigger_field option:first").prop("selected",true);
+        this.uiForm.find("#alert_trigger_op option:first").prop("selected",true);
+        this.uiForm.find("#alert_trigger_value").val("");
     }
 
     /**
@@ -393,8 +393,8 @@ class ProductAlerts
      */
     toggleAlertFormLoading(on)
     {
-        const $alertFormLoading = $('.alert-form-loading');
-        on ? $alertFormLoading.addClass('show') : $alertFormLoading.removeClass('show');
+        const $alertFormLoading = $(".alert-form-loading");
+        on ? $alertFormLoading.addClass("show") : $alertFormLoading.removeClass("show");
     }
 }
 

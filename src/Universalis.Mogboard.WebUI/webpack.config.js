@@ -1,13 +1,13 @@
-const path = require('path');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const path = require("path");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = [
     {
-        name: 'app',
-        entry: './Shared/JS/App.js',
+        name: "app",
+        entry: "./Shared/JS/App.js",
         output: {
-            filename: 'app.js',
-            path: path.resolve(__dirname, 'wwwroot', 'ui'),
+            filename: "app.js",
+            path: path.resolve(__dirname, "wwwroot", "ui"),
         },
         module: {
             rules: [
@@ -15,9 +15,9 @@ module.exports = [
                     test: /\.m?js$/,
                     exclude: /(node_modules|bower_components)/,
                     use: {
-                        loader: 'babel-loader',
+                        loader: "babel-loader",
                         options: {
-                            presets: ['@babel/preset-env'],
+                            presets: ["@babel/preset-env"],
                         },
                     },
                 },
@@ -25,14 +25,14 @@ module.exports = [
         },
     },
     {
-        name: 'ui',
+        name: "ui",
         plugins: [new MiniCssExtractPlugin({
-            filename: 'ui.css',
+            filename: "ui.css",
         })],
-        entry: './Shared/SCSS/app.scss',
+        entry: "./Shared/SCSS/app.scss",
         output: {
-            filename: 'ui.css.js',
-            path: path.resolve(__dirname, 'wwwroot', 'ui'),
+            filename: "ui.css.js",
+            path: path.resolve(__dirname, "wwwroot", "ui"),
         },
         module: {
             rules: [
@@ -40,15 +40,15 @@ module.exports = [
                     test: /\.s[ac]ss$/i,
                     use: [
                         MiniCssExtractPlugin.loader,
-                        'css-loader',
-                        'sass-loader',
+                        "css-loader",
+                        "sass-loader",
                     ],
                 },
             ],
         },
         resolve: {
             alias: {
-                '/i': path.resolve(__dirname, 'wwwroot', 'i'),
+                '/i': path.resolve(__dirname, "wwwroot", "i"),
             },
         },
     },
