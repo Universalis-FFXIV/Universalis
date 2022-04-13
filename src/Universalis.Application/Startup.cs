@@ -14,12 +14,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.XPath;
-using Microsoft.AspNetCore.Hosting.StaticWebAssets;
-using Microsoft.AspNetCore.StaticFiles.Infrastructure;
-using Microsoft.Extensions.FileProviders;
 using Universalis.Alerts;
 using Universalis.Application.Caching;
 using Universalis.Application.ExceptionFilters;
+using Universalis.Application.Realtime;
 using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Views.V1;
@@ -28,7 +26,6 @@ using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.GameData;
 using Universalis.Mogboard;
 using Universalis.Mogboard.WebUI;
-using Universalis.Mogboard.WebUI.Pages;
 
 namespace Universalis.Application;
 
@@ -52,6 +49,8 @@ public class Startup
 
         var cacheSize = int.Parse(Configuration["MarketCurrentDataCacheSize"]);
         services.AddSingleton<ICache<CurrentlyShownQuery, CurrentlyShownView>>(new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(cacheSize));
+
+        services.AddSingleton<ISocketProcessor, SocketProcessor>();
 
         services
             .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
@@ -172,7 +171,12 @@ public class Startup
 
             options.DocumentTitle = "Universalis Documentation";
         });
-        
+
+        app.UseWebSockets(new WebSocketOptions
+        {
+            KeepAliveInterval = TimeSpan.FromMinutes(2),
+        });
+
         app.UseStaticFiles();
 
         app.UseRouting();
