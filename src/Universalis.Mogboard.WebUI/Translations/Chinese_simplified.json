@@ -1,1 +1,2226 @@
-[]
+[
+    {
+        "term": "Market",
+        "definition": "\u5e02\u573a",
+        "context": "header_market",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "My Account",
+        "definition": "\u8d26\u53f7",
+        "context": "header_myaccount",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Login via Discord",
+        "definition": "\u901a\u8fc7 Discord \u767b\u5f55",
+        "context": "header_discordlogin",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "WEAPONS",
+        "definition": "\u6b66\u5668",
+        "context": "nav_weapons",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "ARMOR",
+        "definition": "\u88c5\u5907",
+        "context": "nav_armor",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "ITEMS",
+        "definition": "\u7269\u54c1",
+        "context": "nav_items",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "HOUSING",
+        "definition": "\u4f4f\u623f",
+        "context": "nav_housing",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "based on",
+        "definition": "\u57fa\u4e8e",
+        "context": "footer_basedon",
+        "term_plural": "",
+        "reference": "https:\/\/idioms.thefreedictionary.com\/based+on",
+        "comment": ""
+    },
+    {
+        "term": "About",
+        "definition": "\u5173\u4e8e",
+        "context": "footer_about",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "API Documentation",
+        "definition": "API \u6587\u6863",
+        "context": "footer_docs",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "GitHub",
+        "definition": "GitHub",
+        "context": "footer_github",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Discord",
+        "definition": "Discord",
+        "context": "generic_discord",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "FINAL FANTASY XIV \u00a9 2010 - 2020 SQUARE ENIX CO., LTD. All Rights Reserved.",
+        "definition": "FINAL FANTASY XIV \u00a9 2010 - 2020 SQUARE ENIX CO., LTD. All Rights Reserved.",
+        "context": "footer_license",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Final Fantasy XIV Online: Market Board aggregator. Find Prices, track Item History and create Price Alerts. Anywhere, anytime.",
+        "definition": "\u6700\u7ec8\u5e7b\u60f3XIV\uff1a\u5e02\u573a\u4ea4\u6613\u677f\u6574\u5408\u3002 \u67e5\u627e\u4ef7\u683c\uff0c\u8ddf\u8e2a\u5546\u54c1\u5386\u53f2\u8bb0\u5f55\u5e76\u521b\u5efa\u4ef7\u683c\u63d0\u9192\u3002 \u968f\u65f6\uff0c\u968f\u5730\u3002",
+        "context": "base_tabtitle",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Could not find the page you were looking for kupo~!",
+        "definition": "\u627e\u4e0d\u5230\u60a8\u8981\u7684\u9875\u9762\u5e93\u5575\uff01",
+        "context": "error_404_flavortext",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "404 Not Found",
+        "definition": "404 \u627e\u4e0d\u5230\u9875\u9762",
+        "context": "error_404",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Something went wrong",
+        "definition": "\u51fa\u4e86\u4e9b\u95ee\u9898",
+        "context": "error_generic_tabtitle",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Something went wrong!",
+        "definition": "\u51fa\u4e86\u4e9b\u95ee\u9898\uff01",
+        "context": "error_generic_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "A goat has been made aware of this problem and will be looking into it for you!",
+        "definition": "\u4e00\u53ea goat \u5df2\u7ecf\u6ce8\u610f\u5230\u4e86\u8fd9\u4e2a\u95ee\u9898\uff0c\u5e76\u5c06\u7740\u624b\u8c03\u67e5\u5b83\uff01",
+        "context": "error_generic_made_aware",
+        "term_plural": "",
+        "reference": "",
+        "comment": "goat is https:\/\/github.com\/goaaats, prefer not to translate dev names"
+    },
+    {
+        "term": "If you continue to run into this issue, please jump on the discord for help!",
+        "definition": "\u5982\u679c\u60a8\u4f9d\u7136\u9047\u5230\u6b64\u95ee\u9898\uff0c\u8bf7\u52a0\u5165 Discord \u5bfb\u6c42\u5e2e\u52a9\uff01",
+        "context": "error_generic_not_aware",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Market Activity",
+        "definition": "\u5e02\u573a\u6d3b\u52a8",
+        "context": "home_market_activity",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no alerts set up.",
+        "definition": "\u60a8\u6ca1\u6709\u8bbe\u7f6e\u4efb\u4f55\u63d0\u9192\u3002",
+        "context": "home_noalerts",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Lists",
+        "definition": "\u6e05\u5355",
+        "context": "generic_lists",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no lists.",
+        "definition": "\u60a8\u6ca1\u6709\u6e05\u5355\u3002",
+        "context": "home_nolists",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Retainers",
+        "definition": "\u96c7\u5458",
+        "context": "generic_retainers",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no retainers.",
+        "definition": "\u60a8\u6ca1\u6709\u96c7\u5458\u3002",
+        "context": "home_noretainers",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Logged-out",
+        "definition": "\u5c1a\u672a\u767b\u5f55",
+        "context": "home_logged_out",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Lists, Alerts, Market activity and retainer links will show here when you are logged into the site.",
+        "definition": "\u767b\u5f55\u4ee5\u4f7f\u7528\u6e05\u5355\u3001\u63d0\u9192\u3001\u5e02\u573a\u52a8\u6001\u4ee5\u53ca\u96c7\u5458\u7b49\u529f\u80fd\u3002",
+        "context": "home_logged_out_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Become a member!",
+        "definition": "\u6210\u4e3a\u4e00\u5458\uff01",
+        "context": "home_become_member",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Create alerts, make lists, add your retainers and get a personalised home page feed!",
+        "definition": "\u521b\u5efa\u63d0\u9192\uff0c\u751f\u6210\u6e05\u5355\uff0c\u6dfb\u52a0\u60a8\u7684\u96c7\u5458\u5e76\u4e2a\u6027\u5316\u60a8\u7684\u4e3b\u9875\u7b80\u4ecb\uff01",
+        "context": "home_become_member_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Login via <strong>Discord<\/strong>",
+        "definition": "\u901a\u8fc7 <strong>Discord<\/strong> \u767b\u5f55",
+        "context": "home_login_discord",
+        "term_plural": "",
+        "reference": "Don't translate HTML tags.",
+        "comment": ""
+    },
+    {
+        "term": "DISCORD",
+        "definition": "DISCORD",
+        "context": "discord_capitalized",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Recent Updates",
+        "definition": "\u6700\u8fd1\u66f4\u65b0",
+        "context": "home_recent_updates",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Upload Counts by World",
+        "definition": "\u5404\u670d\u52a1\u5668\u4e0a\u4f20\u6570",
+        "context": "home_upload_counts_world",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Uploads today",
+        "definition": "\u4eca\u65e5\u4e0a\u4f20",
+        "context": "home_uploads_today",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Uploads this week",
+        "definition": "\u672c\u5468\u4e0a\u4f20",
+        "context": "home_uploads_week",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Thank you!",
+        "definition": "\u611f\u8c22\u60a8\uff01",
+        "context": "thank_you",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Current Market Tax Rates on %s",
+        "definition": "\u5f53\u524d %s \u7684\u5e02\u573a\u7a0e\u7387",
+        "context": "home_current_tax_rates",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Watcher: ",
+        "definition": "\u89e6\u53d1\u5668\uff1a",
+        "context": "alert_watcher",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Last Triggered Event: %s",
+        "definition": "\u4e0a\u4e00\u4e2a\u89e6\u53d1\u7684\u4e8b\u4ef6\uff1a %s",
+        "context": "alert_last_triggered_event",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "This alert has no triggered events.",
+        "definition": "\u8be5\u63d0\u9192\u8fd8\u6ca1\u6709\u89e6\u53d1\u4e8b\u4ef6\u3002",
+        "context": "alert_no_triggered_events",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Click on the list title to view market information for this list.",
+        "definition": "\u5355\u51fb\u6e05\u5355\u6807\u9898\u4ee5\u67e5\u770b\u6b64\u6e05\u5355\u7684\u5e02\u573a\u4fe1\u606f\u3002",
+        "context": "list_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "%d items in this list",
+        "definition": "\u6b64\u6e05\u5355\u4e2d\u6709 %d \u4e2a\u7269\u54c1\u3002",
+        "context": "list_items_contained",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Welcome to Universalis!",
+        "definition": "\u6b22\u8fce\u6765\u5230 Universalis \uff01",
+        "context": "news_universalis_welcome",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Contribute to market board data",
+        "definition": "\u8d21\u732e\u5e02\u573a\u5e03\u544a\u677f\u6570\u636e",
+        "context": "news_contribute",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Thank you, and enjoy your stay!",
+        "definition": "\u8c22\u8c22\uff0c\u795d\u60a8\u73a9\u5f97\u6109\u5feb\uff01",
+        "context": "news_enjoy",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Universalis is a market board data site with crowd sourced information, based on mogboard. It can aggregate market board information from multiple sources, so if you want to help out, please check out our contributing page.",
+        "definition": "Universalis \u662f\u4e00\u4e2a\u5e02\u573a\u5e03\u544a\u677f\u6570\u636e\u7edf\u8ba1\u7ad9\uff0c\u5176\u4e2d\u5305\u542b\u57fa\u4e8e mogboard \u7684\u4f17\u591a\u6765\u6e90\u7684\u5e02\u573a\u6570\u636e\u3002 \u5b83\u53ef\u4ee5\u6c47\u603b\u6765\u81ea\u591a\u4e2a\u6765\u6e90\u7684\u5e02\u573a\u4ea4\u6613\u677f\u4fe1\u606f\uff0c\u56e0\u6b64\uff0c\u5982\u679c\u60a8\u60f3\u63d0\u4f9b\u5e2e\u52a9\uff0c\u8bf7\u67e5\u770b\u6211\u4eec\u7684\u201c\u8d21\u732e\u6570\u636e\u201d\u9875\u9762\u3002",
+        "context": "news_product_blurb",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Your Server",
+        "definition": "\u60a8\u7684\u670d\u52a1\u5668",
+        "context": "generic_your_server",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "- Please Choose a Server -",
+        "definition": "- \u8bf7\u9009\u62e9\u670d\u52a1\u5668 -",
+        "context": "option_choose_server_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Language",
+        "definition": "\u8bed\u8a00",
+        "context": "generic_language",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "- Choose your language -",
+        "definition": "- \u9009\u62e9\u60a8\u7684\u8bed\u8a00 -",
+        "context": "option_choose_language_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Timezone",
+        "definition": "\u65f6\u533a",
+        "context": "generic_timezone",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "- Choose your timezone -",
+        "definition": "- \u9009\u62e9\u60a8\u7684\u65f6\u533a -",
+        "context": "option_choose_timezone_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Left Navigation",
+        "definition": "\u5de6\u4fa7\u5bfc\u822a",
+        "context": "generic_left_navigation",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "This enables a quick-access left-navigation of all market categories.",
+        "definition": "\u8fd9\u5c06\u5f00\u542f\u53ef\u4ee5\u5feb\u901f\u8bbf\u95ee\u6240\u6709\u7269\u54c1\u5206\u7c7b\u7684\u5de6\u4fa7\u5bfc\u822a\u3002",
+        "context": "option_left_nav_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "No",
+        "definition": "\u5426",
+        "context": "generic_no",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Yes",
+        "definition": "\u662f",
+        "context": "generic_yes",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Save Settings",
+        "definition": "\u4fdd\u5b58\u8bbe\u7f6e",
+        "context": "option_save_settings",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Default Home World",
+        "definition": "\u539f\u59cb\u670d\u52a1\u5668",
+        "context": "generic_default_home_world",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "This will show prices\/history on your home world by default instead of cross-world.",
+        "definition": "\u9ed8\u8ba4\u60c5\u51b5\u4e0b\uff0c\u8fd9\u5c06\u663e\u793a\u60a8\u7684\u539f\u59cb\u670d\u52a1\u5668\u7684\u4ef7\u683c\/\u5386\u53f2\uff0c\u800c\u4e0d\u662f\u5176\u4ed6\u670d\u52a1\u5668\u7684\u4ef7\u683c\/\u5386\u53f2\u3002",
+        "context": "option_default_home_world_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "What is <strong>Universalis<\/strong>?",
+        "definition": "<strong>Universalis<\/strong> \u662f\u4ec0\u4e48\uff1f",
+        "context": "about_whatisthis_title",
+        "term_plural": "",
+        "reference": "Don't translate HTML tags.",
+        "comment": ""
+    },
+    {
+        "term": "The site allows you to view in-game market for multiple servers at anytime, anywhere. It uses crowd-sourced data from multiple sources to provide the most up-to-date prices possible.",
+        "definition": "\u8be5\u7ad9\u70b9\u4f7f\u60a8\u53ef\u4ee5\u968f\u65f6\u968f\u5730\u67e5\u770b\u5404\u670d\u52a1\u5668\u7684\u6e38\u620f\u5185\u5e02\u573a\u3002\u5b83\u4f7f\u7528\u4f17\u5305\u7684\u5f62\u5f0f\u4ece\u591a\u4e2a\u6765\u6e90\u83b7\u53d6\u6570\u636e\uff0c\u4ee5\u63d0\u4f9b\u5c3d\u53ef\u80fd\u6700\u65b0\u7684\u4ef7\u683c\u3002",
+        "context": "about_whatisthis_explanation_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "What information can I get?",
+        "definition": "\u6211\u53ef\u4ee5\u83b7\u5f97\u4ec0\u4e48\u4fe1\u606f\uff1f",
+        "context": "about_whatisthis_infoquestion",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "All market information is available: Prices, Materia, Retainer, Crafters and even Buyers. Everything that you see in-game is available. Additional data-views have been added such as graphs, extended history and cross-world summary is also included.",
+        "definition": "\u6240\u6709\u5e02\u573a\u4ea4\u6613\u677f\u4fe1\u606f\u90fd\u53ef\u83b7\u5f97\uff1a\u4ef7\u683c\uff0c\u9b54\u6676\u77f3\uff0c\u96c7\u5458\uff0c\u5236\u4f5c\u8005\u751a\u81f3\u4e70\u5bb6\u3002\u5305\u62ec\u60a8\u80fd\u5728\u6e38\u620f\u4e2d\u770b\u5230\u7684\u6240\u6709\u5185\u5bb9\u3002\u540c\u65f6\u4e5f\u5305\u542b\u4e86\u989d\u5916\u7684\u6570\u636e\u89c6\u56fe\uff0c\u4f8b\u5982\u4ef7\u683c\u66f2\u7ebf\uff0c\u5386\u53f2\u7684\u4ea4\u6613\u91cf\u548c\u8de8\u670d\u7684\u6458\u8981\u3002",
+        "context": "about_whatisthis_explanation_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Can I have access to the data?",
+        "definition": "\u6211\u80fd\u591f\u8bbf\u95ee\u6570\u636e\u5417\uff1f",
+        "context": "about_whatisthis_accessquestion",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "<strong>Definitely!<\/strong>\n<br><br>\nEverything you see on Universalis is open for anyone to use, to learn more about how to access the data using a REST API Service, check out the %s documentation.",
+        "definition": "<strong>\u5f53\u7136\u4e86\uff01<\/strong>\n<br><br>\n\u60a8\u5728 Universalis \u4e0a\u770b\u5230\u7684\u6240\u6709\u5185\u5bb9\u90fd\u5f00\u653e\u7ed9\u4efb\u4f55\u4eba\u4f7f\u7528\uff0c\u8981\u4e86\u89e3\u6709\u5173\u5982\u4f55\u4f7f\u7528 REST API \u670d\u52a1\u8bbf\u95ee\u6570\u636e\u7684\u66f4\u591a\u4fe1\u606f\uff0c\u8bf7\u67e5\u9605 %s \u6587\u6863\u3002",
+        "context": "about_whatisthis_explanation_3",
+        "term_plural": "",
+        "reference": "Don't translate HTML tags.",
+        "comment": ""
+    },
+    {
+        "term": "Special thanks",
+        "definition": "\u7279\u522b\u611f\u8c22",
+        "context": "generic_special_thanks",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "We would like to thank Vekien and Miu from %s for their initial work on mogboard, which made this site, in its current state, possible.",
+        "definition": "\u6211\u4eec\u8981\u7279\u522b\u611f\u8c22\u6765\u81ea\u4e8e %s \u7684 Vekien \u548c Miu\uff0c\u4ed6\u4eec\u5bf9 mogboard \u9879\u76ee\u7684\u4ed8\u51fa\u4f7f\u5f97\u8fd9\u4e2a\u7f51\u7ad9\u5f97\u4ee5\u5b58\u5728\u3002",
+        "context": "about_whatisthis_explanation_4",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "So, how does it actually work? Get Technical.",
+        "definition": "\u90a3\u4e48\uff0c\u5b83\u5b9e\u9645\u4e0a\u5982\u4f55\u5de5\u4f5c\uff1f \u6280\u672f\u7ec6\u8282\u3002",
+        "context": "about_get_technical_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "<strong>Universalis<\/strong> runs a REST API that applications can post market board data to, after they collect the data from a running game instance by multiple users, anonymously.",
+        "definition": "<strong>Universalis<\/strong> \u63d0\u4f9b\u4e00\u4e2a REST API \uff0c\u5e94\u7528\u7a0b\u5e8f\u53ef\u4ee5\u533f\u540d\u5730\u4ece\u591a\u7528\u6237\u6b63\u5728\u8fd0\u884c\u7684\u6e38\u620f\u4e2d\u6536\u96c6\u5e02\u573a\u4ea4\u6613\u677f\u6570\u636e\uff0c\u4e4b\u540e\u5c06\u5176\u4e0a\u4f20\u5230\u8be5API\u3002",
+        "context": "about_get_technical_explanation_1",
+        "term_plural": "",
+        "reference": "Don't translate HTML tags.",
+        "comment": ""
+    },
+    {
+        "term": "It stores this data, and reports it back to anyone that requests its endpoints - including this frontend, which visualizes the stored data and notifies you about changes.",
+        "definition": "\u5b83\u5b58\u50a8\u8fd9\u4e9b\u6570\u636e\uff0c\u5e76\u5c06\u5176\u62a5\u544a\u7ed9\u8bf7\u6c42\u5176\u540e\u7aef\u7684\u4efb\u4f55\u4eba\u2014\u2014\u5305\u62ec\u7f51\u9875\u524d\u7aef\uff0c\u524d\u7aef\u5c06\u53ef\u89c6\u5316\u5b58\u50a8\u7684\u6570\u636e\u5e76\u901a\u77e5\u60a8\u6709\u5173\u4fe1\u606f\u7684\u66f4\u6539\u3002",
+        "context": "about_get_technical_explanation_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Credits",
+        "definition": "\u81f4\u8c22",
+        "context": "generic_credits",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Database API, server maintenance",
+        "definition": "\u6570\u636e\u5e93API\uff0c\u670d\u52a1\u5668\u7ef4\u62a4",
+        "context": "karashiiro_credits",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Game stuff, stealing mogboard",
+        "definition": "\u6e38\u620f\u76f8\u5173\uff0c\u5077 mogboard \u4ee3\u7801",
+        "context": "goat_credits",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Also thanks to: Vekien, Miu, Mino and all of our uploaders!",
+        "definition": "\u989d\u5916\u81f4\u8c22\uff1aVekien\uff0cMiu\uff0cMino\u548c\u6240\u6709\u7684\u4e0a\u4f20\u8005\u5c0f\u53ef\u7231\u4eec\uff01",
+        "context": "about_honorable_mentions",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Game data sourced from <a href=\"%s\">XIVAPI<\/a> and <a href=\"%s\">FFCafe<\/a>",
+        "definition": "\u6e38\u620f\u6570\u636e\u6765\u81ea\u4e8e <a href=\"%s\">XIVAPI<\/a> \u4e0e <a href=\"%s\">FFCafe<\/a>",
+        "context": "about_data_sources",
+        "term_plural": "",
+        "reference": "Don't translate HTML tags.",
+        "comment": ""
+    },
+    {
+        "term": "I have more questions!",
+        "definition": "\u6211\u8fd8\u6709\u95ee\u9898\uff01",
+        "context": "about_more_questions",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Hop onto <a href=\"%s\">our Discord<\/a> and you can ask all your questions.",
+        "definition": "\u52a0\u5165 <a href=\"%s\">\u6211\u4eec\u7684Discord<\/a> \u60a8\u53ef\u4ee5\u63d0\u51fa\u6240\u6709\u7591\u95ee\u3002",
+        "context": "about_more_questions_directory",
+        "term_plural": "",
+        "reference": "Don't translate HTML tags.",
+        "comment": ""
+    },
+    {
+        "term": "You can also PM me: <span class=\"text-yellow\">%s<\/span> if you prefer :)",
+        "definition": "\u60a8\u4e5f\u53ef\u4ee5\u79c1\u804a\u6211\uff1a <span class=\"text-yellow\">%s<\/span> \u5982\u679c\u60a8\u613f\u610f\u7684\u8bdd :)",
+        "context": "about_pm_invite",
+        "term_plural": "",
+        "reference": "Don't translate HTML tags.",
+        "comment": ""
+    },
+    {
+        "term": "How to contribute to <strong>Universalis<\/strong>",
+        "definition": "\u5982\u4f55\u4e3a <strong>Universalis<\/strong> \u8d21\u732e\u6570\u636e",
+        "context": "contribute_howto_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "There are multiple ways to contribute to <strong>Universalis<\/strong>. All of your contributions are anonymous - no one will be able to refer back to your character or account to know that you have uploaded any data. The applications below are tested by us to make sure that they don't endanger your account or your characters.",
+        "definition": "<strong>Universalis<\/strong> \u6709\u591a\u79cd\u8d21\u732e\u65b9\u5f0f\u3002 \u60a8\u6240\u6709\u7684\u8d21\u732e\u90fd\u662f\u533f\u540d\u7684 \u2014\u2014 \u6ca1\u6709\u4eba\u80fd\u591f\u901a\u8fc7\u63a8\u6d4b\u60a8\u7684\u89d2\u8272\u6216\u5e10\u6237\u6765\u77e5\u9053\u60a8\u5df2\u4e0a\u4f20\u4efb\u4f55\u6570\u636e\u3002 \u6211\u4eec\u5df2\u5bf9\u4ee5\u4e0b\u5e94\u7528\u7a0b\u5e8f\u8fdb\u884c\u4e86\u6d4b\u8bd5\uff0c\u4ee5\u786e\u4fdd\u5b83\u4eec\u4e0d\u4f1a\u5371\u5bb3\u60a8\u7684\u5e10\u6237\u6216\u89d2\u8272\u3002",
+        "context": "contribute_howto_explanation_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Every contribution helps to make the data on <strong>Universalis<\/strong> better, more accurate and more helpful. Thank you very much for helping out!",
+        "definition": "\u6bcf\u4e00\u6b21\u8d21\u732e\u90fd\u4f1a\u4f7f <strong>Universalis<\/strong> \u4e0a\u7684\u6570\u636e\u66f4\u597d\uff0c\u66f4\u51c6\u786e\uff0c\u66f4\u6709\u7528\u3002 \u975e\u5e38\u611f\u8c22\u60a8\u7684\u5e2e\u52a9\uff01",
+        "context": "contribute_howto_explanation_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "In-Game addon",
+        "definition": "\u6e38\u620f\u63d2\u4ef6",
+        "context": "contribute_applicationkind_ingame_addon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "FFXIVQuickLauncher is a faster launcher for FFXIV  aims to fix the slowness and tediousness of the regular launcher and adds a lot of QoL features to the game.",
+        "definition": "FFXIVQuickLauncher\u662fFFXIV\u7684\u5feb\u901f\u542f\u52a8\u5668\uff0c\u65e8\u5728\u4fee\u590d\u5e38\u89c4\u542f\u52a8\u5668\u7684\u7f13\u6162\u6027\u548c\u4e4f\u5473\u6027\uff0c\u5e76\u4e3a\u6e38\u620f\u589e\u52a0\u4e86\u8bb8\u591aQoL\u529f\u80fd\u3002\u7531\u4e8e\u4e2d\u56fd\u670d\u52a1\u5668\u7684\u542f\u52a8\u8fc7\u7a0b\u88ab\u76db\u8da3\u9b54\u6539\uff0c\u76ee\u524d\u9700\u8981\u901a\u8fc7\u5176\u4ed6\u65b9\u5f0f\u5b9e\u73b0\u5176\u6846\u67b6Dalamud\u7684\u6e38\u620f\u5185\u529f\u80fd\u3002",
+        "context": "contribute_description_xivlauncher",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "This is a regular ACT plugin that runs next to the always-used FFXIV_ACT_PLUGIN - just drop it into your ACT plugins folder, add it to ACT and you\\'re good to go! No configuration needed.",
+        "definition": "\u8fd9\u662f\u4e00\u4e2a\u666e\u901a\u7684 ACT \u63d2\u4ef6\uff0c\u53ef\u4ee5\u548c\u89e3\u6790\u63d2\u4ef6\u4e00\u8d77\u8fd0\u884c\u2014\u2014\u53ea\u9700\u5c06\u5176\u653e\u5165 ACT \u63d2\u4ef6\u6587\u4ef6\u5939\u4e2d\uff0c\u7136\u540e\u5c06\u5176\u52a0\u8f7d\u5230 ACT \u4e2d\u5c31\u53ef\u4ee5\u4e86\uff01 \u65e0\u9700\u5176\u4ed6\u8bbe\u7f6e\u3002",
+        "context": "contribute_description_act_plugin",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "ACT plugin",
+        "definition": "ACT \u63d2\u4ef6",
+        "context": "contribute_applicationkind_act_plugin",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Collaborative crafting tool",
+        "definition": "\u534f\u540c\u751f\u4ea7\u5de5\u5177",
+        "context": "contribute_applicationkind_teamcraft",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "FFXIV Teamcraft is a tool for Final Fantasy XIV players that helps with crafting lists organization and crafting\/gathering in general. It has a lot of features to make it a one stop shop, with things like integrated alarms, custom items, permissions system, realtime sharing, etc.",
+        "definition": "FFXIV Teamcraft\u662f\u9002\u7528\u4e8e\u6700\u7ec8\u5e7b\u60f314\u73a9\u5bb6\u7684\u5de5\u5177\uff0c\u53ef\u5e2e\u52a9\u6574\u4f53\u751f\u4ea7\u6e05\u5355\u548c\u7ec4\u7ec7\/\u6536\u96c6\u3002 \u5b83\u5177\u6709\u8bb8\u591a\u529f\u80fd\uff0c\u4f7f\u5b83\u6210\u4e3a\u4e00\u7ad9\u5f0f\u5de5\u5177\uff0c\u5e76\u4e14\u96c6\u6210\u4e86\u63d0\u9192\uff0c\u81ea\u5b9a\u4e49\u9879\u76ee\uff0c\u6743\u9650\u7cfb\u7edf\uff0c\u5b9e\u65f6\u5171\u4eab\u7b49\u529f\u80fd\u3002",
+        "context": "contribute_description_teamcraft",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Are you making your own application?",
+        "definition": "\u60a8\u6b63\u5728\u5236\u4f5c\u81ea\u5df1\u7684\u5e94\u7528\u7a0b\u5e8f\u5417\uff1f",
+        "context": "contribute_invite_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "If you wish to contribute to <strong>Universalis<\/strong> with your own application, please contact us on our <a href=\"%s\">Discord<\/a>. Let\\'s work together!",
+        "definition": "\u5982\u679c\u60a8\u5e0c\u671b\u4f7f\u7528\u81ea\u5df1\u7684\u5e94\u7528\u7a0b\u5e8f\u4e3a <strong>Universalis<\/strong> \u505a\u51fa\u8d21\u732e\uff0c\u8bf7\u901a\u8fc7\u6211\u4eec\u7684 <a href=\"%s\">Discord<\/a> \u4e0e\u6211\u4eec\u8054\u7cfb\u3002\u4e00\u8d77\u641e\u4e8b\u5427\uff01",
+        "context": "contribute_invite_explanation",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Download",
+        "definition": "\u4e0b\u8f7d",
+        "context": "generic_download",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Name",
+        "definition": "\u540d\u79f0",
+        "context": "generic_name",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Actions",
+        "definition": "\u64cd\u4f5c",
+        "context": "generic_actions",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "HQ?",
+        "definition": "HQ?",
+        "context": "generic_hq_question",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "HQ",
+        "definition": "HQ",
+        "context": "generic_hq",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "NQ",
+        "definition": "NQ",
+        "context": "generic_nq",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Cross-World?",
+        "definition": "\u8de8\u670d?",
+        "context": "generic_crossworld_question",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Notification",
+        "definition": "\u63d0\u9192",
+        "context": "generic_notification",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Email",
+        "definition": "Email",
+        "context": "generic_email",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Sent",
+        "definition": "\u5df2\u53d1\u9001",
+        "context": "generic_sent",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Never",
+        "definition": "\u4ece\u4e0d",
+        "context": "generic_never",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Edit",
+        "definition": "\u7f16\u8f91",
+        "context": "generic_edit",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Delete",
+        "definition": "\u5220\u9664",
+        "context": "generic_delete",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no alerts for this item.",
+        "definition": "\u60a8\u5c1a\u672a\u5bf9\u6b64\u7269\u54c1\u8bbe\u7f6e\u63d0\u9192\u3002",
+        "context": "alerts_table_no_alerts",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "What\\'s an alert",
+        "definition": "\u201c\u63d0\u9192\u201d\u662f\u4ec0\u4e48\uff1f",
+        "context": "alerts_whatis_title",
+        "term_plural": "",
+        "reference": "There's a question mark after the phrase, but it's an image so don't include it here :V",
+        "comment": ""
+    },
+    {
+        "term": "You are currently maxed-out on alerts and will not be able to create any more.",
+        "definition": "\u60a8\u5df2\u8fbe\u5230\u6700\u5927\u63d0\u9192\u5bb9\u91cf\uff0c\u65e0\u6cd5\u5efa\u7acb\u65b0\u7684\u63d0\u9192\u3002",
+        "context": "alerts_maxed_out",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Create a new alert",
+        "definition": "\u521b\u5efa\u4e00\u4e2a\u65b0\u7684\u63d0\u9192",
+        "context": "alerts_create_alert_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Give your alert a name (length: 4-100)",
+        "definition": "\u7ed9\u60a8\u7684\u63d0\u9192\u8d77\u4e2a\u540d\u5b57\uff08\u957f\u5ea6\uff1a4-100\uff09",
+        "context": "alerts_create_alert_guide_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Decide if the trigger should check NQ\/HQ or both.",
+        "definition": "\u8bbe\u7f6e\u89e6\u53d1\u5668\u53ea\u76d1\u63a7 NQ \/ HQ \u6216\u8005\u90fd\u76d1\u63a7",
+        "context": "alerts_create_alert_guide_2",
+        "term_plural": "",
+        "reference": "Trigger, as in a trigger for an alert.",
+        "comment": ""
+    },
+    {
+        "term": "Normal Quality",
+        "definition": "\u666e\u901a\u54c1\u8d28",
+        "context": "generic_normal_quality",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "High-Quality",
+        "definition": "\u4f18\u8d28",
+        "context": "generic_high_quality",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Setup Triggers <strong>(Max: 15)<\/strong>",
+        "definition": "\u8bbe\u7f6e\u89e6\u53d1\u5668<strong>\uff08\u6700\u591a15\u4e2a\uff09<\/strong>",
+        "context": "alerts_create_alert_guide_3",
+        "term_plural": "",
+        "reference": "Trigger, as in a trigger for an alert.",
+        "comment": ""
+    },
+    {
+        "term": "Select a Field",
+        "definition": "\u9009\u62e9\u4e00\u9879",
+        "context": "alerts_create_alert_guide_4",
+        "term_plural": "",
+        "reference": "Field, as in definition 10 as described here: https:\/\/www.merriam-webster.com\/dictionary\/field",
+        "comment": ""
+    },
+    {
+        "term": "Select an Operator",
+        "definition": "\u9009\u62e9\u4e00\u4e2a\u6bd4\u8f83\u65b9\u5f0f",
+        "context": "alerts_create_alert_guide_5",
+        "term_plural": "",
+        "reference": "Operator, as in +-\/*&|",
+        "comment": ""
+    },
+    {
+        "term": "Add",
+        "definition": "\u6dfb\u52a0",
+        "context": "generic_add_to_list",
+        "term_plural": "",
+        "reference": "As in adding something to a list.",
+        "comment": ""
+    },
+    {
+        "term": "<span class=\"text-red\">NOTE:<\/span> The filter: <code>Price_Added<\/code> is a timestamp, it is NOT a Gil value. You can convert a date to a timestamp <a href=\"%s\" target=\"_blank\">here<\/a>, work is being done to improve this UI.",
+        "definition": "<span class=\"text-red\">\u6ce8\u610f\uff1a<\/span> \u8fc7\u6ee4\u5668\uff1a <code>Price_Added<\/code> \u662f\u4e00\u4e2a\u65f6\u95f4\u6233\uff0c\u800c\u4e0d\u662f\u4e00\u4e2a\u4ef7\u683c\u3002\u60a8\u53ef\u4ee5 <a href=\"%s\" target=\"_blank\">\u5728\u8fd9\u91cc<\/a> \u5c06\u4e00\u4e2a\u65f6\u95f4\u8f6c\u5316\u4e3a\u65f6\u95f4\u6233\u3002\u6b64\u5904UI\u6b63\u5728\u8003\u8651\u66f4\u7b80\u4fbf\u7684\u4ea4\u4e92\u3002",
+        "context": "alerts_create_alert_guide_6",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Trigger values are checked as a series of <strong>AND<\/strong> conditions.",
+        "definition": "\u8bbe\u7f6e\u7684\u89e6\u53d1\u5668\u6761\u4ef6<strong>\u5168\u90e8<\/strong>\u6ee1\u8db3\u65f6\u624d\u4f1a\u89e6\u53d1\u63d0\u9192\u3002",
+        "context": "alerts_create_alert_guide_7",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "How do you want to be notified?",
+        "definition": "\u60a8\u60f3\u901a\u8fc7\u4ec0\u4e48\u65b9\u5f0f\u88ab\u63d0\u9192\uff1f",
+        "context": "alerts_create_alert_how_notify",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Save Alert",
+        "definition": "\u4fdd\u5b58\u63d0\u9192",
+        "context": "alerts_save_alert",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You are currently editing an alert",
+        "definition": "\u60a8\u6b63\u5728\u7f16\u8f91\u4e00\u4e2a\u63d0\u9192",
+        "context": "alerts_currently_editing",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Reset the form and start a new alert",
+        "definition": "\u91cd\u7f6e\u8868\u5355\u5e76\u5f00\u59cb\u65b0\u7684\u63d0\u9192",
+        "context": "alerts_new_alert_tooltip",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "New Alert",
+        "definition": "\u65b0\u63d0\u9192",
+        "context": "alerts_new_alert",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Current alerts for: %s",
+        "definition": "\u5f53\u524d\u7684\u63d0\u9192\uff1a%s",
+        "context": "alerts_current_alerts_for",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Loading alerts...",
+        "definition": "\u5bfc\u5165\u63d0\u9192\u4e2d......",
+        "context": "alerts_loading",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "NOTE:",
+        "definition": "\u6ce8\u610f\uff1a",
+        "context": "generic_note_capitalized_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You must be in <a href=\"%s\" target=\"_blank\">our Discord server<\/a> to receive alerts.",
+        "definition": "\u60a8\u5fc5\u987b\u52a0\u5165<a href=\"%s\" target=\"_blank\">\u6211\u4eec\u7684Discord\u670d\u52a1\u5668<\/a>\u624d\u80fd\u6536\u5230\u63d0\u9192\u6d88\u606f\u3002",
+        "context": "alerts_in_discord_notice",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Keep in mind that alerts will only be fired when the item is updated by someone.",
+        "definition": "\u8bf7\u8bb0\u4f4f\uff0c\u4ec5\u5f53\u67d0\u4eba\u66f4\u65b0\u8be5\u7269\u54c1\u65f6\uff0c\u624d\u4f1a\u89e6\u53d1\u63d0\u9192\u3002",
+        "context": "alerts_only_updates_under_condition_notice",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You must be logged-in to create item alerts.",
+        "definition": "\u60a8\u5fc5\u987b\u767b\u5f55\u6765\u521b\u5efa\u7269\u54c1\u63d0\u9192\u3002",
+        "context": "alerts_must_be_logged_in",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Are you sure you wish to delete this alert?",
+        "definition": "\u60a8\u786e\u5b9a\u8981\u5220\u9664\u8fd9\u4e2a\u63d0\u9192\u5417\uff1f",
+        "context": "alerts_deletion_confirmation",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Yes I\\'m sure, delete it.",
+        "definition": "\u662f\u7684\uff0c\u6211\u786e\u5b9a\uff0c\u5220\u6389\u5b83\u5427\u3002",
+        "context": "generic_deletion_confirmation",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "What are alerts?",
+        "definition": "\u4ec0\u4e48\u662f\u201c\u63d0\u9192\u201d\uff1f",
+        "context": "alerts_whatisthis_guide_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alerts allow you to setup notification watchers that can track an item and send you information such as price changes or history events.",
+        "definition": "\u63d0\u9192\u4f7f\u60a8\u53ef\u4ee5\u8bbe\u7f6e\u901a\u77e5\u76d1\u63a7\uff0c\u4ee5\u76d1\u63a7\u67d0\u7269\u54c1\u5e76\u5411\u60a8\u53d1\u9001\u4ef7\u683c\u53d8\u5316\u6216\u5386\u53f2\u4e8b\u4ef6\u7b49\u4fe1\u606f\u7684\u63d0\u9192\u3002",
+        "context": "alerts_whatisthis_guide_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Triggers",
+        "definition": "\u89e6\u53d1\u5668",
+        "context": "generic_alert_trigger",
+        "term_plural": "",
+        "reference": "As in trigger for an alert.",
+        "comment": ""
+    },
+    {
+        "term": "<strong>Triggers<\/strong>, these are conditions you can set on the alert to be checked at interval times and if any market entry meets the criteria of the condition then your alert will be \"Triggered\" and you'll receive a notification either via Discord or Email.",
+        "definition": "<strong>\u89e6\u53d1\u5668<\/strong>\uff0c\u8fd9\u4e9b\u662f\u60a8\u53ef\u4ee5\u5728\u95f4\u9694\u65f6\u95f4\u8bbe\u7f6e\u7684\u63d0\u9192\u6761\u4ef6\uff0c\u5982\u679c\u6709\u4efb\u4f55\u5e02\u573a\u7684\u6761\u76ee\u7b26\u5408\u6761\u4ef6\uff0c\u5219\u63d0\u9192\u5c06\u88ab\u201c\u89e6\u53d1\u201d\uff0c\u5e76\u4e14\u60a8\u4f1a\u6536\u5230\u901a\u8fc7Discord\u6216Email\u53d1\u9001\u7684\u901a\u77e5\u3002",
+        "context": "alerts_whatisthis_guide_3",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Trigger conditions can be set against any market field and future plans will allow you to manage these dynamically as well as setup automatic triggers based on your retainers current sales.",
+        "definition": "\u53ef\u4ee5\u9488\u5bf9\u4efb\u4f55\u5e02\u573a\u6570\u636e\u5c5e\u6027\u8bbe\u7f6e\u89e6\u53d1\u6761\u4ef6\uff0c\u672a\u6765\u7684\u8ba1\u5212\u5c06\u4f7f\u60a8\u80fd\u591f\u52a8\u6001\u7ba1\u7406\u8fd9\u4e9b\u6761\u4ef6\uff0c\u5e76\u6839\u636e\u60a8\u96c7\u5458\u5f53\u524d\u7684\u9500\u552e\u60c5\u51b5\u8bbe\u7f6e\u81ea\u52a8\u89e6\u53d1\u3002",
+        "context": "alerts_whatisthis_guide_4",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Trigger Condition Information",
+        "definition": "\u89e6\u53d1\u6761\u4ef6\u4fe1\u606f",
+        "context": "alerts_trigger_condition_info_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "<strong>Prices\/History: Added<\/strong><br>\nThis is currently an Epoch Unix Timestamp. Work is being done to improve this.",
+        "definition": "<strong>Prices\/History: Added<\/strong><br>\n\u5f53\u524d\u662f\u4e00\u4e2aEpoch Unix\u65f6\u95f4\u6233\u3002 \u6b63\u5728\u52aa\u529b\u6539\u5584\u8fd9\u4e00\u70b9\u3002",
+        "context": "alerts_trigger_condition_info_guide_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "<strong>Prices\/History: \"IsXX\"<\/strong><br>\nThe Is condition triggers such as IsHQ are bools and the value must be either 1 or 0 for true \/ false.",
+        "definition": "<strong>Prices\/History: \"IsXX\"<\/strong><br>\nIs\u5f00\u5934\u7684\u6761\u4ef6\u89e6\u53d1\u5668\uff08\u4f8b\u5982IsHQ\uff09\u662f\u5e03\u5c14\u503c\uff0c\u5bf9\u4e8etrue\/false\uff0c\u503c\u5fc5\u987b\u4e3a1\u62160\u3002",
+        "context": "alerts_trigger_condition_info_guide_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "<strong>History:<\/strong><br>\nEvents for history will be based on entries added to the history after the event was created.",
+        "definition": "<strong>History:<\/strong><br>\n\u5386\u53f2\u4e8b\u4ef6\u5c06\u57fa\u4e8e\u521b\u5efa\u4e8b\u4ef6\u540e\u6dfb\u52a0\u5230\u5386\u53f2\u7684\u6761\u76ee\u3002",
+        "context": "alerts_trigger_condition_info_guide_3",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "If logged in and character verified, show if any friends have purchased this item.",
+        "definition": "\u5982\u679c\u5df2\u767b\u5f55\u5e76\u9a8c\u8bc1\u4e86\u89d2\u8272\uff0c\u663e\u793a\u662f\u5426\u6709\u4efb\u4f55\u597d\u53cb\u8d2d\u4e70\u4e86\u6b64\u7269\u54c1\u3002",
+        "context": "friends_guide_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "#",
+        "definition": "#",
+        "context": "generic_quantity_shorthand",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Item",
+        "definition": "\u7269\u54c1",
+        "context": "generic_item",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Server",
+        "definition": "\u670d\u52a1\u5668",
+        "context": "generic_server",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Price",
+        "definition": "\u4ef7\u683c",
+        "context": "generic_price",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "QTY",
+        "definition": "\u6570\u91cf",
+        "context": "generic_quantity_shorthand",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Total",
+        "definition": "\u603b\u8ba1",
+        "context": "generic_total",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "%Diff",
+        "definition": "%\u5dee\u5f02",
+        "context": "generic_percent_difference_shorthand",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Buyer",
+        "definition": "\u4e70\u5bb6",
+        "context": "generic_buyer",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Date",
+        "definition": "\u65e5\u671f",
+        "context": "generic_date",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Really rare!?",
+        "definition": "\u5341\u5206\u7a00\u6709\uff01\uff1f",
+        "context": "market_board_really_rare",
+        "term_plural": "",
+        "reference": "Shown if the item has no recorded sales, you can have fun with this.",
+        "comment": ""
+    },
+    {
+        "term": "There is currently no recorded history for this item on Universalis.",
+        "definition": "\u76ee\u524d\u5728Universalis\u4e0a\u6ca1\u6709\u6b64\u4ea7\u54c1\u7684\u8bb0\u5f55\u5386\u53f2\u3002",
+        "context": "market_board_no_recorded_history",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Stack:",
+        "definition": "\u6bcf\u7ec4\u4e2a\u6570\uff1a",
+        "context": "generic_stack_size_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Menu",
+        "definition": "\u83dc\u5355",
+        "context": "generic_menu",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Cross-World",
+        "definition": "\u8de8\u670d",
+        "context": "generic_cross_world",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alerts",
+        "definition": "\u63d0\u9192",
+        "context": "generic_alerts",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "(%s) Price Per Unit",
+        "definition": "(%s) \u5355\u4ef7",
+        "context": "market_board_ppu",
+        "term_plural": "",
+        "reference": "%s here is HQ\/NQ, using the existing translations for those.",
+        "comment": ""
+    },
+    {
+        "term": "(%s) Price Per Unit QUANTITY",
+        "definition": "(%s) \u5355\u4ef7\u6570\u91cf",
+        "context": "market_board_ppu_quantity",
+        "term_plural": "",
+        "reference": "%s here is High-Quality\/Normal Quality, using the existing translations for those.",
+        "comment": ""
+    },
+    {
+        "term": "STACK SIZE HISTOGRAM <small>Last 20 Sales<\/small>",
+        "definition": "\u7ec4\u6570\u76f4\u65b9\u56fe <small>\u6700\u8fd120\u6b21\u9500\u552e<\/small>",
+        "context": "market_board_stack_size_histogram_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Cheapest %s",
+        "definition": "%s \u6700\u4f4e\u4ef7",
+        "context": "market_board_cheapest_title",
+        "term_plural": "",
+        "reference": "Cheapest HQ\/Cheapest NQ",
+        "comment": ""
+    },
+    {
+        "term": "Server:",
+        "definition": "\u670d\u52a1\u5668\uff1a",
+        "context": "generic_server_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Total:",
+        "definition": "\u603b\u8ba1\uff1a",
+        "context": "generic_total_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "No %s for sale.",
+        "definition": "\u6ca1\u6709\u5728\u552e\u7684 %s \u3002",
+        "context": "market_board_none_for_sale",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Item has no HQ variant.",
+        "definition": "\u8be5\u7269\u54c1\u6ca1\u6709HQ\u7248\u672c\u3002",
+        "context": "market_board_no_hq_variant",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Cross-World Purchase history (500 sales)",
+        "definition": "\u8de8\u670d\u4ea4\u6613\u6570\u636e\uff08500\u6761\uff09",
+        "context": "market_board_purchase_history_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "(%s) PerUnit",
+        "definition": "(%s) \u6bcf\u4e2a",
+        "context": "generic_perunit",
+        "term_plural": "",
+        "reference": "As in price per unit.",
+        "comment": ""
+    },
+    {
+        "term": "(%s) PerUnit QUANTITY",
+        "definition": "(%s) \u6bcf\u4e2a\u6570\u91cf",
+        "context": "generic_perunit_quantity",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "%s Prices",
+        "definition": "%s \u4ef7\u683c",
+        "context": "generic_prices_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "%s Purchase History",
+        "definition": "%s \u4ea4\u6613\u5386\u53f2",
+        "context": "generic_purchase_history",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Avg. Per Unit",
+        "definition": "\u5e73\u5747\u6bcf\u4e2a",
+        "context": "market_board_avg_perunit",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Avg. Total",
+        "definition": "\u603b\u5e73\u5747",
+        "context": "market_board_avg_total",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Load Speed: %f",
+        "definition": "\u52a0\u8f7d\u65f6\u95f4\uff1a%f",
+        "context": "load_speed",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Purchasable from NPC Vendors",
+        "definition": "\u53ef\u4eceNPC\u5904\u8d2d\u4e70",
+        "context": "item_shops_purchasable_npc_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "As this item can be bought from NPCs for pure Gil, market information is not available.",
+        "definition": "\u9274\u4e8e\u8be5\u7269\u54c1\u53ef\u4ee5\u82b1\u91d1\u5e01\u4eceNPC\u5904\u8d2d\u4e70\uff0c\u5176\u5e02\u573a\u4fe1\u606f\u4e0d\u4f1a\u88ab\u6536\u96c6\u3002",
+        "context": "item_shops_purchasable_npc_explanation",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Gil",
+        "definition": "\u91d1\u5e01",
+        "context": "generic_gil",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Position unknown, go hunt for them!",
+        "definition": "\u4f4d\u7f6e\u672a\u77e5\uff0c\u53bb\u63a2\u7d22\u5427\uff01",
+        "context": "item_shops_purchasable_npc_not_found",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "X: <span class=\"text-yellow\">%f<\/span>",
+        "definition": "X: <span class=\"text-yellow\">%f<\/span>",
+        "context": "pos_x",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Y: <span class=\"text-yellow\">%f<\/span>",
+        "definition": "Y: <span class=\"text-yellow\">%f<\/span>",
+        "context": "pos_y",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Items:",
+        "definition": "\u7269\u54c1\uff1a",
+        "context": "generic_items_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no lists! <br> Create one by entering in a new name above.",
+        "definition": "\u60a8\u8fd8\u6ca1\u6709\u6e05\u5355\uff01<br>\u901a\u8fc7\u5728\u4e0a\u9762\u8f93\u5165\u65b0\u540d\u79f0\u6765\u521b\u5efa\u4e00\u4e2a\u3002",
+        "context": "lists_have_none",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You are not logged in. Login using Discord to create item lists.",
+        "definition": "\u60a8\u5c1a\u672a\u767b\u5f55\u3002\u4f7f\u7528Discord\u767b\u5f55\u4ee5\u521b\u5efa\u7269\u54c1\u6e05\u5355\u3002",
+        "context": "lists_logged_out",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Show on GarlandTools",
+        "definition": "GarlandTools\u4e2d\u663e\u793a",
+        "context": "ext_garlandtools",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Show on Teamcraft",
+        "definition": "Teamcraft\u4e2d\u663e\u793a",
+        "context": "ext_teamcraft",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Faved",
+        "definition": "\u5df2\u6536\u85cf",
+        "context": "generic_faved",
+        "term_plural": "",
+        "reference": "Slang of \"favorited\"",
+        "comment": ""
+    },
+    {
+        "term": "Favourite",
+        "definition": "\u6536\u85cf",
+        "context": "generic_favourite",
+        "term_plural": "",
+        "reference": "Verb",
+        "comment": ""
+    },
+    {
+        "term": "Add to list",
+        "definition": "\u6dfb\u52a0\u5230\u6e05\u5355",
+        "context": "lists_add_to_list",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Loading your item lists",
+        "definition": "\u8f7d\u5165\u7269\u54c1\u6e05\u5355",
+        "context": "lists_loading_lists",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have reached the maximum of 12 lists. You cannot create any more.",
+        "definition": "\u60a8\u5df2\u8fbe\u5230\u6700\u5927\u768412\u4e2a\u7269\u54c1\u6e05\u5355\uff0c\u65e0\u6cd5\u521b\u5efa\u65b0\u7684\u3002",
+        "context": "lists_limit_reached",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Option 1) Create a new list:",
+        "definition": "\u9009\u9879 1) \u521b\u5efa\u65b0\u6e05\u5355",
+        "context": "lists_option_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Option 2) Use an existing list:",
+        "definition": "\u9009\u9879 2) \u4f7f\u7528\u5df2\u5b58\u5728\u7684\u6e05\u5355",
+        "context": "lists_option_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "REMOVE",
+        "definition": "\u5220\u9664",
+        "context": "generic_remove_capitalized",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Sorry, no market data!",
+        "definition": "\u5bf9\u4e0d\u8d77\uff0c\u6ca1\u6709\u5e02\u573a\u6570\u636e\uff01",
+        "context": "no_market_data_title_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Universalis could not find any market data for this item on the server <strong>%s<\/strong>.",
+        "definition": "Universalis \u65e0\u6cd5\u5728\u627e\u5230\u670d\u52a1\u5668 %s \u4e2d\u8fd9\u4e2a\u7269\u54c1\u7684\u5e02\u573a\u6570\u636e\u3002",
+        "context": "no_market_data_explanation_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "There can be a few reasons for this, here are some:",
+        "definition": "\u8fd9\u53ef\u80fd\u7531\u4ee5\u4e0b\u7684\u51e0\u70b9\u539f\u56e0\u9020\u6210\uff1a",
+        "context": "no_market_data_title_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "%s is a brand new server",
+        "definition": "%s \u662f\u65b0\u670d\u52a1\u5668",
+        "context": "no_market_data_explanation_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "No one has contributed any information about this item yet",
+        "definition": "\u6ca1\u6709\u4eba\u7ed9\u8be5\u7269\u54c1\u4e0a\u4f20\u8fc7\u6570\u636e",
+        "context": "no_market_data_explanation_3",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Something broke",
+        "definition": "\u670d\u52a1\u51fa\u9519\u4e86",
+        "context": "no_market_data_explanation_4",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "If it is that last one, be sure to jump on <a href=\"%s\">Discord<\/a> and let us know!",
+        "definition": "\u5982\u679c\u662f\u6700\u540e\u4e00\u70b9\u539f\u56e0\uff0c\u8bf7\u52a0\u5165\u6211\u4eec\u7684 <a href=\"%s\">Discord<\/a> \u901a\u77e5\u6211\u4eec\uff01",
+        "context": "no_market_data_explanation_5",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "PRICES",
+        "definition": "\u4ef7\u683c",
+        "context": "generic_prices_capitalized",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Updated:",
+        "definition": "\u66f4\u65b0\u4e8e\uff1a",
+        "context": "generic_updated_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Mat",
+        "definition": "\u6750\u6599",
+        "context": "generic_material_shorthand",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Retainer",
+        "definition": "\u96c7\u5458",
+        "context": "generic_retainer",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Creator",
+        "definition": "\u5236\u4f5c\u8005",
+        "context": "generic_creator",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "No Listings",
+        "definition": "\u6ca1\u6709\u6e05\u5355",
+        "context": "generic_no_listings",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "There are no listings for this item, check back later!",
+        "definition": "\u8fd9\u4e2a\u7269\u54c1\u6ca1\u6709\u6e05\u5355\uff0c\u7b49\u4f1a\u513f\u518d\u6765\uff01",
+        "context": "prices_no_listings",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Special Shops",
+        "definition": "\u7279\u6b8a\u5546\u5e97",
+        "context": "special_shops_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Special Shop:",
+        "definition": "\u7279\u6b8a\u5546\u5e97\uff1a",
+        "context": "special_shop_title_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Cost",
+        "definition": "\u4ef7\u683c",
+        "context": "generic_cost",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Qty Received",
+        "definition": "\u6536\u5230\u7684\u6570\u91cf",
+        "context": "generic_qty_received",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Quantity",
+        "definition": "\u6570\u91cf",
+        "context": "generic_quantity",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Price Per Unit",
+        "definition": "\u5355\u4ef7",
+        "context": "generic_ppu",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Price Total",
+        "definition": "\u603b\u4ef7",
+        "context": "generic_price_total",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Gil Per Token",
+        "definition": "\u6bcf\u4e2a\u4ee3\u5e01\u7684\u4ef7\u683c",
+        "context": "generic_gil_per_token",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "None on the market board",
+        "definition": "\u5e02\u573a\u5e03\u544a\u677f\u4e2d\u6ca1\u6709\u6570\u636e",
+        "context": "shop_no_listings",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "CANNOT BE SOLD",
+        "definition": "\u65e0\u6cd5\u51fa\u552e",
+        "context": "generic_cannot_be_sold_capitalized",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "HQ:",
+        "definition": "HQ:",
+        "context": "generic_hq_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Account",
+        "definition": "\u8d26\u53f7",
+        "context": "generic_account",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Data Center",
+        "definition": "\u5927\u533a",
+        "context": "generic_data_center",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alert has not sent any notifications.",
+        "definition": "\u8be5\u63d0\u9192\u8fd8\u672a\u89e6\u53d1\u4efb\u4f55\u901a\u77e5",
+        "context": "alerts_none_sent",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You can add alerts on item pages.",
+        "definition": "\u60a8\u53ef\u4ee5\u5728\u7269\u54c1\u754c\u9762\u6dfb\u52a0\u63d0\u9192\u3002",
+        "context": "alerts_useraccount_guide_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Max: %d",
+        "definition": "\u6700\u5927\uff1a%d",
+        "context": "generic_max_quantity",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Events",
+        "definition": "\u4e8b\u4ef6",
+        "context": "generic_events",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Expires:",
+        "definition": "\u8fc7\u671f\uff1a",
+        "context": "generic_expires_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alert is active",
+        "definition": "\u63d0\u9192\u5df2\u542f\u7528",
+        "context": "alerts_is_active",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alert has been disabled.",
+        "definition": "\u63d0\u9192\u5df2\u7981\u7528\u3002",
+        "context": "alerts_is_inactive",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Information",
+        "definition": "\u4fe1\u606f",
+        "context": "generic_information",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Type",
+        "definition": "\u7c7b\u522b",
+        "context": "generic_type",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Sent Today",
+        "definition": "\u4eca\u65e5\u53d1\u9001",
+        "context": "generic_sent_today",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Last Sent",
+        "definition": "\u4e0a\u6b21\u53d1\u9001",
+        "context": "generic_last_sent",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "%d days",
+        "definition": "%s \u5929",
+        "context": "generic_n_days",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Max Alerts",
+        "definition": "\u6700\u5927\u63d0\u9192",
+        "context": "generic_max_alerts",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alert Expiry Time",
+        "definition": "\u63d0\u9192\u8fc7\u671f\u65f6\u95f4",
+        "context": "generic_alert_expiry_time",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alert Item Update",
+        "definition": "\u63d0\u9192\u7269\u54c1\u66f4\u65b0",
+        "context": "generic_alert_item_update",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alerts allow you to track all kinds of information about items on the market and be informed either by Discord or email for any changes that meet your requirements. To get started with creating alerts, go search for any item and then click on the Alert tab on the left.",
+        "definition": "\u63d0\u9192\u4f7f\u60a8\u53ef\u4ee5\u8ddf\u8e2a\u6709\u5173\u5e02\u573a\u4e0a\u7269\u54c1\u7684\u5404\u79cd\u4fe1\u606f\uff0c\u5e76\u901a\u8fc7Discord\u6216\u7535\u5b50\u90ae\u4ef6\u901a\u77e5\u4efb\u4f55\u7b26\u5408\u60a8\u8981\u6c42\u7684\u66f4\u6539\u3002 \u8981\u5f00\u59cb\u521b\u5efa\u63d0\u9192\uff0c\u8bf7\u5148\u641c\u7d22\u4efb\u4f55\u7269\u54c1\uff0c\u7136\u540e\u5355\u51fb\u5de6\u4fa7\u7684\u201c\u63d0\u9192\u201d\u9009\u9879\u5361\u3002",
+        "context": "alerts_useraccount_guide_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "<strong>Alert Expiration:<\/strong> To keep the system clean, alerts will expire after a set amount of time from when they were created. To refresh a notification you must return to Universalis and be logged in.",
+        "definition": "<strong>\u63d0\u9192\u8fc7\u671f\uff1a<\/strong>\u4e3a\u4e86\u4fdd\u6301\u7cfb\u7edf\u6e05\u6d01\uff0c\u63d0\u9192\u5c06\u5728\u521b\u5efa\u540e\u7684\u4e00\u6bb5\u6307\u5b9a\u65f6\u95f4\u540e\u8fc7\u671f\u3002 \u8981\u5237\u65b0\u901a\u77e5\uff0c\u60a8\u5fc5\u987b\u8fd4\u56deUniversalis\u5e76\u767b\u5f55\u3002",
+        "context": "alerts_useraccount_guide_3",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You can create: <strong class=\"text-green\">%d<\/strong> alerts with an expiry time of: <strong class=\"text-green\">%d days<\/strong>.",
+        "definition": "\u60a8\u53ef\u4ee5\u521b\u5efa\uff1a<strong class=\"text-green\">%d<\/strong>\u4e2a\u63d0\u9192\uff0c\u5176\u5230\u671f\u65f6\u95f4\u4e3a\uff1a<strong class=\"text-green\">%d\u5929<\/strong>\u3002",
+        "context": "alerts_useraccount_quota",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Reports",
+        "definition": "\u62a5\u544a",
+        "context": "generic_reports",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Characters",
+        "definition": "\u89d2\u8272",
+        "context": "generic_characters",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Set character as MAIN.",
+        "definition": "\u8bbe\u5b9a\u89d2\u8272\u4e3a\u4e3b\u8981\u89d2\u8272\u3002",
+        "context": "characters_set_main",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no characters, why not add one below!",
+        "definition": "\u60a8\u6ca1\u6709\u58f0\u660e\u89d2\u8272\uff0c\u5feb\u6765\u6dfb\u52a0\u4e00\u4e2a\uff01",
+        "context": "characters_no_characters",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Add a new character",
+        "definition": "\u6dfb\u52a0\u89d2\u8272",
+        "context": "characters_add_new_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "AUTH CODE: %s",
+        "definition": "\u8ba4\u8bc1\u7801\uff1a%s",
+        "context": "characters_auth_code",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "To add a new character, you must first add your verification code. <strong>Please add your MAIN character first<\/strong>.",
+        "definition": "\u8981\u6dfb\u52a0\u65b0\u5b57\u7b26\uff0c\u60a8\u5fc5\u987b\u9996\u5148\u6dfb\u52a0\u8ba4\u8bc1\u7801\u3002 <strong>\u8bf7\u5148\u6dfb\u52a0\u60a8\u7684\u4e3b\u8981\u89d2\u8272<\/strong>\u3002",
+        "context": "characters_guide_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "selected",
+        "definition": "\u5df2\u9009\u62e9",
+        "context": "generic_selected",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Search",
+        "definition": "\u641c\u7d22",
+        "context": "generic_search",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Name, ID, or Lodestone URL",
+        "definition": "\u59d3\u540d\uff0cID\uff0c\u6216 Lodestone \u5730\u5740",
+        "context": "generic_name_id_lodestone_url",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Go to Lodestone and Login with your character. Then <a href=\"%s\">click here to edit your profile<\/a>.",
+        "definition": "\u8f6c\u5230 Lodestone \u5e76\u4f7f\u7528\u60a8\u7684\u89d2\u8272\u767b\u5f55\u3002 \u7136\u540e<a href=\"%s\">\u5355\u51fb\u6b64\u5904\u7f16\u8f91\u60a8\u7684\u4e2a\u4eba\u8d44\u6599<\/a>\u3002",
+        "context": "characters_guide_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "In the text box, enter in your <strong>AUTH CODE<\/strong>, then click on Confirm (twice).",
+        "definition": "\u5728\u6587\u672c\u6846\u4e2d\uff0c\u8f93\u5165\u60a8\u7684<strong>\u8ba4\u8bc1\u7801<\/strong>\uff0c\u7136\u540e\u5355\u51fb\u201c\u786e\u8ba4\u201d\uff08\u4e24\u6b21\uff09\u3002",
+        "context": "characters_guide_3",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Hop back to Universalis and fill in the form below. The site will search for your character and confirm your auth code.",
+        "definition": "\u8df3\u56de Universalis \u5e76\u586b\u5199\u4ee5\u4e0b\u8868\u683c\u3002 \u8be5\u7ad9\u70b9\u5c06\u641c\u7d22\u60a8\u7684\u89d2\u8272\u5e76\u786e\u8ba4\u60a8\u7684\u8eab\u4efd\u8ba4\u8bc1\u7801\u3002",
+        "context": "characters_guide_4",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Logout",
+        "definition": "\u767b\u51fa",
+        "context": "generic_logout",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Oops!",
+        "definition": "\u554a\u54e6\uff01",
+        "context": "generic_oops",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You must be logged in to view this area.",
+        "definition": "\u60a8\u5fc5\u987b\u767b\u5f55\u4ee5\u67e5\u770b\u6b64\u533a\u57df\u3002",
+        "context": "useraccount_index_logged_out_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You can <a href=\"%s\">login via Discord<\/a> to get that juicy access!",
+        "definition": "\u60a8\u53ef\u4ee5<a href=\"%s\">\u4f7f\u7528 Discord \u767b\u5f55<\/a> \uff0c\u7b80\u5355\u800c\u4fbf\u6377\uff01",
+        "context": "useraccount_index_logged_out_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Delete List",
+        "definition": "\u5220\u9664\u6e05\u5355",
+        "context": "generic_delete_list",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no lists, visit some items and create some!",
+        "definition": "\u60a8\u6ca1\u6709\u521b\u5efa\u6e05\u5355\uff0c\u8bbf\u95ee\u4e00\u4e9b\u7269\u54c1\u754c\u9762\u5e76\u521b\u5efa\u4e00\u4e9b\uff01",
+        "context": "useraccount_lists_no_lists",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Custom Universalis list by %s",
+        "definition": "%s \u7684\u81ea\u5b9a\u4e49 Universalis \u6e05\u5355",
+        "context": "userlist_tab_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "List",
+        "definition": "\u6e05\u5355",
+        "context": "generic_list",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no items in this list.",
+        "definition": "\u6b64\u6e05\u5355\u4e2d\u6ca1\u6709\u7269\u54c1",
+        "context": "userlists_no_items",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "LIST",
+        "definition": "\u6e05\u5355",
+        "context": "generic_list_capitalized",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Show Cross-World",
+        "definition": "\u663e\u793a\u8de8\u670d",
+        "context": "generic_show_cross_world",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "%d \/ %d items",
+        "definition": "%d \/ %d \u4e2a\u7269\u54c1",
+        "context": "n_of_m_items",
+        "term_plural": "",
+        "reference": "Like current\/max items.",
+        "comment": ""
+    },
+    {
+        "term": "Show Home Server Only",
+        "definition": "\u53ea\u663e\u793a\u4e3b\u670d\u52a1\u5668",
+        "context": "generic_show_home_server_only",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Remove item from list",
+        "definition": "\u4ece\u6e05\u5355\u4e2d\u5220\u9664\u7269\u54c1",
+        "context": "userlists_remove_item_tooltip",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Top 5 cheapest - Total for sale: %d",
+        "definition": "5\u4e2a\u6700\u4f4e\u4ef7\u2014\u2014\u5728\u552e\u603b\u4ef7\uff1a%d",
+        "context": "userlists_top_5_sale",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Last 5 sales",
+        "definition": "\u8fc7\u53bb5\u6b21\u552e\u5356",
+        "context": "generic_last_5_sales",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Last updated:",
+        "definition": "\u4e0a\u6b21\u66f4\u65b0\uff1a",
+        "context": "generic_last_updated_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Market info could not be fetched for: %s at this time.",
+        "definition": "%s \u7684\u5e02\u573a\u4fe1\u606f\u6682\u65f6\u65e0\u6cd5\u88ab\u83b7\u53d6\u3002",
+        "context": "userlists_fetch_failed_for_item",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "If you are playing on chinese server(other servers are not supported), you can use Matcha plugin provided by FFCAFE which have built-in Universalis integration. Matcha also provides a overlay to show price information from Universalis.",
+        "definition": "\u5982\u679c\u60a8\u5728\u56fd\u670d\uff0c\u5219\u53ef\u4ee5\u4f7f\u7528 FFCafe \u63d0\u4f9b\u7684\u62b9\u8336 Matcha \u63d2\u4ef6\uff0c\u8be5\u63d2\u4ef6\u652f\u6301\u9009\u62e9\u81ea\u52a8\u5411 Universalist \u4e0a\u62a5\u6570\u636e\u3002 \u62b9\u8336 Matcha \u8fd8\u63d0\u4f9b\u4e86\u4e00\u4e2a\u60ac\u6d6e\u7a97\u53ef\u4ee5\u5b9e\u65f6\u67e5\u770b\u6765\u81ea Universalis \u7684\u4ef7\u683c\u4fe1\u606f\u3002",
+        "context": "contribute_description_matcha",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "No data",
+        "definition": "\u65e0\u6570\u636e",
+        "context": "generic_no_data",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Not Sellable",
+        "definition": "\u4e0d\u53ef\u51fa\u552e",
+        "context": "generic_not_sellable",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Cannot be sold",
+        "definition": "\u5f53\u524d\u7248\u672c\u65e0\u6cd5\u51fa\u552e",
+        "context": "generic_cannot_be_sold",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Recently Viewed",
+        "definition": null,
+        "context": "user_list_recently_viewed",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Favourites",
+        "definition": null,
+        "context": "user_list_favourites",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Should the alert check the whole Data Center?",
+        "definition": null,
+        "context": "alerts_create_alert_guide_6",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Check entire Data Center",
+        "definition": null,
+        "context": "alerts_create_alert_guide_7",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Rename List",
+        "definition": null,
+        "context": "lists_rename_list",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Rename",
+        "definition": null,
+        "context": "generic_rename",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Sales",
+        "definition": null,
+        "context": "sales_label",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Listings",
+        "definition": null,
+        "context": "listings_label",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    }
+]
