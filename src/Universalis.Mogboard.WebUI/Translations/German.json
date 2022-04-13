@@ -1,1 +1,2226 @@
-[]
+[
+    {
+        "term": "Market",
+        "definition": "Marktbrett",
+        "context": "header_market",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "My Account",
+        "definition": "Mein Account",
+        "context": "header_myaccount",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Login via Discord",
+        "definition": "Mit Discord einloggen",
+        "context": "header_discordlogin",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "WEAPONS",
+        "definition": "WAFFEN",
+        "context": "nav_weapons",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "ARMOR",
+        "definition": "R\u00dcSTUNG",
+        "context": "nav_armor",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "ITEMS",
+        "definition": "ITEMS",
+        "context": "nav_items",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "HOUSING",
+        "definition": "H\u00e4userbau",
+        "context": "nav_housing",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "based on",
+        "definition": "basierend auf",
+        "context": "footer_basedon",
+        "term_plural": "",
+        "reference": "https:\/\/idioms.thefreedictionary.com\/based+on",
+        "comment": ""
+    },
+    {
+        "term": "About",
+        "definition": "Impressum",
+        "context": "footer_about",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "API Documentation",
+        "definition": "API Dokumentation",
+        "context": "footer_docs",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "GitHub",
+        "definition": "GitHub",
+        "context": "footer_github",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Discord",
+        "definition": "Discord",
+        "context": "generic_discord",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "FINAL FANTASY XIV \u00a9 2010 - 2020 SQUARE ENIX CO., LTD. All Rights Reserved.",
+        "definition": "FINAL FANTASY XIV \u00a9 2010 - 2020 SQUARE ENIX CO., LTD. Alle Rechte vorbehalten.",
+        "context": "footer_license",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Final Fantasy XIV Online: Market Board aggregator. Find Prices, track Item History and create Price Alerts. Anywhere, anytime.",
+        "definition": "Final Fantasy XIV Online: Marktbrett-Infos. Finde Preise, verfolge Items \u00fcber Zeit und erstelle Benachrichtigungen. \u00dcberall, zu jeder Zeit.",
+        "context": "base_tabtitle",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Could not find the page you were looking for kupo~!",
+        "definition": "Konnte diese Seite nicht finden, kupo~!",
+        "context": "error_404_flavortext",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "404 Not Found",
+        "definition": "404 Nicht Gefunden",
+        "context": "error_404",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Something went wrong",
+        "definition": "Etwas ist schief gelaufen",
+        "context": "error_generic_tabtitle",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Something went wrong!",
+        "definition": "Etwas ist schief gelaufen!",
+        "context": "error_generic_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "A goat has been made aware of this problem and will be looking into it for you!",
+        "definition": "Ein Entwickler wurde \u00fcber dieses Problem benachrichtigt und wird es \u00fcberpr\u00fcfen.",
+        "context": "error_generic_made_aware",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "If you continue to run into this issue, please jump on the discord for help!",
+        "definition": "Wenn dieses Problem weiterhin auftritt, melde dich bitte auf unserem Discord-Server.",
+        "context": "error_generic_not_aware",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Market Activity",
+        "definition": "Markt-Aktivit\u00e4t",
+        "context": "home_market_activity",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no alerts set up.",
+        "definition": "Kein Alarm aktiviert.",
+        "context": "home_noalerts",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Lists",
+        "definition": "Listen",
+        "context": "generic_lists",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no lists.",
+        "definition": "Du hast keine Listen.",
+        "context": "home_nolists",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Retainers",
+        "definition": "Gehilfen",
+        "context": "generic_retainers",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no retainers.",
+        "definition": "Du hast keine Gehilfen.",
+        "context": "home_noretainers",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Logged-out",
+        "definition": "Ausgeloggt",
+        "context": "home_logged_out",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Lists, Alerts, Market activity and retainer links will show here when you are logged into the site.",
+        "definition": "Listen, Alarme, Marktaktivit\u00e4ten und Gehilfenlinks werden hier angezeigt, wenn du eingeloggt bist.",
+        "context": "home_logged_out_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Become a member!",
+        "definition": "Werde Mitglied!",
+        "context": "home_become_member",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Create alerts, make lists, add your retainers and get a personalised home page feed!",
+        "definition": "F\u00fcge deine Gehilfen hinzu, erstelle Alarme, Listen und deine eigene Markt\u00fcbersicht.",
+        "context": "home_become_member_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Login via <strong>Discord<\/strong>",
+        "definition": "Mit <strong>Discord<\/strong> einloggen ",
+        "context": "home_login_discord",
+        "term_plural": "",
+        "reference": "Don't translate HTML tags.",
+        "comment": ""
+    },
+    {
+        "term": "DISCORD",
+        "definition": "DISCORD",
+        "context": "discord_capitalized",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Recent Updates",
+        "definition": "Letzte Updates",
+        "context": "home_recent_updates",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Upload Counts by World",
+        "definition": "Aktualisierungen nach Welt",
+        "context": "home_upload_counts_world",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Uploads today",
+        "definition": "Aktualisierungen heute",
+        "context": "home_uploads_today",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Uploads this week",
+        "definition": "Aktualisierungen diese Woche",
+        "context": "home_uploads_week",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Thank you!",
+        "definition": "Danke!",
+        "context": "thank_you",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Current Market Tax Rates on %s",
+        "definition": "Aktuelle Marktsteuer in %s",
+        "context": "home_current_tax_rates",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Watcher: ",
+        "definition": "Alarm",
+        "context": "alert_watcher",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Last Triggered Event: %s",
+        "definition": "Letzter ausgel\u00f6ster Alarm: %s",
+        "context": "alert_last_triggered_event",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "This alert has no triggered events.",
+        "definition": "Dieser Alarm hat noch keinen Ausl\u00f6ser.",
+        "context": "alert_no_triggered_events",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Click on the list title to view market information for this list.",
+        "definition": "Klicke auf den Listennamen um Marktinformationen f\u00fcr diese Liste abzurufen.",
+        "context": "list_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "%d items in this list",
+        "definition": "%d Gegenst\u00e4nde auf der Liste",
+        "context": "list_items_contained",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Welcome to Universalis!",
+        "definition": "Willkommen bei Universalis!",
+        "context": "news_universalis_welcome",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Contribute to market board data",
+        "definition": "Marktinformationen beitragen",
+        "context": "news_contribute",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Thank you, and enjoy your stay!",
+        "definition": "Danke, genie\u00df deinen Aufenthalt!",
+        "context": "news_enjoy",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Universalis is a market board data site with crowd sourced information, based on mogboard. It can aggregate market board information from multiple sources, so if you want to help out, please check out our contributing page.",
+        "definition": "Universalis ist eine auf Nutzerdaten und Mogboard basierende Marktinformationsseite. Es werden Daten aus unterschiedlichen Quellen genutzt. Um mitzuhelfen, schau gerne auf der Seite \"Mitmachen\" vorbei.",
+        "context": "news_product_blurb",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Your Server",
+        "definition": "Deine Welt",
+        "context": "generic_your_server",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "- Please Choose a Server -",
+        "definition": "- Bitte w\u00e4hle eine Welt - ",
+        "context": "option_choose_server_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Language",
+        "definition": "Sprache",
+        "context": "generic_language",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "- Choose your language -",
+        "definition": "- W\u00e4hle deine Sprache - ",
+        "context": "option_choose_language_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Timezone",
+        "definition": "Zeitzone",
+        "context": "generic_timezone",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "- Choose your timezone -",
+        "definition": "- W\u00e4hle deine Zeitzone -",
+        "context": "option_choose_timezone_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Left Navigation",
+        "definition": "Linke Navigationsleiste",
+        "context": "generic_left_navigation",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "This enables a quick-access left-navigation of all market categories.",
+        "definition": "Dies aktiviert eine Navigationsleiste f\u00fcr alle Markt-Kategorien.",
+        "context": "option_left_nav_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "No",
+        "definition": "Nein",
+        "context": "generic_no",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Yes",
+        "definition": "Ja",
+        "context": "generic_yes",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Save Settings",
+        "definition": "Speichere Einstellungen",
+        "context": "option_save_settings",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Default Home World",
+        "definition": "Standard Heimat Welt",
+        "context": "generic_default_home_world",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "This will show prices\/history on your home world by default instead of cross-world.",
+        "definition": "Dies zeigt den Preisverlauf deiner Heimatwelt, anstatt welten\u00fcbergreifend.",
+        "context": "option_default_home_world_guide",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "What is <strong>Universalis<\/strong>?",
+        "definition": "Was ist <strong>Universalis<\/strong>?",
+        "context": "about_whatisthis_title",
+        "term_plural": "",
+        "reference": "Don't translate HTML tags.",
+        "comment": ""
+    },
+    {
+        "term": "The site allows you to view in-game market for multiple servers at anytime, anywhere. It uses crowd-sourced data from multiple sources to provide the most up-to-date prices possible.",
+        "definition": "Diese Seite erlaube es dir das Marktbrett verschiedener Sever jederzeit und \u00fcberall einzusehen. XXX Missin grest",
+        "context": "about_whatisthis_explanation_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "What information can I get?",
+        "definition": "Welche Informationen gibt es?",
+        "context": "about_whatisthis_infoquestion",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "All market information is available: Prices, Materia, Retainer, Crafters and even Buyers. Everything that you see in-game is available. Additional data-views have been added such as graphs, extended history and cross-world summary is also included.",
+        "definition": "Alle Marktinformationen sind verf\u00fcgbar: Preise, Materia, Gehilfen, Handwerker und sogar K\u00e4ufer. Alles was du im Spielst siehst ist hier. Zus\u00e4tzliche Datenansichten wurden erstellt, zum Beispiel Diagramme, erweiterte Kaufhistorie und welten\u00fcbergreifende Zusammenfassungen.",
+        "context": "about_whatisthis_explanation_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Can I have access to the data?",
+        "definition": "Sind die Daten \u00f6ffentlich?",
+        "context": "about_whatisthis_accessquestion",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "<strong>Definitely!<\/strong>\n<br><br>\nEverything you see on Universalis is open for anyone to use, to learn more about how to access the data using a REST API Service, check out the %s documentation.",
+        "definition": "<strong>Auf jeden Fall!<\/strong>\n<br><br>\nAlles was du auf Unversalis sieht ist f\u00fcr jedermann offen und nutzbar. Wenn du mehr \u00fcber die API erfahren m\u00f6chtest, schau doch in der %s Dokumentation nach.",
+        "context": "about_whatisthis_explanation_3",
+        "term_plural": "",
+        "reference": "Don't translate HTML tags.",
+        "comment": ""
+    },
+    {
+        "term": "Special thanks",
+        "definition": "Besonderer Dank",
+        "context": "generic_special_thanks",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "We would like to thank Vekien and Miu from %s for their initial work on mogboard, which made this site, in its current state, possible.",
+        "definition": "Wir m\u00f6chten uns besonders bei Vekien und Miu aus %s, f\u00fcr ihre Unterst\u00fctzung bei MogBoard bedanken, welches diese Seite in ihrer jetzigen Form erst m\u00f6glich gemacht hat.",
+        "context": "about_whatisthis_explanation_4",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "So, how does it actually work? Get Technical.",
+        "definition": "Also, wie funktioniert das eigentlich?",
+        "context": "about_get_technical_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "<strong>Universalis<\/strong> runs a REST API that applications can post market board data to, after they collect the data from a running game instance by multiple users, anonymously.",
+        "definition": "<strong>Universalis<\/strong> hat eine API, die mit Marktdaten von vielen \nSpielern aus dem laufendem Spiel, anonym gef\u00fcttert wird.",
+        "context": "about_get_technical_explanation_1",
+        "term_plural": "",
+        "reference": "Don't translate HTML tags.",
+        "comment": ""
+    },
+    {
+        "term": "It stores this data, and reports it back to anyone that requests its endpoints - including this frontend, which visualizes the stored data and notifies you about changes.",
+        "definition": "Es speichert die Daten und sendet sie and jeden der sie abfragt - auch an diese Seite hier, die Daten visualisiert und dich \u00fcber \u00c4nderungen benachrichtigt.",
+        "context": "about_get_technical_explanation_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Credits",
+        "definition": "Impressum",
+        "context": "generic_credits",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Database API, server maintenance",
+        "definition": "Datenkbank API, Serverwartung",
+        "context": "karashiiro_credits",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Game stuff, stealing mogboard",
+        "definition": "Spielbezogenes, Umsetzung von MogBoard",
+        "context": "goat_credits",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Also thanks to: Vekien, Miu, Mino and all of our uploaders!",
+        "definition": "Vielen Dank an: Vekien, Miu, Mino und an alle flei\u00dfigen Unterst\u00fctzer.",
+        "context": "about_honorable_mentions",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Game data sourced from <a href=\"%s\">XIVAPI<\/a> and <a href=\"%s\">FFCafe<\/a>",
+        "definition": "Die Spieldaten kommen von <a href=\"%s\">XIVAPI<\/a> und <a href=\"%s\">FFCafe<\/a> ",
+        "context": "about_data_sources",
+        "term_plural": "",
+        "reference": "Don't translate HTML tags.",
+        "comment": ""
+    },
+    {
+        "term": "I have more questions!",
+        "definition": "Ich habe noch Fragen!",
+        "context": "about_more_questions",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Hop onto <a href=\"%s\">our Discord<\/a> and you can ask all your questions.",
+        "definition": "Schau einfach auf <a href=\"%s\">unserem Discord<\/a> vorbei, und stell all deine Fragen.",
+        "context": "about_more_questions_directory",
+        "term_plural": "",
+        "reference": "Don't translate HTML tags.",
+        "comment": ""
+    },
+    {
+        "term": "You can also PM me: <span class=\"text-yellow\">%s<\/span> if you prefer :)",
+        "definition": "Du kannst mir nat\u00fcrlich auch pers\u00f6nlich schreiben: <span class=\"text-yellow\">%s<\/span>, wenn du das bevorzugst :)",
+        "context": "about_pm_invite",
+        "term_plural": "",
+        "reference": "Don't translate HTML tags.",
+        "comment": ""
+    },
+    {
+        "term": "How to contribute to <strong>Universalis<\/strong>",
+        "definition": "Wie du bei <strong>Universalis<\/strong> mithelfen kannst.",
+        "context": "contribute_howto_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "There are multiple ways to contribute to <strong>Universalis<\/strong>. All of your contributions are anonymous - no one will be able to refer back to your character or account to know that you have uploaded any data. The applications below are tested by us to make sure that they don't endanger your account or your characters.",
+        "definition": "Es gibt viele M\u00f6glichkeiten wie du bei <strong>Universalis<\/strong> mitmachen kannst. Alle Daten werden anonym ausgewertet. Es kann also keiner R\u00fcckschl\u00fcsse auf deine Charaktere oder deinen Account ziehen. Die Anwendungen unten sind alle getestet, um sicher zu stellen, dass sie deine Charaktere und deinen Account nicht gef\u00e4hrden.",
+        "context": "contribute_howto_explanation_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Every contribution helps to make the data on <strong>Universalis<\/strong> better, more accurate and more helpful. Thank you very much for helping out!",
+        "definition": "Jeder Beitrags hilft uns die Daten auf <strong>Universalis<\/strong> beser, genauer und hilfreicher zu gestalten. Vielen Dank f\u00fcr deine Mithilfe!",
+        "context": "contribute_howto_explanation_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "In-Game addon",
+        "definition": "In-Game Addon",
+        "context": "contribute_applicationkind_ingame_addon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "FFXIVQuickLauncher is a faster launcher for FFXIV  aims to fix the slowness and tediousness of the regular launcher and adds a lot of QoL features to the game.",
+        "definition": "FFXIVQuickLauncher ist ein schnellerer Launcher f\u00fcr FFXIV. Er zielt darauf ab die Tr\u00e4gheit und Umst\u00e4ndlichkeit des normalen Launchers zu beheben, und bringt zus\u00e4tzlich noch viele praktische Features mit.",
+        "context": "contribute_description_xivlauncher",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "This is a regular ACT plugin that runs next to the always-used FFXIV_ACT_PLUGIN - just drop it into your ACT plugins folder, add it to ACT and you\\'re good to go! No configuration needed.",
+        "definition": "Dieses Plugin ist ein normales ACT Plugin, das normal neben dem FFXIV_ACT_PLUGIN l\u00e4uft. Installiere es einfach in deinem Plugin Ordner und f\u00fcge es ACT hinzu. Du brauchst keine weiteren Einstellungen!",
+        "context": "contribute_description_act_plugin",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "ACT plugin",
+        "definition": "ACT Plugin",
+        "context": "contribute_applicationkind_act_plugin",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Collaborative crafting tool",
+        "definition": "Gemeinschaftliches Handwerkstool",
+        "context": "contribute_applicationkind_teamcraft",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "FFXIV Teamcraft is a tool for Final Fantasy XIV players that helps with crafting lists organization and crafting\/gathering in general. It has a lot of features to make it a one stop shop, with things like integrated alarms, custom items, permissions system, realtime sharing, etc.",
+        "definition": "FFXIV Teamcraft ist nein n\u00fctzliches Tool f\u00fcr FF14, dass Spielern bei Handwerksberufen und ",
+        "context": "contribute_description_teamcraft",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Are you making your own application?",
+        "definition": "Machst du eine eigene Anwendung?",
+        "context": "contribute_invite_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "If you wish to contribute to <strong>Universalis<\/strong> with your own application, please contact us on our <a href=\"%s\">Discord<\/a>. Let\\'s work together!",
+        "definition": "Wenn du bei <strong>Universalis<\/strong> mit deiner eigenen Anwendung mit machen m\u00f6chtest, kontaktiere uns doch bitte auf unserem <a href=\"%s\">Discord<\/a. Lass uns zusammen arbeiten!",
+        "context": "contribute_invite_explanation",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Download",
+        "definition": "Herunterladen",
+        "context": "generic_download",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Name",
+        "definition": "Name",
+        "context": "generic_name",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Actions",
+        "definition": "Aktionen",
+        "context": "generic_actions",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "HQ?",
+        "definition": "HQ?",
+        "context": "generic_hq_question",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "HQ",
+        "definition": "HQ",
+        "context": "generic_hq",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "NQ",
+        "definition": "NQ",
+        "context": "generic_nq",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Cross-World?",
+        "definition": "Welten\u00fcbergreifend?",
+        "context": "generic_crossworld_question",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Notification",
+        "definition": "Benachrichtigung",
+        "context": "generic_notification",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Email",
+        "definition": "Email",
+        "context": "generic_email",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Sent",
+        "definition": "Gesendet",
+        "context": "generic_sent",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Never",
+        "definition": "Niemals",
+        "context": "generic_never",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Edit",
+        "definition": "Bearbeiten",
+        "context": "generic_edit",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Delete",
+        "definition": "L\u00f6schen",
+        "context": "generic_delete",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no alerts for this item.",
+        "definition": "Du hast keine Alarme f\u00fcr diesen Gegenstand.",
+        "context": "alerts_table_no_alerts",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "What\\'s an alert",
+        "definition": "Was ist ein Alarm?",
+        "context": "alerts_whatis_title",
+        "term_plural": "",
+        "reference": "There's a question mark after the phrase, but it's an image so don't include it here :V",
+        "comment": ""
+    },
+    {
+        "term": "You are currently maxed-out on alerts and will not be able to create any more.",
+        "definition": "Du hast die maximale Anzahl an Alarmen erreicht und kannst keine neuen erstellen.",
+        "context": "alerts_maxed_out",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Create a new alert",
+        "definition": "Erstelle einen neuen Alarm.",
+        "context": "alerts_create_alert_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Give your alert a name (length: 4-100)",
+        "definition": "Gib deinem Alarm einen Namen (L\u00e4nge 4-100)",
+        "context": "alerts_create_alert_guide_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Decide if the trigger should check NQ\/HQ or both.",
+        "definition": "Entscheide ob der Alarm bei NQ\/HQ, oder beidem ausgel\u00f6st werden soll.",
+        "context": "alerts_create_alert_guide_2",
+        "term_plural": "",
+        "reference": "Trigger, as in a trigger for an alert.",
+        "comment": ""
+    },
+    {
+        "term": "Normal Quality",
+        "definition": "Normale Qualit\u00e4t",
+        "context": "generic_normal_quality",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "High-Quality",
+        "definition": "Hohe Qualit\u00e4t",
+        "context": "generic_high_quality",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Setup Triggers <strong>(Max: 15)<\/strong>",
+        "definition": "Ausl\u00f6ser einstellen <strong>(Max: 15)<\/strong>",
+        "context": "alerts_create_alert_guide_3",
+        "term_plural": "",
+        "reference": "Trigger, as in a trigger for an alert.",
+        "comment": ""
+    },
+    {
+        "term": "Select a Field",
+        "definition": "W\u00e4hle ein Feld",
+        "context": "alerts_create_alert_guide_4",
+        "term_plural": "",
+        "reference": "Field, as in definition 10 as described here: https:\/\/www.merriam-webster.com\/dictionary\/field",
+        "comment": ""
+    },
+    {
+        "term": "Select an Operator",
+        "definition": "W\u00e4hle einen Operator",
+        "context": "alerts_create_alert_guide_5",
+        "term_plural": "",
+        "reference": "Operator, as in +-\/*&|",
+        "comment": ""
+    },
+    {
+        "term": "Add",
+        "definition": "Hinzuf\u00fcgen",
+        "context": "generic_add_to_list",
+        "term_plural": "",
+        "reference": "As in adding something to a list.",
+        "comment": ""
+    },
+    {
+        "term": "<span class=\"text-red\">NOTE:<\/span> The filter: <code>Price_Added<\/code> is a timestamp, it is NOT a Gil value. You can convert a date to a timestamp <a href=\"%s\" target=\"_blank\">here<\/a>, work is being done to improve this UI.",
+        "definition": "<span class=\"text-red\">BEACHTE:<\/span> Filter: <code>Preis hinzugef\u00fcgt<\/code> Ist ein Datum, kein Gil Wert. Du kannst ein Datum in einen Zeitpunkt umwandeln <a href=\"%s\" target=\"_blank\">here<\/a>, es wird daran gearbeitet das Interface zu verbessern.",
+        "context": "alerts_create_alert_guide_6",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Trigger values are checked as a series of <strong>AND<\/strong> conditions.",
+        "definition": "Erf\u00fclle <strong>ALLE<\/strong> Bedingungen um den Alarm auszul\u00f6sen.",
+        "context": "alerts_create_alert_guide_7",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "How do you want to be notified?",
+        "definition": "Wie willst du benachrichtigt werden?",
+        "context": "alerts_create_alert_how_notify",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Save Alert",
+        "definition": "Speichere Alarm",
+        "context": "alerts_save_alert",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You are currently editing an alert",
+        "definition": "Du bearbeitest gerade einen Alarm.",
+        "context": "alerts_currently_editing",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Reset the form and start a new alert",
+        "definition": "Zur\u00fccksetzen und neuen Alarm starten",
+        "context": "alerts_new_alert_tooltip",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "New Alert",
+        "definition": "Neuer Alarm",
+        "context": "alerts_new_alert",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Current alerts for: %s",
+        "definition": "Neuer Alarm f\u00fcr: %s",
+        "context": "alerts_current_alerts_for",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Loading alerts...",
+        "definition": "Alarme werden geladen...",
+        "context": "alerts_loading",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "NOTE:",
+        "definition": "Notiz:",
+        "context": "generic_note_capitalized_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You must be in <a href=\"%s\" target=\"_blank\">our Discord server<\/a> to receive alerts.",
+        "definition": "Du musst auf <a href=\"%s\" target=\"_blank\">unserem Discordserver<\/a> sein, um Alarmnachrichten zu erhalten.",
+        "context": "alerts_in_discord_notice",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Keep in mind that alerts will only be fired when the item is updated by someone.",
+        "definition": "Denk daran, dass ein Alarm nur ausgel\u00f6st wird, wenn ein IGegenstand von jemandem aktualisiert wird.",
+        "context": "alerts_only_updates_under_condition_notice",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You must be logged-in to create item alerts.",
+        "definition": "Du musst eingelogggt sein um Alarme zu erstellen.",
+        "context": "alerts_must_be_logged_in",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Are you sure you wish to delete this alert?",
+        "definition": "M\u00f6chtest du diesen Alarm wirklich l\u00f6schen?",
+        "context": "alerts_deletion_confirmation",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Yes I\\'m sure, delete it.",
+        "definition": "Ja, bitte l\u00f6schen.",
+        "context": "generic_deletion_confirmation",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "What are alerts?",
+        "definition": "Was sind Alarme?",
+        "context": "alerts_whatisthis_guide_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alerts allow you to setup notification watchers that can track an item and send you information such as price changes or history events.",
+        "definition": "Alarme erlauben es dir Benachrichtigungen zu erhalten, wenn sich zum Beispiel der Preis eines Items \u00e4ndert.",
+        "context": "alerts_whatisthis_guide_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Triggers",
+        "definition": "Ausl\u00f6ser",
+        "context": "generic_alert_trigger",
+        "term_plural": "",
+        "reference": "As in trigger for an alert.",
+        "comment": ""
+    },
+    {
+        "term": "<strong>Triggers<\/strong>, these are conditions you can set on the alert to be checked at interval times and if any market entry meets the criteria of the condition then your alert will be \"Triggered\" and you'll receive a notification either via Discord or Email.",
+        "definition": "<strong>Ausl\u00f6ser<\/strong>, diese Bedingungen kannst du unter Alarme einstellen und benachrichtigt dich sobald ein Markteintrag diese erf\u00fcllt. Du kannst dich via Discord oder per Email dar\u00fcber informieren lassen.",
+        "context": "alerts_whatisthis_guide_3",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Trigger conditions can be set against any market field and future plans will allow you to manage these dynamically as well as setup automatic triggers based on your retainers current sales.",
+        "definition": "Ausl\u00f6sebedingungen k\u00f6nnen \u00fcberall, und in Zukunft sogar dynamisch genutzt werden. Es wird m\u00f6glich sein diese auch anhand der Verk\u00e4ufe deiner Gehilfen anzupassen.",
+        "context": "alerts_whatisthis_guide_4",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Trigger Condition Information",
+        "definition": "Ausl\u00f6sebedingung",
+        "context": "alerts_trigger_condition_info_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "<strong>Prices\/History: Added<\/strong><br>\nThis is currently an Epoch Unix Timestamp. Work is being done to improve this.",
+        "definition": "<strong>Preis\/Verlauf: hinzugef\u00fcgt<\/strong><br> Dies ist im Moment ein Epoch Unix Zeitstempel. Wir arbeiten an der Verbesserung.",
+        "context": "alerts_trigger_condition_info_guide_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "<strong>Prices\/History: \"IsXX\"<\/strong><br>\nThe Is condition triggers such as IsHQ are bools and the value must be either 1 or 0 for true \/ false.",
+        "definition": "<strong> Preise\/Verlauf: \"IsXX\"<\/strong><br>\nDiese Bedingung setzt den Wert von IsHQ auf 0 oder 1 (true \/ false), wie eine Boolean.",
+        "context": "alerts_trigger_condition_info_guide_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "<strong>History:<\/strong><br>\nEvents for history will be based on entries added to the history after the event was created.",
+        "definition": "<strong>Verlauf:<\/strong><br>\nDer Verlauf beachtet alle Eintr\u00e4ge, die nach dem erstellen get\u00e4tigt werden.",
+        "context": "alerts_trigger_condition_info_guide_3",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "If logged in and character verified, show if any friends have purchased this item.",
+        "definition": "Zeigt Freunde die das Item gekauft haben an, wenn du eingeloggt bist und deinen Charakter verifiziert hast.",
+        "context": "friends_guide_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "#",
+        "definition": "#",
+        "context": "generic_quantity_shorthand",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Item",
+        "definition": "Gegenstand",
+        "context": "generic_item",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Server",
+        "definition": "Welt",
+        "context": "generic_server",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Price",
+        "definition": "Preis",
+        "context": "generic_price",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "QTY",
+        "definition": "STK",
+        "context": "generic_quantity_shorthand",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Total",
+        "definition": "Gesamt",
+        "context": "generic_total",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "%Diff",
+        "definition": "%Diff",
+        "context": "generic_percent_difference_shorthand",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Buyer",
+        "definition": "K\u00e4ufer",
+        "context": "generic_buyer",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Date",
+        "definition": "Datum",
+        "context": "generic_date",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Really rare!?",
+        "definition": "Sehr selten!?",
+        "context": "market_board_really_rare",
+        "term_plural": "",
+        "reference": "Shown if the item has no recorded sales, you can have fun with this.",
+        "comment": ""
+    },
+    {
+        "term": "There is currently no recorded history for this item on Universalis.",
+        "definition": "Es gibt im moment noch keine Daten f\u00fcr dieses Item auf Universalis.",
+        "context": "market_board_no_recorded_history",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Stack:",
+        "definition": "Stapel:",
+        "context": "generic_stack_size_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Menu",
+        "definition": "Men\u00fc",
+        "context": "generic_menu",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Cross-World",
+        "definition": "Welten\u00fcbergreifend",
+        "context": "generic_cross_world",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alerts",
+        "definition": "Alarme",
+        "context": "generic_alerts",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "(%s) Price Per Unit",
+        "definition": "(%s) Preis pro St\u00fcck",
+        "context": "market_board_ppu",
+        "term_plural": "",
+        "reference": "%s here is HQ\/NQ, using the existing translations for those.",
+        "comment": ""
+    },
+    {
+        "term": "(%s) Price Per Unit QUANTITY",
+        "definition": "(%s) Preis pro St\u00fcck ST\u00dcCKZAHL",
+        "context": "market_board_ppu_quantity",
+        "term_plural": "",
+        "reference": "%s here is High-Quality\/Normal Quality, using the existing translations for those.",
+        "comment": ""
+    },
+    {
+        "term": "STACK SIZE HISTOGRAM <small>Last 20 Sales<\/small>",
+        "definition": "Stapelgr\u00f6\u00dfen-Verteilung <small>Letzte 20 Verk\u00e4ufe<\/small>",
+        "context": "market_board_stack_size_histogram_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Cheapest %s",
+        "definition": "Billigste %s",
+        "context": "market_board_cheapest_title",
+        "term_plural": "",
+        "reference": "Cheapest HQ\/Cheapest NQ",
+        "comment": ""
+    },
+    {
+        "term": "Server:",
+        "definition": "Server:",
+        "context": "generic_server_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Total:",
+        "definition": "Gesamt:",
+        "context": "generic_total_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "No %s for sale.",
+        "definition": "Keine %s zum Verkauf.",
+        "context": "market_board_none_for_sale",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Item has no HQ variant.",
+        "definition": "Der Gegenstand hat keine HQ Variante.",
+        "context": "market_board_no_hq_variant",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Cross-World Purchase history (500 sales)",
+        "definition": "Welten\u00fcbergreifender Kaufverlauf (500 Verk\u00e4ufe)",
+        "context": "market_board_purchase_history_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "(%s) PerUnit",
+        "definition": "(%s) Pro St\u00fcck",
+        "context": "generic_perunit",
+        "term_plural": "",
+        "reference": "As in price per unit.",
+        "comment": ""
+    },
+    {
+        "term": "(%s) PerUnit QUANTITY",
+        "definition": "(%s) Pro St\u00fcck ST\u00dcCKZAHL",
+        "context": "generic_perunit_quantity",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "%s Prices",
+        "definition": "%s Preise",
+        "context": "generic_prices_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "%s Purchase History",
+        "definition": "%s Kaufverlauf",
+        "context": "generic_purchase_history",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Avg. Per Unit",
+        "definition": "Durchschnitt pro Einheit",
+        "context": "market_board_avg_perunit",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Avg. Total",
+        "definition": "Durchschnitt Gesamt",
+        "context": "market_board_avg_total",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Load Speed: %f",
+        "definition": "Ladegeschwindigkeit: %f",
+        "context": "load_speed",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Purchasable from NPC Vendors",
+        "definition": "Von NPC Verk\u00e4ufern erh\u00e4ltlich",
+        "context": "item_shops_purchasable_npc_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "As this item can be bought from NPCs for pure Gil, market information is not available.",
+        "definition": "Da dieses Item von NPCs f\u00fcr Gil gekauft werden kann, gibt es keine Marktinformationen.",
+        "context": "item_shops_purchasable_npc_explanation",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Gil",
+        "definition": "Gil",
+        "context": "generic_gil",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Position unknown, go hunt for them!",
+        "definition": "Position unbekannt, finde sie!",
+        "context": "item_shops_purchasable_npc_not_found",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "X: <span class=\"text-yellow\">%f<\/span>",
+        "definition": "X: <span class=\"text-yellow\">%f<\/span>",
+        "context": "pos_x",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Y: <span class=\"text-yellow\">%f<\/span>",
+        "definition": "Y: <span class=\"text-yellow\">%f<\/span> ",
+        "context": "pos_y",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Items:",
+        "definition": "Gegenst\u00e4nde:",
+        "context": "generic_items_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no lists! <br> Create one by entering in a new name above.",
+        "definition": "Du hast noch keine Listen!  <br> Erstelle eine indem du einen euen Namen oben eingibst.",
+        "context": "lists_have_none",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You are not logged in. Login using Discord to create item lists.",
+        "definition": "Du bist nicht eingeloggt. Logge dich mit Discord ein um Item Listen zu erstellen.",
+        "context": "lists_logged_out",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Show on GarlandTools",
+        "definition": "Zeige auf GarlanTools",
+        "context": "ext_garlandtools",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Show on Teamcraft",
+        "definition": "Zeige auf Teamcraft",
+        "context": "ext_teamcraft",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Faved",
+        "definition": "Favorisiert",
+        "context": "generic_faved",
+        "term_plural": "",
+        "reference": "Slang of \"favorited\"",
+        "comment": ""
+    },
+    {
+        "term": "Favourite",
+        "definition": "Favoriten",
+        "context": "generic_favourite",
+        "term_plural": "",
+        "reference": "Verb",
+        "comment": ""
+    },
+    {
+        "term": "Add to list",
+        "definition": "Der Liste hinzuf\u00fcgen",
+        "context": "lists_add_to_list",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Loading your item lists",
+        "definition": "Laden der Item Listen",
+        "context": "lists_loading_lists",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have reached the maximum of 12 lists. You cannot create any more.",
+        "definition": "Du hast bereits das Maximum von 12 Listen erreicht. Mehr kannst du nicht erstellen.",
+        "context": "lists_limit_reached",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Option 1) Create a new list:",
+        "definition": "Option 1) Erstelle eine neue Liste:",
+        "context": "lists_option_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Option 2) Use an existing list:",
+        "definition": "Option 2) Nutze eine vorhandene Liste:",
+        "context": "lists_option_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "REMOVE",
+        "definition": "ENTFERNEN",
+        "context": "generic_remove_capitalized",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Sorry, no market data!",
+        "definition": "Sorry, keine Marktdaten!",
+        "context": "no_market_data_title_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Universalis could not find any market data for this item on the server <strong>%s<\/strong>.",
+        "definition": "Universalis konnte keine Marktinformationen f\u00fcr diesen Gegenstand auf dem Server <strong>%s<\/strong> finden.",
+        "context": "no_market_data_explanation_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "There can be a few reasons for this, here are some:",
+        "definition": "Daf\u00fcr kann es einige Gr\u00fcnde geben, zum Beispiel:",
+        "context": "no_market_data_title_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "%s is a brand new server",
+        "definition": "%s ist ein neuer Server",
+        "context": "no_market_data_explanation_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "No one has contributed any information about this item yet",
+        "definition": "Zu diesem Gegenstand wurde noch keine Informationen beigetragen.",
+        "context": "no_market_data_explanation_3",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Something broke",
+        "definition": "Etwas ist schief gelaufen!",
+        "context": "no_market_data_explanation_4",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "If it is that last one, be sure to jump on <a href=\"%s\">Discord<\/a> and let us know!",
+        "definition": "Wenn es das letzte ist, schau doch auf unserem <a href=\"%s\">Discord<\/a> vorbei und sag uns Bescheid!",
+        "context": "no_market_data_explanation_5",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "PRICES",
+        "definition": "PREISE",
+        "context": "generic_prices_capitalized",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Updated:",
+        "definition": "letzte Aktualisierung:",
+        "context": "generic_updated_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Mat",
+        "definition": "Mat",
+        "context": "generic_material_shorthand",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Retainer",
+        "definition": "Gehilfe",
+        "context": "generic_retainer",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Creator",
+        "definition": "Ersteller",
+        "context": "generic_creator",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "No Listings",
+        "definition": "Keine Eintr\u00e4ge",
+        "context": "generic_no_listings",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "There are no listings for this item, check back later!",
+        "definition": "Es gibt keine Eintr\u00e4ge f\u00fcr diesen Gegenstand. Schau sp\u00e4ter noch einmal vorbei!",
+        "context": "prices_no_listings",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Special Shops",
+        "definition": "Spezialverk\u00e4ufer",
+        "context": "special_shops_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Special Shop:",
+        "definition": "Spezialverk\u00e4ufer:",
+        "context": "special_shop_title_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Cost",
+        "definition": "Kosten",
+        "context": "generic_cost",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Qty Received",
+        "definition": "Stk erhalten",
+        "context": "generic_qty_received",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Quantity",
+        "definition": "Anzahl",
+        "context": "generic_quantity",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Price Per Unit",
+        "definition": "Preis pro St\u00fcck",
+        "context": "generic_ppu",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Price Total",
+        "definition": "Preis Gesamt",
+        "context": "generic_price_total",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Gil Per Token",
+        "definition": "Gil pro Token",
+        "context": "generic_gil_per_token",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "None on the market board",
+        "definition": "Keine Verf\u00fcgbar",
+        "context": "shop_no_listings",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "CANNOT BE SOLD",
+        "definition": "KANN NICHT VERKAUFT WERDEN",
+        "context": "generic_cannot_be_sold_capitalized",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "HQ:",
+        "definition": "HQ:",
+        "context": "generic_hq_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Account",
+        "definition": "Account",
+        "context": "generic_account",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Data Center",
+        "definition": "Datenzentrum",
+        "context": "generic_data_center",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alert has not sent any notifications.",
+        "definition": "Alarm hat keine Benachrichtigungen geschickt.",
+        "context": "alerts_none_sent",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You can add alerts on item pages.",
+        "definition": "Du kannst Alarme auf den Gegenstandsseiten hinzuf\u00fcgen.",
+        "context": "alerts_useraccount_guide_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Max: %d",
+        "definition": "Max: %d",
+        "context": "generic_max_quantity",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Events",
+        "definition": "Events",
+        "context": "generic_events",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Expires:",
+        "definition": "L\u00e4uft aus:",
+        "context": "generic_expires_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alert is active",
+        "definition": "Alarm ist aktiv",
+        "context": "alerts_is_active",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alert has been disabled.",
+        "definition": "Alarm wurde deaktiviert.",
+        "context": "alerts_is_inactive",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Information",
+        "definition": "Informationen",
+        "context": "generic_information",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Type",
+        "definition": "Typ",
+        "context": "generic_type",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Sent Today",
+        "definition": "Heute gesendet",
+        "context": "generic_sent_today",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Last Sent",
+        "definition": "Zuletzt gesendet",
+        "context": "generic_last_sent",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "%d days",
+        "definition": "%d Tage",
+        "context": "generic_n_days",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Max Alerts",
+        "definition": "Max Alarme",
+        "context": "generic_max_alerts",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alert Expiry Time",
+        "definition": "Alarm Auslaufzeit",
+        "context": "generic_alert_expiry_time",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alert Item Update",
+        "definition": "Alarm Gegenstandsupdate",
+        "context": "generic_alert_item_update",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Alerts allow you to track all kinds of information about items on the market and be informed either by Discord or email for any changes that meet your requirements. To get started with creating alerts, go search for any item and then click on the Alert tab on the left.",
+        "definition": "Alarme erlauben es dir alle m\u00f6glichen Informationen zu einem Item im Blick zu behalten. Du kannst du \u00fcber Discord oder Email informieren lassen, sollten die eingestellten Bedingungen erf\u00fcllt werden. Um einen Alarm zu erstellen, besuche eine beliebige Item-Seite, und klicke links auf \"Alarm\".",
+        "context": "alerts_useraccount_guide_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "<strong>Alert Expiration:<\/strong> To keep the system clean, alerts will expire after a set amount of time from when they were created. To refresh a notification you must return to Universalis and be logged in.",
+        "definition": "<strong>Alarm l\u00e4uft aus:<\/strong> Um das System nicht unn\u00f6tig zu belasten, laufen Alarme nach einer festgelegten Zeit aus. Um sie wieder zu aktivieren, besuche einfach wieder Universalis und logge dich ein.",
+        "context": "alerts_useraccount_guide_3",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You can create: <strong class=\"text-green\">%d<\/strong> alerts with an expiry time of: <strong class=\"text-green\">%d days<\/strong>.",
+        "definition": "Du kannst erstellen: <strong class=\"text-green\">%d<\/strong>Alarme mit einer Lufzeit von: <strong class=\"text-green\">%d Tage<\/strong>. ",
+        "context": "alerts_useraccount_quota",
+        "term_plural": "",
+        "reference": "",
+        "comment": "<strong> doesnt show up in original string"
+    },
+    {
+        "term": "Reports",
+        "definition": "Berichte",
+        "context": "generic_reports",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Characters",
+        "definition": "Charaktere",
+        "context": "generic_characters",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Set character as MAIN.",
+        "definition": "Markiere als Hauptcharakter.",
+        "context": "characters_set_main",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no characters, why not add one below!",
+        "definition": "Du hast noch keine Charaktere. F\u00fcge doch welche unten hinzu!",
+        "context": "characters_no_characters",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Add a new character",
+        "definition": "F\u00fcge neuen Charakter hinzu",
+        "context": "characters_add_new_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "AUTH CODE: %s",
+        "definition": "AUTH CODE: %s",
+        "context": "characters_auth_code",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "To add a new character, you must first add your verification code. <strong>Please add your MAIN character first<\/strong>.",
+        "definition": "Um einen neuen Charakter hinzuzuf\u00fcgen, musst du zuerst deinen Best\u00e4tigungscode hinzuf\u00fcgen. <strong>Bitte f\u00fcge zuerst deinen Hauptcharakter hinzu!<\/strong>",
+        "context": "characters_guide_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": "<strong> in original string doesnt show up"
+    },
+    {
+        "term": "selected",
+        "definition": "Ausgew\u00e4hlt",
+        "context": "generic_selected",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Search",
+        "definition": "Suche",
+        "context": "generic_search",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Name, ID, or Lodestone URL",
+        "definition": "Name, ID, oder Lodestone URL",
+        "context": "generic_name_id_lodestone_url",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Go to Lodestone and Login with your character. Then <a href=\"%s\">click here to edit your profile<\/a>.",
+        "definition": "Gehe zum Lodestone und Logge dich mit deinem Charakter ein. Dann <a href=\"%s\">Klicke hier um dein Profil zu bearbeiten<\/a>.",
+        "context": "characters_guide_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "In the text box, enter in your <strong>AUTH CODE<\/strong>, then click on Confirm (twice).",
+        "definition": "Trage deinen <strong>AUTH CODE<\/strong> in der Textbox ein, und best\u00e4tige (zwei mal).",
+        "context": "characters_guide_3",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Hop back to Universalis and fill in the form below. The site will search for your character and confirm your auth code.",
+        "definition": "Gehe zu Universalis zur\u00fcck und f\u00fclle den Antrag unten aus. Die Seite wird nach deinem Charakter suchen und deinen Authentifizierungscode best\u00e4tigen.",
+        "context": "characters_guide_4",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Logout",
+        "definition": "Ausloggen",
+        "context": "generic_logout",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Oops!",
+        "definition": "Oops!",
+        "context": "generic_oops",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You must be logged in to view this area.",
+        "definition": "Du musst eingeloggt sein um das hier zu sehen.",
+        "context": "useraccount_index_logged_out_1",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You can <a href=\"%s\">login via Discord<\/a> to get that juicy access!",
+        "definition": "Du kannst dich mit <a href=\"%s\">Discord einloggen<\/a> um einfach Zugriff zu erhalten!",
+        "context": "useraccount_index_logged_out_2",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Delete List",
+        "definition": "L\u00f6sche Liste",
+        "context": "generic_delete_list",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no lists, visit some items and create some!",
+        "definition": "Du hast noch keine Listen. Schau auf den Gegenstandsseiten vorbei und erstelle welche!",
+        "context": "useraccount_lists_no_lists",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Custom Universalis list by %s",
+        "definition": "Eigene Universalis Liste von %s",
+        "context": "userlist_tab_title",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "List",
+        "definition": "Liste",
+        "context": "generic_list",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "You have no items in this list.",
+        "definition": "Du hast keine Gegenst\u00e4nde auf der Liste.",
+        "context": "userlists_no_items",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "LIST",
+        "definition": "LISTE",
+        "context": "generic_list_capitalized",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Show Cross-World",
+        "definition": "Zeige Welten\u00fcbergreifend",
+        "context": "generic_show_cross_world",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "%d \/ %d items",
+        "definition": "%d \/ %d Gegenst\u00e4nde",
+        "context": "n_of_m_items",
+        "term_plural": "",
+        "reference": "Like current\/max items.",
+        "comment": ""
+    },
+    {
+        "term": "Show Home Server Only",
+        "definition": "Zeige nur die Heimat-Welt",
+        "context": "generic_show_home_server_only",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Remove item from list",
+        "definition": "Entferne Gegenstand von der Liste",
+        "context": "userlists_remove_item_tooltip",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Top 5 cheapest - Total for sale: %d",
+        "definition": "Top 5 Billigste - Gesamt angeboten: %d",
+        "context": "userlists_top_5_sale",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Last 5 sales",
+        "definition": "Letzte 5 Verk\u00e4ufe:",
+        "context": "generic_last_5_sales",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Last updated:",
+        "definition": "Zuletzt aktualisiert:",
+        "context": "generic_last_updated_colon",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Market info could not be fetched for: %s at this time.",
+        "definition": "Marktinformationen f\u00fcr: %s konnten gerade nicht abgerufen werden.",
+        "context": "userlists_fetch_failed_for_item",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "If you are playing on chinese server(other servers are not supported), you can use Matcha plugin provided by FFCAFE which have built-in Universalis integration. Matcha also provides a overlay to show price information from Universalis.",
+        "definition": "Wenn du auf einer chinesischen Welt spielst (andere Welten werden nicht unterst\u00fctzt), kannst du das Matcha plugin von FFCAFE mit Universalis Integration nutzen.",
+        "context": "contribute_description_matcha",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "No data",
+        "definition": "Keine Informationen",
+        "context": "generic_no_data",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Not Sellable",
+        "definition": "Unverk\u00e4uflich",
+        "context": "generic_not_sellable",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Cannot be sold",
+        "definition": "Kann nicht verkauft werden",
+        "context": "generic_cannot_be_sold",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Recently Viewed",
+        "definition": null,
+        "context": "user_list_recently_viewed",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Favourites",
+        "definition": null,
+        "context": "user_list_favourites",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Should the alert check the whole Data Center?",
+        "definition": null,
+        "context": "alerts_create_alert_guide_6",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Check entire Data Center",
+        "definition": null,
+        "context": "alerts_create_alert_guide_7",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Rename List",
+        "definition": null,
+        "context": "lists_rename_list",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Rename",
+        "definition": null,
+        "context": "generic_rename",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Sales",
+        "definition": null,
+        "context": "sales_label",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    },
+    {
+        "term": "Listings",
+        "definition": null,
+        "context": "listings_label",
+        "term_plural": "",
+        "reference": "",
+        "comment": ""
+    }
+]
