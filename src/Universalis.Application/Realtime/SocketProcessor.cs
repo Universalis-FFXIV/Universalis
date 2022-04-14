@@ -28,6 +28,7 @@ public class SocketProcessor : ISocketProcessor
 
         var conn = new SocketClient(ws, cs);
         conn.OnClose += () => _connections.TryRemove(id, out _);
+        _ = conn.RunSocket();
 
         _connections[id] = conn;
     }
