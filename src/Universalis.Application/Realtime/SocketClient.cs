@@ -25,6 +25,10 @@ public class SocketClient
     public void Push(object o)
     {
         _updateQueue.Enqueue(o);
+        while (_updateQueue.Count > 20)
+        {
+            _updateQueue.TryDequeue(out _);
+        }
     }
 
     public async Task RunSocket()
