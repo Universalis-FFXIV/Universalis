@@ -5,5 +5,5 @@ namespace Universalis.Application.Realtime;
 
 public interface ISocketProcessor
 {
-    Task AddSocket(WebSocket ws, TaskCompletionSource<object> cs);
+    void AddSocket(WebSocket ws, TaskCompletionSource<object> cs);
 }

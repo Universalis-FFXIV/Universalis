@@ -46,7 +46,7 @@ public class WebSocketController : ControllerBase
                 new WebSocketAcceptContext { DangerousEnableCompression = true });
             var socketFinished = new TaskCompletionSource<object>();
 
-            _ = _socketProcessor.AddSocket(webSocket, socketFinished);
+            _socketProcessor.AddSocket(webSocket, socketFinished);
 
             await socketFinished.Task;
         }
