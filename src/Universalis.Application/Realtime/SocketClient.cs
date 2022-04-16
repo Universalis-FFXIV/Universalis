@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,22 +32,21 @@ public class SocketClient
         }
     }
 
-    public async Task RunSocket()
+    public async Task RunSocket(CancellationToken cancellationToken = default)
     {
         var buf = new byte[512];
-        var recv = await _ws.ReceiveAsync(buf, CancellationToken.None);
-        while (!recv.CloseStatus.HasValue)
+        while (!cancellationToken.IsCancellationRequested && _ws.State == WebSocketState.Open)
         {
             if (!_updateQueue.TryDequeue(out _))
             {
-                await Task.Yield();
+                var n = Encoding.UTF8.GetBytes("{\"status\": \"ok\"}", buf);
+                await _ws.SendAsync(buf.AsMemory(..n), WebSocketMessageType.Text, WebSocketMessageFlags.None, CancellationToken.None);
+                // await Task.Yield();
             }
             else
             {
                 await _ws.SendAsync(buf, WebSocketMessageType.Binary, true, CancellationToken.None);
             }
-
-            recv = await _ws.ReceiveAsync(buf, CancellationToken.None);
         }
 
         OnClose?.Invoke();

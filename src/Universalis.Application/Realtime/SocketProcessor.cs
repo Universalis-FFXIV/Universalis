@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Universalis.Application.Realtime;
@@ -22,13 +23,13 @@ public class SocketProcessor : ISocketProcessor
         }
     }
 
-    public void AddSocket(WebSocket ws, TaskCompletionSource<object> cs)
+    public void AddSocket(WebSocket ws, TaskCompletionSource<object> cs, CancellationToken cancellationToken = default)
     {
         var id = Guid.NewGuid();
 
         var conn = new SocketClient(ws, cs);
         conn.OnClose += () => _connections.TryRemove(id, out _);
-        _ = conn.RunSocket();
+        _ = conn.RunSocket(cancellationToken);
 
         _connections[id] = conn;
     }

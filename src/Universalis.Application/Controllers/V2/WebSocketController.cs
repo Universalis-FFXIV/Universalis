@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Threading;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Universalis.Application.Realtime;
@@ -26,9 +27,9 @@ public class WebSocketController : ControllerBase
     [MapToApiVersion("1")]
     [Route("ws")]
     [ApiTag("WebSocket")]
-    public Task Get()
+    public Task Get(CancellationToken cancellationToken = default)
     {
-        return GetV2();
+        return GetV2(cancellationToken);
     }
 
     /// <summary>
@@ -38,7 +39,7 @@ public class WebSocketController : ControllerBase
     [MapToApiVersion("2")]
     [Route("v{version:apiVersion}/ws")]
     [ApiTag("WebSocket")]
-    public async Task GetV2()
+    public async Task GetV2(CancellationToken cancellationToken = default)
     {
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
@@ -46,7 +47,7 @@ public class WebSocketController : ControllerBase
                 new WebSocketAcceptContext { DangerousEnableCompression = true });
             var socketFinished = new TaskCompletionSource<object>();
 
-            _socketProcessor.AddSocket(webSocket, socketFinished);
+            _socketProcessor.AddSocket(webSocket, socketFinished, cancellationToken);
 
             await socketFinished.Task;
         }
