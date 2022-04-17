@@ -47,8 +47,11 @@ public class Startup
 
         services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
 
-        var cacheSize = int.Parse(Configuration["MarketCurrentDataCacheSize"]);
-        services.AddSingleton<ICache<CurrentlyShownQuery, CurrentlyShownView>>(new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(cacheSize));
+        
+        services.AddSingleton<ICache<CurrentlyShownQuery, CurrentlyShownView>>(_ => { 
+            var cacheSize = int.Parse(Configuration["MarketCurrentDataCacheSize"]);
+            return new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(cacheSize);
+        });
 
         services.AddSingleton<ISocketProcessor, SocketProcessor>();
 
