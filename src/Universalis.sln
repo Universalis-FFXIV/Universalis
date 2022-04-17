@@ -58,6 +58,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Mogboard.Tests"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Mogboard.WebUI", "Universalis.Mogboard.WebUI\Universalis.Mogboard.WebUI.csproj", "{415488BF-0191-4DCB-A783-4EB6343CC997}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dev Deployment", "Dev Deployment", "{47BB0929-4369-4D80-8C4A-DBB2F11CBDEF}"
+	ProjectSection(SolutionItems) = preProject
+		..\devenv\docker-compose.yml = ..\devenv\docker-compose.yml
+		..\devenv\prometheus.yml = ..\devenv\prometheus.yml
+		..\devenv\README.md = ..\devenv\README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
