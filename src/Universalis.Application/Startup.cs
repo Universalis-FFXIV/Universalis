@@ -16,11 +16,11 @@ using System.Reflection;
 using System.Xml.XPath;
 using Universalis.Alerts;
 using Universalis.Application.Caching;
+using Universalis.Application.Controllers;
 using Universalis.Application.ExceptionFilters;
 using Universalis.Application.Realtime;
 using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Behaviors;
-using Universalis.Application.Views.V1;
 using Universalis.DbAccess;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.GameData;
@@ -48,7 +48,7 @@ public class Startup
         services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
 
         var cacheSize = int.Parse(Configuration["MarketCurrentDataCacheSize"]);
-        services.AddSingleton<ICache<CurrentlyShownQuery, CurrentlyShownView>>(new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(cacheSize));
+        services.AddSingleton<ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData>>(new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(cacheSize));
 
         services.AddSingleton<ISocketProcessor, SocketProcessor>();
 

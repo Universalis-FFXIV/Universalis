@@ -20,7 +20,7 @@ public class ListingView : IPriceable
     /// The price per unit sold.
     /// </summary>
     [JsonPropertyName("pricePerUnit")]
-    public uint PricePerUnit { get; init; }
+    public uint PricePerUnit { get; set; }
 
     /// <summary>
     /// The stack size sold.

@@ -19,7 +19,7 @@ namespace Universalis.Application.Controllers;
 public class CurrentlyShownControllerBase : WorldDcControllerBase
 {
     protected readonly ICurrentlyShownDbAccess CurrentlyShown;
-    protected readonly ICache<CurrentlyShownQuery, CurrentlyShownView> Cache;
+    protected readonly ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> Cache;
 
     private static readonly Counter CacheHits = Metrics.CreateCounter("universalis_cache_hits", "Cache Hits");
     private static readonly Counter CacheMisses = Metrics.CreateCounter("universalis_cache_misses", "Cache Misses");
@@ -27,10 +27,80 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
     private static readonly Histogram CacheHitMs = Metrics.CreateHistogram("universalis_cache_hit_milliseconds", "Cache Hit Milliseconds");
     private static readonly Histogram CacheMissMs = Metrics.CreateHistogram("universalis_cache_miss_milliseconds", "Cache Miss Milliseconds");
 
-    public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, ICache<CurrentlyShownQuery, CurrentlyShownView> cache) : base(gameData)
+    public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> cache) : base(gameData)
     {
         CurrentlyShown = currentlyShownDb;
         Cache = cache;
+    }
+
+    protected async Task<MinimizedCurrentlyShownData> GetCurrentlyShownDataSingle(
+        uint worldId,
+        uint itemId,
+        CancellationToken cancellationToken = default)
+    {
+        // Fetch data from the cache
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+        var cached = Cache.Get(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId });
+        stopwatch.Stop();
+        if (cached != null)
+        {
+            CacheHitMs.Observe(stopwatch.ElapsedMilliseconds);
+            CacheHits.Inc();
+
+            return cached;
+        }
+        
+        CacheMissMs.Observe(stopwatch.ElapsedMilliseconds);
+        CacheMisses.Inc();
+
+        // Retrieve data from the database
+        var data = await CurrentlyShown.Retrieve(new CurrentlyShownQuery
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+        }, cancellationToken);
+
+        if (data == null)
+        {
+            return null;
+        }
+
+        // Transform data into a view
+        var dataListings = await (data.Listings ?? new List<Listing>())
+            .ToAsyncEnumerable()
+            .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
+            .ToListAsync(cancellationToken);
+
+        var dataHistory = (data.RecentHistory ?? new List<Sale>())
+            .Where(s => s.PricePerUnit > 0)
+            .Where(s => s.Quantity > 0)
+            .Where(s => s.TimestampUnixSeconds > 0)
+            .Select(s => new SaleView
+            {
+                Hq = s.Hq,
+                PricePerUnit = s.PricePerUnit,
+                Quantity = s.Quantity,
+                Total = s.PricePerUnit * s.Quantity,
+                TimestampUnixSeconds = (long)s.TimestampUnixSeconds,
+                BuyerName = s.BuyerName,
+                WorldId = worldId,
+            })
+            .ToList();
+
+        var dataView = new MinimizedCurrentlyShownData
+        {
+            ItemId = itemId,
+            WorldId = worldId,
+            LastUploadTimeUnixMilliseconds = (long)data.LastUploadTimeUnixMilliseconds,
+            Listings = dataListings,
+            RecentHistory = dataHistory,
+        };
+
+        Cache.Set(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId }, dataView);
+        CacheEntries.Set(Cache.Count);
+
+        return dataView;
     }
 
     protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(
@@ -45,88 +115,61 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         long entriesWithin = -1,
         CancellationToken cancellationToken = default)
     {
-        if (worldIds.Length == 1)
-        {
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            var cachedData = Cache.Get(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldIds[0] });
-            stopwatch.Stop();
-            if (cachedData != null)
-            {
-                CacheHitMs.Observe(stopwatch.ElapsedMilliseconds);
-                CacheHits.Inc();
-
-                Ok(cachedData);
-            }
-
-            CacheMissMs.Observe(stopwatch.ElapsedMilliseconds);
-            CacheMisses.Inc();
-        }
-
-        var data = (await CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery
-        {
-            WorldIds = worldIds,
-            ItemId = itemId,
-        }, cancellationToken)).ToList();
+        var data = await worldIds
+            .ToAsyncEnumerable()
+            .SelectAwait(async worldId => await GetCurrentlyShownDataSingle(worldId, itemId, cancellationToken))
+            .Where(o => o != null)
+            .ToListAsync(cancellationToken);
         var resolved = data.Count > 0;
+
         var worlds = GameData.AvailableWorlds();
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var nowSeconds = now / 1000;
-        var currentlyShown = await data
-            .ToAsyncEnumerable()
-            .AggregateAwaitAsync(new CurrentlyShownView(), async (agg, next) =>
-            {
-                // Handle undefined arrays
-                next.Listings ??= new List<Listing>();
-                next.RecentHistory ??= new List<Sale>();
-
-                // Convert database entities into views. Separate classes are used for the entities
-                // and the views in order to avoid any undesirable data leaking out into the public
-                // API through inheritance and to allow separate purposes for the properties to be
-                // described in the property names (e.g. CreatorIdHash in the view and CreatorId in
-                // the database entity).
-                agg.Listings = await next.Listings
-                    .ToAsyncEnumerable()
-                    .SelectAwait(async l =>
-                    {
-                        var listingView = await Util.ListingToView(l, noGst, cancellationToken);
-                        listingView.WorldId = worldDc.IsDc ? next.WorldId : null;
-                        listingView.WorldName = worldDc.IsDc ? worlds[next.WorldId] : null;
-                        return listingView;
-                    })
-                    .Concat(agg.Listings.ToAsyncEnumerable())
-                    .ToListAsync(cancellationToken);
-
-                agg.RecentHistory = await next.RecentHistory
-                    .ToAsyncEnumerable()
-                    .Where(s => entriesWithin < 0 || nowSeconds - s.TimestampUnixSeconds < entriesWithin)
-                    .Select(s => new SaleView
-                    {
-                        Hq = s.Hq,
-                        PricePerUnit = s.PricePerUnit,
-                        Quantity = s.Quantity,
-                        Total = s.PricePerUnit * s.Quantity,
-                        TimestampUnixSeconds = (long)s.TimestampUnixSeconds,
-                        BuyerName = s.BuyerName,
-                        WorldId = worldDc.IsDc ? next.WorldId : null,
-                        WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
-                    })
-                    .Where(s => s.PricePerUnit > 0)
-                    .Where(s => s.Quantity > 0)
-                    .Where(s => s.TimestampUnixSeconds > 0)
-                    .Concat(agg.RecentHistory.ToAsyncEnumerable())
-                    .ToListAsync(cancellationToken);
-                agg.LastUploadTimeUnixMilliseconds = (long)Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
-
-                if (worldDc.IsDc)
+        var (worldUploadTimes, currentlyShown) = data
+            .Aggregate(
+                (EmptyWorldDictionary<Dictionary<uint, long>, long>(worldIds),
+                    new MinimizedCurrentlyShownData { Listings = new List<ListingView>(), RecentHistory = new List<SaleView>() }),
+                (agg, next) =>
                 {
-                    agg.WorldUploadTimes ??= new Dictionary<uint, long>();
-                    agg.WorldUploadTimes[next.WorldId] = (long)next.LastUploadTimeUnixMilliseconds;
-                }
+                    var (aggWorldUploadTimes, aggData) = agg;
 
-                return agg;
-            }, cancellationToken);
+                    // Convert database entities into views. Separate classes are used for the entities
+                    // and the views in order to avoid any undesirable data leaking out into the public
+                    // API through inheritance and to allow separate purposes for the properties to be
+                    // described in the property names (e.g. CreatorIdHash in the view and CreatorId in
+                    // the database entity).
+
+                    aggData.Listings = next.Listings
+                        .Select(l =>
+                        {
+                            if (!noGst)
+                            {
+                                l.PricePerUnit = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
+                            }
+
+                            l.WorldId = worldDc.IsDc ? next.WorldId : null;
+                            l.WorldName = worldDc.IsDc ? worlds[next.WorldId] : null;
+                            return l;
+                        })
+                        .Concat(aggData.Listings)
+                        .ToList();
+
+                    aggData.RecentHistory = next.RecentHistory
+                        .Where(s => entriesWithin < 0 || nowSeconds - s.TimestampUnixSeconds < entriesWithin)
+                        .Select(s =>
+                        {
+                            s.WorldId = worldDc.IsDc ? next.WorldId : null;
+                            s.WorldName = worldDc.IsDc ? worlds[next.WorldId] : null;
+                            return s;
+                        })
+                        .Concat(aggData.RecentHistory)
+                        .ToList();
+
+                    aggData.LastUploadTimeUnixMilliseconds = Math.Max(next.LastUploadTimeUnixMilliseconds, aggData.LastUploadTimeUnixMilliseconds);
+
+                    return (aggWorldUploadTimes, aggData);
+                });
 
         currentlyShown.Listings.Sort((a, b) => (int)a.PricePerUnit - (int)b.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
@@ -163,14 +206,8 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
             AveragePrice = GetAveragePricePerUnit(currentlyShown.RecentHistory),
             AveragePriceNq = GetAveragePricePerUnit(nqSales),
             AveragePriceHq = GetAveragePricePerUnit(hqSales),
-            WorldUploadTimes = worldDc.IsWorld ? null : currentlyShown.WorldUploadTimes ?? EmptyWorldDictionary<Dictionary<uint, long>, long>(worldIds),
+            WorldUploadTimes = worldDc.IsWorld ? null : worldUploadTimes,
         };
-
-        if (worldIds.Length == 1)
-        {
-            Cache.Set(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldIds[0] }, view);
-            CacheEntries.Set(Cache.Count);
-        }
 
         return (resolved, view);
     }
