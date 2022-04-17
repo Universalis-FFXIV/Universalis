@@ -41,18 +41,16 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         // Fetch data from the cache
         var stopwatch = new Stopwatch();
         stopwatch.Start();
+
         var cached = Cache.Get(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId });
-        stopwatch.Stop();
         if (cached != null)
         {
+            stopwatch.Stop();
             CacheHitMs.Observe(stopwatch.ElapsedMilliseconds);
             CacheHits.Inc();
 
             return cached;
         }
-        
-        CacheMissMs.Observe(stopwatch.ElapsedMilliseconds);
-        CacheMisses.Inc();
 
         // Retrieve data from the database
         var data = await CurrentlyShown.Retrieve(new CurrentlyShownQuery
@@ -60,6 +58,10 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
             WorldId = worldId,
             ItemId = itemId,
         }, cancellationToken);
+
+        stopwatch.Stop();
+        CacheMissMs.Observe(stopwatch.ElapsedMilliseconds);
+        CacheMisses.Inc();
 
         if (data == null)
         {
