@@ -36,28 +36,33 @@ public class SocketClient
 
     public async Task RunSocket(CancellationToken cancellationToken = default)
     {
-        var buf = new byte[512];
-        while (!cancellationToken.IsCancellationRequested && _ws.State == WebSocketState.Open)
+        try
         {
-            if (!_updateQueue.TryDequeue(out _))
+            var buf = new byte[512];
+            while (!cancellationToken.IsCancellationRequested && _ws.State == WebSocketState.Open)
             {
-                await SendEvent(buf, new ItemUpdate { ItemId = 2001 }, cancellationToken);
-                // await Task.Yield();
+                if (!_updateQueue.TryDequeue(out _))
+                {
+                    await SendEvent(buf, new ItemUpdate { ItemId = 5, WorldId = 74}, cancellationToken);
+                    // await Task.Yield();
+                }
+                else
+                {
+                    await _ws.SendAsync(buf, WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage,
+                        cancellationToken);
+                }
             }
-            else
-            {
-                await _ws.SendAsync(buf, WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage, cancellationToken);
-            }
+
+            await _ws.CloseAsync(
+                WebSocketCloseStatus.NormalClosure,
+                "closing socket",
+                cancellationToken);
         }
-
-        OnClose?.Invoke();
-
-        await _ws.CloseAsync(
-            WebSocketCloseStatus.NormalClosure,
-            "closing socket",
-            cancellationToken);
-
-        _cs.TrySetResult(true);
+        finally
+        {
+            OnClose?.Invoke();
+            _cs.TrySetResult(true);
+        }
     }
 
     private async Task SendEvent(byte[] buf, SocketMessage message, CancellationToken cancellationToken = default)
