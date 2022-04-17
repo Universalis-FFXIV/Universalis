@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
+using Universalis.Application.Controllers;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.Realtime;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
-using Universalis.Application.Views.V1;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.Uploads;
 using Xunit;
@@ -20,7 +20,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
 
@@ -39,7 +39,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
 
@@ -58,7 +58,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
 
@@ -76,7 +76,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
 
@@ -95,7 +95,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
 
@@ -154,7 +154,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
 
@@ -208,7 +208,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
 

@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
+using Universalis.Application.Controllers;
 using Universalis.Application.Realtime;
 using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
@@ -25,7 +26,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 {
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IHistoryDbAccess _historyDb;
-    private readonly ICache<CurrentlyShownQuery, CurrentlyShownView> _cache;
+    private readonly ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> _cache;
     private readonly ISocketProcessor _sockets;
 
     private static readonly Counter CacheDeletes = Metrics.CreateCounter("universalis_cache_deletes", "Cache Deletes");
@@ -33,7 +34,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     public MarketBoardUploadBehavior(
         ICurrentlyShownDbAccess currentlyShownDb,
         IHistoryDbAccess historyDb,
-        ICache<CurrentlyShownQuery, CurrentlyShownView> cache,
+        ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> cache,
         ISocketProcessor sockets)
     {
         _currentlyShownDb = currentlyShownDb;

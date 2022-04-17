@@ -38,14 +38,14 @@ public class SaleView : IPriceable
     /// </summary>
     [JsonPropertyName("worldName")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string WorldName { get; init; }
+    public string WorldName { get; set; }
 
     /// <summary>
     /// The world ID, if applicable.
     /// </summary>
     [JsonPropertyName("worldID")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public uint? WorldId { get; init; }
+    public uint? WorldId { get; set; }
 
     /// <summary>
     /// The buyer name.
