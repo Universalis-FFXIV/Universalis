@@ -1,6 +1,6 @@
 const WebSocket = require("ws");
 
-const ws = new WebSocket("https://localhost:5001");
+const ws = new WebSocket("ws://localhost:5000/api/ws");
 
 ws.on("open", () => {
 	console.log("Connection opened.");

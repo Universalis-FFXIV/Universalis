@@ -1,6 +1,6 @@
-﻿using System.Threading;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Realtime;
 using Universalis.Application.Swagger;

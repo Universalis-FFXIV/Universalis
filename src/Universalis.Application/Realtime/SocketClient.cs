@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Net.WebSockets;
-using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Universalis.Application.Realtime.Message;
 
 namespace Universalis.Application.Realtime;
 
@@ -39,23 +41,31 @@ public class SocketClient
         {
             if (!_updateQueue.TryDequeue(out _))
             {
-                var n = Encoding.UTF8.GetBytes("{\"status\": \"ok\"}", buf);
-                await _ws.SendAsync(buf.AsMemory(..n), WebSocketMessageType.Text, WebSocketMessageFlags.None, CancellationToken.None);
+                await SendEvent(buf, new ItemUpdate { ItemId = 2001 }, cancellationToken);
                 // await Task.Yield();
             }
             else
             {
-                await _ws.SendAsync(buf, WebSocketMessageType.Binary, true, CancellationToken.None);
+                await _ws.SendAsync(buf, WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage, cancellationToken);
             }
         }
 
         OnClose?.Invoke();
 
         await _ws.CloseAsync(
-            WebSocketCloseStatus.Empty,
-            "",
-            CancellationToken.None);
+            WebSocketCloseStatus.NormalClosure,
+            "closing socket",
+            cancellationToken);
 
         _cs.TrySetResult(true);
+    }
+
+    private async Task SendEvent(byte[] buf, SocketMessage message, CancellationToken cancellationToken = default)
+    {
+        await using var streamView = new MemoryStream(buf, true);
+        await JsonSerializer.SerializeAsync(streamView, (object)message, cancellationToken: cancellationToken);
+
+        var pos = (int)streamView.Position;
+        await _ws.SendAsync(buf.AsMemory(..pos), WebSocketMessageType.Text, WebSocketMessageFlags.EndOfMessage, cancellationToken);
     }
 }
