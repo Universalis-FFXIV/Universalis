@@ -24,6 +24,8 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
     private static readonly Counter CacheHits = Metrics.CreateCounter("universalis_cache_hits", "Cache Hits");
     private static readonly Counter CacheMisses = Metrics.CreateCounter("universalis_cache_misses", "Cache Misses");
     private static readonly Gauge CacheEntries = Metrics.CreateGauge("universalis_cache_entries", "Cache Entries");
+    private static readonly Histogram CacheHitMs = Metrics.CreateHistogram("universalis_cache_hit_milliseconds", "Cache Hit Milliseconds");
+    private static readonly Histogram CacheMissMs = Metrics.CreateHistogram("universalis_cache_miss_milliseconds", "Cache Miss Milliseconds");
 
     public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> cache) : base(gameData)
     {
@@ -48,8 +50,7 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
 
             return cached;
         }
-
-            CacheMisses.Inc();
+        
         CacheMissMs.Observe(stopwatch.ElapsedMilliseconds);
         CacheMisses.Inc();
 
