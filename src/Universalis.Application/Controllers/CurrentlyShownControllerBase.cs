@@ -1,6 +1,7 @@
 ﻿using Prometheus;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,6 +24,8 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
     private static readonly Counter CacheHits = Metrics.CreateCounter("universalis_cache_hits", "Cache Hits");
     private static readonly Counter CacheMisses = Metrics.CreateCounter("universalis_cache_misses", "Cache Misses");
     private static readonly Gauge CacheEntries = Metrics.CreateGauge("universalis_cache_entries", "Cache Entries");
+    private static readonly Histogram CacheHitMs = Metrics.CreateHistogram("universalis_cache_hit_milliseconds", "Cache Hit Milliseconds");
+    private static readonly Histogram CacheMissMs = Metrics.CreateHistogram("universalis_cache_miss_milliseconds", "Cache Miss Milliseconds");
 
     public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, ICache<CurrentlyShownQuery, CurrentlyShownView> cache) : base(gameData)
     {
@@ -44,13 +47,19 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
     {
         if (worldIds.Length == 1)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
             var cachedData = Cache.Get(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldIds[0] });
+            stopwatch.Stop();
             if (cachedData != null)
             {
+                CacheHitMs.Observe(stopwatch.ElapsedMilliseconds);
                 CacheHits.Inc();
+
                 Ok(cachedData);
             }
 
+            CacheMissMs.Observe(stopwatch.ElapsedMilliseconds);
             CacheMisses.Inc();
         }
 
