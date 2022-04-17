@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Universalis.Application.Realtime.Message;
+namespace Universalis.Application.Realtime.Messages;
 
 public abstract class SocketMessage
 {

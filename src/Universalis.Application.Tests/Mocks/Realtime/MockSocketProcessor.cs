@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Realtime;
-using Universalis.Application.Realtime.Message;
+using Universalis.Application.Realtime.Messages;
 
 namespace Universalis.Application.Tests.Mocks.Realtime;
 

@@ -1,4 +1,4 @@
-﻿namespace Universalis.Application.Realtime.Message;
+﻿namespace Universalis.Application.Realtime.Messages;
 
 public static class MessageKindExtensions
 {
