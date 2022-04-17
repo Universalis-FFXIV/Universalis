@@ -1,6 +1,6 @@
 ﻿namespace Universalis.Application.Realtime.Message;
 
-public static class MassageKindExtensions
+public static class MessageKindExtensions
 {
     public static string ToEventName(this MessageKind kind)
     {
