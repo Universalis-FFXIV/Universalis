@@ -11,6 +11,9 @@ namespace Universalis.Application.Controllers.V2;
 [ApiVersion("1")]
 [ApiVersion("2")]
 [Route("api")]
+#if !DEBUG
+[ApiExplorerSettings(IgnoreApi = true)]
+#endif
 public class WebSocketController : ControllerBase
 {
     private readonly ISocketProcessor _socketProcessor;
