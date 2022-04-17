@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
+using Universalis.Application.Tests.Mocks.Realtime;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
 using Universalis.Application.Views.V1;
@@ -20,7 +21,8 @@ public class MarketBoardUploadBehaviorTests
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+        var sockets = new MockSocketProcessor();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
 
         var upload = new UploadParameters
         {
@@ -38,7 +40,8 @@ public class MarketBoardUploadBehaviorTests
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+        var sockets = new MockSocketProcessor();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
 
         var upload = new UploadParameters
         {
@@ -56,7 +59,8 @@ public class MarketBoardUploadBehaviorTests
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+        var sockets = new MockSocketProcessor();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
 
         var upload = new UploadParameters
         {
@@ -73,7 +77,8 @@ public class MarketBoardUploadBehaviorTests
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+        var sockets = new MockSocketProcessor();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
 
         var upload = new UploadParameters
         {
@@ -91,7 +96,8 @@ public class MarketBoardUploadBehaviorTests
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+        var sockets = new MockSocketProcessor();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
 
         var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
 
@@ -149,7 +155,8 @@ public class MarketBoardUploadBehaviorTests
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+        var sockets = new MockSocketProcessor();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
 
         var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
 
@@ -202,7 +209,8 @@ public class MarketBoardUploadBehaviorTests
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CurrentlyShownView>(1);
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache);
+        var sockets = new MockSocketProcessor();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
 
         var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
 

@@ -2,7 +2,7 @@
 
 namespace Universalis.Application.Realtime.Message;
 
-public class SocketMessage
+public abstract class SocketMessage
 {
     [JsonPropertyName("event")]
     public string Event { get; }

@@ -7,6 +7,8 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
+using Universalis.Application.Realtime;
+using Universalis.Application.Realtime.Message;
 using Universalis.Application.Uploads.Schema;
 using Universalis.Application.Views.V1;
 using Universalis.DbAccess.MarketBoard;
@@ -24,14 +26,20 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IHistoryDbAccess _historyDb;
     private readonly ICache<CurrentlyShownQuery, CurrentlyShownView> _cache;
+    private readonly ISocketProcessor _sockets;
 
     private static readonly Counter CacheDeletes = Metrics.CreateCounter("universalis_cache_deletes", "Cache Deletes");
 
-    public MarketBoardUploadBehavior(ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess historyDb, ICache<CurrentlyShownQuery, CurrentlyShownView> cache)
+    public MarketBoardUploadBehavior(
+        ICurrentlyShownDbAccess currentlyShownDb,
+        IHistoryDbAccess historyDb,
+        ICache<CurrentlyShownQuery, CurrentlyShownView> cache,
+        ISocketProcessor sockets)
     {
         _currentlyShownDb = currentlyShownDb;
         _historyDb = historyDb;
         _cache = cache;
+        _sockets = sockets;
     }
 
     public bool ShouldExecute(UploadParameters parameters)
@@ -196,6 +204,12 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             WorldId = worldId,
             ItemId = itemId,
         }, cancellationToken);
+
+        _sockets.BroadcastUpdate(new ItemUpdate
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+        });
 
         return null;
     }

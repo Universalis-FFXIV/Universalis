@@ -27,4 +27,8 @@
     <ProjectReference Include="..\Universalis.DbAccess.Tests\Universalis.DbAccess.Tests.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Mocks\Realtime\" />
+  </ItemGroup>
+
 </Project>

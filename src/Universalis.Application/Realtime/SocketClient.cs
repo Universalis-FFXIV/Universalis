@@ -11,7 +11,7 @@ namespace Universalis.Application.Realtime;
 
 public class SocketClient
 {
-    private readonly ConcurrentQueue<object> _updateQueue;
+    private readonly ConcurrentQueue<SocketMessage> _messages;
     private readonly WebSocket _ws;
     private readonly TaskCompletionSource<object> _cs;
 
@@ -19,18 +19,20 @@ public class SocketClient
 
     public SocketClient(WebSocket ws, TaskCompletionSource<object> cs)
     {
-        _updateQueue = new ConcurrentQueue<object>();
+        _messages = new ConcurrentQueue<SocketMessage>();
 
         _ws = ws;
         _cs = cs;
     }
 
-    public void Push(object o)
+    public void Push(SocketMessage message)
     {
-        _updateQueue.Enqueue(o);
-        while (_updateQueue.Count > 20)
+        _messages.Enqueue(message);
+        while (_messages.Count > 20)
         {
-            _updateQueue.TryDequeue(out _);
+            // We don't want backlog to create memory issues, but this shouldn't happen
+            // on most connections anyways.
+            _messages.TryDequeue(out _);
         }
     }
 
@@ -41,15 +43,13 @@ public class SocketClient
             var buf = new byte[512];
             while (!cancellationToken.IsCancellationRequested && _ws.State == WebSocketState.Open)
             {
-                if (!_updateQueue.TryDequeue(out _))
+                if (_messages.TryDequeue(out var message))
                 {
-                    await SendEvent(buf, new ItemUpdate { ItemId = 5, WorldId = 74}, cancellationToken);
-                    // await Task.Yield();
+                    await SendEvent(buf, message, cancellationToken);
                 }
                 else
                 {
-                    await _ws.SendAsync(buf, WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage,
-                        cancellationToken);
+                    await Task.Yield();
                 }
             }
 
