@@ -22,7 +22,7 @@ public class SocketProcessor : ISocketProcessor
         _connections = new ConcurrentDictionary<Guid, SocketClient>();
     }
 
-    public void BroadcastUpdate(SocketMessage message)
+    public void Publish(SocketMessage message)
     {
         var stopwatch = new Stopwatch();
         stopwatch.Start();

@@ -2,7 +2,7 @@ import WebSocket from "ws";
 
 const addr = process.argv.length > 2
 	? process.argv[2]
-    : "ws://localhost:5000/api/ws";
+    : "ws://localhost:5000/api/ws-dev";
 
 const ws = new WebSocket(addr);
 
