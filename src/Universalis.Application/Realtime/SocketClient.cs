@@ -1,4 +1,5 @@
 ﻿using Priority_Queue;
+using Prometheus;
 using System;
 using System.IO;
 using System.Net.WebSockets;
@@ -23,6 +24,8 @@ public class SocketClient
     public Action OnClose { get; set; }
     public bool Running { get; private set; }
 
+    private static readonly Histogram DiscardedMessages = Metrics.CreateHistogram("universalis_ws_discarded_messages", "WebSocket Discarded Messages");
+
     public SocketClient(WebSocket ws, TaskCompletionSource<object> cs)
     {
         _messages = new SimplePriorityQueue<SocketMessage, long>();
@@ -35,11 +38,24 @@ public class SocketClient
     public void Push(SocketMessage message)
     {
         _messages.Enqueue(message, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+
+        // We keep an incrementing count of discarded messages because
+        // the consumer can still pull messages off while we're removing
+        // them.
+        var discarded = 0;
         while (_messages.Count > QueueLimit)
         {
             // We don't want backlog to create memory issues, but this shouldn't happen
             // on most connections anyways.
-            _messages.TryDequeue(out _);
+            if (_messages.TryDequeue(out _))
+            {
+                discarded++;
+            }
+        }
+
+        if (discarded > 0)
+        {
+            DiscardedMessages.Observe(discarded);
         }
 
         // Release the semaphore, if applicable
@@ -80,7 +96,7 @@ public class SocketClient
 
         try
         {
-            var buf = new byte[512];
+            var buf = new byte[512]; // TODO: something
             while (!cancellationToken.IsCancellationRequested && _ws.State == WebSocketState.Open)
             {
                 // Wait for data to be made available
