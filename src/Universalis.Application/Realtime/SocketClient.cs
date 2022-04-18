@@ -1,17 +1,19 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Priority_Queue;
 using Universalis.Application.Realtime.Messages;
 
 namespace Universalis.Application.Realtime;
 
 public class SocketClient
 {
-    private readonly ConcurrentQueue<SocketMessage> _messages;
+    private const int QueueLimit = 50;
+
+    private readonly SimplePriorityQueue<SocketMessage, long> _messages;
     private readonly WebSocket _ws;
     private readonly TaskCompletionSource<object> _cs;
 
@@ -19,7 +21,7 @@ public class SocketClient
 
     public SocketClient(WebSocket ws, TaskCompletionSource<object> cs)
     {
-        _messages = new ConcurrentQueue<SocketMessage>();
+        _messages = new SimplePriorityQueue<SocketMessage, long>();
 
         _ws = ws;
         _cs = cs;
@@ -27,8 +29,8 @@ public class SocketClient
 
     public void Push(SocketMessage message)
     {
-        _messages.Enqueue(message);
-        while (_messages.Count > 20)
+        _messages.Enqueue(message, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+        while (_messages.Count > QueueLimit)
         {
             // We don't want backlog to create memory issues, but this shouldn't happen
             // on most connections anyways.
