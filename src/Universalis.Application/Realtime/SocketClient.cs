@@ -12,7 +12,7 @@ namespace Universalis.Application.Realtime;
 
 public class SocketClient
 {
-    private const int QueueLimit = 50;
+    private const int QueueLimit = 20;
 
     private readonly SimplePriorityQueue<SocketMessage, long> _messages;
     private readonly WebSocket _ws;
