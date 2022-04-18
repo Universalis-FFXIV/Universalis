@@ -48,7 +48,7 @@ public class WebSocketController : ControllerBase
         {
             using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync(
                 new WebSocketAcceptContext { DangerousEnableCompression = true });
-            var socketFinished = new TaskCompletionSource<object>();
+            var socketFinished = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             _socketProcessor.AddSocket(webSocket, socketFinished, cancellationToken);
 
