@@ -81,13 +81,10 @@ public class Listing : IEquatable<Listing>
                && PricePerUnit == other.PricePerUnit
                && Quantity == other.Quantity
                && DyeId == other.DyeId
-               && CreatorId == other.CreatorId
                && CreatorName == other.CreatorName
                && Math.Abs(LastReviewTimeUnixSeconds - other.LastReviewTimeUnixSeconds) < 0.1
-               && RetainerId == other.RetainerId
                && RetainerName == other.RetainerName
-               && RetainerCityId == other.RetainerCityId
-               && SellerId == other.SellerId;
+               && RetainerCityId == other.RetainerCityId;
     }
 
     public override bool Equals(object obj)

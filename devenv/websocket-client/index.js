@@ -20,7 +20,11 @@ ws.on("message", data => {
     }
 
     const currentCount = counts.get(message.event);
-    counts.set(message.event, currentCount + 1);
+    if (message.event.startsWith("sales")) {
+        counts.set(message.event, currentCount + message.sales.length);
+    } else if (message.event.startsWith("listings")) {
+        counts.set(message.event, currentCount + message.listings.length);
+    }
 
     console.log(counts);
 });
