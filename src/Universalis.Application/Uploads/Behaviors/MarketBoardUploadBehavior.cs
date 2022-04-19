@@ -11,7 +11,6 @@ using Universalis.Application.Controllers;
 using Universalis.Application.Realtime;
 using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
-using Universalis.Application.Views.V1;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
@@ -96,7 +95,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             {
                 WorldId = worldId,
                 ItemId = itemId,
-                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
+                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
             };
 
             if (existingHistory == null)
@@ -108,6 +107,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             {
                 // Remove duplicates
                 var head = existingHistory.Sales.FirstOrDefault();
+
+                // ReSharper disable once ForCanBeConvertedToForeach
                 for (var i = 0; i < minimizedSales.Count; i++)
                 {
                     if (minimizedSales[i].Equals(head))
