@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Universalis.Application.Caching;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -22,16 +23,19 @@ public class DeleteListingController : WorldDcControllerBase
     private readonly ITrustedSourceDbAccess _trustedSourceDb;
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
+    private readonly ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> _cache;
 
     public DeleteListingController(
         IGameDataProvider gameData,
         ITrustedSourceDbAccess trustedSourceDb,
         ICurrentlyShownDbAccess currentlyShownDb,
-        IFlaggedUploaderDbAccess flaggedUploaderDb) : base(gameData)
+        IFlaggedUploaderDbAccess flaggedUploaderDb,
+        ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> cache) : base(gameData)
     {
         _trustedSourceDb = trustedSourceDb;
         _currentlyShownDb = currentlyShownDb;
         _flaggedUploaderDb = flaggedUploaderDb;
+        _cache = cache;
     }
 
     [HttpPost]
@@ -90,11 +94,15 @@ public class DeleteListingController : WorldDcControllerBase
 
         itemData.Listings.RemoveAt(listingIndex);
 
-        await _currentlyShownDb.Update(itemData, new CurrentlyShownQuery
+        var query = new CurrentlyShownQuery
         {
             WorldId = worldDc.WorldId,
             ItemId = itemId,
-        }, cancellationToken);
+        };
+
+        await _currentlyShownDb.Update(itemData, query, cancellationToken);
+
+        _cache.Delete(query);
 
         return Ok("Success");
     }

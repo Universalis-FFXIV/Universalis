@@ -71,10 +71,11 @@ public class Listing : IEquatable<Listing>
     {
         // The upload application is not included in the equality check
         // because it's metadata specific to Universalis, not the game.
+        // The listing ID is also not included because it's been 0 in too many
+        // cases.
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
-        return ListingId == other.ListingId
-               || Hq == other.Hq
+        return Hq == other.Hq
                && OnMannequin == other.OnMannequin
                && Materia.SequenceEqual(other.Materia)
                && PricePerUnit == other.PricePerUnit

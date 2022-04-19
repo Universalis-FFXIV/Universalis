@@ -20,20 +20,20 @@ public static class SeedDataGenerator
             Listings = Enumerable.Range(0, 100)
                 .Select(i => new Listing
                 {
-                    ListingIdInternal = "FB",
+                    ListingIdInternal = (ulong)rand.NextInt64(),
                     Hq = rand.NextDouble() > 0.5,
                     OnMannequin = rand.NextDouble() > 0.5,
                     Materia = new List<Materia>(),
                     PricePerUnit = (uint)rand.Next(100, 60000),
                     Quantity = (uint)rand.Next(1, 999),
                     DyeId = (byte)rand.Next(0, 255),
-                    CreatorIdInternal = "54565458626446136552",
+                    CreatorIdInternal = (ulong)rand.NextInt64(),
                     CreatorName = "Bingus Bongus",
                     LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
-                    RetainerIdInternal = "54565458626446136554",
+                    RetainerIdInternal = (ulong)rand.NextInt64(),
                     RetainerName = "xpotato",
                     RetainerCityIdInternal = 0xA,
-                    SellerIdInternal = "54565458626446136553",
+                    SellerIdInternal = (ulong)rand.NextInt64(),
                     UploadApplicationName = "test runner",
                 })
                 .ToList(),
