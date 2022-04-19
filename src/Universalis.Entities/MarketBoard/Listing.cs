@@ -82,7 +82,6 @@ public class Listing : IEquatable<Listing>
                && Quantity == other.Quantity
                && DyeId == other.DyeId
                && CreatorName == other.CreatorName
-               && Math.Abs(LastReviewTimeUnixSeconds - other.LastReviewTimeUnixSeconds) < 0.1
                && RetainerName == other.RetainerName
                && RetainerCityId == other.RetainerCityId;
     }
