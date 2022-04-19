@@ -2,11 +2,14 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Universalis.Application.Caching;
+using Universalis.Application.Controllers;
 using Universalis.Application.Controllers.V1;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Uploads.Schema;
+using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Tests;
 using Universalis.Entities.Uploads;
 using Xunit;
@@ -22,7 +25,8 @@ public class DeleteListingControllerTests
         var flaggedUploaders = new MockFlaggedUploaderDbAccess();
         var currentlyShown = new MockCurrentlyShownDbAccess();
         var trustedSources = new MockTrustedSourceDbAccess();
-        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders);
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
 
         const string key = "blah";
         using (var sha512 = SHA512.Create())
@@ -48,10 +52,18 @@ public class DeleteListingControllerTests
             UploaderId = document.UploaderIdHash,
         });
 
+        var updatedDocument = await currentlyShown.Retrieve(new CurrentlyShownQuery
+        {
+            WorldId = 74,
+            ItemId = 5333,
+        });
+
         Assert.IsType<OkObjectResult>(result);
 
-        Assert.Equal(originalCount - 1, document.Listings.Count);
-        Assert.DoesNotContain(toRemove, document.Listings);
+        Assert.Equal(originalCount - 1, updatedDocument.Listings.Count);
+
+        var toRemoveIndex = updatedDocument.Listings.IndexOf(toRemove);
+        Assert.Equal(-1, toRemoveIndex);
     }
 
     [Fact]
@@ -61,7 +73,8 @@ public class DeleteListingControllerTests
         var flaggedUploaders = new MockFlaggedUploaderDbAccess();
         var currentlyShown = new MockCurrentlyShownDbAccess();
         var trustedSources = new MockTrustedSourceDbAccess();
-        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders);
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
 
         const string key = "blah";
         using (var sha512 = SHA512.Create())
@@ -91,7 +104,8 @@ public class DeleteListingControllerTests
         var flaggedUploaders = new MockFlaggedUploaderDbAccess();
         var currentlyShown = new MockCurrentlyShownDbAccess();
         var trustedSources = new MockTrustedSourceDbAccess();
-        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders);
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
 
         var result = await controller.Post(5333, 74.ToString(), "r87uy6t7y8u65t8", new DeleteListingParameters
         {
@@ -112,7 +126,8 @@ public class DeleteListingControllerTests
         var flaggedUploaders = new MockFlaggedUploaderDbAccess();
         var currentlyShown = new MockCurrentlyShownDbAccess();
         var trustedSources = new MockTrustedSourceDbAccess();
-        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders);
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
 
         const string key = "blah";
         using (var sha512 = SHA512.Create())
@@ -141,7 +156,8 @@ public class DeleteListingControllerTests
         var flaggedUploaders = new MockFlaggedUploaderDbAccess();
         var currentlyShown = new MockCurrentlyShownDbAccess();
         var trustedSources = new MockTrustedSourceDbAccess();
-        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders);
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
 
         const string key = "blah";
         using (var sha512 = SHA512.Create())
@@ -171,7 +187,8 @@ public class DeleteListingControllerTests
         var flaggedUploaders = new MockFlaggedUploaderDbAccess();
         var currentlyShown = new MockCurrentlyShownDbAccess();
         var trustedSources = new MockTrustedSourceDbAccess();
-        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders);
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
 
         const string key = "blah";
         const string uploaderId = "ffff";
