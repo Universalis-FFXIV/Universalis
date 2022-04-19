@@ -7,7 +7,7 @@ namespace Universalis.Application.Realtime;
 
 public interface ISocketProcessor
 {
-    void BroadcastUpdate(SocketMessage message);
+    void Publish(SocketMessage message);
 
     void AddSocket(WebSocket ws, TaskCompletionSource<object> cs, CancellationToken cancellationToken = default);
 }

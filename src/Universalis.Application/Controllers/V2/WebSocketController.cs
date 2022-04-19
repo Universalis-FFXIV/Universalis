@@ -46,13 +46,7 @@ public class WebSocketController : ControllerBase
     {
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
-            using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync(
-                new WebSocketAcceptContext { DangerousEnableCompression = true });
-            var socketFinished = new TaskCompletionSource<object>();
-
-            _socketProcessor.AddSocket(webSocket, socketFinished, cancellationToken);
-
-            await socketFinished.Task;
+            await WebSocketHandler.Connect(HttpContext, _socketProcessor, cancellationToken);
         }
         else
         {

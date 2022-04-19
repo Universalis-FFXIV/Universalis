@@ -208,7 +208,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             ItemId = itemId,
         }, cancellationToken);
 
-        _sockets.BroadcastUpdate(new ItemUpdate
+        _sockets.Publish(new ItemUpdate
         {
             WorldId = worldId,
             ItemId = itemId,
