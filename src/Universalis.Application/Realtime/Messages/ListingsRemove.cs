@@ -12,8 +12,11 @@ public class ListingsRemove : SocketMessage
     [JsonPropertyName("world")]
     public uint WorldId { get; init; }
 
-    [JsonPropertyName("listings")]
-    public IList<ListingView> Listings { get; init; }
+    [JsonPropertyName("removed")]
+    public int DroppedListings { get; init; }
+
+    [JsonPropertyName("kept")]
+    public int KeptListings { get; init; }
 
     public ListingsRemove() : base("listings", "remove")
     {
