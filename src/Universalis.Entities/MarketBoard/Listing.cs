@@ -81,9 +81,12 @@ public class Listing : IEquatable<Listing>
                && PricePerUnit == other.PricePerUnit
                && Quantity == other.Quantity
                && DyeId == other.DyeId
+               && CreatorId == other.CreatorId
                && CreatorName == other.CreatorName
+               && RetainerId == other.RetainerId
                && RetainerName == other.RetainerName
-               && RetainerCityId == other.RetainerCityId;
+               && RetainerCityId == other.RetainerCityId
+               && SellerId == other.SellerId;
     }
 
     public override bool Equals(object obj)
