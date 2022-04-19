@@ -1,12 +1,12 @@
-﻿using Priority_Queue;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.IO;
+using Priority_Queue;
 using Prometheus;
 using System;
-using System.IO;
 using System.Net.WebSockets;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Universalis.Application.Realtime.Messages;
 
 namespace Universalis.Application.Realtime;
@@ -14,6 +14,8 @@ namespace Universalis.Application.Realtime;
 public class SocketClient
 {
     private const int QueueLimit = 20;
+
+    private static readonly RecyclableMemoryStreamManager MemoryStreamPool = new();
 
     private readonly SimplePriorityQueue<SocketMessage, long> _messages;
     private readonly WebSocket _ws;
@@ -103,7 +105,6 @@ public class SocketClient
 
         try
         {
-            var buf = new byte[4096]; // TODO: something
             while (!cancellationToken.IsCancellationRequested && _ws.State == WebSocketState.Open)
             {
                 // Wait for data to be made available
@@ -113,7 +114,7 @@ public class SocketClient
                 {
                     // So long as there's at least one await in this while loop,
                     // it shouldn't block other threads.
-                    await SendEvent(buf, message, cancellationToken);
+                    await SendEvent(message, cancellationToken);
                 }
             }
 
@@ -140,12 +141,24 @@ public class SocketClient
         }
     }
 
-    private async Task SendEvent(byte[] buf, SocketMessage message, CancellationToken cancellationToken = default)
+    private async Task SendEvent(SocketMessage message, CancellationToken cancellationToken = default)
     {
-        await using var streamView = new MemoryStream(buf, true);
-        await JsonSerializer.SerializeAsync(streamView, (object)message, cancellationToken: cancellationToken);
+        await using var stream = MemoryStreamPool.GetStream() as RecyclableMemoryStream;
+        await JsonSerializer.SerializeAsync(stream!, (object)message, cancellationToken: cancellationToken);
 
-        var pos = (int)streamView.Position;
-        await _ws.SendAsync(buf.AsMemory(..pos), WebSocketMessageType.Text, WebSocketMessageFlags.EndOfMessage, cancellationToken);
+        var cur = 0;
+        var end = (int)stream.Position;
+        foreach (var memory in stream.GetReadOnlySequence())
+        {
+            if (cur + memory.Length >= end)
+            {
+                var lastIdx = end - (cur + memory.Length);
+                await _ws.SendAsync(memory[..lastIdx], WebSocketMessageType.Text, WebSocketMessageFlags.EndOfMessage, cancellationToken);
+                break;
+            }
+
+            cur += memory.Length;
+            await _ws.SendAsync(memory, WebSocketMessageType.Text, WebSocketMessageFlags.None, cancellationToken);
+        }
     }
 }
