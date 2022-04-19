@@ -152,7 +152,7 @@ public class SocketClient
         {
             if (cur + memory.Length >= end)
             {
-                var lastIdx = end - (cur + memory.Length);
+                var lastIdx = end - cur;
                 await _ws.SendAsync(memory[..lastIdx], WebSocketMessageType.Text, WebSocketMessageFlags.EndOfMessage, cancellationToken);
                 break;
             }
