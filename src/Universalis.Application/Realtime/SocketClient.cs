@@ -6,6 +6,7 @@ using System.Net.WebSockets;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Universalis.Application.Realtime.Messages;
 
 namespace Universalis.Application.Realtime;
@@ -17,6 +18,7 @@ public class SocketClient
     private readonly SimplePriorityQueue<SocketMessage, long> _messages;
     private readonly WebSocket _ws;
     private readonly TaskCompletionSource<object> _cs;
+    private readonly ILogger _logger;
     private readonly object _runningLock;
 
     private SemaphoreSlim _recv;
@@ -26,13 +28,14 @@ public class SocketClient
 
     private static readonly Histogram DiscardedMessages = Metrics.CreateHistogram("universalis_ws_discarded_messages", "WebSocket Discarded Messages");
 
-    public SocketClient(WebSocket ws, TaskCompletionSource<object> cs)
+    public SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger logger)
     {
         _messages = new SimplePriorityQueue<SocketMessage, long>();
         _runningLock = true;
 
         _ws = ws;
         _cs = cs;
+        _logger = logger;
     }
 
     public void Push(SocketMessage message)
@@ -67,11 +70,15 @@ public class SocketClient
             }
             catch (ObjectDisposedException)
             {
-                // ignored
+                _logger.LogWarning("Semaphore is disposed.");
             }
             catch (SemaphoreFullException)
             {
-                // ignored
+                _logger.LogWarning("Semaphore is full.");
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Semaphore release failed for an unknown reason.");
             }
         }
     }
@@ -96,7 +103,7 @@ public class SocketClient
 
         try
         {
-            var buf = new byte[512]; // TODO: something
+            var buf = new byte[4096]; // TODO: something
             while (!cancellationToken.IsCancellationRequested && _ws.State == WebSocketState.Open)
             {
                 // Wait for data to be made available
@@ -114,6 +121,10 @@ public class SocketClient
                 WebSocketCloseStatus.NormalClosure,
                 "closing socket",
                 cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "WebSocket loop aborted with an exception.");
         }
         finally
         {
