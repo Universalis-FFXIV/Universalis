@@ -91,6 +91,9 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 .Select(s => MinimizedSale.FromSale(s, parameters.UploaderId))
                 .ToListAsync(cancellationToken);
 
+            // Used for WebSocket updates
+            var addedSales = new List<Sale>();
+
             var historyDocument = new History
             {
                 WorldId = worldId,
@@ -107,16 +110,10 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             {
                 // Remove duplicates
                 var head = existingHistory.Sales.FirstOrDefault();
-
-                // ReSharper disable once ForCanBeConvertedToForeach
-                for (var i = 0; i < minimizedSales.Count; i++)
+                foreach (var (minimizedSale, sale) in minimizedSales.Zip(cleanSales).TakeWhile(t => !t.First.Equals(head)))
                 {
-                    if (minimizedSales[i].Equals(head))
-                    {
-                        break;
-                    }
-
-                    existingHistory.Sales.Insert(0, minimizedSales[i]);
+                    existingHistory.Sales.Insert(0, minimizedSale);
+                    addedSales.Add(sale);
                 }
 
                 // Trims out duplicates and any invalid data
@@ -135,6 +132,12 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 }, cancellationToken);
             }
         }
+
+        var existingCurrentlyShown = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+        }, cancellationToken);
 
         List<Listing> cleanListings = null;
         if (parameters.Listings != null)
@@ -178,13 +181,11 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 .Where(l => l.Quantity > 0)
                 .OrderBy(l => l.PricePerUnit)
                 .ToListAsync(cancellationToken);
-        }
 
-        var existingCurrentlyShown = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-        }, cancellationToken);
+            var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
+            var addedListings = cleanListings.Except(oldListings).ToList();
+            var removedListings = oldListings.Except(cleanListings).ToList();
+        }
 
         var document = new CurrentlyShown
         {

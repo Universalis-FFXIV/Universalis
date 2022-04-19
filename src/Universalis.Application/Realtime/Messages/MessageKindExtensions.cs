@@ -6,8 +6,10 @@ public static class MessageKindExtensions
     {
         return kind switch
         {
-            MessageKind.ItemUpdate => "ITEM_UPDATE",
-            _ => "UNKNOWN",
+            MessageKind.ItemUpdate => "update",
+            MessageKind.Sales => "sales",
+            MessageKind.Listings => "listings",
+            _ => "unknown",
         };
     }
 }

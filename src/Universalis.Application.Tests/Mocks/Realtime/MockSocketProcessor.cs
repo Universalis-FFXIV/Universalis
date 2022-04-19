@@ -8,7 +8,7 @@ namespace Universalis.Application.Tests.Mocks.Realtime;
 
 public class MockSocketProcessor : ISocketProcessor
 {
-    public void BroadcastUpdate(SocketMessage message)
+    public void Publish(SocketMessage message)
     {
     }
 

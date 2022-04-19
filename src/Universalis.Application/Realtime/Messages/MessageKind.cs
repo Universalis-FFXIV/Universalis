@@ -3,4 +3,6 @@
 public enum MessageKind
 {
     ItemUpdate = 1,
+    Sales,
+    Listings,
 }
