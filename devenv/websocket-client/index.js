@@ -11,13 +11,16 @@ ws.on("open", () => {
 	ws.send(JSON.stringify({message: "Hello, world!"}));
 });
 
-let ev = [];
-ws.on("message", async data => {
-    ev.push(Date.now().valueOf());
-    while (ev[ev.length - 1] - ev[0] > 1000) {
-        ev.shift();
+let counts = new Map();
+ws.on("message", data => {
+    const message = JSON.parse(data);
+
+    if (!counts.has(message.event)) {
+        counts.set(message.event, 0);
     }
 
-	console.log(`RECV: ${data}`);
-    console.log(`AGG: ${ev.length} ev/s`);
+    const currentCount = counts.get(message.event);
+    counts.set(message.event, currentCount + 1);
+
+    console.log(counts);
 });
