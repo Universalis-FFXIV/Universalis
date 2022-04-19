@@ -202,10 +202,11 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 {
                     WorldId = worldId,
                     ItemId = itemId,
-                    Listings = await addedListings
+                    NewListings = (await addedListings
                         .ToAsyncEnumerable()
                         .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
-                        .ToListAsync(cancellationToken),
+                        .ToListAsync(cancellationToken)).Count,
+                    KeptListings = cleanListings.Count - addedListings.Count - removedListings.Count,
                 });
             }
 
@@ -215,10 +216,11 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 {
                     WorldId = worldId,
                     ItemId = itemId,
-                    Listings = await removedListings
+                    DroppedListings = (await removedListings
                         .ToAsyncEnumerable()
                         .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
-                        .ToListAsync(cancellationToken),
+                        .ToListAsync(cancellationToken)).Count,
+                    KeptListings = cleanListings.Count - addedListings.Count - removedListings.Count,
                 });
             }
         }
