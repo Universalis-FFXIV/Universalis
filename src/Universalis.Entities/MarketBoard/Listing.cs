@@ -74,7 +74,7 @@ public class Listing : IEquatable<Listing>
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
         return ListingId == other.ListingId
-               && Hq == other.Hq
+               || Hq == other.Hq
                && OnMannequin == other.OnMannequin
                && Materia.SequenceEqual(other.Materia)
                && PricePerUnit == other.PricePerUnit
@@ -83,7 +83,8 @@ public class Listing : IEquatable<Listing>
                && CreatorId == other.CreatorId
                && CreatorName == other.CreatorName
                && Math.Abs(LastReviewTimeUnixSeconds - other.LastReviewTimeUnixSeconds) < 0.1
-               && RetainerId == other.RetainerId && RetainerName == other.RetainerName
+               && RetainerId == other.RetainerId
+               && RetainerName == other.RetainerName
                && RetainerCityId == other.RetainerCityId
                && SellerId == other.SellerId;
     }
