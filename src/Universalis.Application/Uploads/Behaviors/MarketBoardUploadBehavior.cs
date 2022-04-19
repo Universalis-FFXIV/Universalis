@@ -64,8 +64,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 return new BadRequestResult();
             }
 
-            cleanSales = await parameters.Sales
-                .ToAsyncEnumerable()
+            cleanSales = parameters.Sales
                 .Select(s => new Sale
                 {
                     Hq = Util.ParseUnusualBool(s.Hq),
@@ -79,17 +78,16 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 .Where(s => s.Quantity > 0)
                 .Where(s => s.TimestampUnixSeconds > 0)
                 .OrderByDescending(s => s.TimestampUnixSeconds)
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             var existingHistory = await _historyDb.Retrieve(new HistoryQuery
             {
                 WorldId = worldId,
                 ItemId = itemId,
             }, cancellationToken);
-            var minimizedSales = await cleanSales
-                .ToAsyncEnumerable()
+            var minimizedSales = cleanSales
                 .Select(s => MinimizedSale.FromSale(s, parameters.UploaderId))
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             // Used for WebSocket updates
             var addedSales = new List<Sale>();
@@ -117,12 +115,11 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 }
 
                 // Trims out duplicates and any invalid data
-                existingHistory.Sales = await existingHistory.Sales
-                    .ToAsyncEnumerable()
+                existingHistory.Sales = existingHistory.Sales
                     .Where(s => s.PricePerUnit > 0) // We check PPU and *not* quantity because there are entries from before quantity was tracked
                     .Distinct()
                     .OrderByDescending(s => s.SaleTimeUnixSeconds)
-                    .ToListAsync(cancellationToken);
+                    .ToList();
 
                 historyDocument.Sales = existingHistory.Sales;
                 await _historyDb.Update(historyDocument, new HistoryQuery
@@ -157,8 +154,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 return new BadRequestResult();
             }
 
-            newListings = await parameters.Listings
-                .ToAsyncEnumerable()
+            newListings = parameters.Listings
                 .Select(l =>
                 {
                     return new Listing
@@ -190,7 +186,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 .Where(l => l.PricePerUnit > 0)
                 .Where(l => l.Quantity > 0)
                 .OrderBy(l => l.PricePerUnit)
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
             var addedListings = newListings.Where(l => !oldListings.Contains(l)).ToList();
@@ -202,11 +198,10 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 {
                     WorldId = worldId,
                     ItemId = itemId,
-                    NewListings = (await addedListings
+                    Listings = await addedListings
                         .ToAsyncEnumerable()
                         .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
-                        .ToListAsync(cancellationToken)).Count,
-                    KeptListings = oldListings.Count - removedListings.Count,
+                        .ToListAsync(cancellationToken),
                 });
             }
 
@@ -216,11 +211,10 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 {
                     WorldId = worldId,
                     ItemId = itemId,
-                    DroppedListings = (await removedListings
+                    Listings = await removedListings
                         .ToAsyncEnumerable()
                         .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
-                        .ToListAsync(cancellationToken)).Count,
-                    KeptListings = oldListings.Count - removedListings.Count,
+                        .ToListAsync(cancellationToken),
                 });
             }
         }

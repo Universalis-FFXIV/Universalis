@@ -11,7 +11,14 @@ ws.on("open", () => {
 	ws.send(JSON.stringify({message: "Hello, world!"}));
 });
 
+const counts = new Map();
 ws.on("message", data => {
     const message = JSON.parse(data);
-    console.log(message);
+
+    if (counts[message.event] == null) {
+        counts[message.event] = 0;
+    }
+
+    counts[message.event]++;
+    console.log(counts);
 });
