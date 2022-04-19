@@ -12,7 +12,7 @@ ws.on("open", () => {
 });
 
 let ev = [];
-ws.on("message", data => {
+ws.on("message", async data => {
     ev.push(Date.now().valueOf());
     while (ev[ev.length - 1] - ev[0] > 1000) {
         ev.shift();

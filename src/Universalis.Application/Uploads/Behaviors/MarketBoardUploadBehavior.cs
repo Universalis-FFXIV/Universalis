@@ -11,7 +11,6 @@ using Universalis.Application.Controllers;
 using Universalis.Application.Realtime;
 using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
-using Universalis.Application.Views.V1;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
@@ -92,11 +91,14 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 .Select(s => MinimizedSale.FromSale(s, parameters.UploaderId))
                 .ToListAsync(cancellationToken);
 
+            // Used for WebSocket updates
+            var addedSales = new List<Sale>();
+
             var historyDocument = new History
             {
                 WorldId = worldId,
                 ItemId = itemId,
-                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(), // TODO: Make this not risk overflowing
+                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
             };
 
             if (existingHistory == null)
@@ -108,14 +110,10 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             {
                 // Remove duplicates
                 var head = existingHistory.Sales.FirstOrDefault();
-                for (var i = 0; i < minimizedSales.Count; i++)
+                foreach (var (minimizedSale, sale) in minimizedSales.Zip(cleanSales).TakeWhile(t => !t.First.Equals(head)))
                 {
-                    if (minimizedSales[i].Equals(head))
-                    {
-                        break;
-                    }
-
-                    existingHistory.Sales.Insert(0, minimizedSales[i]);
+                    existingHistory.Sales.Insert(0, minimizedSale);
+                    addedSales.Add(sale);
                 }
 
                 // Trims out duplicates and any invalid data
@@ -133,7 +131,23 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     ItemId = itemId,
                 }, cancellationToken);
             }
+
+            if (addedSales.Count > 0)
+            {
+                _sockets.Publish(new SalesAdd
+                {
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    Sales = addedSales.Select(Util.SaleToView).ToList(),
+                });
+            }
         }
+
+        var existingCurrentlyShown = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+        }, cancellationToken);
 
         List<Listing> cleanListings = null;
         if (parameters.Listings != null)
@@ -177,13 +191,37 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 .Where(l => l.Quantity > 0)
                 .OrderBy(l => l.PricePerUnit)
                 .ToListAsync(cancellationToken);
-        }
 
-        var existingCurrentlyShown = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-        }, cancellationToken);
+            var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
+            var addedListings = cleanListings.Except(oldListings).ToList();
+            var removedListings = oldListings.Except(cleanListings).ToList();
+
+            if (addedListings.Count > 0)
+            {
+                _sockets.Publish(new ListingsAdd
+                {
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    Listings = await addedListings
+                        .ToAsyncEnumerable()
+                        .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
+                        .ToListAsync(cancellationToken),
+                });
+            }
+
+            if (removedListings.Count > 0)
+            {
+                _sockets.Publish(new ListingsRemove
+                {
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    Listings = await removedListings
+                        .ToAsyncEnumerable()
+                        .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
+                        .ToListAsync(cancellationToken),
+                });
+            }
+        }
 
         var document = new CurrentlyShown
         {
@@ -205,13 +243,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             WorldId = worldId,
             ItemId = itemId,
         }, cancellationToken);
-
-        _sockets.Publish(new ItemUpdate
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-        });
-
+        
         return null;
     }
 }

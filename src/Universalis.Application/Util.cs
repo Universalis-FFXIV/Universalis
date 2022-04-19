@@ -25,6 +25,19 @@ public static class Util
 
     private static readonly RecyclableMemoryStreamManager MemoryStreamPool = new();
 
+    public static SaleView SaleToView(Sale s)
+    {
+        return new SaleView
+        {
+            Hq = s.Hq,
+            PricePerUnit = s.PricePerUnit,
+            Quantity = s.Quantity,
+            Total = s.PricePerUnit * s.Quantity,
+            TimestampUnixSeconds = (long)s.TimestampUnixSeconds,
+            BuyerName = s.BuyerName,
+        };
+    }
+
     /// <summary>
     /// Converts a database listing into a listing view to be returned to external clients.
     /// </summary>

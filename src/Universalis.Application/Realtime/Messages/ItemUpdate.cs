@@ -10,7 +10,7 @@ public class ItemUpdate : SocketMessage
     [JsonPropertyName("world")]
     public uint WorldId { get; init; }
 
-    public ItemUpdate() : base(MessageKind.ItemUpdate)
+    public ItemUpdate() : base("item", "update")
     {
     }
 }

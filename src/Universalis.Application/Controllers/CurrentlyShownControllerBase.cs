@@ -78,16 +78,7 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
             .Where(s => s.PricePerUnit > 0)
             .Where(s => s.Quantity > 0)
             .Where(s => s.TimestampUnixSeconds > 0)
-            .Select(s => new SaleView
-            {
-                Hq = s.Hq,
-                PricePerUnit = s.PricePerUnit,
-                Quantity = s.Quantity,
-                Total = s.PricePerUnit * s.Quantity,
-                TimestampUnixSeconds = (long)s.TimestampUnixSeconds,
-                BuyerName = s.BuyerName,
-                WorldId = worldId,
-            })
+            .Select(Util.SaleToView)
             .ToList();
 
         var dataView = new MinimizedCurrentlyShownData
