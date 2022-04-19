@@ -149,7 +149,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             ItemId = itemId,
         }, cancellationToken);
 
-        List<Listing> cleanListings = null;
+        List<Listing> newListings = null;
         if (parameters.Listings != null)
         {
             if (Util.HasHtmlTags(JsonSerializer.Serialize(parameters.Listings)))
@@ -157,7 +157,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 return new BadRequestResult();
             }
 
-            cleanListings = await parameters.Listings
+            newListings = await parameters.Listings
                 .ToAsyncEnumerable()
                 .Select(l =>
                 {
@@ -193,8 +193,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 .ToListAsync(cancellationToken);
 
             var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
-            var addedListings = cleanListings.Except(oldListings).ToList();
-            var removedListings = oldListings.Except(cleanListings).ToList();
+            var addedListings = newListings.Where(l => !oldListings.Contains(l)).ToList();
+            var removedListings = oldListings.Where(l => !newListings.Contains(l)).ToList();
 
             if (addedListings.Count > 0)
             {
@@ -230,7 +230,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             WorldId = worldId,
             ItemId = itemId,
             LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            Listings = cleanListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>(),
+            Listings = newListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>(),
             RecentHistory = cleanSales ?? existingCurrentlyShown?.RecentHistory ?? new List<Sale>(),
             UploaderIdHash = parameters.UploaderId,
         };
