@@ -7,8 +7,8 @@ public abstract class SocketMessage
     [JsonPropertyName("event")]
     public string Event { get; }
 
-    protected SocketMessage(MessageKind kind)
+    protected SocketMessage(params string[] channels)
     {
-        Event = kind.ToEventName();
+        Event = string.Join('/', channels);
     }
 }

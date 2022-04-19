@@ -131,6 +131,16 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     ItemId = itemId,
                 }, cancellationToken);
             }
+
+            if (addedSales.Count > 0)
+            {
+                _sockets.Publish(new SalesAdd
+                {
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    Sales = addedSales.Select(Util.SaleToView).ToList(),
+                });
+            }
         }
 
         var existingCurrentlyShown = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
@@ -185,6 +195,32 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
             var addedListings = cleanListings.Except(oldListings).ToList();
             var removedListings = oldListings.Except(cleanListings).ToList();
+
+            if (addedListings.Count > 0)
+            {
+                _sockets.Publish(new ListingsAdd
+                {
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    Listings = await addedListings
+                        .ToAsyncEnumerable()
+                        .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
+                        .ToListAsync(cancellationToken),
+                });
+            }
+
+            if (removedListings.Count > 0)
+            {
+                _sockets.Publish(new ListingsRemove
+                {
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    Listings = await removedListings
+                        .ToAsyncEnumerable()
+                        .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
+                        .ToListAsync(cancellationToken),
+                });
+            }
         }
 
         var document = new CurrentlyShown
@@ -207,13 +243,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             WorldId = worldId,
             ItemId = itemId,
         }, cancellationToken);
-
-        _sockets.Publish(new ItemUpdate
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-        });
-
+        
         return null;
     }
 }
