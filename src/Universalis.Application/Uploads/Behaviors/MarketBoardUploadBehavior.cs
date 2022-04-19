@@ -206,7 +206,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                         .ToAsyncEnumerable()
                         .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
                         .ToListAsync(cancellationToken)).Count,
-                    KeptListings = cleanListings.Count - removedListings.Count,
+                    KeptListings = oldListings.Count - removedListings.Count,
                 });
             }
 
@@ -220,7 +220,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                         .ToAsyncEnumerable()
                         .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
                         .ToListAsync(cancellationToken)).Count,
-                    KeptListings = cleanListings.Count - removedListings.Count,
+                    KeptListings = oldListings.Count - removedListings.Count,
                 });
             }
         }
