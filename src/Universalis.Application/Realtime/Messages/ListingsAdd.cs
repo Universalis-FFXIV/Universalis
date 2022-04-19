@@ -12,11 +12,8 @@ public class ListingsAdd : SocketMessage
     [JsonPropertyName("world")]
     public uint WorldId { get; init; }
 
-    [JsonPropertyName("added")]
-    public int NewListings { get; init; }
-
-    [JsonPropertyName("kept")]
-    public int KeptListings { get; init; }
+    [JsonPropertyName("listings")]
+    public IList<ListingView> Listings { get; init; }
 
     public ListingsAdd() : base("listings", "add")
     {
