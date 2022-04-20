@@ -139,6 +139,7 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
                             if (!noGst)
                             {
                                 l.PricePerUnit = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
+                                l.Total = (uint)Math.Ceiling(l.Total * 1.05);
                             }
 
                             l.WorldId = worldDc.IsDc ? next.WorldId : null;
