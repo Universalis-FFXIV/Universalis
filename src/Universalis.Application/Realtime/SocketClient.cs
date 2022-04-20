@@ -102,21 +102,10 @@ public class SocketClient
 
         // Create a blocked semaphore with one consumer
         _recv = new SemaphoreSlim(0, 1);
-
         try
         {
-            while (!cancellationToken.IsCancellationRequested && _ws.State == WebSocketState.Open)
-            {
-                // Wait for data to be made available
-                await _recv.WaitAsync(cancellationToken);
-
-                while (_messages.TryDequeue(out var message))
-                {
-                    // So long as there's at least one await in this while loop,
-                    // it shouldn't block other threads.
-                    await SendEvent(message, cancellationToken);
-                }
-            }
+            // Run the outbound and inbound data loops
+            await Task.WhenAny(OutboundLoop(cancellationToken), InboundLoop(cancellationToken));
 
             await _ws.CloseAsync(
                 WebSocketCloseStatus.NormalClosure,
@@ -131,13 +120,41 @@ public class SocketClient
         {
             OnClose?.Invoke();
             _cs.TrySetResult(true);
+            _recv.Dispose();
         }
-
-        _recv.Dispose();
 
         lock (_runningLock)
         {
             Running = false;
+        }
+    }
+
+    private async Task OutboundLoop(CancellationToken cancellationToken = default)
+    {
+        while (!cancellationToken.IsCancellationRequested && _ws.State == WebSocketState.Open)
+        {
+            // Wait for data to be made available
+            await _recv.WaitAsync(cancellationToken);
+
+            while (_messages.TryDequeue(out var message))
+            {
+                // So long as there's at least one await in this while loop,
+                // it shouldn't block other threads.
+                await SendEvent(message, cancellationToken);
+            }
+        }
+    }
+
+    private async Task InboundLoop(CancellationToken cancellationToken = default)
+    {
+        var buf = new byte[1024]; // TODO: something
+        while (!cancellationToken.IsCancellationRequested && _ws.State == WebSocketState.Open)
+        {
+            var res = await _ws.ReceiveAsync(buf, cancellationToken);
+            if (res.CloseStatus != null)
+            {
+                break;
+            }
         }
     }
 
