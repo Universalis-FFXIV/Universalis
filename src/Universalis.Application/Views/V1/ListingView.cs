@@ -124,5 +124,5 @@ public class ListingView : IPriceable
     /// The total price.
     /// </summary>
     [JsonPropertyName("total")]
-    public uint Total { get; init; }
+    public uint Total { get; set; }
 }

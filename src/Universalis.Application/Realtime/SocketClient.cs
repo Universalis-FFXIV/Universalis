@@ -13,7 +13,7 @@ namespace Universalis.Application.Realtime;
 
 public class SocketClient
 {
-    private const int QueueLimit = 20;
+    private const int QueueLimit = 30;
 
     private static readonly RecyclableMemoryStreamManager MemoryStreamPool = new();
 
