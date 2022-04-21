@@ -5,10 +5,13 @@ namespace Universalis.Application.Realtime.Messages;
 public abstract class SocketMessage
 {
     [JsonPropertyName("event")]
-    public string Event { get; }
+    public string Event => string.Join('/', ChannelsInternal);
+
+    [JsonIgnore]
+    public string[] ChannelsInternal { get; }
 
     protected SocketMessage(params string[] channels)
     {
-        Event = string.Join('/', channels);
+        ChannelsInternal = channels;
     }
 }

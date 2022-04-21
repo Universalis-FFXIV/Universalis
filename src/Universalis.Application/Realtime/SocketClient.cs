@@ -3,6 +3,9 @@ using Microsoft.IO;
 using Priority_Queue;
 using Prometheus;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Text.Json;
 using System.Threading;
@@ -21,6 +24,7 @@ public class SocketClient
     private readonly WebSocket _ws;
     private readonly TaskCompletionSource<object> _cs;
     private readonly ILogger _logger;
+    private readonly IList<EventCondition> _conditions;
     private readonly object _runningLock;
 
     private SemaphoreSlim _recv;
@@ -34,6 +38,7 @@ public class SocketClient
     {
         _messages = new SimplePriorityQueue<SocketMessage, long>();
         _runningLock = true;
+        _conditions = new List<EventCondition>();
 
         _ws = ws;
         _cs = cs;
@@ -42,6 +47,14 @@ public class SocketClient
 
     public void Push(SocketMessage message)
     {
+        // Check if this socket is expecting this kind of message. If the
+        // client hasn't subscribed to any channels, this will not send
+        // any messages.
+        if (!_conditions.Any(cond => cond.ShouldSend(message)))
+        {
+            return;
+        }
+
         _messages.Enqueue(message, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
 
         // We keep an incrementing count of discarded messages because
@@ -154,6 +167,47 @@ public class SocketClient
             if (res.CloseStatus != null)
             {
                 break;
+            }
+            
+            await using var stream = new MemoryStream(buf);
+            var data = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+
+            if (!data.RootElement.TryGetProperty("event", out var e) && e.ValueKind == JsonValueKind.String)
+            {
+                continue;
+            }
+
+            var eventName = e.GetString()?.ToLowerInvariant();
+            switch (eventName)
+            {
+                case "subscribe":
+                    if (!data.RootElement.TryGetProperty("channel", out var subChannel)
+                        && subChannel.ValueKind == JsonValueKind.String)
+                    {
+                        continue;
+                    }
+
+                    var subCond = EventCondition.Parse(subChannel.GetString());
+                    if (!_conditions.Contains(subCond))
+                    {
+                        _conditions.Add(subCond);
+                    }
+
+                    break;
+                case "unsubscribe":
+                    if (!data.RootElement.TryGetProperty("channel", out var unsubChannel)
+                        && unsubChannel.ValueKind == JsonValueKind.String)
+                    {
+                        continue;
+                    }
+
+                    var unsubCond = EventCondition.Parse(unsubChannel.GetString());
+                    if (_conditions.Contains(unsubCond))
+                    {
+                        _conditions.Remove(unsubCond);
+                    }
+
+                    break;
             }
         }
     }
