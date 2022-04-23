@@ -131,12 +131,15 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
             if (addedSales.Count > 0)
             {
-                _sockets.Publish(new SalesAdd
+                await Task.Run(() =>
                 {
-                    WorldId = worldId,
-                    ItemId = itemId,
-                    Sales = addedSales.Select(Util.SaleToView).ToList(),
-                });
+                    _sockets.Publish(new SalesAdd
+                    {
+                        WorldId = worldId,
+                        ItemId = itemId,
+                        Sales = addedSales.Select(Util.SaleToView).ToList(),
+                    });
+                }, cancellationToken);
             }
         }
 
@@ -194,28 +197,34 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
             if (addedListings.Count > 0)
             {
-                _sockets.Publish(new ListingsAdd
+                await Task.Run(async () =>
                 {
-                    WorldId = worldId,
-                    ItemId = itemId,
-                    Listings = await addedListings
-                        .ToAsyncEnumerable()
-                        .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
-                        .ToListAsync(cancellationToken),
-                });
+                    _sockets.Publish(new ListingsAdd
+                    {
+                        WorldId = worldId,
+                        ItemId = itemId,
+                        Listings = await addedListings
+                            .ToAsyncEnumerable()
+                            .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
+                            .ToListAsync(cancellationToken),
+                    });
+                }, cancellationToken);
             }
 
             if (removedListings.Count > 0)
             {
-                _sockets.Publish(new ListingsRemove
+                await Task.Run(async () =>
                 {
-                    WorldId = worldId,
-                    ItemId = itemId,
-                    Listings = await removedListings
-                        .ToAsyncEnumerable()
-                        .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
-                        .ToListAsync(cancellationToken),
-                });
+                    _sockets.Publish(new ListingsRemove
+                    {
+                        WorldId = worldId,
+                        ItemId = itemId,
+                        Listings = await removedListings
+                            .ToAsyncEnumerable()
+                            .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
+                            .ToListAsync(cancellationToken),
+                    });
+                }, cancellationToken);
             }
         }
 
