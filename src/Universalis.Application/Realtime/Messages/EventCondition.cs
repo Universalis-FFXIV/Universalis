@@ -8,23 +8,23 @@ namespace Universalis.Application.Realtime.Messages;
 
 public class EventCondition : IEquatable<EventCondition>
 {
-    private readonly string[] _channels;
+    private readonly string[] _filterChannels;
     private readonly IDictionary<string, string> _filters;
 
     private EventCondition(string[] channels, IDictionary<string, string> filters)
     {
-        _channels = channels;
+        _filterChannels = channels;
         _filters = filters;
     }
 
     public bool ShouldSend(SocketMessage message)
     {
-        if (_channels.Length > message.ChannelsInternal.Length)
+        if (_filterChannels.Length > message.ChannelsInternal.Length)
         {
             return false;
         }
 
-        foreach (var (cond, query) in _channels.Zip(message.ChannelsInternal))
+        foreach (var (cond, query) in _filterChannels.Zip(message.ChannelsInternal))
         {
             if (!string.Equals(cond, query, StringComparison.InvariantCultureIgnoreCase))
             {
@@ -41,7 +41,7 @@ public class EventCondition : IEquatable<EventCondition>
                     prop => prop.GetGetMethod()?.Invoke(message, Array.Empty<object>())?.ToString());
             foreach (var (key, val) in _filters)
             {
-                if (properties[key] != val)
+                if (!properties.TryGetValue(key, out var test) || test != val)
                 {
                     return false;
                 }
@@ -61,10 +61,11 @@ public class EventCondition : IEquatable<EventCondition>
         var filtersEnd = condition.IndexOf('}');
         if (filtersStart != -1 && filtersEnd != -1)
         {
-            var filtersStr = condition[filtersStart..filtersEnd];
+            var filtersStr = condition[(filtersStart + 1)..filtersEnd];
             filters = filtersStr
                 .Split(',')
-                .Select(s => s.Trim().Split('='))
+                .Select(s => s.Trim().Split('=').Select(ss => ss.Trim()).ToArray())
+                .Where(p => p.Length == 2)
                 .ToDictionary(p => p[0], p => p[1]);
         }
 
@@ -75,7 +76,7 @@ public class EventCondition : IEquatable<EventCondition>
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
-        return Equals(_channels, other._channels) && Equals(_filters, other._filters);
+        return Equals(_filterChannels, other._filterChannels) && Equals(_filters, other._filters);
     }
 
     public override bool Equals(object obj)
@@ -87,6 +88,6 @@ public class EventCondition : IEquatable<EventCondition>
 
     public override int GetHashCode()
     {
-        return (_channels != null ? _channels.GetHashCode() : 0);
+        return (_filterChannels != null ? _filterChannels.GetHashCode() : 0);
     }
 }
