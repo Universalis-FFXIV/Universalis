@@ -8,7 +8,11 @@ const ws = new WebSocket(addr);
 
 ws.on("open", () => {
 	console.log("Connection opened.");
-	ws.send(JSON.stringify({message: "Hello, world!"}));
+	ws.send(JSON.stringify({event: "subscribe", channel: "item/update{world=74}"}));
+});
+
+ws.on("close", () => {
+	console.log("Connection closed.");
 });
 
 ws.on("message", data => {
