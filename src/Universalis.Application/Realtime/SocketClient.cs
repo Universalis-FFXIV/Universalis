@@ -160,24 +160,39 @@ public class SocketClient
 
     private async Task InboundLoop(CancellationToken cancellationToken = default)
     {
-        var buf = new byte[1024]; // TODO: something
+        // Limit inbound message size to 1KB
+        var buf = new byte[1024];
+
         while (!cancellationToken.IsCancellationRequested && _ws.State == WebSocketState.Open)
         {
+            // Ideally we would only allocate the buffer as needed since inbound messages are
+            // infrequent, but there doesn't seem to be a way of doing that without refactoring
+            // the entire system into a one that loops over the connections, which probably
+            // doesn't scale well for many connections.
             var res = await _ws.ReceiveAsync(buf, cancellationToken);
             if (res.CloseStatus != null)
             {
                 break;
             }
             
-            await using var stream = new MemoryStream(buf);
-            var data = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+            JsonDocument data;
+            await using var stream = new MemoryStream(buf[..res.Count]);
+            try
+            {
+                data = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "JSON parsing failed");
+                return;
+            }
 
-            if (!data.RootElement.TryGetProperty("event", out var e) && e.ValueKind == JsonValueKind.String)
+            if (!data.RootElement.TryGetProperty("event", out var @event) && @event.ValueKind == JsonValueKind.String)
             {
                 continue;
             }
 
-            var eventName = e.GetString()?.ToLowerInvariant();
+            var eventName = @event.GetString()?.ToLowerInvariant();
             switch (eventName)
             {
                 case "subscribe":
