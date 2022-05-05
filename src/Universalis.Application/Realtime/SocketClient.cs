@@ -179,12 +179,11 @@ public class SocketClient
                 break;
             }
 
-            await ReceiveEvent(buf, res, cancellationToken);
+            await ReceiveEvent(buf, res);
         }
     }
 
-    private async Task ReceiveEvent(byte[] buf, WebSocketReceiveResult res,
-        CancellationToken cancellationToken = default)
+    private async Task ReceiveEvent(byte[] buf, WebSocketReceiveResult res)
     {
         BsonDocument data;
         await using var stream = new MemoryStream(buf[..res.Count]);
