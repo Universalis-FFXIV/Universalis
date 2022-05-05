@@ -1,13 +1,13 @@
-﻿using System.Text.Json.Serialization;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
 namespace Universalis.Application.Realtime.Messages;
 
 public class ItemUpdate : SocketMessage
 {
-    [JsonPropertyName("item")]
+    [BsonElement("item")]
     public uint ItemId { get; init; }
 
-    [JsonPropertyName("world")]
+    [BsonElement("world")]
     public uint WorldId { get; init; }
 
     public ItemUpdate() : base("item", "update")
