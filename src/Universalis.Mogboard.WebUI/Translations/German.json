@@ -1441,7 +1441,7 @@
     },
     {
         "term": "Show on GarlandTools",
-        "definition": "Zeige auf GarlanTools",
+        "definition": "Zeige auf GarlandTools",
         "context": "ext_garlandtools",
         "term_plural": "",
         "reference": "",
