@@ -1,13 +1,13 @@
-﻿using System.Text.Json.Serialization;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
 namespace Universalis.Application.Realtime.Messages;
 
 public abstract class SocketMessage
 {
-    [JsonPropertyName("event")]
+    [BsonElement("event")]
     public string Event => string.Join('/', ChannelsInternal);
 
-    [JsonIgnore]
+    [BsonIgnore]
     public string[] ChannelsInternal { get; }
 
     protected SocketMessage(params string[] channels)

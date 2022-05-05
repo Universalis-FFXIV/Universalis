@@ -1,3 +1,4 @@
+import { deserialize, serialize } from "bson";
 import WebSocket from "ws";
 
 const addr = process.argv.length > 2
@@ -8,7 +9,7 @@ const ws = new WebSocket(addr);
 
 ws.on("open", () => {
 	console.log("Connection opened.");
-	ws.send(JSON.stringify({event: "subscribe", channel: "item/update{world=74}"}));
+	ws.send(serialize({ event: "subscribe", channel: "item/update{world=74}" }));
 });
 
 ws.on("close", () => {
@@ -16,6 +17,6 @@ ws.on("close", () => {
 });
 
 ws.on("message", data => {
-    const message = JSON.parse(data);
+    const message = deserialize(data);
     console.log(message);
 });

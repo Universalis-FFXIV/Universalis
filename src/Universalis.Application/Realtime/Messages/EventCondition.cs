@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text.Json.Serialization;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Universalis.Application.Realtime.Messages;
 
@@ -19,6 +19,7 @@ public class EventCondition : IEquatable<EventCondition>
 
     public bool ShouldSend(SocketMessage message)
     {
+        // Check that the filter channels are a subset of the message channels
         if (_filterChannels.Length > message.ChannelsInternal.Length)
         {
             return false;
@@ -32,19 +33,24 @@ public class EventCondition : IEquatable<EventCondition>
             }
         }
 
-        if (_filters.Count > 0)
+        // Check the filters and filter values
+        if (_filters.Count <= 0)
         {
-            var properties = message.GetType()
-                .GetProperties()
-                .Where(prop => prop.GetGetMethod() != null)
-                .ToDictionary(prop => prop.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? prop.Name,
-                    prop => prop.GetGetMethod()?.Invoke(message, Array.Empty<object>())?.ToString());
-            foreach (var (key, val) in _filters)
+            return true;
+        }
+        
+        var properties = message.GetType()
+            .GetProperties()
+            .Where(prop => prop.GetGetMethod() != null)
+            .Where(prop => prop.GetCustomAttribute<BsonIgnoreAttribute>() == null)
+            .ToDictionary(
+                prop => prop.GetCustomAttribute<BsonElementAttribute>()?.ElementName ?? prop.Name,
+                prop => prop.GetGetMethod()?.Invoke(message, Array.Empty<object>())?.ToString());
+        foreach (var (key, val) in _filters)
+        {
+            if (!properties.TryGetValue(key, out var test) || test != val)
             {
-                if (!properties.TryGetValue(key, out var test) || test != val)
-                {
-                    return false;
-                }
+                return false;
             }
         }
 

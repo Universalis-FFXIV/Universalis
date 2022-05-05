@@ -352,3 +352,6 @@ Universalis.*.xml
 
 # Monitoring logs
 *.csv
+
+# macOS metadata
+.DS_Store

@@ -7,9 +7,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using MongoDB.Bson;
+using MongoDB.Bson.IO;
+using MongoDB.Bson.Serialization;
 using Universalis.Application.Realtime.Messages;
 
 namespace Universalis.Application.Realtime;
@@ -77,24 +79,26 @@ public class SocketClient
         }
 
         // Release the semaphore, if applicable
-        if (_recv.CurrentCount == 0)
+        if (_recv.CurrentCount != 0)
         {
-            try
-            {
-                _recv?.Release();
-            }
-            catch (ObjectDisposedException)
-            {
-                _logger.LogWarning("Semaphore is disposed.");
-            }
-            catch (SemaphoreFullException)
-            {
-                _logger.LogWarning("Semaphore is full.");
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Semaphore release failed for an unknown reason.");
-            }
+            return;
+        }
+        
+        try
+        {
+            _recv?.Release();
+        }
+        catch (ObjectDisposedException)
+        {
+            _logger.LogWarning("Semaphore is disposed.");
+        }
+        catch (SemaphoreFullException)
+        {
+            _logger.LogWarning("Semaphore is full.");
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Semaphore release failed for an unknown reason.");
         }
     }
 
@@ -174,63 +178,82 @@ public class SocketClient
             {
                 break;
             }
-            
-            JsonDocument data;
-            await using var stream = new MemoryStream(buf[..res.Count]);
-            try
-            {
-                data = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "JSON parsing failed");
-                return;
-            }
 
-            if (!data.RootElement.TryGetProperty("event", out var @event) && @event.ValueKind == JsonValueKind.String)
-            {
-                continue;
-            }
+            await ReceiveEvent(buf, res);
+        }
+    }
 
-            var eventName = @event.GetString()?.ToLowerInvariant();
-            switch (eventName)
-            {
-                case "subscribe":
-                    if (!data.RootElement.TryGetProperty("channel", out var subChannel)
-                        && subChannel.ValueKind == JsonValueKind.String)
-                    {
-                        continue;
-                    }
+    private async Task ReceiveEvent(byte[] buf, WebSocketReceiveResult res)
+    {
+        BsonDocument data;
+        await using var stream = new MemoryStream(buf[..res.Count]);
+        try
+        {
+            data = BsonSerializer.Deserialize<BsonDocument>(buf);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "BSON deserialization failed");
+            return;
+        }
 
-                    var subCond = EventCondition.Parse(subChannel.GetString());
-                    if (!_conditions.Contains(subCond))
-                    {
-                        _conditions.Add(subCond);
-                    }
+        string @event;
+        try
+        {
+            @event = data["event"].AsString;
+        }
+        catch (InvalidCastException)
+        {
+            return;
+        }
 
-                    break;
-                case "unsubscribe":
-                    if (!data.RootElement.TryGetProperty("channel", out var unsubChannel)
-                        && unsubChannel.ValueKind == JsonValueKind.String)
-                    {
-                        continue;
-                    }
+        var eventName = @event.ToLowerInvariant();
+        switch (eventName)
+        {
+            case "subscribe":
+                string subChannel;
+                try
+                {
+                    subChannel = data["channel"].AsString;
+                }
+                catch (InvalidCastException)
+                {
+                    return;
+                }
+                
+                var subCond = EventCondition.Parse(subChannel);
+                if (!_conditions.Contains(subCond))
+                {
+                    _conditions.Add(subCond);
+                }
 
-                    var unsubCond = EventCondition.Parse(unsubChannel.GetString());
-                    if (_conditions.Contains(unsubCond))
-                    {
-                        _conditions.Remove(unsubCond);
-                    }
+                break;
+            case "unsubscribe":
+                string unsubChannel;
+                try
+                {
+                    unsubChannel = data["channel"].AsString;
+                }
+                catch (InvalidCastException)
+                {
+                    return;
+                }
 
-                    break;
-            }
+                var unsubCond = EventCondition.Parse(unsubChannel);
+                if (_conditions.Contains(unsubCond))
+                {
+                    _conditions.Remove(unsubCond);
+                }
+
+                break;
         }
     }
 
     private async Task SendEvent(SocketMessage message, CancellationToken cancellationToken = default)
     {
         await using var stream = MemoryStreamPool.GetStream() as RecyclableMemoryStream;
-        await JsonSerializer.SerializeAsync(stream!, (object)message, cancellationToken: cancellationToken);
+        using var writer = new BsonBinaryWriter(stream);
+        BsonSerializer.Serialize(writer, message.GetType(), message);
 
         var cur = 0;
         var end = (int)stream.Position;
@@ -239,12 +262,12 @@ public class SocketClient
             if (cur + memory.Length >= end)
             {
                 var lastIdx = end - cur;
-                await _ws.SendAsync(memory[..lastIdx], WebSocketMessageType.Text, WebSocketMessageFlags.EndOfMessage, cancellationToken);
+                await _ws.SendAsync(memory[..lastIdx], WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage, cancellationToken);
                 break;
             }
 
             cur += memory.Length;
-            await _ws.SendAsync(memory, WebSocketMessageType.Text, WebSocketMessageFlags.None, cancellationToken);
+            await _ws.SendAsync(memory, WebSocketMessageType.Binary, WebSocketMessageFlags.None, cancellationToken);
         }
     }
 }
