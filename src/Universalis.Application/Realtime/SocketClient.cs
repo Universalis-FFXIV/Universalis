@@ -174,56 +174,62 @@ public class SocketClient
             {
                 break;
             }
-            
-            JsonDocument data;
-            await using var stream = new MemoryStream(buf[..res.Count]);
-            try
-            {
-                data = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "JSON parsing failed");
-                return;
-            }
 
-            if (!data.RootElement.TryGetProperty("event", out var @event) && @event.ValueKind == JsonValueKind.String)
-            {
-                continue;
-            }
+            await ReceiveEvent(buf, res, cancellationToken);
+        }
+    }
 
-            var eventName = @event.GetString()?.ToLowerInvariant();
-            switch (eventName)
-            {
-                case "subscribe":
-                    if (!data.RootElement.TryGetProperty("channel", out var subChannel)
-                        && subChannel.ValueKind == JsonValueKind.String)
-                    {
-                        continue;
-                    }
+    private async Task ReceiveEvent(byte[] buf, WebSocketReceiveResult res,
+        CancellationToken cancellationToken = default)
+    {
+        JsonDocument data;
+        await using var stream = new MemoryStream(buf[..res.Count]);
+        try
+        {
+            data = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "JSON parsing failed");
+            return;
+        }
 
-                    var subCond = EventCondition.Parse(subChannel.GetString());
-                    if (!_conditions.Contains(subCond))
-                    {
-                        _conditions.Add(subCond);
-                    }
+        if (!data.RootElement.TryGetProperty("event", out var @event) && @event.ValueKind == JsonValueKind.String)
+        {
+            return;
+        }
 
-                    break;
-                case "unsubscribe":
-                    if (!data.RootElement.TryGetProperty("channel", out var unsubChannel)
-                        && unsubChannel.ValueKind == JsonValueKind.String)
-                    {
-                        continue;
-                    }
+        var eventName = @event.GetString()?.ToLowerInvariant();
+        switch (eventName)
+        {
+            case "subscribe":
+                if (!data.RootElement.TryGetProperty("channel", out var subChannel)
+                    && subChannel.ValueKind == JsonValueKind.String)
+                {
+                    return;
+                }
 
-                    var unsubCond = EventCondition.Parse(unsubChannel.GetString());
-                    if (_conditions.Contains(unsubCond))
-                    {
-                        _conditions.Remove(unsubCond);
-                    }
+                var subCond = EventCondition.Parse(subChannel.GetString());
+                if (!_conditions.Contains(subCond))
+                {
+                    _conditions.Add(subCond);
+                }
 
-                    break;
-            }
+                break;
+            case "unsubscribe":
+                if (!data.RootElement.TryGetProperty("channel", out var unsubChannel)
+                    && unsubChannel.ValueKind == JsonValueKind.String)
+                {
+                    return;
+                }
+
+                var unsubCond = EventCondition.Parse(unsubChannel.GetString());
+                if (_conditions.Contains(unsubCond))
+                {
+                    _conditions.Remove(unsubCond);
+                }
+
+                break;
         }
     }
 
