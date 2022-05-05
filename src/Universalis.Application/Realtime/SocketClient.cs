@@ -263,12 +263,12 @@ public class SocketClient
             if (cur + memory.Length >= end)
             {
                 var lastIdx = end - cur;
-                await _ws.SendAsync(memory[..lastIdx], WebSocketMessageType.Text, WebSocketMessageFlags.EndOfMessage, cancellationToken);
+                await _ws.SendAsync(memory[..lastIdx], WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage, cancellationToken);
                 break;
             }
 
             cur += memory.Length;
-            await _ws.SendAsync(memory, WebSocketMessageType.Text, WebSocketMessageFlags.None, cancellationToken);
+            await _ws.SendAsync(memory, WebSocketMessageType.Binary, WebSocketMessageFlags.None, cancellationToken);
         }
     }
 }
