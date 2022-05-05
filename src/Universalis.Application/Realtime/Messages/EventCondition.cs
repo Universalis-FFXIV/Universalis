@@ -19,6 +19,7 @@ public class EventCondition : IEquatable<EventCondition>
 
     public bool ShouldSend(SocketMessage message)
     {
+        // Check that the filter channels are a subset of the message channels
         if (_filterChannels.Length > message.ChannelsInternal.Length)
         {
             return false;
@@ -32,6 +33,7 @@ public class EventCondition : IEquatable<EventCondition>
             }
         }
 
+        // Check the filters and filter values
         if (_filters.Count <= 0)
         {
             return true;
@@ -40,7 +42,9 @@ public class EventCondition : IEquatable<EventCondition>
         var properties = message.GetType()
             .GetProperties()
             .Where(prop => prop.GetGetMethod() != null)
-            .ToDictionary(prop => prop.GetCustomAttribute<BsonElementAttribute>()?.ElementName ?? prop.Name,
+            .Where(prop => prop.GetCustomAttribute<BsonIgnoreAttribute>() == null)
+            .ToDictionary(
+                prop => prop.GetCustomAttribute<BsonElementAttribute>()?.ElementName ?? prop.Name,
                 prop => prop.GetGetMethod()?.Invoke(message, Array.Empty<object>())?.ToString());
         foreach (var (key, val) in _filters)
         {
