@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Universalis.Application.Caching;
 using Universalis.Application.Controllers;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
+using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Tests.Mocks.Realtime;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
@@ -22,7 +23,8 @@ public class MarketBoardUploadBehaviorTests
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
+        var gameData = new MockGameDataProvider();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
 
         var upload = new UploadParameters
         {
@@ -41,7 +43,8 @@ public class MarketBoardUploadBehaviorTests
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
+        var gameData = new MockGameDataProvider();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
 
         var upload = new UploadParameters
         {
@@ -60,13 +63,106 @@ public class MarketBoardUploadBehaviorTests
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
+        var gameData = new MockGameDataProvider();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
 
         var upload = new UploadParameters
         {
             WorldId = 74,
             ItemId = 5333,
             UploaderId = "5627384655756342554",
+        };
+        Assert.False(behavior.ShouldExecute(upload));
+    }
+    
+    [Fact]
+    public void Behavior_DoesNotRun_WithZeroQuantitySales()
+    {
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var sockets = new MockSocketProcessor();
+        var gameData = new MockGameDataProvider();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
+        
+        var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
+        sales[0].Quantity = 0;
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            UploaderId = "5627384655756342554",
+            Sales = sales,
+        };
+        Assert.False(behavior.ShouldExecute(upload));
+    }
+    
+    [Fact]
+    public void Behavior_DoesNotRun_WithZeroQuantityListings()
+    {
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var sockets = new MockSocketProcessor();
+        var gameData = new MockGameDataProvider();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
+        
+        var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
+        listings[0].Quantity = 0;
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            UploaderId = "5627384655756342554",
+            Listings = listings,
+        };
+        Assert.False(behavior.ShouldExecute(upload));
+    }
+    
+    [Fact]
+    public void Behavior_DoesNotRun_WithInvalidStackSizeSales()
+    {
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var sockets = new MockSocketProcessor();
+        var gameData = new MockGameDataProvider();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
+        
+        var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
+        sales[0].Quantity = 9999;
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            UploaderId = "5627384655756342554",
+            Sales = sales,
+        };
+        Assert.False(behavior.ShouldExecute(upload));
+    }
+    
+    [Fact]
+    public void Behavior_DoesNotRun_WithInvalidStackSizeListings()
+    {
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
+        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var sockets = new MockSocketProcessor();
+        var gameData = new MockGameDataProvider();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
+        
+        var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
+        listings[0].Quantity = 9999;
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            UploaderId = "5627384655756342554",
+            Listings = listings,
         };
         Assert.False(behavior.ShouldExecute(upload));
     }
@@ -78,7 +174,8 @@ public class MarketBoardUploadBehaviorTests
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
+        var gameData = new MockGameDataProvider();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
 
         var upload = new UploadParameters
         {
@@ -97,9 +194,11 @@ public class MarketBoardUploadBehaviorTests
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
+        var gameData = new MockGameDataProvider();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
 
-        var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
+        var stackSize = gameData.MarketableItemStackSizes()[5333];
+        var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
 
         var source = new TrustedSource
         {
@@ -156,9 +255,11 @@ public class MarketBoardUploadBehaviorTests
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
+        var gameData = new MockGameDataProvider();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
 
-        var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
+        var stackSize = gameData.MarketableItemStackSizes()[5333];
+        var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
 
         var source = new TrustedSource
         {
@@ -210,9 +311,11 @@ public class MarketBoardUploadBehaviorTests
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets);
+        var gameData = new MockGameDataProvider();
+        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
 
-        var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
+        var stackSize = gameData.MarketableItemStackSizes()[5333];
+        var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
 
         var source = new TrustedSource
         {

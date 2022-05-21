@@ -16,6 +16,7 @@ public class CsvGameDataProvider : IGameDataProvider
     private readonly IReadOnlySet<uint> _availableWorldIds;
 
     private readonly IReadOnlySet<uint> _marketableItemIds;
+    private readonly IReadOnlyDictionary<uint, uint> _marketableItemStackSizes;
 
     private readonly IReadOnlyList<DataCenter> _dataCenters;
 
@@ -30,6 +31,7 @@ public class CsvGameDataProvider : IGameDataProvider
         _availableWorldIds = LoadAvailableWorldIds().GetAwaiter().GetResult();
 
         _marketableItemIds = LoadMarketableItems().GetAwaiter().GetResult();
+        _marketableItemStackSizes = LoadMarketableItemStackSizes().GetAwaiter().GetResult();
 
         _dataCenters = LoadDataCenters().GetAwaiter().GetResult();
     }
@@ -45,6 +47,9 @@ public class CsvGameDataProvider : IGameDataProvider
 
     IReadOnlySet<uint> IGameDataProvider.MarketableItemIds()
         => _marketableItemIds;
+    
+    IReadOnlyDictionary<uint, uint> IGameDataProvider.MarketableItemStackSizes()
+        => _marketableItemStackSizes;
 
     IEnumerable<DataCenter> IGameDataProvider.DataCenters()
         => _dataCenters;
@@ -108,6 +113,22 @@ public class CsvGameDataProvider : IGameDataProvider
             .Select(i => i.RowId)
             .ToList());
     }
+    
+    private async Task<IReadOnlyDictionary<uint, uint>> LoadMarketableItemStackSizes()
+    {
+        var csvData =
+            await _http.GetStreamAsync("https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/Item.csv");
+        using var reader = new StreamReader(csvData);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        await csv.ReadAsync();
+        await csv.ReadAsync();
+        csv.ReadHeader();
+        await csv.ReadAsync();
+        var items = csv.GetRecords<CsvItem>();
+        return items
+            .Where(i => i.ItemSearchCategory >= 1)
+            .ToDictionary(i => i.RowId, i => i.StackSize);
+    }
 
     private async Task<IReadOnlyList<DataCenter>> LoadDataCenters()
     {
@@ -154,6 +175,9 @@ public class CsvGameDataProvider : IGameDataProvider
 
         [Name("ItemSearchCategory")]
         public uint ItemSearchCategory { get; set; }
+        
+        [Name("StackSize")]
+        public uint StackSize { get; set; }
     }
 
     private class CsvWorld
