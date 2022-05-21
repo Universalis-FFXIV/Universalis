@@ -29,4 +29,6 @@ public class RobustGameDataProvider : IGameDataProvider
     public IEnumerable<DataCenter> DataCenters() => _gdp.DataCenters();
 
     public IReadOnlySet<uint> MarketableItemIds() => _gdp.MarketableItemIds();
+    
+    public IReadOnlyDictionary<uint, uint> MarketableItemStackSizes() => _gdp.MarketableItemStackSizes();
 }

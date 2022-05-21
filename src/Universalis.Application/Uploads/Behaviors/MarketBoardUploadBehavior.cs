@@ -15,6 +15,7 @@ using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
 using Universalis.Entities.Uploads;
+using Universalis.GameData;
 using Listing = Universalis.Entities.MarketBoard.Listing;
 using Materia = Universalis.Entities.Materia;
 using Sale = Universalis.Entities.MarketBoard.Sale;
@@ -27,6 +28,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     private readonly IHistoryDbAccess _historyDb;
     private readonly ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> _cache;
     private readonly ISocketProcessor _sockets;
+    private readonly IGameDataProvider _gdp;
 
     private static readonly Counter CacheDeletes = Metrics.CreateCounter("universalis_cache_deletes", "Cache Deletes");
 
@@ -34,19 +36,38 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         ICurrentlyShownDbAccess currentlyShownDb,
         IHistoryDbAccess historyDb,
         ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> cache,
-        ISocketProcessor sockets)
+        ISocketProcessor sockets,
+        IGameDataProvider gdp)
     {
         _currentlyShownDb = currentlyShownDb;
         _historyDb = historyDb;
         _cache = cache;
         _sockets = sockets;
+        _gdp = gdp;
     }
 
     public bool ShouldExecute(UploadParameters parameters)
     {
-        return parameters.WorldId != null
-               && parameters.ItemId != null
-               && (parameters.Sales != null || parameters.Listings != null);
+        var cond = parameters.WorldId != null;
+        cond &= parameters.ItemId != null;
+        cond &= parameters.Sales != null || parameters.Listings != null;
+        
+        if (cond)
+        {
+            var stackSize = _gdp.MarketableItemStackSizes()[parameters.ItemId.Value];
+            
+            if (parameters.Sales != null)
+            {
+                cond &= parameters.Sales.All(l => l.Quantity is > 0 && l.Quantity <= stackSize);
+            }
+
+            if (parameters.Listings != null)
+            {
+                cond &= parameters.Listings.All(l => l.Quantity is > 0 && l.Quantity <= stackSize);
+            }
+        }
+        
+        return cond;
     }
 
     public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)

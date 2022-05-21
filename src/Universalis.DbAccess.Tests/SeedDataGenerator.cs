@@ -9,7 +9,7 @@ namespace Universalis.DbAccess.Tests;
 
 public static class SeedDataGenerator
 {
-    public static CurrentlyShown MakeCurrentlyShown(uint worldId, uint itemId, long? lastUploadTime = null)
+    public static CurrentlyShown MakeCurrentlyShown(uint worldId, uint itemId, long? lastUploadTime = null, uint maxStackSize = 999)
     {
         var rand = new Random();
         return new CurrentlyShown
@@ -25,7 +25,7 @@ public static class SeedDataGenerator
                     OnMannequin = rand.NextDouble() > 0.5,
                     Materia = new List<Materia>(),
                     PricePerUnit = (uint)rand.Next(100, 60000),
-                    Quantity = (uint)rand.Next(1, 999),
+                    Quantity = (uint)rand.Next(1, (int)maxStackSize),
                     DyeId = (byte)rand.Next(0, 255),
                     CreatorIdInternal = (ulong)rand.NextInt64(),
                     CreatorName = "Bingus Bongus",
@@ -42,7 +42,7 @@ public static class SeedDataGenerator
                 {
                     Hq = rand.NextDouble() > 0.5,
                     PricePerUnit = (uint)rand.Next(100, 60000),
-                    Quantity = (uint)rand.Next(1, 999),
+                    Quantity = (uint)rand.Next(1, (int)maxStackSize),
                     BuyerName = "Someone Someone",
                     TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
                     UploadApplicationName = "test runner",

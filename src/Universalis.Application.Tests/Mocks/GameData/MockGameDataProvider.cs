@@ -33,6 +33,15 @@ public class MockGameDataProvider : IGameDataProvider
     {
         return new SortedSet<uint>(Enumerable.Range(1, 35000).Select(n => (uint)n));
     }
+    
+    public IReadOnlyDictionary<uint, uint> MarketableItemStackSizes()
+    {
+        return new Dictionary<uint, uint>
+        {
+            {5333, 99},
+            {5, 9999},
+        };
+    }
 
     public IEnumerable<DataCenter> DataCenters()
     {

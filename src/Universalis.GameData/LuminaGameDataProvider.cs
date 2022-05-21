@@ -16,6 +16,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
     private readonly IReadOnlySet<uint> _availableWorldIds;
 
     private readonly IReadOnlySet<uint> _marketableItemIds;
+    private readonly IReadOnlyDictionary<uint, uint> _marketableItemStackSizes;
 
     private readonly IReadOnlyList<DataCenter> _dataCenters;
 
@@ -28,6 +29,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
         _availableWorldIds = LoadAvailableWorldIds(lumina);
 
         _marketableItemIds = LoadMarketableItems(lumina);
+        _marketableItemStackSizes = LoadMarketableItemStackSizes(lumina);
 
         _dataCenters = LoadDataCenters(lumina);
     }
@@ -43,6 +45,9 @@ internal class LuminaGameDataProvider : IGameDataProvider
 
     IReadOnlySet<uint> IGameDataProvider.MarketableItemIds()
         => _marketableItemIds;
+
+    IReadOnlyDictionary<uint, uint> IGameDataProvider.MarketableItemStackSizes()
+        => _marketableItemStackSizes;
 
     IEnumerable<DataCenter> IGameDataProvider.DataCenters()
         => _dataCenters;
@@ -114,6 +119,22 @@ internal class LuminaGameDataProvider : IGameDataProvider
             .Where(i => i.ItemSearchCategory.Value?.RowId >= 1)
             .Select(i => i.RowId)
             .ToList());
+    }
+    
+    /// <summary>
+    /// Gets a read-only dictionary of the stack size limits for all marketable items.
+    /// </summary>
+    private static IReadOnlyDictionary<uint, uint> LoadMarketableItemStackSizes(Lumina.GameData lumina)
+    {
+        var items = lumina.GetExcelSheet<Item>();
+        if (items == null)
+        {
+            throw new InvalidOperationException(ExcelLoadError);
+        }
+
+        return items
+            .Where(i => i.ItemSearchCategory.Value?.RowId >= 1)
+            .ToDictionary(i => i.RowId, i => i.StackSize);
     }
 
     /// <summary>
