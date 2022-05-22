@@ -56,7 +56,7 @@ public class HistoryControllerBase : WorldDcControllerBase
                     {
                         Hq = s.Hq,
                         PricePerUnit = s.PricePerUnit,
-                        Quantity = s.Quantity ?? 0, // This should never be 0 since we're filtering out null quantities
+                        Quantity = s.Quantity ?? 0, // This should never be 0 since we're filtering out null and zero quantities
                         BuyerName = s.BuyerName,
                         TimestampUnixSeconds = (long)s.SaleTimeUnixSeconds,
                         WorldId = worldDc.IsDc ? next.WorldId : null,
