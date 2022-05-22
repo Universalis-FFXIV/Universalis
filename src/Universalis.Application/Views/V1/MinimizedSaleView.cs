@@ -30,6 +30,7 @@ public class MinimizedSaleView
     /// The buyer's character name. This may be null.
     /// </summary>
     [JsonPropertyName("buyerName")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string BuyerName { get; init; }
 
     /// <summary>
