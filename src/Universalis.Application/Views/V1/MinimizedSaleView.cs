@@ -25,6 +25,12 @@ public class MinimizedSaleView
     /// </summary>
     [JsonPropertyName("quantity")]
     public uint Quantity { get; init; }
+    
+    /// <summary>
+    /// The buyer's character name. This may be null.
+    /// </summary>
+    [JsonPropertyName("buyerName")]
+    public string BuyerName { get; init; }
 
     /// <summary>
     /// The sale time, in seconds since the UNIX epoch.

@@ -14,6 +14,9 @@ public class MinimizedSale : IEquatable<MinimizedSale>
     // Quantities before December 2019 or so weren't stored here, and therefore will be null
     [BsonElement("quantity")]
     public uint? Quantity { get; init; }
+    
+    [BsonElement("buyerName")]
+    public string BuyerName { get; init; }
 
     [BsonElement("timestamp")]
     public double SaleTimeUnixSeconds { get; init; }
@@ -23,11 +26,12 @@ public class MinimizedSale : IEquatable<MinimizedSale>
 
     public static MinimizedSale FromSale(Sale s, string uploaderIdHash)
     {
-        return new()
+        return new MinimizedSale()
         {
             Hq = s.Hq,
             PricePerUnit = s.PricePerUnit,
             Quantity = s.Quantity,
+            BuyerName = s.BuyerName,
             SaleTimeUnixSeconds = s.TimestampUnixSeconds,
             UploaderIdHash = uploaderIdHash,
         };
