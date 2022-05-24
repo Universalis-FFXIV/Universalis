@@ -155,6 +155,11 @@ public class Startup
             app.UseExceptionHandler("/error");
         }
 
+        app.UseCors(options =>
+        {
+            options.AllowAnyOrigin();
+        });
+
         app.UseSwagger(options =>
         {
             options.RouteTemplate = "/docs/swagger/{documentName}/swagger.json";
