@@ -155,19 +155,12 @@ public class Startup
             app.UseExceptionHandler("/error");
         }
 
-        app.UseSwagger(options =>
-        {
-            options.RouteTemplate = "/docs/swagger/{documentName}/swagger.json";
-        });
-
+        app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
             // Relative paths
             options.SwaggerEndpoint("swagger/v1/swagger.json", "Universalis v1");
             options.SwaggerEndpoint("swagger/v2/swagger.json", "Universalis v2");
-
-            // Reverse proxy path
-            options.RoutePrefix = "docs";
 
             options.DocumentTitle = "Universalis Documentation";
         });

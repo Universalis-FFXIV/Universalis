@@ -8,6 +8,10 @@ services:
       - /home/universalis/sqpack:/sqpack
       - /home/universalis/DataProtection-Keys:/root/.aspnet/DataProtection-Keys
     network_mode: "host" # TODO: Containerize MongoDB so this can be changed
+  universalis-docs:
+    image: ghcr.io/universalis-ffxiv/universalis-docs:latest
+    ports:
+      - 3998:3000
   lodestone:
     image: ghcr.io/universalis-ffxiv/lodestone:latest
     ports:
