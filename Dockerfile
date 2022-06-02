@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
 WORKDIR /source
 COPY ./ ./
 
-# Install MongoDB driver for tests, run the tests, and build
+# Install MongoDB for tests
 RUN ln -s /bin/echo /bin/systemctl \
     && apt-get update \
     && apt-get install -qqy --no-install-recommends gnupg \
@@ -18,6 +18,7 @@ RUN mkdir /data \
     && mkdir /data/log \
     && chown mongodb /data -R
 
+# Run the tests and build the application
 RUN mongod --fork --logpath /var/log/mongod.log \
     && ./build.sh --target Test Compile --configuration Release
 
