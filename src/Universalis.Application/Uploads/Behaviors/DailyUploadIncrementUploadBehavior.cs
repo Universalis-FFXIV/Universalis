@@ -27,27 +27,29 @@ public class DailyUploadIncrementUploadBehavior : IUploadBehavior
 
     public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
-        var now = (double)DateTimeOffset.Now.ToUnixTimeMilliseconds();
-        var data = await _uploadCountHistoryDb.Retrieve(new UploadCountHistoryQuery(), cancellationToken);
-        if (data == null)
-        {
-            await _uploadCountHistoryDb.Create(new UploadCountHistory
-            {
-                LastPush = now,
-                UploadCountByDay = new List<double> { 1 },
-            }, cancellationToken);
+        // TODO: Possibly bringing down the system through lock contention in MongoDB; use Redis?
+        // var now = (double)DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        // var data = await _uploadCountHistoryDb.Retrieve(new UploadCountHistoryQuery(), cancellationToken);
+        // if (data == null)
+        // {
+        //     await _uploadCountHistoryDb.Create(new UploadCountHistory
+        //     {
+        //         LastPush = now,
+        //         UploadCountByDay = new List<double> { 1 },
+        //     }, cancellationToken);
+// 
+        //     return null;
+        // }
 
-            return null;
-        }
+        // if (now - data.LastPush > 86400000)
+        // {
+        //     data.LastPush = now;
+        //     data.UploadCountByDay = new double[] { 0 }.Concat(data.UploadCountByDay ?? new List<double>()).Take(30).ToList();
+        // }
 
-        if (now - data.LastPush > 86400000)
-        {
-            data.LastPush = now;
-            data.UploadCountByDay = new double[] { 0 }.Concat(data.UploadCountByDay ?? new List<double>()).Take(30).ToList();
-        }
-
-        data.UploadCountByDay[0]++;
-        await _uploadCountHistoryDb.Update(data.LastPush, data.UploadCountByDay, cancellationToken);
+        
+        // data.UploadCountByDay[0]++;
+        // await _uploadCountHistoryDb.Update(data.LastPush, data.UploadCountByDay, cancellationToken);
 
         return null;
     }
