@@ -7,7 +7,7 @@ services:
     volumes:
       - /home/universalis/sqpack:/sqpack
       - /home/universalis/DataProtection-Keys:/root/.aspnet/DataProtection-Keys
-    network_mode: "host" # TODO: Containerize MongoDB so this can be changed
+    network_mode: "host" # TODO: Containerize MongoDB so all of this can be changed
   universalis-docs:
     image: ghcr.io/universalis-ffxiv/universalis-docs:latest
     ports:
@@ -42,7 +42,6 @@ services:
   redis:
     image: redis:7.0.0
     command: redis-server --save 60 1 --loglevel warning
-    ports:
-      - 4050:6379
+    network_mode: "host"
     volumes:
       - /home/universalis/redis:/data
