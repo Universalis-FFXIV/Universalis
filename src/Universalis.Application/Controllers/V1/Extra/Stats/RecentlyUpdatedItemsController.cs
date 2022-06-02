@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,10 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats;
 public class RecentlyUpdatedItemsController : ControllerBase
 {
     private readonly IRecentlyUpdatedItemsDbAccess _recentlyUpdatedItemsDb;
+    
+    // Bodge caching mechanism; TODO: fix
+    private static List<uint> Data;
+    private static DateTime LastFetch;
 
     public RecentlyUpdatedItemsController(IRecentlyUpdatedItemsDbAccess recentlyUpdatedItemsDb)
     {
@@ -30,9 +35,14 @@ public class RecentlyUpdatedItemsController : ControllerBase
     [ProducesResponseType(typeof(RecentlyUpdatedItemsView), 200)]
     public async Task<RecentlyUpdatedItemsView> Get(CancellationToken cancellationToken = default)
     {
-        var data = (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery(), cancellationToken))?.Items;
-        return data == null
+        if (DateTime.Now - LastFetch > TimeSpan.FromSeconds(3))
+        {
+            Data = (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery(), cancellationToken))?.Items;
+            LastFetch = DateTime.Now;
+        }
+        
+        return Data == null
             ? new RecentlyUpdatedItemsView { Items = new List<uint>() }
-            : new RecentlyUpdatedItemsView { Items = data };
+            : new RecentlyUpdatedItemsView { Items = Data };
     }
 }
