@@ -33,7 +33,8 @@ public class ItemIdUploadBehavior : IUploadBehavior
             return new NotFoundObjectResult(parameters.ItemId);
         }
 
-        await _recentlyUpdatedItemsDb.Push(parameters.ItemId.Value, cancellationToken);
+        // TODO: Possibly bringing down the system through lock contention in MongoDB; use Redis?
+        // await _recentlyUpdatedItemsDb.Push(parameters.ItemId.Value, cancellationToken);
         return null;
     }
 }
