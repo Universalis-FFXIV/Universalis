@@ -20,7 +20,7 @@ public class UploadCountHistoryController : ControllerBase
     
     // Bodge caching mechanism; TODO: fix
     private static UploadCountHistory Data;
-    private static DateTime LastFetch = DateTime.Now;
+    private static DateTime LastFetch;
 
     public UploadCountHistoryController(IUploadCountHistoryDbAccess uploadCountHistoryDb)
     {

@@ -20,7 +20,7 @@ public class WorldUploadCountController : ControllerBase
 
     // Bodge caching mechanism; TODO: fix
     private static IList<WorldUploadCount> Data;
-    private static DateTime LastFetch = DateTime.Now;
+    private static DateTime LastFetch;
 
     public WorldUploadCountController(IWorldUploadCountDbAccess worldUploadCountDb)
     {
