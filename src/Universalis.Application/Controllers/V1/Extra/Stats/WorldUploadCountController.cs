@@ -35,7 +35,7 @@ public class WorldUploadCountController : ControllerBase
     [ProducesResponseType(typeof(IDictionary<string, WorldUploadCountView>), 200)]
     public async Task<IDictionary<string, WorldUploadCountView>> Get(CancellationToken cancellationToken = default)
     {
-        if (DateTime.Now - LastFetch < TimeSpan.FromMinutes(5))
+        if (DateTime.Now - LastFetch > TimeSpan.FromMinutes(5))
         {
             Data = (await _worldUploadCountDb.GetWorldUploadCounts(cancellationToken))
                 .Where(d => !string.IsNullOrEmpty(d.WorldName))
@@ -43,12 +43,12 @@ public class WorldUploadCountController : ControllerBase
             LastFetch = DateTime.Now;
         }
 
-        var sum = Data.Sum(d => d.Count);
-        return Data
+        var sum = Data?.Sum(d => d.Count) ?? 0;
+        return Data?
             .ToDictionary(d => d.WorldName, d => new WorldUploadCountView
             {
                 Count = d.Count,
                 Proportion = d.Count / sum,
-            });
+            }) ?? new Dictionary<string, WorldUploadCountView>();
     }
 }

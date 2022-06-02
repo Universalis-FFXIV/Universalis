@@ -35,7 +35,7 @@ public class UploadCountHistoryController : ControllerBase
     [ProducesResponseType(typeof(UploadCountHistoryView), 200)]
     public async Task<UploadCountHistoryView> Get(CancellationToken cancellationToken = default)
     {
-        if (DateTime.Now - LastFetch < TimeSpan.FromMinutes(5))
+        if (DateTime.Now - LastFetch > TimeSpan.FromMinutes(5))
         {
             Data = await _uploadCountHistoryDb.Retrieve(new UploadCountHistoryQuery(), cancellationToken);
             LastFetch = DateTime.Now;
