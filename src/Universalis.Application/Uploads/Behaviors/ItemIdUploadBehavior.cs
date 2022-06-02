@@ -33,7 +33,7 @@ public class ItemIdUploadBehavior : IUploadBehavior
             return new NotFoundObjectResult(parameters.ItemId);
         }
 
-        await _recentlyUpdatedItemsDb.Push(parameters.ItemId.Value, cancellationToken);
+        //await _recentlyUpdatedItemsDb.Push(parameters.ItemId.Value, cancellationToken);
         return null;
     }
 }
