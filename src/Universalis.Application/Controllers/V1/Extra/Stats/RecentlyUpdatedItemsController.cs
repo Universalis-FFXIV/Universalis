@@ -15,15 +15,11 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats;
 [Route("api/extra/stats/recently-updated")]
 public class RecentlyUpdatedItemsController : ControllerBase
 {
-    private readonly IRecentlyUpdatedItemsDbAccess _recentlyUpdatedItemsDb;
+    //private readonly IRecentlyUpdatedItemsDbAccess _recentlyUpdatedItemsDb;
     
-    // Bodge caching mechanism; TODO: fix
-    private static List<uint> Data;
-    private static DateTime LastFetch;
-
-    public RecentlyUpdatedItemsController(IRecentlyUpdatedItemsDbAccess recentlyUpdatedItemsDb)
+    public RecentlyUpdatedItemsController(/*IRecentlyUpdatedItemsDbAccess recentlyUpdatedItemsDb*/)
     {
-        _recentlyUpdatedItemsDb = recentlyUpdatedItemsDb;
+        //_recentlyUpdatedItemsDb = recentlyUpdatedItemsDb;
     }
 
     /// <summary>
@@ -35,14 +31,19 @@ public class RecentlyUpdatedItemsController : ControllerBase
     [ProducesResponseType(typeof(RecentlyUpdatedItemsView), 200)]
     public async Task<RecentlyUpdatedItemsView> Get(CancellationToken cancellationToken = default)
     {
-        if (DateTime.Now - LastFetch > TimeSpan.FromMinutes(1))
-        {
-            Data = (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery(), cancellationToken))?.Items;
-            LastFetch = DateTime.Now;
-        }
+        List<uint> data = null;
+        // try
+        // {
+        //     data = (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery(), cancellationToken))
+        //         ?.Items;
+        // }
+        // catch (Exception)
+        // {
+        //     // ignored
+        // }
         
-        return Data == null
+        return data == null
             ? new RecentlyUpdatedItemsView { Items = new List<uint>() }
-            : new RecentlyUpdatedItemsView { Items = Data };
+            : new RecentlyUpdatedItemsView { Items = data };
     }
 }
