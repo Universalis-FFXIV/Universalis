@@ -35,7 +35,7 @@ public class RecentlyUpdatedItemsController : ControllerBase
     [ProducesResponseType(typeof(RecentlyUpdatedItemsView), 200)]
     public async Task<RecentlyUpdatedItemsView> Get(CancellationToken cancellationToken = default)
     {
-        if (DateTime.Now - LastFetch > TimeSpan.FromSeconds(3))
+        if (DateTime.Now - LastFetch > TimeSpan.FromMinutes(1))
         {
             Data = (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery(), cancellationToken))?.Items;
             LastFetch = DateTime.Now;
