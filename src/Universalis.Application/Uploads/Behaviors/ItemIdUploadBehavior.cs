@@ -13,12 +13,12 @@ namespace Universalis.Application.Uploads.Behaviors;
 public class ItemIdUploadBehavior : IUploadBehavior
 {
     private readonly IGameDataProvider _gameData;
-    private readonly IRecentlyUpdatedItemsDbAccess _recentlyUpdatedItemsDb;
+    //private readonly IRecentlyUpdatedItemsDbAccess _recentlyUpdatedItemsDb;
 
-    public ItemIdUploadBehavior(IGameDataProvider gameData, IRecentlyUpdatedItemsDbAccess recentlyUpdatedItemsDb)
+    public ItemIdUploadBehavior(IGameDataProvider gameData/*, IRecentlyUpdatedItemsDbAccess recentlyUpdatedItemsDb*/)
     {
         _gameData = gameData;
-        _recentlyUpdatedItemsDb = recentlyUpdatedItemsDb;
+        //_recentlyUpdatedItemsDb = recentlyUpdatedItemsDb;
     }
 
     public bool ShouldExecute(UploadParameters parameters)

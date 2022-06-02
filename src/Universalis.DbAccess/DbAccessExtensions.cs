@@ -24,7 +24,7 @@ public static class DbAccessExtensions
         sc.AddSingleton<IWorldUploadCountDbAccess, WorldUploadCountDbAccess>();
         sc.AddSingleton<IUploadCountHistoryDbAccess, UploadCountHistoryDbAccess>();
         
-        sc.AddSingleton<IScoreboardStore<uint>, RecentlyUpdatedItemsStore>();
-        sc.AddSingleton<IRecentlyUpdatedItemsDbAccess, RecentlyUpdatedItemsDbAccess>();
+        // sc.AddSingleton<IScoreboardStore<uint>, RecentlyUpdatedItemsStore>();
+        // sc.AddSingleton<IRecentlyUpdatedItemsDbAccess, RecentlyUpdatedItemsDbAccess>();
     }
 }
