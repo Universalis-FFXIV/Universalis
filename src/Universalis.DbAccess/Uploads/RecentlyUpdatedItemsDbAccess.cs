@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using StackExchange.Redis;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.Uploads;
 
@@ -14,32 +13,25 @@ public class RecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess
 
     public static readonly string Key = "Universalis.RecentlyUpdated";
 
-    private readonly IConnectionMultiplexer _redis;
+    private readonly IScoreboardStore<uint> _store;
 
-    public RecentlyUpdatedItemsDbAccess(IConnectionMultiplexer redis)
+    public RecentlyUpdatedItemsDbAccess(IScoreboardStore<uint> store)
     {
-        _redis = redis;
+        _store = store;
     }
 
     public async Task<RecentlyUpdatedItems> Retrieve(RecentlyUpdatedItemsQuery query, CancellationToken cancellationToken = default)
     {
-        var db = _redis.GetDatabase();
-        var items = await db.SortedSetRangeByScoreAsync(Key, order: Order.Descending, take: MaxItems);
+        var items = await _store.GetAllScores(Key);
         return new RecentlyUpdatedItems
         {
-            Items = items.Select(i => (uint)i).ToList(),
+            Items = items.Take(MaxItems).Select(i => i.Key).ToList(),
         };
     }
 
     public async Task Push(uint itemId, CancellationToken cancellationToken = default)
     {
-        var db = _redis.GetDatabase();
-        await db.SortedSetAddAsync(Key, new[] { new SortedSetEntry(itemId, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()) });
-
-        var count = await db.SortedSetLengthAsync(Key);
-        if (count > MaxItems)
-        {
-            await db.SortedSetRemoveRangeByRankAsync(Key, 0, count - MaxItems);
-        }
+        await _store.SetScore(Key, itemId, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+        await _store.TrimScores(Key, MaxItems);
     }
 }

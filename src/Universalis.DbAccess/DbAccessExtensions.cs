@@ -22,7 +22,9 @@ public static class DbAccessExtensions
         sc.AddSingleton<ITrustedSourceDbAccess, TrustedSourceDbAccess>();
         sc.AddSingleton<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();
         sc.AddSingleton<IWorldUploadCountDbAccess, WorldUploadCountDbAccess>();
-        sc.AddSingleton<IRecentlyUpdatedItemsDbAccess, RecentlyUpdatedItemsDbAccess>();
         sc.AddSingleton<IUploadCountHistoryDbAccess, UploadCountHistoryDbAccess>();
+        
+        sc.AddSingleton<IScoreboardStore<uint>, RecentlyUpdatedItemsStore>();
+        sc.AddSingleton<IRecentlyUpdatedItemsDbAccess, RecentlyUpdatedItemsDbAccess>();
     }
 }
