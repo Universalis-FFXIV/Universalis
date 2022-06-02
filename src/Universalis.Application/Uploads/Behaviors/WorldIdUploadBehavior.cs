@@ -34,8 +34,9 @@ public class WorldIdUploadBehavior : IUploadBehavior
         if (!_gameData.AvailableWorldIds().Contains(worldId))
             return new NotFoundObjectResult(worldId);
 
-        var worldName = _gameData.AvailableWorlds()[parameters.WorldId.Value];
-        await _worldUploadCountDb.Increment(new WorldUploadCountQuery { WorldName = worldName }, cancellationToken);
+        // TODO: Possibly bringing down the system through lock contention in MongoDB; use Redis?
+        // var worldName = _gameData.AvailableWorlds()[parameters.WorldId.Value];
+        // await _worldUploadCountDb.Increment(new WorldUploadCountQuery { WorldName = worldName }, cancellationToken);
 
         return null;
     }
