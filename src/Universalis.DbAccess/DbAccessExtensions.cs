@@ -10,7 +10,10 @@ public static class DbAccessExtensions
 {
     public static void AddDbAccessServices(this IServiceCollection sc, IConfiguration configuration)
     {
-        sc.AddSingleton<IMongoClient>(new MongoClient(configuration["MongoDbConnectionString"]));
+        var settings = MongoClientSettings.FromConnectionString(configuration["MongoDbConnectionString"]);
+        settings.MaxConnectionPoolSize = 500;
+        
+        sc.AddSingleton<IMongoClient>(new MongoClient(settings));
 
         sc.AddSingleton<IMostRecentlyUpdatedDbAccess, MostRecentlyUpdatedDbAccess>();
         sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
