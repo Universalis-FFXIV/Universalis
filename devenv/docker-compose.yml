@@ -6,7 +6,7 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - 9090:9090
-    extra_hosts: # TODO: Grafana and Prometheus need to reach out to the application for stats
+    extra_hosts: # Grafana and Prometheus need to reach out to the application for stats
       - "host.docker.internal:host-gateway"
   grafana:
     image: grafana/grafana:8.4.2
