@@ -1,5 +1,4 @@
-version: "3.4"
-
+version: "2.4"
 services:
   prometheus:
     image: prom/prometheus:v2.33.4
@@ -7,9 +6,8 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - 9090:9090
-    extra_hosts:
+    extra_hosts: # TODO: Grafana and Prometheus need to reach out to the application for stats
       - "host.docker.internal:host-gateway"
-
   grafana:
     image: grafana/grafana:8.4.2
     ports:
@@ -18,7 +16,6 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./data:/var/lib/grafana
-
   mariadb:
     image: mariadb:10.3.32
     ports:
@@ -30,9 +27,14 @@ services:
       MYSQL_PASSWORD: dalamud
     volumes:
       - ./sqlinit:/docker-entrypoint-initdb.d
-  
+  mongo:
+    image: mongo:4.4.11
+    ports:
+      - 4051:27017
   redis:
     image: redis:7.0.0
     command: redis-server --save 60 1 --loglevel warning
     ports:
-      - 6379:6379
+      - 4050:6379
+    volumes:
+      - ./redis:/data

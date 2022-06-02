@@ -64,6 +64,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dev Deployment", "Dev Deplo
 		..\devenv\docker-compose.yml = ..\devenv\docker-compose.yml
 		..\devenv\prometheus.yml = ..\devenv\prometheus.yml
 		..\devenv\README.md = ..\devenv\README.md
+		..\devenv\.gitignore = ..\devenv\.gitignore
 	EndProjectSection
 EndProject
 Global
