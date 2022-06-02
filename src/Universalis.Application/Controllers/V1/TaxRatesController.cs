@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1;
@@ -15,6 +18,10 @@ namespace Universalis.Application.Controllers.V1;
 public class TaxRatesController : WorldDcControllerBase
 {
     private readonly ITaxRatesDbAccess _taxRatesDb;
+    
+    // Bodge caching mechanism; TODO: fix
+    private static Dictionary<uint, TaxRates> Data = new();
+    private static Dictionary<uint, DateTime> LastFetch = new();
 
     public TaxRatesController(IGameDataProvider gameData, ITaxRatesDbAccess taxRatesDb) : base(gameData)
     {
@@ -44,7 +51,19 @@ public class TaxRatesController : WorldDcControllerBase
             return NotFound();
         }
 
-        var taxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = worldDc.WorldId }, cancellationToken);
+        if (!LastFetch.TryGetValue(worldDc.WorldId, out var lastFetch))
+        {
+            lastFetch = default;
+        }
+        
+        if (DateTime.Now - lastFetch > TimeSpan.FromMinutes(5))
+        {
+            Data[worldDc.WorldId] = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = worldDc.WorldId }, cancellationToken);
+            LastFetch[worldDc.WorldId] = DateTime.Now;
+        }
+        
+        var taxRates = Data[worldDc.WorldId];
+        
         if (taxRates == null)
         {
             return Ok(new TaxRatesView());
