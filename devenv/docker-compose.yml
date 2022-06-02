@@ -30,3 +30,9 @@ services:
       MYSQL_PASSWORD: dalamud
     volumes:
       - ./sqlinit:/docker-entrypoint-initdb.d
+  
+  redis:
+    image: redis:7.0.0
+    command: redis redis-server --save 60 1 --loglevel warning
+    ports:
+      - 6379:6379

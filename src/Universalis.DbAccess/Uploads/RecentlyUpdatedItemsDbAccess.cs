@@ -1,50 +1,45 @@
-﻿using MongoDB.Driver;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using StackExchange.Redis;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.Uploads;
 
 namespace Universalis.DbAccess.Uploads;
 
-public class RecentlyUpdatedItemsDbAccess : DbAccessService<RecentlyUpdatedItems, RecentlyUpdatedItemsQuery>, IRecentlyUpdatedItemsDbAccess
+public class RecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess
 {
     public static readonly int MaxItems = 200;
 
-    public RecentlyUpdatedItemsDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "extraData") { }
+    public static readonly string Key = "Universalis.RecentlyUpdated";
 
-    public RecentlyUpdatedItemsDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "content") { }
+    private readonly IConnectionMultiplexer _redis;
+
+    public RecentlyUpdatedItemsDbAccess(IConnectionMultiplexer redis)
+    {
+        _redis = redis;
+    }
+
+    public async Task<RecentlyUpdatedItems> Retrieve(RecentlyUpdatedItemsQuery query, CancellationToken cancellationToken = default)
+    {
+        var db = _redis.GetDatabase();
+        var items = await db.SortedSetRangeByScoreAsync(Key, order: Order.Descending, take: MaxItems);
+        return new RecentlyUpdatedItems
+        {
+            Items = items.Select(i => (uint)i).ToList(),
+        };
+    }
 
     public async Task Push(uint itemId, CancellationToken cancellationToken = default)
     {
-        var query = new RecentlyUpdatedItemsQuery();
-        var existing = await Retrieve(query, cancellationToken);
+        var db = _redis.GetDatabase();
+        await db.SortedSetAddAsync(Key, new[] { new SortedSetEntry(itemId, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()) });
 
-        if (existing == null)
+        var count = await db.SortedSetLengthAsync(Key);
+        if (count > MaxItems)
         {
-            await Create(new RecentlyUpdatedItems
-            {
-                Items = new List<uint> { itemId },
-            }, cancellationToken);
-            return;
+            await db.SortedSetRemoveRangeByRankAsync(Key, 0, count - MaxItems);
         }
-
-        var newItems = existing.Items;
-        var existingIndex = newItems.IndexOf(itemId);
-        if (existingIndex != -1)
-        {
-            newItems.RemoveAt(existingIndex);
-            newItems.Insert(0, itemId);
-        }
-        else
-        {
-            newItems.Insert(0, itemId);
-            newItems = newItems.Take(MaxItems).ToList();
-        }
-
-        var updateBuilder = Builders<RecentlyUpdatedItems>.Update;
-        var update = updateBuilder.Set(o => o.Items, newItems);
-        await Collection.UpdateOneAsync(query.ToFilterDefinition(), update, cancellationToken: cancellationToken);
     }
 }
