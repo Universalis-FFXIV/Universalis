@@ -24,13 +24,13 @@ public class WorldUploadCountControllerTests
         await dbAccess.Increment(query);
 
         var result = await controller.Get();
-        Assert.IsAssignableFrom<IDictionary<string, WorldUploadCountView>>(result);
+        var counts = Assert.IsAssignableFrom<IDictionary<string, WorldUploadCountView>>(result);
 
-        // Assert.True(counts.ContainsKey(query.WorldName));
-        // Assert.Equal(1U, counts[query.WorldName].Count);
+        Assert.True(counts.ContainsKey(query.WorldName));
+        Assert.Equal(1U, counts[query.WorldName].Count);
 
         // ReSharper disable once CompareOfFloatsByEqualityOperator
-        // Assert.Equal(1, counts[query.WorldName].Proportion);
+        Assert.Equal(1, counts[query.WorldName].Proportion);
     }
 
     [Fact]
