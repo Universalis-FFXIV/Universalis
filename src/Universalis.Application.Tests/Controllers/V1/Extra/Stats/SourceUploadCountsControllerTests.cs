@@ -25,8 +25,6 @@ public class SourceUploadCountsControllerTests
             UploadCount = 0,
         };
         await dbAccess.Create(document);
-
-        var query = new TrustedSourceQuery { ApiKeySha512 = document.ApiKeySha512 };
         await dbAccess.Increment(document.Name);
 
         var result = await controller.Get();
@@ -34,7 +32,7 @@ public class SourceUploadCountsControllerTests
 
         Assert.Single(counts);
         Assert.Equal(document.Name, counts.First().Name);
-        Assert.Equal(1U, document.UploadCount + 1);
+        Assert.Equal(1U, document.UploadCount);
     }
 
     [Fact]
