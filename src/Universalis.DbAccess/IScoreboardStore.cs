@@ -7,7 +7,7 @@ public interface IScoreboardStore<TKey>
 {
     Task SetScore(string scoreboardName, TKey id, double val);
     
-    Task<IList<KeyValuePair<TKey, double>>> GetAllScores(string scoreboardName);
+    Task<IList<KeyValuePair<TKey, double>>> GetAllScores(string scoreboardName, int stop = -1);
 
     Task TrimScores(string scoreboardName, int topKeeping);
 }
