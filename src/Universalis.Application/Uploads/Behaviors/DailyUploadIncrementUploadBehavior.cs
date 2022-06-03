@@ -27,7 +27,7 @@ public class DailyUploadIncrementUploadBehavior : IUploadBehavior
 
     public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
-        await _uploadCountHistoryDb.Increment();
+        //await _uploadCountHistoryDb.Increment();
         return null;
     }
 }
