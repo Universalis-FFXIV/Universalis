@@ -16,7 +16,7 @@ public class ItemIdUploadBehaviorTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockRecentlyUpdatedItemsDbAccess();
-        var behavior = new ItemIdUploadBehavior(gameData);
+        var behavior = new ItemIdUploadBehavior(gameData, dbAccess);
 
         var upload = new UploadParameters();
 
@@ -28,7 +28,7 @@ public class ItemIdUploadBehaviorTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockRecentlyUpdatedItemsDbAccess();
-        var behavior = new ItemIdUploadBehavior(gameData);
+        var behavior = new ItemIdUploadBehavior(gameData, dbAccess);
 
         var upload = new UploadParameters
         {
@@ -51,7 +51,7 @@ public class ItemIdUploadBehaviorTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockRecentlyUpdatedItemsDbAccess();
-        var behavior = new ItemIdUploadBehavior(gameData);
+        var behavior = new ItemIdUploadBehavior(gameData, dbAccess);
 
         var upload = new UploadParameters
         {

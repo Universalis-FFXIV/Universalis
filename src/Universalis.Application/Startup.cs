@@ -159,8 +159,8 @@ public class Startup
         app.UseSwaggerUI(options =>
         {
             // Relative paths
-            options.SwaggerEndpoint("swagger/v1/swagger.json", "Universalis v1");
-            options.SwaggerEndpoint("swagger/v2/swagger.json", "Universalis v2");
+            options.SwaggerEndpoint("v1/swagger.json", "Universalis v1");
+            options.SwaggerEndpoint("v2/swagger.json", "Universalis v2");
 
             options.DocumentTitle = "Universalis Documentation";
         });
