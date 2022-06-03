@@ -22,6 +22,8 @@ public static class DbAccessExtensions
         sc.AddSingleton<IContentDbAccess, ContentDbAccess>();
         sc.AddSingleton<ITaxRatesDbAccess, TaxRatesDbAccess>();
         sc.AddSingleton<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();
+
+        sc.AddSingleton<IWorldItemUploadStore, WorldItemUploadStore>();
         sc.AddSingleton<IWorldUploadCountDbAccess, WorldUploadCountDbAccess>();
 
         sc.AddSingleton<IDailyUploadCountStore, DailyUploadCountStore>();
