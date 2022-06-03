@@ -22,19 +22,35 @@ public class DailyUploadCountStore : IDailyUploadCountStore
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var lastPush = (long)await db.StringGetAsync(lastPushKey);
 
+        // Create the last push time key
+        if (lastPush == 0)
+        {
+            var t0 = db.CreateTransaction();
+            t0.AddCondition(Condition.KeyNotExists(lastPushKey));
+            _ = t0.StringSetAsync(lastPushKey, 0);
+            await t0.ExecuteAsync();
+        }
+
+        // Push a new counter if the date has rolled over
         if (now - lastPush > 86400000)
         {
             var t1 = db.CreateTransaction();
             t1.AddCondition(Condition.StringEqual(lastPushKey, lastPush));
-            await t1.StringSetAsync(lastPushKey, now);
-            await t1.ListLeftPushAsync(key, 0);
+            _ = t1.StringSetAsync(lastPushKey, now);
+            _ = t1.ListLeftPushAsync(key, 0);
             await t1.ExecuteAsync();
+
+            lastPush = now;
         }
+        
+        // Increment the counter
+        var count = (long)await db.ListGetByIndexAsync(key, 0);
 
         var t2 = db.CreateTransaction();
-        var count = (long)await t2.ListGetByIndexAsync(key, 0);
+        // Don't accidentally copy the last count into today's count
+        t2.AddCondition(Condition.StringEqual(lastPushKey, lastPush));
         count++;
-        await t2.ListSetByIndexAsync(key, 0, count);
+        _ = t2.ListSetByIndexAsync(key, 0, count);
         await t2.ExecuteAsync();
     }
 

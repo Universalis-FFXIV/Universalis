@@ -20,10 +20,8 @@ public class UploadCountHistoryDbAccess : IUploadCountHistoryDbAccess
         return _store.Increment(Key, KeyLastPush);
     }
 
-    public Task<IList<long>> GetUploadCounts(int count = -1)
+    public Task<IList<long>> GetUploadCounts(int stop = -1)
     {
-        return count == 0
-            ? Task.FromResult((IList<long>)new List<long>())
-            : _store.GetUploadCounts(Key, count - 1);
+        return _store.GetUploadCounts(Key, stop);
     }
 }
