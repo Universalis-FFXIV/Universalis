@@ -14,7 +14,9 @@ public static class DbAccessExtensions
         sc.AddSingleton<IMongoClient>(new MongoClient(configuration["MongoDbConnectionString"]));
         sc.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(configuration["RedisConnectionString"]));
 
+        sc.AddSingleton<IWorldItemUploadStore, WorldItemUploadStore>();
         sc.AddSingleton<IMostRecentlyUpdatedDbAccess, MostRecentlyUpdatedDbAccess>();
+        
         sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
         sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
         sc.AddSingleton<IContentDbAccess, ContentDbAccess>();

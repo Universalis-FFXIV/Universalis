@@ -11,7 +11,7 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
 {
     public static readonly int MaxItems = 200;
 
-    public static readonly string KeyFormat = "Universalis.WorldItemUploads.{0}";
+    public static readonly string KeyFormat = "Universalis.WorldItemUploadTimes.{0}";
 
     private readonly IWorldItemUploadStore _store;
 
