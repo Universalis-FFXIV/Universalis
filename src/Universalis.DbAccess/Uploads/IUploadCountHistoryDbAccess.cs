@@ -7,5 +7,5 @@ public interface IUploadCountHistoryDbAccess
 {
     Task Increment();
 
-    Task<IList<long>> GetUploadCounts(int count = -1);
+    Task<IList<long>> GetUploadCounts(int stop = -1);
 }

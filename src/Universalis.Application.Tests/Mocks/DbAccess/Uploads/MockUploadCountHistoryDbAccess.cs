@@ -25,12 +25,12 @@ public class MockUploadCountHistoryDbAccess : IUploadCountHistoryDbAccess
         return Task.CompletedTask;
     }
 
-    public Task<IList<long>> GetUploadCounts(int count = -1)
+    public Task<IList<long>> GetUploadCounts(int stop = -1)
     {
         var en = _counts;
-        if (count > -1)
+        if (stop > -1)
         {
-            en = en.Take(count).ToList();
+            en = en.Take(stop + 1).ToList();
         }
         
         return Task.FromResult((IList<long>)en);

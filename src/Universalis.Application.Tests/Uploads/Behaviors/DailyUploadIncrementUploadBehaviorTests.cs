@@ -2,7 +2,6 @@
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
-using Universalis.DbAccess.Queries.Uploads;
 using Xunit;
 
 namespace Universalis.Application.Tests.Uploads.Behaviors;
@@ -21,10 +20,10 @@ public class DailyUploadIncrementUploadBehaviorTests
         var result = await behavior.Execute(null, upload);
         Assert.Null(result);
 
-        //var data = await dbAccess.GetUploadCounts();
-//
-        //Assert.NotNull(data);
-        //Assert.Single(data);
-        //Assert.Equal(1U, data[0]);
+        var data = await dbAccess.GetUploadCounts();
+
+        Assert.NotNull(data);
+        Assert.Single(data);
+        Assert.Equal(1U, data[0]);
     }
 }
