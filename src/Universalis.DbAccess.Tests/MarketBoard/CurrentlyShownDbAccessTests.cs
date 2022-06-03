@@ -16,17 +16,22 @@ public class CurrentlyShownDbAccessTests : IDisposable
 {
     private class MockWorldItemUploadStore : IWorldItemUploadStore
     {
-        private readonly Dictionary<uint, double> _scores = new();
+        private readonly Dictionary<string, Dictionary<uint, double>> _scores = new();
         
         public Task SetItem(string key, uint id, double val)
         {
-            _scores[id] = val;
+            if (!_scores.ContainsKey(key))
+            {
+                _scores[key] = new Dictionary<uint, double>();
+            }
+            
+            _scores[key][id] = val;
             return Task.CompletedTask;
         }
 
         public Task<IList<KeyValuePair<uint, double>>> GetAllItems(string key, int stop = -1)
         {
-            var en = _scores.OrderByDescending(s => s.Value).ToList();
+            var en = _scores[key].OrderByDescending(s => s.Value).ToList();
             if (stop > -1)
             {
                 en = en.Take(stop + 1).ToList();
