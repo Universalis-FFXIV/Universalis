@@ -29,15 +29,6 @@ public class RecentlyUpdatedItemsDbAccessTests
 
             return Task.FromResult((IList<KeyValuePair<uint, double>>)en);
         }
-
-        public Task TrimScores(string scoreboardName, int topKeeping)
-        {
-            _scores = _scores
-                .OrderByDescending(s => s.Value)
-                .Take(topKeeping)
-                .ToDictionary(s => s.Key, s => s.Value);
-            return Task.CompletedTask;
-        }
     }
 
     [Fact]
