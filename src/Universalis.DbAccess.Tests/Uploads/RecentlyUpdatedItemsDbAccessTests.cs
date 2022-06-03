@@ -19,11 +19,15 @@ public class RecentlyUpdatedItemsDbAccessTests
             return Task.CompletedTask;
         }
 
-        public Task<IList<KeyValuePair<uint, double>>> GetAllScores(string scoreboardName)
+        public Task<IList<KeyValuePair<uint, double>>> GetAllScores(string scoreboardName, int stop = -1)
         {
-            return Task.FromResult((IList<KeyValuePair<uint, double>>)_scores
-                .OrderByDescending(s => s.Value)
-                .ToList());
+            var en = _scores.OrderByDescending(s => s.Value).ToList();
+            if (stop > -1)
+            {
+                en = en.Take(stop + 1).ToList();
+            }
+
+            return Task.FromResult((IList<KeyValuePair<uint, double>>)en);
         }
 
         public Task TrimScores(string scoreboardName, int topKeeping)
