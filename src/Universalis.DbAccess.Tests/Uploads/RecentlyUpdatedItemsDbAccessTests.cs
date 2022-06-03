@@ -9,17 +9,17 @@ namespace Universalis.DbAccess.Tests.Uploads;
 
 public class RecentlyUpdatedItemsDbAccessTests
 {
-    private class ScoreBoardStoreMock : IScoreboardStore<uint>
+    private class ScoreBoardStoreMock : IRecentlyUpdatedItemsStore
     {
-        private Dictionary<uint, double> _scores = new();
+        private readonly Dictionary<uint, double> _scores = new();
         
-        public Task SetScore(string scoreboardName, uint id, double val)
+        public Task SetItem(string key, uint id, double val)
         {
             _scores[id] = val;
             return Task.CompletedTask;
         }
 
-        public Task<IList<KeyValuePair<uint, double>>> GetAllScores(string scoreboardName, int stop = -1)
+        public Task<IList<KeyValuePair<uint, double>>> GetAllItems(string key, int stop = -1)
         {
             var en = _scores.OrderByDescending(s => s.Value).ToList();
             if (stop > -1)

@@ -40,20 +40,15 @@ public class MockTrustedSourceDbAccess : ITrustedSourceDbAccess
         await Create(document, cancellationToken);
     }
 
-    public async Task Increment(TrustedSourceQuery query, CancellationToken cancellationToken = default)
+    public Task Increment(string sourceName, CancellationToken cancellationToken = default)
     {
-        var document = await Retrieve(query, cancellationToken);
-        if (document == null)
+        if (!_collection.Any(e => e.Value.Name == sourceName))
         {
-            return;
+            return Task.CompletedTask;
         }
-
-        await Update(new TrustedSource
-        {
-            ApiKeySha512 = document.ApiKeySha512,
-            Name = document.Name,
-            UploadCount = document.UploadCount + 1,
-        }, query, cancellationToken);
+        
+        _collection.First(e => e.Value.Name == sourceName).Value.UploadCount++;
+        return Task.CompletedTask;
     }
 
     public Task Delete(TrustedSourceQuery query, CancellationToken cancellationToken = default)

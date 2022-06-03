@@ -13,16 +13,16 @@ public class RecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess
 
     public static readonly string Key = "Universalis.RecentlyUpdated";
 
-    private readonly IScoreboardStore<uint> _store;
+    private readonly IRecentlyUpdatedItemsStore _store;
 
-    public RecentlyUpdatedItemsDbAccess(IScoreboardStore<uint> store)
+    public RecentlyUpdatedItemsDbAccess(IRecentlyUpdatedItemsStore store)
     {
         _store = store;
     }
 
     public async Task<RecentlyUpdatedItems> Retrieve(RecentlyUpdatedItemsQuery query, CancellationToken cancellationToken = default)
     {
-        var items = await _store.GetAllScores(Key, MaxItems - 1);
+        var items = await _store.GetAllItems(Key, MaxItems - 1);
         return new RecentlyUpdatedItems
         {
             Items = items.Take(MaxItems).Select(i => i.Key).ToList(),
@@ -31,6 +31,6 @@ public class RecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess
 
     public async Task Push(uint itemId, CancellationToken cancellationToken = default)
     {
-        await _store.SetScore(Key, itemId, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+        await _store.SetItem(Key, itemId, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
     }
 }
