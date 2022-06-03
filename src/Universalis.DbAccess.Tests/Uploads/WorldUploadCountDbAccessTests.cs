@@ -1,5 +1,6 @@
 ﻿using MongoDB.Driver;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.Uploads;
@@ -9,28 +10,33 @@ using Xunit;
 
 namespace Universalis.DbAccess.Tests.Uploads;
 
-public class WorldUploadCountDbAccessTests : IDisposable
+public class WorldUploadCountDbAccessTests
 {
-    private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(WorldUploadCountDbAccessTests));
-
-    private readonly IMongoClient _client;
-        
-    public WorldUploadCountDbAccessTests()
+    private class MockWorldUploadCountStore : IWorldUploadCountStore
     {
-        _client = new MongoClient("mongodb://localhost:27017");
-        _client.DropDatabase(Database);
-    }
+        private readonly Dictionary<string, long> _counts = new();
 
-    public void Dispose()
-    {
-        _client.DropDatabase(Database);
-        GC.SuppressFinalize(this);
+        public Task Increment(string key, string worldName)
+        {
+            if (!_counts.ContainsKey(worldName))
+            {
+                _counts[worldName] = 0;
+            }
+            
+            _counts[worldName]++;
+            return Task.CompletedTask;
+        }
+
+        public Task<IList<KeyValuePair<string, long>>> GetWorldUploadCounts(string key)
+        {
+            return Task.FromResult((IList<KeyValuePair<string, long>>)_counts.ToList());
+        }
     }
 
     [Fact]
     public async Task GetWorldUploadCounts_DoesNotThrow()
     {
-        IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(_client, Database);
+        IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(new MockWorldUploadCountStore());
         var output = await db.GetWorldUploadCounts();
         Assert.NotNull(output);
         Assert.Empty(output);
@@ -39,7 +45,7 @@ public class WorldUploadCountDbAccessTests : IDisposable
     [Fact]
     public async Task Increment_DoesNotThrow()
     {
-        IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(_client, Database);
+        IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(new MockWorldUploadCountStore());
         var query = new WorldUploadCountQuery { WorldName = "Coeurl" };
 
         await db.Increment(query);
@@ -49,7 +55,7 @@ public class WorldUploadCountDbAccessTests : IDisposable
     [Fact]
     public async Task Increment_DoesRetrieve()
     {
-        IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(_client, Database);
+        IWorldUploadCountDbAccess db = new WorldUploadCountDbAccess(new MockWorldUploadCountStore());
         await db.Increment(new WorldUploadCountQuery { WorldName = "Coeurl" });
         var output = (await db.GetWorldUploadCounts()).ToList();
         Assert.NotNull(output);

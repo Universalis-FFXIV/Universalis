@@ -18,10 +18,6 @@ public class WorldUploadCountController : ControllerBase
 {
     private readonly IWorldUploadCountDbAccess _worldUploadCountDb;
 
-    // Bodge caching mechanism; TODO: fix
-    private static IList<WorldUploadCount> Data;
-    private static DateTime LastFetch;
-
     public WorldUploadCountController(IWorldUploadCountDbAccess worldUploadCountDb)
     {
         _worldUploadCountDb = worldUploadCountDb;
@@ -35,20 +31,15 @@ public class WorldUploadCountController : ControllerBase
     [ProducesResponseType(typeof(IDictionary<string, WorldUploadCountView>), 200)]
     public async Task<IDictionary<string, WorldUploadCountView>> Get(CancellationToken cancellationToken = default)
     {
-        if (DateTime.Now - LastFetch > TimeSpan.FromMinutes(5))
-        {
-            Data = (await _worldUploadCountDb.GetWorldUploadCounts(cancellationToken))
-                .Where(d => !string.IsNullOrEmpty(d.WorldName))
-                .ToList();
-            LastFetch = DateTime.Now;
-        }
-
-        var sum = Data?.Sum(d => d.Count) ?? 0;
-        return Data?
+        var data = (await _worldUploadCountDb.GetWorldUploadCounts(cancellationToken))
+            .Where(d => !string.IsNullOrEmpty(d.WorldName))
+            .ToList();
+        var sum = data.Sum(d => d.Count);
+        return data
             .ToDictionary(d => d.WorldName, d => new WorldUploadCountView
             {
                 Count = d.Count,
                 Proportion = d.Count / sum,
-            }) ?? new Dictionary<string, WorldUploadCountView>();
+            });
     }
 }
