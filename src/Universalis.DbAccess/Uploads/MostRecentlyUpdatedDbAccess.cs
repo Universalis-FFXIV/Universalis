@@ -2,57 +2,60 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MongoDB.Driver;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.Entities.Uploads;
 
 namespace Universalis.DbAccess.Uploads;
 
-public class MostRecentlyUpdatedDbAccess : DbAccessService<MostRecentlyUpdated, MostRecentlyUpdatedQuery>, IMostRecentlyUpdatedDbAccess
+public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
 {
     public static readonly int MaxItems = 200;
-        
-    public MostRecentlyUpdatedDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "mostRecentlyUpdated") { }
 
-    public MostRecentlyUpdatedDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "mostRecentlyUpdated") { }
+    public static readonly string KeyFormat = "Universalis.WorldItemUploads.{0}";
 
-    public async Task Push(uint worldId, WorldItemUpload document, CancellationToken cancellationToken = default)
+    private readonly IWorldItemUploadStore _store;
+
+    public MostRecentlyUpdatedDbAccess(IWorldItemUploadStore store)
     {
-        var query = new MostRecentlyUpdatedQuery { WorldId = worldId };
-        var existing = await Retrieve(query, cancellationToken);
+        _store = store;
+    }
 
-        if (existing == null)
+    public Task Push(uint worldId, WorldItemUpload document, CancellationToken cancellationToken = default)
+    {
+        return _store.SetItem(string.Format(KeyFormat, worldId), document.ItemId,
+            document.LastUploadTimeUnixMilliseconds);
+    }
+
+    public async Task<MostRecentlyUpdated> Retrieve(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
+    {
+        var data = await _store.GetAllItems(string.Format(KeyFormat, query.WorldId), MaxItems - 1);
+        return new MostRecentlyUpdated
         {
-            await Create(new MostRecentlyUpdated
+            WorldId = query.WorldId,
+            Uploads = data.Select(kvp => new WorldItemUpload
             {
-                WorldId = worldId,
-                Uploads = new List<WorldItemUpload> { document },
-            }, cancellationToken);
-            return;
-        }
-
-        var uploads = existing.Uploads;
-        var existingIndex = uploads.FindIndex(o => o.ItemId == document.ItemId);
-        if (existingIndex != -1)
-        {
-            uploads.RemoveAt(existingIndex);
-            uploads.Insert(0, document);
-        }
-        else
-        {
-            uploads.Insert(0, document);
-            uploads = uploads.Take(MaxItems).ToList();
-        }
-
-        var updateBuilder = Builders<MostRecentlyUpdated>.Update;
-        var update = updateBuilder.Set(o => o.Uploads, uploads);
-        await Collection.UpdateOneAsync(query.ToFilterDefinition(), update,
-            cancellationToken: cancellationToken);
+                WorldId = query.WorldId,
+                ItemId = kvp.Key,
+                LastUploadTimeUnixMilliseconds = kvp.Value,
+            }).ToList(),
+        };
     }
 
     public async Task<IList<MostRecentlyUpdated>> RetrieveMany(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
     {
-        return await Collection.Find(query.ToFilterDefinition())
+        return await query.WorldIds.ToAsyncEnumerable()
+            .SelectAwait(async world => new MostRecentlyUpdated
+            {
+                WorldId = world,
+                Uploads = (await _store.GetAllItems(string.Format(KeyFormat, world), MaxItems - 1))
+                    .Select(kvp => new WorldItemUpload
+                    {
+                        WorldId = world,
+                        ItemId = kvp.Key,
+                        LastUploadTimeUnixMilliseconds = kvp.Value,
+                    })
+                    .ToList(),
+            })
             .ToListAsync(cancellationToken);
     }
 }
