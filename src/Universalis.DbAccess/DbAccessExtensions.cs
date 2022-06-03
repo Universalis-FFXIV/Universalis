@@ -19,12 +19,14 @@ public static class DbAccessExtensions
         sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
         sc.AddSingleton<IContentDbAccess, ContentDbAccess>();
         sc.AddSingleton<ITaxRatesDbAccess, TaxRatesDbAccess>();
-        sc.AddSingleton<ITrustedSourceDbAccess, TrustedSourceDbAccess>();
         sc.AddSingleton<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();
         sc.AddSingleton<IWorldUploadCountDbAccess, WorldUploadCountDbAccess>();
         sc.AddSingleton<IUploadCountHistoryDbAccess, UploadCountHistoryDbAccess>();
+
+        sc.AddSingleton<ISourceUploadCountStore, TrustedSourceUploadCountStore>();
+        sc.AddSingleton<ITrustedSourceDbAccess, TrustedSourceDbAccess>();
         
-        sc.AddSingleton<IScoreboardStore<uint>, RecentlyUpdatedItemsStore>();
+        sc.AddSingleton<IRecentlyUpdatedItemsStore, RecentlyUpdatedItemsStore>();
         sc.AddSingleton<IRecentlyUpdatedItemsDbAccess, RecentlyUpdatedItemsDbAccess>();
     }
 }

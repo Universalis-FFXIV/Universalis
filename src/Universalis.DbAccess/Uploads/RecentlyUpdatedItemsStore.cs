@@ -5,7 +5,7 @@ using StackExchange.Redis;
 
 namespace Universalis.DbAccess.Uploads;
 
-public class RecentlyUpdatedItemsStore : IScoreboardStore<uint>
+public class RecentlyUpdatedItemsStore : IRecentlyUpdatedItemsStore
 {
     private readonly IConnectionMultiplexer _redis;
 
@@ -14,16 +14,16 @@ public class RecentlyUpdatedItemsStore : IScoreboardStore<uint>
         _redis = redis;
     }
 
-    public async Task SetScore(string scoreboardName, uint id, double val)
+    public async Task SetItem(string key, uint id, double val)
     {
         var db = _redis.GetDatabase();
-        await db.SortedSetAddAsync(scoreboardName, new[] { new SortedSetEntry(id, val) });
+        await db.SortedSetAddAsync(key, new[] { new SortedSetEntry(id, val) });
     }
 
-    public async Task<IList<KeyValuePair<uint, double>>> GetAllScores(string scoreboardName, int stop = -1)
+    public async Task<IList<KeyValuePair<uint, double>>> GetAllItems(string key, int stop = -1)
     {
         var db = _redis.GetDatabase();
-        var items = await db.SortedSetRangeByRankWithScoresAsync(scoreboardName, stop: stop, order: Order.Descending);
+        var items = await db.SortedSetRangeByRankWithScoresAsync(key, stop: stop, order: Order.Descending);
         return items.Select(i => new KeyValuePair<uint, double>((uint)i.Element, i.Score)).ToList();
     }
 }

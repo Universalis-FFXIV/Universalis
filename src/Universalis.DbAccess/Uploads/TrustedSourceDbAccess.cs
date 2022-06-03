@@ -1,5 +1,6 @@
 ﻿using MongoDB.Driver;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.Uploads;
@@ -9,31 +10,34 @@ namespace Universalis.DbAccess.Uploads;
 
 public class TrustedSourceDbAccess : DbAccessService<TrustedSource, TrustedSourceQuery>, ITrustedSourceDbAccess
 {
-    public TrustedSourceDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "trustedSources") { }
+    public static readonly string Key = "Universalis.TrustedSourceUploadCounts";
+    
+    private readonly ISourceUploadCountStore _store;
 
-    public TrustedSourceDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "content") { }
-
-    public async Task Increment(TrustedSourceQuery query, CancellationToken cancellationToken = default)
+    public TrustedSourceDbAccess(IMongoClient client, ISourceUploadCountStore store) : base(client, Constants.DatabaseName,
+        "trustedSources")
     {
-        if (await Retrieve(query, cancellationToken) == null)
-        {
-            // Sources can only be added manually, so we don't create one if none exists
-            return;
-        }
+        _store = store;
+    }
 
-        var updateBuilder = Builders<TrustedSource>.Update;
-        var update = updateBuilder.Inc(o => o.UploadCount, 1U);
-        await Collection.UpdateOneAsync(query.ToFilterDefinition(), update, cancellationToken: cancellationToken);
+    public TrustedSourceDbAccess(IMongoClient client, string databaseName, ISourceUploadCountStore store) : base(client,
+        databaseName, "content")
+    {
+        _store = store;
+    }
+
+    public Task Increment(string sourceName, CancellationToken cancellationToken = default)
+    {
+        return _store.IncrementCounter(Key, sourceName);
     }
 
     public async Task<IEnumerable<TrustedSourceNoApiKey>> GetUploaderCounts(CancellationToken cancellationToken = default)
     {
-        var projectDefinition = Builders<TrustedSource>.Projection
-            .Include(o => o.Name)
-            .Include(o => o.UploadCount);
-
-        return await Collection.Find(FilterDefinition<TrustedSource>.Empty)
-            .Project<TrustedSourceNoApiKey>(projectDefinition)
-            .ToListAsync(cancellationToken);
+        var counts = await _store.GetCounterValues(Key);
+        return counts.Select(kvp => new TrustedSourceNoApiKey
+        {
+            Name = kvp.Key,
+            UploadCount = kvp.Value,
+        });
     }
 }

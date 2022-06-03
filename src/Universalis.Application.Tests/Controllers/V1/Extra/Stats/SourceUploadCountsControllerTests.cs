@@ -27,7 +27,7 @@ public class SourceUploadCountsControllerTests
         await dbAccess.Create(document);
 
         var query = new TrustedSourceQuery { ApiKeySha512 = document.ApiKeySha512 };
-        await dbAccess.Increment(query);
+        await dbAccess.Increment(document.Name);
 
         var result = await controller.Get();
         var counts = Assert.IsAssignableFrom<IEnumerable<SourceUploadCountView>>(result).ToList();

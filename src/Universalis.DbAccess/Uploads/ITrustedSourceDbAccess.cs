@@ -12,11 +12,11 @@ public interface ITrustedSourceDbAccess
 
     public Task<TrustedSource> Retrieve(TrustedSourceQuery query, CancellationToken cancellationToken = default);
 
-    public Task<IEnumerable<TrustedSourceNoApiKey>> GetUploaderCounts(CancellationToken cancellationToken = default);
-
     public Task Update(TrustedSource document, TrustedSourceQuery query, CancellationToken cancellationToken = default);
 
-    public Task Increment(TrustedSourceQuery query, CancellationToken cancellationToken = default);
-
     public Task Delete(TrustedSourceQuery query, CancellationToken cancellationToken = default);
+    
+    public Task Increment(string sourceName, CancellationToken cancellationToken = default);
+
+    public Task<IEnumerable<TrustedSourceNoApiKey>> GetUploaderCounts(CancellationToken cancellationToken = default);
 }

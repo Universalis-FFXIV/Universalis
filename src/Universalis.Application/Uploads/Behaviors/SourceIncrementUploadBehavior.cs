@@ -24,11 +24,17 @@ public class SourceIncrementUploadBehavior : IUploadBehavior
 
     public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
-        // TODO: Possibly bringing down the system through lock contention in MongoDB; use Redis?
-        //await _trustedSourceDb.Increment(new TrustedSourceQuery
-        //{
-        //    ApiKeySha512 = source.ApiKeySha512,
-        //}, cancellationToken);
+        var ts = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
+        {
+            ApiKeySha512 = source.ApiKeySha512,
+        }, cancellationToken);
+
+        if (ts == null)
+        {
+            return null;
+        }
+
+        //await _trustedSourceDb.Increment(ts.Name, cancellationToken);
 
         return null;
     }
