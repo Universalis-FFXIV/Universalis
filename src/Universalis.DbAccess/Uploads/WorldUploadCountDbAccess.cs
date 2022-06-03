@@ -28,6 +28,7 @@ public class WorldUploadCountDbAccess : IWorldUploadCountDbAccess
         var counts = await _store.GetWorldUploadCounts(Key);
         return counts.Select(c => new WorldUploadCount
         {
+            WorldName = c.Key,
             Count = c.Value,
         });
     }
