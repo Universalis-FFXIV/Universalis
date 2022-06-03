@@ -34,7 +34,7 @@ public class SourceIncrementUploadBehavior : IUploadBehavior
             return null;
         }
 
-        //await _trustedSourceDb.Increment(ts.Name, cancellationToken);
+        await _trustedSourceDb.Increment(ts.Name, cancellationToken);
 
         return null;
     }
