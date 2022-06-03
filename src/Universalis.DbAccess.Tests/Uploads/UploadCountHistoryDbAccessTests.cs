@@ -1,76 +1,53 @@
-﻿using MongoDB.Driver;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
-using Universalis.Entities.Uploads;
 using Xunit;
 
 namespace Universalis.DbAccess.Tests.Uploads;
 
-public class UploadCountHistoryDbAccessTests : IDisposable
+public class UploadCountHistoryDbAccessTests
 {
-    private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(UploadCountHistoryDbAccessTests));
-
-    private readonly IMongoClient _client;
+    private class MockDailyUploadCountStore : IDailyUploadCountStore
+    {
+        private readonly List<long> _counts = new();
+        private long _lastPush;
         
-    public UploadCountHistoryDbAccessTests()
-    {
-        _client = new MongoClient("mongodb://localhost:27017");
-        _client.DropDatabase(Database);
-    }
-
-    public void Dispose()
-    {
-        _client.DropDatabase(Database);
-        GC.SuppressFinalize(this);
-    }
-
-    [Fact]
-    public async Task Create_DoesNotThrow()
-    {
-        var db = new UploadCountHistoryDbAccess(_client, Database);
-        await db.Create(new UploadCountHistory
+        public Task Increment(string key, string lastPushKey)
         {
-            LastPush = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            UploadCountByDay = new List<double> { 1 },
-        });
-    }
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            if (now - _lastPush > 86400000)
+            {
+                _counts.Insert(0, 0);
+                _lastPush = now;
+            }
 
-    [Fact]
-    public async Task Retrieve_DoesNotThrow()
-    {
-        var db = new UploadCountHistoryDbAccess(_client, Database);
-        var output = await db.Retrieve(new UploadCountHistoryQuery());
-        Assert.Null(output);
-    }
+            _counts[0]++;
+        
+            return Task.CompletedTask;
+        }
 
-    [Fact]
-    public async Task Update_DoesNotThrow()
-    {
-        var db = new UploadCountHistoryDbAccess(_client, Database);
-        await db.Update(new UploadCountHistory
+        public Task<IList<long>> GetUploadCounts(string key, int stop = -1)
         {
-            LastPush = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            UploadCountByDay = new List<double> { 1 },
-        }, new UploadCountHistoryQuery());
+            var en = _counts;
+            if (stop > -1)
+            {
+                en = en.Take(stop - 1).ToList();
+            }
+        
+            return Task.FromResult((IList<long>)en);
+        }
     }
-
+    
     [Fact]
-    public async Task Create_DoesInsert()
+    public async Task Increment_Works()
     {
-        var db = new UploadCountHistoryDbAccess(_client, Database);
-        var document = new UploadCountHistory
-        {
-            LastPush = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            UploadCountByDay = new List<double> { 1 },
-        };
-        await db.Create(document);
+        var db = new UploadCountHistoryDbAccess(new MockDailyUploadCountStore());
+        await db.Increment();
 
-        var output = await db.Retrieve(new UploadCountHistoryQuery());
-        Assert.NotNull(output);
-        Assert.Equal(document.LastPush, output.LastPush);
-        Assert.Equal(document.UploadCountByDay, output.UploadCountByDay);
+        var data = await db.GetUploadCounts();
+        Assert.Single(data);
+        Assert.Equal(1U, data[0]);
     }
 }

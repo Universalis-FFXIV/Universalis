@@ -1,27 +1,29 @@
-﻿using MongoDB.Driver;
-using System.Collections.Generic;
-using System.Threading;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Universalis.DbAccess.Queries.Uploads;
-using Universalis.Entities.Uploads;
 
 namespace Universalis.DbAccess.Uploads;
 
-public class UploadCountHistoryDbAccess : DbAccessService<UploadCountHistory, UploadCountHistoryQuery>, IUploadCountHistoryDbAccess
+public class UploadCountHistoryDbAccess : IUploadCountHistoryDbAccess
 {
-    public UploadCountHistoryDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "extraData") { }
+    public static readonly string Key = "Universalis.DailyUploads";
+    public static readonly string KeyLastPush = "Universalis.DailyUploadsLastPush";
 
-    public UploadCountHistoryDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "extraData") { }
-
-    public Task Update(double lastPush, List<double> uploadCountByDay, CancellationToken cancellationToken = default)
+    private readonly IDailyUploadCountStore _store;
+    
+    public UploadCountHistoryDbAccess(IDailyUploadCountStore store)
     {
-        var filterBuilder = Builders<UploadCountHistory>.Filter;
-        var filter = filterBuilder.Eq(o => o.SetName, UploadCountHistory.DefaultSetName);
+        _store = store;
+    }
 
-        var updateBuilder = Builders<UploadCountHistory>.Update;
-        var update1 = updateBuilder.Set(o => o.LastPush, lastPush);
-        var update2 = updateBuilder.Set(o => o.UploadCountByDay, uploadCountByDay);
+    public Task Increment()
+    {
+        return _store.Increment(Key, KeyLastPush);
+    }
 
-        return Collection.UpdateOneAsync(filter, updateBuilder.Combine(update1, update2), cancellationToken: cancellationToken);
+    public Task<IList<long>> GetUploadCounts(int count = -1)
+    {
+        return count == 0
+            ? Task.FromResult((IList<long>)new List<long>())
+            : _store.GetUploadCounts(Key, count - 1);
     }
 }

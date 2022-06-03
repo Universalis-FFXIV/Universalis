@@ -16,13 +16,13 @@ public class UploadCountHistoryControllerTests
         var dbAccess = new MockUploadCountHistoryDbAccess();
         var controller = new UploadCountHistoryController(dbAccess);
             
-        await dbAccess.Update(DateTimeOffset.Now.ToUnixTimeMilliseconds(), new List<double> { 1 });
+        await dbAccess.Increment();
 
         var result = await controller.Get();
-        Assert.IsType<UploadCountHistoryView>(result);
+        var counts = Assert.IsType<UploadCountHistoryView>(result);
 
-        // Assert.Equal(1, counts.UploadCountByDay.Count);
-        // Assert.Equal(1U, counts.UploadCountByDay[0]);
+        Assert.Equal(1, counts.UploadCountByDay.Count);
+        Assert.Equal(1U, counts.UploadCountByDay[0]);
     }
 
     [Fact]
@@ -32,8 +32,8 @@ public class UploadCountHistoryControllerTests
         var controller = new UploadCountHistoryController(dbAccess);
 
         var result = await controller.Get();
-        Assert.IsType<UploadCountHistoryView>(result);
+        var counts = Assert.IsType<UploadCountHistoryView>(result);
 
-        // Assert.Equal(0, counts.UploadCountByDay.Count);
+        Assert.Equal(0, counts.UploadCountByDay.Count);
     }
 }
