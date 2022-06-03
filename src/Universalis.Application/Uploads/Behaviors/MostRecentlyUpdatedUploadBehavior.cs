@@ -31,12 +31,12 @@ public class MostRecentlyUpdatedUploadBehavior : IUploadBehavior
     {
         var worldId = parameters.WorldId!.Value;
 
-        //await _mostRecentlyUpdatedDb.Push(worldId, new WorldItemUpload
-        //{
-        //    ItemId = parameters.ItemId!.Value,
-        //    WorldId = worldId,
-        //    LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-        //}, cancellationToken);
+        await _mostRecentlyUpdatedDb.Push(worldId, new WorldItemUpload
+        {
+            ItemId = parameters.ItemId!.Value,
+            WorldId = worldId,
+            LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+        }, cancellationToken);
 
         return null;
     }
