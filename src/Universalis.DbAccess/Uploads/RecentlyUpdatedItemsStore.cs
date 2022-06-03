@@ -26,14 +26,4 @@ public class RecentlyUpdatedItemsStore : IScoreboardStore<uint>
         var items = await db.SortedSetRangeByRankWithScoresAsync(scoreboardName, stop: stop, order: Order.Descending);
         return items.Select(i => new KeyValuePair<uint, double>((uint)i.Element, i.Score)).ToList();
     }
-
-    public async Task TrimScores(string scoreboardName, int topKeeping)
-    {
-        var db = _redis.GetDatabase();
-        var count = await db.SortedSetLengthAsync(scoreboardName);
-        if (count > topKeeping)
-        {
-            await db.SortedSetRemoveRangeByRankAsync(scoreboardName, 0, count - topKeeping);
-        }
-    }
 }

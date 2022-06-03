@@ -19,8 +19,8 @@ public class RecentlyUpdatedItemsControllerTests
         var result = await controller.Get();
         Assert.IsAssignableFrom<RecentlyUpdatedItemsView>(result);
 
-        // Assert.Single(counts);
-        // Assert.Equal(5333U, counts[0]);
+        Assert.Single(result.Items);
+        Assert.Equal(5333U, result.Items[0]);
     }
 
     [Fact]
@@ -32,6 +32,6 @@ public class RecentlyUpdatedItemsControllerTests
         var result = await controller.Get();
         Assert.IsAssignableFrom<RecentlyUpdatedItemsView>(result);
 
-        // Assert.Empty(counts);
+        Assert.Empty(result.Items);
     }
 }
