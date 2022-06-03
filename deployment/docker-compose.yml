@@ -42,6 +42,7 @@ services:
   redis:
     image: redis:7.0.0
     command: redis-server --save 60 1 --loglevel warning
-    network_mode: "host"
+    ports:
+      - 4050:6379
     volumes:
       - /home/universalis/redis:/data
