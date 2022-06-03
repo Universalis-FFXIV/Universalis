@@ -1,54 +1,38 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
-using Universalis.Entities.Uploads;
 
 namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 
 public class MockUploadCountHistoryDbAccess : IUploadCountHistoryDbAccess
 {
-    private readonly List<UploadCountHistory> _collection = new();
+    private readonly List<long> _counts = new();
+    private long _lastPush;
 
-    public Task Create(UploadCountHistory document, CancellationToken cancellationToken = default)
+    public Task Increment()
     {
-        _collection.Add(document);
-        return Task.CompletedTask;
-    }
-
-    public Task<UploadCountHistory> Retrieve(UploadCountHistoryQuery query, CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(_collection.FirstOrDefault());
-    }
-
-    public async Task Update(UploadCountHistory document, UploadCountHistoryQuery query, CancellationToken cancellationToken = default)
-    {
-        await Delete(query, cancellationToken);
-        await Create(document, cancellationToken);
-    }
-
-    public async Task Update(double lastPush, List<double> uploadCountByDay, CancellationToken cancellationToken = default)
-    {
-        var existing = await Retrieve(new UploadCountHistoryQuery(), cancellationToken);
-        if (existing != null)
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        if (now - _lastPush > 86400000)
         {
-            existing.LastPush = lastPush;
-            existing.UploadCountByDay = uploadCountByDay;
-            return;
+            _counts.Insert(0, 0);
+            _lastPush = now;
         }
 
-        await Create(new UploadCountHistory
-        {
-            LastPush = lastPush,
-            UploadCountByDay = uploadCountByDay,
-        }, cancellationToken);
+        _counts[0]++;
+        
+        return Task.CompletedTask;
     }
 
-    public Task Delete(UploadCountHistoryQuery query, CancellationToken cancellationToken = default)
+    public Task<IList<long>> GetUploadCounts(int count = -1)
     {
-        _collection.Remove(_collection.FirstOrDefault());
-        return Task.CompletedTask;
+        var en = _counts;
+        if (count > -1)
+        {
+            en = en.Take(count).ToList();
+        }
+        
+        return Task.FromResult((IList<long>)en);
     }
 }
