@@ -15,11 +15,11 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats;
 [Route("api/extra/stats/recently-updated")]
 public class RecentlyUpdatedItemsController : ControllerBase
 {
-    //private readonly IRecentlyUpdatedItemsDbAccess _recentlyUpdatedItemsDb;
+    private readonly IRecentlyUpdatedItemsDbAccess _recentlyUpdatedItemsDb;
     
-    public RecentlyUpdatedItemsController(/*IRecentlyUpdatedItemsDbAccess recentlyUpdatedItemsDb*/)
+    public RecentlyUpdatedItemsController(IRecentlyUpdatedItemsDbAccess recentlyUpdatedItemsDb)
     {
-        //_recentlyUpdatedItemsDb = recentlyUpdatedItemsDb;
+        _recentlyUpdatedItemsDb = recentlyUpdatedItemsDb;
     }
 
     /// <summary>
@@ -32,15 +32,15 @@ public class RecentlyUpdatedItemsController : ControllerBase
     public async Task<RecentlyUpdatedItemsView> Get(CancellationToken cancellationToken = default)
     {
         List<uint> data = null;
-        // try
-        // {
-        //     data = (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery(), cancellationToken))
-        //         ?.Items;
-        // }
-        // catch (Exception)
-        // {
-        //     // ignored
-        // }
+        try
+        {
+            data = (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery(), cancellationToken))
+                ?.Items;
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
         
         return data == null
             ? new RecentlyUpdatedItemsView { Items = new List<uint>() }
