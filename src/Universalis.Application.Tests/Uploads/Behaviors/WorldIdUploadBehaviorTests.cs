@@ -40,10 +40,10 @@ public class WorldIdUploadBehaviorTests
         var result = await behavior.Execute(null, upload);
         Assert.Null(result);
 
-        // var data = (await dbAccess.GetWorldUploadCounts()).ToList();
-        // Assert.NotNull(data);
-        // Assert.Single(data);
-        // Assert.Equal(gameData.AvailableWorlds()[upload.WorldId.Value], data[0].WorldName);
+        var data = (await dbAccess.GetWorldUploadCounts()).ToList();
+        Assert.NotNull(data);
+        Assert.Single(data);
+        Assert.Equal(gameData.AvailableWorlds()[upload.WorldId.Value], data[0].WorldName);
     }
 
     [Fact]
