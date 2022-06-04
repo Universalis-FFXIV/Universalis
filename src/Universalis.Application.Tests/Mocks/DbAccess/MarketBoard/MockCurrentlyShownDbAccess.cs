@@ -32,28 +32,6 @@ public class MockCurrentlyShownDbAccess : ICurrentlyShownDbAccess
             .Where(d => d.ItemId == query.ItemId && query.WorldIds.Contains(d.WorldId)));
     }
 
-    public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order, CancellationToken cancellationToken = default)
-    {
-        var documents = _collection
-            .Where(o => query.WorldIds.Contains(o.WorldId))
-            .Select(o => new WorldItemUpload
-            {
-                WorldId = o.WorldId,
-                ItemId = o.ItemId,
-                LastUploadTimeUnixMilliseconds = o.LastUploadTimeUnixMilliseconds,
-            })
-            .ToList();
-
-        documents.Sort((a, b) => order switch
-        {
-            UploadOrder.MostRecent => (int)(b.LastUploadTimeUnixMilliseconds - a.LastUploadTimeUnixMilliseconds),
-            UploadOrder.LeastRecent => (int)(a.LastUploadTimeUnixMilliseconds - b.LastUploadTimeUnixMilliseconds),
-            _ => throw new ArgumentException(nameof(order)),
-        });
-            
-        return await Task.FromResult(documents.Take(count).ToList());
-    }
-
     public async Task Update(CurrentlyShown document, CurrentlyShownQuery query, CancellationToken cancellationToken = default)
     {
         await Delete(query, cancellationToken);

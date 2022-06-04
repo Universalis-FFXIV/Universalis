@@ -14,44 +14,6 @@ namespace Universalis.DbAccess.Tests.MarketBoard;
 
 public class CurrentlyShownDbAccessTests : IDisposable
 {
-    private class MockWorldItemUploadStore : IWorldItemUploadStore
-    {
-        private readonly Dictionary<string, Dictionary<uint, double>> _scores = new();
-        
-        public Task SetItem(string key, uint id, double val)
-        {
-            if (!_scores.ContainsKey(key))
-            {
-                _scores[key] = new Dictionary<uint, double>();
-            }
-            
-            _scores[key][id] = val;
-            return Task.CompletedTask;
-        }
-
-        public Task<IList<KeyValuePair<uint, double>>> GetMostRecent(string key, int stop = -1)
-        {
-            var en = _scores[key].OrderByDescending(s => s.Value).ToList();
-            if (stop > -1)
-            {
-                en = en.Take(stop + 1).ToList();
-            }
-
-            return Task.FromResult((IList<KeyValuePair<uint, double>>)en);
-        }
-        
-        public Task<IList<KeyValuePair<uint, double>>> GetLeastRecent(string key, int stop = -1)
-        {
-            var en = _scores[key].OrderBy(s => s.Value).ToList();
-            if (stop > -1)
-            {
-                en = en.Take(stop + 1).ToList();
-            }
-
-            return Task.FromResult((IList<KeyValuePair<uint, double>>)en);
-        }
-    }
-    
     private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(CurrentlyShownDbAccessTests));
 
     private readonly IMongoClient _client;
@@ -71,7 +33,7 @@ public class CurrentlyShownDbAccessTests : IDisposable
     [Fact]
     public async Task Create_DoesNotThrow()
     {
-        var db = new CurrentlyShownDbAccess(new MostRecentlyUpdatedDbAccess(new MockWorldItemUploadStore()), _client, Database);
+        var db = new CurrentlyShownDbAccess(_client, Database);
         var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
         await db.Create(document);
     }
@@ -79,7 +41,7 @@ public class CurrentlyShownDbAccessTests : IDisposable
     [Fact]
     public async Task Retrieve_DoesNotThrow()
     {
-        var db = new CurrentlyShownDbAccess(new MostRecentlyUpdatedDbAccess(new MockWorldItemUploadStore()), _client, Database);
+        var db = new CurrentlyShownDbAccess(_client, Database);
         var output = await db.Retrieve(new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
         Assert.Null(output);
     }
@@ -87,7 +49,7 @@ public class CurrentlyShownDbAccessTests : IDisposable
     [Fact]
     public async Task RetrieveMany_DoesNotThrow()
     {
-        var db = new CurrentlyShownDbAccess(new MostRecentlyUpdatedDbAccess(new MockWorldItemUploadStore()), _client, Database);
+        var db = new CurrentlyShownDbAccess(_client, Database);
         var output = await db.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = new uint[] { 74 }, ItemId = 5333 });
         Assert.NotNull(output);
         Assert.Empty(output);
@@ -96,7 +58,7 @@ public class CurrentlyShownDbAccessTests : IDisposable
     [Fact]
     public async Task Update_DoesNotThrow()
     {
-        var db = new CurrentlyShownDbAccess(new MostRecentlyUpdatedDbAccess(new MockWorldItemUploadStore()), _client, Database);
+        var db = new CurrentlyShownDbAccess(_client, Database);
         var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
         var query = new CurrentlyShownQuery { WorldId = document.WorldId, ItemId = document.ItemId };
 
@@ -113,14 +75,14 @@ public class CurrentlyShownDbAccessTests : IDisposable
     [Fact]
     public async Task Delete_DoesNotThrow()
     {
-        var db = new CurrentlyShownDbAccess(new MostRecentlyUpdatedDbAccess(new MockWorldItemUploadStore()), _client, Database);
+        var db = new CurrentlyShownDbAccess(_client, Database);
         await db.Delete(new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
     }
 
     [Fact]
     public async Task Create_DoesInsert()
     {
-        var db = new CurrentlyShownDbAccess(new MostRecentlyUpdatedDbAccess(new MockWorldItemUploadStore()), _client, Database);
+        var db = new CurrentlyShownDbAccess(_client, Database);
 
         var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
         await db.Create(document);
@@ -132,7 +94,7 @@ public class CurrentlyShownDbAccessTests : IDisposable
     [Fact]
     public async Task RetrieveMany_ReturnsData()
     {
-        var db = new CurrentlyShownDbAccess(new MostRecentlyUpdatedDbAccess(new MockWorldItemUploadStore()), _client, Database);
+        var db = new CurrentlyShownDbAccess(_client, Database);
 
         var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
         await db.Create(document);
@@ -146,34 +108,5 @@ public class CurrentlyShownDbAccessTests : IDisposable
         Assert.Equal(document.Listings, output[0].Listings);
         Assert.Equal(document.RecentHistory, output[0].RecentHistory);
         Assert.Equal(document.UploaderIdHash, output[0].UploaderIdHash);
-    }
-
-    [Fact]
-    public async Task RetrieveByUploadTime_MostRecent_MultiWorld_Works()
-    {
-        var mru = new MostRecentlyUpdatedDbAccess(new MockWorldItemUploadStore());
-        var db = new CurrentlyShownDbAccess(mru, _client, Database);
-
-        await mru.Push(74, new WorldItemUpload
-        {
-            WorldId = 74,
-            ItemId = 5333,
-            LastUploadTimeUnixMilliseconds = 10,
-        });
-
-        await mru.Push(34, new WorldItemUpload
-        {
-            WorldId = 34,
-            ItemId = 5335,
-            LastUploadTimeUnixMilliseconds = 20,
-        });
-
-        var data = await db.RetrieveByUploadTime(
-            new CurrentlyShownWorldIdsQuery { WorldIds = new[] { 74U, 34U } }, 3,
-            UploadOrder.MostRecent);
-
-        Assert.Equal(34U, data[0].WorldId);
-        Assert.Equal(74U, data[1].WorldId);
-        Assert.Equal(2, data.Count);
     }
 }
