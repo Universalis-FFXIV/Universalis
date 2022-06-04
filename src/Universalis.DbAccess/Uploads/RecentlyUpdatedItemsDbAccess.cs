@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.Uploads;
 
 namespace Universalis.DbAccess.Uploads;
@@ -20,7 +19,7 @@ public class RecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess
         _store = store;
     }
 
-    public async Task<RecentlyUpdatedItems> Retrieve(RecentlyUpdatedItemsQuery query, CancellationToken cancellationToken = default)
+    public async Task<RecentlyUpdatedItems> Retrieve(CancellationToken cancellationToken = default)
     {
         var items = await _store.GetAllItems(Key, MaxItems - 1);
         return new RecentlyUpdatedItems

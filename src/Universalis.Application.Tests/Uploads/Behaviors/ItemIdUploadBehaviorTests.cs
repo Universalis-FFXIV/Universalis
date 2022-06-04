@@ -4,7 +4,6 @@ using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
-using Universalis.DbAccess.Queries.MarketBoard;
 using Xunit;
 
 namespace Universalis.Application.Tests.Uploads.Behaviors;
@@ -40,10 +39,10 @@ public class ItemIdUploadBehaviorTests
         var result = await behavior.Execute(null, upload);
         Assert.Null(result);
 
-        // var data = await dbAccess.Retrieve(new RecentlyUpdatedItemsQuery());
-        // Assert.NotNull(data);
-        // Assert.Single(data.Items);
-        // Assert.Equal(upload.ItemId.Value, data.Items[0]);
+        var data = await dbAccess.Retrieve();
+        Assert.NotNull(data);
+        Assert.Single(data.Items);
+        Assert.Equal(upload.ItemId.Value, data.Items[0]);
     }
 
     [Fact]
@@ -63,7 +62,7 @@ public class ItemIdUploadBehaviorTests
         var result = await behavior.Execute(null, upload);
         Assert.IsType<NotFoundObjectResult>(result);
 
-        var data = await dbAccess.Retrieve(new RecentlyUpdatedItemsQuery());
-        Assert.Null(data);
+        var data = await dbAccess.Retrieve();
+        Assert.Empty(data.Items);
     }
 }
