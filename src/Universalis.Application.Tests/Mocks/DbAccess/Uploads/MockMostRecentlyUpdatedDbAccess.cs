@@ -34,4 +34,14 @@ public class MockMostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
     {
         return _store.Where(o => query.WorldIds.Contains(o.WorldId)).ToList();
     }
+    
+    public Task<IList<WorldItemUpload>> GetLeastRecent(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult((IList<WorldItemUpload>)_store.Where(o => o.WorldId == query.WorldId).Reverse().ToList());
+    }
+
+    public async Task<IList<WorldItemUpload>> GetAllLeastRecent(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
+    {
+        return _store.Where(o => query.WorldIds.Contains(o.WorldId)).Reverse().ToList();
+    }
 }

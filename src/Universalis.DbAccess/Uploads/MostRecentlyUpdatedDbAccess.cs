@@ -29,7 +29,7 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
 
     public async Task<IList<WorldItemUpload>> GetMostRecent(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
     {
-        var data = await _store.GetAllItems(string.Format(KeyFormat, query.WorldId), MaxItems - 1);
+        var data = await _store.GetMostRecent(string.Format(KeyFormat, query.WorldId), MaxItems - 1);
         return data.Select(kvp => new WorldItemUpload
         {
             WorldId = query.WorldId,
@@ -43,7 +43,35 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
         return await query.WorldIds.ToAsyncEnumerable()
             .SelectManyAwait(async world =>
             {
-                return (await _store.GetAllItems(string.Format(KeyFormat, world), MaxItems - 1))
+                return (await _store.GetMostRecent(string.Format(KeyFormat, world), MaxItems - 1))
+                    .ToAsyncEnumerable()
+                    .Select(kvp => new WorldItemUpload
+                    {
+                        WorldId = world,
+                        ItemId = kvp.Key,
+                        LastUploadTimeUnixMilliseconds = kvp.Value,
+                    });
+            })
+            .ToListAsync(cancellationToken);
+    }
+    
+    public async Task<IList<WorldItemUpload>> GetLeastRecent(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
+    {
+        var data = await _store.GetLeastRecent(string.Format(KeyFormat, query.WorldId), MaxItems - 1);
+        return data.Select(kvp => new WorldItemUpload
+        {
+            WorldId = query.WorldId,
+            ItemId = kvp.Key,
+            LastUploadTimeUnixMilliseconds = kvp.Value,
+        }).ToList();
+    }
+
+    public async Task<IList<WorldItemUpload>> GetAllLeastRecent(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
+    {
+        return await query.WorldIds.ToAsyncEnumerable()
+            .SelectManyAwait(async world =>
+            {
+                return (await _store.GetLeastRecent(string.Format(KeyFormat, world), MaxItems - 1))
                     .ToAsyncEnumerable()
                     .Select(kvp => new WorldItemUpload
                     {

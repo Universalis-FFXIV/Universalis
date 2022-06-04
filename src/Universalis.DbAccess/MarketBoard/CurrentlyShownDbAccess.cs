@@ -37,39 +37,11 @@ public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyS
         return await Collection.Find(query.ToFilterDefinition()).ToListAsync(cancellationToken);
     }
 
-    public async Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order, CancellationToken cancellationToken = default)
+    public Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order, CancellationToken cancellationToken = default)
     {
-        if (order == UploadOrder.MostRecent)
-        {
-            return await GetMostRecentlyUpdated(query, count, cancellationToken);
-        }
-
-        // This is a *very long* query right now, so we hold a static cache of all the responses
-        // To mitigate potential thread pool starvation caused by this being requested repeatedly.
-        var callState = new UploadTimeQueryCallState { WorldIds = query.WorldIds, Count = count, Order = order };
-        if (UploadTimeQueryCache.ContainsKey(callState) && DateTime.Now - UploadTimeQueryCache[callState].QueryTime < new TimeSpan(0, 10, 0))
-        {
-            return UploadTimeQueryCache[callState].Uploads;
-        }
-
-        var sortBuilder = Builders<CurrentlyShown>.Sort;
-        var sortDefinition = sortBuilder.Ascending(o => o.LastUploadTimeUnixMilliseconds);
-
-        var projectDefinition = Builders<CurrentlyShown>.Projection
-            .Include(o => o.WorldId)
-            .Include(o => o.ItemId)
-            .Include(o => o.LastUploadTimeUnixMilliseconds);
-
-        var uploads = await Collection
-            .Find(query.ToFilterDefinition())
-            .Project<WorldItemUpload>(projectDefinition)
-            .Sort(sortDefinition)
-            .Limit(count)
-            .ToListAsync(cancellationToken);
-
-        UploadTimeQueryCache[callState] = new UploadTimeQueryResult { QueryTime = DateTime.Now, Uploads = uploads };
-
-        return uploads;
+        return order == UploadOrder.MostRecent
+            ? GetMostRecentlyUpdated(query, count, cancellationToken)
+            : GetLeastRecentlyUpdated(query, count, cancellationToken);
     }
 
     private async Task<IList<WorldItemUpload>> GetMostRecentlyUpdated(
@@ -91,7 +63,7 @@ public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyS
         var heap = new SimplePriorityQueue<WorldItemUpload, double>(Comparer<double>.Create((a, b) => (int)(b - a)));
         foreach (var d in multiWorldData)
         {
-            // Build a heap with the first (most recent) element of each document as the priority
+            // Build a heap
             heap.Enqueue(d, d.LastUploadTimeUnixMilliseconds);
         }
 
@@ -100,7 +72,42 @@ public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyS
         {
             if (heap.Count == 0) break;
 
-            // Pulling the top K documents
+            // Pull the top K documents
+            outData.Add(heap.First);
+        }
+
+        return outData;
+    }
+    
+    private async Task<IList<WorldItemUpload>> GetLeastRecentlyUpdated(
+        CurrentlyShownWorldIdsQuery query,
+        int count,
+        CancellationToken cancellationToken = default)
+    {
+        // Single world case
+        if (query.WorldIds.Length == 1)
+        {
+            var oneWorldData = await _mostRecentlyUpdatedDb.GetLeastRecent(new MostRecentlyUpdatedQuery
+                { WorldId = query.WorldIds[0] }, cancellationToken);
+            return oneWorldData.Take(count).ToList();
+        }
+
+        // Data center case
+        var multiWorldData = await _mostRecentlyUpdatedDb.GetAllLeastRecent(new MostRecentlyUpdatedManyQuery { WorldIds = query.WorldIds }, cancellationToken);
+
+        var heap = new SimplePriorityQueue<WorldItemUpload, double>(Comparer<double>.Create((a, b) => (int)(b - a)));
+        foreach (var d in multiWorldData)
+        {
+            // Build a heap but make the timestamp negative to reverse it
+            heap.Enqueue(d, -d.LastUploadTimeUnixMilliseconds);
+        }
+
+        var outData = new List<WorldItemUpload>();
+        while (outData.Count < count)
+        {
+            if (heap.Count == 0) break;
+
+            // Pull the top K documents
             outData.Add(heap.First);
         }
 

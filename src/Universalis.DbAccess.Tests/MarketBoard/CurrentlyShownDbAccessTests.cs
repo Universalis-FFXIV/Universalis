@@ -29,9 +29,20 @@ public class CurrentlyShownDbAccessTests : IDisposable
             return Task.CompletedTask;
         }
 
-        public Task<IList<KeyValuePair<uint, double>>> GetAllItems(string key, int stop = -1)
+        public Task<IList<KeyValuePair<uint, double>>> GetMostRecent(string key, int stop = -1)
         {
             var en = _scores[key].OrderByDescending(s => s.Value).ToList();
+            if (stop > -1)
+            {
+                en = en.Take(stop + 1).ToList();
+            }
+
+            return Task.FromResult((IList<KeyValuePair<uint, double>>)en);
+        }
+        
+        public Task<IList<KeyValuePair<uint, double>>> GetLeastRecent(string key, int stop = -1)
+        {
+            var en = _scores[key].OrderBy(s => s.Value).ToList();
             if (stop > -1)
             {
                 en = en.Take(stop + 1).ToList();
