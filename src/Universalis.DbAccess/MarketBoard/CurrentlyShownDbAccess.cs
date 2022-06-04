@@ -39,6 +39,7 @@ public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyS
 
     public Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count, UploadOrder order, CancellationToken cancellationToken = default)
     {
+        // TODO: Put this in the MRU service
         return order == UploadOrder.MostRecent
             ? GetMostRecentlyUpdated(query, count, cancellationToken)
             : GetLeastRecentlyUpdated(query, count, cancellationToken);
