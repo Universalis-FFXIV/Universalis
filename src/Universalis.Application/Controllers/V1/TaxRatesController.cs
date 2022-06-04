@@ -18,10 +18,6 @@ namespace Universalis.Application.Controllers.V1;
 public class TaxRatesController : WorldDcControllerBase
 {
     private readonly ITaxRatesDbAccess _taxRatesDb;
-    
-    // Bodge caching mechanism; TODO: fix
-    private static Dictionary<uint, TaxRates> Data = new();
-    private static Dictionary<uint, DateTime> LastFetch = new();
 
     public TaxRatesController(IGameDataProvider gameData, ITaxRatesDbAccess taxRatesDb) : base(gameData)
     {
@@ -51,18 +47,7 @@ public class TaxRatesController : WorldDcControllerBase
             return NotFound();
         }
 
-        if (!LastFetch.TryGetValue(worldDc.WorldId, out var lastFetch))
-        {
-            lastFetch = default;
-        }
-        
-        if (DateTime.Now - lastFetch > TimeSpan.FromMinutes(5))
-        {
-            Data[worldDc.WorldId] = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = worldDc.WorldId }, cancellationToken);
-            LastFetch[worldDc.WorldId] = DateTime.Now;
-        }
-        
-        var taxRates = Data[worldDc.WorldId];
+        var taxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = worldDc.WorldId }, cancellationToken);
         
         if (taxRates == null)
         {
@@ -77,7 +62,7 @@ public class TaxRatesController : WorldDcControllerBase
             Ishgard = taxRates.Ishgard,
             Kugane = taxRates.Kugane,
             Crystarium = taxRates.Crystarium,
-            OldSharlayan = taxRates.OldSharlayan ?? 0,
+            OldSharlayan = taxRates.OldSharlayan,
         });
     }
 }

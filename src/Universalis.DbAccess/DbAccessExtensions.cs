@@ -20,8 +20,10 @@ public static class DbAccessExtensions
         sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
         sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
         sc.AddSingleton<IContentDbAccess, ContentDbAccess>();
-        sc.AddSingleton<ITaxRatesDbAccess, TaxRatesDbAccess>();
         sc.AddSingleton<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();
+
+        sc.AddSingleton<ITaxRatesStore, TaxRatesStore>();
+        sc.AddSingleton<ITaxRatesDbAccess, TaxRatesDbAccess>();
 
         sc.AddSingleton<IWorldUploadCountStore, WorldUploadCountStore>();
         sc.AddSingleton<IWorldUploadCountDbAccess, WorldUploadCountDbAccess>();

@@ -106,14 +106,12 @@ public class TaxRatesUploadBehaviorTests
         });
 
         Assert.NotNull(data);
-        Assert.Equal(upload.WorldId, data.WorldId);
         Assert.Equal(upload.TaxRates.LimsaLominsa, data.LimsaLominsa);
         Assert.Equal(upload.TaxRates.Gridania, data.Gridania);
         Assert.Equal(upload.TaxRates.Uldah, data.Uldah);
         Assert.Equal(upload.TaxRates.Ishgard, data.Ishgard);
         Assert.Equal(upload.TaxRates.Kugane, data.Kugane);
         Assert.Equal(upload.TaxRates.Crystarium, data.Crystarium);
-        Assert.Equal(upload.UploaderId, data.UploaderIdHash);
         Assert.Equal(source.Name, data.UploadApplicationName);
     }
 }

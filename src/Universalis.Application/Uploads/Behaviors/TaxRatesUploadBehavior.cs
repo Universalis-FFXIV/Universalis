@@ -27,7 +27,7 @@ public class TaxRatesUploadBehavior : IUploadBehavior
     {
         var existingTaxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = parameters.WorldId!.Value }, cancellationToken);
         
-        await _taxRatesDb.Update(new TaxRates
+        await _taxRatesDb.Update(new TaxRatesSimple
         {
             LimsaLominsa = parameters.TaxRates!.LimsaLominsa ?? existingTaxRates?.LimsaLominsa ?? 0,
             Gridania = parameters.TaxRates.Gridania ?? existingTaxRates?.Gridania ?? 0,
@@ -36,8 +36,6 @@ public class TaxRatesUploadBehavior : IUploadBehavior
             Kugane = parameters.TaxRates.Kugane ?? existingTaxRates?.Kugane ?? 0,
             Crystarium = parameters.TaxRates.Crystarium ?? existingTaxRates?.Crystarium ?? 0,
             OldSharlayan = parameters.TaxRates.OldSharlayan ?? existingTaxRates?.OldSharlayan ?? 0,
-            UploaderIdHash = parameters.UploaderId,
-            WorldId = parameters.WorldId.Value,
             UploadApplicationName = source.Name,
         }, new TaxRatesQuery
         {
