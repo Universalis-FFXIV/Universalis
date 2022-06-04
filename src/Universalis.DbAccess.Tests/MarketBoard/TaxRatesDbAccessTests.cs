@@ -11,7 +11,7 @@ public class TaxRatesDbAccessTests
 {
     private class MockTaxRatesStore : ITaxRatesStore
     {
-        private readonly Dictionary<uint, TaxRatesSimple> _taxRates;
+        private readonly Dictionary<uint, TaxRatesSimple> _taxRates = new();
 
         public Task SetTaxRates(uint worldId, TaxRatesSimple taxRates)
         {
@@ -23,7 +23,7 @@ public class TaxRatesDbAccessTests
         {
             return _taxRates.TryGetValue(worldId, out var rates)
                 ? Task.FromResult(rates)
-                : null;
+                : Task.FromResult(new TaxRatesSimple());
         }
     }
 
@@ -31,8 +31,7 @@ public class TaxRatesDbAccessTests
     public async Task Retrieve_DoesNotThrow()
     {
         var db = new TaxRatesDbAccess(new MockTaxRatesStore());
-        var output = await db.Retrieve(new TaxRatesQuery { WorldId = 74 });
-        Assert.Null(output);
+        await db.Retrieve(new TaxRatesQuery { WorldId = 74 });
     }
 
     [Fact]
