@@ -7,6 +7,8 @@ using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1.Extra.Stats;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.DbAccess.Queries.Uploads;
+using Universalis.DbAccess.Uploads;
 using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1.Extra.Stats;
@@ -16,12 +18,12 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats;
 [Route("api/extra/stats/least-recently-updated")]
 public class LeastRecentlyUpdatedItemsController : WorldDcControllerBase
 {
-    private readonly ICurrentlyShownDbAccess _currentlyShownDb;
+    private readonly IMostRecentlyUpdatedDbAccess _mostRecentlyUpdatedDb;
 
     public LeastRecentlyUpdatedItemsController(IGameDataProvider gameData,
-        ICurrentlyShownDbAccess currentlyShownDb) : base(gameData)
+        IMostRecentlyUpdatedDbAccess mostRecentlyUpdatedDb) : base(gameData)
     {
-        _currentlyShownDb = currentlyShownDb;
+        _mostRecentlyUpdatedDb = mostRecentlyUpdatedDb;
     }
 
     /// <summary>
@@ -67,16 +69,14 @@ public class LeastRecentlyUpdatedItemsController : WorldDcControllerBase
             count = Math.Min(Math.Max(0, queryCount), 200);
         }
 
-        var documents = await _currentlyShownDb.RetrieveByUploadTime(
-            new CurrentlyShownWorldIdsQuery { WorldIds = worldIds },
-            count * 4,
-            UploadOrder.LeastRecent, cancellationToken);
+        var documents = await _mostRecentlyUpdatedDb.GetAllLeastRecent(
+            new MostRecentlyUpdatedManyQuery { WorldIds = worldIds, Count = count },
+            cancellationToken);
 
         var worlds = GameData.AvailableWorlds();
         return Ok(new LeastRecentlyUpdatedItemsView
         {
             Items = documents
-                .Where(o => GameData.MarketableItemIds().Contains(o.ItemId))
                 .Select(o => new WorldItemRecencyView
                 {
                     WorldId = o.WorldId,
@@ -84,7 +84,6 @@ public class LeastRecentlyUpdatedItemsController : WorldDcControllerBase
                     ItemId = o.ItemId,
                     LastUploadTimeUnixMilliseconds = o.LastUploadTimeUnixMilliseconds,
                 })
-                .Take(count)
                 .ToList(),
         });
     }

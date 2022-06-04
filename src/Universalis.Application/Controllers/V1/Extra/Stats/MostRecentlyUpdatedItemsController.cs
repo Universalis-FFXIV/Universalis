@@ -5,8 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1.Extra.Stats;
-using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.DbAccess.Queries.Uploads;
+using Universalis.DbAccess.Uploads;
 using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1.Extra.Stats;
@@ -16,12 +17,12 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats;
 [Route("api/extra/stats/most-recently-updated")]
 public class MostRecentlyUpdatedItemsController : WorldDcControllerBase
 {
-    private readonly ICurrentlyShownDbAccess _currentlyShownDb;
+    private readonly IMostRecentlyUpdatedDbAccess _mostRecentlyUpdatedDb;
 
     public MostRecentlyUpdatedItemsController(IGameDataProvider gameData,
-        ICurrentlyShownDbAccess currentlyShownDb) : base(gameData)
+        IMostRecentlyUpdatedDbAccess mostRecentlyUpdatedDb) : base(gameData)
     {
-        _currentlyShownDb = currentlyShownDb;
+        _mostRecentlyUpdatedDb = mostRecentlyUpdatedDb;
     }
 
     /// <summary>
@@ -65,10 +66,9 @@ public class MostRecentlyUpdatedItemsController : WorldDcControllerBase
             count = Math.Min(Math.Max(0, queryCount), 200);
         }
 
-        var documents = await _currentlyShownDb.RetrieveByUploadTime(
-            new CurrentlyShownWorldIdsQuery { WorldIds = worldIds },
-            count,
-            UploadOrder.MostRecent, cancellationToken);
+        var documents = await _mostRecentlyUpdatedDb.GetAllMostRecent(
+            new MostRecentlyUpdatedManyQuery { WorldIds = worldIds, Count = count },
+            cancellationToken);
 
         var worlds = GameData.AvailableWorlds();
         return Ok(new MostRecentlyUpdatedItemsView

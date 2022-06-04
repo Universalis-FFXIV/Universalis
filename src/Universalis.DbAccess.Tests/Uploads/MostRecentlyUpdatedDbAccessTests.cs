@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MongoDB.Driver;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
 using Universalis.Entities.Uploads;
@@ -10,7 +9,7 @@ using Xunit;
 
 namespace Universalis.DbAccess.Tests.Uploads;
 
-public class MostRecentlyUpdatedDbAccessTests : IDisposable
+public class MostRecentlyUpdatedDbAccessTests
 {
     private class MockWorldItemUploadStore : IWorldItemUploadStore
     {
@@ -44,22 +43,6 @@ public class MostRecentlyUpdatedDbAccessTests : IDisposable
             return Task.FromResult((IList<KeyValuePair<uint, double>>)en);
         }
     }
-    
-    private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(MostRecentlyUpdatedDbAccessTests));
-
-    private readonly IMongoClient _client;
-
-    public MostRecentlyUpdatedDbAccessTests()
-    {
-        _client = new MongoClient("mongodb://localhost:27017");
-        _client.DropDatabase(Database);
-    }
-
-    public void Dispose()
-    {
-        _client.DropDatabase(Database);
-        GC.SuppressFinalize(this);
-    }
 
     [Fact]
     public async Task Retrieve_DoesNotThrow()
@@ -68,6 +51,7 @@ public class MostRecentlyUpdatedDbAccessTests : IDisposable
         var output = await db.GetMostRecent(new MostRecentlyUpdatedQuery
         {
             WorldId = 74,
+            Count = 10,
         });
         
         Assert.NotNull(output);
@@ -100,6 +84,7 @@ public class MostRecentlyUpdatedDbAccessTests : IDisposable
         var output = await db.GetMostRecent(new MostRecentlyUpdatedQuery
         {
             WorldId = 74,
+            Count = 10,
         });
         
         Assert.NotNull(output);
@@ -128,6 +113,7 @@ public class MostRecentlyUpdatedDbAccessTests : IDisposable
         var output = await db.GetMostRecent(new MostRecentlyUpdatedQuery
         {
             WorldId = 74,
+            Count = 10,
         });
         Assert.NotNull(output);
         
@@ -164,6 +150,7 @@ public class MostRecentlyUpdatedDbAccessTests : IDisposable
         var output = await db.GetMostRecent(new MostRecentlyUpdatedQuery
         {
             WorldId = 74,
+            Count = 10,
         });
         
         Assert.NotNull(output);
@@ -173,10 +160,10 @@ public class MostRecentlyUpdatedDbAccessTests : IDisposable
     }
     
     [Fact]
-    public async Task PushMany_TakesMax()
+    public async Task PushMany_TakesCount()
     {
         IMostRecentlyUpdatedDbAccess db = new MostRecentlyUpdatedDbAccess(new MockWorldItemUploadStore());
-        for (var i = 0; i < RecentlyUpdatedItemsDbAccess.MaxItems * 2; i++)
+        for (var i = 0; i < 20; i++)
         {
             await db.Push(74, new WorldItemUpload
             {
@@ -189,8 +176,9 @@ public class MostRecentlyUpdatedDbAccessTests : IDisposable
         var output = await db.GetMostRecent(new MostRecentlyUpdatedQuery
         {
             WorldId = 74,
+            Count = 10,
         });
         Assert.NotNull(output);
-        Assert.Equal(RecentlyUpdatedItemsDbAccess.MaxItems, output.Count);
+        Assert.Equal(10, output.Count);
     }
 }

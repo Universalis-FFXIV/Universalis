@@ -3,11 +3,10 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1.Extra.Stats;
-using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
+using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views.V1.Extra.Stats;
-using Universalis.DbAccess.Queries.MarketBoard;
-using Universalis.DbAccess.Tests;
+using Universalis.Entities.Uploads;
 using Xunit;
 
 namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats;
@@ -18,19 +17,16 @@ public class MostRecentlyUpdatedItemsControllerTests
     public async Task Controller_Get_Succeeds()
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var dbAccess = new MockMostRecentlyUpdatedDbAccess();
         var controller = new MostRecentlyUpdatedItemsController(gameData, dbAccess);
-        var rand = new Random();
 
-        var seed = Enumerable.Range(0, 200)
-            .Select(_ => SeedDataGenerator.MakeCurrentlyShown(74, (uint)rand.Next(1, 35000)));
-
-        foreach (var s in seed)
+        foreach (var itemId in Enumerable.Range(1, 35000))
         {
-            await dbAccess.Update(s, new CurrentlyShownQuery
+            await dbAccess.Push(74, new WorldItemUpload
             {
-                WorldId = s.WorldId,
-                ItemId = s.ItemId,
+                WorldId = 74,
+                ItemId = (uint)itemId,
+                LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             });
         }
 
@@ -55,7 +51,7 @@ public class MostRecentlyUpdatedItemsControllerTests
     public async Task Controller_Get_Fails_WhenServerInvalid(string world, string dc)
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var dbAccess = new MockMostRecentlyUpdatedDbAccess();
         var controller = new MostRecentlyUpdatedItemsController(gameData, dbAccess);
 
         var result = await controller.Get(world, dc, "");
@@ -66,7 +62,7 @@ public class MostRecentlyUpdatedItemsControllerTests
     public async Task Controller_Get_Succeeds_WhenNone()
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var dbAccess = new MockMostRecentlyUpdatedDbAccess();
         var controller = new MostRecentlyUpdatedItemsController(gameData, dbAccess);
 
         var result = await controller.Get("", "Crystal", "");

@@ -15,9 +15,6 @@ public interface ICurrentlyShownDbAccess
 
     public Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query, CancellationToken cancellationToken = default);
 
-    public Task<IList<WorldItemUpload>> RetrieveByUploadTime(CurrentlyShownWorldIdsQuery query, int count,
-        UploadOrder order, CancellationToken cancellationToken = default);
-
     public Task Update(CurrentlyShown document, CurrentlyShownQuery query, CancellationToken cancellationToken = default);
 
     public Task Delete(CurrentlyShownQuery query, CancellationToken cancellationToken = default);
