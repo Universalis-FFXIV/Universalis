@@ -54,13 +54,13 @@ public class MostRecentlyUpdatedDbAccessTests : IDisposable
     public async Task Retrieve_DoesNotThrow()
     {
         IMostRecentlyUpdatedDbAccess db = new MostRecentlyUpdatedDbAccess(new MockWorldItemUploadStore());
-        var output = await db.Retrieve(new MostRecentlyUpdatedQuery
+        var output = await db.GetMostRecent(new MostRecentlyUpdatedQuery
         {
             WorldId = 74,
         });
         
         Assert.NotNull(output);
-        Assert.Empty(output.Uploads);
+        Assert.Empty(output);
     }
 
     [Fact]
@@ -86,14 +86,14 @@ public class MostRecentlyUpdatedDbAccessTests : IDisposable
             LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
         });
         
-        var output = await db.Retrieve(new MostRecentlyUpdatedQuery
+        var output = await db.GetMostRecent(new MostRecentlyUpdatedQuery
         {
             WorldId = 74,
         });
         
         Assert.NotNull(output);
-        Assert.Single(output.Uploads);
-        Assert.Equal(5333U, output.Uploads[0].ItemId);
+        Assert.Single(output);
+        Assert.Equal(5333U, output[0].ItemId);
     }
 
     [Fact]
@@ -114,13 +114,13 @@ public class MostRecentlyUpdatedDbAccessTests : IDisposable
             LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
         });
         
-        var output = await db.Retrieve(new MostRecentlyUpdatedQuery
+        var output = await db.GetMostRecent(new MostRecentlyUpdatedQuery
         {
             WorldId = 74,
         });
         Assert.NotNull(output);
         
-        var uploads = output.Uploads.Select(u => u.ItemId).ToList();
+        var uploads = output.Select(u => u.ItemId).ToList();
         Assert.Contains(5U, uploads);
         Assert.Contains(5333U, uploads);
     }
@@ -150,15 +150,15 @@ public class MostRecentlyUpdatedDbAccessTests : IDisposable
             LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
         });
         
-        var output = await db.Retrieve(new MostRecentlyUpdatedQuery
+        var output = await db.GetMostRecent(new MostRecentlyUpdatedQuery
         {
             WorldId = 74,
         });
         
         Assert.NotNull(output);
-        Assert.Equal(5333U, output.Uploads[0].ItemId);
-        Assert.Equal(5U, output.Uploads[1].ItemId);
-        Assert.Equal(2, output.Uploads.Count);
+        Assert.Equal(5333U, output[0].ItemId);
+        Assert.Equal(5U, output[1].ItemId);
+        Assert.Equal(2, output.Count);
     }
     
     [Fact]
@@ -175,11 +175,11 @@ public class MostRecentlyUpdatedDbAccessTests : IDisposable
             });
         }
         
-        var output = await db.Retrieve(new MostRecentlyUpdatedQuery
+        var output = await db.GetMostRecent(new MostRecentlyUpdatedQuery
         {
             WorldId = 74,
         });
         Assert.NotNull(output);
-        Assert.Equal(RecentlyUpdatedItemsDbAccess.MaxItems, output.Uploads.Count);
+        Assert.Equal(RecentlyUpdatedItemsDbAccess.MaxItems, output.Count);
     }
 }

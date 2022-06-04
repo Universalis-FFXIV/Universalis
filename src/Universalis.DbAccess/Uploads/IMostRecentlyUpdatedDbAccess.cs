@@ -10,7 +10,7 @@ public interface IMostRecentlyUpdatedDbAccess
 {
     public Task Push(uint worldId, WorldItemUpload document, CancellationToken cancellationToken = default);
 
-    public Task<MostRecentlyUpdated> Retrieve(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default);
+    public Task<IList<WorldItemUpload>> GetMostRecent(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default);
 
-    public Task<IList<MostRecentlyUpdated>> RetrieveMany(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default);
+    public Task<IList<WorldItemUpload>> GetAllMostRecent(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default);
 }

@@ -27,35 +27,30 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
             document.LastUploadTimeUnixMilliseconds);
     }
 
-    public async Task<MostRecentlyUpdated> Retrieve(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
+    public async Task<IList<WorldItemUpload>> GetMostRecent(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
     {
         var data = await _store.GetAllItems(string.Format(KeyFormat, query.WorldId), MaxItems - 1);
-        return new MostRecentlyUpdated
+        return data.Select(kvp => new WorldItemUpload
         {
             WorldId = query.WorldId,
-            Uploads = data.Select(kvp => new WorldItemUpload
-            {
-                WorldId = query.WorldId,
-                ItemId = kvp.Key,
-                LastUploadTimeUnixMilliseconds = kvp.Value,
-            }).ToList(),
-        };
+            ItemId = kvp.Key,
+            LastUploadTimeUnixMilliseconds = kvp.Value,
+        }).ToList();
     }
 
-    public async Task<IList<MostRecentlyUpdated>> RetrieveMany(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
+    public async Task<IList<WorldItemUpload>> GetAllMostRecent(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
     {
         return await query.WorldIds.ToAsyncEnumerable()
-            .SelectAwait(async world => new MostRecentlyUpdated
+            .SelectManyAwait(async world =>
             {
-                WorldId = world,
-                Uploads = (await _store.GetAllItems(string.Format(KeyFormat, world), MaxItems - 1))
+                return (await _store.GetAllItems(string.Format(KeyFormat, world), MaxItems - 1))
+                    .ToAsyncEnumerable()
                     .Select(kvp => new WorldItemUpload
                     {
                         WorldId = world,
                         ItemId = kvp.Key,
                         LastUploadTimeUnixMilliseconds = kvp.Value,
-                    })
-                    .ToList(),
+                    });
             })
             .ToListAsync(cancellationToken);
     }

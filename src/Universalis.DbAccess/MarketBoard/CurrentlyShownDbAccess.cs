@@ -80,41 +80,28 @@ public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyS
         // Single world case
         if (query.WorldIds.Length == 1)
         {
-            var oneWorldData = await _mostRecentlyUpdatedDb.Retrieve(new MostRecentlyUpdatedQuery
+            var oneWorldData = await _mostRecentlyUpdatedDb.GetMostRecent(new MostRecentlyUpdatedQuery
                 { WorldId = query.WorldIds[0] }, cancellationToken);
-            return oneWorldData.Uploads.Take(count).ToList();
+            return oneWorldData.Take(count).ToList();
         }
 
         // Data center case
-        var multiWorldData = await _mostRecentlyUpdatedDb.RetrieveMany(new MostRecentlyUpdatedManyQuery { WorldIds = query.WorldIds }, cancellationToken);
-        multiWorldData = multiWorldData.Where(d => d.Uploads.Any()).ToList();
+        var multiWorldData = await _mostRecentlyUpdatedDb.GetAllMostRecent(new MostRecentlyUpdatedManyQuery { WorldIds = query.WorldIds }, cancellationToken);
 
-        var heap = new SimplePriorityQueue<MostRecentlyUpdated, double>(Comparer<double>.Create((a, b) => (int)(b - a)));
+        var heap = new SimplePriorityQueue<WorldItemUpload, double>(Comparer<double>.Create((a, b) => (int)(b - a)));
         foreach (var d in multiWorldData)
         {
             // Build a heap with the first (most recent) element of each document as the priority
-            heap.Enqueue(d, d.Uploads[0].LastUploadTimeUnixMilliseconds);
+            heap.Enqueue(d, d.LastUploadTimeUnixMilliseconds);
         }
 
         var outData = new List<WorldItemUpload>();
         while (outData.Count < count)
         {
-            if (heap.Count == 0 || !heap.First.Uploads.Any()) break;
+            if (heap.Count == 0) break;
 
-            // Keep pulling off the first item of the top document
-            outData.Add(heap.First.Uploads[0]);
-            heap.First.Uploads.RemoveAt(0);
-
-            if (!heap.First.Uploads.Any())
-            {
-                // Remove the top document
-                heap.Dequeue();
-            }
-            else
-            {
-                // Update the priority if the top document wasn't removed
-                heap.UpdatePriority(heap.First, heap.First.Uploads[0].LastUploadTimeUnixMilliseconds);
-            }
+            // Pulling the top K documents
+            outData.Add(heap.First);
         }
 
         return outData;
