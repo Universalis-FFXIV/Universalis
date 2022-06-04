@@ -1,11 +1,8 @@
-﻿using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
-using Universalis.Entities.Uploads;
 using Xunit;
 
 namespace Universalis.DbAccess.Tests.Uploads;
@@ -60,10 +57,7 @@ public class WorldUploadCountDbAccessTests
         var output = (await db.GetWorldUploadCounts()).ToList();
         Assert.NotNull(output);
         Assert.Single(output);
-        Assert.Equal(new WorldUploadCount
-        {
-            WorldName = "Coeurl",
-            Count = 1,
-        }, output[0]);
+        Assert.Equal("Coeurl", output[0].WorldName);
+        Assert.Equal(1, output[0].Count);
     }
 }

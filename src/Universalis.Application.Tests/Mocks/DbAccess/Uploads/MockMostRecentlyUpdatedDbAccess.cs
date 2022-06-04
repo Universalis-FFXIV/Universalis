@@ -10,49 +10,38 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 
 public class MockMostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
 {
-    private readonly List<MostRecentlyUpdated> _store = new();
-        
-    public Task Create(MostRecentlyUpdated document, CancellationToken cancellationToken = default)
+    private readonly List<WorldItemUpload> _store = new();
+
+    public Task Push(uint worldId, WorldItemUpload document, CancellationToken cancellationToken = default)
     {
-        _store.Add(document);
+        var existingIndex = _store.FindIndex(o => o.WorldId == worldId && o.ItemId == document.ItemId);
+        if (existingIndex != -1)
+        {
+            _store.RemoveAt(existingIndex);
+        }
+        
+        _store.Insert(0, document);
+        
         return Task.CompletedTask;
     }
 
-    public async Task Push(uint worldId, WorldItemUpload document, CancellationToken cancellationToken = default)
+    public Task<IList<WorldItemUpload>> GetMostRecent(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
     {
-        var query = new MostRecentlyUpdatedQuery();
-        var existing = await Retrieve(query, cancellationToken);
-
-        if (existing == null)
-        {
-            await Create(new MostRecentlyUpdated
-            {
-                WorldId = worldId,
-                Uploads = new List<WorldItemUpload> { document },
-            }, cancellationToken);
-            return;
-        }
-            
-        var existingIndex = existing.Uploads.FindIndex(o => o.ItemId == document.ItemId);
-        if (existingIndex != -1)
-        {
-            existing.Uploads.RemoveAt(existingIndex);
-            existing.Uploads.Insert(0, document);
-        }
-        else
-        {
-            existing.Uploads.Insert(0, document);
-            existing.Uploads = existing.Uploads.Take(MostRecentlyUpdatedDbAccess.MaxItems).ToList();
-        }
+        return Task.FromResult((IList<WorldItemUpload>)_store.Where(o => o.WorldId == query.WorldId).ToList());
     }
 
-    public Task<MostRecentlyUpdated> Retrieve(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(_store.FirstOrDefault(o => o.WorldId == query.WorldId));
-    }
-
-    public async Task<IList<MostRecentlyUpdated>> RetrieveMany(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
+    public async Task<IList<WorldItemUpload>> GetAllMostRecent(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
     {
         return _store.Where(o => query.WorldIds.Contains(o.WorldId)).ToList();
+    }
+    
+    public Task<IList<WorldItemUpload>> GetLeastRecent(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult((IList<WorldItemUpload>)_store.Where(o => o.WorldId == query.WorldId).Reverse().ToList());
+    }
+
+    public async Task<IList<WorldItemUpload>> GetAllLeastRecent(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
+    {
+        return _store.Where(o => query.WorldIds.Contains(o.WorldId)).Reverse().ToList();
     }
 }

@@ -30,7 +30,7 @@ public class RecentlyUpdatedItemsController : ControllerBase
     [ProducesResponseType(typeof(RecentlyUpdatedItemsView), 200)]
     public async Task<RecentlyUpdatedItemsView> Get(CancellationToken cancellationToken = default)
     {
-        var data = (await _recentlyUpdatedItemsDb.Retrieve(new RecentlyUpdatedItemsQuery(), cancellationToken))?.Items;
+        var data = (await _recentlyUpdatedItemsDb.Retrieve(cancellationToken))?.Items;
         return data == null
             ? new RecentlyUpdatedItemsView { Items = new List<uint>() }
             : new RecentlyUpdatedItemsView { Items = data };

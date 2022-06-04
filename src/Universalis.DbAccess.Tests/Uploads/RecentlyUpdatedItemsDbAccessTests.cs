@@ -35,7 +35,7 @@ public class RecentlyUpdatedItemsDbAccessTests
     public async Task Retrieve_DoesNotThrow()
     {
         IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(new ScoreBoardStoreMock());
-        var output = await db.Retrieve(new RecentlyUpdatedItemsQuery());
+        var output = await db.Retrieve();
         Assert.NotNull(output);
         Assert.Empty(output.Items);
     }
@@ -52,7 +52,7 @@ public class RecentlyUpdatedItemsDbAccessTests
     {
         IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(new ScoreBoardStoreMock());
         await db.Push(5333);
-        var output = await db.Retrieve(new RecentlyUpdatedItemsQuery());
+        var output = await db.Retrieve();
         Assert.NotNull(output);
         Assert.Single(output.Items);
         Assert.Equal(5333U, output.Items[0]);
@@ -64,7 +64,7 @@ public class RecentlyUpdatedItemsDbAccessTests
         IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(new ScoreBoardStoreMock());
         await db.Push(5333);
         await db.Push(5);
-        var output = await db.Retrieve(new RecentlyUpdatedItemsQuery());
+        var output = await db.Retrieve();
         Assert.NotNull(output);
         Assert.Contains(5U, output.Items);
         Assert.Contains(5333U, output.Items);
@@ -77,7 +77,7 @@ public class RecentlyUpdatedItemsDbAccessTests
         await db.Push(5333);
         await db.Push(5);
         await db.Push(5333);
-        var output = await db.Retrieve(new RecentlyUpdatedItemsQuery());
+        var output = await db.Retrieve();
         Assert.NotNull(output);
         Assert.Equal(5333U, output.Items[0]);
         Assert.Equal(5U, output.Items[1]);
@@ -93,7 +93,7 @@ public class RecentlyUpdatedItemsDbAccessTests
             await db.Push((uint)i);
         }
         
-        var output = await db.Retrieve(new RecentlyUpdatedItemsQuery());
+        var output = await db.Retrieve();
         Assert.NotNull(output);
         Assert.Equal(RecentlyUpdatedItemsDbAccess.MaxItems, output.Items.Count);
     }

@@ -20,10 +20,17 @@ public class WorldItemUploadStore : IWorldItemUploadStore
         await db.SortedSetAddAsync(key, new[] { new SortedSetEntry(id, val) });
     }
     
-    public async Task<IList<KeyValuePair<uint, double>>> GetAllItems(string key, int stop = -1)
+    public async Task<IList<KeyValuePair<uint, double>>> GetMostRecent(string key, int stop = -1)
     {
         var db = _redis.GetDatabase();
         var items = await db.SortedSetRangeByRankWithScoresAsync(key, stop: stop, order: Order.Descending);
+        return items.Select(i => new KeyValuePair<uint, double>((uint)i.Element, i.Score)).ToList();
+    }
+    
+    public async Task<IList<KeyValuePair<uint, double>>> GetLeastRecent(string key, int stop = -1)
+    {
+        var db = _redis.GetDatabase();
+        var items = await db.SortedSetRangeByRankWithScoresAsync(key, stop: stop, order: Order.Ascending);
         return items.Select(i => new KeyValuePair<uint, double>((uint)i.Element, i.Score)).ToList();
     }
 }
