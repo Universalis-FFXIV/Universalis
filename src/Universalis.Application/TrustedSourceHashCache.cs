@@ -9,6 +9,7 @@ using Universalis.DbAccess.Uploads;
 
 namespace Universalis.Application;
 
+// TODO: Determine if this can be removed; likely a premature optimization
 public static class TrustedSourceHashCache
 {
     private static readonly ConcurrentDictionary<string, string> Hashes = new();
