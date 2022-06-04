@@ -74,6 +74,7 @@ public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyS
 
             // Pull the top K documents
             outData.Add(heap.First);
+            heap.Dequeue();
         }
 
         return outData;
@@ -109,6 +110,7 @@ public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyS
 
             // Pull the top K documents
             outData.Add(heap.First);
+            heap.Dequeue();
         }
 
         return outData;
