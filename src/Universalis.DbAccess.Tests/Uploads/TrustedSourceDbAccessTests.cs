@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using StackExchange.Redis;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
 using Xunit;
@@ -37,7 +36,6 @@ public class TrustedSourceDbAccessTests : IDisposable
     private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(TrustedSourceDbAccessTests));
 
     private readonly IMongoClient _client;
-    private readonly IConnectionMultiplexer _redis;
         
     public TrustedSourceDbAccessTests()
     {
