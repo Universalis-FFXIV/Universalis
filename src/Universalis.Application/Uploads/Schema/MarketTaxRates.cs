@@ -5,24 +5,24 @@ namespace Universalis.Application.Uploads.Schema;
 public class MarketTaxRates
 {
     [JsonPropertyName("limsaLominsa")]
-    public byte? LimsaLominsa { get; set; }
+    public int? LimsaLominsa { get; set; }
 
     [JsonPropertyName("gridania")]
-    public byte? Gridania { get; set; }
+    public int? Gridania { get; set; }
 
     [JsonPropertyName("uldah")]
-    public byte? Uldah { get; set; }
+    public int? Uldah { get; set; }
 
     [JsonPropertyName("ishgard")]
-    public byte? Ishgard { get; set; }
+    public int? Ishgard { get; set; }
 
     [JsonPropertyName("kugane")]
-    public byte? Kugane { get; set; }
+    public int? Kugane { get; set; }
 
     [JsonPropertyName("crystarium")]
-    public byte? Crystarium { get; set; }
+    public int? Crystarium { get; set; }
 
     [JsonPropertyName("sharlayan")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public byte? OldSharlayan { get; set; }
+    public int? OldSharlayan { get; set; }
 }

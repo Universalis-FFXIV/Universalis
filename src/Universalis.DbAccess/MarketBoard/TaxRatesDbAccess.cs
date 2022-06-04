@@ -1,12 +1,26 @@
-﻿using MongoDB.Driver;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
 
-public class TaxRatesDbAccess : DbAccessService<TaxRates, TaxRatesQuery>, ITaxRatesDbAccess
+public class TaxRatesDbAccess : ITaxRatesDbAccess
 {
-    public TaxRatesDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "extraData") { }
+    private readonly ITaxRatesStore _store;
 
-    public TaxRatesDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "extraData") { }
+    public TaxRatesDbAccess(ITaxRatesStore store)
+    {
+        _store = store;
+    }
+
+    public Task<TaxRatesSimple> Retrieve(TaxRatesQuery query, CancellationToken cancellationToken = default)
+    {
+        return _store.GetTaxRates(query.WorldId);
+    }
+
+    public Task Update(TaxRatesSimple document, TaxRatesQuery query, CancellationToken cancellationToken = default)
+    {
+        return _store.SetTaxRates(query.WorldId, document);
+    }
 }

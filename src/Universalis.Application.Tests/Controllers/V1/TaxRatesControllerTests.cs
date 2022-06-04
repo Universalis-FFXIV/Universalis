@@ -5,6 +5,7 @@ using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views;
 using Universalis.Application.Views.V1;
+using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Tests;
 using Xunit;
 
@@ -22,8 +23,8 @@ public class TaxRatesControllerTests
         var dbAccess = new MockTaxRatesDbAccess();
         var controller = new TaxRatesController(gameData, dbAccess);
 
-        var expectedTaxRates = SeedDataGenerator.MakeTaxRates(74);
-        await dbAccess.Create(expectedTaxRates);
+        var expectedTaxRates = SeedDataGenerator.MakeTaxRatesSimple(74);
+        await dbAccess.Update(expectedTaxRates, new TaxRatesQuery { WorldId = 74 });
 
         var result = await controller.Get(world);
         var taxRates = (TaxRatesView)Assert.IsType<OkObjectResult>(result).Value;
@@ -43,7 +44,8 @@ public class TaxRatesControllerTests
         var dbAccess = new MockTaxRatesDbAccess();
         var controller = new TaxRatesController(gameData, dbAccess);
 
-        await dbAccess.Create(SeedDataGenerator.MakeTaxRates(74));
+        var expectedTaxRates = SeedDataGenerator.MakeTaxRatesSimple(74);
+        await dbAccess.Update(expectedTaxRates, new TaxRatesQuery { WorldId = 74 });
 
         var result = await controller.Get("crystal");
         Assert.IsType<NotFoundResult>(result);
@@ -56,7 +58,8 @@ public class TaxRatesControllerTests
         var dbAccess = new MockTaxRatesDbAccess();
         var controller = new TaxRatesController(gameData, dbAccess);
 
-        await dbAccess.Create(SeedDataGenerator.MakeTaxRates(74));
+        var expectedTaxRates = SeedDataGenerator.MakeTaxRatesSimple(74);
+        await dbAccess.Update(expectedTaxRates, new TaxRatesQuery { WorldId = 74 });
 
         var result = await controller.Get("50");
         Assert.IsType<NotFoundResult>(result);

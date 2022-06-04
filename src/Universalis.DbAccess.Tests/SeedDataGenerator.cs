@@ -72,6 +72,20 @@ public static class SeedDataGenerator
                 .ToList(),
         };
     }
+    
+    public static TaxRatesSimple MakeTaxRatesSimple(uint worldId)
+    {
+        return new()
+        {
+            UploadApplicationName = "test runner",
+            LimsaLominsa = 3,
+            Gridania = 3,
+            Uldah = 3,
+            Ishgard = 0,
+            Kugane = 0,
+            Crystarium = 5,
+        };
+    }
 
     public static TaxRates MakeTaxRates(uint worldId)
     {
