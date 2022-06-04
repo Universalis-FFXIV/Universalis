@@ -28,7 +28,7 @@ services:
     volumes:
       - ./sqlinit:/docker-entrypoint-initdb.d
   mongo:
-    image: mongo:4.4.11
+    image: mongo:5.0.5
     ports:
       - 4051:27017
   redis:
