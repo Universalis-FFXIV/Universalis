@@ -16,7 +16,7 @@ public static class SeedDataGenerator
         {
             WorldId = worldId,
             ItemId = itemId,
-            LastUploadTimeUnixMilliseconds = lastUploadTime ?? (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+            LastUploadTimeUnixMilliseconds = lastUploadTime ?? DateTimeOffset.Now.ToUnixTimeMilliseconds(),
             Listings = Enumerable.Range(0, 100)
                 .Select(i => new Listing
                 {
@@ -29,7 +29,7 @@ public static class SeedDataGenerator
                     DyeId = (byte)rand.Next(0, 255),
                     CreatorIdInternal = (ulong)rand.NextInt64(),
                     CreatorName = "Bingus Bongus",
-                    LastReviewTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 360000),
+                    LastReviewTimeUnixSeconds = (uint)(DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 360000)),
                     RetainerIdInternal = (ulong)rand.NextInt64(),
                     RetainerName = "xpotato",
                     RetainerCityIdInternal = 0xA,
@@ -44,12 +44,48 @@ public static class SeedDataGenerator
                     PricePerUnit = (uint)rand.Next(100, 60000),
                     Quantity = (uint)rand.Next(1, (int)maxStackSize),
                     BuyerName = "Someone Someone",
-                    TimestampUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
+                    TimestampUnixSeconds = (uint)(DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000)),
                     UploadApplicationName = "test runner",
                 })
                 .ToList(),
             UploaderIdHash = "2A",
         };
+    }
+    
+    public static CurrentlyShownSimple MakeCurrentlyShownSimple(uint worldId, uint itemId, long? lastUploadTime = null, uint maxStackSize = 999)
+    {
+        var rand = new Random();
+        var t = lastUploadTime ?? DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        var listings = Enumerable.Range(0, 100)
+            .Select(i => new ListingSimple
+            {
+                ListingId = rand.NextInt64().ToString(),
+                Hq = rand.NextDouble() > 0.5,
+                OnMannequin = rand.NextDouble() > 0.5,
+                Materia = new List<Materia>(),
+                PricePerUnit = (uint)rand.Next(100, 60000),
+                Quantity = (uint)rand.Next(1, (int)maxStackSize),
+                DyeId = (byte)rand.Next(0, 255),
+                CreatorId = rand.NextInt64().ToString(),
+                CreatorName = "Bingus Bongus",
+                LastReviewTimeUnixSeconds = (uint)(DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 360000)),
+                RetainerId = rand.NextInt64().ToString(),
+                RetainerName = "xpotato",
+                RetainerCityId = 0xA,
+                SellerId = rand.NextInt64().ToString(),
+            })
+            .ToList();
+        var sales = Enumerable.Range(0, 100)
+            .Select(i => new SaleSimple
+            {
+                Hq = rand.NextDouble() > 0.5,
+                PricePerUnit = (uint)rand.Next(100, 60000),
+                Quantity = (uint)rand.Next(1, (int)maxStackSize),
+                BuyerName = "Someone Someone",
+                TimestampUnixSeconds = (uint)(DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000)),
+            })
+            .ToList();
+        return new CurrentlyShownSimple(worldId, itemId, t, "test runner", listings, sales);
     }
 
     public static History MakeHistory(uint worldId, uint itemId, long? lastUploadTime = null)
@@ -59,14 +95,14 @@ public static class SeedDataGenerator
         {
             WorldId = worldId,
             ItemId = itemId,
-            LastUploadTimeUnixMilliseconds = lastUploadTime ?? (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+            LastUploadTimeUnixMilliseconds = lastUploadTime ?? DateTimeOffset.Now.ToUnixTimeMilliseconds(),
             Sales = Enumerable.Range(0, 100)
                 .Select(i => new MinimizedSale
                 {
                     Hq = rand.NextDouble() > 0.5,
                     PricePerUnit = (uint)rand.Next(100, 60000),
                     Quantity = (uint)rand.Next(1, 999),
-                    SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
+                    SaleTimeUnixSeconds = (uint)(DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000)),
                     UploaderIdHash = "2A",
                 })
                 .ToList(),
@@ -75,7 +111,7 @@ public static class SeedDataGenerator
     
     public static TaxRatesSimple MakeTaxRatesSimple(uint worldId)
     {
-        return new()
+        return new TaxRatesSimple
         {
             UploadApplicationName = "test runner",
             LimsaLominsa = 3,
@@ -89,12 +125,12 @@ public static class SeedDataGenerator
 
     public static FlaggedUploader MakeFlaggedUploader()
     {
-        return new() { UploaderIdHash = "afffff" };
+        return new FlaggedUploader { UploaderIdHash = "afffff" };
     }
 
     public static TrustedSource MakeTrustedSource()
     {
-        return new()
+        return new TrustedSource
         {
             ApiKeySha512 = "aefe32ee",
             Name = "test runner",

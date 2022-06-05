@@ -6,5 +6,6 @@ internal static class RedisDatabases
     {
         public const int Stats = 0;
         public const int TaxRates = 1;
+        public const int CurrentData = 2;
     }
 }

@@ -34,8 +34,8 @@ public class CurrentlyShownControllerTests
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         const uint itemId = 5333;
-        var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
-        await dbAccess.Create(document);
+        var document = SeedDataGenerator.MakeCurrentlyShownSimple(74, itemId);
+        await dbAccess.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
         var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
@@ -55,8 +55,8 @@ public class CurrentlyShownControllerTests
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         const uint itemId = 5333;
-        var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
-        await dbAccess.Create(document);
+        var document = SeedDataGenerator.MakeCurrentlyShownSimple(74, itemId);
+        await dbAccess.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
         var result = await controller.Get(itemId.ToString(), worldOrDc, "1");
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
@@ -79,8 +79,8 @@ public class CurrentlyShownControllerTests
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         const uint itemId = 5333;
-        var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
-        await dbAccess.Create(document);
+        var document = SeedDataGenerator.MakeCurrentlyShownSimple(74, itemId);
+        await dbAccess.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
         var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: "1");
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
@@ -102,11 +102,11 @@ public class CurrentlyShownControllerTests
         var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
-        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
-        await dbAccess.Create(document1);
+        var document1 = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333);
+        await dbAccess.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
-        var document2 = SeedDataGenerator.MakeCurrentlyShown(74, 5);
-        await dbAccess.Create(document2);
+        var document2 = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5);
+        await dbAccess.Update(document2, new CurrentlyShownQuery { WorldId = 74, ItemId = 5 });
 
         var result = await controller.Get("5, 5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
@@ -133,20 +133,21 @@ public class CurrentlyShownControllerTests
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
         var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
-        await dbAccess.Create(document1);
+        var document1 = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333, unixNowMs);
+        await dbAccess.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
-        var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5333, unixNowMs);
-        await dbAccess.Create(document2);
+        var document2 = SeedDataGenerator.MakeCurrentlyShownSimple(34, 5333, unixNowMs);
+        await dbAccess.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5333 });
 
         var result = await controller.Get("5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
-        document1.Listings = document1.Listings.Concat(document2.Listings).ToList();
-        document1.RecentHistory = document1.RecentHistory.Concat(document2.RecentHistory).ToList();
+        var joinedListings = document1.Listings.Concat(document2.Listings).ToList();
+        var joinedSales = document1.Sales.Concat(document2.Sales).ToList();
+        var joinedDocument = new CurrentlyShownSimple(0, 5333, unixNowMs, "test runner", joinedListings, joinedSales);
 
         AssertCurrentlyShownDataCenter(
-            document1,
+            joinedDocument,
             currentlyShown,
             unixNowMs,
             worldOrDc,
@@ -164,11 +165,11 @@ public class CurrentlyShownControllerTests
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
         var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
-        await dbAccess.Create(document1);
+        var document1 = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333, unixNowMs);
+        await dbAccess.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
-        var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5, unixNowMs);
-        await dbAccess.Create(document2);
+        var document2 = SeedDataGenerator.MakeCurrentlyShownSimple(34, 5, unixNowMs);
+        await dbAccess.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5 });
 
         var result = await controller.Get("5,5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
@@ -380,7 +381,7 @@ public class CurrentlyShownControllerTests
         Assert.Null(history.WorldId);
     }
 
-    private static void AssertCurrentlyShownValidWorld(CurrentlyShown document, CurrentlyShownView currentlyShown, IGameDataProvider gameData)
+    private static void AssertCurrentlyShownValidWorld(CurrentlyShownSimple document, CurrentlyShownView currentlyShown, IGameDataProvider gameData)
     {
         Assert.Equal(document.ItemId, currentlyShown.ItemId);
         Assert.Equal(document.WorldId, currentlyShown.WorldId);
@@ -394,9 +395,9 @@ public class CurrentlyShownControllerTests
         currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
         document.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
-        document.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+        document.Sales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
-        document.Listings = document.Listings.Select(l =>
+        var listings = document.Listings.Select(l =>
         {
             l.PricePerUnit = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
             return l;
@@ -408,11 +409,11 @@ public class CurrentlyShownControllerTests
         Assert.All(currentlyShown.RecentHistory.Select(s => (object)s.WorldId), Assert.Null);
         Assert.All(currentlyShown.RecentHistory.Select(s => s.WorldName), Assert.Null);
 
-        var nqListings = document.Listings.Where(s => !s.Hq).ToList();
-        var hqListings = document.Listings.Where(s => s.Hq).ToList();
+        var nqListings = listings.Where(s => !s.Hq).ToList();
+        var hqListings = listings.Where(s => s.Hq).ToList();
 
-        var nqHistory = document.RecentHistory.Where(s => !s.Hq).ToList();
-        var hqHistory = document.RecentHistory.Where(s => s.Hq).ToList();
+        var nqHistory = document.Sales.Where(s => !s.Hq).ToList();
+        var hqHistory = document.Sales.Where(s => s.Hq).ToList();
 
         var currentAveragePrice = Filters.RemoveOutliers(document.Listings.Select(s => (float)s.PricePerUnit), 3).Average();
         var currentAveragePriceNq = Filters.RemoveOutliers(nqListings.Select(s => (float)s.PricePerUnit), 3).Average();
@@ -422,7 +423,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(Round(currentAveragePriceNq), Round(currentlyShown.CurrentAveragePriceNq));
         Assert.Equal(Round(currentAveragePriceHq), Round(currentlyShown.CurrentAveragePriceHq));
 
-        var averagePrice = Filters.RemoveOutliers(document.RecentHistory.Select(s => (float)s.PricePerUnit), 3).Average();
+        var averagePrice = Filters.RemoveOutliers(document.Sales.Select(s => (float)s.PricePerUnit), 3).Average();
         var averagePriceNq = Filters.RemoveOutliers(nqHistory.Select(s => (float)s.PricePerUnit), 3).Average();
         var averagePriceHq = Filters.RemoveOutliers(hqHistory.Select(s => (float)s.PricePerUnit), 3).Average();
 
@@ -448,17 +449,17 @@ public class CurrentlyShownControllerTests
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var saleVelocity = Statistics.VelocityPerDay(
-            currentlyShown.RecentHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), now, WeekLength);
+            currentlyShown.RecentHistory.Select(s => s.TimestampUnixSeconds * 1000), now, WeekLength);
         var saleVelocityNq = Statistics.VelocityPerDay(
-            nqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), now, WeekLength);
+            nqHistory.Select(s => s.TimestampUnixSeconds * 1000), now, WeekLength);
         var saleVelocityHq = Statistics.VelocityPerDay(
-            hqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), now, WeekLength);
+            hqHistory.Select(s => s.TimestampUnixSeconds * 1000), now, WeekLength);
 
         Assert.Equal(Round(saleVelocity), Round(currentlyShown.SaleVelocity));
         Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));
         Assert.Equal(Round(saleVelocityHq), Round(currentlyShown.SaleVelocityHq));
 
-        var stackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(document.Listings.Select(l => (int)l.Quantity)));
+        var stackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(listings.Select(l => (int)l.Quantity)));
         var stackSizeHistogramNq = new SortedDictionary<int, int>(Statistics.GetDistribution(nqListings.Select(l => (int)l.Quantity)));
         var stackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqListings.Select(l => (int)l.Quantity)));
 
@@ -467,7 +468,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
     }
 
-    private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc, long unixNowMs)
+    private static void AssertCurrentlyShownDataCenter(CurrentlyShownSimple anyWorldDocument, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc, long unixNowMs)
     {
         Assert.Equal(anyWorldDocument.ItemId, currentlyShown.ItemId);
         Assert.Equal(lastUploadTime, currentlyShown.LastUploadTimeUnixMilliseconds);
@@ -481,9 +482,9 @@ public class CurrentlyShownControllerTests
         currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
         anyWorldDocument.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
-        anyWorldDocument.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+        anyWorldDocument.Sales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
-        anyWorldDocument.Listings = anyWorldDocument.Listings.Select(l =>
+        var listings = anyWorldDocument.Listings.Select(l =>
         {
             l.PricePerUnit = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
             return l;
@@ -495,13 +496,13 @@ public class CurrentlyShownControllerTests
         Assert.All(currentlyShown.RecentHistory.Select(s => (object)s.WorldId), Assert.NotNull);
         Assert.All(currentlyShown.RecentHistory.Select(s => s.WorldName), Assert.NotNull);
 
-        var nqListings = anyWorldDocument.Listings.Where(s => !s.Hq).ToList();
-        var hqListings = anyWorldDocument.Listings.Where(s => s.Hq).ToList();
+        var nqListings = listings.Where(s => !s.Hq).ToList();
+        var hqListings = listings.Where(s => s.Hq).ToList();
 
-        var nqHistory = anyWorldDocument.RecentHistory.Where(s => !s.Hq).ToList();
-        var hqHistory = anyWorldDocument.RecentHistory.Where(s => s.Hq).ToList();
+        var nqHistory = anyWorldDocument.Sales.Where(s => !s.Hq).ToList();
+        var hqHistory = anyWorldDocument.Sales.Where(s => s.Hq).ToList();
 
-        var currentAveragePrice = Filters.RemoveOutliers(anyWorldDocument.Listings.Select(s => (float)s.PricePerUnit), 3).Average();
+        var currentAveragePrice = Filters.RemoveOutliers(listings.Select(s => (float)s.PricePerUnit), 3).Average();
         var currentAveragePriceNq = Filters.RemoveOutliers(nqListings.Select(s => (float)s.PricePerUnit), 3).Average();
         var currentAveragePriceHq = Filters.RemoveOutliers(hqListings.Select(s => (float)s.PricePerUnit), 3).Average();
 
@@ -509,7 +510,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(Round(currentAveragePriceNq), Round(currentlyShown.CurrentAveragePriceNq));
         Assert.Equal(Round(currentAveragePriceHq), Round(currentlyShown.CurrentAveragePriceHq));
 
-        var averagePrice = Filters.RemoveOutliers(anyWorldDocument.RecentHistory.Select(s => (float)s.PricePerUnit), 3).Average();
+        var averagePrice = Filters.RemoveOutliers(anyWorldDocument.Sales.Select(s => (float)s.PricePerUnit), 3).Average();
         var averagePriceNq = Filters.RemoveOutliers(nqHistory.Select(s => (float)s.PricePerUnit), 3).Average();
         var averagePriceHq = Filters.RemoveOutliers(hqHistory.Select(s => (float)s.PricePerUnit), 3).Average();
 
@@ -544,7 +545,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));
         Assert.Equal(Round(saleVelocityHq), Round(currentlyShown.SaleVelocityHq));
 
-        var stackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(anyWorldDocument.Listings.Select(l => (int)l.Quantity)));
+        var stackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(listings.Select(l => (int)l.Quantity)));
         var stackSizeHistogramNq = new SortedDictionary<int, int>(Statistics.GetDistribution(nqListings.Select(l => (int)l.Quantity)));
         var stackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqListings.Select(l => (int)l.Quantity)));
 

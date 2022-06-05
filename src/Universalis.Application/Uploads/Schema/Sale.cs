@@ -5,16 +5,16 @@ namespace Universalis.Application.Uploads.Schema;
 public class Sale
 {
     [JsonPropertyName("hq")]
-    public object Hq { get; set; }
+    public object Hq { get; init; }
 
     [JsonPropertyName("pricePerUnit")]
-    public uint? PricePerUnit { get; set; }
+    public uint? PricePerUnit { get; init; }
         
     [JsonPropertyName("quantity")]
     public uint? Quantity { get; set; }
         
     [JsonPropertyName("buyerName")]
-    public string BuyerName { get; set; }
+    public string BuyerName { get; init; }
         
     [JsonPropertyName("onMannequin")]
     public object OnMannequin { get; set; }
@@ -40,5 +40,5 @@ public class Sale
     }
 
     [JsonPropertyName("timestamp")]
-    public double? TimestampUnixSeconds { get; set; }
+    public long? TimestampUnixSeconds { get; init; }
 }

@@ -77,7 +77,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var itemId = parameters.ItemId.Value;
         // ReSharper restore PossibleInvalidOperationException
 
-        List<Sale> cleanSales = null;
+        List<SaleSimple> cleanSales = null;
         if (parameters.Sales != null)
         {
             if (Util.HasHtmlTags(JsonSerializer.Serialize(parameters.Sales)))
@@ -86,14 +86,13 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             }
 
             cleanSales = parameters.Sales
-                .Select(s => new Sale
+                .Select(s => new SaleSimple
                 {
                     Hq = Util.ParseUnusualBool(s.Hq),
                     BuyerName = s.BuyerName,
                     PricePerUnit = s.PricePerUnit ?? 0,
                     Quantity = s.Quantity ?? 0,
                     TimestampUnixSeconds = s.TimestampUnixSeconds ?? 0,
-                    UploadApplicationName = source.Name,
                 })
                 .Where(s => s.PricePerUnit > 0)
                 .Where(s => s.Quantity > 0)
@@ -107,11 +106,11 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 ItemId = itemId,
             }, cancellationToken);
             var minimizedSales = cleanSales
-                .Select(s => MinimizedSale.FromSale(s, parameters.UploaderId))
+                .Select(s => MinimizedSale.FromSaleSimple(s, parameters.UploaderId))
                 .ToList();
 
             // Used for WebSocket updates
-            var addedSales = new List<Sale>();
+            var addedSales = new List<SaleSimple>();
 
             var historyDocument = new History
             {
@@ -158,7 +157,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     {
                         WorldId = worldId,
                         ItemId = itemId,
-                        Sales = addedSales.Select(Util.SaleToView).ToList(),
+                        Sales = addedSales.Select(Util.SaleSimpleToView).ToList(),
                     });
                 }, cancellationToken);
             }
@@ -170,7 +169,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             ItemId = itemId,
         }, cancellationToken);
 
-        List<Listing> newListings = null;
+        List<ListingSimple> newListings = null;
         if (parameters.Listings != null)
         {
             if (Util.HasHtmlTags(JsonSerializer.Serialize(parameters.Listings)))
@@ -181,9 +180,9 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             newListings = parameters.Listings
                 .Select(l =>
                 {
-                    return new Listing
+                    return new ListingSimple
                     {
-                        ListingIdInternal = l.ListingId,
+                        ListingId = l.ListingId ?? "",
                         Hq = Util.ParseUnusualBool(l.Hq),
                         OnMannequin = Util.ParseUnusualBool(l.OnMannequin),
                         Materia = l.Materia?
@@ -197,14 +196,13 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                         PricePerUnit = l.PricePerUnit ?? 0,
                         Quantity = l.Quantity ?? 0,
                         DyeId = l.DyeId ?? 0,
-                        CreatorIdInternal = Util.ParseUnusualId(l.CreatorId),
+                        CreatorId = Util.ParseUnusualId(l.CreatorId) ?? "",
                         CreatorName = l.CreatorName,
                         LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds ?? 0,
-                        RetainerIdInternal = Util.ParseUnusualId(l.RetainerId),
+                        RetainerId = Util.ParseUnusualId(l.RetainerId) ?? "",
                         RetainerName = l.RetainerName,
-                        RetainerCityIdInternal = l.RetainerCityId,
-                        SellerIdInternal = Util.ParseUnusualId(l.SellerId),
-                        UploadApplicationName = source.Name,
+                        RetainerCityId = l.RetainerCityId ?? 1, // TODO: This probably shouldn't have a default value
+                        SellerId = Util.ParseUnusualId(l.SellerId) ?? "",
                     };
                 })
                 .Where(l => l.PricePerUnit > 0)
@@ -212,7 +210,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 .OrderBy(l => l.PricePerUnit)
                 .ToList();
 
-            var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
+            var oldListings = existingCurrentlyShown?.Listings ?? new List<ListingSimple>();
             var addedListings = newListings.Where(l => !oldListings.Contains(l)).ToList();
             var removedListings = oldListings.Where(l => !newListings.Contains(l)).ToList();
 
@@ -226,7 +224,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                         ItemId = itemId,
                         Listings = await addedListings
                             .ToAsyncEnumerable()
-                            .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
+                            .SelectAwait(async l => await Util.ListingSimpleToView(l, cancellationToken))
                             .ToListAsync(cancellationToken),
                     });
                 }, cancellationToken);
@@ -242,22 +240,17 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                         ItemId = itemId,
                         Listings = await removedListings
                             .ToAsyncEnumerable()
-                            .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
+                            .SelectAwait(async l => await Util.ListingSimpleToView(l, cancellationToken))
                             .ToListAsync(cancellationToken),
                     });
                 }, cancellationToken);
             }
         }
 
-        var document = new CurrentlyShown
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-            LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            Listings = newListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>(),
-            RecentHistory = cleanSales ?? existingCurrentlyShown?.RecentHistory ?? new List<Sale>(),
-            UploaderIdHash = parameters.UploaderId,
-        };
+        var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        var listings = newListings ?? existingCurrentlyShown?.Listings ?? new List<ListingSimple>();
+        var sales = cleanSales ?? existingCurrentlyShown?.Sales ?? new List<SaleSimple>();
+        var document = new CurrentlyShownSimple(worldId, itemId, now, source.Name, listings, sales);
 
         if (_cache.Delete(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId }))
         {

@@ -26,13 +26,26 @@ public class MinimizedSale : IEquatable<MinimizedSale>
 
     public static MinimizedSale FromSale(Sale s, string uploaderIdHash)
     {
-        return new MinimizedSale()
+        return new MinimizedSale
         {
             Hq = s.Hq,
             PricePerUnit = s.PricePerUnit,
             Quantity = s.Quantity,
             BuyerName = s.BuyerName,
             SaleTimeUnixSeconds = s.TimestampUnixSeconds,
+            UploaderIdHash = uploaderIdHash,
+        };
+    }
+    
+    public static MinimizedSale FromSaleSimple(SaleSimple s, string uploaderIdHash)
+    {
+        return new MinimizedSale
+        {
+            Hq = s.Hq,
+            PricePerUnit = s.PricePerUnit,
+            Quantity = s.Quantity,
+            BuyerName = s.BuyerName,
+            SaleTimeUnixSeconds = Convert.ToDouble(s.TimestampUnixSeconds),
             UploaderIdHash = uploaderIdHash,
         };
     }

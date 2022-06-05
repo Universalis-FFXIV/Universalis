@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.Tests;
@@ -26,7 +27,7 @@ public static class SchemaSeedDataGenerator
                 SellerId = l.SellerId,
                 CreatorId = l.CreatorId,
                 DyeId = l.DyeId,
-                LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
+                LastReviewTimeUnixSeconds = Convert.ToInt64(l.LastReviewTimeUnixSeconds),
                 Materia = l.Materia
                     .Select(m => new Materia
                     {
@@ -47,7 +48,7 @@ public static class SchemaSeedDataGenerator
                 PricePerUnit = s.PricePerUnit,
                 Quantity = s.Quantity,
                 SellerId = "",
-                TimestampUnixSeconds = s.TimestampUnixSeconds,
+                TimestampUnixSeconds = Convert.ToInt64(s.TimestampUnixSeconds),
             })
             .ToList();
 

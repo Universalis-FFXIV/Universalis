@@ -37,8 +37,8 @@ public class DeleteListingControllerTests
             });
         }
 
-        var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
-        await currentlyShown.Create(document);
+        var document = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333);
+        await currentlyShown.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
         var originalCount = document.Listings.Count;
         var toRemove = document.Listings[0];
@@ -49,7 +49,7 @@ public class DeleteListingControllerTests
             PricePerUnit = toRemove.PricePerUnit,
             Quantity = toRemove.Quantity,
             RetainerId = toRemove.RetainerId,
-            UploaderId = document.UploaderIdHash,
+            UploaderId = "FB",
         });
 
         var updatedDocument = await currentlyShown.Retrieve(new CurrentlyShownQuery
