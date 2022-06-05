@@ -241,7 +241,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 new HashEntry("hq", sale.Hq),
                 new HashEntry("ppu", sale.PricePerUnit),
                 new HashEntry("q", sale.Quantity),
-                new HashEntry("bn", sale.BuyerName),
+                new HashEntry("bn", sale.BuyerName ?? ""),
                 new HashEntry("t", sale.TimestampUnixSeconds),
             });
         }
