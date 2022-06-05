@@ -173,19 +173,19 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             var listingKey = GetListingKey(worldId, itemId, listingId);
             _ = trans.HashSetAsync(listingKey, new []
             {
-                new HashEntry("id", listing.ListingId),
+                new HashEntry("id", listing.ListingId ?? ""),
                 new HashEntry("hq", listing.Hq),
                 new HashEntry("mann", listing.OnMannequin),
                 new HashEntry("ppu", listing.PricePerUnit),
                 new HashEntry("q", listing.Quantity),
                 new HashEntry("did", listing.DyeId),
-                new HashEntry("cid", listing.CreatorId),
-                new HashEntry("cname", listing.CreatorName),
+                new HashEntry("cid", listing.CreatorId ?? ""),
+                new HashEntry("cname", listing.CreatorName ?? ""),
                 new HashEntry("t", listing.LastReviewTimeUnixSeconds),
-                new HashEntry("rid", listing.RetainerId),
-                new HashEntry("rname", listing.RetainerName),
+                new HashEntry("rid", listing.RetainerId ?? ""),
+                new HashEntry("rname", listing.RetainerName ?? ""),
                 new HashEntry("rcid", listing.RetainerCityId),
-                new HashEntry("sid", listing.SellerId),
+                new HashEntry("sid", listing.SellerId ?? ""),
             });
         }
         
