@@ -117,7 +117,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     private static void SetSourceAtomic(IDatabaseAsync trans, uint worldId, uint itemId, string source)
     {
         var sourceKey = GetUploadSourceKey(worldId, itemId);
-        _ = trans.StringSetAsync(sourceKey, source);
+        _ = trans.StringSetAsync(sourceKey, source ?? "");
     }
 
     private static async Task<List<ListingSimple>> GetListings(IDatabaseAsync db, uint worldId, uint itemId)
