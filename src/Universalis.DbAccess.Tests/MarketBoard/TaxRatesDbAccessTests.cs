@@ -11,19 +11,19 @@ public class TaxRatesDbAccessTests
 {
     private class MockTaxRatesStore : ITaxRatesStore
     {
-        private readonly Dictionary<uint, TaxRatesSimple> _taxRates = new();
+        private readonly Dictionary<uint, TaxRates> _taxRates = new();
 
-        public Task SetTaxRates(uint worldId, TaxRatesSimple taxRates)
+        public Task SetTaxRates(uint worldId, TaxRates taxRates)
         {
             _taxRates[worldId] = taxRates;
             return Task.CompletedTask;
         }
 
-        public Task<TaxRatesSimple> GetTaxRates(uint worldId)
+        public Task<TaxRates> GetTaxRates(uint worldId)
         {
             return _taxRates.TryGetValue(worldId, out var rates)
                 ? Task.FromResult(rates)
-                : Task.FromResult(new TaxRatesSimple());
+                : Task.FromResult(new TaxRates());
         }
     }
 

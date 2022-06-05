@@ -109,9 +109,9 @@ public static class SeedDataGenerator
         };
     }
     
-    public static TaxRatesSimple MakeTaxRatesSimple(uint worldId)
+    public static TaxRates MakeTaxRatesSimple(uint worldId)
     {
-        return new TaxRatesSimple
+        return new TaxRates
         {
             UploadApplicationName = "test runner",
             LimsaLominsa = 3,

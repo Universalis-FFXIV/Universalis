@@ -27,7 +27,7 @@ public class TaxRatesUploadBehavior : IUploadBehavior
     {
         var existingTaxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = parameters.WorldId!.Value }, cancellationToken);
         
-        await _taxRatesDb.Update(new TaxRatesSimple
+        await _taxRatesDb.Update(new TaxRates
         {
             LimsaLominsa = parameters.TaxRates!.LimsaLominsa ?? existingTaxRates?.LimsaLominsa ?? 0,
             Gridania = parameters.TaxRates.Gridania ?? existingTaxRates?.Gridania ?? 0,
