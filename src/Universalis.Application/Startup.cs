@@ -73,24 +73,11 @@ public class Startup
         {
             var license = new OpenApiLicense { Name = "MIT", Url = new Uri("https://github.com/Universalis-FFXIV/Universalis/blob/master/LICENSE") };
 
-            var apiDescription =
-                typeof(Startup).Assembly.GetManifestResourceStream(
-                    new EmbeddedResourceName("doc_description.html"));
-            if (apiDescription == null)
-            {
-                throw new FileNotFoundException(nameof(apiDescription));
-            }
-
-            using var apiDescriptionReader = new StreamReader(apiDescription);
-            var description = apiDescriptionReader.ReadToEnd();
-
             options.SwaggerDoc("v1", new UniversalisApiInfo()
-                .WithDescription(description)
                 .WithLicense(license)
                 .WithVersion(new Version(1, 0)));
 
             options.SwaggerDoc("v2", new UniversalisApiInfo()
-                .WithDescription(description)
                 .WithLicense(license)
                 .WithVersion(new Version(2, 0)));
 

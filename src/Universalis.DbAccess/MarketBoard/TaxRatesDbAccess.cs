@@ -14,12 +14,12 @@ public class TaxRatesDbAccess : ITaxRatesDbAccess
         _store = store;
     }
 
-    public Task<TaxRatesSimple> Retrieve(TaxRatesQuery query, CancellationToken cancellationToken = default)
+    public Task<TaxRates> Retrieve(TaxRatesQuery query, CancellationToken cancellationToken = default)
     {
         return _store.GetTaxRates(query.WorldId);
     }
 
-    public Task Update(TaxRatesSimple document, TaxRatesQuery query, CancellationToken cancellationToken = default)
+    public Task Update(TaxRates document, TaxRatesQuery query, CancellationToken cancellationToken = default)
     {
         return _store.SetTaxRates(query.WorldId, document);
     }

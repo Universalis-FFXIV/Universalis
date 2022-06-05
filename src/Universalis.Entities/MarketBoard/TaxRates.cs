@@ -1,6 +1,6 @@
 ﻿namespace Universalis.Entities.MarketBoard;
 
-public class TaxRatesSimple
+public class TaxRates
 {
     public int LimsaLominsa { get; init; }
 

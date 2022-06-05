@@ -10,7 +10,6 @@
   </PropertyGroup>
 
 	<ItemGroup>
-    <EmbeddedResource Include="doc_description.html" />
     <EmbeddedResource Include="Universalis.Application.xml" />
   </ItemGroup>
 

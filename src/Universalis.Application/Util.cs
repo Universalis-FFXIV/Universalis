@@ -37,7 +37,20 @@ public static class Util
             BuyerName = s.BuyerName,
         };
     }
-
+    
+    public static SaleView SaleSimpleToView(SaleSimple s)
+    {
+        return new SaleView
+        {
+            Hq = s.Hq,
+            PricePerUnit = s.PricePerUnit,
+            Quantity = s.Quantity,
+            Total = s.PricePerUnit * s.Quantity,
+            TimestampUnixSeconds = s.TimestampUnixSeconds,
+            BuyerName = s.BuyerName,
+        };
+    }
+    
     /// <summary>
     /// Converts a database listing into a listing view to be returned to external clients.
     /// </summary>
@@ -65,6 +78,55 @@ public static class Util
             CreatorName = l.CreatorName ?? "",
             IsCrafted = !string.IsNullOrEmpty(l.CreatorId),
             LastReviewTimeUnixSeconds = (long)l.LastReviewTimeUnixSeconds,
+            RetainerName = l.RetainerName,
+            RetainerCityId = l.RetainerCityId,
+        };
+
+        using var sha256 = SHA256.Create();
+
+        if (!string.IsNullOrEmpty(l.CreatorId))
+        {
+            listingView.CreatorIdHash = await Hash(sha256, l.CreatorId, cancellationToken);
+        }
+
+        if (!string.IsNullOrEmpty(l.ListingId))
+        {
+            listingView.ListingIdHash = await Hash(sha256, l.ListingId, cancellationToken);
+        }
+
+        listingView.SellerIdHash = await Hash(sha256, l.SellerId, cancellationToken);
+        listingView.RetainerIdHash = await Hash(sha256, l.RetainerId, cancellationToken);
+
+        return listingView;
+    }
+
+    /// <summary>
+    /// Converts a database listing into a listing view to be returned to external clients.
+    /// </summary>
+    /// <param name="l">The database listing.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>A listing view associated with the provided listing.</returns>
+    public static async Task<ListingView> ListingSimpleToView(ListingSimple l, CancellationToken cancellationToken = default)
+    {
+        var ppu = l.PricePerUnit;
+        var listingView = new ListingView
+        {
+            Hq = l.Hq,
+            OnMannequin = l.OnMannequin,
+            Materia = l.Materia?
+                .Select(m => new MateriaView
+                {
+                    SlotId = m.SlotId,
+                    MateriaId = m.MateriaId,
+                })
+                .ToList() ?? new List<MateriaView>(),
+            PricePerUnit = ppu,
+            Quantity = l.Quantity,
+            Total = ppu * l.Quantity,
+            DyeId = l.DyeId,
+            CreatorName = l.CreatorName ?? "",
+            IsCrafted = !string.IsNullOrEmpty(l.CreatorId),
+            LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
             RetainerName = l.RetainerName,
             RetainerCityId = l.RetainerCityId,
         };

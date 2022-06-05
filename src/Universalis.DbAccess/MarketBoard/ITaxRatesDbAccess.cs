@@ -7,7 +7,7 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public interface ITaxRatesDbAccess
 {
-    public Task<TaxRatesSimple> Retrieve(TaxRatesQuery query, CancellationToken cancellationToken = default);
+    public Task<TaxRates> Retrieve(TaxRatesQuery query, CancellationToken cancellationToken = default);
 
-    public Task Update(TaxRatesSimple document, TaxRatesQuery query, CancellationToken cancellationToken = default);
+    public Task Update(TaxRates document, TaxRatesQuery query, CancellationToken cancellationToken = default);
 }

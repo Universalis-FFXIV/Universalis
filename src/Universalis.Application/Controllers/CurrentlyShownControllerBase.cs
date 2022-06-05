@@ -69,16 +69,16 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         }
 
         // Transform data into a view
-        var dataListings = await (data.Listings ?? new List<Listing>())
+        var dataListings = await (data.Listings ?? new List<ListingSimple>())
             .ToAsyncEnumerable()
-            .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
+            .SelectAwait(async l => await Util.ListingSimpleToView(l, cancellationToken))
             .ToListAsync(cancellationToken);
 
-        var dataHistory = (data.RecentHistory ?? new List<Sale>())
+        var dataHistory = (data.Sales ?? new List<SaleSimple>())
             .Where(s => s.PricePerUnit > 0)
             .Where(s => s.Quantity > 0)
             .Where(s => s.TimestampUnixSeconds > 0)
-            .Select(Util.SaleToView)
+            .Select(Util.SaleSimpleToView)
             .ToList();
 
         var dataView = new MinimizedCurrentlyShownData

@@ -16,8 +16,10 @@ public static class DbAccessExtensions
 
         sc.AddSingleton<IWorldItemUploadStore, WorldItemUploadStore>();
         sc.AddSingleton<IMostRecentlyUpdatedDbAccess, MostRecentlyUpdatedDbAccess>();
-        
+
+        sc.AddSingleton<ICurrentlyShownStore, CurrentlyShownStore>();
         sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
+        
         sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
         sc.AddSingleton<IContentDbAccess, ContentDbAccess>();
         sc.AddSingleton<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();

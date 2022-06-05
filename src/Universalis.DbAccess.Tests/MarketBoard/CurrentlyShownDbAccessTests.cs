@@ -1,19 +1,38 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
-using Universalis.DbAccess.Uploads;
-using Universalis.Entities.Uploads;
+using Universalis.Entities.MarketBoard;
 using Xunit;
 
 namespace Universalis.DbAccess.Tests.MarketBoard;
 
 public class CurrentlyShownDbAccessTests : IDisposable
 {
+    private class MockCurrentlyShownStore : ICurrentlyShownStore
+    {
+        private readonly Dictionary<(uint, uint), CurrentlyShownSimple> _currentlyShown = new();
+        
+        public Task<CurrentlyShownSimple> GetData(uint worldId, uint itemId)
+        {
+            if (_currentlyShown.TryGetValue((worldId, itemId), out var data))
+            {
+                return Task.FromResult(data);
+            }
+
+            return Task.FromResult(new CurrentlyShownSimple(0, 0, 0, "", new List<ListingSimple>(),
+                new List<SaleSimple>()));
+        }
+
+        public Task SetData(CurrentlyShownSimple data)
+        {
+            _currentlyShown[(data.WorldId, data.ItemId)] = data;
+            return Task.CompletedTask;
+        }
+    }
+    
     private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(CurrentlyShownDbAccessTests));
 
     private readonly IMongoClient _client;
@@ -31,82 +50,32 @@ public class CurrentlyShownDbAccessTests : IDisposable
     }
 
     [Fact]
-    public async Task Create_DoesNotThrow()
+    public async Task Retrieve_Works_WhenEmpty()
     {
-        var db = new CurrentlyShownDbAccess(_client, Database);
-        var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
-        await db.Create(document);
-    }
+        var store = new MockCurrentlyShownStore();
+        ICurrentlyShownDbAccess db = new CurrentlyShownDbAccess(_client, Database, store);
 
-    [Fact]
-    public async Task Retrieve_DoesNotThrow()
-    {
-        var db = new CurrentlyShownDbAccess(_client, Database);
         var output = await db.Retrieve(new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
         Assert.Null(output);
     }
 
     [Fact]
-    public async Task RetrieveMany_DoesNotThrow()
+    public async Task Update_Retrieve_Works()
     {
-        var db = new CurrentlyShownDbAccess(_client, Database);
-        var output = await db.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = new uint[] { 74 }, ItemId = 5333 });
-        Assert.NotNull(output);
-        Assert.Empty(output);
-    }
+        var store = new MockCurrentlyShownStore();
+        ICurrentlyShownDbAccess db = new CurrentlyShownDbAccess(_client, Database, store);
+        
+        var document1 = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333);
+        var query = new CurrentlyShownQuery { WorldId = document1.WorldId, ItemId = document1.ItemId };
+        await db.Update(document1, query);
 
-    [Fact]
-    public async Task Update_DoesNotThrow()
-    {
-        var db = new CurrentlyShownDbAccess(_client, Database);
-        var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
-        var query = new CurrentlyShownQuery { WorldId = document.WorldId, ItemId = document.ItemId };
-
-        await db.Update(document, query);
-        await db.Update(document, query);
-
-        document.LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-        await db.Update(document, query);
+        var document2 = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333);
+        await db.Update(document2, query);
 
         var retrieved = await db.Retrieve(query);
-        Assert.Equal(document.LastUploadTimeUnixMilliseconds, retrieved.LastUploadTimeUnixMilliseconds);
-    }
-
-    [Fact]
-    public async Task Delete_DoesNotThrow()
-    {
-        var db = new CurrentlyShownDbAccess(_client, Database);
-        await db.Delete(new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
-    }
-
-    [Fact]
-    public async Task Create_DoesInsert()
-    {
-        var db = new CurrentlyShownDbAccess(_client, Database);
-
-        var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
-        await db.Create(document);
-
-        var output = await db.Retrieve(new CurrentlyShownQuery { WorldId = document.WorldId, ItemId = document.ItemId });
-        Assert.NotNull(output);
-    }
-
-    [Fact]
-    public async Task RetrieveMany_ReturnsData()
-    {
-        var db = new CurrentlyShownDbAccess(_client, Database);
-
-        var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
-        await db.Create(document);
-
-        var output = (await db.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = new[] { document.WorldId }, ItemId = document.ItemId }))?.ToList();
-        Assert.NotNull(output);
-        Assert.Single((IEnumerable)output);
-        Assert.Equal(document.WorldId, output[0].WorldId);
-        Assert.Equal(document.ItemId, output[0].ItemId);
-        Assert.Equal(document.LastUploadTimeUnixMilliseconds, output[0].LastUploadTimeUnixMilliseconds);
-        Assert.Equal(document.Listings, output[0].Listings);
-        Assert.Equal(document.RecentHistory, output[0].RecentHistory);
-        Assert.Equal(document.UploaderIdHash, output[0].UploaderIdHash);
+        Assert.Equal(document2.WorldId, retrieved.WorldId);
+        Assert.Equal(document2.ItemId, retrieved.ItemId);
+        Assert.Equal(document2.UploadSource, retrieved.UploadSource);
+        Assert.Equal(document2.LastUploadTimeUnixMilliseconds, retrieved.LastUploadTimeUnixMilliseconds);
     }
 }

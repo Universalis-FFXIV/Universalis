@@ -229,11 +229,10 @@ public class MarketBoardUploadBehaviorTests
         Assert.NotNull(currentlyShown);
         Assert.Equal(upload.WorldId.Value, currentlyShown.WorldId);
         Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
-        Assert.Equal(upload.UploaderId, currentlyShown.UploaderIdHash);
         Assert.NotNull(currentlyShown.Listings);
         Assert.NotEmpty(currentlyShown.Listings);
-        Assert.NotNull(currentlyShown.RecentHistory);
-        Assert.NotEmpty(currentlyShown.RecentHistory);
+        Assert.NotNull(currentlyShown.Sales);
+        Assert.NotEmpty(currentlyShown.Sales);
 
         var history = await historyDb.Retrieve(new HistoryQuery
         {
@@ -289,11 +288,10 @@ public class MarketBoardUploadBehaviorTests
         Assert.NotNull(currentlyShown);
         Assert.Equal(upload.WorldId.Value, currentlyShown.WorldId);
         Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
-        Assert.Equal(upload.UploaderId, currentlyShown.UploaderIdHash);
         Assert.NotNull(currentlyShown.Listings);
         Assert.NotEmpty(currentlyShown.Listings);
-        Assert.NotNull(currentlyShown.RecentHistory);
-        Assert.Empty(currentlyShown.RecentHistory);
+        Assert.NotNull(currentlyShown.Sales);
+        Assert.Empty(currentlyShown.Sales);
 
         var history = await historyDb.Retrieve(new HistoryQuery
         {
@@ -345,11 +343,10 @@ public class MarketBoardUploadBehaviorTests
         Assert.NotNull(currentlyShown);
         Assert.Equal(upload.WorldId.Value, currentlyShown.WorldId);
         Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
-        Assert.Equal(upload.UploaderId, currentlyShown.UploaderIdHash);
         Assert.NotNull(currentlyShown.Listings);
         Assert.Empty(currentlyShown.Listings);
-        Assert.NotNull(currentlyShown.RecentHistory);
-        Assert.NotEmpty(currentlyShown.RecentHistory);
+        Assert.NotNull(currentlyShown.Sales);
+        Assert.NotEmpty(currentlyShown.Sales);
 
         var history = await historyDb.Retrieve(new HistoryQuery
         {

@@ -13,7 +13,7 @@ public class TaxRatesStore : ITaxRatesStore
         _redis = redis;
     }
 
-    public Task SetTaxRates(uint worldId, TaxRatesSimple taxRates)
+    public Task SetTaxRates(uint worldId, TaxRates taxRates)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.TaxRates);
         return db.HashSetAsync(worldId.ToString(), new []
@@ -29,11 +29,11 @@ public class TaxRatesStore : ITaxRatesStore
         });
     }
 
-    public async Task<TaxRatesSimple> GetTaxRates(uint worldId)
+    public async Task<TaxRates> GetTaxRates(uint worldId)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.TaxRates);
         var key = worldId.ToString();
-        return new TaxRatesSimple
+        return new TaxRates
         {
             LimsaLominsa = (int)await db.HashGetAsync(key, "Limsa Lominsa"),
             Gridania = (int)await db.HashGetAsync(key, "Gridania"),

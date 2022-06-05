@@ -9,16 +9,16 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 
 public class MockTaxRatesDbAccess : ITaxRatesDbAccess
 {
-    private readonly Dictionary<uint, TaxRatesSimple> _collection = new();
+    private readonly Dictionary<uint, TaxRates> _collection = new();
 
-    public Task<TaxRatesSimple> Retrieve(TaxRatesQuery query, CancellationToken cancellationToken = default)
+    public Task<TaxRates> Retrieve(TaxRatesQuery query, CancellationToken cancellationToken = default)
     {
         return !_collection.TryGetValue(query.WorldId, out var taxRates)
-            ? Task.FromResult<TaxRatesSimple>(null)
+            ? Task.FromResult<TaxRates>(null)
             : Task.FromResult(taxRates);
     }
 
-    public async Task Update(TaxRatesSimple document, TaxRatesQuery query, CancellationToken cancellationToken = default)
+    public async Task Update(TaxRates document, TaxRatesQuery query, CancellationToken cancellationToken = default)
     {
         _collection[query.WorldId] = document;
     }

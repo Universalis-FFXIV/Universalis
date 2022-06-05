@@ -1,5 +1,6 @@
 ﻿using MongoDB.Driver;
 using System;
+using System.Collections.Generic;
 using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.Queries.MarketBoard;
