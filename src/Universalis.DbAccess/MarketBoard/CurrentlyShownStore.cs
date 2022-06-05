@@ -21,6 +21,12 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
         
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
+
+        if (!await db.KeyExistsAsync(lastUpdatedKey))
+        {
+            return new CurrentlyShownSimple(0, 0, 0, "",
+                new List<ListingSimple>(), new List<SaleSimple>());
+        }
         
         // Fetch all of the data in a consistent manner. This shouldn't usually run more
         // than once, given that reads are far more frequent than writes.
