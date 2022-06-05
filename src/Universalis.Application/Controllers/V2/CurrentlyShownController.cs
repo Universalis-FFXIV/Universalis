@@ -44,7 +44,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
     /// will not trigger this. Instead, the returned list of unresolved item IDs will contain the invalid item ID or IDs.
     /// </response>
     [HttpGet]
-    [ApiTag("Market board listings")]
+    [ApiTag("Market board current data")]
     [ProducesResponseType(typeof(CurrentlyShownView), 200)]
     [ProducesResponseType(typeof(CurrentlyShownMultiViewV2), 200)]
     [ProducesResponseType(404)]
