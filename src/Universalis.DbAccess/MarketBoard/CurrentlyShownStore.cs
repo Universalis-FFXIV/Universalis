@@ -135,21 +135,23 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             .SelectAwait(async id =>
             {
                 var listingKey = GetListingKey(worldId, itemId, id);
+                var listingEntries = await db.HashGetAllAsync(listingKey);
+                var listing = listingEntries.ToDictionary();
                 return new ListingSimple
                 {
-                    ListingId = await db.HashGetAsync(listingKey, "id"),
-                    Hq = (bool)await db.HashGetAsync(listingKey, "hq"),
-                    OnMannequin = (bool)await db.HashGetAsync(listingKey, "mann"),
-                    PricePerUnit = (uint)await db.HashGetAsync(listingKey, "ppu"),
-                    Quantity = (uint)await db.HashGetAsync(listingKey, "q"),
-                    DyeId = (uint)await db.HashGetAsync(listingKey, "did"),
-                    CreatorId = await db.HashGetAsync(listingKey, "cid"),
-                    CreatorName = await db.HashGetAsync(listingKey, "cname"),
-                    LastReviewTimeUnixSeconds = (long)await db.HashGetAsync(listingKey, "t"),
-                    RetainerId = await db.HashGetAsync(listingKey, "rid"),
-                    RetainerName = await db.HashGetAsync(listingKey, "rname"),
-                    RetainerCityId = (int)await db.HashGetAsync(listingKey, "rcid"),
-                    SellerId = (string)await db.HashGetAsync(listingKey, "sid"),
+                    ListingId = GetValueString(listing, "id"),
+                    Hq = GetValueBool(listing, "hq"),
+                    OnMannequin = GetValueBool(listing, "mann"),
+                    PricePerUnit = GetValueUInt32(listing, "ppu"),
+                    Quantity = GetValueUInt32(listing, "q"),
+                    DyeId = GetValueUInt32(listing, "did"),
+                    CreatorId = GetValueString(listing, "cid"),
+                    CreatorName = GetValueString(listing, "cname"),
+                    LastReviewTimeUnixSeconds = GetValueInt64(listing, "t"),
+                    RetainerId = GetValueString(listing, "rid"),
+                    RetainerName = GetValueString(listing, "rname"),
+                    RetainerCityId = GetValueInt32(listing, "rcid"),
+                    SellerId = GetValueString(listing, "sid"),
                 };
             })
             .ToListAsync();
@@ -207,14 +209,16 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         return await saleIds.ToAsyncEnumerable()
             .SelectAwait(async id =>
             {
-                var listingKey = GetListingKey(worldId, itemId, id);
+                var saleKey = GetSaleKey(worldId, itemId, id);
+                var saleEntries = await db.HashGetAllAsync(saleKey);
+                var sale = saleEntries.ToDictionary();
                 return new SaleSimple
                 {
-                    Hq = (bool)await db.HashGetAsync(listingKey, "hq"),
-                    PricePerUnit = (uint)await db.HashGetAsync(listingKey, "ppu"),
-                    Quantity = (uint)await db.HashGetAsync(listingKey, "q"),
-                    BuyerName = await db.HashGetAsync(listingKey, "bn"),
-                    TimestampUnixSeconds = (long)await db.HashGetAsync(listingKey, "t"),
+                    Hq = GetValueBool(sale, "hq"),
+                    PricePerUnit = GetValueUInt32(sale, "ppu"),
+                    Quantity = GetValueUInt32(sale, "q"),
+                    BuyerName = GetValueString(sale, "bn"),
+                    TimestampUnixSeconds = GetValueInt64(sale, "t"),
                 };
             })
             .ToListAsync();
@@ -248,6 +252,31 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         
         // Update the sales index
         _ = trans.StringSetAsync(salesKey, string.Join(':', newSaleIds.Select(id => id.ToString())));
+    }
+    
+    private static uint GetValueUInt32(IDictionary<RedisValue, RedisValue> hash, string key)
+    {
+        return hash.ContainsKey(key) ? (uint)hash[key] : 0;
+    }
+    
+    private static int GetValueInt32(IDictionary<RedisValue, RedisValue> hash, string key)
+    {
+        return hash.ContainsKey(key) ? (int)hash[key] : 0;
+    }
+    
+    private static long GetValueInt64(IDictionary<RedisValue, RedisValue> hash, string key)
+    {
+        return hash.ContainsKey(key) ? (long)hash[key] : 0;
+    }
+
+    private static bool GetValueBool(IDictionary<RedisValue, RedisValue> hash, string key)
+    {
+        return hash.ContainsKey(key) && (bool)hash[key];
+    }
+    
+    private static string GetValueString(IDictionary<RedisValue, RedisValue> hash, string key)
+    {
+        return hash.ContainsKey(key) ? hash[key] : "";
     }
 
     private static IEnumerable<Guid> ParseObjectIds(RedisValue v)
