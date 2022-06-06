@@ -33,8 +33,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         bool transactionExecuted;
         long lastUpdated;
         string source;
-        List<ListingSimple> listings;
-        List<SaleSimple> sales;
+        IEnumerable<ListingSimple> listings;
+        IEnumerable<SaleSimple> sales;
         do
         {
             lastUpdated = await EnsureLastUpdated(worldId, itemId);
@@ -42,14 +42,19 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             var trans = db.CreateTransaction();
             trans.AddCondition(Condition.StringEqual(lastUpdatedKey, lastUpdated));
 
-            source = await GetSource(db, worldId, itemId);
-            listings = await GetListings(db, worldId, itemId);
-            sales = await GetSales(db, worldId, itemId);
+            var sourceTask = GetSource(db, worldId, itemId);
+            var listingsTask = GetListings(db, worldId, itemId);
+            var salesTask = GetSales(db, worldId, itemId);
+            await Task.WhenAll(sourceTask, listingsTask, salesTask);
+            
+            source = await sourceTask;
+            listings = await listingsTask;
+            sales = await salesTask;
 
             transactionExecuted = await trans.ExecuteAsync();
         } while (!transactionExecuted);
         
-        return new CurrentlyShownSimple(worldId, itemId, lastUpdated, source, listings, sales);
+        return new CurrentlyShownSimple(worldId, itemId, lastUpdated, source, listings.ToList(), sales.ToList());
     }
 
     public async Task SetData(CurrentlyShownSimple data)
@@ -120,19 +125,19 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _ = trans.StringSetAsync(sourceKey, source);
     }
 
-    private static async Task<List<ListingSimple>> GetListings(IDatabaseAsync db, uint worldId, uint itemId)
+    private static async Task<ListingSimple[]> GetListings(IDatabaseAsync db, uint worldId, uint itemId)
     {
         var listingsKey = GetListingsIndexKey(worldId, itemId);
         
         var listingIdsRaw = await db.StringGetAsync(listingsKey);
         if (listingIdsRaw.IsNullOrEmpty)
         {
-            return new List<ListingSimple>();
+            return Array.Empty<ListingSimple>();
         }
 
         var listingIds = ParseObjectIds(listingIdsRaw);
-        return await listingIds.ToAsyncEnumerable()
-            .SelectAwait(async id =>
+        var listingFetches = listingIds
+            .Select(async id =>
             {
                 var listingKey = GetListingKey(worldId, itemId, id);
                 var listingEntries = await db.HashGetAllAsync(listingKey);
@@ -153,8 +158,9 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                     RetainerCityId = GetValueInt32(listing, "rcid"),
                     SellerId = GetValueString(listing, "sid"),
                 };
-            })
-            .ToListAsync();
+            });
+        
+        return await Task.WhenAll(listingFetches);
     }
     
     private static void SetListingsAtomic(IDatabaseAsync trans, uint worldId, uint itemId, IEnumerable<Guid> existingListingIds, IList<ListingSimple> listings)
@@ -195,19 +201,19 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _ = trans.StringSetAsync(listingsKey, string.Join(':', newListingIds.Select(id => id.ToString())));
     }
     
-    private static async Task<List<SaleSimple>> GetSales(IDatabaseAsync db, uint worldId, uint itemId)
+    private static async Task<SaleSimple[]> GetSales(IDatabaseAsync db, uint worldId, uint itemId)
     {
         var salesKey = GetSalesIndexKey(worldId, itemId);
         
         var saleIdsRaw = await db.StringGetAsync(salesKey);
         if (saleIdsRaw.IsNullOrEmpty)
         {
-            return new List<SaleSimple>();
+            return Array.Empty<SaleSimple>();
         }
 
         var saleIds = ParseObjectIds(saleIdsRaw);
-        return await saleIds.ToAsyncEnumerable()
-            .SelectAwait(async id =>
+        var saleFetches = saleIds
+            .Select(async id =>
             {
                 var saleKey = GetSaleKey(worldId, itemId, id);
                 var saleEntries = await db.HashGetAllAsync(saleKey);
@@ -220,8 +226,9 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                     BuyerName = GetValueString(sale, "bn"),
                     TimestampUnixSeconds = GetValueInt64(sale, "t"),
                 };
-            })
-            .ToListAsync();
+            });
+        
+        return await Task.WhenAll(saleFetches);
     }
     
     private static void SetSalesAtomic(IDatabaseAsync trans, uint worldId, uint itemId, IEnumerable<Guid> existingSaleIds, IList<SaleSimple> sales)
