@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -71,25 +72,29 @@ public class UploadController : ControllerBase
             return Ok("Success");
         }
 
-        // Execute upload behaviors
-        foreach (var uploadBehavior in _uploadBehaviors)
+        // Execute validators
+        foreach (var uploadBehavior in _uploadBehaviors.Where(b => b.GetType().GetCustomAttribute<ValidatorAttribute>() != null))
         {
-            var isValidator = uploadBehavior.GetType().GetCustomAttribute<ValidatorAttribute>() != null;
-
-            try
+            if (!uploadBehavior.ShouldExecute(parameters)) continue;
+            
+            var actionResult = await uploadBehavior.Execute(source, parameters, cancellationToken);
+            if (actionResult != null)
             {
-                if (!uploadBehavior.ShouldExecute(parameters)) continue;
-                var actionResult = await uploadBehavior.Execute(source, parameters, cancellationToken);
-                if (isValidator && actionResult != null)
-                {
-                    return actionResult;
-                }
+                return actionResult;
             }
-            catch (Exception e)
-            {
-                if (isValidator) throw; // Cancel the request and log at the base level
-                _logger.LogError(e, "Exception caught in upload procedure.");
-            }
+        }
+        
+        // Execute other upload behaviors
+        try
+        {
+            await Task.WhenAll(_uploadBehaviors
+                .Where(b => b.GetType().GetCustomAttribute<ValidatorAttribute>() == null)
+                .Where(b => b.ShouldExecute(parameters))
+                .Select(b => b.Execute(source, parameters, cancellationToken)));
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Exception caught in upload procedure.");
         }
 
         return Ok("Success");
