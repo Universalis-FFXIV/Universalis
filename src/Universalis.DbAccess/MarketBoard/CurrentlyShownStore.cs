@@ -196,12 +196,12 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 new HashEntry("rname", listing.RetainerName ?? ""),
                 new HashEntry("rcid", listing.RetainerCityId),
                 new HashEntry("sid", listing.SellerId ?? ""),
-                new HashEntry("mat", string.Join(':', listing.Materia.Select(m => $"{m.MateriaId}-{m.SlotId}"))),
+                new HashEntry("mat", SerializeMateriaArray(listing.Materia)),
             });
         }
         
         // Update the listings index
-        _ = trans.StringSetAsync(listingsKey, string.Join(':', newListingIds.Select(id => id.ToString())));
+        _ = trans.StringSetAsync(listingsKey, SerializeObjectIds(newListingIds));
     }
     
     private static async Task<SaleSimple[]> GetSales(IDatabaseAsync db, uint worldId, uint itemId)
@@ -261,7 +261,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         }
         
         // Update the sales index
-        _ = trans.StringSetAsync(salesKey, string.Join(':', newSaleIds.Select(id => id.ToString())));
+        _ = trans.StringSetAsync(salesKey, SerializeObjectIds(newSaleIds));
     }
     
     private static uint GetValueUInt32(IDictionary<RedisValue, RedisValue> hash, string key)
@@ -324,6 +324,16 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
         var vStr = (string)v;
         return vStr.Split(':', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse);
+    }
+
+    private static string SerializeMateriaArray(IEnumerable<Materia> materia)
+    {
+        return string.Join(':', materia.Select(m => $"{m.MateriaId}-{m.SlotId}"));
+    }
+    
+    private static string SerializeObjectIds(IEnumerable<Guid> ids)
+    {
+        return string.Join(':', ids.Select(id => id.ToString()));
     }
     
     private static string GetUploadSourceKey(uint worldId, uint itemId)
