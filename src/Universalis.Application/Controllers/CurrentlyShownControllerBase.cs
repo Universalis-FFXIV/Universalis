@@ -19,7 +19,7 @@ namespace Universalis.Application.Controllers;
 public class CurrentlyShownControllerBase : WorldDcControllerBase
 {
     protected readonly ICurrentlyShownDbAccess CurrentlyShown;
-    protected readonly ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> Cache;
+    //protected readonly ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> Cache;
 
     private static readonly Counter CacheHits = Metrics.CreateCounter("universalis_cache_hits", "Cache Hits");
     private static readonly Counter CacheMisses = Metrics.CreateCounter("universalis_cache_misses", "Cache Misses");
@@ -30,7 +30,7 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
     public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> cache) : base(gameData)
     {
         CurrentlyShown = currentlyShownDb;
-        Cache = cache;
+        //Cache = cache;
     }
 
     protected async Task<MinimizedCurrentlyShownData> GetCurrentlyShownDataSingle(
@@ -42,15 +42,15 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         var stopwatch = new Stopwatch();
         stopwatch.Start();
 
-        var cached = Cache.Get(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId });
-        if (cached != null)
-        {
-            stopwatch.Stop();
-            CacheHitMs.Observe(stopwatch.ElapsedMilliseconds);
-            CacheHits.Inc();
-
-            return cached;
-        }
+        //var cached = Cache.Get(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId });
+        //if (cached != null)
+        //{
+        //    stopwatch.Stop();
+        //    CacheHitMs.Observe(stopwatch.ElapsedMilliseconds);
+        //    CacheHits.Inc();
+//
+        //    return cached;
+        //}
 
         // Retrieve data from the database
         var data = await CurrentlyShown.Retrieve(new CurrentlyShownQuery
@@ -85,13 +85,13 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         {
             ItemId = itemId,
             WorldId = worldId,
-            LastUploadTimeUnixMilliseconds = (long)data.LastUploadTimeUnixMilliseconds,
+            LastUploadTimeUnixMilliseconds = data.LastUploadTimeUnixMilliseconds,
             Listings = dataListings,
             RecentHistory = dataHistory,
         };
 
-        Cache.Set(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId }, dataView);
-        CacheEntries.Set(Cache.Count);
+        //Cache.Set(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId }, dataView);
+        //CacheEntries.Set(Cache.Count);
 
         return dataView;
     }
