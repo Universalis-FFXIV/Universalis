@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -58,10 +59,13 @@ public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyS
 
     private static CurrentlyShownSimple ConvertToSimple(CurrentlyShown data)
     {
-        var source = data.Listings.Count == 0
+        var listingsIn = data.Listings ?? new List<Listing>();
+        var salesIn = data.RecentHistory ?? new List<Sale>();
+        
+        var source = listingsIn.Count == 0
             ? ""
-            : data.Listings[0].UploadApplicationName ?? "";
-        var listings = data.Listings
+            : listingsIn[0].UploadApplicationName ?? "";
+        var listings = listingsIn
             .Select(l => new ListingSimple
             {
                 ListingId = l.ListingId,
@@ -80,7 +84,7 @@ public class CurrentlyShownDbAccess : DbAccessService<CurrentlyShown, CurrentlyS
                 SellerId = l.SellerId ?? "",
             })
             .ToList();
-        var sales = data.RecentHistory
+        var sales = salesIn
             .Select(s => new SaleSimple
             {
                 Hq = s.Hq,
