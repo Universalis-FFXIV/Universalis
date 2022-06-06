@@ -16,13 +16,13 @@ public class RecentlyUpdatedItemsStore : IRecentlyUpdatedItemsStore
 
     public async Task SetItem(string key, uint id, double val)
     {
-        var db = _redis.GetDatabase();
+        var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         await db.SortedSetAddAsync(key, new[] { new SortedSetEntry(id, val) });
     }
 
     public async Task<IList<KeyValuePair<uint, double>>> GetAllItems(string key, int stop = -1)
     {
-        var db = _redis.GetDatabase();
+        var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         var items = await db.SortedSetRangeByRankWithScoresAsync(key, stop: stop, order: Order.Descending);
         return items.Select(i => new KeyValuePair<uint, double>((uint)i.Element, i.Score)).ToList();
     }
