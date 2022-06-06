@@ -17,7 +17,7 @@ public class DailyUploadCountStore : IDailyUploadCountStore
 
     public async Task Increment(string key, string lastPushKey)
     {
-        var db = _redis.GetDatabase();
+        var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var lastPush = (long)await db.StringGetAsync(lastPushKey);
@@ -25,10 +25,7 @@ public class DailyUploadCountStore : IDailyUploadCountStore
         // Create the last push time key
         if (lastPush == 0)
         {
-            var t0 = db.CreateTransaction();
-            t0.AddCondition(Condition.KeyNotExists(lastPushKey));
-            _ = t0.StringSetAsync(lastPushKey, 0);
-            await t0.ExecuteAsync();
+            await db.StringSetAsync(lastPushKey, 0, when: When.NotExists);
         }
 
         // Push a new counter if the date has rolled over
@@ -56,7 +53,7 @@ public class DailyUploadCountStore : IDailyUploadCountStore
 
     public async Task<IList<long>> GetUploadCounts(string key, int stop = -1)
     {
-        var db = _redis.GetDatabase();
+        var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         var counts = await db.ListRangeAsync(key, stop: stop);
         return counts.Select(c => (long)c).ToList();
     }
