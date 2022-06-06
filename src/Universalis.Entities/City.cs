@@ -6,6 +6,7 @@ internal static class City
 {
     public static readonly Dictionary<string, byte> Dict = new()
     {
+        { "Unknown", 0 },
         { "Nowheresville", 0 },
         { "Limsa Lominsa", 1 },
         { "Gridania", 2 },
