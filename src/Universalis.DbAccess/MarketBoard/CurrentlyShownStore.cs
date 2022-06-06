@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using StackExchange.Redis;
+using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
@@ -157,6 +158,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                     RetainerName = GetValueString(listing, "rname"),
                     RetainerCityId = GetValueInt32(listing, "rcid"),
                     SellerId = GetValueString(listing, "sid"),
+                    Materia = GetValueMateriaArray(listing, "mat"),
                 };
             });
         
@@ -194,6 +196,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 new HashEntry("rname", listing.RetainerName ?? ""),
                 new HashEntry("rcid", listing.RetainerCityId),
                 new HashEntry("sid", listing.SellerId ?? ""),
+                new HashEntry("mat", string.Join(':', listing.Materia.Select(m => $"{m.MateriaId}-{m.SlotId}"))),
             });
         }
         
@@ -284,6 +287,32 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     private static string GetValueString(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? hash[key] : "";
+    }
+    
+    private static List<Materia> GetValueMateriaArray(IDictionary<RedisValue, RedisValue> hash, string key)
+    {
+        return hash.ContainsKey(key) ? ParseMateria(hash[key]).ToList() : new List<Materia>();
+    }
+
+    private static IEnumerable<Materia> ParseMateria(RedisValue v)
+    {
+        if (v.IsNull)
+        {
+            return Enumerable.Empty<Materia>();
+        }
+
+        var vStr = (string)v;
+        return vStr.Split(':', StringSplitOptions.RemoveEmptyEntries)
+            .Select(m =>
+            {
+                var data = m.Split('-').Select(uint.Parse).ToArray();
+                return new Materia
+                {
+                    MateriaId = data[0],
+                    SlotId = data[1],
+                };
+            })
+            .ToList();
     }
 
     private static IEnumerable<Guid> ParseObjectIds(RedisValue v)
