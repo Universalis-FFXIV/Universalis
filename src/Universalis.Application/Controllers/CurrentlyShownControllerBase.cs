@@ -69,10 +69,9 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         }
 
         // Transform data into a view
-        var dataListings = await (data.Listings ?? new List<ListingSimple>())
-            .ToAsyncEnumerable()
-            .SelectAwait(async l => await Util.ListingSimpleToView(l, cancellationToken))
-            .ToListAsync(cancellationToken);
+        var dataConversions = await Task.WhenAll((data.Listings ?? new List<ListingSimple>())
+            .Select(l => Util.ListingSimpleToView(l, cancellationToken)));
+        var dataListings = dataConversions.ToList();
 
         var dataHistory = (data.Sales ?? new List<SaleSimple>())
             .Where(s => s.PricePerUnit > 0)
@@ -108,11 +107,10 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         long entriesWithin = -1,
         CancellationToken cancellationToken = default)
     {
-        var data = await worldIds
-            .ToAsyncEnumerable()
-            .SelectAwait(async worldId => await GetCurrentlyShownDataSingle(worldId, itemId, cancellationToken))
+        var fetches = worldIds.Select(worldId => GetCurrentlyShownDataSingle(worldId, itemId, cancellationToken));
+        var data = (await Task.WhenAll(fetches))
             .Where(o => o != null)
-            .ToListAsync(cancellationToken);
+            .ToList();
         var resolved = data.Count > 0;
 
         var worlds = GameData.AvailableWorlds();
