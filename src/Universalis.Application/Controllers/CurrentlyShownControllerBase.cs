@@ -71,7 +71,10 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         // Transform data into a view
         var dataConversions = await Task.WhenAll((data.Listings ?? new List<ListingSimple>())
             .Select(l => Util.ListingSimpleToView(l, cancellationToken)));
-        var dataListings = dataConversions.ToList();
+        var dataListings = dataConversions
+            .Where(s => s.PricePerUnit > 0)
+            .Where(s => s.Quantity > 0)
+            .ToList();
 
         var dataHistory = (data.Sales ?? new List<SaleSimple>())
             .Where(s => s.PricePerUnit > 0)
