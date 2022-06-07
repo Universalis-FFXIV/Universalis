@@ -1,4 +1,4 @@
-﻿using Prometheus;
+using Prometheus;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
