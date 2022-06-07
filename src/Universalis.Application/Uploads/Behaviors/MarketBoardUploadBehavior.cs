@@ -252,7 +252,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var sales = cleanSales ?? existingCurrentlyShown?.Sales ?? new List<SaleSimple>();
         var document = new CurrentlyShownSimple(worldId, itemId, now, source.Name, listings, sales);
 
-        if (_cache.Delete(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId }))
+        if (await _cache.Delete(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId }))
         {
             CacheDeletes.Inc();
         }

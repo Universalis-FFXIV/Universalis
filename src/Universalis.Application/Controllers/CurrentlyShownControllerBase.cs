@@ -42,7 +42,7 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         var stopwatch = new Stopwatch();
         stopwatch.Start();
 
-        var cached = Cache.Get(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId });
+        var cached = await Cache.Get(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId });
         if (cached != null)
         {
             stopwatch.Stop();

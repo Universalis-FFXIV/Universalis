@@ -1,4 +1,4 @@
-﻿using System.Threading;
+﻿using System.Threading.Tasks;
 using Universalis.Application.Caching;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Xunit;
@@ -24,29 +24,29 @@ public class MemoryCacheTests
     }
 
     [Fact]
-    public void Cache_Delete_DoesRemove()
+    public async Task Cache_Delete_DoesRemove()
     {
         var cache = new MemoryCache<int, Data>(1);
-        cache.Set(1, new Data(1));
-        var j = cache.Get(1);
+        await cache.Set(1, new Data(1));
+        var j = await cache.Get(1);
         Assert.True(j?.Value ==  1);
-        cache.Delete(1);
-        var k = cache.Get(1);
+        await cache.Delete(1);
+        var k = await cache.Get(1);
         Assert.True(k == null);
     }
 
     [Fact]
-    public void Cache_Get_ReturnsNewObject()
+    public async Task Cache_Get_ReturnsNewObject()
     {
         var cache = new MemoryCache<int, Data>(1);
         var a = new Data(1);
         cache.Set(1, a);
-        var b = cache.Get(1);
+        var b = await cache.Get(1);
         Assert.False(ReferenceEquals(a, b));
     }
 
     [Fact]
-    public void Cache_DoesEviction()
+    public async Task Cache_DoesEviction()
     {
         var cache = new MemoryCache<int, Data>(4);
         for (var i = 0; i < 5; i++)
@@ -57,40 +57,40 @@ public class MemoryCacheTests
         var hits = 0;
         for (var i = 0; i < 5; i++)
         {
-            var j = cache.Get(i);
+            var j = await cache.Get(i);
             if (j?.Value == 1) hits++;
         }
 
-        Assert.Equal(hits, 4);
+        Assert.Equal(4, hits);
     }
 
     [Theory]
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(50000)]
-    public void Cache_IsThreadSafe(int cacheSize)
+    public async Task Cache_IsThreadSafe(int cacheSize)
     {
         const uint nIterations = 1000000U;
 
         var cache = new MemoryCache<CurrentlyShownQuery, Data>(cacheSize);
 
-        var threads = new Thread[4];
+        var tasks = new Task[4];
 
-        threads[0] = new Thread(() =>
+        tasks[0] = new Task(async () =>
         {
             for (var j = 0U; j < nIterations; j++)
             {
                 var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
-                cache.Set(query, new Data(j));
+                await cache.Set(query, new Data(j));
             }
         });
 
-        threads[1] = new Thread(() =>
+        tasks[1] = new Task(async () =>
         {
             for (var j = 0U; j < nIterations; j++)
             {
                 var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
-                var cached = cache.Get(query);
+                var cached = await cache.Get(query);
                 if (cached != null)
                 {
                     Assert.Equal(j, cached.Value);
@@ -98,32 +98,32 @@ public class MemoryCacheTests
             }
         });
 
-        threads[2] = new Thread(() =>
+        tasks[2] = new Task(async () =>
         {
             for (var j = 0U; j < nIterations; j++)
             {
                 var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
-                cache.Set(query, new Data(j));
+                await cache.Set(query, new Data(j));
             }
         });
 
-        threads[3] = new Thread(() =>
+        tasks[3] = new Task(async () =>
         {
             for (var j = 0U; j < nIterations; j++)
             {
                 var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
-                cache.Delete(query);
+                await cache.Delete(query);
             }
         });
 
-        threads[0].Start();
-        threads[1].Start();
-        threads[2].Start();
-        threads[3].Start();
-        Assert.True(threads[0].Join(30000));
-        Assert.True(threads[1].Join(1000));
-        Assert.True(threads[2].Join(1000));
-        Assert.True(threads[3].Join(1000));
+        tasks[0].Start();
+        tasks[1].Start();
+        tasks[2].Start();
+        tasks[3].Start();
+        await tasks[0];
+        await tasks[1];
+        await tasks[2];
+        await tasks[3];
     }
 
     private class Data

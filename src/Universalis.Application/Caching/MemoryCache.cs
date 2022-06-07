@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Universalis.Application.Caching;
 
@@ -24,7 +25,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         _freeEntries.TrimExcess();
     }
 
-    public void Set(TKey key, TValue value)
+    public Task Set(TKey key, TValue value)
     {
         var keyCopy = JsonSerializer.Deserialize<TKey>(JsonSerializer.Serialize(key));
         var valCopy = JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(value));
@@ -39,7 +40,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
             {
                 _data[idx].Referenced = false;
                 _data[idx].Value = valCopy;
-                return;
+                return Task.CompletedTask;
             }
 
             CleanAdd(keyCopy, valCopy);
@@ -48,20 +49,22 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         {
             Monitor.Exit(_lock);
         }
+        
+        return Task.CompletedTask;
     }
 
-    public TValue Get(TKey key)
+    public Task<TValue> Get(TKey key)
     {
         Monitor.Enter(_lock);
         try
         {
-            if (!_idMap.TryGetValue(key, out var idx)) return null;
+            if (!_idMap.TryGetValue(key, out var idx)) return Task.FromResult<TValue>(null);
 
             var val = _data[idx];
             val.Referenced = true;
 
             var valCopy = JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(val.Value));
-            return valCopy;
+            return Task.FromResult(valCopy);
         }
         finally
         {
@@ -69,19 +72,19 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         }
     }
 
-    public bool Delete(TKey key)
+    public Task<bool> Delete(TKey key)
     {
         Monitor.Enter(_lock);
         try
         {
             if (!_idMap.TryGetValue(key, out var idx))
             {
-                return false;
+                return Task.FromResult(false);
             }
 
             CleanRemove(idx);
 
-            return true;
+            return Task.FromResult(true);
         }
         finally
         {
