@@ -22,6 +22,7 @@ using Universalis.Application.Realtime;
 using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.DbAccess;
+using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.GameData;
 using Universalis.Mogboard;
@@ -48,7 +49,11 @@ public class Startup
         services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
 
         var cacheSize = int.Parse(Configuration["MarketCurrentDataCacheSize"]);
-        services.AddSingleton<ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData>>(new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(cacheSize));
+        services.AddSingleton<ICache<CurrentlyShownQuery, CachedCurrentlyShownData>>(sc =>
+        {
+            var db = sc.GetRequiredService<ICurrentlyShownDbAccess>();
+            return new CurrentlyShownCache(cacheSize, db);
+        });
 
         services.AddSingleton<ISocketProcessor, SocketProcessor>();
 

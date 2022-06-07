@@ -21,7 +21,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var gameData = new MockGameDataProvider();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
@@ -41,7 +41,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var gameData = new MockGameDataProvider();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
@@ -61,7 +61,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var gameData = new MockGameDataProvider();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
@@ -80,7 +80,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var gameData = new MockGameDataProvider();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
@@ -103,7 +103,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var gameData = new MockGameDataProvider();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
@@ -126,7 +126,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var gameData = new MockGameDataProvider();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
@@ -149,7 +149,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var gameData = new MockGameDataProvider();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
@@ -172,7 +172,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var gameData = new MockGameDataProvider();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
@@ -192,7 +192,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var gameData = new MockGameDataProvider();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
@@ -252,7 +252,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var gameData = new MockGameDataProvider();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
@@ -307,7 +307,7 @@ public class MarketBoardUploadBehaviorTests
     {
         var currentlyShownDb = new MockCurrentlyShownDbAccess();
         var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var sockets = new MockSocketProcessor();
         var gameData = new MockGameDataProvider();
         var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);

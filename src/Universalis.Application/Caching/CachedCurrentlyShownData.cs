@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using Universalis.Application.Views.V1;
 
-namespace Universalis.Application.Controllers;
+namespace Universalis.Application.Caching;
 
-public class MinimizedCurrentlyShownData
+public class CachedCurrentlyShownData
 {
     public uint ItemId { get; set; }
     

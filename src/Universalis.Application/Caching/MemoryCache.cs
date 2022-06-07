@@ -25,7 +25,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         _freeEntries.TrimExcess();
     }
 
-    public Task Set(TKey key, TValue value)
+    public virtual Task Set(TKey key, TValue value, CancellationToken cancellationToken = default)
     {
         var keyCopy = JsonSerializer.Deserialize<TKey>(JsonSerializer.Serialize(key));
         var valCopy = JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(value));
@@ -53,7 +53,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         return Task.CompletedTask;
     }
 
-    public Task<TValue> Get(TKey key)
+    public virtual Task<TValue> Get(TKey key, CancellationToken cancellationToken = default)
     {
         Monitor.Enter(_lock);
         try
@@ -72,7 +72,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         }
     }
 
-    public Task<bool> Delete(TKey key)
+    public virtual Task<bool> Delete(TKey key, CancellationToken cancellationToken = default)
     {
         Monitor.Enter(_lock);
         try
@@ -90,6 +90,33 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         {
             Monitor.Exit(_lock);
         }
+    }
+    
+    /// <summary>
+    /// Evicts an entry from the cache, returning the evicted entry's index to the free entry stack.
+    /// </summary>
+    /// <returns>true if an entry was evicted; otherwise false.</returns>
+    protected virtual bool Evict()
+    {
+        // This loops at most once due to all of the reference booleans being
+        // flipped in the first iteration.
+        while (_data.Length != 0)
+        {
+            for (var i = 0; i < _data.Length; i++)
+            {
+                if (_data[i] == null) continue;
+
+                if (!_data[i].Referenced)
+                {
+                    CleanRemove(i);
+                    return true;
+                }
+
+                _data[i].Referenced = false;
+            }
+        }
+
+        return false;
     }
 
     private int GetCount()
@@ -110,7 +137,10 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         // Get a data array index
         if (!_freeEntries.TryPop(out var nextIdx))
         {
-            Evict();
+            while (!Evict())
+            {
+            }
+
             nextIdx = _freeEntries.Pop();
         }
 
@@ -130,30 +160,6 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         _data[idx] = null;
         _idMap.Remove(val.Key);
         _freeEntries.Push(idx);
-    }
-
-    /// <summary>
-    /// Evicts an entry from the cache, returning the evicted entry's index to the free entry stack.
-    /// </summary>
-    private void Evict()
-    {
-        // This loops at most once due to all of the reference booleans being
-        // flipped in the first iteration.
-        while (true)
-        {
-            for (var i = 0; i < _data.Length; i++)
-            {
-                if (_data[i] == null) continue;
-
-                if (!_data[i].Referenced)
-                {
-                    CleanRemove(i);
-                    return;
-                }
-
-                _data[i].Referenced = false;
-            }
-        }
     }
 
     private class CacheEntry<TCacheKey, TCacheValue>
