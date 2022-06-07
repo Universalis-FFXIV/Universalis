@@ -1,7 +1,5 @@
-using Prometheus;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,83 +17,12 @@ namespace Universalis.Application.Controllers;
 public class CurrentlyShownControllerBase : WorldDcControllerBase
 {
     protected readonly ICurrentlyShownDbAccess CurrentlyShown;
-    protected readonly ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> Cache;
+    protected readonly ICache<CurrentlyShownQuery, CachedCurrentlyShownData> Cache;
 
-    private static readonly Counter CacheHits = Metrics.CreateCounter("universalis_cache_hits", "Cache Hits");
-    private static readonly Counter CacheMisses = Metrics.CreateCounter("universalis_cache_misses", "Cache Misses");
-    private static readonly Gauge CacheEntries = Metrics.CreateGauge("universalis_cache_entries", "Cache Entries");
-    private static readonly Histogram CacheHitMs = Metrics.CreateHistogram("universalis_cache_hit_milliseconds", "Cache Hit Milliseconds");
-    private static readonly Histogram CacheMissMs = Metrics.CreateHistogram("universalis_cache_miss_milliseconds", "Cache Miss Milliseconds");
-
-    public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> cache) : base(gameData)
+    public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, ICache<CurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData)
     {
         CurrentlyShown = currentlyShownDb;
         Cache = cache;
-    }
-
-    protected async Task<MinimizedCurrentlyShownData> GetCurrentlyShownDataSingle(
-        uint worldId,
-        uint itemId,
-        CancellationToken cancellationToken = default)
-    {
-        // Fetch data from the cache
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
-
-        var cached = Cache.Get(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId });
-        if (cached != null)
-        {
-            stopwatch.Stop();
-            CacheHitMs.Observe(stopwatch.ElapsedMilliseconds);
-            CacheHits.Inc();
-
-            return cached;
-        }
-
-        // Retrieve data from the database
-        var data = await CurrentlyShown.Retrieve(new CurrentlyShownQuery
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-        }, cancellationToken);
-
-        stopwatch.Stop();
-        CacheMissMs.Observe(stopwatch.ElapsedMilliseconds);
-        CacheMisses.Inc();
-
-        if (data == null)
-        {
-            return null;
-        }
-
-        // Transform data into a view
-        var dataConversions = await Task.WhenAll((data.Listings ?? new List<ListingSimple>())
-            .Select(l => Util.ListingSimpleToView(l, cancellationToken)));
-        var dataListings = dataConversions
-            .Where(s => s.PricePerUnit > 0)
-            .Where(s => s.Quantity > 0)
-            .ToList();
-
-        var dataHistory = (data.Sales ?? new List<SaleSimple>())
-            .Where(s => s.PricePerUnit > 0)
-            .Where(s => s.Quantity > 0)
-            .Where(s => s.TimestampUnixSeconds > 0)
-            .Select(Util.SaleSimpleToView)
-            .ToList();
-
-        var dataView = new MinimizedCurrentlyShownData
-        {
-            ItemId = itemId,
-            WorldId = worldId,
-            LastUploadTimeUnixMilliseconds = data.LastUploadTimeUnixMilliseconds,
-            Listings = dataListings,
-            RecentHistory = dataHistory,
-        };
-
-        Cache.Set(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId }, dataView);
-        CacheEntries.Set(Cache.Count);
-
-        return dataView;
     }
 
     protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(
@@ -110,7 +37,40 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         long entriesWithin = -1,
         CancellationToken cancellationToken = default)
     {
-        var fetches = worldIds.Select(worldId => GetCurrentlyShownDataSingle(worldId, itemId, cancellationToken));
+        var fetches = worldIds
+            .Select(async worldId =>
+            {
+                var q = new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId };
+                var d = await Cache.Get(q, cancellationToken);
+                if (d == null)
+                {
+                    var cd = await CurrentlyShown.Retrieve(q, cancellationToken);
+                    if (cd == null)
+                    {
+                        return null;
+                    }
+                    
+                    return new CachedCurrentlyShownData
+                    {
+                        WorldId = cd.WorldId,
+                        ItemId = cd.ItemId,
+                        LastUploadTimeUnixMilliseconds = cd.LastUploadTimeUnixMilliseconds,
+                        Listings = (await Task.WhenAll((cd.Listings ?? new List<ListingSimple>())
+                                .Select(l => Util.ListingSimpleToView(l, cancellationToken))))
+                            .Where(s => s.PricePerUnit > 0)
+                            .Where(s => s.Quantity > 0)
+                            .ToList(),
+                        RecentHistory = (cd.Sales ?? new List<SaleSimple>())
+                            .Select(Util.SaleSimpleToView)
+                            .Where(s => s.PricePerUnit > 0)
+                            .Where(s => s.Quantity > 0)
+                            .Where(s => s.TimestampUnixSeconds > 0)
+                            .ToList(),
+                    };
+                }
+
+                return d;
+            });
         var data = (await Task.WhenAll(fetches))
             .Where(o => o != null)
             .ToList();
@@ -123,7 +83,7 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         var (worldUploadTimes, currentlyShown) = data
             .Aggregate(
                 (EmptyWorldDictionary<Dictionary<uint, long>, long>(worldIds),
-                    new MinimizedCurrentlyShownData { Listings = new List<ListingView>(), RecentHistory = new List<SaleView>() }),
+                    new CachedCurrentlyShownData { Listings = new List<ListingView>(), RecentHistory = new List<SaleView>() }),
                 (agg, next) =>
                 {
                     var (aggWorldUploadTimes, aggData) = agg;

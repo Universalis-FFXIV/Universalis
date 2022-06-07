@@ -23,14 +23,14 @@ public class DeleteListingController : WorldDcControllerBase
     private readonly ITrustedSourceDbAccess _trustedSourceDb;
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
-    private readonly ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> _cache;
+    private readonly ICache<CurrentlyShownQuery, CachedCurrentlyShownData> _cache;
 
     public DeleteListingController(
         IGameDataProvider gameData,
         ITrustedSourceDbAccess trustedSourceDb,
         ICurrentlyShownDbAccess currentlyShownDb,
         IFlaggedUploaderDbAccess flaggedUploaderDb,
-        ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> cache) : base(gameData)
+        ICache<CurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData)
     {
         _trustedSourceDb = trustedSourceDb;
         _currentlyShownDb = currentlyShownDb;

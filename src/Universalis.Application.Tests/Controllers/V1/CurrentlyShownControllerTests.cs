@@ -30,7 +30,7 @@ public class CurrentlyShownControllerTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockCurrentlyShownDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         const uint itemId = 5333;
@@ -51,7 +51,7 @@ public class CurrentlyShownControllerTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockCurrentlyShownDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         const uint itemId = 5333;
@@ -75,7 +75,7 @@ public class CurrentlyShownControllerTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockCurrentlyShownDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         const uint itemId = 5333;
@@ -99,7 +99,7 @@ public class CurrentlyShownControllerTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockCurrentlyShownDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         var document1 = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333);
@@ -129,7 +129,7 @@ public class CurrentlyShownControllerTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockCurrentlyShownDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
         var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
@@ -161,7 +161,7 @@ public class CurrentlyShownControllerTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockCurrentlyShownDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
         var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
@@ -204,7 +204,7 @@ public class CurrentlyShownControllerTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockCurrentlyShownDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         const uint itemId = 5333;
@@ -240,7 +240,7 @@ public class CurrentlyShownControllerTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockCurrentlyShownDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         var result = await controller.Get("5333,5", worldOrDc);
@@ -264,7 +264,7 @@ public class CurrentlyShownControllerTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockCurrentlyShownDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         const uint itemId = 5333;
@@ -297,7 +297,7 @@ public class CurrentlyShownControllerTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockCurrentlyShownDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         var result = await controller.Get("5333,5", worldOrDc);
@@ -318,7 +318,7 @@ public class CurrentlyShownControllerTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockCurrentlyShownDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         const uint itemId = 0;
@@ -332,7 +332,7 @@ public class CurrentlyShownControllerTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockCurrentlyShownDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         var result = await controller.Get("0, 4294967295", "74");
@@ -351,7 +351,7 @@ public class CurrentlyShownControllerTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockCurrentlyShownDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         const uint itemId = 0;
@@ -365,7 +365,7 @@ public class CurrentlyShownControllerTests
     {
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockCurrentlyShownDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, MinimizedCurrentlyShownData>(1);
+        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, dbAccess, cache);
 
         var result = await controller.Get("0 ,4294967295", "crystal");

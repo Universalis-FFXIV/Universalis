@@ -20,7 +20,7 @@ public class LeastRecentlyUpdatedItemsControllerTests
         var dbAccess = new MockMostRecentlyUpdatedDbAccess();
         var controller = new LeastRecentlyUpdatedItemsController(gameData, dbAccess);
 
-        foreach (var itemId in Enumerable.Range(1, 35000))
+        foreach (var itemId in Enumerable.Range(1, 12000))
         {
             await dbAccess.Push(74, new WorldItemUpload
             {

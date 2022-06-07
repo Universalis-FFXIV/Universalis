@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Universalis.Application.Caching;
 
@@ -6,9 +8,9 @@ public interface ICache<in TKey, TValue> where TKey : IEquatable<TKey>
 {
     public int Count { get; }
 
-    public void Set(TKey key, TValue value);
+    public Task Set(TKey key, TValue value, CancellationToken cancellationToken = default);
 
-    public TValue Get(TKey key);
+    public Task<TValue> Get(TKey key, CancellationToken cancellationToken = default);
 
-    public bool Delete(TKey key);
+    public Task<bool> Delete(TKey key, CancellationToken cancellationToken = default);
 }
