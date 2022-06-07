@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -18,7 +18,8 @@ public class HistoryControllerBase : WorldDcControllerBase
 {
     protected readonly IHistoryDbAccess History;
     
-    private static readonly Counter RequestedKeys = Metrics.CreateCounter("universalis_history_requested_keys", "History Requested Keys");
+    private static readonly Counter RequestedKeys =
+        Metrics.CreateCounter("universalis_history_requested_keys", "History Requested Keys", "worldId", "itemId");
 
     public HistoryControllerBase(IGameDataProvider gameData, IHistoryDbAccess historyDb) : base(gameData)
     {
@@ -35,9 +36,19 @@ public class HistoryControllerBase : WorldDcControllerBase
         CancellationToken cancellationToken = default)
     {
         // Record the requested compound keys
-        foreach (var worldId in worldIds)
+        if (GameData.MarketableItemIds().Contains(itemId))
         {
-            RequestedKeys.Labels($"{worldId}:{itemId}").Inc();
+            foreach (var worldId in worldIds)
+            {
+                if (GameData.AvailableWorldIds().Contains(worldId))
+                {
+                    // This is not recommended, as it can lead to large numbers of time series being tracked by Prometheus.
+                    // I'm wrapping this in explicit and redundant checks for world IDs and item IDs so this never becomes
+                    // exposed to uncontrolled data. In this case, the total number of active time series is "only" around
+                    // 1.5 million, so this is safe.
+                    RequestedKeys.WithLabels(worldId.ToString(), itemId.ToString()).Inc();
+                }
+            }
         }
         
         // Fetch the data

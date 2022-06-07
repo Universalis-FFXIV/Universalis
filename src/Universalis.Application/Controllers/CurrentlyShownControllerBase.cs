@@ -1,4 +1,4 @@
-﻿using Prometheus;
+using Prometheus;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,7 +27,7 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
     private static readonly Histogram CacheHitMs = Metrics.CreateHistogram("universalis_cache_hit_milliseconds", "Cache Hit Milliseconds");
     private static readonly Histogram CacheMissMs = Metrics.CreateHistogram("universalis_cache_miss_milliseconds", "Cache Miss Milliseconds");
     
-    private static readonly Counter RequestedKeys = Metrics.CreateCounter("universalis_current_data_requested_keys", "Current Data Requested Keys");
+    private static readonly Counter RequestedKeys = Metrics.CreateCounter("universalis_current_data_requested_keys", "Current Data Requested Keys", "worldId", "itemId");
 
     public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> cache) : base(gameData)
     {
@@ -40,8 +40,15 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         uint itemId,
         CancellationToken cancellationToken = default)
     {
-        // Record the requested compound key
-        RequestedKeys.Labels($"{worldId}:${itemId}").Inc();
+        // Record the requested compound keys
+        if (GameData.MarketableItemIds().Contains(itemId) && GameData.AvailableWorldIds().Contains(worldId))
+        {
+            // This is not recommended, as it can lead to large numbers of time series being tracked by Prometheus.
+            // I'm wrapping this in explicit and redundant checks for world IDs and item IDs so this never becomes
+            // exposed to uncontrolled data. In this case, the total number of active time series is "only" around
+            // 1.5 million, so this is safe.
+            RequestedKeys.WithLabels(worldId.ToString(), itemId.ToString()).Inc();
+        }
         
         // Fetch data from the cache
         var stopwatch = new Stopwatch();
