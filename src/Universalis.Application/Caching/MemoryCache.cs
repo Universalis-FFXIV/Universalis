@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Priority_Queue;
 
 namespace Universalis.Application.Caching;
 
@@ -13,6 +14,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
     private readonly CacheEntry<TKey, TValue>[] _data;
     private readonly IDictionary<TKey, int> _idMap;
     private readonly Stack<int> _freeEntries;
+    private readonly SimplePriorityQueue<int, CacheEntry<TKey, TValue>> _hits;
 
     public int Count => GetCount();
 
@@ -23,6 +25,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         _idMap = new Dictionary<TKey, int>();
         _freeEntries = new Stack<int>(Enumerable.Range(0, size));
         _freeEntries.TrimExcess();
+        _hits = new SimplePriorityQueue<int, CacheEntry<TKey, TValue>>((a, b) => a.Hits - b.Hits);
     }
 
     public virtual Task Set(TKey key, TValue value, CancellationToken cancellationToken = default)
@@ -38,8 +41,9 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
             // that we can reuse
             if (_idMap.TryGetValue(keyCopy, out var idx))
             {
-                _data[idx].Referenced = false;
+                _data[idx].Hits = 0;
                 _data[idx].Value = valCopy;
+                _hits.UpdatePriority(idx, _data[idx]);
                 return Task.CompletedTask;
             }
 
@@ -61,7 +65,8 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
             if (!_idMap.TryGetValue(key, out var idx)) return Task.FromResult<TValue>(null);
 
             var val = _data[idx];
-            val.Referenced = true;
+            val.Hits++;
+            _hits.UpdatePriority(idx, val);
 
             var valCopy = JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(val.Value));
             return Task.FromResult(valCopy);
@@ -98,25 +103,16 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
     /// <returns>true if an entry was evicted; otherwise false.</returns>
     protected virtual bool Evict()
     {
-        // This loops at most once due to all of the reference booleans being
-        // flipped in the first iteration.
-        while (_data.Length != 0)
+        if (Count == 0)
         {
-            for (var i = 0; i < _data.Length; i++)
-            {
-                if (_data[i] == null) continue;
-
-                if (!_data[i].Referenced)
-                {
-                    CleanRemove(i);
-                    return true;
-                }
-
-                _data[i].Referenced = false;
-            }
+            return false;
         }
-
-        return false;
+        
+        // Find the entry with the *highest* number of hits and remove it.
+        // We assume that the older an item is, the more likely it is to be
+        // checked soon.
+        CleanRemove(_hits.First);
+        return true;
     }
 
     private int GetCount()
@@ -145,12 +141,15 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         }
 
         // Set the cache entry
-        _idMap.Add(key, nextIdx);
-        _data[nextIdx] = new CacheEntry<TKey, TValue>
+        var newEntry = new CacheEntry<TKey, TValue>
         {
             Key = key,
             Value = value,
         };
+        
+        _idMap.Add(key, nextIdx);
+        _hits.Enqueue(nextIdx, newEntry);
+        _data[nextIdx] = newEntry;
     }
 
     private void CleanRemove(int idx)
@@ -159,12 +158,13 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
 
         _data[idx] = null;
         _idMap.Remove(val.Key);
+        _hits.Remove(idx);
         _freeEntries.Push(idx);
     }
 
     private class CacheEntry<TCacheKey, TCacheValue>
     {
-        public bool Referenced;
+        public int Hits;
 
         public TCacheKey Key;
 
