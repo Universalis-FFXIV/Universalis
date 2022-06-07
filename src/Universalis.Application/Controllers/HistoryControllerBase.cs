@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Prometheus;
 using Universalis.Application.Common;
 using Universalis.Application.Views.V1;
 using Universalis.DataTransformations;
@@ -18,9 +17,6 @@ public class HistoryControllerBase : WorldDcControllerBase
 {
     protected readonly IHistoryDbAccess History;
     
-    private static readonly Counter RequestedKeys =
-        Metrics.CreateCounter("universalis_history_requested_keys", "History Requested Keys", "worldId", "itemId");
-
     public HistoryControllerBase(IGameDataProvider gameData, IHistoryDbAccess historyDb) : base(gameData)
     {
         History = historyDb;
@@ -35,22 +31,6 @@ public class HistoryControllerBase : WorldDcControllerBase
         long entriesWithin = -1,
         CancellationToken cancellationToken = default)
     {
-        // Record the requested compound keys
-        if (GameData.MarketableItemIds().Contains(itemId))
-        {
-            foreach (var worldId in worldIds)
-            {
-                if (GameData.AvailableWorldIds().Contains(worldId))
-                {
-                    // This is not recommended, as it can lead to large numbers of time series being tracked by Prometheus.
-                    // I'm wrapping this in explicit and redundant checks for world IDs and item IDs so this never becomes
-                    // exposed to uncontrolled data. In this case, the total number of active time series is "only" around
-                    // 1.5 million, so this is safe.
-                    RequestedKeys.WithLabels(worldId.ToString(), itemId.ToString()).Inc();
-                }
-            }
-        }
-        
         // Fetch the data
         var data = (await History.RetrieveMany(new HistoryManyQuery
         {
