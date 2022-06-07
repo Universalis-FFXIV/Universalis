@@ -61,7 +61,7 @@ public class MemoryCacheTests
             if (j?.Value == 1) hits++;
         }
 
-        Assert.Equal(hits, cache.Capacity);
+        Assert.Equal(hits, 4);
     }
 
     [Theory]
