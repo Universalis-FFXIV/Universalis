@@ -26,6 +26,8 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
     private static readonly Gauge CacheEntries = Metrics.CreateGauge("universalis_cache_entries", "Cache Entries");
     private static readonly Histogram CacheHitMs = Metrics.CreateHistogram("universalis_cache_hit_milliseconds", "Cache Hit Milliseconds");
     private static readonly Histogram CacheMissMs = Metrics.CreateHistogram("universalis_cache_miss_milliseconds", "Cache Miss Milliseconds");
+    
+    private static readonly Counter RequestedKeys = Metrics.CreateCounter("universalis_current_data_requested_keys", "Current Data Requested Keys");
 
     public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, ICache<CurrentlyShownQuery, MinimizedCurrentlyShownData> cache) : base(gameData)
     {
@@ -38,6 +40,9 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         uint itemId,
         CancellationToken cancellationToken = default)
     {
+        // Record the requested compound key
+        RequestedKeys.Labels($"{worldId}:${itemId}").Inc();
+        
         // Fetch data from the cache
         var stopwatch = new Stopwatch();
         stopwatch.Start();

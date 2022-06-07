@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Prometheus;
 using Universalis.Application.Common;
 using Universalis.Application.Views.V1;
 using Universalis.DataTransformations;
@@ -16,6 +17,8 @@ namespace Universalis.Application.Controllers;
 public class HistoryControllerBase : WorldDcControllerBase
 {
     protected readonly IHistoryDbAccess History;
+    
+    private static readonly Counter RequestedKeys = Metrics.CreateCounter("universalis_history_requested_keys", "History Requested Keys");
 
     public HistoryControllerBase(IGameDataProvider gameData, IHistoryDbAccess historyDb) : base(gameData)
     {
@@ -31,6 +34,13 @@ public class HistoryControllerBase : WorldDcControllerBase
         long entriesWithin = -1,
         CancellationToken cancellationToken = default)
     {
+        // Record the requested compound keys
+        foreach (var worldId in worldIds)
+        {
+            RequestedKeys.Labels($"{worldId}:{itemId}").Inc();
+        }
+        
+        // Fetch the data
         var data = (await History.RetrieveMany(new HistoryManyQuery
         {
             WorldIds = worldIds,
