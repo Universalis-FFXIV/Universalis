@@ -111,6 +111,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         // Find the entry with the *highest* number of hits and remove it.
         // We assume that the older an item is, the more likely it is to be
         // checked soon.
+        // https://en.wikipedia.org/wiki/Cache_replacement_policies#Most_recently_used_(MRU)
         CleanRemove(_hits.First);
         return true;
     }
