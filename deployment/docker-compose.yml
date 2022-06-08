@@ -25,7 +25,7 @@ services:
     ports:
       - 3999:3999
   prometheus:
-    image: prom/prometheus:v2.33.4
+    image: prom/prometheus:v2.36.0
     network_mode: "host"
     volumes:
       - /home/universalis/prometheus/data:/prometheus

@@ -1,7 +1,7 @@
 version: "2.4"
 services:
   prometheus:
-    image: prom/prometheus:v2.33.4
+    image: prom/prometheus:v2.36.0
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
