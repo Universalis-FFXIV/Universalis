@@ -3,38 +3,41 @@ services:
   universalis:
     image: ghcr.io/universalis-ffxiv/universalis:latest
     environment:
-      ASPNETCORE_URLS: http://+:4002
+      ASPNETCORE_URLS: "http://+:4002"
     volumes:
-      - /home/universalis/sqpack:/sqpack
-      - /home/universalis/DataProtection-Keys:/root/.aspnet/DataProtection-Keys
-    network_mode: "host" # TODO: Containerize MongoDB so all of this can be changed
+      - "${HOME}/sqpack:/sqpack"
+      - "${HOME}/DataProtection-Keys:/root/.aspnet/DataProtection-Keys"
+    network_mode: "host" # TODO: Containerize or remove MongoDB so all of this can be changed
+    depends_on:
+      - postgres
+      - redis
   universalis-staging:
     image: ghcr.io/universalis-ffxiv/universalis-staging:v2
     environment:
       ASPNETCORE_URLS: http://+:4001
     volumes:
-      - /home/universalis/sqpack:/sqpack
-      - /home/universalis/DataProtection-Keys-Staging:/root/.aspnet/DataProtection-Keys
+      - "${HOME}/sqpack:/sqpack"
+      - "${HOME}/DataProtection-Keys-Staging:/root/.aspnet/DataProtection-Keys"
     network_mode: "host"
   universalis-docs:
     image: ghcr.io/universalis-ffxiv/universalis-docs:latest
     ports:
-      - 3998:3000
+      - "3998:3000"
   lodestone:
     image: ghcr.io/universalis-ffxiv/lodestone:latest
     ports:
-      - 3999:3999
+      - "3999:3999"
   prometheus:
     image: prom/prometheus:v2.36.0
     network_mode: "host"
     volumes:
-      - /home/universalis/prometheus/data:/prometheus
-      - /home/universalis/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - "${HOME}/prometheus/data:/prometheus"
+      - "${HOME}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
   grafana:
     image: grafana/grafana:8.5.5
     network_mode: "host"
     volumes:
-      - /home/universalis/grafana/data:/var/lib/grafana
+      - "${HOME}/grafana/data:/var/lib/grafana"
     environment:
       GF_SERVER_DOMAIN: monitor.universalis.app
     user: '104'
@@ -46,13 +49,22 @@ services:
       WATCHTOWER_NOTIFICATION_TEMPLATE: "{{range .}}{{.Time.Format \"2006-01-02 15:04:05\"}} ({{.Level}}): {{.Message}}{{println}}{{end}}"
       WATCHTOWER_ROLLING_RESTART: "true"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /home/universalis/.docker/config.json:/config.json
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "${HOME}/.docker/config.json:/config.json"
     command: --interval 30
+  postgres:
+    image: postgres:14.3
+    ports:
+      - "4052:5432"
+    environment:
+      POSTGRES_USER: universalis
+      POSTGRES_PASSWORD: universalis
+    volumes:
+      - "${HOME}/postgres:/var/lib/postgres/data"
   redis:
     image: redis:7.0.0
     command: redis-server --save 300 1 --loglevel warning
     ports:
-      - 4050:6379
+      - "4050:6379"
     volumes:
-      - /home/universalis/redis:/data
+      - "${HOME}/redis:/data"
