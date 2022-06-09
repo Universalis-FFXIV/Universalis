@@ -6,7 +6,7 @@ public class Sale
 
     public uint PricePerUnit { get; init; }
 
-    public uint Quantity { get; init; }
+    public uint? Quantity { get; init; }
 
     public string BuyerName { get; init; }
 

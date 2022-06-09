@@ -27,12 +27,13 @@ public static class Util
 
     public static SaleView SaleSimpleToView(Sale s)
     {
+        var quantity = s.Quantity ?? 0;
         return new SaleView
         {
             Hq = s.Hq,
             PricePerUnit = s.PricePerUnit,
-            Quantity = s.Quantity,
-            Total = s.PricePerUnit * s.Quantity,
+            Quantity = quantity,
+            Total = s.PricePerUnit * quantity,
             TimestampUnixSeconds = s.TimestampUnixSeconds,
             BuyerName = s.BuyerName,
         };

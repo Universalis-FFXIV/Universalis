@@ -254,7 +254,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             {
                 new HashEntry("hq", sale.Hq),
                 new HashEntry("ppu", sale.PricePerUnit),
-                new HashEntry("q", sale.Quantity),
+                new HashEntry("q", sale.Quantity ?? 0),
                 new HashEntry("bn", sale.BuyerName ?? ""),
                 new HashEntry("t", sale.TimestampUnixSeconds),
             });
