@@ -28,6 +28,9 @@ public static class DbAccessExtensions
 
         sc.AddSingleton<ICurrentlyShownStore, CurrentlyShownStore>();
         sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
+
+        sc.AddSingleton<IMarketItemStore, MarketItemStore>(_ => new MarketItemStore(configuration["PostgresConnectionString"]));
+        sc.AddSingleton<ISaleStore, SaleStore>(_ => new SaleStore(configuration["PostgresConnectionString"]));
         
         sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
         sc.AddSingleton<IContentDbAccess, ContentDbAccess>();

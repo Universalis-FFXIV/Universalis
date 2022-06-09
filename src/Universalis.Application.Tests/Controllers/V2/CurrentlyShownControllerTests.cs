@@ -63,7 +63,7 @@ public class CurrentlyShownControllerTests
                 PricePerUnit = (uint)rand.Next(100, 60000),
                 Quantity = (uint)rand.Next(1, 999),
                 BuyerName = "Someone Someone",
-                TimestampUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000),
+                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
             })
             .ToList();
         var document = new CurrentlyShown(74, itemId, now, "test runner", listings, sales);
@@ -114,7 +114,7 @@ public class CurrentlyShownControllerTests
                 PricePerUnit = (uint)rand.Next(100, 60000),
                 Quantity = (uint)rand.Next(1, 999),
                 BuyerName = "Someone Someone",
-                TimestampUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000),
+                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
             })
             .ToList();
         var document1 = new CurrentlyShown(74, 5333, lastUploadTime, "test runner", listings1, sales1);
@@ -146,7 +146,7 @@ public class CurrentlyShownControllerTests
                 PricePerUnit = (uint)rand.Next(100, 60000),
                 Quantity = (uint)rand.Next(1, 999),
                 BuyerName = "Someone Someone",
-                TimestampUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000),
+                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
             })
             .ToList();
         var document2 = new CurrentlyShown(74, 5, lastUploadTime, "test runner", listings2, sales2);
@@ -207,7 +207,7 @@ public class CurrentlyShownControllerTests
                 PricePerUnit = (uint)rand.Next(100, 60000),
                 Quantity = (uint)rand.Next(1, 999),
                 BuyerName = "Someone Someone",
-                TimestampUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000),
+                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
             })
             .ToList();
         var document1 = new CurrentlyShown(74, 5333, lastUploadTime, "test runner", listings1, sales1);
@@ -239,7 +239,7 @@ public class CurrentlyShownControllerTests
                 PricePerUnit = (uint)rand.Next(100, 60000),
                 Quantity = (uint)rand.Next(1, 999),
                 BuyerName = "Someone Someone",
-                TimestampUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000),
+                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
             })
             .ToList();
         var document2 = new CurrentlyShown(34, 5333, lastUploadTime, "test runner", listings2, sales2);
@@ -298,7 +298,7 @@ public class CurrentlyShownControllerTests
                 PricePerUnit = (uint)rand.Next(100, 60000),
                 Quantity = (uint)rand.Next(1, 999),
                 BuyerName = "Someone Someone",
-                TimestampUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000),
+                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
             })
             .ToList();
         var document1 = new CurrentlyShown(74, 5333, lastUploadTime, "test runner", listings1, sales1);
@@ -330,7 +330,7 @@ public class CurrentlyShownControllerTests
                 PricePerUnit = (uint)rand.Next(100, 60000),
                 Quantity = (uint)rand.Next(1, 999),
                 BuyerName = "Someone Someone",
-                TimestampUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000),
+                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
             })
             .ToList();
         var document2 = new CurrentlyShown(34, 5, lastUploadTime, "test runner", listings2, sales2);
@@ -561,7 +561,7 @@ public class CurrentlyShownControllerTests
         currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
         document.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
-        document.Sales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+        document.Sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
         var listings = document.Listings.Select(l =>
         {
@@ -616,9 +616,9 @@ public class CurrentlyShownControllerTests
         var saleVelocity = Statistics.VelocityPerDay(
             currentlyShown.RecentHistory.Select(s => s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
         var saleVelocityNq = Statistics.VelocityPerDay(
-            nqHistory.Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
+            nqHistory.Select(s => s.SaleTime.ToUnixTimeMilliseconds()), unixNowMs, WeekLength);
         var saleVelocityHq = Statistics.VelocityPerDay(
-            hqHistory.Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
+            hqHistory.Select(s => s.SaleTime.ToUnixTimeMilliseconds()), unixNowMs, WeekLength);
 
         Assert.Equal(Round(saleVelocity), Round(currentlyShown.SaleVelocity));
         Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));
@@ -647,7 +647,7 @@ public class CurrentlyShownControllerTests
         currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
         anyWorldDocument.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
-        anyWorldDocument.Sales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+        anyWorldDocument.Sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
         var listings = anyWorldDocument.Listings.Select(l =>
         {
@@ -702,9 +702,9 @@ public class CurrentlyShownControllerTests
         var saleVelocity = Statistics.VelocityPerDay(
             currentlyShown.RecentHistory.Select(s => s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
         var saleVelocityNq = Statistics.VelocityPerDay(
-            nqHistory.Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
+            nqHistory.Select(s => s.SaleTime.ToUnixTimeMilliseconds()), unixNowMs, WeekLength);
         var saleVelocityHq = Statistics.VelocityPerDay(
-            hqHistory.Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
+            hqHistory.Select(s => s.SaleTime.ToUnixTimeMilliseconds()), unixNowMs, WeekLength);
 
         Assert.Equal(Round(saleVelocity), Round(currentlyShown.SaleVelocity));
         Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));

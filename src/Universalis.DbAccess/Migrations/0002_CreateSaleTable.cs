@@ -15,7 +15,7 @@ public class CreateSaleTable : Migration
             .WithColumn("unit_price").AsInt64().NotNullable()
             .WithColumn("quantity").AsInt32()
             .WithColumn("buyer_name").AsString()
-            .WithColumn("timestamp").AsDateTimeOffset().NotNullable()
+            .WithColumn("sale_time").AsDateTimeOffset().NotNullable()
             .WithColumn("uploader_id").AsString();
 
         Create.ForeignKey()

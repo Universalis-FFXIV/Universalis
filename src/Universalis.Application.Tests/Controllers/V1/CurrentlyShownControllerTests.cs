@@ -395,7 +395,7 @@ public class CurrentlyShownControllerTests
         currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
         document.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
-        document.Sales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+        document.Sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
         var listings = document.Listings.Select(l =>
         {
@@ -451,9 +451,9 @@ public class CurrentlyShownControllerTests
         var saleVelocity = Statistics.VelocityPerDay(
             currentlyShown.RecentHistory.Select(s => s.TimestampUnixSeconds * 1000), now, WeekLength);
         var saleVelocityNq = Statistics.VelocityPerDay(
-            nqHistory.Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), now, WeekLength);
+            nqHistory.Select(s => s.SaleTime.ToUnixTimeMilliseconds()), now, WeekLength);
         var saleVelocityHq = Statistics.VelocityPerDay(
-            hqHistory.Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), now, WeekLength);
+            hqHistory.Select(s => s.SaleTime.ToUnixTimeMilliseconds()), now, WeekLength);
 
         Assert.Equal(Round(saleVelocity), Round(currentlyShown.SaleVelocity));
         Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));
@@ -482,7 +482,7 @@ public class CurrentlyShownControllerTests
         currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
         anyWorldDocument.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
-        anyWorldDocument.Sales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+        anyWorldDocument.Sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
         var listings = anyWorldDocument.Listings.Select(l =>
         {
@@ -537,9 +537,9 @@ public class CurrentlyShownControllerTests
         var saleVelocity = Statistics.VelocityPerDay(
             currentlyShown.RecentHistory.Select(s => s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
         var saleVelocityNq = Statistics.VelocityPerDay(
-            nqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
+            nqHistory.Select(s => s.SaleTime.ToUnixTimeMilliseconds()), unixNowMs, WeekLength);
         var saleVelocityHq = Statistics.VelocityPerDay(
-            hqHistory.Select(s => (long)s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
+            hqHistory.Select(s => s.SaleTime.ToUnixTimeMilliseconds()), unixNowMs, WeekLength);
 
         Assert.Equal(Round(saleVelocity), Round(currentlyShown.SaleVelocity));
         Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));
