@@ -44,7 +44,7 @@ services:
       WATCHTOWER_NOTIFICATIONS: shoutrrr
       WATCHTOWER_NOTIFICATION_URL: "discord://${ALERTS_CHANNEL_WEBHOOK}" # Format: token@channel
       WATCHTOWER_NOTIFICATION_TEMPLATE: "{{range .}}{{.Time.Format \"2006-01-02 15:04:05\"}} ({{.Level}}): {{.Message}}{{println}}{{end}}"
-      WATCHTOWER_ROLLING_RESTART: true
+      WATCHTOWER_ROLLING_RESTART: "true"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/universalis/.docker/config.json:/config.json
