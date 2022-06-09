@@ -5,13 +5,13 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - 9090:9090
+      - "9090:9090"
     extra_hosts: # Grafana and Prometheus need to reach out to the application for stats
       - "host.docker.internal:host-gateway"
   grafana:
     image: grafana/grafana:8.5.5
     ports:
-      - 3000:3000
+      - "3000:3000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -19,7 +19,7 @@ services:
   mariadb:
     image: mariadb:10.3.32
     ports:
-      - 4003:3306
+      - "4003:3306"
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: dalamud
@@ -30,7 +30,16 @@ services:
   mongo:
     image: mongo:5.0.5
     ports:
-      - 4051:27017
+      - "4051:27017"
+  postgres:
+    image: postgres:14.3
+    ports:
+      - "4052:5432"
+    environment:
+      POSTGRES_USER: universalis
+      POSTGRES_PASSWORD: universalis
+    volumes:
+      - ./postgres:/var/lib/postgres/data
   redis:
     image: redis:7.0.0
     command: redis-server --save 300 1 --loglevel warning

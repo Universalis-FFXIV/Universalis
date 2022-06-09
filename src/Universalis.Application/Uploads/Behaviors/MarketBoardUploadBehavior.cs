@@ -85,19 +85,19 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             }
 
             cleanSales = parameters.Sales
+                .Where(s => s.TimestampUnixSeconds > 0)
                 .Select(s => new Sale
                 {
                     Hq = Util.ParseUnusualBool(s.Hq),
                     BuyerName = s.BuyerName,
                     PricePerUnit = s.PricePerUnit ?? 0,
                     Quantity = s.Quantity ?? 0,
-                    TimestampUnixSeconds = s.TimestampUnixSeconds ?? 0,
+                    SaleTime = DateTimeOffset.FromUnixTimeSeconds(s.TimestampUnixSeconds ?? 0),
                     UploaderIdHash = parameters.UploaderId
                 })
                 .Where(s => s.PricePerUnit > 0)
                 .Where(s => s.Quantity > 0)
-                .Where(s => s.TimestampUnixSeconds > 0)
-                .OrderByDescending(s => s.TimestampUnixSeconds)
+                .OrderByDescending(s => s.SaleTime)
                 .ToList();
 
             var existingHistory = await _historyDb.Retrieve(new HistoryQuery
@@ -135,7 +135,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 existingHistory.Sales = existingHistory.Sales
                     .Where(s => s.PricePerUnit > 0) // We check PPU and *not* quantity because there are entries from before quantity was tracked
                     .Distinct()
-                    .OrderByDescending(s => s.TimestampUnixSeconds)
+                    .OrderByDescending(s => s.SaleTime)
                     .ToList();
 
                 historyDocument.Sales = existingHistory.Sales;

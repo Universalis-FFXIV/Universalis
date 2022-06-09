@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using FluentMigrator.Runner;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using StackExchange.Redis;
 using Universalis.DbAccess.MarketBoard;
+using Universalis.DbAccess.Migrations;
 using Universalis.DbAccess.Uploads;
 
 namespace Universalis.DbAccess;
@@ -14,11 +16,21 @@ public static class DbAccessExtensions
         sc.AddSingleton<IMongoClient>(new MongoClient(configuration["MongoDbConnectionString"]));
         sc.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(configuration["RedisConnectionString"]));
 
+        sc.AddFluentMigratorCore()
+            .ConfigureRunner(rb => rb
+                .AddPostgres()
+                .WithGlobalConnectionString(configuration["PostgresConnectionString"])
+                .ScanIn(typeof(CreateMarketItemTable).Assembly).For.All())
+            .AddLogging(lb => lb.AddFluentMigratorConsole());
+
         sc.AddSingleton<IWorldItemUploadStore, WorldItemUploadStore>();
         sc.AddSingleton<IMostRecentlyUpdatedDbAccess, MostRecentlyUpdatedDbAccess>();
 
         sc.AddSingleton<ICurrentlyShownStore, CurrentlyShownStore>();
         sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
+
+        sc.AddSingleton<IMarketItemStore, MarketItemStore>(_ => new MarketItemStore(configuration["PostgresConnectionString"]));
+        sc.AddSingleton<ISaleStore, SaleStore>(_ => new SaleStore(configuration["PostgresConnectionString"]));
         
         sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
         sc.AddSingleton<IContentDbAccess, ContentDbAccess>();

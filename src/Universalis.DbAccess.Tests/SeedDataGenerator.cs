@@ -35,11 +35,14 @@ public static class SeedDataGenerator
         var sales = Enumerable.Range(0, 100)
             .Select(i => new Sale
             {
+                Id = Guid.NewGuid(),
+                WorldId = worldId,
+                ItemId = itemId,
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
                 Quantity = (uint)rand.Next(1, (int)maxStackSize),
                 BuyerName = "Someone Someone",
-                TimestampUnixSeconds = (uint)(DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000)),
+                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
             })
             .ToList();
         return new CurrentlyShown(worldId, itemId, t, "test runner", listings, sales);
@@ -56,10 +59,13 @@ public static class SeedDataGenerator
             Sales = Enumerable.Range(0, 100)
                 .Select(i => new Sale
                 {
+                    Id = Guid.NewGuid(),
+                    WorldId = worldId,
+                    ItemId = itemId,
                     Hq = rand.NextDouble() > 0.5,
                     PricePerUnit = (uint)rand.Next(100, 60000),
                     Quantity = (uint)rand.Next(1, 999),
-                    TimestampUnixSeconds = Convert.ToDouble(DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000)),
+                    SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
                     UploaderIdHash = "2A",
                 })
                 .ToList(),

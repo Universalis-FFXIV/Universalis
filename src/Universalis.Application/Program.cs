@@ -1,4 +1,6 @@
+using FluentMigrator.Runner;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -9,6 +11,14 @@ public static class Program
     public static void Main(string[] args)
     {
         var host = CreateHostBuilder(args).Build();
+
+        // Run database migrations
+        using (var scope = host.Services.CreateScope())
+        {
+            var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
+            runner.MigrateUp();
+        }
+        
         host.Run();
     }
 

@@ -227,7 +227,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                     PricePerUnit = GetValueUInt32(sale, "ppu"),
                     Quantity = GetValueUInt32(sale, "q"),
                     BuyerName = GetValueString(sale, "bn"),
-                    TimestampUnixSeconds = GetValueInt64(sale, "t"),
+                    SaleTime = DateTimeOffset.FromUnixTimeMilliseconds(GetValueInt64(sale, "t")),
                 };
             });
         
@@ -256,7 +256,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 new HashEntry("ppu", sale.PricePerUnit),
                 new HashEntry("q", sale.Quantity ?? 0),
                 new HashEntry("bn", sale.BuyerName ?? ""),
-                new HashEntry("t", sale.TimestampUnixSeconds),
+                new HashEntry("t", sale.SaleTime.ToUnixTimeMilliseconds()),
             });
         }
         
