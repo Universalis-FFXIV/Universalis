@@ -1,7 +1,7 @@
 version: "2.4"
 services:
   prometheus:
-    image: prom/prometheus:v2.33.4
+    image: prom/prometheus:v2.36.0
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
@@ -9,7 +9,7 @@ services:
     extra_hosts: # Grafana and Prometheus need to reach out to the application for stats
       - "host.docker.internal:host-gateway"
   grafana:
-    image: grafana/grafana:8.4.2
+    image: grafana/grafana:8.5.5
     ports:
       - 3000:3000
     extra_hosts:
@@ -33,7 +33,7 @@ services:
       - 4051:27017
   redis:
     image: redis:7.0.0
-    command: redis-server --save 3600 1 300 30000 60 120000 --loglevel warning
+    command: redis-server --save 300 1 --loglevel warning
     ports:
       - 4050:6379
     volumes:

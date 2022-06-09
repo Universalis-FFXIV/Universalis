@@ -8,6 +8,14 @@ services:
       - /home/universalis/sqpack:/sqpack
       - /home/universalis/DataProtection-Keys:/root/.aspnet/DataProtection-Keys
     network_mode: "host" # TODO: Containerize MongoDB so all of this can be changed
+  universalis-staging:
+    image: ghcr.io/universalis-ffxiv/universalis-staging:v2
+    environment:
+      ASPNETCORE_URLS: http://+:4001
+    volumes:
+      - /home/universalis/sqpack:/sqpack
+      - /home/universalis/DataProtection-Keys-Staging:/root/.aspnet/DataProtection-Keys
+    network_mode: "host"
   universalis-docs:
     image: ghcr.io/universalis-ffxiv/universalis-docs:latest
     ports:
@@ -17,12 +25,13 @@ services:
     ports:
       - 3999:3999
   prometheus:
-    image: prom/prometheus:v2.33.4
+    image: prom/prometheus:v2.36.0
     network_mode: "host"
     volumes:
+      - /home/universalis/prometheus/data:/prometheus
       - /home/universalis/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
   grafana:
-    image: grafana/grafana:8.4.2
+    image: grafana/grafana:8.5.5
     network_mode: "host"
     volumes:
       - /home/universalis/grafana/data:/var/lib/grafana
@@ -35,13 +44,14 @@ services:
       WATCHTOWER_NOTIFICATIONS: shoutrrr
       WATCHTOWER_NOTIFICATION_URL: "discord://${ALERTS_CHANNEL_WEBHOOK}" # Format: token@channel
       WATCHTOWER_NOTIFICATION_TEMPLATE: "{{range .}}{{.Time.Format \"2006-01-02 15:04:05\"}} ({{.Level}}): {{.Message}}{{println}}{{end}}"
+      WATCHTOWER_ROLLING_RESTART: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/universalis/.docker/config.json:/config.json
     command: --interval 30
   redis:
     image: redis:7.0.0
-    command: redis-server --save 3600 1 300 30000 60 120000 --loglevel warning
+    command: redis-server --save 300 1 --loglevel warning
     ports:
       - 4050:6379
     volumes:
