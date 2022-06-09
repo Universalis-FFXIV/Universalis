@@ -22,8 +22,8 @@ public class CurrentlyShownDbAccessTests : IDisposable
                 return Task.FromResult(data);
             }
 
-            return Task.FromResult(new CurrentlyShownSimple(0, 0, 0, "", new List<ListingSimple>(),
-                new List<SaleSimple>()));
+            return Task.FromResult(new CurrentlyShownSimple(0, 0, 0, "", new List<Listing>(),
+                new List<Sale>()));
         }
 
         public Task SetData(CurrentlyShownSimple data)
@@ -53,7 +53,7 @@ public class CurrentlyShownDbAccessTests : IDisposable
     public async Task Retrieve_Works_WhenEmpty()
     {
         var store = new MockCurrentlyShownStore();
-        ICurrentlyShownDbAccess db = new CurrentlyShownDbAccess(_client, Database, store);
+        ICurrentlyShownDbAccess db = new CurrentlyShownDbAccess(store);
 
         var output = await db.Retrieve(new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
         Assert.Null(output);
@@ -63,7 +63,7 @@ public class CurrentlyShownDbAccessTests : IDisposable
     public async Task Update_Retrieve_Works()
     {
         var store = new MockCurrentlyShownStore();
-        ICurrentlyShownDbAccess db = new CurrentlyShownDbAccess(_client, Database, store);
+        ICurrentlyShownDbAccess db = new CurrentlyShownDbAccess(store);
         
         var document1 = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333);
         var query = new CurrentlyShownQuery { WorldId = document1.WorldId, ItemId = document1.ItemId };

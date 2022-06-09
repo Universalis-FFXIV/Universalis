@@ -23,21 +23,8 @@ public class MinimizedSale : IEquatable<MinimizedSale>
 
     [BsonElement("uploaderID")]
     public string UploaderIdHash { get; init; }
-
-    public static MinimizedSale FromSale(Sale s, string uploaderIdHash)
-    {
-        return new MinimizedSale
-        {
-            Hq = s.Hq,
-            PricePerUnit = s.PricePerUnit,
-            Quantity = s.Quantity,
-            BuyerName = s.BuyerName,
-            SaleTimeUnixSeconds = s.TimestampUnixSeconds,
-            UploaderIdHash = uploaderIdHash,
-        };
-    }
     
-    public static MinimizedSale FromSaleSimple(SaleSimple s, string uploaderIdHash)
+    public static MinimizedSale FromSaleSimple(Sale s, string uploaderIdHash)
     {
         return new MinimizedSale
         {

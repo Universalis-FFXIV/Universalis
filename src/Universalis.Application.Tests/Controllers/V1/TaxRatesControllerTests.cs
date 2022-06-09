@@ -23,7 +23,7 @@ public class TaxRatesControllerTests
         var dbAccess = new MockTaxRatesDbAccess();
         var controller = new TaxRatesController(gameData, dbAccess);
 
-        var expectedTaxRates = SeedDataGenerator.MakeTaxRatesSimple(74);
+        var expectedTaxRates = SeedDataGenerator.MakeTaxRates(74);
         await dbAccess.Update(expectedTaxRates, new TaxRatesQuery { WorldId = 74 });
 
         var result = await controller.Get(world);
@@ -44,7 +44,7 @@ public class TaxRatesControllerTests
         var dbAccess = new MockTaxRatesDbAccess();
         var controller = new TaxRatesController(gameData, dbAccess);
 
-        var expectedTaxRates = SeedDataGenerator.MakeTaxRatesSimple(74);
+        var expectedTaxRates = SeedDataGenerator.MakeTaxRates(74);
         await dbAccess.Update(expectedTaxRates, new TaxRatesQuery { WorldId = 74 });
 
         var result = await controller.Get("crystal");
@@ -58,7 +58,7 @@ public class TaxRatesControllerTests
         var dbAccess = new MockTaxRatesDbAccess();
         var controller = new TaxRatesController(gameData, dbAccess);
 
-        var expectedTaxRates = SeedDataGenerator.MakeTaxRatesSimple(74);
+        var expectedTaxRates = SeedDataGenerator.MakeTaxRates(74);
         await dbAccess.Update(expectedTaxRates, new TaxRatesQuery { WorldId = 74 });
 
         var result = await controller.Get("50");

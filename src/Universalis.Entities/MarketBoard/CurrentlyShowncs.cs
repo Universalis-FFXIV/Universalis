@@ -12,12 +12,12 @@ public class CurrentlyShownSimple
     
     public string UploadSource { get; }
 
-    public List<ListingSimple> Listings { get; }
+    public List<Listing> Listings { get; }
 
-    public List<SaleSimple> Sales { get; }
+    public List<Sale> Sales { get; }
 
     public CurrentlyShownSimple(uint worldId, uint itemId, long uploadTimeUnixMs, string source,
-        List<ListingSimple> listings, List<SaleSimple> sales)
+        List<Listing> listings, List<Sale> sales)
     {
         WorldId = worldId;
         ItemId = itemId;

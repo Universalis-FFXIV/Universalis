@@ -55,12 +55,12 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
                         WorldId = cd.WorldId,
                         ItemId = cd.ItemId,
                         LastUploadTimeUnixMilliseconds = cd.LastUploadTimeUnixMilliseconds,
-                        Listings = (await Task.WhenAll((cd.Listings ?? new List<ListingSimple>())
+                        Listings = (await Task.WhenAll((cd.Listings ?? new List<Listing>())
                                 .Select(l => Util.ListingSimpleToView(l, cancellationToken))))
                             .Where(s => s.PricePerUnit > 0)
                             .Where(s => s.Quantity > 0)
                             .ToList(),
-                        RecentHistory = (cd.Sales ?? new List<SaleSimple>())
+                        RecentHistory = (cd.Sales ?? new List<Sale>())
                             .Select(Util.SaleSimpleToView)
                             .Where(s => s.PricePerUnit > 0)
                             .Where(s => s.Quantity > 0)

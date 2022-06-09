@@ -38,7 +38,7 @@ public class CurrentlyShownControllerTests
         const uint itemId = 5333;
         var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         var listings = Enumerable.Range(0, 100)
-            .Select(i => new ListingSimple
+            .Select(i => new Listing
             {
                 ListingId = "FB",
                 Hq = rand.NextDouble() > 0.5,
@@ -57,7 +57,7 @@ public class CurrentlyShownControllerTests
             })
             .ToList();
         var sales = Enumerable.Range(0, 100)
-            .Select(i => new SaleSimple
+            .Select(i => new Sale
             {
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
@@ -89,7 +89,7 @@ public class CurrentlyShownControllerTests
         var lastUploadTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         var listings1 = Enumerable.Range(0, 100)
-            .Select(i => new ListingSimple
+            .Select(i => new Listing
             {
                 ListingId = "FB",
                 Hq = rand.NextDouble() > 0.5,
@@ -108,7 +108,7 @@ public class CurrentlyShownControllerTests
             })
             .ToList();
         var sales1 = Enumerable.Range(0, 100)
-            .Select(i => new SaleSimple
+            .Select(i => new Sale
             {
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
@@ -121,7 +121,7 @@ public class CurrentlyShownControllerTests
         await dbAccess.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
         var listings2 = Enumerable.Range(0, 100)
-            .Select(i => new ListingSimple
+            .Select(i => new Listing
             {
                 ListingId = "FB",
                 Hq = rand.NextDouble() > 0.5,
@@ -140,7 +140,7 @@ public class CurrentlyShownControllerTests
             })
             .ToList();
         var sales2 = Enumerable.Range(0, 100)
-            .Select(i => new SaleSimple
+            .Select(i => new Sale
             {
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
@@ -182,7 +182,7 @@ public class CurrentlyShownControllerTests
         var lastUploadTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
         var listings1 = Enumerable.Range(0, 100)
-            .Select(i => new ListingSimple
+            .Select(i => new Listing
             {
                 ListingId = "FB",
                 Hq = rand.NextDouble() > 0.5,
@@ -201,7 +201,7 @@ public class CurrentlyShownControllerTests
             })
             .ToList();
         var sales1 = Enumerable.Range(0, 100)
-            .Select(i => new SaleSimple
+            .Select(i => new Sale
             {
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
@@ -214,7 +214,7 @@ public class CurrentlyShownControllerTests
         await dbAccess.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
         var listings2 = Enumerable.Range(0, 100)
-            .Select(i => new ListingSimple
+            .Select(i => new Listing
             {
                 ListingId = "FB",
                 Hq = rand.NextDouble() > 0.5,
@@ -233,7 +233,7 @@ public class CurrentlyShownControllerTests
             })
             .ToList();
         var sales2 = Enumerable.Range(0, 100)
-            .Select(i => new SaleSimple
+            .Select(i => new Sale
             {
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
@@ -273,7 +273,7 @@ public class CurrentlyShownControllerTests
         var lastUploadTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
         var listings1 = Enumerable.Range(0, 100)
-            .Select(i => new ListingSimple
+            .Select(i => new Listing
             {
                 ListingId = "FB",
                 Hq = rand.NextDouble() > 0.5,
@@ -292,7 +292,7 @@ public class CurrentlyShownControllerTests
             })
             .ToList();
         var sales1 = Enumerable.Range(0, 100)
-            .Select(i => new SaleSimple
+            .Select(i => new Sale
             {
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
@@ -305,7 +305,7 @@ public class CurrentlyShownControllerTests
         await dbAccess.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
         var listings2 = Enumerable.Range(0, 100)
-            .Select(i => new ListingSimple
+            .Select(i => new Listing
             {
                 ListingId = "FB",
                 Hq = rand.NextDouble() > 0.5,
@@ -324,7 +324,7 @@ public class CurrentlyShownControllerTests
             })
             .ToList();
         var sales2 = Enumerable.Range(0, 100)
-            .Select(i => new SaleSimple
+            .Select(i => new Sale
             {
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
