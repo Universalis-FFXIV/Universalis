@@ -35,6 +35,9 @@ public static class SeedDataGenerator
         var sales = Enumerable.Range(0, 100)
             .Select(i => new Sale
             {
+                Id = Guid.NewGuid(),
+                WorldId = worldId,
+                ItemId = itemId,
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
                 Quantity = (uint)rand.Next(1, (int)maxStackSize),
@@ -56,6 +59,9 @@ public static class SeedDataGenerator
             Sales = Enumerable.Range(0, 100)
                 .Select(i => new Sale
                 {
+                    Id = Guid.NewGuid(),
+                    WorldId = worldId,
+                    ItemId = itemId,
                     Hq = rand.NextDouble() > 0.5,
                     PricePerUnit = (uint)rand.Next(100, 60000),
                     Quantity = (uint)rand.Next(1, 999),

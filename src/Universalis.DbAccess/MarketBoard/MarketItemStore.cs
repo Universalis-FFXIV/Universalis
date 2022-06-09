@@ -48,6 +48,13 @@ public class MarketItemStore : IMarketItemStore
                     new NpgsqlParameter { Value = marketItem.ItemId },
                 },
             };
+
+        if (await Retrieve(marketItem.WorldId, marketItem.ItemId, cancellationToken) == null)
+        {
+            await Insert(marketItem, cancellationToken);
+            return;
+        }
+        
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 

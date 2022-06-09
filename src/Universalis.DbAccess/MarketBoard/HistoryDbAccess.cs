@@ -1,5 +1,6 @@
-﻿using MongoDB.Driver;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -7,14 +8,65 @@ using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
 
-public class HistoryDbAccess : DbAccessService<History, HistoryQuery>, IHistoryDbAccess
+public class HistoryDbAccess : IHistoryDbAccess
 {
-    public HistoryDbAccess(IMongoClient client) : base(client, Constants.DatabaseName, "extendedHistory") { }
+    private readonly IMarketItemStore _marketItemStore;
+    private readonly ISaleStore _saleStore;
 
-    public HistoryDbAccess(IMongoClient client, string databaseName) : base(client, databaseName, "extendedHistory") { }
+    public HistoryDbAccess(IMarketItemStore marketItemStore, ISaleStore saleStore)
+    {
+        _marketItemStore = marketItemStore;
+        _saleStore = saleStore;
+    }
+
+    public async Task Create(History document, CancellationToken cancellationToken = default)
+    {
+        await _marketItemStore.Insert(new MarketItem
+        {
+            WorldId = document.WorldId,
+            ItemId = document.ItemId,
+            LastUploadTime =
+                DateTimeOffset.FromUnixTimeMilliseconds(Convert.ToInt64(document.LastUploadTimeUnixMilliseconds)),
+        }, cancellationToken);
+
+        await Task.WhenAll(document.Sales.Select(s => _saleStore.Insert(s, cancellationToken)));
+    }
+
+    public async Task<History> Retrieve(HistoryQuery query, CancellationToken cancellationToken = default)
+    {
+        var marketItem = await _marketItemStore.Retrieve(query.WorldId, query.ItemId, cancellationToken);
+        if (marketItem == null)
+        {
+            return null;
+        }
+        
+        var sales = await _saleStore.RetrieveBySaleTime(query.WorldId, query.ItemId, 1000, cancellationToken);
+        return new History
+        {
+            WorldId = marketItem.WorldId,
+            ItemId = marketItem.ItemId,
+            LastUploadTimeUnixMilliseconds = marketItem.LastUploadTime.ToUnixTimeMilliseconds(),
+            Sales = sales.ToList(),
+        };
+    }
 
     public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query, CancellationToken cancellationToken = default)
     {
-        return await Collection.Find(query.ToFilterDefinition()).ToListAsync(cancellationToken);
+        return (await Task.WhenAll(query.WorldIds
+            .Select(worldId => Retrieve(new HistoryQuery { WorldId = worldId, ItemId = query.ItemId }, cancellationToken))))
+            .Where(h => h != null);
+    }
+
+    public async Task Update(History document, HistoryQuery query, CancellationToken cancellationToken = default)
+    {
+        await _marketItemStore.Update(new MarketItem
+        {
+            WorldId = query.WorldId,
+            ItemId = query.ItemId,
+            LastUploadTime =
+                DateTimeOffset.FromUnixTimeMilliseconds(Convert.ToInt64(document.LastUploadTimeUnixMilliseconds)),
+        }, cancellationToken);
+        
+        await Task.WhenAll(document.Sales.Select(s => _saleStore.Insert(s, cancellationToken)));
     }
 }
