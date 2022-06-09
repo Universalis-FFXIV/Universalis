@@ -9,7 +9,7 @@ namespace Universalis.DbAccess.Tests;
 
 public static class SeedDataGenerator
 {
-    public static CurrentlyShownSimple MakeCurrentlyShownSimple(uint worldId, uint itemId, long? lastUploadTime = null, uint maxStackSize = 999)
+    public static CurrentlyShown MakeCurrentlyShownSimple(uint worldId, uint itemId, long? lastUploadTime = null, uint maxStackSize = 999)
     {
         var rand = new Random();
         var t = lastUploadTime ?? DateTimeOffset.Now.ToUnixTimeMilliseconds();
@@ -42,7 +42,7 @@ public static class SeedDataGenerator
                 TimestampUnixSeconds = (uint)(DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000)),
             })
             .ToList();
-        return new CurrentlyShownSimple(worldId, itemId, t, "test runner", listings, sales);
+        return new CurrentlyShown(worldId, itemId, t, "test runner", listings, sales);
     }
 
     public static History MakeHistory(uint worldId, uint itemId, long? lastUploadTime = null)

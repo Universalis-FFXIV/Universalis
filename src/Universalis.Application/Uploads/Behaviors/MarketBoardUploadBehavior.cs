@@ -247,7 +247,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         var listings = newListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>();
         var sales = cleanSales ?? existingCurrentlyShown?.Sales ?? new List<Sale>();
-        var document = new CurrentlyShownSimple(worldId, itemId, now, source.Name, listings, sales);
+        var document = new CurrentlyShown(worldId, itemId, now, source.Name, listings, sales);
 
         if (await _cache.Delete(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId }, cancellationToken))
         {

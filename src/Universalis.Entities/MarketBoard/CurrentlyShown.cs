@@ -2,7 +2,7 @@
 
 namespace Universalis.Entities.MarketBoard;
 
-public class CurrentlyShownSimple
+public class CurrentlyShown
 {
     public uint WorldId { get; }
     
@@ -16,7 +16,7 @@ public class CurrentlyShownSimple
 
     public List<Sale> Sales { get; }
 
-    public CurrentlyShownSimple(uint worldId, uint itemId, long uploadTimeUnixMs, string source,
+    public CurrentlyShown(uint worldId, uint itemId, long uploadTimeUnixMs, string source,
         List<Listing> listings, List<Sale> sales)
     {
         WorldId = worldId;

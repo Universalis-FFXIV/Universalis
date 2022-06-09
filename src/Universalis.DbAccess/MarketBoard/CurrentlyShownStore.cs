@@ -17,7 +17,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _redis = redis;
     }
 
-    public async Task<CurrentlyShownSimple> GetData(uint worldId, uint itemId)
+    public async Task<CurrentlyShown> GetData(uint worldId, uint itemId)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
         
@@ -25,7 +25,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
         if (!await db.KeyExistsAsync(lastUpdatedKey))
         {
-            return new CurrentlyShownSimple(0, 0, 0, "",
+            return new CurrentlyShown(0, 0, 0, "",
                 new List<Listing>(), new List<Sale>());
         }
         
@@ -55,10 +55,10 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             transactionExecuted = await trans.ExecuteAsync();
         } while (!transactionExecuted);
         
-        return new CurrentlyShownSimple(worldId, itemId, lastUpdated, source, listings.ToList(), sales.ToList());
+        return new CurrentlyShown(worldId, itemId, lastUpdated, source, listings.ToList(), sales.ToList());
     }
 
-    public async Task SetData(CurrentlyShownSimple data)
+    public async Task SetData(CurrentlyShown data)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
 

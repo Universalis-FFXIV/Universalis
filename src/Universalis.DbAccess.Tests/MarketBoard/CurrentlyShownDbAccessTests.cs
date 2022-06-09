@@ -13,20 +13,20 @@ public class CurrentlyShownDbAccessTests : IDisposable
 {
     private class MockCurrentlyShownStore : ICurrentlyShownStore
     {
-        private readonly Dictionary<(uint, uint), CurrentlyShownSimple> _currentlyShown = new();
+        private readonly Dictionary<(uint, uint), CurrentlyShown> _currentlyShown = new();
         
-        public Task<CurrentlyShownSimple> GetData(uint worldId, uint itemId)
+        public Task<CurrentlyShown> GetData(uint worldId, uint itemId)
         {
             if (_currentlyShown.TryGetValue((worldId, itemId), out var data))
             {
                 return Task.FromResult(data);
             }
 
-            return Task.FromResult(new CurrentlyShownSimple(0, 0, 0, "", new List<Listing>(),
+            return Task.FromResult(new CurrentlyShown(0, 0, 0, "", new List<Listing>(),
                 new List<Sale>()));
         }
 
-        public Task SetData(CurrentlyShownSimple data)
+        public Task SetData(CurrentlyShown data)
         {
             _currentlyShown[(data.WorldId, data.ItemId)] = data;
             return Task.CompletedTask;

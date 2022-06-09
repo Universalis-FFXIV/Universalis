@@ -14,13 +14,13 @@ public class CurrentlyShownDbAccess : ICurrentlyShownDbAccess
         _store = store;
     }
 
-    async Task<CurrentlyShownSimple> ICurrentlyShownDbAccess.Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
+    async Task<CurrentlyShown> ICurrentlyShownDbAccess.Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
     {
         var data = await _store.GetData(query.WorldId, query.ItemId);
         return data.LastUploadTimeUnixMilliseconds == 0 ? null : data;
     }
 
-    public Task Update(CurrentlyShownSimple document, CurrentlyShownQuery query, CancellationToken cancellationToken = default)
+    public Task Update(CurrentlyShown document, CurrentlyShownQuery query, CancellationToken cancellationToken = default)
     {
         return _store.SetData(document);
     }

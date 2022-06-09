@@ -144,7 +144,7 @@ public class CurrentlyShownControllerTests
 
         var joinedListings = document1.Listings.Concat(document2.Listings).ToList();
         var joinedSales = document1.Sales.Concat(document2.Sales).ToList();
-        var joinedDocument = new CurrentlyShownSimple(0, 5333, unixNowMs, "test runner", joinedListings, joinedSales);
+        var joinedDocument = new CurrentlyShown(0, 5333, unixNowMs, "test runner", joinedListings, joinedSales);
 
         AssertCurrentlyShownDataCenter(
             joinedDocument,
@@ -381,7 +381,7 @@ public class CurrentlyShownControllerTests
         Assert.Null(history.WorldId);
     }
 
-    private static void AssertCurrentlyShownValidWorld(CurrentlyShownSimple document, CurrentlyShownView currentlyShown, IGameDataProvider gameData)
+    private static void AssertCurrentlyShownValidWorld(CurrentlyShown document, CurrentlyShownView currentlyShown, IGameDataProvider gameData)
     {
         Assert.Equal(document.ItemId, currentlyShown.ItemId);
         Assert.Equal(document.WorldId, currentlyShown.WorldId);
@@ -468,7 +468,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
     }
 
-    private static void AssertCurrentlyShownDataCenter(CurrentlyShownSimple anyWorldDocument, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc, long unixNowMs)
+    private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc, long unixNowMs)
     {
         Assert.Equal(anyWorldDocument.ItemId, currentlyShown.ItemId);
         Assert.Equal(lastUploadTime, currentlyShown.LastUploadTimeUnixMilliseconds);
