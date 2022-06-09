@@ -10,7 +10,7 @@ public static class SchemaSeedDataGenerator
 {
     public static (List<Listing>, List<Sale>) GetUploadListingsAndSales(uint worldId, uint itemId, uint maxStackSize = 999)
     {
-        var seed = SeedDataGenerator.MakeCurrentlyShown(worldId, itemId, maxStackSize: maxStackSize);
+        var seed = SeedDataGenerator.MakeCurrentlyShownSimple(worldId, itemId, maxStackSize: maxStackSize);
 
         var listings = seed.Listings
             .Select(l => new Listing
@@ -38,7 +38,7 @@ public static class SchemaSeedDataGenerator
             })
             .ToList();
 
-        var sales = seed.RecentHistory
+        var sales = seed.Sales
             .Select(s => new Sale
             {
                 BuyerId = "",

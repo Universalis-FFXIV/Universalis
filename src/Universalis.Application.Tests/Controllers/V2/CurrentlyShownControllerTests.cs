@@ -38,7 +38,7 @@ public class CurrentlyShownControllerTests
         const uint itemId = 5333;
         var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         var listings = Enumerable.Range(0, 100)
-            .Select(i => new ListingSimple
+            .Select(i => new Listing
             {
                 ListingId = "FB",
                 Hq = rand.NextDouble() > 0.5,
@@ -57,7 +57,7 @@ public class CurrentlyShownControllerTests
             })
             .ToList();
         var sales = Enumerable.Range(0, 100)
-            .Select(i => new SaleSimple
+            .Select(i => new Sale
             {
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
@@ -66,7 +66,7 @@ public class CurrentlyShownControllerTests
                 TimestampUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000),
             })
             .ToList();
-        var document = new CurrentlyShownSimple(74, itemId, now, "test runner", listings, sales);
+        var document = new CurrentlyShown(74, itemId, now, "test runner", listings, sales);
         await dbAccess.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = itemId });
 
         var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: int.MaxValue.ToString());
@@ -89,7 +89,7 @@ public class CurrentlyShownControllerTests
         var lastUploadTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         var listings1 = Enumerable.Range(0, 100)
-            .Select(i => new ListingSimple
+            .Select(i => new Listing
             {
                 ListingId = "FB",
                 Hq = rand.NextDouble() > 0.5,
@@ -108,7 +108,7 @@ public class CurrentlyShownControllerTests
             })
             .ToList();
         var sales1 = Enumerable.Range(0, 100)
-            .Select(i => new SaleSimple
+            .Select(i => new Sale
             {
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
@@ -117,11 +117,11 @@ public class CurrentlyShownControllerTests
                 TimestampUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000),
             })
             .ToList();
-        var document1 = new CurrentlyShownSimple(74, 5333, lastUploadTime, "test runner", listings1, sales1);
+        var document1 = new CurrentlyShown(74, 5333, lastUploadTime, "test runner", listings1, sales1);
         await dbAccess.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
         var listings2 = Enumerable.Range(0, 100)
-            .Select(i => new ListingSimple
+            .Select(i => new Listing
             {
                 ListingId = "FB",
                 Hq = rand.NextDouble() > 0.5,
@@ -140,7 +140,7 @@ public class CurrentlyShownControllerTests
             })
             .ToList();
         var sales2 = Enumerable.Range(0, 100)
-            .Select(i => new SaleSimple
+            .Select(i => new Sale
             {
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
@@ -149,7 +149,7 @@ public class CurrentlyShownControllerTests
                 TimestampUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000),
             })
             .ToList();
-        var document2 = new CurrentlyShownSimple(74, 5, lastUploadTime, "test runner", listings2, sales2);
+        var document2 = new CurrentlyShown(74, 5, lastUploadTime, "test runner", listings2, sales2);
         await dbAccess.Update(document2, new CurrentlyShownQuery { WorldId = 74, ItemId = 5 });
 
         var result = await controller.Get("5, 5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
@@ -182,7 +182,7 @@ public class CurrentlyShownControllerTests
         var lastUploadTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
         var listings1 = Enumerable.Range(0, 100)
-            .Select(i => new ListingSimple
+            .Select(i => new Listing
             {
                 ListingId = "FB",
                 Hq = rand.NextDouble() > 0.5,
@@ -201,7 +201,7 @@ public class CurrentlyShownControllerTests
             })
             .ToList();
         var sales1 = Enumerable.Range(0, 100)
-            .Select(i => new SaleSimple
+            .Select(i => new Sale
             {
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
@@ -210,11 +210,11 @@ public class CurrentlyShownControllerTests
                 TimestampUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000),
             })
             .ToList();
-        var document1 = new CurrentlyShownSimple(74, 5333, lastUploadTime, "test runner", listings1, sales1);
+        var document1 = new CurrentlyShown(74, 5333, lastUploadTime, "test runner", listings1, sales1);
         await dbAccess.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
         var listings2 = Enumerable.Range(0, 100)
-            .Select(i => new ListingSimple
+            .Select(i => new Listing
             {
                 ListingId = "FB",
                 Hq = rand.NextDouble() > 0.5,
@@ -233,7 +233,7 @@ public class CurrentlyShownControllerTests
             })
             .ToList();
         var sales2 = Enumerable.Range(0, 100)
-            .Select(i => new SaleSimple
+            .Select(i => new Sale
             {
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
@@ -242,7 +242,7 @@ public class CurrentlyShownControllerTests
                 TimestampUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000),
             })
             .ToList();
-        var document2 = new CurrentlyShownSimple(34, 5333, lastUploadTime, "test runner", listings2, sales2);
+        var document2 = new CurrentlyShown(34, 5333, lastUploadTime, "test runner", listings2, sales2);
         await dbAccess.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5333 });
 
         var result = await controller.Get("5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
@@ -250,7 +250,7 @@ public class CurrentlyShownControllerTests
 
         var joinedListings = document1.Listings.Concat(document2.Listings).ToList();
         var joinedSales = document1.Sales.Concat(document2.Sales).ToList();
-        var joinedDocument = new CurrentlyShownSimple(0, 5333, lastUploadTime, "test runner", joinedListings, joinedSales);
+        var joinedDocument = new CurrentlyShown(0, 5333, lastUploadTime, "test runner", joinedListings, joinedSales);
 
         AssertCurrentlyShownDataCenter(
             joinedDocument,
@@ -273,7 +273,7 @@ public class CurrentlyShownControllerTests
         var lastUploadTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
         var listings1 = Enumerable.Range(0, 100)
-            .Select(i => new ListingSimple
+            .Select(i => new Listing
             {
                 ListingId = "FB",
                 Hq = rand.NextDouble() > 0.5,
@@ -292,7 +292,7 @@ public class CurrentlyShownControllerTests
             })
             .ToList();
         var sales1 = Enumerable.Range(0, 100)
-            .Select(i => new SaleSimple
+            .Select(i => new Sale
             {
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
@@ -301,11 +301,11 @@ public class CurrentlyShownControllerTests
                 TimestampUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000),
             })
             .ToList();
-        var document1 = new CurrentlyShownSimple(74, 5333, lastUploadTime, "test runner", listings1, sales1);
+        var document1 = new CurrentlyShown(74, 5333, lastUploadTime, "test runner", listings1, sales1);
         await dbAccess.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
         var listings2 = Enumerable.Range(0, 100)
-            .Select(i => new ListingSimple
+            .Select(i => new Listing
             {
                 ListingId = "FB",
                 Hq = rand.NextDouble() > 0.5,
@@ -324,7 +324,7 @@ public class CurrentlyShownControllerTests
             })
             .ToList();
         var sales2 = Enumerable.Range(0, 100)
-            .Select(i => new SaleSimple
+            .Select(i => new Sale
             {
                 Hq = rand.NextDouble() > 0.5,
                 PricePerUnit = (uint)rand.Next(100, 60000),
@@ -333,7 +333,7 @@ public class CurrentlyShownControllerTests
                 TimestampUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000),
             })
             .ToList();
-        var document2 = new CurrentlyShownSimple(34, 5, lastUploadTime, "test runner", listings2, sales2);
+        var document2 = new CurrentlyShown(34, 5, lastUploadTime, "test runner", listings2, sales2);
         await dbAccess.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5 });
 
         var result = await controller.Get("5,5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
@@ -547,7 +547,7 @@ public class CurrentlyShownControllerTests
         Assert.Null(history.WorldId);
     }
 
-    private static void AssertCurrentlyShownValidWorld(CurrentlyShownSimple document, CurrentlyShownView currentlyShown, IGameDataProvider gameData, long unixNowMs)
+    private static void AssertCurrentlyShownValidWorld(CurrentlyShown document, CurrentlyShownView currentlyShown, IGameDataProvider gameData, long unixNowMs)
     {
         Assert.Equal(document.ItemId, currentlyShown.ItemId);
         Assert.Equal(document.WorldId, currentlyShown.WorldId);
@@ -616,9 +616,9 @@ public class CurrentlyShownControllerTests
         var saleVelocity = Statistics.VelocityPerDay(
             currentlyShown.RecentHistory.Select(s => s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
         var saleVelocityNq = Statistics.VelocityPerDay(
-            nqHistory.Select(s => s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
+            nqHistory.Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
         var saleVelocityHq = Statistics.VelocityPerDay(
-            hqHistory.Select(s => s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
+            hqHistory.Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
 
         Assert.Equal(Round(saleVelocity), Round(currentlyShown.SaleVelocity));
         Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));
@@ -633,7 +633,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
     }
 
-    private static void AssertCurrentlyShownDataCenter(CurrentlyShownSimple anyWorldDocument, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc, long unixNowMs)
+    private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc, long unixNowMs)
     {
         Assert.Equal(anyWorldDocument.ItemId, currentlyShown.ItemId);
         Assert.Equal(lastUploadTime, currentlyShown.LastUploadTimeUnixMilliseconds);
@@ -702,9 +702,9 @@ public class CurrentlyShownControllerTests
         var saleVelocity = Statistics.VelocityPerDay(
             currentlyShown.RecentHistory.Select(s => s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
         var saleVelocityNq = Statistics.VelocityPerDay(
-            nqHistory.Select(s => s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
+            nqHistory.Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
         var saleVelocityHq = Statistics.VelocityPerDay(
-            hqHistory.Select(s => s.TimestampUnixSeconds * 1000), unixNowMs, WeekLength);
+            hqHistory.Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
 
         Assert.Equal(Round(saleVelocity), Round(currentlyShown.SaleVelocity));
         Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));

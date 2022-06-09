@@ -12,21 +12,21 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 
 public class MockCurrentlyShownDbAccess : ICurrentlyShownDbAccess
 {
-    private readonly List<CurrentlyShownSimple> _collection = new();
+    private readonly List<CurrentlyShown> _collection = new();
 
-    private Task Create(CurrentlyShownSimple document, CancellationToken cancellationToken = default)
+    private Task Create(CurrentlyShown document, CancellationToken cancellationToken = default)
     {
         _collection.Add(document);
         return Task.CompletedTask;
     }
 
-    public Task<CurrentlyShownSimple> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
+    public Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_collection
             .FirstOrDefault(d => d.WorldId == query.WorldId && d.ItemId == query.ItemId));
     }
 
-    public async Task Update(CurrentlyShownSimple document, CurrentlyShownQuery query, CancellationToken cancellationToken = default)
+    public async Task Update(CurrentlyShown document, CurrentlyShownQuery query, CancellationToken cancellationToken = default)
     {
         await Delete(query, cancellationToken);
         await Create(document, cancellationToken);

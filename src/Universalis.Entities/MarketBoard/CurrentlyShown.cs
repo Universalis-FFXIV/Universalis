@@ -1,25 +1,29 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Universalis.Entities.MarketBoard;
 
 public class CurrentlyShown
 {
-    [BsonElement("itemID")]
-    public uint ItemId { get; init; }
+    public uint WorldId { get; }
+    
+    public uint ItemId { get; }
 
-    [BsonElement("worldID")]
-    public uint WorldId { get; init; }
+    public long LastUploadTimeUnixMilliseconds { get; }
+    
+    public string UploadSource { get; }
 
-    [BsonElement("lastUploadTime")]
-    public double LastUploadTimeUnixMilliseconds { get; set; }
+    public List<Listing> Listings { get; }
 
-    [BsonElement("uploaderID")]
-    public string UploaderIdHash { get; init; }
+    public List<Sale> Sales { get; }
 
-    [BsonElement("listings")]
-    public List<Listing> Listings { get; set; }
-
-    [BsonElement("recentHistory")]
-    public List<Sale> RecentHistory { get; set; }
+    public CurrentlyShown(uint worldId, uint itemId, long uploadTimeUnixMs, string source,
+        List<Listing> listings, List<Sale> sales)
+    {
+        WorldId = worldId;
+        ItemId = itemId;
+        LastUploadTimeUnixMilliseconds = uploadTimeUnixMs;
+        UploadSource = source;
+        Listings = listings;
+        Sales = sales;
+    }
 }

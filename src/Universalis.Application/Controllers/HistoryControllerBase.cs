@@ -47,11 +47,11 @@ public class HistoryControllerBase : WorldDcControllerBase
             .AggregateAwaitAsync(new HistoryView(), async (agg, next) =>
             {
                 // Handle undefined arrays
-                next.Sales ??= new List<MinimizedSale>();
+                next.Sales ??= new List<Sale>();
 
                 agg.Sales = await next.Sales
                     .ToAsyncEnumerable()
-                    .Where(s => entriesWithin < 0 || nowSeconds - s.SaleTimeUnixSeconds < entriesWithin)
+                    .Where(s => entriesWithin < 0 || nowSeconds - s.TimestampUnixSeconds < entriesWithin)
                     .Where(s => s.Quantity is > 0)
                     .Select(s => new MinimizedSaleView
                     {
@@ -59,7 +59,7 @@ public class HistoryControllerBase : WorldDcControllerBase
                         PricePerUnit = s.PricePerUnit,
                         Quantity = s.Quantity ?? 0, // This should never be 0 since we're filtering out null and zero quantities
                         BuyerName = s.BuyerName,
-                        TimestampUnixSeconds = (long)s.SaleTimeUnixSeconds,
+                        TimestampUnixSeconds = Convert.ToInt64(s.TimestampUnixSeconds),
                         WorldId = worldDc.IsDc ? next.WorldId : null,
                         WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
                     })

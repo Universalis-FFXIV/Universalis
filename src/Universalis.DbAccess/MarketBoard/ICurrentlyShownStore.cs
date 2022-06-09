@@ -6,7 +6,7 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public interface ICurrentlyShownStore
 {
-    Task<CurrentlyShownSimple> GetData(uint worldId, uint itemId);
+    Task<CurrentlyShown> GetData(uint worldId, uint itemId);
 
-    Task SetData(CurrentlyShownSimple data);
+    Task SetData(CurrentlyShown data);
 }

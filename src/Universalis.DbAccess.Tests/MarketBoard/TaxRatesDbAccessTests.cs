@@ -38,11 +38,11 @@ public class TaxRatesDbAccessTests
     public async Task Update_DoesNotThrow()
     {
         var db = new TaxRatesDbAccess(new MockTaxRatesStore());
-        var document = SeedDataGenerator.MakeTaxRatesSimple(74);
+        var document = SeedDataGenerator.MakeTaxRates(74);
         await db.Update(document, new TaxRatesQuery { WorldId = 74 });
         await db.Update(document, new TaxRatesQuery { WorldId = 74 });
 
-        document = SeedDataGenerator.MakeTaxRatesSimple(74);
+        document = SeedDataGenerator.MakeTaxRates(74);
         await db.Update(document, new TaxRatesQuery { WorldId = 74 });
     }
 
@@ -54,10 +54,10 @@ public class TaxRatesDbAccessTests
         var db = new TaxRatesDbAccess(new MockTaxRatesStore());
         var query = new TaxRatesQuery { WorldId = worldId };
 
-        var document1 = SeedDataGenerator.MakeTaxRatesSimple(worldId);
+        var document1 = SeedDataGenerator.MakeTaxRates(worldId);
         await db.Update(document1, query);
 
-        var document2 = SeedDataGenerator.MakeTaxRatesSimple(worldId);
+        var document2 = SeedDataGenerator.MakeTaxRates(worldId);
         await db.Update(document2, query);
 
         var retrieved = await db.Retrieve(query);

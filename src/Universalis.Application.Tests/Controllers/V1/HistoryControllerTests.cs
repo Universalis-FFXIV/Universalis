@@ -328,7 +328,7 @@ public class HistoryControllerTests
 
     private static void AssertHistoryValidWorld(History document, HistoryView history, IGameDataProvider gameData, string entriesToReturn, long unixNowMs)
     {
-        document.Sales.Sort((a, b) => (int)b.SaleTimeUnixSeconds - (int)a.SaleTimeUnixSeconds);
+        document.Sales.Sort((a, b) => (int)(b.TimestampUnixSeconds - a.TimestampUnixSeconds));
 
         var nqSales = document.Sales.Where(s => !s.Hq).ToList();
         var hqSales = document.Sales.Where(s => s.Hq).ToList();
@@ -348,20 +348,20 @@ public class HistoryControllerTests
         Assert.True(IsSorted(history.StackSizeHistogramHq));
 
         var saleVelocity = Statistics.VelocityPerDay(document.Sales
-            .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength);
+            .Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
         var saleVelocityNq = Statistics.VelocityPerDay(nqSales
-            .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength);
+            .Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
         var saleVelocityHq = Statistics.VelocityPerDay(hqSales
-            .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength);
+            .Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
 
         Assert.Equal(Round(saleVelocity), Round(history.SaleVelocity));
         Assert.Equal(Round(saleVelocityNq), Round(history.SaleVelocityNq));
         Assert.Equal(Round(saleVelocityHq), Round(history.SaleVelocityHq));
     }
 
-    private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<MinimizedSale> sales, long lastUploadTime, string worldOrDc, string entriesToReturn, long unixNowMs)
+    private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<Sale> sales, long lastUploadTime, string worldOrDc, string entriesToReturn, long unixNowMs)
     {
-        sales.Sort((a, b) => (int)b.SaleTimeUnixSeconds - (int)a.SaleTimeUnixSeconds);
+        sales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
         var nqSales = sales.Where(s => !s.Hq).ToList();
         var hqSales = sales.Where(s => s.Hq).ToList();
@@ -381,11 +381,11 @@ public class HistoryControllerTests
         Assert.True(IsSorted(history.StackSizeHistogramHq));
 
         var saleVelocity = Statistics.VelocityPerDay(sales
-            .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength);
+            .Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
         var saleVelocityNq = Statistics.VelocityPerDay(nqSales
-            .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength);
+            .Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
         var saleVelocityHq = Statistics.VelocityPerDay(hqSales
-            .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength);
+            .Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
 
         Assert.Equal(Round(saleVelocity), Round(history.SaleVelocity));
         Assert.Equal(Round(saleVelocityNq), Round(history.SaleVelocityNq));

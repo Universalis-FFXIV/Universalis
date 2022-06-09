@@ -1,22 +1,12 @@
-﻿using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
-using Universalis.Entities.MarketBoard;
+﻿using System;
 
 namespace Universalis.DbAccess.Queries.MarketBoard;
 
-public class CurrentlyShownQuery : DbAccessQuery<CurrentlyShown>, IEquatable<CurrentlyShownQuery>
+public class CurrentlyShownQuery : IEquatable<CurrentlyShownQuery>
 {
     public uint WorldId { get; init; }
 
     public uint ItemId { get; init; }
-
-    internal override FilterDefinition<CurrentlyShown> ToFilterDefinition()
-    {
-        var filterBuilder = Builders<CurrentlyShown>.Filter;
-        var filter = filterBuilder.Eq(o => o.WorldId, WorldId) & filterBuilder.Eq(o => o.ItemId, ItemId);
-        return filter;
-    }
         
     public bool Equals(CurrentlyShownQuery other)
     {

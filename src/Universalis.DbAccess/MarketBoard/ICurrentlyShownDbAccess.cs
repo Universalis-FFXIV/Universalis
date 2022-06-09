@@ -7,7 +7,7 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public interface ICurrentlyShownDbAccess
 {
-    public Task<CurrentlyShownSimple> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default);
+    public Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default);
 
-    public Task Update(CurrentlyShownSimple document, CurrentlyShownQuery query, CancellationToken cancellationToken = default);
+    public Task Update(CurrentlyShown document, CurrentlyShownQuery query, CancellationToken cancellationToken = default);
 }

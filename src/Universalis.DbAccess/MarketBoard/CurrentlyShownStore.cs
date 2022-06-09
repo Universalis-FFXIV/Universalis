@@ -17,7 +17,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _redis = redis;
     }
 
-    public async Task<CurrentlyShownSimple> GetData(uint worldId, uint itemId)
+    public async Task<CurrentlyShown> GetData(uint worldId, uint itemId)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
         
@@ -25,8 +25,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
         if (!await db.KeyExistsAsync(lastUpdatedKey))
         {
-            return new CurrentlyShownSimple(0, 0, 0, "",
-                new List<ListingSimple>(), new List<SaleSimple>());
+            return new CurrentlyShown(0, 0, 0, "",
+                new List<Listing>(), new List<Sale>());
         }
         
         // Fetch all of the data in a consistent manner. This shouldn't usually run more
@@ -34,8 +34,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         bool transactionExecuted;
         long lastUpdated;
         string source;
-        IEnumerable<ListingSimple> listings;
-        IEnumerable<SaleSimple> sales;
+        IEnumerable<Listing> listings;
+        IEnumerable<Sale> sales;
         do
         {
             lastUpdated = await EnsureLastUpdated(worldId, itemId);
@@ -55,10 +55,10 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             transactionExecuted = await trans.ExecuteAsync();
         } while (!transactionExecuted);
         
-        return new CurrentlyShownSimple(worldId, itemId, lastUpdated, source, listings.ToList(), sales.ToList());
+        return new CurrentlyShown(worldId, itemId, lastUpdated, source, listings.ToList(), sales.ToList());
     }
 
-    public async Task SetData(CurrentlyShownSimple data)
+    public async Task SetData(CurrentlyShown data)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
 
@@ -126,14 +126,14 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _ = trans.StringSetAsync(sourceKey, source);
     }
 
-    private static async Task<ListingSimple[]> GetListings(IDatabaseAsync db, uint worldId, uint itemId)
+    private static async Task<Listing[]> GetListings(IDatabaseAsync db, uint worldId, uint itemId)
     {
         var listingsKey = GetListingsIndexKey(worldId, itemId);
         
         var listingIdsRaw = await db.StringGetAsync(listingsKey);
         if (listingIdsRaw.IsNullOrEmpty)
         {
-            return Array.Empty<ListingSimple>();
+            return Array.Empty<Listing>();
         }
 
         var listingIds = ParseObjectIds(listingIdsRaw);
@@ -143,7 +143,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 var listingKey = GetListingKey(worldId, itemId, id);
                 var listingEntries = await db.HashGetAllAsync(listingKey);
                 var listing = listingEntries.ToDictionary();
-                return new ListingSimple
+                return new Listing
                 {
                     ListingId = GetValueString(listing, "id"),
                     Hq = GetValueBool(listing, "hq"),
@@ -165,7 +165,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         return await Task.WhenAll(listingFetches);
     }
     
-    private static void SetListingsAtomic(IDatabaseAsync trans, uint worldId, uint itemId, IEnumerable<Guid> existingListingIds, IList<ListingSimple> listings)
+    private static void SetListingsAtomic(IDatabaseAsync trans, uint worldId, uint itemId, IEnumerable<Guid> existingListingIds, IList<Listing> listings)
     {
         var listingsKey = GetListingsIndexKey(worldId, itemId);
         
@@ -204,14 +204,14 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _ = trans.StringSetAsync(listingsKey, SerializeObjectIds(newListingIds));
     }
     
-    private static async Task<SaleSimple[]> GetSales(IDatabaseAsync db, uint worldId, uint itemId)
+    private static async Task<Sale[]> GetSales(IDatabaseAsync db, uint worldId, uint itemId)
     {
         var salesKey = GetSalesIndexKey(worldId, itemId);
         
         var saleIdsRaw = await db.StringGetAsync(salesKey);
         if (saleIdsRaw.IsNullOrEmpty)
         {
-            return Array.Empty<SaleSimple>();
+            return Array.Empty<Sale>();
         }
 
         var saleIds = ParseObjectIds(saleIdsRaw);
@@ -221,7 +221,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 var saleKey = GetSaleKey(worldId, itemId, id);
                 var saleEntries = await db.HashGetAllAsync(saleKey);
                 var sale = saleEntries.ToDictionary();
-                return new SaleSimple
+                return new Sale
                 {
                     Hq = GetValueBool(sale, "hq"),
                     PricePerUnit = GetValueUInt32(sale, "ppu"),
@@ -234,7 +234,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         return await Task.WhenAll(saleFetches);
     }
     
-    private static void SetSalesAtomic(IDatabaseAsync trans, uint worldId, uint itemId, IEnumerable<Guid> existingSaleIds, IList<SaleSimple> sales)
+    private static void SetSalesAtomic(IDatabaseAsync trans, uint worldId, uint itemId, IEnumerable<Guid> existingSaleIds, IList<Sale> sales)
     {
         var salesKey = GetSalesIndexKey(worldId, itemId);
         
@@ -254,7 +254,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             {
                 new HashEntry("hq", sale.Hq),
                 new HashEntry("ppu", sale.PricePerUnit),
-                new HashEntry("q", sale.Quantity),
+                new HashEntry("q", sale.Quantity ?? 0),
                 new HashEntry("bn", sale.BuyerName ?? ""),
                 new HashEntry("t", sale.TimestampUnixSeconds),
             });

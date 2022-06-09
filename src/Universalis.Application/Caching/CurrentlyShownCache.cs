@@ -56,14 +56,14 @@ public class CurrentlyShownCache : MemoryCache<CurrentlyShownQuery, CachedCurren
         }
 
         // Transform data into a view
-        var dataConversions = await Task.WhenAll((data.Listings ?? new List<ListingSimple>())
+        var dataConversions = await Task.WhenAll((data.Listings ?? new List<Listing>())
             .Select(l => Util.ListingSimpleToView(l, cancellationToken)));
         var dataListings = dataConversions
             .Where(s => s.PricePerUnit > 0)
             .Where(s => s.Quantity > 0)
             .ToList();
 
-        var dataHistory = (data.Sales ?? new List<SaleSimple>())
+        var dataHistory = (data.Sales ?? new List<Sale>())
             .Where(s => s.PricePerUnit > 0)
             .Where(s => s.Quantity > 0)
             .Where(s => s.TimestampUnixSeconds > 0)

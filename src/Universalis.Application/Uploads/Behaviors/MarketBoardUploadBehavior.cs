@@ -7,7 +7,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
-using Universalis.Application.Controllers;
 using Universalis.Application.Realtime;
 using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
@@ -77,7 +76,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var itemId = parameters.ItemId.Value;
         // ReSharper restore PossibleInvalidOperationException
 
-        List<SaleSimple> cleanSales = null;
+        List<Sale> cleanSales = null;
         if (parameters.Sales != null)
         {
             if (Util.HasHtmlTags(JsonSerializer.Serialize(parameters.Sales)))
@@ -86,13 +85,14 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             }
 
             cleanSales = parameters.Sales
-                .Select(s => new SaleSimple
+                .Select(s => new Sale
                 {
                     Hq = Util.ParseUnusualBool(s.Hq),
                     BuyerName = s.BuyerName,
                     PricePerUnit = s.PricePerUnit ?? 0,
                     Quantity = s.Quantity ?? 0,
                     TimestampUnixSeconds = s.TimestampUnixSeconds ?? 0,
+                    UploaderIdHash = parameters.UploaderId
                 })
                 .Where(s => s.PricePerUnit > 0)
                 .Where(s => s.Quantity > 0)
@@ -105,12 +105,9 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 WorldId = worldId,
                 ItemId = itemId,
             }, cancellationToken);
-            var minimizedSales = cleanSales
-                .Select(s => MinimizedSale.FromSaleSimple(s, parameters.UploaderId))
-                .ToList();
 
             // Used for WebSocket updates
-            var addedSales = new List<SaleSimple>();
+            var addedSales = new List<Sale>();
 
             var historyDocument = new History
             {
@@ -121,16 +118,16 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
             if (existingHistory == null)
             {
-                historyDocument.Sales = minimizedSales;
+                historyDocument.Sales = cleanSales;
                 await _historyDb.Create(historyDocument, cancellationToken);
             }
             else
             {
                 // Remove duplicates
                 var head = existingHistory.Sales.FirstOrDefault();
-                foreach (var (minimizedSale, sale) in minimizedSales.Zip(cleanSales).TakeWhile(t => !t.First.Equals(head)))
+                foreach (var sale in cleanSales.TakeWhile(t => !t.Equals(head)))
                 {
-                    existingHistory.Sales.Insert(0, minimizedSale);
+                    existingHistory.Sales.Insert(0, sale);
                     addedSales.Add(sale);
                 }
 
@@ -138,7 +135,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 existingHistory.Sales = existingHistory.Sales
                     .Where(s => s.PricePerUnit > 0) // We check PPU and *not* quantity because there are entries from before quantity was tracked
                     .Distinct()
-                    .OrderByDescending(s => s.SaleTimeUnixSeconds)
+                    .OrderByDescending(s => s.TimestampUnixSeconds)
                     .ToList();
 
                 historyDocument.Sales = existingHistory.Sales;
@@ -169,7 +166,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             ItemId = itemId,
         }, cancellationToken);
 
-        List<ListingSimple> newListings = null;
+        List<Listing> newListings = null;
         if (parameters.Listings != null)
         {
             if (Util.HasHtmlTags(JsonSerializer.Serialize(parameters.Listings)))
@@ -180,7 +177,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             newListings = parameters.Listings
                 .Select(l =>
                 {
-                    return new ListingSimple
+                    return new Listing
                     {
                         ListingId = l.ListingId ?? "",
                         Hq = Util.ParseUnusualBool(l.Hq),
@@ -210,7 +207,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 .OrderBy(l => l.PricePerUnit)
                 .ToList();
 
-            var oldListings = existingCurrentlyShown?.Listings ?? new List<ListingSimple>();
+            var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
             var addedListings = newListings.Where(l => !oldListings.Contains(l)).ToList();
             var removedListings = oldListings.Where(l => !newListings.Contains(l)).ToList();
 
@@ -248,9 +245,9 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         }
 
         var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-        var listings = newListings ?? existingCurrentlyShown?.Listings ?? new List<ListingSimple>();
-        var sales = cleanSales ?? existingCurrentlyShown?.Sales ?? new List<SaleSimple>();
-        var document = new CurrentlyShownSimple(worldId, itemId, now, source.Name, listings, sales);
+        var listings = newListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>();
+        var sales = cleanSales ?? existingCurrentlyShown?.Sales ?? new List<Sale>();
+        var document = new CurrentlyShown(worldId, itemId, now, source.Name, listings, sales);
 
         if (await _cache.Delete(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId }, cancellationToken))
         {
