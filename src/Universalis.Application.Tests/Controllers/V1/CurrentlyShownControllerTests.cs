@@ -451,9 +451,9 @@ public class CurrentlyShownControllerTests
         var saleVelocity = Statistics.VelocityPerDay(
             currentlyShown.RecentHistory.Select(s => s.TimestampUnixSeconds * 1000), now, WeekLength);
         var saleVelocityNq = Statistics.VelocityPerDay(
-            nqHistory.Select(s => s.TimestampUnixSeconds * 1000), now, WeekLength);
+            nqHistory.Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), now, WeekLength);
         var saleVelocityHq = Statistics.VelocityPerDay(
-            hqHistory.Select(s => s.TimestampUnixSeconds * 1000), now, WeekLength);
+            hqHistory.Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), now, WeekLength);
 
         Assert.Equal(Round(saleVelocity), Round(currentlyShown.SaleVelocity));
         Assert.Equal(Round(saleVelocityNq), Round(currentlyShown.SaleVelocityNq));

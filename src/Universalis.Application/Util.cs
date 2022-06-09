@@ -34,7 +34,7 @@ public static class Util
             PricePerUnit = s.PricePerUnit,
             Quantity = quantity,
             Total = s.PricePerUnit * quantity,
-            TimestampUnixSeconds = s.TimestampUnixSeconds,
+            TimestampUnixSeconds = Convert.ToInt64(s.TimestampUnixSeconds),
             BuyerName = s.BuyerName,
         };
     }

@@ -54,12 +54,12 @@ public static class SeedDataGenerator
             ItemId = itemId,
             LastUploadTimeUnixMilliseconds = lastUploadTime ?? DateTimeOffset.Now.ToUnixTimeMilliseconds(),
             Sales = Enumerable.Range(0, 100)
-                .Select(i => new MinimizedSale
+                .Select(i => new Sale
                 {
                     Hq = rand.NextDouble() > 0.5,
                     PricePerUnit = (uint)rand.Next(100, 60000),
                     Quantity = (uint)rand.Next(1, 999),
-                    SaleTimeUnixSeconds = (uint)(DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000)),
+                    TimestampUnixSeconds = Convert.ToDouble(DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000)),
                     UploaderIdHash = "2A",
                 })
                 .ToList(),

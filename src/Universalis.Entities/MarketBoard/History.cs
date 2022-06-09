@@ -15,5 +15,5 @@ public class History
     public double LastUploadTimeUnixMilliseconds { get; set; }
 
     [BsonElement("entries")]
-    public List<MinimizedSale> Sales { get; set; }
+    public List<Sale> Sales { get; set; }
 }

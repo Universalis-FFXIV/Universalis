@@ -92,6 +92,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     PricePerUnit = s.PricePerUnit ?? 0,
                     Quantity = s.Quantity ?? 0,
                     TimestampUnixSeconds = s.TimestampUnixSeconds ?? 0,
+                    UploaderIdHash = parameters.UploaderId
                 })
                 .Where(s => s.PricePerUnit > 0)
                 .Where(s => s.Quantity > 0)
@@ -104,9 +105,6 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 WorldId = worldId,
                 ItemId = itemId,
             }, cancellationToken);
-            var minimizedSales = cleanSales
-                .Select(s => MinimizedSale.FromSaleSimple(s, parameters.UploaderId))
-                .ToList();
 
             // Used for WebSocket updates
             var addedSales = new List<Sale>();
@@ -120,16 +118,16 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
             if (existingHistory == null)
             {
-                historyDocument.Sales = minimizedSales;
+                historyDocument.Sales = cleanSales;
                 await _historyDb.Create(historyDocument, cancellationToken);
             }
             else
             {
                 // Remove duplicates
                 var head = existingHistory.Sales.FirstOrDefault();
-                foreach (var (minimizedSale, sale) in minimizedSales.Zip(cleanSales).TakeWhile(t => !t.First.Equals(head)))
+                foreach (var sale in cleanSales.TakeWhile(t => !t.Equals(head)))
                 {
-                    existingHistory.Sales.Insert(0, minimizedSale);
+                    existingHistory.Sales.Insert(0, sale);
                     addedSales.Add(sale);
                 }
 
@@ -137,7 +135,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 existingHistory.Sales = existingHistory.Sales
                     .Where(s => s.PricePerUnit > 0) // We check PPU and *not* quantity because there are entries from before quantity was tracked
                     .Distinct()
-                    .OrderByDescending(s => s.SaleTimeUnixSeconds)
+                    .OrderByDescending(s => s.TimestampUnixSeconds)
                     .ToList();
 
                 historyDocument.Sales = existingHistory.Sales;

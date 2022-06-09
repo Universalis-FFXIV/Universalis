@@ -19,6 +19,21 @@ public class HistoryControllerTests
 {
     private const long WeekLength = 604800000L;
 
+    private List<Sale> MakeSales(int n)
+    {
+        var rand = new Random();
+        return Enumerable.Range(0, n)
+            .Select(i => new Sale
+            {
+                Hq = rand.NextDouble() > 0.5,
+                PricePerUnit = (uint)rand.Next(100, 60000),
+                Quantity = (uint)rand.Next(1, 999),
+                TimestampUnixSeconds = Convert.ToDouble(DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 80000)),
+                UploaderIdHash = "2A",
+            })
+            .ToList();
+    }
+
     [Theory]
     [InlineData("74", "")]
     [InlineData("Coeurl", " bingus4645")]
@@ -28,23 +43,13 @@ public class HistoryControllerTests
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockHistoryDbAccess();
         var controller = new HistoryController(gameData, dbAccess);
-        var rand = new Random();
 
         var document = new History
         {
             WorldId = 74,
             ItemId = 5333,
             LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            Sales = Enumerable.Range(0, 100)
-                .Select(i => new MinimizedSale
-                {
-                    Hq = rand.NextDouble() > 0.5,
-                    PricePerUnit = (uint)rand.Next(100, 60000),
-                    Quantity = (uint)rand.Next(1, 999),
-                    SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                    UploaderIdHash = "2A",
-                })
-                .ToList(),
+            Sales = MakeSales(100),
         };
         await dbAccess.Create(document);
 
@@ -72,16 +77,7 @@ public class HistoryControllerTests
             WorldId = 74,
             ItemId = 5333,
             LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            Sales = Enumerable.Range(0, 100)
-                .Select(i => new MinimizedSale
-                {
-                    Hq = rand.NextDouble() > 0.5,
-                    PricePerUnit = (uint)rand.Next(100, 60000),
-                    Quantity = (uint)rand.Next(1, 999),
-                    SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                    UploaderIdHash = "2A",
-                })
-                .ToList(),
+            Sales = MakeSales(100),
         };
         await dbAccess.Create(document1);
 
@@ -90,16 +86,7 @@ public class HistoryControllerTests
             WorldId = 74,
             ItemId = 5,
             LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            Sales = Enumerable.Range(0, 100)
-                .Select(i => new MinimizedSale
-                {
-                    Hq = rand.NextDouble() > 0.5,
-                    PricePerUnit = (uint)rand.Next(100, 60000),
-                    Quantity = (uint)rand.Next(1, 999),
-                    SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                    UploaderIdHash = "2A",
-                })
-                .ToList(),
+            Sales = MakeSales(100),
         };
         await dbAccess.Create(document2);
 
@@ -135,16 +122,7 @@ public class HistoryControllerTests
             WorldId = 74,
             ItemId = 5333,
             LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            Sales = Enumerable.Range(0, 100)
-                .Select(i => new MinimizedSale
-                {
-                    Hq = rand.NextDouble() > 0.5,
-                    PricePerUnit = (uint)rand.Next(100, 60000),
-                    Quantity = (uint)rand.Next(1, 999),
-                    SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                    UploaderIdHash = "2A",
-                })
-                .ToList(),
+            Sales = MakeSales(100),
         };
         await dbAccess.Create(document1);
 
@@ -153,16 +131,7 @@ public class HistoryControllerTests
             WorldId = 34,
             ItemId = 5333,
             LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            Sales = Enumerable.Range(0, 100)
-                .Select(i => new MinimizedSale
-                {
-                    Hq = rand.NextDouble() > 0.5,
-                    PricePerUnit = (uint)rand.Next(100, 60000),
-                    Quantity = (uint)rand.Next(1, 999),
-                    SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                    UploaderIdHash = "2A",
-                })
-                .ToList(),
+            Sales = MakeSales(100),
         };
         await dbAccess.Create(document2);
 
@@ -202,16 +171,7 @@ public class HistoryControllerTests
             WorldId = 74,
             ItemId = 5333,
             LastUploadTimeUnixMilliseconds = lastUploadTime,
-            Sales = Enumerable.Range(0, 100)
-                .Select(i => new MinimizedSale
-                {
-                    Hq = rand.NextDouble() > 0.5,
-                    PricePerUnit = (uint)rand.Next(100, 60000),
-                    Quantity = (uint)rand.Next(1, 999),
-                    SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                    UploaderIdHash = "2A",
-                })
-                .ToList(),
+            Sales = MakeSales(100),
         };
         await dbAccess.Create(document1);
 
@@ -220,16 +180,7 @@ public class HistoryControllerTests
             WorldId = 34,
             ItemId = 5,
             LastUploadTimeUnixMilliseconds = lastUploadTime,
-            Sales = Enumerable.Range(0, 100)
-                .Select(i => new MinimizedSale
-                {
-                    Hq = rand.NextDouble() > 0.5,
-                    PricePerUnit = (uint)rand.Next(100, 60000),
-                    Quantity = (uint)rand.Next(1, 999),
-                    SaleTimeUnixSeconds = (uint)DateTimeOffset.Now.ToUnixTimeSeconds() - (uint)rand.Next(0, 80000),
-                    UploaderIdHash = "2A",
-                })
-                .ToList(),
+            Sales = MakeSales(100),
         };
         await dbAccess.Create(document2);
 
@@ -437,7 +388,7 @@ public class HistoryControllerTests
 
     private static void AssertHistoryValidWorld(History document, HistoryView history, IGameDataProvider gameData, string entriesToReturn, long unixNowMs)
     {
-        document.Sales.Sort((a, b) => (int)b.SaleTimeUnixSeconds - (int)a.SaleTimeUnixSeconds);
+        document.Sales.Sort((a, b) => (int)(b.TimestampUnixSeconds - a.TimestampUnixSeconds));
 
         var nqSales = document.Sales.Where(s => !s.Hq).ToList();
         var hqSales = document.Sales.Where(s => s.Hq).ToList();
@@ -457,19 +408,19 @@ public class HistoryControllerTests
         Assert.True(IsSorted(history.StackSizeHistogramHq));
 
         Assert.Equal(Statistics.VelocityPerDay(document.Sales
-                .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength),
+                .Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength),
             history.SaleVelocity);
         Assert.Equal(Statistics.VelocityPerDay(nqSales
-                .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength),
+                .Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength),
             history.SaleVelocityNq);
         Assert.Equal(Statistics.VelocityPerDay(hqSales
-                .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength),
+                .Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength),
             history.SaleVelocityHq);
     }
 
-    private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<MinimizedSale> sales, long lastUploadTime, string worldOrDc, string entriesToReturn, long unixNowMs)
+    private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<Sale> sales, long lastUploadTime, string worldOrDc, string entriesToReturn, long unixNowMs)
     {
-        sales.Sort((a, b) => (int)b.SaleTimeUnixSeconds - (int)a.SaleTimeUnixSeconds);
+        sales.Sort((a, b) => (int)(b.TimestampUnixSeconds - a.TimestampUnixSeconds));
 
         var nqSales = sales.Where(s => !s.Hq).ToList();
         var hqSales = sales.Where(s => s.Hq).ToList();
@@ -489,11 +440,11 @@ public class HistoryControllerTests
         Assert.True(IsSorted(history.StackSizeHistogramHq));
 
         var saleVelocity = Statistics.VelocityPerDay(sales
-            .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength);
+            .Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
         var saleVelocityNq = Statistics.VelocityPerDay(nqSales
-            .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength);
+            .Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
         var saleVelocityHq = Statistics.VelocityPerDay(hqSales
-            .Select(s => (long)s.SaleTimeUnixSeconds * 1000), unixNowMs, WeekLength);
+            .Select(s => s.TimestampUnixSeconds * 1000).Select(Convert.ToInt64), unixNowMs, WeekLength);
 
         Assert.Equal(Round(saleVelocity), Round(history.SaleVelocity));
         Assert.Equal(Round(saleVelocityNq), Round(history.SaleVelocityNq));
