@@ -58,6 +58,7 @@ public class HistoryDbAccessTests
                 .Select(d => d.Value)
                 .Where(sale => sale.WorldId == worldId && sale.ItemId == itemId)
                 .OrderByDescending(sale => sale.SaleTime)
+                .Take(count)
                 .ToList());
         }
     }
@@ -88,20 +89,25 @@ public class HistoryDbAccessTests
     }
 
     [Fact]
-    public async Task Update_DoesNotThrow()
+    public async Task InsertSales_Works()
     {
         var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore());
-        var document = SeedDataGenerator.MakeHistory(74, 5333);
-        var query = new HistoryQuery { WorldId = document.WorldId, ItemId = document.ItemId };
+        var history1 = SeedDataGenerator.MakeHistory(74, 5333);
+        var history2 = SeedDataGenerator.MakeHistory(74, 5333);
+        var history3 = SeedDataGenerator.MakeHistory(74, 5333);
+        var query = new HistoryQuery { WorldId = history1.WorldId, ItemId = history1.ItemId };
 
-        await db.Update(document, query);
-        await db.Update(document, query);
-
-        document.LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-        await db.Update(document, query);
+        await db.InsertSales(history1.Sales, query);
+        await db.InsertSales(history2.Sales, query);
+        await db.InsertSales(history3.Sales, query);
 
         var retrieved = await db.Retrieve(query);
-        Assert.Equal(document.LastUploadTimeUnixMilliseconds, retrieved.LastUploadTimeUnixMilliseconds);
+
+        var expectedSorted = history1.Sales.Concat(history2.Sales).Concat(history3.Sales)
+            .OrderByDescending(s => s.SaleTime).Take(1000).ToList();
+        var actualSorted = retrieved.Sales.OrderByDescending(s => s.SaleTime).ToList();
+        
+        Assert.Equal(expectedSorted, actualSorted);
     }
 
     [Fact]

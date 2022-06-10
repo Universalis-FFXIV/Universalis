@@ -11,10 +11,12 @@ namespace Universalis.DbAccess.MarketBoard;
 public class CurrentlyShownStore : ICurrentlyShownStore
 {
     private readonly IConnectionMultiplexer _redis;
+    private readonly ISaleStore _saleStore;
 
-    public CurrentlyShownStore(IConnectionMultiplexer redis)
+    public CurrentlyShownStore(IConnectionMultiplexer redis, ISaleStore saleStore)
     {
         _redis = redis;
+        _saleStore = saleStore;
     }
 
     public async Task<CurrentlyShown> GetData(uint worldId, uint itemId)
@@ -26,7 +28,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         if (!await db.KeyExistsAsync(lastUpdatedKey))
         {
             return new CurrentlyShown(0, 0, 0, "",
-                new List<Listing>(), new List<Sale>());
+                new List<Listing>());
         }
         
         // Fetch all of the data in a consistent manner. This shouldn't usually run more
@@ -45,7 +47,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
             var sourceTask = GetSource(db, worldId, itemId);
             var listingsTask = GetListings(db, worldId, itemId);
-            var salesTask = GetSales(db, worldId, itemId);
+            var salesTask = _saleStore.RetrieveBySaleTime(worldId, itemId, 10);
             await Task.WhenAll(sourceTask, listingsTask, salesTask);
             
             source = await sourceTask;
@@ -55,7 +57,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             transactionExecuted = await trans.ExecuteAsync();
         } while (!transactionExecuted);
         
-        return new CurrentlyShown(worldId, itemId, lastUpdated, source, listings.ToList(), sales.ToList());
+        return new CurrentlyShown(worldId, itemId, lastUpdated, source, listings.ToList());
     }
 
     public async Task SetData(CurrentlyShown data)
@@ -67,7 +69,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         var lastUploadTime = data.LastUploadTimeUnixMilliseconds;
         var uploadSource = data.UploadSource;
         var listings = data.Listings;
-        var sales = data.Sales;
 
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
         var lastUpdated = await EnsureLastUpdated(worldId, itemId);
@@ -81,12 +82,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         var existingListingIdsRaw = await db.StringGetAsync(listingsKey);
         var existingListingIds = ParseObjectIds(existingListingIdsRaw);
         SetListingsAtomic(trans, worldId, itemId, existingListingIds, listings);
-        
-        // Queue an update to the sales
-        var salesKey = GetSalesIndexKey(worldId, itemId);
-        var existingSaleIdsRaw = await db.StringGetAsync(salesKey);
-        var existingSaleIds = ParseObjectIds(existingSaleIdsRaw);
-        SetSalesAtomic(trans, worldId, itemId, existingSaleIds, sales);
         
         // Queue an update to the upload source
         SetSourceAtomic(trans, worldId, itemId, uploadSource);
@@ -204,66 +199,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _ = trans.StringSetAsync(listingsKey, SerializeObjectIds(newListingIds));
     }
     
-    private static async Task<Sale[]> GetSales(IDatabaseAsync db, uint worldId, uint itemId)
-    {
-        var salesKey = GetSalesIndexKey(worldId, itemId);
-        
-        var saleIdsRaw = await db.StringGetAsync(salesKey);
-        if (saleIdsRaw.IsNullOrEmpty)
-        {
-            return Array.Empty<Sale>();
-        }
-
-        var saleIds = ParseObjectIds(saleIdsRaw);
-        var saleFetches = saleIds
-            .Select(async id =>
-            {
-                var saleKey = GetSaleKey(worldId, itemId, id);
-                var saleEntries = await db.HashGetAllAsync(saleKey);
-                var sale = saleEntries.ToDictionary();
-                return new Sale
-                {
-                    Hq = GetValueBool(sale, "hq"),
-                    PricePerUnit = GetValueUInt32(sale, "ppu"),
-                    Quantity = GetValueUInt32(sale, "q"),
-                    BuyerName = GetValueString(sale, "bn"),
-                    SaleTime = DateTimeOffset.FromUnixTimeMilliseconds(GetValueInt64(sale, "t")),
-                };
-            });
-        
-        return await Task.WhenAll(saleFetches);
-    }
-    
-    private static void SetSalesAtomic(IDatabaseAsync trans, uint worldId, uint itemId, IEnumerable<Guid> existingSaleIds, IList<Sale> sales)
-    {
-        var salesKey = GetSalesIndexKey(worldId, itemId);
-        
-        // Delete the existing sales
-        foreach (var saleId in existingSaleIds)
-        {
-            var saleKey = GetSaleKey(worldId, itemId, saleId);
-            _ = trans.KeyDeleteAsync(saleKey);
-        }
-        
-        // Set the updated sales
-        var newSaleIds = sales.Select(_ => Guid.NewGuid()).ToList();
-        foreach (var (sale, saleId) in sales.Zip(newSaleIds))
-        {
-            var saleKey = GetSaleKey(worldId, itemId, saleId);
-            _ = trans.HashSetAsync(saleKey, new []
-            {
-                new HashEntry("hq", sale.Hq),
-                new HashEntry("ppu", sale.PricePerUnit),
-                new HashEntry("q", sale.Quantity ?? 0),
-                new HashEntry("bn", sale.BuyerName ?? ""),
-                new HashEntry("t", sale.SaleTime.ToUnixTimeMilliseconds()),
-            });
-        }
-        
-        // Update the sales index
-        _ = trans.StringSetAsync(salesKey, SerializeObjectIds(newSaleIds));
-    }
-    
     private static uint GetValueUInt32(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? (uint)hash[key] : 0;
@@ -354,15 +289,5 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     private static string GetListingKey(uint worldId, uint itemId, Guid listingId)
     {
         return $"{worldId}:{itemId}:Listings:{listingId.ToString()}";
-    }
-    
-    private static string GetSalesIndexKey(uint worldId, uint itemId)
-    {
-        return $"{worldId}:{itemId}:Sales";
-    }
-    
-    private static string GetSaleKey(uint worldId, uint itemId, Guid saleId)
-    {
-        return $"{worldId}:{itemId}:Sales:{saleId.ToString()}";
     }
 }

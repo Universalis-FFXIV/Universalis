@@ -29,18 +29,22 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_Succeeds_SingleItem_World(string worldOrDc)
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
 
         const uint itemId = 5333;
-        var document = SeedDataGenerator.MakeCurrentlyShownSimple(74, itemId);
-        await dbAccess.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
+        await currentlyShownDb.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = itemId });
+        
+        var sales = SeedDataGenerator.MakeHistory(74, itemId).Sales;
+        await historyDb.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId});
 
         var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
-        AssertCurrentlyShownValidWorld(document, currentlyShown, gameData);
+        AssertCurrentlyShownValidWorld(document, sales, currentlyShown, gameData);
     }
 
     [Theory]
@@ -50,13 +54,17 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_ReturnsOne_WithListings(string worldOrDc)
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
 
         const uint itemId = 5333;
-        var document = SeedDataGenerator.MakeCurrentlyShownSimple(74, itemId);
-        await dbAccess.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
+        await currentlyShownDb.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = itemId });
+        
+        var sales = SeedDataGenerator.MakeHistory(74, itemId).Sales;
+        await historyDb.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId});
 
         var result = await controller.Get(itemId.ToString(), worldOrDc, "1");
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
@@ -74,13 +82,17 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_ReturnsOne_WithEntries(string worldOrDc)
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
 
         const uint itemId = 5333;
-        var document = SeedDataGenerator.MakeCurrentlyShownSimple(74, itemId);
-        await dbAccess.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
+        await currentlyShownDb.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = itemId });
+        
+        var sales = SeedDataGenerator.MakeHistory(74, itemId).Sales;
+        await historyDb.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId});
 
         var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: "1");
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
@@ -98,15 +110,22 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_Succeeds_MultiItem_World(string worldOrDc)
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
 
-        var document1 = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333);
-        await dbAccess.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
+        await currentlyShownDb.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        
+        var sales1 = SeedDataGenerator.MakeHistory(74, 5333).Sales;
+        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333});
 
-        var document2 = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5);
-        await dbAccess.Update(document2, new CurrentlyShownQuery { WorldId = 74, ItemId = 5 });
+        var document2 = SeedDataGenerator.MakeCurrentlyShown(74, 5);
+        await currentlyShownDb.Update(document2, new CurrentlyShownQuery { WorldId = 74, ItemId = 5 });
+        
+        var sales2 = SeedDataGenerator.MakeHistory(74, 5).Sales;
+        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 74, ItemId = 5});
 
         var result = await controller.Get("5, 5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
@@ -118,8 +137,8 @@ public class CurrentlyShownControllerTests
         Assert.Equal(gameData.AvailableWorlds()[document1.WorldId], currentlyShown.WorldName);
         Assert.Null(currentlyShown.DcName);
 
-        AssertCurrentlyShownValidWorld(document1, currentlyShown.Items.First(item => item.ItemId == document1.ItemId), gameData);
-        AssertCurrentlyShownValidWorld(document2, currentlyShown.Items.First(item => item.ItemId == document2.ItemId), gameData);
+        AssertCurrentlyShownValidWorld(document1, sales1, currentlyShown.Items.First(item => item.ItemId == document1.ItemId), gameData);
+        AssertCurrentlyShownValidWorld(document2, sales2, currentlyShown.Items.First(item => item.ItemId == document2.ItemId), gameData);
     }
 
     [Theory]
@@ -128,26 +147,34 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_Succeeds_SingleItem_DataCenter(string worldOrDc)
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
         var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-        var document1 = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333, unixNowMs);
-        await dbAccess.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
+        await currentlyShownDb.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        
+        var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
+        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333});
 
-        var document2 = SeedDataGenerator.MakeCurrentlyShownSimple(34, 5333, unixNowMs);
-        await dbAccess.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5333 });
+        var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5333, unixNowMs);
+        await currentlyShownDb.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5333 });
+        
+        var sales2 = SeedDataGenerator.MakeHistory(34, 5333, unixNowMs).Sales;
+        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5333});
 
         var result = await controller.Get("5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
         var joinedListings = document1.Listings.Concat(document2.Listings).ToList();
-        var joinedSales = document1.Sales.Concat(document2.Sales).ToList();
-        var joinedDocument = new CurrentlyShown(0, 5333, unixNowMs, "test runner", joinedListings, joinedSales);
+        var joinedSales = sales1.Concat(sales2).ToList();
+        var joinedDocument = new CurrentlyShown(0, 5333, unixNowMs, "test runner", joinedListings);
 
         AssertCurrentlyShownDataCenter(
             joinedDocument,
+            joinedSales,
             currentlyShown,
             unixNowMs,
             worldOrDc,
@@ -160,16 +187,23 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_Succeeds_MultiItem_DataCenter(string worldOrDc)
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
         var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-        var document1 = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333, unixNowMs);
-        await dbAccess.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
+        await currentlyShownDb.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        
+        var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
+        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333});
 
-        var document2 = SeedDataGenerator.MakeCurrentlyShownSimple(34, 5, unixNowMs);
-        await dbAccess.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5 });
+        var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5, unixNowMs);
+        await currentlyShownDb.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5 });
+        
+        var sales2 = SeedDataGenerator.MakeHistory(34, 5, unixNowMs).Sales;
+        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 34, ItemId = 5});
 
         var result = await controller.Get("5,5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
@@ -184,12 +218,14 @@ public class CurrentlyShownControllerTests
 
         AssertCurrentlyShownDataCenter(
             document1,
+            sales1,
             currentlyShown.Items.First(item => item.ItemId == document1.ItemId),
             unixNowMs,
             worldOrDc,
             unixNowMs);
         AssertCurrentlyShownDataCenter(
             document2,
+            sales2,
             currentlyShown.Items.First(item => item.ItemId == document2.ItemId),
             unixNowMs,
             worldOrDc,
@@ -203,9 +239,10 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_Succeeds_SingleItem_World_WhenNone(string worldOrDc)
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
 
         const uint itemId = 5333;
         var result = await controller.Get(itemId.ToString(), worldOrDc);
@@ -239,9 +276,10 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_Succeeds_MultiItem_World_WhenNone(string worldOrDc)
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
 
         var result = await controller.Get("5333,5", worldOrDc);
 
@@ -263,9 +301,10 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_Succeeds_SingleItem_DataCenter_WhenNone(string worldOrDc)
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
 
         const uint itemId = 5333;
         var result = await controller.Get(itemId.ToString(), worldOrDc);
@@ -296,9 +335,10 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_Succeeds_MultiItem_DataCenter_WhenNone(string worldOrDc)
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
 
         var result = await controller.Get("5333,5", worldOrDc);
 
@@ -317,9 +357,10 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_Succeeds_SingleItem_World_WhenNotMarketable()
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
 
         const uint itemId = 0;
         var result = await controller.Get(itemId.ToString(), "74");
@@ -331,9 +372,10 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_Succeeds_MultiItem_World_WhenNotMarketable()
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
 
         var result = await controller.Get("0, 4294967295", "74");
 
@@ -350,9 +392,10 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_Succeeds_SingleItem_DataCenter_WhenNotMarketable()
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
 
         const uint itemId = 0;
         var result = await controller.Get(itemId.ToString(), "Crystal");
@@ -364,9 +407,10 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_Succeeds_MultiItem_DataCenter_WhenNotMarketable()
     {
         var gameData = new MockGameDataProvider();
-        var dbAccess = new MockCurrentlyShownDbAccess();
+        var currentlyShownDb = new MockCurrentlyShownDbAccess();
+        var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, dbAccess, cache);
+        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
 
         var result = await controller.Get("0 ,4294967295", "crystal");
 
@@ -381,7 +425,7 @@ public class CurrentlyShownControllerTests
         Assert.Null(history.WorldId);
     }
 
-    private static void AssertCurrentlyShownValidWorld(CurrentlyShown document, CurrentlyShownView currentlyShown, IGameDataProvider gameData)
+    private static void AssertCurrentlyShownValidWorld(CurrentlyShown document, List<Sale> sales, CurrentlyShownView currentlyShown, IGameDataProvider gameData)
     {
         Assert.Equal(document.ItemId, currentlyShown.ItemId);
         Assert.Equal(document.WorldId, currentlyShown.WorldId);
@@ -395,7 +439,7 @@ public class CurrentlyShownControllerTests
         currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
         document.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
-        document.Sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
+        sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
         var listings = document.Listings.Select(l =>
         {
@@ -412,8 +456,8 @@ public class CurrentlyShownControllerTests
         var nqListings = listings.Where(s => !s.Hq).ToList();
         var hqListings = listings.Where(s => s.Hq).ToList();
 
-        var nqHistory = document.Sales.Where(s => !s.Hq).ToList();
-        var hqHistory = document.Sales.Where(s => s.Hq).ToList();
+        var nqHistory = sales.Where(s => !s.Hq).ToList();
+        var hqHistory = sales.Where(s => s.Hq).ToList();
 
         var currentAveragePrice = Filters.RemoveOutliers(document.Listings.Select(s => (float)s.PricePerUnit), 3).Average();
         var currentAveragePriceNq = Filters.RemoveOutliers(nqListings.Select(s => (float)s.PricePerUnit), 3).Average();
@@ -423,7 +467,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(Round(currentAveragePriceNq), Round(currentlyShown.CurrentAveragePriceNq));
         Assert.Equal(Round(currentAveragePriceHq), Round(currentlyShown.CurrentAveragePriceHq));
 
-        var averagePrice = Filters.RemoveOutliers(document.Sales.Select(s => (float)s.PricePerUnit), 3).Average();
+        var averagePrice = Filters.RemoveOutliers(sales.Select(s => (float)s.PricePerUnit), 3).Average();
         var averagePriceNq = Filters.RemoveOutliers(nqHistory.Select(s => (float)s.PricePerUnit), 3).Average();
         var averagePriceHq = Filters.RemoveOutliers(hqHistory.Select(s => (float)s.PricePerUnit), 3).Average();
 
@@ -468,7 +512,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
     }
 
-    private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc, long unixNowMs)
+    private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, List<Sale> sales, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc, long unixNowMs)
     {
         Assert.Equal(anyWorldDocument.ItemId, currentlyShown.ItemId);
         Assert.Equal(lastUploadTime, currentlyShown.LastUploadTimeUnixMilliseconds);
@@ -482,7 +526,7 @@ public class CurrentlyShownControllerTests
         currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
         anyWorldDocument.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
-        anyWorldDocument.Sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
+        sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
         var listings = anyWorldDocument.Listings.Select(l =>
         {
@@ -499,8 +543,8 @@ public class CurrentlyShownControllerTests
         var nqListings = listings.Where(s => !s.Hq).ToList();
         var hqListings = listings.Where(s => s.Hq).ToList();
 
-        var nqHistory = anyWorldDocument.Sales.Where(s => !s.Hq).ToList();
-        var hqHistory = anyWorldDocument.Sales.Where(s => s.Hq).ToList();
+        var nqHistory = sales.Where(s => !s.Hq).ToList();
+        var hqHistory = sales.Where(s => s.Hq).ToList();
 
         var currentAveragePrice = Filters.RemoveOutliers(listings.Select(s => (float)s.PricePerUnit), 3).Average();
         var currentAveragePriceNq = Filters.RemoveOutliers(nqListings.Select(s => (float)s.PricePerUnit), 3).Average();
@@ -510,7 +554,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(Round(currentAveragePriceNq), Round(currentlyShown.CurrentAveragePriceNq));
         Assert.Equal(Round(currentAveragePriceHq), Round(currentlyShown.CurrentAveragePriceHq));
 
-        var averagePrice = Filters.RemoveOutliers(anyWorldDocument.Sales.Select(s => (float)s.PricePerUnit), 3).Average();
+        var averagePrice = Filters.RemoveOutliers(sales.Select(s => (float)s.PricePerUnit), 3).Average();
         var averagePriceNq = Filters.RemoveOutliers(nqHistory.Select(s => (float)s.PricePerUnit), 3).Average();
         var averagePriceHq = Filters.RemoveOutliers(hqHistory.Select(s => (float)s.PricePerUnit), 3).Average();
 

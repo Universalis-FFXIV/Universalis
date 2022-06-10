@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Universalis.DbAccess.Tests.MarketBoard;
 
-public class CurrentlyShownDbAccessTests : IDisposable
+public class CurrentlyShownDbAccessTests
 {
     private class MockCurrentlyShownStore : ICurrentlyShownStore
     {
@@ -17,13 +17,9 @@ public class CurrentlyShownDbAccessTests : IDisposable
         
         public Task<CurrentlyShown> GetData(uint worldId, uint itemId)
         {
-            if (_currentlyShown.TryGetValue((worldId, itemId), out var data))
-            {
-                return Task.FromResult(data);
-            }
-
-            return Task.FromResult(new CurrentlyShown(0, 0, 0, "", new List<Listing>(),
-                new List<Sale>()));
+            return Task.FromResult(_currentlyShown.TryGetValue((worldId, itemId), out var data)
+                ? data
+                : new CurrentlyShown(0, 0, 0, "", new List<Listing>()));
         }
 
         public Task SetData(CurrentlyShown data)
@@ -31,22 +27,6 @@ public class CurrentlyShownDbAccessTests : IDisposable
             _currentlyShown[(data.WorldId, data.ItemId)] = data;
             return Task.CompletedTask;
         }
-    }
-    
-    private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(CurrentlyShownDbAccessTests));
-
-    private readonly IMongoClient _client;
-
-    public CurrentlyShownDbAccessTests()
-    {
-        _client = new MongoClient("mongodb://localhost:27017");
-        _client.DropDatabase(Database);
-    }
-
-    public void Dispose()
-    {
-        _client.DropDatabase(Database);
-        GC.SuppressFinalize(this);
     }
 
     [Fact]
@@ -65,11 +45,11 @@ public class CurrentlyShownDbAccessTests : IDisposable
         var store = new MockCurrentlyShownStore();
         ICurrentlyShownDbAccess db = new CurrentlyShownDbAccess(store);
         
-        var document1 = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333);
+        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
         var query = new CurrentlyShownQuery { WorldId = document1.WorldId, ItemId = document1.ItemId };
         await db.Update(document1, query);
 
-        var document2 = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333);
+        var document2 = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
         await db.Update(document2, query);
 
         var retrieved = await db.Retrieve(query);

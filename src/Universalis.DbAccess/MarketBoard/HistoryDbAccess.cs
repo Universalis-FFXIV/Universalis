@@ -40,7 +40,7 @@ public class HistoryDbAccess : IHistoryDbAccess
             return null;
         }
         
-        var sales = await _saleStore.RetrieveBySaleTime(query.WorldId, query.ItemId, 1000, cancellationToken);
+        var sales = await _saleStore.RetrieveBySaleTime(query.WorldId, query.ItemId, query.Count ?? 1000, cancellationToken);
         return new History
         {
             WorldId = marketItem.WorldId,
@@ -57,16 +57,15 @@ public class HistoryDbAccess : IHistoryDbAccess
             .Where(h => h != null);
     }
 
-    public async Task Update(History document, HistoryQuery query, CancellationToken cancellationToken = default)
+    public async Task InsertSales(IEnumerable<Sale> sales, HistoryQuery query, CancellationToken cancellationToken = default)
     {
         await _marketItemStore.Update(new MarketItem
         {
             WorldId = query.WorldId,
             ItemId = query.ItemId,
-            LastUploadTime =
-                DateTimeOffset.FromUnixTimeMilliseconds(Convert.ToInt64(document.LastUploadTimeUnixMilliseconds)),
+            LastUploadTime = DateTimeOffset.UtcNow,
         }, cancellationToken);
         
-        await Task.WhenAll(document.Sales.Select(s => _saleStore.Insert(s, cancellationToken)));
+        await Task.WhenAll(sales.Select(s => _saleStore.Insert(s, cancellationToken)));
     }
 }

@@ -231,8 +231,6 @@ public class MarketBoardUploadBehaviorTests
         Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
         Assert.NotNull(currentlyShown.Listings);
         Assert.NotEmpty(currentlyShown.Listings);
-        Assert.NotNull(currentlyShown.Sales);
-        Assert.NotEmpty(currentlyShown.Sales);
 
         var history = await historyDb.Retrieve(new HistoryQuery
         {
@@ -290,8 +288,6 @@ public class MarketBoardUploadBehaviorTests
         Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
         Assert.NotNull(currentlyShown.Listings);
         Assert.NotEmpty(currentlyShown.Listings);
-        Assert.NotNull(currentlyShown.Sales);
-        Assert.Empty(currentlyShown.Sales);
 
         var history = await historyDb.Retrieve(new HistoryQuery
         {
@@ -345,8 +341,6 @@ public class MarketBoardUploadBehaviorTests
         Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
         Assert.NotNull(currentlyShown.Listings);
         Assert.Empty(currentlyShown.Listings);
-        Assert.NotNull(currentlyShown.Sales);
-        Assert.NotEmpty(currentlyShown.Sales);
 
         var history = await historyDb.Retrieve(new HistoryQuery
         {

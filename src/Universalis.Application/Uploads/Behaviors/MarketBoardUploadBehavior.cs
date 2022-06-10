@@ -76,7 +76,6 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var itemId = parameters.ItemId.Value;
         // ReSharper restore PossibleInvalidOperationException
 
-        List<Sale> cleanSales = null;
         if (parameters.Sales != null)
         {
             if (Util.HasHtmlTags(JsonSerializer.Serialize(parameters.Sales)))
@@ -84,7 +83,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 return new BadRequestResult();
             }
 
-            cleanSales = parameters.Sales
+            var cleanSales = parameters.Sales
                 .Where(s => s.TimestampUnixSeconds > 0)
                 .Select(s => new Sale
                 {
@@ -106,20 +105,17 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 ItemId = itemId,
             }, cancellationToken);
 
-            // Used for WebSocket updates
             var addedSales = new List<Sale>();
-
-            var historyDocument = new History
-            {
-                WorldId = worldId,
-                ItemId = itemId,
-                LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            };
 
             if (existingHistory == null)
             {
-                historyDocument.Sales = cleanSales;
-                await _historyDb.Create(historyDocument, cancellationToken);
+                await _historyDb.Create(new History
+                {
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                    Sales = cleanSales,
+                }, cancellationToken);
             }
             else
             {
@@ -130,21 +126,13 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     existingHistory.Sales.Insert(0, sale);
                     addedSales.Add(sale);
                 }
-
-                // Trims out duplicates and any invalid data
-                existingHistory.Sales = existingHistory.Sales
-                    .Where(s => s.PricePerUnit > 0) // We check PPU and *not* quantity because there are entries from before quantity was tracked
-                    .Distinct()
-                    .OrderByDescending(s => s.SaleTime)
-                    .ToList();
-
-                historyDocument.Sales = existingHistory.Sales;
-                await _historyDb.Update(historyDocument, new HistoryQuery
-                {
-                    WorldId = worldId,
-                    ItemId = itemId,
-                }, cancellationToken);
             }
+            
+            await _historyDb.InsertSales(addedSales, new HistoryQuery
+            {
+                WorldId = worldId,
+                ItemId = itemId,
+            }, cancellationToken);
 
             if (addedSales.Count > 0)
             {
@@ -246,8 +234,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
         var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         var listings = newListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>();
-        var sales = cleanSales ?? existingCurrentlyShown?.Sales ?? new List<Sale>();
-        var document = new CurrentlyShown(worldId, itemId, now, source.Name, listings, sales);
+        var document = new CurrentlyShown(worldId, itemId, now, source.Name, listings);
 
         if (await _cache.Delete(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId }, cancellationToken))
         {

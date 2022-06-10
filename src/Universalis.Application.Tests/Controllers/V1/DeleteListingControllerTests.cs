@@ -37,7 +37,7 @@ public class DeleteListingControllerTests
             });
         }
 
-        var document = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333);
+        var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
         await currentlyShown.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
         var originalCount = document.Listings.Count;

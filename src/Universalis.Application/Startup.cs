@@ -51,8 +51,9 @@ public class Startup
         var cacheSize = int.Parse(Configuration["MarketCurrentDataCacheSize"]);
         services.AddSingleton<ICache<CurrentlyShownQuery, CachedCurrentlyShownData>>(sc =>
         {
-            var db = sc.GetRequiredService<ICurrentlyShownDbAccess>();
-            return new CurrentlyShownCache(cacheSize, db);
+            var currentlyShownDb = sc.GetRequiredService<ICurrentlyShownDbAccess>();
+            var historyDb = sc.GetRequiredService<IHistoryDbAccess>();
+            return new CurrentlyShownCache(cacheSize, currentlyShownDb, historyDb);
         });
 
         services.AddSingleton<ISocketProcessor, SocketProcessor>();
