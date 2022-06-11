@@ -372,7 +372,6 @@ public class HistoryControllerTests
         Assert.Null(history.WorldId);
         Assert.Null(history.WorldName);
         Assert.NotNull(history.Sales);
-        Assert.Equal(lastUploadTime, history.LastUploadTimeUnixMilliseconds);
 
         Assert.True(IsSorted(history.StackSizeHistogram));
         Assert.True(IsSorted(history.StackSizeHistogramNq));

@@ -5,7 +5,7 @@ using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess;
 using Universalis.DbAccess.Queries;
 using Universalis.Entities;
-using Universalis.Entities.Uploads;
+using Universalis.Entities.AccessControl;
 
 namespace Universalis.Application.Uploads.Behaviors;
 
@@ -23,7 +23,7 @@ public class PlayerContentUploadBehavior : IUploadBehavior
         return !string.IsNullOrEmpty(parameters.ContentId) && !string.IsNullOrEmpty(parameters.CharacterName);
     }
 
-    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         await _contentDb.Update(new Content
         {

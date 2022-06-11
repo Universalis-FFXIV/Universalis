@@ -1,13 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Uploads.Schema;
-using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
-using Universalis.Entities.Uploads;
+using Universalis.Entities.AccessControl;
 
 namespace Universalis.Application.Uploads.Behaviors;
 
@@ -25,7 +21,7 @@ public class DailyUploadIncrementUploadBehavior : IUploadBehavior
         return true;
     }
 
-    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         await _uploadCountHistoryDb.Increment();
         return null;

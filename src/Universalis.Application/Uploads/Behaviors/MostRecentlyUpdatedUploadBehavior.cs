@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.Uploads;
+using Universalis.Entities.AccessControl;
 using Universalis.Entities.Uploads;
 using Universalis.GameData;
 
@@ -27,7 +28,7 @@ public class MostRecentlyUpdatedUploadBehavior : IUploadBehavior
                && _gameData.AvailableWorldIds().Contains(parameters.WorldId.Value);
     }
 
-    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         var worldId = parameters.WorldId!.Value;
 

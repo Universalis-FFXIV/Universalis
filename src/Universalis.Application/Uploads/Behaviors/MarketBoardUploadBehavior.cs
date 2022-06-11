@@ -12,8 +12,8 @@ using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.Entities.AccessControl;
 using Universalis.Entities.MarketBoard;
-using Universalis.Entities.Uploads;
 using Universalis.GameData;
 using Listing = Universalis.Entities.MarketBoard.Listing;
 using Materia = Universalis.Entities.Materia;
@@ -69,7 +69,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         return cond;
     }
 
-    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         // ReSharper disable PossibleInvalidOperationException
         var worldId = parameters.WorldId.Value;

@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Universalis.Application.Uploads.Attributes;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
+using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
 
@@ -48,7 +49,7 @@ public class UploadController : ControllerBase
             ApiKeySha512 = await TrustedSourceHashCache.GetHash(apiKey, _trustedSourceDb, cancellationToken),
         }, cancellationToken);
 
-        if (source == null)
+        if (source is not { CanUpload: true })
         {
             return Forbid();
         }

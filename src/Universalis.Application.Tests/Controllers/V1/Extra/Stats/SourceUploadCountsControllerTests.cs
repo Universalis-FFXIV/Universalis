@@ -1,10 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1.Extra.Stats;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Views.V1.Extra.Stats;
 using Universalis.DbAccess.Queries.Uploads;
+using Universalis.Entities.AccessControl;
 using Universalis.Entities.Uploads;
 using Xunit;
 
@@ -17,22 +20,21 @@ public class SourceUploadCountsControllerTests
     {
         var dbAccess = new MockTrustedSourceDbAccess();
         var controller = new SourceUploadCountsController(dbAccess);
+        
+        const string key = "blah";
+        using var sha512 = SHA512.Create();
+        var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+        var document = new ApiKey(hash, "something", true);
 
-        var document = new TrustedSource
-        {
-            ApiKeySha512 = "2A",
-            Name = "test runner",
-            UploadCount = 0,
-        };
         await dbAccess.Create(document);
-        await dbAccess.Increment(document.Name);
+        await dbAccess.Increment(new TrustedSourceQuery { ApiKeySha512 = document.TokenSha512});
 
         var result = await controller.Get();
         var counts = Assert.IsAssignableFrom<IEnumerable<SourceUploadCountView>>(result).ToList();
 
         Assert.Single(counts);
         Assert.Equal(document.Name, counts.First().Name);
-        Assert.Equal(1U, document.UploadCount);
+        Assert.Equal(1U, counts.First().UploadCount);
     }
 
     [Fact]

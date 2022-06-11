@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Universalis.Entities;
+using Universalis.Entities.AccessControl;
 using Universalis.Entities.MarketBoard;
 using Universalis.Entities.Uploads;
 
@@ -78,13 +79,8 @@ public static class SeedDataGenerator
         return new FlaggedUploader { UploaderIdHash = "afffff" };
     }
 
-    public static TrustedSource MakeTrustedSource()
+    public static ApiKey MakeApiKey()
     {
-        return new TrustedSource
-        {
-            ApiKeySha512 = "aefe32ee",
-            Name = "test runner",
-            UploadCount = 0,
-        };
+        return new ApiKey("aefe32ee", "test runner", true);
     }
 }

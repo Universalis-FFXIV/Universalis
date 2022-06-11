@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
-namespace Universalis.DbAccess.Uploads;
+namespace Universalis.DbAccess.AccessControl;
 
 public class TrustedSourceNoApiKey
 {

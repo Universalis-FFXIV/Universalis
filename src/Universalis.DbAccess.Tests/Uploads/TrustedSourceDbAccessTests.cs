@@ -1,15 +1,15 @@
-﻿using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.Queries.Uploads;
-using Universalis.DbAccess.Uploads;
+using Universalis.Entities.AccessControl;
 using Xunit;
 
 namespace Universalis.DbAccess.Tests.Uploads;
 
-public class TrustedSourceDbAccessTests : IDisposable
+public class TrustedSourceDbAccessTests
 {
     private class MockSourceUploadCountStore : ISourceUploadCountStore
     {
@@ -32,95 +32,76 @@ public class TrustedSourceDbAccessTests : IDisposable
             return Task.FromResult((IList<KeyValuePair<string, long>>)_counts.Select(c => c).ToList());
         }
     }
-    
-    private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(TrustedSourceDbAccessTests));
 
-    private readonly IMongoClient _client;
-        
-    public TrustedSourceDbAccessTests()
+    private class MockApiKeyStore : IApiKeyStore
     {
-        _client = new MongoClient("mongodb://localhost:27017");
-        _client.DropDatabase(Database);
-    }
+        private readonly Dictionary<string, ApiKey> _data = new();
 
-    public void Dispose()
-    {
-        _client.DropDatabase(Database);
-        GC.SuppressFinalize(this);
+        public Task Insert(ApiKey apiKey, CancellationToken cancellationToken = default)
+        {
+            _data[apiKey.TokenSha512] = apiKey;
+            return Task.CompletedTask;
+        }
+
+        public Task<ApiKey> Retrieve(string tokenSha512, CancellationToken cancellationToken = default)
+        {
+            return !_data.ContainsKey(tokenSha512)
+                ? Task.FromResult<ApiKey>(null)
+                : Task.FromResult(_data[tokenSha512]);
+        }
     }
 
     [Fact]
     public async Task Create_DoesNotThrow()
     {
-        var db = new TrustedSourceDbAccess(_client, Database, new MockSourceUploadCountStore());
-        var document = SeedDataGenerator.MakeTrustedSource();
+        var db = new TrustedSourceDbAccess(new MockApiKeyStore(), new MockSourceUploadCountStore());
+        var document = SeedDataGenerator.MakeApiKey();
         await db.Create(document);
     }
 
     [Fact]
     public async Task Retrieve_DoesNotThrow()
     {
-        var db = new TrustedSourceDbAccess(_client, Database, new MockSourceUploadCountStore());
+        var db = new TrustedSourceDbAccess(new MockApiKeyStore(), new MockSourceUploadCountStore());
         var output = await db.Retrieve(new TrustedSourceQuery { ApiKeySha512 = "babaef32" });
         Assert.Null(output);
     }
 
     [Fact]
-    public async Task Update_DoesNotThrow()
-    {
-        var db = new TrustedSourceDbAccess(_client, Database, new MockSourceUploadCountStore());
-        var document = SeedDataGenerator.MakeTrustedSource();
-        var query = new TrustedSourceQuery { ApiKeySha512 = document.ApiKeySha512 };
-
-        await db.Update(document, query);
-        await db.Update(document, query);
-
-        document.UploadCount = 74;
-        await db.Update(document, query);
-    }
-
-    [Fact]
-    public async Task Delete_DoesNotThrow()
-    {
-        var db = new TrustedSourceDbAccess(_client, Database, new MockSourceUploadCountStore());
-        await db.Delete(new TrustedSourceQuery { ApiKeySha512 = "babaef32" });
-    }
-
-    [Fact]
     public async Task Create_DoesInsert()
     {
-        var db = new TrustedSourceDbAccess(_client, Database, new MockSourceUploadCountStore());
-        var document = SeedDataGenerator.MakeTrustedSource();
+        var db = new TrustedSourceDbAccess(new MockApiKeyStore(), new MockSourceUploadCountStore());
+        var document = SeedDataGenerator.MakeApiKey();
         await db.Create(document);
 
-        var output = await db.Retrieve(new TrustedSourceQuery { ApiKeySha512 = document.ApiKeySha512 });
+        var output = await db.Retrieve(new TrustedSourceQuery { ApiKeySha512 = document.TokenSha512 });
         Assert.NotNull(output);
-        Assert.Equal(document.ApiKeySha512, output.ApiKeySha512);
+        Assert.Equal(document.TokenSha512, output.TokenSha512);
         Assert.Equal(document.Name, output.Name);
-        Assert.Equal(document.UploadCount, output.UploadCount);
+        Assert.Equal(document.CanUpload, output.CanUpload);
     }
 
     [Fact]
     public async Task Increment_DoesNotThrow()
     {
-        var db = new TrustedSourceDbAccess(_client, Database, new MockSourceUploadCountStore());
-        var document = SeedDataGenerator.MakeTrustedSource();
+        var db = new TrustedSourceDbAccess(new MockApiKeyStore(), new MockSourceUploadCountStore());
+        var document = SeedDataGenerator.MakeApiKey();
 
         await db.Create(document);
-        await db.Increment(document.Name);
+        await db.Increment(new TrustedSourceQuery { ApiKeySha512 = document.TokenSha512 });
     }
 
     [Fact]
     public async Task Increment_DoesPersist()
     {
-        var db = new TrustedSourceDbAccess(_client, Database, new MockSourceUploadCountStore());
-        var document = SeedDataGenerator.MakeTrustedSource();
+        var db = new TrustedSourceDbAccess(new MockApiKeyStore(), new MockSourceUploadCountStore());
+        var document = SeedDataGenerator.MakeApiKey();
         await db.Create(document);
-        await db.Increment(document.Name);
+        await db.Increment(new TrustedSourceQuery { ApiKeySha512 = document.TokenSha512 });
         var output = (await db.GetUploaderCounts())?.ToList();
         Assert.NotNull(output);
         Assert.Single(output);
         Assert.Equal(document.Name, output[0].Name);
-        Assert.Equal(document.UploadCount + 1, output[0].UploadCount);
+        Assert.Equal(1, output[0].UploadCount);
     }
 }

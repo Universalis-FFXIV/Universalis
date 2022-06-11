@@ -2,23 +2,25 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.Queries.Uploads;
-using Universalis.DbAccess.Uploads;
-using Universalis.Entities.Uploads;
+using Universalis.Entities.AccessControl;
 
 namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 
 public class MockTrustedSourceDbAccess : ITrustedSourceDbAccess
 {
-    private readonly Dictionary<string, TrustedSource> _collection = new();
+    private readonly Dictionary<string, ApiKey> _collection = new();
+    private readonly Dictionary<string, long> _uploadCounts = new();
 
-    public Task Create(TrustedSource document, CancellationToken cancellationToken = default)
+    public Task Create(ApiKey document, CancellationToken cancellationToken = default)
     {
-        _collection.Add(document.ApiKeySha512, document);
+        _collection.Add(document.TokenSha512, document);
+        _uploadCounts.Add(document.TokenSha512, 0);
         return Task.CompletedTask;
     }
 
-    public Task<TrustedSource> Retrieve(TrustedSourceQuery query, CancellationToken cancellationToken = default)
+    Task<ApiKey> ITrustedSourceDbAccess.Retrieve(TrustedSourceQuery query, CancellationToken cancellationToken)
     {
         return Task.FromResult(_collection
             .FirstOrDefault(s => s.Key == query.ApiKeySha512).Value);
@@ -26,28 +28,23 @@ public class MockTrustedSourceDbAccess : ITrustedSourceDbAccess
 
     public Task<IEnumerable<TrustedSourceNoApiKey>> GetUploaderCounts(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(_collection.Values.AsEnumerable()
+        return Task.FromResult(_collection.Values
             .Select(s => new TrustedSourceNoApiKey
             {
                 Name = s.Name,
-                UploadCount = s.UploadCount,
+                UploadCount = _uploadCounts[s.TokenSha512],
             }));
     }
 
-    public async Task Update(TrustedSource document, TrustedSourceQuery query, CancellationToken cancellationToken = default)
+    public Task Increment(TrustedSourceQuery query, CancellationToken cancellationToken = default)
     {
-        await Delete(query, cancellationToken);
-        await Create(document, cancellationToken);
-    }
-
-    public Task Increment(string sourceName, CancellationToken cancellationToken = default)
-    {
-        if (!_collection.Any(e => e.Value.Name == sourceName))
+        var apiKey = _collection.FirstOrDefault(e => e.Key == query.ApiKeySha512);
+        if (apiKey.Value == null)
         {
             return Task.CompletedTask;
         }
         
-        _collection.First(e => e.Value.Name == sourceName).Value.UploadCount++;
+        _uploadCounts[apiKey.Key]++;
         return Task.CompletedTask;
     }
 
