@@ -9,6 +9,7 @@ using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views.V1;
 using Universalis.Application.Views.V2;
 using Universalis.DataTransformations;
+using Universalis.DbAccess.Tests;
 using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
 using Xunit;
@@ -70,24 +71,12 @@ public class HistoryControllerTests
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockHistoryDbAccess();
         var controller = new HistoryController(gameData, dbAccess);
-        var rand = new Random();
+        var lastUploadTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-        var document1 = new History
-        {
-            WorldId = 74,
-            ItemId = 5333,
-            LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            Sales = MakeSales(100),
-        };
+        var document1 = SeedDataGenerator.MakeHistory(74, 5333, lastUploadTime);
         await dbAccess.Create(document1);
 
-        var document2 = new History
-        {
-            WorldId = 74,
-            ItemId = 5,
-            LastUploadTimeUnixMilliseconds = (uint)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            Sales = MakeSales(100),
-        };
+        var document2 = SeedDataGenerator.MakeHistory(74, 5, lastUploadTime);
         await dbAccess.Create(document2);
 
         var result = await controller.Get("5,5333", worldOrDc, entriesToReturn);
@@ -101,10 +90,8 @@ public class HistoryControllerTests
         Assert.Equal(gameData.AvailableWorlds()[74], history.WorldName);
         Assert.Null(history.DcName);
 
-        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-        AssertHistoryValidWorld(document1, history.Items.First(item => item.Key == document1.ItemId).Value, gameData, entriesToReturn, now);
-        AssertHistoryValidWorld(document2, history.Items.First(item => item.Key == document2.ItemId).Value, gameData, entriesToReturn, now);
+        AssertHistoryValidWorld(document1, history.Items.First(item => item.Key == document1.ItemId).Value, gameData, entriesToReturn, lastUploadTime);
+        AssertHistoryValidWorld(document2, history.Items.First(item => item.Key == document2.ItemId).Value, gameData, entriesToReturn, lastUploadTime);
     }
 
     [Theory]
@@ -163,25 +150,12 @@ public class HistoryControllerTests
         var gameData = new MockGameDataProvider();
         var dbAccess = new MockHistoryDbAccess();
         var controller = new HistoryController(gameData, dbAccess);
-        var rand = new Random();
-        var lastUploadTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-
-        var document1 = new History
-        {
-            WorldId = 74,
-            ItemId = 5333,
-            LastUploadTimeUnixMilliseconds = lastUploadTime,
-            Sales = MakeSales(100),
-        };
+        var lastUploadTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        
+        var document1 = SeedDataGenerator.MakeHistory(74, 5333, lastUploadTime);
         await dbAccess.Create(document1);
 
-        var document2 = new History
-        {
-            WorldId = 34,
-            ItemId = 5,
-            LastUploadTimeUnixMilliseconds = lastUploadTime,
-            Sales = MakeSales(100),
-        };
+        var document2 = SeedDataGenerator.MakeHistory(34, 5, lastUploadTime);
         await dbAccess.Create(document2);
 
         var result = await controller.Get("5,5333", worldOrDc, entriesToReturn);
@@ -433,7 +407,6 @@ public class HistoryControllerTests
         Assert.Null(history.WorldId);
         Assert.Null(history.WorldName);
         Assert.NotNull(history.Sales);
-        Assert.Equal(lastUploadTime, history.LastUploadTimeUnixMilliseconds);
 
         Assert.True(IsSorted(history.StackSizeHistogram));
         Assert.True(IsSorted(history.StackSizeHistogramNq));
