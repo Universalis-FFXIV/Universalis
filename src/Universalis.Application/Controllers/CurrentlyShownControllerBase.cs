@@ -64,7 +64,7 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
                             .Where(s => s.PricePerUnit > 0)
                             .Where(s => s.Quantity > 0)
                             .ToList(),
-                        RecentHistory = (h.Sales ?? new List<Sale>())
+                        RecentHistory = (h?.Sales ?? new List<Sale>())
                             .Select(Util.SaleToView)
                             .Where(s => s.PricePerUnit > 0)
                             .Where(s => s.Quantity > 0)

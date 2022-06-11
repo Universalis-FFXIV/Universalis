@@ -342,15 +342,18 @@ public class CurrentlyShownControllerTests
 
         var result = await controller.Get("5333,5", worldOrDc);
 
-        var history = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
+        var data = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
-        Assert.Contains(5U, history.UnresolvedItemIds);
-        Assert.Contains(5333U, history.UnresolvedItemIds);
-        Assert.Contains(5U, history.ItemIds);
-        Assert.Contains(5333U, history.ItemIds);
-        Assert.Empty(history.Items);
-        Assert.Equal("Crystal", history.DcName);
-        Assert.Null(history.WorldId);
+        Assert.Contains(5U, data.UnresolvedItemIds);
+        Assert.Contains(5333U, data.UnresolvedItemIds);
+        Assert.Contains(5U, data.ItemIds);
+        Assert.Contains(5333U, data.ItemIds);
+        Assert.Empty(data.Items);
+        Assert.Equal("Crystal", data.DcName);
+        Assert.Null(data.WorldId);
+        Assert.Null(data.WorldName);
+        Assert.All(data.Items, item => Assert.NotNull(item.Listings));
+        Assert.All(data.Items, item => Assert.NotNull(item.RecentHistory));
     }
 
     [Fact]
