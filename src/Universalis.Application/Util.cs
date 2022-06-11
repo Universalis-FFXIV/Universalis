@@ -25,7 +25,7 @@ public static class Util
 
     private static readonly RecyclableMemoryStreamManager MemoryStreamPool = new();
 
-    public static SaleView SaleSimpleToView(Sale s)
+    public static SaleView SaleToView(Sale s)
     {
         var quantity = s.Quantity ?? 0;
         return new SaleView
@@ -45,7 +45,7 @@ public static class Util
     /// <param name="l">The database listing.</param>
     /// <param name="cancellationToken"></param>
     /// <returns>A listing view associated with the provided listing.</returns>
-    public static async Task<ListingView> ListingSimpleToView(Listing l, CancellationToken cancellationToken = default)
+    public static async Task<ListingView> ListingToView(Listing l, CancellationToken cancellationToken = default)
     {
         var ppu = l.PricePerUnit;
         var listingView = new ListingView

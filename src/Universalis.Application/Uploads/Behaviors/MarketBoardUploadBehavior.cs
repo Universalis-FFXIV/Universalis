@@ -87,15 +87,19 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 .Where(s => s.TimestampUnixSeconds > 0)
                 .Select(s => new Sale
                 {
+                    Id = Guid.NewGuid(),
+                    WorldId = worldId,
+                    ItemId = itemId,
                     Hq = Util.ParseUnusualBool(s.Hq),
                     BuyerName = s.BuyerName,
                     PricePerUnit = s.PricePerUnit ?? 0,
                     Quantity = s.Quantity ?? 0,
                     SaleTime = DateTimeOffset.FromUnixTimeSeconds(s.TimestampUnixSeconds ?? 0),
-                    UploaderIdHash = parameters.UploaderId
+                    UploaderIdHash = parameters.UploaderId,
                 })
                 .Where(s => s.PricePerUnit > 0)
                 .Where(s => s.Quantity > 0)
+                .Where(s => s.SaleTime.ToUnixTimeSeconds() > 0)
                 .OrderByDescending(s => s.SaleTime)
                 .ToList();
 
@@ -142,7 +146,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     {
                         WorldId = worldId,
                         ItemId = itemId,
-                        Sales = addedSales.Select(Util.SaleSimpleToView).ToList(),
+                        Sales = addedSales.Select(Util.SaleToView).ToList(),
                     });
                 }, cancellationToken);
             }
@@ -209,7 +213,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                         ItemId = itemId,
                         Listings = await addedListings
                             .ToAsyncEnumerable()
-                            .SelectAwait(async l => await Util.ListingSimpleToView(l, cancellationToken))
+                            .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
                             .ToListAsync(cancellationToken),
                     });
                 }, cancellationToken);
@@ -225,7 +229,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                         ItemId = itemId,
                         Listings = await removedListings
                             .ToAsyncEnumerable()
-                            .SelectAwait(async l => await Util.ListingSimpleToView(l, cancellationToken))
+                            .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
                             .ToListAsync(cancellationToken),
                     });
                 }, cancellationToken);

@@ -349,6 +349,8 @@ public class MarketBoardUploadBehaviorTests
         });
 
         Assert.NotNull(history);
+        Assert.Equal(upload.WorldId.Value, history.WorldId);
+        Assert.Equal(upload.ItemId.Value, history.ItemId);
         Assert.NotNull(history.Sales);
         Assert.NotEmpty(history.Sales);
     }

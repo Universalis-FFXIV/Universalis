@@ -26,18 +26,25 @@ public class MockHistoryDbAccess : IHistoryDbAccess
             .OrderByDescending(sale => sale.SaleTime)
             .Take(query.Count ?? 1000)
             .ToList();
+        if (sales.Count == 0)
+        {
+            return Task.FromResult<History>(null);
+        }
+        
         return Task.FromResult(new History
         {
             WorldId = query.WorldId,
             ItemId = query.ItemId,
-            LastUploadTimeUnixMilliseconds = sales[0].SaleTime.ToUnixTimeMilliseconds(),
+            LastUploadTimeUnixMilliseconds = sales.Count == 0 ? 0 : sales[0].SaleTime.ToUnixTimeMilliseconds(),
             Sales = sales,
         });
     }
 
     public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query, CancellationToken cancellationToken = default)
     {
-        return await Task.WhenAll(query.WorldIds.Select(worldId => Retrieve(new HistoryQuery { WorldId = worldId, ItemId = query.ItemId })));
+        return (await Task.WhenAll(query.WorldIds
+            .Select(worldId => Retrieve(new HistoryQuery { WorldId = worldId, ItemId = query.ItemId }, cancellationToken))))
+            .Where(o => o != null);
     }
 
     public Task InsertSales(IEnumerable<Sale> sales, HistoryQuery query, CancellationToken cancellationToken = default)

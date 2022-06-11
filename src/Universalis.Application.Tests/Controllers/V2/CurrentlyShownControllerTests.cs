@@ -12,6 +12,7 @@ using Universalis.Application.Views.V1;
 using Universalis.Application.Views.V2;
 using Universalis.DataTransformations;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.DbAccess.Tests;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
@@ -34,42 +35,14 @@ public class CurrentlyShownControllerTests
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
-        var rand = new Random();
-
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        
         const uint itemId = 5333;
-        var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-        var listings = Enumerable.Range(0, 100)
-            .Select(i => new Listing
-            {
-                ListingId = "FB",
-                Hq = rand.NextDouble() > 0.5,
-                OnMannequin = rand.NextDouble() > 0.5,
-                Materia = new List<Materia>(),
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, 999),
-                DyeId = (byte)rand.Next(0, 255),
-                CreatorId = "54565458626446136553",
-                CreatorName = "Bingus Bongus",
-                LastReviewTimeUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 360000),
-                RetainerId = "54565458626446136554",
-                RetainerName = "xpotato",
-                RetainerCityId = 0xA,
-                SellerId = "54565458626446136552",
-            })
-            .ToList();
-        var sales = Enumerable.Range(0, 100)
-            .Select(i => new Sale
-            {
-                Hq = rand.NextDouble() > 0.5,
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, 999),
-                BuyerName = "Someone Someone",
-                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
-            })
-            .ToList();
-        await historyDb.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId });
-        var document = new CurrentlyShown(74, itemId, now, "test runner", listings);
+        var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
         await currentlyShownDb.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = itemId });
+        
+        var sales = SeedDataGenerator.MakeHistory(74, itemId).Sales;
+        await historyDb.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId });
 
         var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
@@ -88,74 +61,18 @@ public class CurrentlyShownControllerTests
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
-        var rand = new Random();
-        var lastUploadTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-        var listings1 = Enumerable.Range(0, 100)
-            .Select(i => new Listing
-            {
-                ListingId = "FB",
-                Hq = rand.NextDouble() > 0.5,
-                OnMannequin = rand.NextDouble() > 0.5,
-                Materia = new List<Materia>(),
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, 999),
-                DyeId = (byte)rand.Next(0, 255),
-                CreatorId = "54565458626446136553",
-                CreatorName = "Bingus Bongus",
-                LastReviewTimeUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 360000),
-                RetainerId = "54565458626446136554",
-                RetainerName = "xpotato",
-                RetainerCityId = 0xA,
-                SellerId = "54565458626446136552",
-            })
-            .ToList();
-        var sales1 = Enumerable.Range(0, 100)
-            .Select(i => new Sale
-            {
-                Hq = rand.NextDouble() > 0.5,
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, 999),
-                BuyerName = "Someone Someone",
-                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
-            })
-            .ToList();
-        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
-        var document1 = new CurrentlyShown(74, 5333, lastUploadTime, "test runner", listings1);
+        
+        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
         await currentlyShownDb.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        
+        var sales1 = SeedDataGenerator.MakeHistory(74, 5333).Sales;
+        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
 
-        var listings2 = Enumerable.Range(0, 100)
-            .Select(i => new Listing
-            {
-                ListingId = "FB",
-                Hq = rand.NextDouble() > 0.5,
-                OnMannequin = rand.NextDouble() > 0.5,
-                Materia = new List<Materia>(),
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, 999),
-                DyeId = (byte)rand.Next(0, 255),
-                CreatorId = "54565458626446136553",
-                CreatorName = "Bingus Bongus",
-                LastReviewTimeUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 360000),
-                RetainerId = "54565458626446136554",
-                RetainerName = "xpotato",
-                RetainerCityId = 0xA,
-                SellerId = "54565458626446136552",
-            })
-            .ToList();
-        var sales2 = Enumerable.Range(0, 100)
-            .Select(i => new Sale
-            {
-                Hq = rand.NextDouble() > 0.5,
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, 999),
-                BuyerName = "Someone Someone",
-                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
-            })
-            .ToList();
-        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 74, ItemId = 5 });
-        var document2 = new CurrentlyShown(74, 5, lastUploadTime, "test runner", listings2);
+        var document2 = SeedDataGenerator.MakeCurrentlyShown(74, 5);
         await currentlyShownDb.Update(document2, new CurrentlyShownQuery { WorldId = 74, ItemId = 5 });
+        
+        var sales2 = SeedDataGenerator.MakeHistory(74, 5).Sales;
+        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 74, ItemId = 5 });
 
         var result = await controller.Get("5, 5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
@@ -184,89 +101,34 @@ public class CurrentlyShownControllerTests
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
-        var rand = new Random();
-        var lastUploadTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        var unixNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-        var listings1 = Enumerable.Range(0, 100)
-            .Select(i => new Listing
-            {
-                ListingId = "FB",
-                Hq = rand.NextDouble() > 0.5,
-                OnMannequin = rand.NextDouble() > 0.5,
-                Materia = new List<Materia>(),
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, 999),
-                DyeId = (byte)rand.Next(0, 255),
-                CreatorId = "54565458626446136553",
-                CreatorName = "Bingus Bongus",
-                LastReviewTimeUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 360000),
-                RetainerId = "54565458626446136554",
-                RetainerName = "xpotato",
-                RetainerCityId = 0xA,
-                SellerId = "54565458626446136552",
-            })
-            .ToList();
-        var sales1 = Enumerable.Range(0, 100)
-            .Select(i => new Sale
-            {
-                Hq = rand.NextDouble() > 0.5,
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, 999),
-                BuyerName = "Someone Someone",
-                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
-            })
-            .ToList();
-        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
-        var document1 = new CurrentlyShown(74, 5333, lastUploadTime, "test runner", listings1);
+        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
         await currentlyShownDb.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        
+        var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
+        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
 
-        var listings2 = Enumerable.Range(0, 100)
-            .Select(i => new Listing
-            {
-                ListingId = "FB",
-                Hq = rand.NextDouble() > 0.5,
-                OnMannequin = rand.NextDouble() > 0.5,
-                Materia = new List<Materia>(),
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, 999),
-                DyeId = (byte)rand.Next(0, 255),
-                CreatorId = "54565458626446136553",
-                CreatorName = "Bingus Bongus",
-                LastReviewTimeUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 360000),
-                RetainerId = "54565458626446136554",
-                RetainerName = "xpotato",
-                RetainerCityId = 0xA,
-                SellerId = "54565458626446136552",
-            })
-            .ToList();
-        var sales2 = Enumerable.Range(0, 100)
-            .Select(i => new Sale
-            {
-                Hq = rand.NextDouble() > 0.5,
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, 999),
-                BuyerName = "Someone Someone",
-                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
-            })
-            .ToList();
-        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5333 });
-        var document2 = new CurrentlyShown(34, 5333, lastUploadTime, "test runner", listings2);
+        var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5333, unixNowMs);
         await currentlyShownDb.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5333 });
+        
+        var sales2 = SeedDataGenerator.MakeHistory(34, 5333, unixNowMs).Sales;
+        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5333 });
 
         var result = await controller.Get("5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
         var joinedListings = document1.Listings.Concat(document2.Listings).ToList();
         var joinedSales = sales1.Concat(sales2).ToList();
-        var joinedDocument = new CurrentlyShown(0, 5333, lastUploadTime, "test runner", joinedListings);
+        var joinedDocument = new CurrentlyShown(0, 5333, unixNowMs, "test runner", joinedListings);
 
         AssertCurrentlyShownDataCenter(
             joinedDocument,
             joinedSales,
             currentlyShown,
-            lastUploadTime,
+            unixNowMs,
             worldOrDc,
-            lastUploadTime);
+            unixNowMs);
     }
 
     [Theory]
@@ -279,74 +141,19 @@ public class CurrentlyShownControllerTests
         var historyDb = new MockHistoryDbAccess();
         var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
         var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
-        var rand = new Random();
-        var lastUploadTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-        var listings1 = Enumerable.Range(0, 100)
-            .Select(i => new Listing
-            {
-                ListingId = "FB",
-                Hq = rand.NextDouble() > 0.5,
-                OnMannequin = rand.NextDouble() > 0.5,
-                Materia = new List<Materia>(),
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, 999),
-                DyeId = (byte)rand.Next(0, 255),
-                CreatorId = "54565458626446136553",
-                CreatorName = "Bingus Bongus",
-                LastReviewTimeUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 360000),
-                RetainerId = "54565458626446136554",
-                RetainerName = "xpotato",
-                RetainerCityId = 0xA,
-                SellerId = "54565458626446136552",
-            })
-            .ToList();
-        var sales1 = Enumerable.Range(0, 100)
-            .Select(i => new Sale
-            {
-                Hq = rand.NextDouble() > 0.5,
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, 999),
-                BuyerName = "Someone Someone",
-                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
-            })
-            .ToList();
-        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
-        var document1 = new CurrentlyShown(74, 5333, lastUploadTime, "test runner", listings1);
+        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
         await currentlyShownDb.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        
+        var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
+        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
 
-        var listings2 = Enumerable.Range(0, 100)
-            .Select(i => new Listing
-            {
-                ListingId = "FB",
-                Hq = rand.NextDouble() > 0.5,
-                OnMannequin = rand.NextDouble() > 0.5,
-                Materia = new List<Materia>(),
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, 999),
-                DyeId = (byte)rand.Next(0, 255),
-                CreatorId = "54565458626446136553",
-                CreatorName = "Bingus Bongus",
-                LastReviewTimeUnixSeconds = DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 360000),
-                RetainerId = "54565458626446136554",
-                RetainerName = "xpotato",
-                RetainerCityId = 0xA,
-                SellerId = "54565458626446136552",
-            })
-            .ToList();
-        var sales2 = Enumerable.Range(0, 100)
-            .Select(i => new Sale
-            {
-                Hq = rand.NextDouble() > 0.5,
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, 999),
-                BuyerName = "Someone Someone",
-                SaleTime = DateTimeOffset.UtcNow - new TimeSpan(rand.Next(0, 80000)),
-            })
-            .ToList();
-        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 74, ItemId = 5333 });
-        var document2 = new CurrentlyShown(34, 5, lastUploadTime, "test runner", listings2);
+        var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5, unixNowMs);
         await currentlyShownDb.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5 });
+        
+        var sales2 = SeedDataGenerator.MakeHistory(34, 5, unixNowMs).Sales;
+        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5 });
 
         var result = await controller.Get("5,5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
@@ -364,16 +171,16 @@ public class CurrentlyShownControllerTests
             document1,
             sales1,
             currentlyShown.Items.First(item => item.Key == document1.ItemId).Value,
-            lastUploadTime,
+            unixNowMs,
             worldOrDc,
-            lastUploadTime);
+            unixNowMs);
         AssertCurrentlyShownDataCenter(
             document2,
             sales2,
             currentlyShown.Items.First(item => item.Key == document2.ItemId).Value,
-            lastUploadTime,
+            unixNowMs,
             worldOrDc,
-            lastUploadTime);
+            unixNowMs);
     }
 
     [Theory]

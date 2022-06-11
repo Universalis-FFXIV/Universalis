@@ -39,7 +39,7 @@ public class CurrentlyShownControllerTests
         await currentlyShownDb.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = itemId });
         
         var sales = SeedDataGenerator.MakeHistory(74, itemId).Sales;
-        await historyDb.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId});
+        await historyDb.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId });
 
         var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
@@ -64,7 +64,7 @@ public class CurrentlyShownControllerTests
         await currentlyShownDb.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = itemId });
         
         var sales = SeedDataGenerator.MakeHistory(74, itemId).Sales;
-        await historyDb.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId});
+        await historyDb.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId });
 
         var result = await controller.Get(itemId.ToString(), worldOrDc, "1");
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
@@ -92,7 +92,7 @@ public class CurrentlyShownControllerTests
         await currentlyShownDb.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = itemId });
         
         var sales = SeedDataGenerator.MakeHistory(74, itemId).Sales;
-        await historyDb.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId});
+        await historyDb.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId });
 
         var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: "1");
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
@@ -119,13 +119,13 @@ public class CurrentlyShownControllerTests
         await currentlyShownDb.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
         
         var sales1 = SeedDataGenerator.MakeHistory(74, 5333).Sales;
-        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333});
+        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
 
         var document2 = SeedDataGenerator.MakeCurrentlyShown(74, 5);
         await currentlyShownDb.Update(document2, new CurrentlyShownQuery { WorldId = 74, ItemId = 5 });
         
         var sales2 = SeedDataGenerator.MakeHistory(74, 5).Sales;
-        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 74, ItemId = 5});
+        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 74, ItemId = 5 });
 
         var result = await controller.Get("5, 5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
@@ -157,13 +157,13 @@ public class CurrentlyShownControllerTests
         await currentlyShownDb.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
         
         var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
-        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333});
+        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
 
         var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5333, unixNowMs);
         await currentlyShownDb.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5333 });
         
         var sales2 = SeedDataGenerator.MakeHistory(34, 5333, unixNowMs).Sales;
-        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5333});
+        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5333 });
 
         var result = await controller.Get("5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
@@ -197,13 +197,13 @@ public class CurrentlyShownControllerTests
         await currentlyShownDb.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
         
         var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
-        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333});
+        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
 
         var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5, unixNowMs);
         await currentlyShownDb.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5 });
         
         var sales2 = SeedDataGenerator.MakeHistory(34, 5, unixNowMs).Sales;
-        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 34, ItemId = 5});
+        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5 });
 
         var result = await controller.Get("5,5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
@@ -439,7 +439,7 @@ public class CurrentlyShownControllerTests
         currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
         document.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
-        sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
+        sales = sales.OrderByDescending(s => s.SaleTime).Take(currentlyShown.RecentHistory.Count).ToList();
 
         var listings = document.Listings.Select(l =>
         {
@@ -526,7 +526,7 @@ public class CurrentlyShownControllerTests
         currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
         anyWorldDocument.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
-        sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
+        sales = sales.OrderByDescending(s => s.SaleTime).Take(currentlyShown.RecentHistory.Count).ToList();
 
         var listings = anyWorldDocument.Listings.Select(l =>
         {
