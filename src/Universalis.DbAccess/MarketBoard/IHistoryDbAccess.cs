@@ -14,5 +14,5 @@ public interface IHistoryDbAccess
 
     public Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query, CancellationToken cancellationToken = default);
 
-    public Task Update(History document, HistoryQuery query, CancellationToken cancellationToken = default);
+    public Task InsertSales(IEnumerable<Sale> sales, HistoryQuery query, CancellationToken cancellationToken = default);
 }

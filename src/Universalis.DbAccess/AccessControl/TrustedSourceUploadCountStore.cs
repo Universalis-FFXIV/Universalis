@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using StackExchange.Redis;
 
-namespace Universalis.DbAccess.Uploads;
+namespace Universalis.DbAccess.AccessControl;
 
 public class TrustedSourceUploadCountStore : ISourceUploadCountStore
 {

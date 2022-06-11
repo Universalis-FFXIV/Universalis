@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
 using Universalis.Application.Controllers;
@@ -8,6 +10,7 @@ using Universalis.Application.Tests.Mocks.Realtime;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.Entities.AccessControl;
 using Universalis.Entities.Uploads;
 using Xunit;
 using Listing = Universalis.Application.Uploads.Schema.Listing;
@@ -200,12 +203,10 @@ public class MarketBoardUploadBehaviorTests
         var stackSize = gameData.MarketableItemStackSizes()[5333];
         var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
 
-        var source = new TrustedSource
-        {
-            ApiKeySha512 = "2f44abe6",
-            Name = "test runner",
-            UploadCount = 0,
-        };
+        const string key = "blah";
+        using var sha512 = SHA512.Create();
+        var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+        var source = new ApiKey(hash, "something", true);
 
         var upload = new UploadParameters
         {
@@ -231,8 +232,6 @@ public class MarketBoardUploadBehaviorTests
         Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
         Assert.NotNull(currentlyShown.Listings);
         Assert.NotEmpty(currentlyShown.Listings);
-        Assert.NotNull(currentlyShown.Sales);
-        Assert.NotEmpty(currentlyShown.Sales);
 
         var history = await historyDb.Retrieve(new HistoryQuery
         {
@@ -260,12 +259,10 @@ public class MarketBoardUploadBehaviorTests
         var stackSize = gameData.MarketableItemStackSizes()[5333];
         var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
 
-        var source = new TrustedSource
-        {
-            ApiKeySha512 = "2f44abe6",
-            Name = "test runner",
-            UploadCount = 0,
-        };
+        const string key = "blah";
+        using var sha512 = SHA512.Create();
+        var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+        var source = new ApiKey(hash, "something", true);
 
         var upload = new UploadParameters
         {
@@ -290,8 +287,6 @@ public class MarketBoardUploadBehaviorTests
         Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
         Assert.NotNull(currentlyShown.Listings);
         Assert.NotEmpty(currentlyShown.Listings);
-        Assert.NotNull(currentlyShown.Sales);
-        Assert.Empty(currentlyShown.Sales);
 
         var history = await historyDb.Retrieve(new HistoryQuery
         {
@@ -315,12 +310,10 @@ public class MarketBoardUploadBehaviorTests
         var stackSize = gameData.MarketableItemStackSizes()[5333];
         var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
 
-        var source = new TrustedSource
-        {
-            ApiKeySha512 = "2f44abe6",
-            Name = "test runner",
-            UploadCount = 0,
-        };
+        const string key = "blah";
+        using var sha512 = SHA512.Create();
+        var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+        var source = new ApiKey(hash, "something", true);
 
         var upload = new UploadParameters
         {
@@ -345,8 +338,6 @@ public class MarketBoardUploadBehaviorTests
         Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
         Assert.NotNull(currentlyShown.Listings);
         Assert.Empty(currentlyShown.Listings);
-        Assert.NotNull(currentlyShown.Sales);
-        Assert.NotEmpty(currentlyShown.Sales);
 
         var history = await historyDb.Retrieve(new HistoryQuery
         {
@@ -355,6 +346,8 @@ public class MarketBoardUploadBehaviorTests
         });
 
         Assert.NotNull(history);
+        Assert.Equal(upload.WorldId.Value, history.WorldId);
+        Assert.Equal(upload.ItemId.Value, history.ItemId);
         Assert.NotNull(history.Sales);
         Assert.NotEmpty(history.Sales);
     }

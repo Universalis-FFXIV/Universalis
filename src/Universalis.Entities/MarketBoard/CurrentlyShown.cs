@@ -14,16 +14,13 @@ public class CurrentlyShown
 
     public List<Listing> Listings { get; }
 
-    public List<Sale> Sales { get; }
-
     public CurrentlyShown(uint worldId, uint itemId, long uploadTimeUnixMs, string source,
-        List<Listing> listings, List<Sale> sales)
+        List<Listing> listings)
     {
         WorldId = worldId;
         ItemId = itemId;
         LastUploadTimeUnixMilliseconds = uploadTimeUnixMs;
         UploadSource = source;
         Listings = listings;
-        Sales = sales;
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,35 +11,49 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 
 public class MockHistoryDbAccess : IHistoryDbAccess
 {
-    private readonly List<History> _collection = new();
+    private readonly Dictionary<Guid, Sale> _collection = new();
 
     public Task Create(History document, CancellationToken cancellationToken = default)
     {
-        _collection.Add(document);
-        return Task.CompletedTask;
+        return InsertSales(document.Sales, new HistoryQuery { WorldId = document.WorldId, ItemId = document.ItemId }, cancellationToken);
     }
 
     public Task<History> Retrieve(HistoryQuery query, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(_collection
-            .FirstOrDefault(d => d.WorldId == query.WorldId && d.ItemId == query.ItemId));
+        var sales = _collection
+            .Select(h => h.Value)
+            .Where(sale => sale.WorldId == query.WorldId && sale.ItemId == query.ItemId)
+            .OrderByDescending(sale => sale.SaleTime)
+            .Take(query.Count ?? 1000)
+            .ToList();
+        if (sales.Count == 0)
+        {
+            return Task.FromResult<History>(null);
+        }
+        
+        return Task.FromResult(new History
+        {
+            WorldId = query.WorldId,
+            ItemId = query.ItemId,
+            LastUploadTimeUnixMilliseconds = sales.Count == 0 ? 0 : sales[0].SaleTime.ToUnixTimeMilliseconds(),
+            Sales = sales,
+        });
     }
 
-    public Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(_collection
-            .Where(d => d.ItemId == query.ItemId && query.WorldIds.Contains(d.WorldId)));
+        return (await Task.WhenAll(query.WorldIds
+            .Select(worldId => Retrieve(new HistoryQuery { WorldId = worldId, ItemId = query.ItemId }, cancellationToken))))
+            .Where(o => o != null);
     }
 
-    public async Task Update(History document, HistoryQuery query, CancellationToken cancellationToken = default)
+    public Task InsertSales(IEnumerable<Sale> sales, HistoryQuery query, CancellationToken cancellationToken = default)
     {
-        await Delete(query, cancellationToken);
-        await Create(document, cancellationToken);
-    }
-
-    public async Task Delete(HistoryQuery query, CancellationToken cancellationToken = default)
-    {
-        var document = await Retrieve(query, cancellationToken);
-        _collection.Remove(document);
+        foreach (var sale in sales)
+        {
+            _collection[sale.Id] = sale;
+        }
+        
+        return Task.CompletedTask;
     }
 }

@@ -5,7 +5,7 @@ using Universalis.Application.Uploads.Attributes;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
-using Universalis.Entities.Uploads;
+using Universalis.Entities.AccessControl;
 using Universalis.GameData;
 
 namespace Universalis.Application.Uploads.Behaviors;
@@ -27,7 +27,7 @@ public class WorldIdUploadBehavior : IUploadBehavior
         return parameters.WorldId != null;
     }
 
-    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         var worldId = parameters.WorldId!.Value;
 

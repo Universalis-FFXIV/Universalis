@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Universalis.Application.Uploads.Schema;
-using Universalis.Entities.Uploads;
+using Universalis.Entities.AccessControl;
 
 namespace Universalis.Application.Uploads.Behaviors;
 
@@ -22,5 +22,5 @@ public interface IUploadBehavior
     /// <param name="parameters">The request parameters.</param>
     /// <param name="cancellationToken"></param>
     /// <returns>An <see cref="IActionResult"/> if the request should return early, or <see langword="null" /> if the request should continue.</returns>
-    public Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default);
+    public Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default);
 }

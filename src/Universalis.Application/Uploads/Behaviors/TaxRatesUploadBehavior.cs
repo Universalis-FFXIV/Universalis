@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.Entities.AccessControl;
 using Universalis.Entities.MarketBoard;
-using Universalis.Entities.Uploads;
 
 namespace Universalis.Application.Uploads.Behaviors;
 
@@ -23,7 +23,7 @@ public class TaxRatesUploadBehavior : IUploadBehavior
         return parameters.WorldId != null && parameters.TaxRates != null && !string.IsNullOrEmpty(parameters.UploaderId);
     }
 
-    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         var existingTaxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = parameters.WorldId!.Value }, cancellationToken);
         

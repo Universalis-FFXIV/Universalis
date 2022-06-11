@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Universalis.DbAccess.Uploads;
+namespace Universalis.DbAccess.AccessControl;
 
 public interface ISourceUploadCountStore
 {

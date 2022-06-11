@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Universalis.Application.Uploads.Attributes;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.Uploads;
-using Universalis.Entities.Uploads;
+using Universalis.Entities.AccessControl;
 using Universalis.GameData;
 
 namespace Universalis.Application.Uploads.Behaviors;
@@ -26,7 +26,7 @@ public class ItemIdUploadBehavior : IUploadBehavior
         return parameters.ItemId != null;
     }
 
-    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         if (!_gameData.MarketableItemIds().Contains(parameters.ItemId!.Value))
         {

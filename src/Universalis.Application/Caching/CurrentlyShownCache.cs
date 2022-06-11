@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -12,7 +13,8 @@ namespace Universalis.Application.Caching;
 
 public class CurrentlyShownCache : MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>
 {
-    private readonly ICurrentlyShownDbAccess _db;
+    private readonly ICurrentlyShownDbAccess _currentlyShownDb;
+    private readonly IHistoryDbAccess _historyDb;
     
     private static readonly Counter CacheHits = Metrics.CreateCounter("universalis_cache_hits", "Cache Hits");
     private static readonly Counter CacheMisses = Metrics.CreateCounter("universalis_cache_misses", "Cache Misses");
@@ -22,9 +24,10 @@ public class CurrentlyShownCache : MemoryCache<CurrentlyShownQuery, CachedCurren
     private static readonly Counter CacheDeletes = Metrics.CreateCounter("universalis_cache_deletes", "Cache Deletes");
     private static readonly Counter CacheEvictions = Metrics.CreateCounter("universalis_cache_evictions", "Cache Evictions");
     
-    public CurrentlyShownCache(int size, ICurrentlyShownDbAccess db) : base(size)
+    public CurrentlyShownCache(int size, ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess historyDb) : base(size)
     {
-        _db = db;
+        _currentlyShownDb = currentlyShownDb;
+        _historyDb = historyDb;
     }
 
     public override async Task<CachedCurrentlyShownData> Get(CurrentlyShownQuery key, CancellationToken cancellationToken = default)
@@ -44,37 +47,38 @@ public class CurrentlyShownCache : MemoryCache<CurrentlyShownQuery, CachedCurren
         }
 
         // Retrieve data from the database
-        var data = await _db.Retrieve(key, cancellationToken);
+        var currentData = await _currentlyShownDb.Retrieve(key, cancellationToken);
+        var history = await _historyDb.Retrieve(new HistoryQuery { WorldId = key.WorldId, ItemId = key.ItemId, Count = 20 }, cancellationToken);
 
         stopwatch.Stop();
         CacheMissMs.Observe(stopwatch.ElapsedMilliseconds);
         CacheMisses.Inc();
 
-        if (data == null)
+        if (currentData == null || history == null)
         {
             return null;
         }
 
         // Transform data into a view
-        var dataConversions = await Task.WhenAll((data.Listings ?? new List<Listing>())
-            .Select(l => Util.ListingSimpleToView(l, cancellationToken)));
+        var dataConversions = await Task.WhenAll((currentData.Listings ?? new List<Listing>())
+            .Select(l => Util.ListingToView(l, cancellationToken)));
         var dataListings = dataConversions
             .Where(s => s.PricePerUnit > 0)
             .Where(s => s.Quantity > 0)
             .ToList();
 
-        var dataHistory = (data.Sales ?? new List<Sale>())
+        var dataHistory = (history.Sales ?? new List<Sale>())
             .Where(s => s.PricePerUnit > 0)
             .Where(s => s.Quantity > 0)
             .Where(s => s.SaleTime.ToUnixTimeSeconds() > 0)
-            .Select(Util.SaleSimpleToView)
+            .Select(Util.SaleToView)
             .ToList();
 
         var dataView = new CachedCurrentlyShownData
         {
             ItemId = key.ItemId,
             WorldId = key.WorldId,
-            LastUploadTimeUnixMilliseconds = data.LastUploadTimeUnixMilliseconds,
+            LastUploadTimeUnixMilliseconds = Convert.ToInt64(history.LastUploadTimeUnixMilliseconds),
             Listings = dataListings,
             RecentHistory = dataHistory,
         };

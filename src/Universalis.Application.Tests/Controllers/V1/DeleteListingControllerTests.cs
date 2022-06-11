@@ -11,6 +11,7 @@ using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Tests;
+using Universalis.Entities.AccessControl;
 using Universalis.Entities.Uploads;
 using Xunit;
 
@@ -31,13 +32,11 @@ public class DeleteListingControllerTests
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
-            await trustedSources.Create(new TrustedSource
-            {
-                ApiKeySha512 = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key))),
-            });
+            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            await trustedSources.Create(new ApiKey(hash, "something", true));
         }
 
-        var document = SeedDataGenerator.MakeCurrentlyShownSimple(74, 5333);
+        var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
         await currentlyShown.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
         var originalCount = document.Listings.Count;
@@ -79,10 +78,8 @@ public class DeleteListingControllerTests
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
-            await trustedSources.Create(new TrustedSource
-            {
-                ApiKeySha512 = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key))),
-            });
+            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            await trustedSources.Create(new ApiKey(hash, "something", true));
         }
 
         var result = await controller.Post(5333, 74.ToString(), key, new DeleteListingParameters
@@ -132,10 +129,8 @@ public class DeleteListingControllerTests
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
-            await trustedSources.Create(new TrustedSource
-            {
-                ApiKeySha512 = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key))),
-            });
+            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            await trustedSources.Create(new ApiKey(hash, "something", true));
         }
 
         var result = await controller.Post(5333, 74.ToString(), key, new DeleteListingParameters
@@ -162,10 +157,8 @@ public class DeleteListingControllerTests
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
-            await trustedSources.Create(new TrustedSource
-            {
-                ApiKeySha512 = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key))),
-            });
+            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            await trustedSources.Create(new ApiKey(hash, "something", true));
         }
 
         var result = await controller.Post(5333, 0.ToString(), key, new DeleteListingParameters
@@ -194,10 +187,8 @@ public class DeleteListingControllerTests
         const string uploaderId = "ffff";
         using (var sha512 = SHA512.Create())
         {
-            await trustedSources.Create(new TrustedSource
-            {
-                ApiKeySha512 = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key))),
-            });
+            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            await trustedSources.Create(new ApiKey(hash, "something", true));
         }
 
         string uploaderIdHash;

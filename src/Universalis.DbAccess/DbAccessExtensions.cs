@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using StackExchange.Redis;
+using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Migrations;
 using Universalis.DbAccess.Uploads;
@@ -45,6 +46,7 @@ public static class DbAccessExtensions
         sc.AddSingleton<IDailyUploadCountStore, DailyUploadCountStore>();
         sc.AddSingleton<IUploadCountHistoryDbAccess, UploadCountHistoryDbAccess>();
 
+        sc.AddSingleton<IApiKeyStore, ApiKeyStore>(_ => new ApiKeyStore(configuration["PostgresConnectionString"]));
         sc.AddSingleton<ISourceUploadCountStore, TrustedSourceUploadCountStore>();
         sc.AddSingleton<ITrustedSourceDbAccess, TrustedSourceDbAccess>();
         

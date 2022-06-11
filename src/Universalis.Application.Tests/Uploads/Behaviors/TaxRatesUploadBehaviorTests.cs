@@ -1,8 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.Entities.AccessControl;
 using Universalis.Entities.Uploads;
 using Xunit;
 
@@ -74,12 +77,10 @@ public class TaxRatesUploadBehaviorTests
         var dbAccess = new MockTaxRatesDbAccess();
         var behavior = new TaxRatesUploadBehavior(dbAccess);
 
-        var source = new TrustedSource
-        {
-            ApiKeySha512 = "2f44abe6",
-            Name = "test runner",
-            UploadCount = 0,
-        };
+        const string key = "blah";
+        using var sha512 = SHA512.Create();
+        var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+        var source = new ApiKey(hash, "something", true);
 
         var upload = new UploadParameters
         {

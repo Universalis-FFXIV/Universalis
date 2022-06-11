@@ -17,11 +17,13 @@ namespace Universalis.Application.Controllers;
 public class CurrentlyShownControllerBase : WorldDcControllerBase
 {
     protected readonly ICurrentlyShownDbAccess CurrentlyShown;
+    protected readonly IHistoryDbAccess History;
     protected readonly ICache<CurrentlyShownQuery, CachedCurrentlyShownData> Cache;
 
-    public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, ICache<CurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData)
+    public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess history, ICache<CurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData)
     {
         CurrentlyShown = currentlyShownDb;
+        History = history;
         Cache = cache;
     }
 
@@ -49,6 +51,8 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
                     {
                         return null;
                     }
+
+                    var h = await History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 }, cancellationToken);
                     
                     return new CachedCurrentlyShownData
                     {
@@ -56,12 +60,12 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
                         ItemId = cd.ItemId,
                         LastUploadTimeUnixMilliseconds = cd.LastUploadTimeUnixMilliseconds,
                         Listings = (await Task.WhenAll((cd.Listings ?? new List<Listing>())
-                                .Select(l => Util.ListingSimpleToView(l, cancellationToken))))
+                                .Select(l => Util.ListingToView(l, cancellationToken))))
                             .Where(s => s.PricePerUnit > 0)
                             .Where(s => s.Quantity > 0)
                             .ToList(),
-                        RecentHistory = (cd.Sales ?? new List<Sale>())
-                            .Select(Util.SaleSimpleToView)
+                        RecentHistory = (h.Sales ?? new List<Sale>())
+                            .Select(Util.SaleToView)
                             .Where(s => s.PricePerUnit > 0)
                             .Where(s => s.Quantity > 0)
                             .Where(s => s.TimestampUnixSeconds > 0)

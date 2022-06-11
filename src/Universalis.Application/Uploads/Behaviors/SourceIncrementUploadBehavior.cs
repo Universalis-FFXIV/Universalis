@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Uploads.Schema;
+using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.Queries.Uploads;
-using Universalis.DbAccess.Uploads;
-using Universalis.Entities.Uploads;
+using Universalis.Entities.AccessControl;
 
 namespace Universalis.Application.Uploads.Behaviors;
 
@@ -22,11 +22,11 @@ public class SourceIncrementUploadBehavior : IUploadBehavior
         return true;
     }
 
-    public async Task<IActionResult> Execute(TrustedSource source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         var ts = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
         {
-            ApiKeySha512 = source.ApiKeySha512,
+            ApiKeySha512 = source.TokenSha512,
         }, cancellationToken);
 
         if (ts == null)
@@ -34,7 +34,7 @@ public class SourceIncrementUploadBehavior : IUploadBehavior
             return null;
         }
 
-        await _trustedSourceDb.Increment(ts.Name, cancellationToken);
+        await _trustedSourceDb.Increment(new TrustedSourceQuery { ApiKeySha512 = ts.TokenSha512 }, cancellationToken);
 
         return null;
     }
