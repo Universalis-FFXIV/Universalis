@@ -344,13 +344,13 @@ public class HistoryControllerTests
         Assert.True(IsSorted(history.StackSizeHistogramHq));
 
         Assert.Equal(Statistics.VelocityPerDay(document.Sales
-                .Select(s => s.SaleTime.ToUnixTimeMilliseconds()), unixNowMs, WeekLength),
+                .Select(s => new DateTimeOffset(s.SaleTime).ToUnixTimeMilliseconds()), unixNowMs, WeekLength),
             history.SaleVelocity);
         Assert.Equal(Statistics.VelocityPerDay(nqSales
-                .Select(s => s.SaleTime.ToUnixTimeMilliseconds()), unixNowMs, WeekLength),
+                .Select(s => new DateTimeOffset(s.SaleTime).ToUnixTimeMilliseconds()), unixNowMs, WeekLength),
             history.SaleVelocityNq);
         Assert.Equal(Statistics.VelocityPerDay(hqSales
-                .Select(s => s.SaleTime.ToUnixTimeMilliseconds()), unixNowMs, WeekLength),
+                .Select(s => new DateTimeOffset(s.SaleTime).ToUnixTimeMilliseconds()), unixNowMs, WeekLength),
             history.SaleVelocityHq);
     }
 

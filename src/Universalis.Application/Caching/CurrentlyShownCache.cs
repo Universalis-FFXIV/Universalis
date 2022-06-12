@@ -70,7 +70,7 @@ public class CurrentlyShownCache : MemoryCache<CurrentlyShownQuery, CachedCurren
         var dataHistory = (history.Sales ?? new List<Sale>())
             .Where(s => s.PricePerUnit > 0)
             .Where(s => s.Quantity > 0)
-            .Where(s => s.SaleTime.ToUnixTimeSeconds() > 0)
+            .Where(s => new DateTimeOffset(s.SaleTime).ToUnixTimeSeconds() > 0)
             .Select(Util.SaleToView)
             .ToList();
 

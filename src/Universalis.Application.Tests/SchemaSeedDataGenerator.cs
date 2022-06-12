@@ -49,7 +49,7 @@ public static class SchemaSeedDataGenerator
                 PricePerUnit = s.PricePerUnit,
                 Quantity = s.Quantity,
                 SellerId = "",
-                TimestampUnixSeconds = s.SaleTime.ToUnixTimeSeconds(),
+                TimestampUnixSeconds = new DateTimeOffset(s.SaleTime).ToUnixTimeSeconds(),
             })
             .ToList();
 
