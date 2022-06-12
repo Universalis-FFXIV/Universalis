@@ -420,6 +420,6 @@ public class MarketBoardUploadBehaviorTests
             ItemId = upload.ItemId.Value,
         });
 
-        Assert.All(history.Sales, listing => Assert.False(listing.ItemId == 0));
+        Assert.All(history.Sales, sale => Assert.False(sale.ItemId == 0));
     }
 }
