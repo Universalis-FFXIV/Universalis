@@ -69,10 +69,10 @@ public class SaleStore : ISaleStore
                 ItemId = Convert.ToUInt32(reader.GetInt32(2)),
                 Hq = reader.GetBoolean(3),
                 PricePerUnit = Convert.ToUInt32(reader.GetInt64(4)),
-                Quantity = Convert.ToUInt32(reader.GetInt32(5)),
-                BuyerName = reader.GetString(6),
+                Quantity = reader.IsDBNull(5) ? null : Convert.ToUInt32(reader.GetInt32(5)),
+                BuyerName = reader.IsDBNull(6) ? null : reader.GetString(6),
                 SaleTime = (DateTime)reader.GetValue(7),
-                UploaderIdHash = reader.GetString(8),
+                UploaderIdHash = reader.IsDBNull(8) ? null : reader.GetString(8),
             });
         }
 
