@@ -26,7 +26,7 @@ public class HistoryDbAccess : IHistoryDbAccess
             WorldId = document.WorldId,
             ItemId = document.ItemId,
             LastUploadTime =
-                DateTimeOffset.FromUnixTimeMilliseconds(Convert.ToInt64(document.LastUploadTimeUnixMilliseconds)).DateTime,
+                DateTimeOffset.FromUnixTimeMilliseconds(Convert.ToInt64(document.LastUploadTimeUnixMilliseconds)).UtcDateTime,
         }, cancellationToken);
 
         await Task.WhenAll(document.Sales.Select(s => _saleStore.Insert(s, cancellationToken)));
