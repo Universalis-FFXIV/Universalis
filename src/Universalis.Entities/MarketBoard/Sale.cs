@@ -1,11 +1,10 @@
 ﻿using System;
-using MongoDB.Bson.Serialization.Attributes;
 
 namespace Universalis.Entities.MarketBoard;
 
 public class Sale : IEquatable<Sale>
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; init; }
     
     public uint WorldId { get; init; }
     
