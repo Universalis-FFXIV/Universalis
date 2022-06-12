@@ -94,7 +94,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     BuyerName = s.BuyerName,
                     PricePerUnit = s.PricePerUnit ?? 0,
                     Quantity = s.Quantity ?? 0,
-                    SaleTime = DateTimeOffset.FromUnixTimeSeconds(s.TimestampUnixSeconds ?? 0).DateTime,
+                    SaleTime = DateTimeOffset.FromUnixTimeSeconds(s.TimestampUnixSeconds ?? 0).UtcDateTime,
                     UploaderIdHash = parameters.UploaderId,
                 })
                 .Where(s => s.PricePerUnit > 0)
