@@ -30,7 +30,15 @@ public class MarketItemStore : IMarketItemStore
                     new NpgsqlParameter { Value = marketItem.LastUploadTime },
                 },
             };
-        await command.ExecuteNonQueryAsync(cancellationToken);
+
+        try
+        {
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+        catch (PostgresException e) when (e.ErrorCode == -0x4005)
+        {
+            // Race condition; unique constraint violated
+        }
     }
     
     public async Task Update(MarketItem marketItem, CancellationToken cancellationToken = default)
@@ -40,15 +48,8 @@ public class MarketItemStore : IMarketItemStore
 
         if (await Retrieve(marketItem.WorldId, marketItem.ItemId, cancellationToken) == null)
         {
-            try
-            {
-                await Insert(marketItem, cancellationToken);
-                return;
-            }
-            catch (PostgresException e) when (e.ErrorCode == -0x4005)
-            {
-                // Race condition; unique constraint violated
-            }
+            await Insert(marketItem, cancellationToken);
+            return;
         }
 
         await using var command =
