@@ -107,6 +107,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             {
                 WorldId = worldId,
                 ItemId = itemId,
+                Count = 1,
             }, cancellationToken);
 
             var addedSales = new List<Sale>();
@@ -125,10 +126,16 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             {
                 // Remove duplicates
                 var head = existingHistory.Sales.FirstOrDefault();
-                foreach (var sale in cleanSales.TakeWhile(t => !t.Equals(head)))
+                if (head == null)
                 {
-                    existingHistory.Sales.Insert(0, sale);
-                    addedSales.Add(sale);
+                    addedSales.AddRange(cleanSales);
+                }
+                else
+                {
+                    foreach (var sale in cleanSales.TakeWhile(t => !t.Equals(head)))
+                    {
+                        addedSales.Add(sale);
+                    }
                 }
             }
             

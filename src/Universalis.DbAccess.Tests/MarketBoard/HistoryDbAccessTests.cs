@@ -136,7 +136,6 @@ public class HistoryDbAccessTests
         Assert.Single(output);
         Assert.Equal(document.WorldId, output[0].WorldId);
         Assert.Equal(document.ItemId, output[0].ItemId);
-        Assert.Equal(document.LastUploadTimeUnixMilliseconds, output[0].LastUploadTimeUnixMilliseconds);
         
         var sortedExpected = document.Sales.OrderByDescending(s => s.SaleTime).ToList();
         var sortedActual = output.Select(h => h.Sales.OrderByDescending(s => s.SaleTime).ToList()).ToList();
