@@ -1,17 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
-using Universalis.Application.Controllers;
+using Universalis.Application.Realtime;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Tests.Mocks.Realtime;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
+using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.AccessControl;
-using Universalis.Entities.Uploads;
+using Universalis.GameData;
 using Xunit;
 using Listing = Universalis.Application.Uploads.Schema.Listing;
 
@@ -19,16 +21,40 @@ namespace Universalis.Application.Tests.Uploads.Behaviors;
 
 public class MarketBoardUploadBehaviorTests
 {
+    private class TestResources
+    {
+        public ICurrentlyShownDbAccess CurrentlyShown { get; private init; }
+        public IHistoryDbAccess History { get; private init; }
+        public ICache<CurrentlyShownQuery, CachedCurrentlyShownData> Cache { get; private init; }
+        public ISocketProcessor Sockets { get; private init; }
+        public IGameDataProvider GameData { get; private init; }
+        public IUploadBehavior Behavior { get; private init; }
+
+        public static TestResources Create()
+        {
+            var currentlyShownDb = new MockCurrentlyShownDbAccess();
+            var historyDb = new MockHistoryDbAccess();
+            var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
+            var sockets = new MockSocketProcessor();
+            var gameData = new MockGameDataProvider();
+            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
+
+            return new TestResources
+            {
+                CurrentlyShown = currentlyShownDb,
+                History = historyDb,
+                Cache = cache,
+                Sockets = sockets,
+                GameData = gameData,
+                Behavior = behavior,
+            };
+        }
+    }
+    
     [Fact]
     public void Behavior_DoesNotRun_WithoutWorldId()
     {
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var sockets = new MockSocketProcessor();
-        var gameData = new MockGameDataProvider();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
-
+        var test = TestResources.Create();
         var upload = new UploadParameters
         {
             ItemId = 5333,
@@ -36,19 +62,14 @@ public class MarketBoardUploadBehaviorTests
             Sales = new List<Sale>(),
             UploaderId = "5627384655756342554",
         };
-        Assert.False(behavior.ShouldExecute(upload));
+        
+        Assert.False(test.Behavior.ShouldExecute(upload));
     }
 
     [Fact]
     public void Behavior_DoesNotRun_WithoutItemId()
     {
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var sockets = new MockSocketProcessor();
-        var gameData = new MockGameDataProvider();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
-
+        var test = TestResources.Create();
         var upload = new UploadParameters
         {
             WorldId = 74,
@@ -56,37 +77,28 @@ public class MarketBoardUploadBehaviorTests
             Sales = new List<Sale>(),
             UploaderId = "5627384655756342554",
         };
-        Assert.False(behavior.ShouldExecute(upload));
+        
+        Assert.False(test.Behavior.ShouldExecute(upload));
     }
 
     [Fact]
     public void Behavior_DoesNotRun_WithoutListingsOrSales()
     {
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var sockets = new MockSocketProcessor();
-        var gameData = new MockGameDataProvider();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
-
+        var test = TestResources.Create();
         var upload = new UploadParameters
         {
             WorldId = 74,
             ItemId = 5333,
             UploaderId = "5627384655756342554",
         };
-        Assert.False(behavior.ShouldExecute(upload));
+        
+        Assert.False(test.Behavior.ShouldExecute(upload));
     }
     
     [Fact]
     public void Behavior_DoesNotRun_WithZeroQuantitySales()
     {
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var sockets = new MockSocketProcessor();
-        var gameData = new MockGameDataProvider();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
+        var test = TestResources.Create();
         
         var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
         sales[0].Quantity = 0;
@@ -98,18 +110,14 @@ public class MarketBoardUploadBehaviorTests
             UploaderId = "5627384655756342554",
             Sales = sales,
         };
-        Assert.False(behavior.ShouldExecute(upload));
+        
+        Assert.False(test.Behavior.ShouldExecute(upload));
     }
     
     [Fact]
     public void Behavior_DoesNotRun_WithZeroQuantityListings()
     {
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var sockets = new MockSocketProcessor();
-        var gameData = new MockGameDataProvider();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
+        var test = TestResources.Create();
         
         var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
         listings[0].Quantity = 0;
@@ -121,18 +129,13 @@ public class MarketBoardUploadBehaviorTests
             UploaderId = "5627384655756342554",
             Listings = listings,
         };
-        Assert.False(behavior.ShouldExecute(upload));
+        Assert.False(test.Behavior.ShouldExecute(upload));
     }
     
     [Fact]
     public void Behavior_DoesNotRun_WithInvalidStackSizeSales()
     {
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var sockets = new MockSocketProcessor();
-        var gameData = new MockGameDataProvider();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
+        var test = TestResources.Create();
         
         var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
         sales[0].Quantity = 9999;
@@ -144,18 +147,14 @@ public class MarketBoardUploadBehaviorTests
             UploaderId = "5627384655756342554",
             Sales = sales,
         };
-        Assert.False(behavior.ShouldExecute(upload));
+        
+        Assert.False(test.Behavior.ShouldExecute(upload));
     }
     
     [Fact]
     public void Behavior_DoesNotRun_WithInvalidStackSizeListings()
     {
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var sockets = new MockSocketProcessor();
-        var gameData = new MockGameDataProvider();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
+        var test = TestResources.Create();
         
         var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
         listings[0].Quantity = 9999;
@@ -167,19 +166,13 @@ public class MarketBoardUploadBehaviorTests
             UploaderId = "5627384655756342554",
             Listings = listings,
         };
-        Assert.False(behavior.ShouldExecute(upload));
+        Assert.False(test.Behavior.ShouldExecute(upload));
     }
 
     [Fact]
     public void Behavior_Runs_WithoutUploaderId()
     {
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var sockets = new MockSocketProcessor();
-        var gameData = new MockGameDataProvider();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
-
+        var test = TestResources.Create();
         var upload = new UploadParameters
         {
             WorldId = 74,
@@ -187,26 +180,19 @@ public class MarketBoardUploadBehaviorTests
             Listings = new List<Listing>(),
             Sales = new List<Sale>(),
         };
-        Assert.True(behavior.ShouldExecute(upload));
+        
+        Assert.True(test.Behavior.ShouldExecute(upload));
     }
 
     [Fact]
     public async Task Behavior_Succeeds_ListingsAndSales()
     {
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var sockets = new MockSocketProcessor();
-        var gameData = new MockGameDataProvider();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
+        var test = TestResources.Create();
 
-        var stackSize = gameData.MarketableItemStackSizes()[5333];
+        var stackSize = test.GameData.MarketableItemStackSizes()[5333];
         var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
 
-        const string key = "blah";
-        using var sha512 = SHA512.Create();
-        var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
-        var source = new ApiKey(hash, "something", true);
+        var source = ApiKey.FromToken("blah", "something", true);
 
         var upload = new UploadParameters
         {
@@ -216,12 +202,13 @@ public class MarketBoardUploadBehaviorTests
             Sales = sales,
             UploaderId = "5627384655756342554",
         };
-        Assert.True(behavior.ShouldExecute(upload));
+        
+        Assert.True(test.Behavior.ShouldExecute(upload));
 
-        var result = await behavior.Execute(source, upload);
+        var result = await test.Behavior.Execute(source, upload);
         Assert.Null(result);
 
-        var currentlyShown = await currentlyShownDb.Retrieve(new CurrentlyShownQuery
+        var currentlyShown = await test.CurrentlyShown.Retrieve(new CurrentlyShownQuery
         {
             WorldId = upload.WorldId.Value,
             ItemId = upload.ItemId.Value,
@@ -233,7 +220,7 @@ public class MarketBoardUploadBehaviorTests
         Assert.NotNull(currentlyShown.Listings);
         Assert.NotEmpty(currentlyShown.Listings);
 
-        var history = await historyDb.Retrieve(new HistoryQuery
+        var history = await test.History.Retrieve(new HistoryQuery
         {
             WorldId = upload.WorldId.Value,
             ItemId = upload.ItemId.Value,
@@ -249,20 +236,12 @@ public class MarketBoardUploadBehaviorTests
     [Fact]
     public async Task Behavior_Succeeds_Listings()
     {
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var sockets = new MockSocketProcessor();
-        var gameData = new MockGameDataProvider();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
+        var test = TestResources.Create();
 
-        var stackSize = gameData.MarketableItemStackSizes()[5333];
+        var stackSize = test.GameData.MarketableItemStackSizes()[5333];
         var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
 
-        const string key = "blah";
-        using var sha512 = SHA512.Create();
-        var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
-        var source = new ApiKey(hash, "something", true);
+        var source = ApiKey.FromToken("blah", "something", true);
 
         var upload = new UploadParameters
         {
@@ -271,12 +250,13 @@ public class MarketBoardUploadBehaviorTests
             Listings = listings,
             UploaderId = "5627384655756342554",
         };
-        Assert.True(behavior.ShouldExecute(upload));
+        
+        Assert.True(test.Behavior.ShouldExecute(upload));
 
-        var result = await behavior.Execute(source, upload);
+        var result = await test.Behavior.Execute(source, upload);
         Assert.Null(result);
 
-        var currentlyShown = await currentlyShownDb.Retrieve(new CurrentlyShownQuery
+        var currentlyShown = await test.CurrentlyShown.Retrieve(new CurrentlyShownQuery
         {
             WorldId = upload.WorldId.Value,
             ItemId = upload.ItemId.Value,
@@ -288,7 +268,7 @@ public class MarketBoardUploadBehaviorTests
         Assert.NotNull(currentlyShown.Listings);
         Assert.NotEmpty(currentlyShown.Listings);
 
-        var history = await historyDb.Retrieve(new HistoryQuery
+        var history = await test.History.Retrieve(new HistoryQuery
         {
             WorldId = upload.WorldId.Value,
             ItemId = upload.ItemId.Value,
@@ -300,20 +280,12 @@ public class MarketBoardUploadBehaviorTests
     [Fact]
     public async Task Behavior_Succeeds_Sales()
     {
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var sockets = new MockSocketProcessor();
-        var gameData = new MockGameDataProvider();
-        var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
+        var test = TestResources.Create();
 
-        var stackSize = gameData.MarketableItemStackSizes()[5333];
+        var stackSize = test.GameData.MarketableItemStackSizes()[5333];
         var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
 
-        const string key = "blah";
-        using var sha512 = SHA512.Create();
-        var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
-        var source = new ApiKey(hash, "something", true);
+        var source = ApiKey.FromToken("blah", "something", true);
 
         var upload = new UploadParameters
         {
@@ -322,12 +294,12 @@ public class MarketBoardUploadBehaviorTests
             Sales = sales,
             UploaderId = "5627384655756342554",
         };
-        Assert.True(behavior.ShouldExecute(upload));
+        Assert.True(test.Behavior.ShouldExecute(upload));
 
-        var result = await behavior.Execute(source, upload);
+        var result = await test.Behavior.Execute(source, upload);
         Assert.Null(result);
 
-        var currentlyShown = await currentlyShownDb.Retrieve(new CurrentlyShownQuery
+        var currentlyShown = await test.CurrentlyShown.Retrieve(new CurrentlyShownQuery
         {
             WorldId = upload.WorldId.Value,
             ItemId = upload.ItemId.Value,
@@ -339,7 +311,7 @@ public class MarketBoardUploadBehaviorTests
         Assert.NotNull(currentlyShown.Listings);
         Assert.Empty(currentlyShown.Listings);
 
-        var history = await historyDb.Retrieve(new HistoryQuery
+        var history = await test.History.Retrieve(new HistoryQuery
         {
             WorldId = upload.WorldId.Value,
             ItemId = upload.ItemId.Value,
@@ -350,5 +322,104 @@ public class MarketBoardUploadBehaviorTests
         Assert.Equal(upload.ItemId.Value, history.ItemId);
         Assert.NotNull(history.Sales);
         Assert.NotEmpty(history.Sales);
+    }
+
+    [Fact]
+    public async Task Behavior_Adds_Sale_Ids()
+    {
+        var test = TestResources.Create();
+
+        var stackSize = test.GameData.MarketableItemStackSizes()[5333];
+        var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
+
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Listings = listings,
+            Sales = sales,
+            UploaderId = "5627384655756342554",
+        };
+        
+        Assert.True(test.Behavior.ShouldExecute(upload));
+
+        var result = await test.Behavior.Execute(source, upload);
+        Assert.Null(result);
+
+        var history = await test.History.Retrieve(new HistoryQuery
+        {
+            WorldId = upload.WorldId.Value,
+            ItemId = upload.ItemId.Value,
+        });
+
+        Assert.All(history.Sales, listing => Assert.False(listing.Id == Guid.Empty));
+    }
+    
+    [Fact]
+    public async Task Behavior_Adds_Sale_WorldIds()
+    {
+        var test = TestResources.Create();
+
+        var stackSize = test.GameData.MarketableItemStackSizes()[5333];
+        var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
+
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Listings = listings,
+            Sales = sales,
+            UploaderId = "5627384655756342554",
+        };
+        
+        Assert.True(test.Behavior.ShouldExecute(upload));
+
+        var result = await test.Behavior.Execute(source, upload);
+        Assert.Null(result);
+
+        var history = await test.History.Retrieve(new HistoryQuery
+        {
+            WorldId = upload.WorldId.Value,
+            ItemId = upload.ItemId.Value,
+        });
+
+        Assert.All(history.Sales, listing => Assert.False(listing.WorldId == 0));
+    }
+    
+    [Fact]
+    public async Task Behavior_Adds_Sale_ItemIds()
+    {
+        var test = TestResources.Create();
+
+        var stackSize = test.GameData.MarketableItemStackSizes()[5333];
+        var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
+
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Listings = listings,
+            Sales = sales,
+            UploaderId = "5627384655756342554",
+        };
+        
+        Assert.True(test.Behavior.ShouldExecute(upload));
+
+        var result = await test.Behavior.Execute(source, upload);
+        Assert.Null(result);
+
+        var history = await test.History.Retrieve(new HistoryQuery
+        {
+            WorldId = upload.WorldId.Value,
+            ItemId = upload.ItemId.Value,
+        });
+
+        Assert.All(history.Sales, sale => Assert.False(sale.ItemId == 0));
     }
 }
