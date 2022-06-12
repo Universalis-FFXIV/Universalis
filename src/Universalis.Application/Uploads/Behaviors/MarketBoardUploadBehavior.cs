@@ -138,7 +138,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     }
                 }
             }
-            
+
             await _historyDb.InsertSales(addedSales, new HistoryQuery
             {
                 WorldId = worldId,
@@ -197,7 +197,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                         LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds ?? 0,
                         RetainerId = Util.ParseUnusualId(l.RetainerId) ?? "",
                         RetainerName = l.RetainerName,
-                        RetainerCityId = l.RetainerCityId ?? 1, // TODO: This probably shouldn't have a default value
+                        RetainerCityId = l.RetainerCityId ?? 0,
                         SellerId = Util.ParseUnusualId(l.SellerId) ?? "",
                     };
                 })
