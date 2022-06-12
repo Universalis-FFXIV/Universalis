@@ -20,7 +20,7 @@ public class Sale : IEquatable<Sale>
     
     public string BuyerName { get; init; }
 
-    public DateTimeOffset SaleTime { get; init; }
+    public DateTime SaleTime { get; init; }
 
     public string UploaderIdHash { get; init; }
 

@@ -35,7 +35,7 @@ public class MockHistoryDbAccess : IHistoryDbAccess
         {
             WorldId = query.WorldId,
             ItemId = query.ItemId,
-            LastUploadTimeUnixMilliseconds = sales.Count == 0 ? 0 : sales[0].SaleTime.ToUnixTimeMilliseconds(),
+            LastUploadTimeUnixMilliseconds = sales.Count == 0 ? 0 : new DateTimeOffset(sales[0].SaleTime).ToUnixTimeMilliseconds(),
             Sales = sales,
         });
     }
