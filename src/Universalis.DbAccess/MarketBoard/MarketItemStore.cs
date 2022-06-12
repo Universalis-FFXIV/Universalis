@@ -25,8 +25,8 @@ public class MarketItemStore : IMarketItemStore
             {
                 Parameters =
                 {
-                    new NpgsqlParameter { Value = marketItem.WorldId },
-                    new NpgsqlParameter { Value = marketItem.ItemId },
+                    new NpgsqlParameter { Value = Convert.ToInt32(marketItem.WorldId) },
+                    new NpgsqlParameter { Value = Convert.ToInt32(marketItem.ItemId) },
                     new NpgsqlParameter { Value = marketItem.LastUploadTime },
                 },
             };
@@ -44,8 +44,8 @@ public class MarketItemStore : IMarketItemStore
                 Parameters =
                 {
                     new NpgsqlParameter { Value = marketItem.LastUploadTime },
-                    new NpgsqlParameter { Value = marketItem.WorldId },
-                    new NpgsqlParameter { Value = marketItem.ItemId },
+                    new NpgsqlParameter { Value = Convert.ToInt32(marketItem.WorldId) },
+                    new NpgsqlParameter { Value = Convert.ToInt32(marketItem.ItemId) },
                 },
             };
 
