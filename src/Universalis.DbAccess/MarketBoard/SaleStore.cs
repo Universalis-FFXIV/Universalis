@@ -71,7 +71,7 @@ public class SaleStore : ISaleStore
                 PricePerUnit = Convert.ToUInt32(reader.GetInt64(4)),
                 Quantity = reader.IsDBNull(5) ? null : Convert.ToUInt32(reader.GetInt32(5)),
                 BuyerName = reader.IsDBNull(6) ? null : reader.GetString(6),
-                SaleTime = (DateTime)reader.GetValue(7),
+                SaleTime = ((DateTime)reader.GetValue(7)).ToUniversalTime(),
                 UploaderIdHash = reader.IsDBNull(8) ? null : reader.GetString(8),
             });
         }

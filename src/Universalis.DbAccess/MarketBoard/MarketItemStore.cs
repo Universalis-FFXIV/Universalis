@@ -86,7 +86,7 @@ public class MarketItemStore : IMarketItemStore
         {
             WorldId = Convert.ToUInt32(reader.GetInt32(0)),
             ItemId = Convert.ToUInt32(reader.GetInt32(1)),
-            LastUploadTime = (DateTime)reader.GetValue(2),
+            LastUploadTime = ((DateTime)reader.GetValue(2)).ToUniversalTime(),
         };
     }
 }
