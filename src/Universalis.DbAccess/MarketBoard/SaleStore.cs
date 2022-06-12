@@ -26,15 +26,15 @@ public class SaleStore : ISaleStore
             {
                 Parameters =
                 {
-                    new NpgsqlParameter { Value = Guid.NewGuid() },
-                    new NpgsqlParameter { Value = Convert.ToInt32(sale.WorldId) },
-                    new NpgsqlParameter { Value = Convert.ToInt32(sale.ItemId) },
-                    new NpgsqlParameter { Value = sale.Hq },
-                    new NpgsqlParameter { Value = Convert.ToInt64(sale.PricePerUnit) },
-                    new NpgsqlParameter { Value = Convert.ToInt32(sale.Quantity) },
-                    new NpgsqlParameter { Value = sale.BuyerName },
-                    new NpgsqlParameter { Value = sale.SaleTime },
-                    new NpgsqlParameter { Value = sale.UploaderIdHash },
+                    new NpgsqlParameter<Guid> { TypedValue = Guid.NewGuid() },
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(sale.WorldId) },
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(sale.ItemId) },
+                    new NpgsqlParameter<bool> { TypedValue = sale.Hq },
+                    new NpgsqlParameter<long> { TypedValue = Convert.ToInt64(sale.PricePerUnit) },
+                    new NpgsqlParameter<int?> { TypedValue = sale.Quantity == null ? null : Convert.ToInt32(sale.Quantity) },
+                    new NpgsqlParameter<string> { TypedValue = sale.BuyerName },
+                    new NpgsqlParameter<DateTime> { TypedValue = sale.SaleTime },
+                    new NpgsqlParameter<string> { TypedValue = sale.UploaderIdHash },
                 },
             };
         await command.ExecuteNonQueryAsync(cancellationToken);
@@ -51,9 +51,9 @@ public class SaleStore : ISaleStore
             {
                 Parameters =
                 {
-                    new NpgsqlParameter { Value = Convert.ToInt32(worldId) },
-                    new NpgsqlParameter { Value = Convert.ToInt32(itemId) },
-                    new NpgsqlParameter { Value = count },
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(worldId) },
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(itemId) },
+                    new NpgsqlParameter<int> { TypedValue = count },
                 },
             };
         

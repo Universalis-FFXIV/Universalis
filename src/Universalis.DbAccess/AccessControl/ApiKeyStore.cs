@@ -24,9 +24,9 @@ public class ApiKeyStore : IApiKeyStore
             {
                 Parameters =
                 {
-                    new NpgsqlParameter { Value = apiKey.TokenSha512 },
-                    new NpgsqlParameter { Value = apiKey.Name },
-                    new NpgsqlParameter { Value = apiKey.CanUpload },
+                    new NpgsqlParameter<string> { TypedValue = apiKey.TokenSha512 },
+                    new NpgsqlParameter<string> { TypedValue = apiKey.Name },
+                    new NpgsqlParameter<bool> { TypedValue = apiKey.CanUpload },
                 },
             };
         await command.ExecuteNonQueryAsync(cancellationToken);

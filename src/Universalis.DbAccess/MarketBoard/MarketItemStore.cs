@@ -25,9 +25,9 @@ public class MarketItemStore : IMarketItemStore
             {
                 Parameters =
                 {
-                    new NpgsqlParameter { Value = Convert.ToInt32(marketItem.WorldId) },
-                    new NpgsqlParameter { Value = Convert.ToInt32(marketItem.ItemId) },
-                    new NpgsqlParameter { Value = marketItem.LastUploadTime },
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(marketItem.WorldId) },
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(marketItem.ItemId) },
+                    new NpgsqlParameter<DateTime> { TypedValue = marketItem.LastUploadTime },
                 },
             };
 
@@ -58,9 +58,9 @@ public class MarketItemStore : IMarketItemStore
             {
                 Parameters =
                 {
-                    new NpgsqlParameter { Value = marketItem.LastUploadTime },
-                    new NpgsqlParameter { Value = Convert.ToInt32(marketItem.WorldId) },
-                    new NpgsqlParameter { Value = Convert.ToInt32(marketItem.ItemId) },
+                    new NpgsqlParameter<DateTime> { TypedValue = marketItem.LastUploadTime },
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(marketItem.WorldId) },
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(marketItem.ItemId) },
                 },
             };
         await command.ExecuteNonQueryAsync(cancellationToken);
@@ -77,8 +77,8 @@ public class MarketItemStore : IMarketItemStore
             {
                 Parameters =
                 {
-                    new NpgsqlParameter { Value = Convert.ToInt32(worldId) },
-                    new NpgsqlParameter { Value = Convert.ToInt32(itemId) },
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(worldId) },
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(itemId) },
                 },
             };
         
