@@ -53,6 +53,8 @@ public class ApiKeyStore : IApiKeyStore
             return null;
         }
 
+        await reader.ReadAsync(cancellationToken);
+
         var name = reader.GetString(0);
         var canUpload = reader.GetBoolean(1);
         return new ApiKey(tokenSha512, name, canUpload);
