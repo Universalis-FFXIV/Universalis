@@ -31,7 +31,7 @@ public class SaleStore : ISaleStore
                     new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(sale.ItemId) },
                     new NpgsqlParameter<bool> { TypedValue = sale.Hq },
                     new NpgsqlParameter<long> { TypedValue = Convert.ToInt64(sale.PricePerUnit) },
-                    new NpgsqlParameter<int?> { TypedValue = sale.Quantity == null ? null : Convert.ToInt32(sale.Quantity) },
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(sale.Quantity) },
                     new NpgsqlParameter<string> { TypedValue = sale.BuyerName },
                     new NpgsqlParameter<DateTime> { TypedValue = sale.SaleTime },
                     new NpgsqlParameter<string> { TypedValue = sale.UploaderIdHash },
