@@ -107,6 +107,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             {
                 WorldId = worldId,
                 ItemId = itemId,
+                Count = cleanSales.Count,
             }, cancellationToken);
 
             var addedSales = new List<Sale>();
@@ -124,14 +125,9 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             else
             {
                 // Remove duplicates
-                var head = existingHistory.Sales.FirstOrDefault();
-                foreach (var sale in cleanSales.TakeWhile(t => !t.Equals(head)))
-                {
-                    existingHistory.Sales.Insert(0, sale);
-                    addedSales.Add(sale);
-                }
+                addedSales.AddRange(cleanSales.Where(t => !existingHistory.Sales.Contains(t)));
             }
-            
+
             await _historyDb.InsertSales(addedSales, new HistoryQuery
             {
                 WorldId = worldId,
@@ -190,7 +186,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                         LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds ?? 0,
                         RetainerId = Util.ParseUnusualId(l.RetainerId) ?? "",
                         RetainerName = l.RetainerName,
-                        RetainerCityId = l.RetainerCityId ?? 1, // TODO: This probably shouldn't have a default value
+                        RetainerCityId = l.RetainerCityId ?? 0,
                         SellerId = Util.ParseUnusualId(l.SellerId) ?? "",
                     };
                 })
