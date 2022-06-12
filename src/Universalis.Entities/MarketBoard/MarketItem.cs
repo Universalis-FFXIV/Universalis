@@ -8,5 +8,5 @@ public class MarketItem
     
     public uint ItemId { get; init; }
 
-    public DateTimeOffset LastUploadTime { get; set; }
+    public DateTime LastUploadTime { get; set; }
 }

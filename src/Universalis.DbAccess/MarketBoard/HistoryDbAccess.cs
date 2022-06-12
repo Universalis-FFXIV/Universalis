@@ -26,7 +26,7 @@ public class HistoryDbAccess : IHistoryDbAccess
             WorldId = document.WorldId,
             ItemId = document.ItemId,
             LastUploadTime =
-                DateTimeOffset.FromUnixTimeMilliseconds(Convert.ToInt64(document.LastUploadTimeUnixMilliseconds)),
+                DateTimeOffset.FromUnixTimeMilliseconds(Convert.ToInt64(document.LastUploadTimeUnixMilliseconds)).DateTime,
         }, cancellationToken);
 
         await Task.WhenAll(document.Sales.Select(s => _saleStore.Insert(s, cancellationToken)));
@@ -45,7 +45,7 @@ public class HistoryDbAccess : IHistoryDbAccess
         {
             WorldId = marketItem.WorldId,
             ItemId = marketItem.ItemId,
-            LastUploadTimeUnixMilliseconds = marketItem.LastUploadTime.ToUnixTimeMilliseconds(),
+            LastUploadTimeUnixMilliseconds = new DateTimeOffset(marketItem.LastUploadTime).ToUnixTimeMilliseconds(),
             Sales = sales.ToList(),
         };
     }
@@ -63,7 +63,7 @@ public class HistoryDbAccess : IHistoryDbAccess
         {
             WorldId = query.WorldId,
             ItemId = query.ItemId,
-            LastUploadTime = DateTimeOffset.UtcNow,
+            LastUploadTime = DateTime.UtcNow,
         }, cancellationToken);
         
         await Task.WhenAll(sales.Select(s => _saleStore.Insert(s, cancellationToken)));
