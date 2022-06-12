@@ -54,11 +54,13 @@ services:
     command: --interval 30
   postgres:
     image: postgres:14.3
+    command: postgres -c shared_buffers=512MB -c max_connections=200
     ports:
       - "4051:5432"
     environment:
       POSTGRES_USER: universalis
       POSTGRES_PASSWORD: universalis
+    shm_size: 512mb
     volumes:
       - "${HOME}/postgres:/var/lib/postgres/data"
   redis:
