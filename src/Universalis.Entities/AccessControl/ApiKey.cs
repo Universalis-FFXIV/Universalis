@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Universalis.Entities.AccessControl;
 
@@ -20,5 +22,13 @@ public class ApiKey
         TokenSha512 = tokenSha512;
         Name = name;
         CanUpload = canUpload;
+    }
+
+    public static ApiKey FromToken(string token, string name, bool canUpload)
+    {
+        using var sha512 = SHA512.Create();
+        var hashBytes = sha512.ComputeHash(Encoding.UTF8.GetBytes(token));
+        var hashStr = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+        return new ApiKey(hashStr, name, canUpload);
     }
 }
