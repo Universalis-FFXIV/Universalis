@@ -47,7 +47,7 @@ public class SaleStore : ISaleStore
         
         await using var command =
             new NpgsqlCommand(
-                "SELECT id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id FROM sale WHERE world_id = $1 AND item_id = $2 ORDER BY sale_time LIMIT $3", conn)
+                "SELECT id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id FROM sale WHERE world_id = $1 AND item_id = $2 ORDER BY sale_time DESC LIMIT $3", conn)
             {
                 Parameters =
                 {
