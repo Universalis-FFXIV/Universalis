@@ -37,6 +37,20 @@ public class MarketItemStore : IMarketItemStore
     {
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
+
+        if (await Retrieve(marketItem.WorldId, marketItem.ItemId, cancellationToken) == null)
+        {
+            try
+            {
+                await Insert(marketItem, cancellationToken);
+                return;
+            }
+            catch (PostgresException e) when (e.ErrorCode == -0x4005)
+            {
+                // Race condition; unique constraint violated
+            }
+        }
+
         await using var command =
             new NpgsqlCommand(
                 "UPDATE market_item SET updated = $1 WHERE world_id = $2 AND item_id = $3", conn)
@@ -48,13 +62,6 @@ public class MarketItemStore : IMarketItemStore
                     new NpgsqlParameter { Value = Convert.ToInt32(marketItem.ItemId) },
                 },
             };
-
-        if (await Retrieve(marketItem.WorldId, marketItem.ItemId, cancellationToken) == null)
-        {
-            await Insert(marketItem, cancellationToken);
-            return;
-        }
-        
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
