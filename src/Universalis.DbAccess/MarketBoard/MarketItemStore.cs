@@ -35,7 +35,7 @@ public class MarketItemStore : IMarketItemStore
         {
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
-        catch (PostgresException e) when (e.ErrorCode == -0x4005)
+        catch (PostgresException e) when (e.ConstraintName == "PK_market_item_item_id_world_id")
         {
             // Race condition; unique constraint violated
         }
