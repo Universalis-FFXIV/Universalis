@@ -54,7 +54,7 @@ services:
     command: --interval 30
   postgres:
     image: postgres:14.3
-    command: postgres -c shared_buffers=512MB -c max_connections=200
+    command: postgres -c shared_buffers=1gb -c max_connections=500
     ports:
       - "4051:5432"
     environment:
