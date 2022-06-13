@@ -4,16 +4,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
-using Universalis.Application.Controllers;
 using Universalis.Application.Controllers.V2;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views.V1;
 using Universalis.Application.Views.V2;
 using Universalis.DataTransformations;
+using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Tests;
-using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
 using Xunit;
@@ -22,7 +21,31 @@ namespace Universalis.Application.Tests.Controllers.V2;
 
 public class CurrentlyShownControllerTests
 {
-    private const long WeekLength = 604800000L;
+    private class TestResources
+    {
+        public IGameDataProvider GameData { get; private init; }
+        public ICurrentlyShownDbAccess CurrentlyShown { get; private init; }
+        public IHistoryDbAccess History { get; private init; }
+        public ICache<CurrentlyShownQuery, CachedCurrentlyShownData> Cache { get; private init; }
+        public CurrentlyShownController Controller { get; private init; }
+
+        public static TestResources Create()
+        {
+            var gameData = new MockGameDataProvider();
+            var currentlyShownDb = new MockCurrentlyShownDbAccess();
+            var historyDb = new MockHistoryDbAccess();
+            var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
+            var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
+            return new TestResources
+            {
+                GameData = gameData,
+                CurrentlyShown = currentlyShownDb,
+                History = historyDb,
+                Cache = cache,
+                Controller = controller,
+            };
+        }
+    }
 
     [Theory]
     [InlineData("74")]
@@ -30,24 +53,20 @@ public class CurrentlyShownControllerTests
     [InlineData("coEUrl")]
     public async Task Controller_Get_Succeeds_SingleItem_World(string worldOrDc)
     {
-        var gameData = new MockGameDataProvider();
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
+        var test = TestResources.Create();
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         
         const uint itemId = 5333;
         var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
-        await currentlyShownDb.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = itemId });
+        await test.CurrentlyShown.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = itemId });
         
         var sales = SeedDataGenerator.MakeHistory(74, itemId).Sales;
-        await historyDb.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId });
+        await test.History.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId });
 
-        var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: int.MaxValue.ToString());
+        var result = await test.Controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
-        AssertCurrentlyShownValidWorld(document, sales, currentlyShown, gameData, now);
+        AssertCurrentlyShownValidWorld(document, sales, currentlyShown, test.GameData, now);
     }
 
     [Theory]
@@ -56,25 +75,21 @@ public class CurrentlyShownControllerTests
     [InlineData("coEUrl")]
     public async Task Controller_Get_Succeeds_MultiItem_World(string worldOrDc)
     {
-        var gameData = new MockGameDataProvider();
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
+        var test = TestResources.Create();
         
         var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
-        await currentlyShownDb.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        await test.CurrentlyShown.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
         
         var sales1 = SeedDataGenerator.MakeHistory(74, 5333).Sales;
-        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
+        await test.History.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
 
         var document2 = SeedDataGenerator.MakeCurrentlyShown(74, 5);
-        await currentlyShownDb.Update(document2, new CurrentlyShownQuery { WorldId = 74, ItemId = 5 });
+        await test.CurrentlyShown.Update(document2, new CurrentlyShownQuery { WorldId = 74, ItemId = 5 });
         
         var sales2 = SeedDataGenerator.MakeHistory(74, 5).Sales;
-        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 74, ItemId = 5 });
+        await test.History.InsertSales(sales2, new HistoryQuery { WorldId = 74, ItemId = 5 });
 
-        var result = await controller.Get("5, 5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
+        var result = await test.Controller.Get("5, 5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
         Assert.NotNull(currentlyShown);
@@ -82,13 +97,13 @@ public class CurrentlyShownControllerTests
         Assert.Equal(2, currentlyShown.ItemIds.Count);
         Assert.Equal(2, currentlyShown.Items.Count);
         Assert.Equal(document1.WorldId, currentlyShown.WorldId);
-        Assert.Equal(gameData.AvailableWorlds()[document1.WorldId], currentlyShown.WorldName);
+        Assert.Equal(test.GameData.AvailableWorlds()[document1.WorldId], currentlyShown.WorldName);
         Assert.Null(currentlyShown.DcName);
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-        AssertCurrentlyShownValidWorld(document1, sales1, currentlyShown.Items.First(item => item.Key == document1.ItemId).Value, gameData, now);
-        AssertCurrentlyShownValidWorld(document2, sales2, currentlyShown.Items.First(item => item.Key == document2.ItemId).Value, gameData, now);
+        AssertCurrentlyShownValidWorld(document1, sales1, currentlyShown.Items.First(item => item.Key == document1.ItemId).Value, test.GameData, now);
+        AssertCurrentlyShownValidWorld(document2, sales2, currentlyShown.Items.First(item => item.Key == document2.ItemId).Value, test.GameData, now);
     }
 
     [Theory]
@@ -96,26 +111,22 @@ public class CurrentlyShownControllerTests
     [InlineData("Crystal")]
     public async Task Controller_Get_Succeeds_SingleItem_DataCenter(string worldOrDc)
     {
-        var gameData = new MockGameDataProvider();
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
+        var test = TestResources.Create();
         var unixNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
-        await currentlyShownDb.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        await test.CurrentlyShown.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
         
         var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
-        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
+        await test.History.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
 
         var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5333, unixNowMs);
-        await currentlyShownDb.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5333 });
+        await test.CurrentlyShown.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5333 });
         
         var sales2 = SeedDataGenerator.MakeHistory(34, 5333, unixNowMs).Sales;
-        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5333 });
+        await test.History.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5333 });
 
-        var result = await controller.Get("5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
+        var result = await test.Controller.Get("5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
         var joinedListings = document1.Listings.Concat(document2.Listings).ToList();
@@ -136,26 +147,22 @@ public class CurrentlyShownControllerTests
     [InlineData("Crystal")]
     public async Task Controller_Get_Succeeds_MultiItem_DataCenter(string worldOrDc)
     {
-        var gameData = new MockGameDataProvider();
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
+        var test = TestResources.Create();
         var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
         var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
-        await currentlyShownDb.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        await test.CurrentlyShown.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
         
         var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
-        await historyDb.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
+        await test.History.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
 
         var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5, unixNowMs);
-        await currentlyShownDb.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5 });
+        await test.CurrentlyShown.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5 });
         
         var sales2 = SeedDataGenerator.MakeHistory(34, 5, unixNowMs).Sales;
-        await historyDb.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5 });
+        await test.History.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5 });
 
-        var result = await controller.Get("5,5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
+        var result = await test.Controller.Get("5,5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
         Assert.NotNull(currentlyShown);
@@ -189,14 +196,10 @@ public class CurrentlyShownControllerTests
     [InlineData("coEUrl")]
     public async Task Controller_Get_Succeeds_SingleItem_World_WhenNone(string worldOrDc)
     {
-        var gameData = new MockGameDataProvider();
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
+        var test = TestResources.Create();
 
         const uint itemId = 5333;
-        var result = await controller.Get(itemId.ToString(), worldOrDc);
+        var result = await test.Controller.Get(itemId.ToString(), worldOrDc);
 
         var history = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
@@ -226,13 +229,9 @@ public class CurrentlyShownControllerTests
     [InlineData("coEUrl")]
     public async Task Controller_Get_Succeeds_MultiItem_World_WhenNone(string worldOrDc)
     {
-        var gameData = new MockGameDataProvider();
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
+        var test = TestResources.Create();
 
-        var result = await controller.Get("5333,5", worldOrDc);
+        var result = await test.Controller.Get("5333,5", worldOrDc);
 
         var history = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
@@ -242,7 +241,7 @@ public class CurrentlyShownControllerTests
         Assert.Contains(5333U, history.ItemIds);
         Assert.Empty(history.Items);
         Assert.Equal(74U, history.WorldId);
-        Assert.Equal(gameData.AvailableWorlds()[74], history.WorldName);
+        Assert.Equal(test.GameData.AvailableWorlds()[74], history.WorldName);
         Assert.Null(history.DcName);
     }
 
@@ -251,14 +250,10 @@ public class CurrentlyShownControllerTests
     [InlineData("Crystal")]
     public async Task Controller_Get_Succeeds_SingleItem_DataCenter_WhenNone(string worldOrDc)
     {
-        var gameData = new MockGameDataProvider();
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
+        var test = TestResources.Create();
 
         const uint itemId = 5333;
-        var result = await controller.Get(itemId.ToString(), worldOrDc);
+        var result = await test.Controller.Get(itemId.ToString(), worldOrDc);
 
         var history = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
@@ -285,13 +280,9 @@ public class CurrentlyShownControllerTests
     [InlineData("Crystal")]
     public async Task Controller_Get_Succeeds_MultiItem_DataCenter_WhenNone(string worldOrDc)
     {
-        var gameData = new MockGameDataProvider();
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
+        var test = TestResources.Create();
 
-        var result = await controller.Get("5333,5", worldOrDc);
+        var result = await test.Controller.Get("5333,5", worldOrDc);
 
         var data = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
@@ -310,14 +301,10 @@ public class CurrentlyShownControllerTests
     [Fact]
     public async Task Controller_Get_Succeeds_SingleItem_World_WhenNotMarketable()
     {
-        var gameData = new MockGameDataProvider();
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
+        var test = TestResources.Create();
 
         const uint itemId = 0;
-        var result = await controller.Get(itemId.ToString(), "74");
+        var result = await test.Controller.Get(itemId.ToString(), "74");
 
         Assert.IsType<OkObjectResult>(result);
     }
@@ -325,13 +312,9 @@ public class CurrentlyShownControllerTests
     [Fact]
     public async Task Controller_Get_Succeeds_MultiItem_World_WhenNotMarketable()
     {
-        var gameData = new MockGameDataProvider();
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
+        var test = TestResources.Create();
 
-        var result = await controller.Get("0, 4294967295", "74");
+        var result = await test.Controller.Get("0, 4294967295", "74");
 
         var history = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
@@ -345,14 +328,10 @@ public class CurrentlyShownControllerTests
     [Fact]
     public async Task Controller_Get_Succeeds_SingleItem_DataCenter_WhenNotMarketable()
     {
-        var gameData = new MockGameDataProvider();
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
+        var test = TestResources.Create();
 
         const uint itemId = 0;
-        var result = await controller.Get(itemId.ToString(), "Crystal");
+        var result = await test.Controller.Get(itemId.ToString(), "Crystal");
 
         Assert.IsType<OkObjectResult>(result);
     }
@@ -360,13 +339,9 @@ public class CurrentlyShownControllerTests
     [Fact]
     public async Task Controller_Get_Succeeds_MultiItem_DataCenter_WhenNotMarketable()
     {
-        var gameData = new MockGameDataProvider();
-        var currentlyShownDb = new MockCurrentlyShownDbAccess();
-        var historyDb = new MockHistoryDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
+        var test = TestResources.Create();
 
-        var result = await controller.Get("0 ,4294967295", "crystal");
+        var result = await test.Controller.Get("0 ,4294967295", "crystal");
 
         var history = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 

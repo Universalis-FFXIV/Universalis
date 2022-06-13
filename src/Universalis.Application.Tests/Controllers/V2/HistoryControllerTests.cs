@@ -9,6 +9,7 @@ using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views.V1;
 using Universalis.Application.Views.V2;
 using Universalis.DataTransformations;
+using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Tests;
 using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
@@ -18,6 +19,26 @@ namespace Universalis.Application.Tests.Controllers.V2;
 
 public class HistoryControllerTests
 {
+    private class TestResources
+    {
+        public IGameDataProvider GameData { get; private init; }
+        public IHistoryDbAccess History { get; private init; }
+        public HistoryController Controller { get; private init; }
+
+        public static TestResources Create()
+        {
+            var gameData = new MockGameDataProvider();
+            var historyDb = new MockHistoryDbAccess();
+            var controller = new HistoryController(gameData, historyDb);
+            return new TestResources
+            {
+                GameData = gameData,
+                History = historyDb,
+                Controller = controller,
+            };
+        }
+    }
+
     private const long WeekLength = 604800000L;
 
     [Theory]
@@ -26,19 +47,17 @@ public class HistoryControllerTests
     [InlineData("coEUrl", "50")]
     public async Task Controller_Get_Succeeds_SingleItem_World(string worldOrDc, string entriesToReturn)
     {
-        var gameData = new MockGameDataProvider();
-        var dbAccess = new MockHistoryDbAccess();
-        var controller = new HistoryController(gameData, dbAccess);
+        var test = TestResources.Create();
         
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         var document = SeedDataGenerator.MakeHistory(74, 5333, now);
-        await dbAccess.Create(document);
+        await test.History.Create(document);
 
-        var result = await controller.Get("5333", worldOrDc, entriesToReturn);
+        var result = await test.Controller.Get("5333", worldOrDc, entriesToReturn);
         var history = (HistoryView)Assert.IsType<OkObjectResult>(result).Value;
 
-        AssertHistoryValidWorld(document, history, gameData, entriesToReturn, now);
+        AssertHistoryValidWorld(document, history, test.GameData, entriesToReturn, now);
     }
 
     [Theory]
@@ -47,18 +66,16 @@ public class HistoryControllerTests
     [InlineData("coEUrl", "50")]
     public async Task Controller_Get_Succeeds_MultiItem_World(string worldOrDc, string entriesToReturn)
     {
-        var gameData = new MockGameDataProvider();
-        var dbAccess = new MockHistoryDbAccess();
-        var controller = new HistoryController(gameData, dbAccess);
+        var test = TestResources.Create();
         var lastUploadTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         var document1 = SeedDataGenerator.MakeHistory(74, 5333, lastUploadTime);
-        await dbAccess.Create(document1);
+        await test.History.Create(document1);
 
         var document2 = SeedDataGenerator.MakeHistory(74, 5, lastUploadTime);
-        await dbAccess.Create(document2);
+        await test.History.Create(document2);
 
-        var result = await controller.Get("5,5333", worldOrDc, entriesToReturn);
+        var result = await test.Controller.Get("5,5333", worldOrDc, entriesToReturn);
         var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
         Assert.Contains(5U, history.ItemIds);
@@ -66,11 +83,11 @@ public class HistoryControllerTests
         Assert.Empty(history.UnresolvedItemIds);
         Assert.Equal(2, history.Items.Count);
         Assert.Equal(74U, history.WorldId);
-        Assert.Equal(gameData.AvailableWorlds()[74], history.WorldName);
+        Assert.Equal(test.GameData.AvailableWorlds()[74], history.WorldName);
         Assert.Null(history.DcName);
 
-        AssertHistoryValidWorld(document1, history.Items.First(item => item.Key == document1.ItemId).Value, gameData, entriesToReturn, lastUploadTime);
-        AssertHistoryValidWorld(document2, history.Items.First(item => item.Key == document2.ItemId).Value, gameData, entriesToReturn, lastUploadTime);
+        AssertHistoryValidWorld(document1, history.Items.First(item => item.Key == document1.ItemId).Value, test.GameData, entriesToReturn, lastUploadTime);
+        AssertHistoryValidWorld(document2, history.Items.First(item => item.Key == document2.ItemId).Value, test.GameData, entriesToReturn, lastUploadTime);
     }
 
     [Theory]
@@ -78,17 +95,15 @@ public class HistoryControllerTests
     [InlineData("Crystal", "50")]
     public async Task Controller_Get_Succeeds_SingleItem_DataCenter(string worldOrDc, string entriesToReturn)
     {
-        var gameData = new MockGameDataProvider();
-        var dbAccess = new MockHistoryDbAccess();
-        var controller = new HistoryController(gameData, dbAccess);
+        var test = TestResources.Create();
 
         var document1 = SeedDataGenerator.MakeHistory(74, 5333);
-        await dbAccess.Create(document1);
+        await test.History.Create(document1);
 
         var document2 = SeedDataGenerator.MakeHistory(34, 5333);
-        await dbAccess.Create(document2);
+        await test.History.Create(document2);
 
-        var result = await controller.Get("5333", worldOrDc, entriesToReturn);
+        var result = await test.Controller.Get("5333", worldOrDc, entriesToReturn);
         var history = (HistoryView)Assert.IsType<OkObjectResult>(result).Value;
 
         var sales = document1.Sales.Concat(document2.Sales).ToList();
@@ -110,18 +125,16 @@ public class HistoryControllerTests
     [InlineData("Crystal", "50")]
     public async Task Controller_Get_Succeeds_MultiItem_DataCenter(string worldOrDc, string entriesToReturn)
     {
-        var gameData = new MockGameDataProvider();
-        var dbAccess = new MockHistoryDbAccess();
-        var controller = new HistoryController(gameData, dbAccess);
+        var test = TestResources.Create();
         var lastUploadTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         
         var document1 = SeedDataGenerator.MakeHistory(74, 5333, lastUploadTime);
-        await dbAccess.Create(document1);
+        await test.History.Create(document1);
 
         var document2 = SeedDataGenerator.MakeHistory(34, 5, lastUploadTime);
-        await dbAccess.Create(document2);
+        await test.History.Create(document2);
 
-        var result = await controller.Get("5,5333", worldOrDc, entriesToReturn);
+        var result = await test.Controller.Get("5,5333", worldOrDc, entriesToReturn);
         var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
         Assert.Contains(5U, history.ItemIds);
@@ -156,12 +169,10 @@ public class HistoryControllerTests
     [InlineData("coEUrl", "50")]
     public async Task Controller_Get_Succeeds_SingleItem_World_WhenNone(string worldOrDc, string entriesToReturn)
     {
-        var gameData = new MockGameDataProvider();
-        var dbAccess = new MockHistoryDbAccess();
-        var controller = new HistoryController(gameData, dbAccess);
+        var test = TestResources.Create();
 
         const uint itemId = 5333;
-        var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn);
+        var result = await test.Controller.Get(itemId.ToString(), worldOrDc, entriesToReturn);
 
         var history = (HistoryView)Assert.IsType<OkObjectResult>(result).Value;
 
@@ -189,11 +200,9 @@ public class HistoryControllerTests
     [InlineData("coEUrl", "50")]
     public async Task Controller_Get_Succeeds_MultiItem_World_WhenNone(string worldOrDc, string entriesToReturn)
     {
-        var gameData = new MockGameDataProvider();
-        var dbAccess = new MockHistoryDbAccess();
-        var controller = new HistoryController(gameData, dbAccess);
+        var test = TestResources.Create();
 
-        var result = await controller.Get("5333,5", worldOrDc, entriesToReturn);
+        var result = await test.Controller.Get("5333,5", worldOrDc, entriesToReturn);
 
         var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
@@ -203,7 +212,7 @@ public class HistoryControllerTests
         Assert.Contains(5333U, history.ItemIds);
         Assert.Empty(history.Items);
         Assert.Equal(74U, history.WorldId);
-        Assert.Equal(gameData.AvailableWorlds()[74], history.WorldName);
+        Assert.Equal(test.GameData.AvailableWorlds()[74], history.WorldName);
         Assert.Null(history.DcName);
     }
 
@@ -212,12 +221,10 @@ public class HistoryControllerTests
     [InlineData("Crystal", "50")]
     public async Task Controller_Get_Succeeds_SingleItem_DataCenter_WhenNone(string worldOrDc, string entriesToReturn)
     {
-        var gameData = new MockGameDataProvider();
-        var dbAccess = new MockHistoryDbAccess();
-        var controller = new HistoryController(gameData, dbAccess);
+        var test = TestResources.Create();
 
         const uint itemId = 5333;
-        var result = await controller.Get(itemId.ToString(), worldOrDc, entriesToReturn);
+        var result = await test.Controller.Get(itemId.ToString(), worldOrDc, entriesToReturn);
 
         var history = (HistoryView)Assert.IsType<OkObjectResult>(result).Value;
 
@@ -242,11 +249,9 @@ public class HistoryControllerTests
     [InlineData("Crystal", "50")]
     public async Task Controller_Get_Succeeds_MultiItem_DataCenter_WhenNone(string worldOrDc, string entriesToReturn)
     {
-        var gameData = new MockGameDataProvider();
-        var dbAccess = new MockHistoryDbAccess();
-        var controller = new HistoryController(gameData, dbAccess);
+        var test = TestResources.Create();
 
-        var result = await controller.Get("5333,5", worldOrDc, entriesToReturn);
+        var result = await test.Controller.Get("5333,5", worldOrDc, entriesToReturn);
 
         var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
@@ -262,12 +267,10 @@ public class HistoryControllerTests
     [Fact]
     public async Task Controller_Get_Fails_SingleItem_World_WhenNotMarketable()
     {
-        var gameData = new MockGameDataProvider();
-        var dbAccess = new MockHistoryDbAccess();
-        var controller = new HistoryController(gameData, dbAccess);
+        var test = TestResources.Create();
 
         const uint itemId = 0;
-        var result = await controller.Get(itemId.ToString(), "74", "");
+        var result = await test.Controller.Get(itemId.ToString(), "74", "");
 
         Assert.IsType<NotFoundResult>(result);
     }
@@ -275,11 +278,9 @@ public class HistoryControllerTests
     [Fact]
     public async Task Controller_Get_Succeeds_MultiItem_World_WhenNotMarketable()
     {
-        var gameData = new MockGameDataProvider();
-        var dbAccess = new MockHistoryDbAccess();
-        var controller = new HistoryController(gameData, dbAccess);
+        var test = TestResources.Create();
 
-        var result = await controller.Get("0, 4294967295", "74", "");
+        var result = await test.Controller.Get("0, 4294967295", "74", "");
 
         var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
@@ -293,12 +294,10 @@ public class HistoryControllerTests
     [Fact]
     public async Task Controller_Get_Fails_SingleItem_DataCenter_WhenNotMarketable()
     {
-        var gameData = new MockGameDataProvider();
-        var dbAccess = new MockHistoryDbAccess();
-        var controller = new HistoryController(gameData, dbAccess);
+        var test = TestResources.Create();
 
         const uint itemId = 0;
-        var result = await controller.Get(itemId.ToString(), "Crystal", "");
+        var result = await test.Controller.Get(itemId.ToString(), "Crystal", "");
 
         Assert.IsType<NotFoundResult>(result);
     }
@@ -306,11 +305,9 @@ public class HistoryControllerTests
     [Fact]
     public async Task Controller_Get_Succeeds_MultiItem_DataCenter_WhenNotMarketable()
     {
-        var gameData = new MockGameDataProvider();
-        var dbAccess = new MockHistoryDbAccess();
-        var controller = new HistoryController(gameData, dbAccess);
+        var test = TestResources.Create();
 
-        var result = await controller.Get("0 ,4294967295", "crystal", "");
+        var result = await test.Controller.Get("0 ,4294967295", "crystal", "");
 
         var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
