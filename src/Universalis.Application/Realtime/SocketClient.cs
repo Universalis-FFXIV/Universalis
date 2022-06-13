@@ -234,7 +234,9 @@ public class SocketClient
                         break;
                     }
 
-                    if (_conditions[i].IsReplaceableWith(subCond))
+                    // Replace the existing condition if the new condition is either more-specific or less-specific
+                    // than the existing one. If the existing and new conditions are not related, do nothing here. 
+                    if (_conditions[i].IsReplaceableWith(subCond) || subCond.IsReplaceableWith(_conditions[i]))
                     {
                         shouldAdd = false;
                         _conditions[i] = subCond;
@@ -260,12 +262,13 @@ public class SocketClient
                 }
 
                 var unsubCond = EventCondition.Parse(unsubChannel);
-                for (var i = 0; i < _conditions.Count; i++)
+                var conditionsCount = _conditions.Count;
+                for (var i = 0; i < conditionsCount; i++)
                 {
-                    if (_conditions[i].Equals(unsubCond))
+                    if (_conditions[i].IsReplaceableWith(unsubCond))
                     {
                         _conditions.RemoveAt(i);
-                        break;
+                        conditionsCount--;
                     }
                 }
 
