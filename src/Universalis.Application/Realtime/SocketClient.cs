@@ -234,7 +234,9 @@ public class SocketClient
                         break;
                     }
 
-                    if (_conditions[i].IsReplaceableWith(subCond))
+                    // Replace the existing condition if the new condition is either more-specific or less-specific
+                    // than the existing one. If the existing and new conditions are not related, do nothing here. 
+                    if (_conditions[i].IsReplaceableWith(subCond) || subCond.IsReplaceableWith(_conditions[i]))
                     {
                         shouldAdd = false;
                         _conditions[i] = subCond;
