@@ -54,7 +54,7 @@ services:
     command: --interval 30
   postgres:
     image: postgres:14.3
-    command: postgres -c shared_buffers=10GB -c max_connections=100
+    command: postgres -c max_connections=100 -c shared_buffers=10GB -c work_mem=256MB -c maintenance_work_mem=1GB -c autovacuum_work_mem=8MB -c effective_io_concurrency=200 -c wal_compression=on -c wal_log_hints=on -c wal_buffers=64MB -c random_page_cost=1.1 -c cpu_tuple_cost=0.03
     ports:
       - "4051:5432"
     environment:

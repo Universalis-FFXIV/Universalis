@@ -33,13 +33,13 @@ services:
       - "4051:27017"
   postgres:
     image: postgres:14.3
-    command: postgres -c shared_buffers=10GB -c max_connections=100
+    command: postgres -c max_connections=100 -c shared_buffers=512MB
     ports:
       - "4052:5432"
     environment:
       POSTGRES_USER: universalis
       POSTGRES_PASSWORD: universalis
-    shm_size: 10gb
+    shm_size: 512mb
     volumes:
       - ./postgres:/var/lib/postgres/data
   redis:
