@@ -265,7 +265,7 @@ public class SocketClient
                 var conditionsCount = _conditions.Count;
                 for (var i = 0; i < conditionsCount; i++)
                 {
-                    if (unsubCond.IsReplaceableWith(_conditions[i]))
+                    if (_conditions[i].IsReplaceableWith(unsubCond))
                     {
                         _conditions.RemoveAt(i);
                         conditionsCount--;
