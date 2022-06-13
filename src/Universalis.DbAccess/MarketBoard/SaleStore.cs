@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Npgsql;
@@ -20,9 +21,34 @@ public class SaleStore : ISaleStore
     {
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
-        await using var command =
-            new NpgsqlCommand(
-                "INSERT INTO sale (id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)", conn)
+        await using var command = new NpgsqlCommand(
+            "INSERT INTO sale (id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)", conn)
+        {
+            Parameters =
+            {
+                new NpgsqlParameter<Guid> { TypedValue = Guid.NewGuid() },
+                new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(sale.WorldId) },
+                new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(sale.ItemId) },
+                new NpgsqlParameter<bool> { TypedValue = sale.Hq },
+                new NpgsqlParameter<long> { TypedValue = Convert.ToInt64(sale.PricePerUnit) },
+                new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(sale.Quantity) },
+                new NpgsqlParameter<string> { TypedValue = sale.BuyerName },
+                new NpgsqlParameter<DateTime> { TypedValue = sale.SaleTime },
+                new NpgsqlParameter<string> { TypedValue = sale.UploaderIdHash },
+            },
+        };
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task InsertMany(IEnumerable<Sale> sales, CancellationToken cancellationToken = default)
+    {
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync(cancellationToken);
+        var batch = new NpgsqlBatch(conn);
+        foreach (var sale in sales)
+        {
+            batch.BatchCommands.Add(new NpgsqlBatchCommand(
+                "INSERT INTO sale (id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)")
             {
                 Parameters =
                 {
@@ -36,8 +62,9 @@ public class SaleStore : ISaleStore
                     new NpgsqlParameter<DateTime> { TypedValue = sale.SaleTime },
                     new NpgsqlParameter<string> { TypedValue = sale.UploaderIdHash },
                 },
-            };
-        await command.ExecuteNonQueryAsync(cancellationToken);
+            });
+        }
+        await batch.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, CancellationToken cancellationToken = default)

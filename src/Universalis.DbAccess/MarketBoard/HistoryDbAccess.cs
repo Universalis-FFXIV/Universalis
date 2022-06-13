@@ -65,7 +65,6 @@ public class HistoryDbAccess : IHistoryDbAccess
             ItemId = query.ItemId,
             LastUploadTime = DateTime.UtcNow,
         }, cancellationToken);
-        
-        await Task.WhenAll(sales.Select(s => _saleStore.Insert(s, cancellationToken)));
+        await _saleStore.InsertMany(sales, cancellationToken);
     }
 }
