@@ -125,10 +125,13 @@ public class SocketClient
             // Run the outbound and inbound data loops
             await Task.WhenAny(OutboundLoop(cancellationToken), InboundLoop(cancellationToken));
 
-            await _ws.CloseAsync(
-                WebSocketCloseStatus.NormalClosure,
-                "closing socket",
-                cancellationToken);
+            if (_ws.State is WebSocketState.Open or WebSocketState.CloseReceived or WebSocketState.CloseSent)
+            {
+                await _ws.CloseAsync(
+                    WebSocketCloseStatus.NormalClosure,
+                    "closing socket",
+                    cancellationToken);
+            }
         }
         catch (Exception e)
         {
