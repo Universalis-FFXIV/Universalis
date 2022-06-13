@@ -179,14 +179,13 @@ public class SocketClient
                 break;
             }
 
-            await ReceiveEvent(buf, res);
+            ReceiveEvent(buf);
         }
     }
 
-    private async Task ReceiveEvent(byte[] buf, WebSocketReceiveResult res)
+    private void ReceiveEvent(byte[] buf)
     {
         BsonDocument data;
-        await using var stream = new MemoryStream(buf[..res.Count]);
         try
         {
             data = BsonSerializer.Deserialize<BsonDocument>(buf);
