@@ -1,5 +1,4 @@
-﻿using MongoDB.Driver;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -50,6 +49,14 @@ public class HistoryDbAccessTests
         {
             _data[sale.Id] = sale;
             return Task.CompletedTask;
+        }
+        
+        public async Task InsertMany(IEnumerable<Sale> sales, CancellationToken cancellationToken = default)
+        {
+            foreach (var sale in sales)
+            {
+                await Insert(sale, cancellationToken);
+            }
         }
 
         public Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, CancellationToken cancellationToken = default)

@@ -14,7 +14,7 @@ public class CurrentlyShownDbAccess : ICurrentlyShownDbAccess
         _store = store;
     }
 
-    async Task<CurrentlyShown> ICurrentlyShownDbAccess.Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
+    public async Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
     {
         var data = await _store.GetData(query.WorldId, query.ItemId);
         return data.LastUploadTimeUnixMilliseconds == 0 ? null : data;
