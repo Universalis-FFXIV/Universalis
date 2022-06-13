@@ -10,6 +10,8 @@ using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
+using Universalis.DbAccess.AccessControl;
+using Universalis.DbAccess.Uploads;
 using Universalis.Entities.AccessControl;
 using Universalis.Entities.Uploads;
 using Xunit;
@@ -18,92 +20,102 @@ namespace Universalis.Application.Tests.Controllers.V1;
 
 public class UploadControllerTests
 {
+    private class TestResources
+    {
+        public IFlaggedUploaderDbAccess FlaggedUploaders { get; private init; }
+        public ITrustedSourceDbAccess TrustedSources { get; private init; }
+        public UploadController Controller { get; private init; }
+        
+        public static TestResources Create(IEnumerable<IUploadBehavior> uploadBehaviors)
+        {
+            var flaggedUploaders = new MockFlaggedUploaderDbAccess();
+            var trustedSources = new MockTrustedSourceDbAccess();
+            var controller = new UploadController(trustedSources, flaggedUploaders, uploadBehaviors);
+            return new TestResources
+            {
+                FlaggedUploaders = flaggedUploaders,
+                TrustedSources = trustedSources,
+                Controller = controller,
+            };
+        }
+    }
+    
     [Fact]
     public async Task Controller_Post_Succeeds()
     {
-        var flaggedUploaders = new MockFlaggedUploaderDbAccess();
-        var trustedSources = new MockTrustedSourceDbAccess();
-        var controller = new UploadController(trustedSources, flaggedUploaders, Enumerable.Empty<IUploadBehavior>());
+        var test = TestResources.Create(Enumerable.Empty<IUploadBehavior>());
 
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
             var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
-            await trustedSources.Create(new ApiKey(hash, "something", true));
+            await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
         var upload = new UploadParameters { UploaderId = "ffff" };
 
-        var result = await controller.Post(key, upload);
+        var result = await test.Controller.Post(key, upload);
         Assert.IsType<OkObjectResult>(result);
     }
 
     [Fact]
     public async Task Controller_Post_Fails_WithBadAuthorization()
     {
-        var flaggedUploaders = new MockFlaggedUploaderDbAccess();
-        var trustedSources = new MockTrustedSourceDbAccess();
-        var controller = new UploadController(trustedSources, flaggedUploaders, Enumerable.Empty<IUploadBehavior>());
+        var test = TestResources.Create(Enumerable.Empty<IUploadBehavior>());
 
         var upload = new UploadParameters { UploaderId = "ffff" };
 
-        var result = await controller.Post("iudh9832h9c32huwh", upload);
+        var result = await test.Controller.Post("iudh9832h9c32huwh", upload);
         Assert.IsType<ForbidResult>(result);
     }
 
     [Fact]
     public async Task Controller_Post_Fails_WithNoUploaderId()
     {
-        var flaggedUploaders = new MockFlaggedUploaderDbAccess();
-        var trustedSources = new MockTrustedSourceDbAccess();
-        var controller = new UploadController(trustedSources, flaggedUploaders, Enumerable.Empty<IUploadBehavior>());
+        var test = TestResources.Create(Enumerable.Empty<IUploadBehavior>());
 
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
             var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
-            await trustedSources.Create(new ApiKey(hash, "something", true));
+            await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
         var upload = new UploadParameters();
 
-        var result = await controller.Post(key, upload);
+        var result = await test.Controller.Post(key, upload);
         Assert.IsType<BadRequestResult>(result);
     }
     
     [Fact]
     public async Task Controller_Post_Fails_WithNoUploadPermissions()
     {
-        var flaggedUploaders = new MockFlaggedUploaderDbAccess();
-        var trustedSources = new MockTrustedSourceDbAccess();
-        var controller = new UploadController(trustedSources, flaggedUploaders, Enumerable.Empty<IUploadBehavior>());
+        var test = TestResources.Create(Enumerable.Empty<IUploadBehavior>());
 
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
             var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
-            await trustedSources.Create(new ApiKey(hash, "something", false));
+            await test.TrustedSources.Create(new ApiKey(hash, "something", false));
         }
 
         var upload = new UploadParameters { UploaderId = "ffff" };
 
-        var result = await controller.Post(key, upload);
+        var result = await test.Controller.Post(key, upload);
         Assert.IsType<ForbidResult>(result);
     }
 
     [Fact]
     public async Task Controller_Post_FailsSilently_WhenFlagged()
     {
-        var flaggedUploaders = new MockFlaggedUploaderDbAccess();
-        var trustedSources = new MockTrustedSourceDbAccess();
-        var controller = new UploadController(trustedSources, flaggedUploaders, Enumerable.Empty<IUploadBehavior>());
+        var test = TestResources.Create(Enumerable.Empty<IUploadBehavior>());
 
         const string key = "blah";
         const string uploaderId = "ffff";
         using (var sha512 = SHA512.Create())
         {
             var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
-            await trustedSources.Create(new ApiKey(hash, "something", true));
+            await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
         string uploaderIdHash;
@@ -112,36 +124,32 @@ public class UploadControllerTests
             uploaderIdHash = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(uploaderId)));
         }
 
-        await flaggedUploaders.Create(new FlaggedUploader { UploaderIdHash = uploaderIdHash });
+        await test.FlaggedUploaders.Create(new FlaggedUploader { UploaderIdHash = uploaderIdHash });
 
         var upload = new UploadParameters { UploaderId = uploaderId };
 
-        var result = await controller.Post(key, upload);
+        var result = await test.Controller.Post(key, upload);
         Assert.IsType<OkObjectResult>(result);
     }
 
     [Fact]
     public async Task Controller_Post_Validators_Run_First()
     {
-        var flaggedUploaders = new MockFlaggedUploaderDbAccess();
-        var trustedSources = new MockTrustedSourceDbAccess();
         var content = new MockContentDbAccess();
         var gameData = new MockGameDataProvider();
         var worldUploadCounts = new MockWorldUploadCountDbAccess();
-        var controller = new UploadController(
-            trustedSources,
-            flaggedUploaders,
-            new List<IUploadBehavior>
-            {
-                new PlayerContentUploadBehavior(content),
-                new WorldIdUploadBehavior(gameData, worldUploadCounts),
-            });
+        
+        var test = TestResources.Create(new List<IUploadBehavior>
+        {
+            new PlayerContentUploadBehavior(content),
+            new WorldIdUploadBehavior(gameData, worldUploadCounts),
+        });
 
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
             var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
-            await trustedSources.Create(new ApiKey(hash, "something", true));
+            await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
         var upload1 = new UploadParameters
@@ -152,7 +160,7 @@ public class UploadControllerTests
             UploaderId = "affffe",
         };
 
-        var result1 = await controller.Post(key, upload1);
+        var result1 = await test.Controller.Post(key, upload1);
         Assert.IsType<NotFoundObjectResult>(result1);
 
         var upload2 = new UploadParameters
@@ -163,7 +171,7 @@ public class UploadControllerTests
             UploaderId = "affffe",
         };
 
-        var result2 = await controller.Post(key, upload2);
+        var result2 = await test.Controller.Post(key, upload2);
         Assert.IsType<OkObjectResult>(result2);
     }
 }

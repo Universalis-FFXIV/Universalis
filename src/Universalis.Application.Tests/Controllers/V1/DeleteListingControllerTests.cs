@@ -9,40 +9,68 @@ using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Uploads.Schema;
+using Universalis.DbAccess.AccessControl;
+using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Tests;
+using Universalis.DbAccess.Uploads;
 using Universalis.Entities.AccessControl;
 using Universalis.Entities.Uploads;
+using Universalis.GameData;
 using Xunit;
 
 namespace Universalis.Application.Tests.Controllers.V1;
 
 public class DeleteListingControllerTests
 {
+    private class TestResources
+    {
+        public IGameDataProvider GameData { get; private init; }
+        public IFlaggedUploaderDbAccess FlaggedUploaders { get; private init; }
+        public ICurrentlyShownDbAccess CurrentlyShown { get; private init; }
+        public ITrustedSourceDbAccess TrustedSources { get; private init; }
+        public ICache<CurrentlyShownQuery, CachedCurrentlyShownData> Cache { get; private init; }
+        public DeleteListingController Controller { get; private init; }
+
+        public static TestResources Create()
+        {
+            var gameData = new MockGameDataProvider();
+            var flaggedUploaders = new MockFlaggedUploaderDbAccess();
+            var currentlyShown = new MockCurrentlyShownDbAccess();
+            var trustedSources = new MockTrustedSourceDbAccess();
+            var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
+            var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
+            return new TestResources
+            {
+                GameData = gameData,
+                FlaggedUploaders = flaggedUploaders,
+                CurrentlyShown = currentlyShown,
+                TrustedSources = trustedSources,
+                Cache = cache,
+                Controller = controller,
+            };
+        }
+    }
+    
     [Fact]
     public async Task Controller_Post_Succeeds()
     {
-        var gameData = new MockGameDataProvider();
-        var flaggedUploaders = new MockFlaggedUploaderDbAccess();
-        var currentlyShown = new MockCurrentlyShownDbAccess();
-        var trustedSources = new MockTrustedSourceDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
+        var test = TestResources.Create();
 
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
             var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
-            await trustedSources.Create(new ApiKey(hash, "something", true));
+            await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
         var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
-        await currentlyShown.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        await test.CurrentlyShown.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
 
         var originalCount = document.Listings.Count;
         var toRemove = document.Listings[0];
 
-        var result = await controller.Post(document.ItemId, document.WorldId.ToString(), key, new DeleteListingParameters
+        var result = await test.Controller.Post(document.ItemId, document.WorldId.ToString(), key, new DeleteListingParameters
         {
             ListingId = toRemove.ListingId,
             PricePerUnit = toRemove.PricePerUnit,
@@ -51,7 +79,7 @@ public class DeleteListingControllerTests
             UploaderId = "FB",
         });
 
-        var updatedDocument = await currentlyShown.Retrieve(new CurrentlyShownQuery
+        var updatedDocument = await test.CurrentlyShown.Retrieve(new CurrentlyShownQuery
         {
             WorldId = 74,
             ItemId = 5333,
@@ -68,21 +96,16 @@ public class DeleteListingControllerTests
     [Fact]
     public async Task Controller_Post_Succeeds_WhenNone()
     {
-        var gameData = new MockGameDataProvider();
-        var flaggedUploaders = new MockFlaggedUploaderDbAccess();
-        var currentlyShown = new MockCurrentlyShownDbAccess();
-        var trustedSources = new MockTrustedSourceDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
+        var test = TestResources.Create();
 
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
             var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
-            await trustedSources.Create(new ApiKey(hash, "something", true));
+            await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
-        var result = await controller.Post(5333, 74.ToString(), key, new DeleteListingParameters
+        var result = await test.Controller.Post(5333, 74.ToString(), key, new DeleteListingParameters
         {
             ListingId = "95448465132123465",
             PricePerUnit = 300,
@@ -97,14 +120,9 @@ public class DeleteListingControllerTests
     [Fact]
     public async Task Controller_Post_Fails_WithBadAuthorizationHeader()
     {
-        var gameData = new MockGameDataProvider();
-        var flaggedUploaders = new MockFlaggedUploaderDbAccess();
-        var currentlyShown = new MockCurrentlyShownDbAccess();
-        var trustedSources = new MockTrustedSourceDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
+        var test = TestResources.Create();
 
-        var result = await controller.Post(5333, 74.ToString(), "r87uy6t7y8u65t8", new DeleteListingParameters
+        var result = await test.Controller.Post(5333, 74.ToString(), "r87uy6t7y8u65t8", new DeleteListingParameters
         {
             ListingId = "95448465132123465",
             PricePerUnit = 300,
@@ -119,21 +137,16 @@ public class DeleteListingControllerTests
     [Fact]
     public async Task Controller_Post_Fails_WithNoUploaderId()
     {
-        var gameData = new MockGameDataProvider();
-        var flaggedUploaders = new MockFlaggedUploaderDbAccess();
-        var currentlyShown = new MockCurrentlyShownDbAccess();
-        var trustedSources = new MockTrustedSourceDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
+        var test = TestResources.Create();
 
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
             var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
-            await trustedSources.Create(new ApiKey(hash, "something", true));
+            await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
-        var result = await controller.Post(5333, 74.ToString(), key, new DeleteListingParameters
+        var result = await test.Controller.Post(5333, 74.ToString(), key, new DeleteListingParameters
         {
             ListingId = "95448465132123465",
             PricePerUnit = 300,
@@ -147,21 +160,16 @@ public class DeleteListingControllerTests
     [Fact]
     public async Task Controller_Post_Fails_WhenWorldInvalid()
     {
-        var gameData = new MockGameDataProvider();
-        var flaggedUploaders = new MockFlaggedUploaderDbAccess();
-        var currentlyShown = new MockCurrentlyShownDbAccess();
-        var trustedSources = new MockTrustedSourceDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
+        var test = TestResources.Create();
 
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
             var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
-            await trustedSources.Create(new ApiKey(hash, "something", true));
+            await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
-        var result = await controller.Post(5333, 0.ToString(), key, new DeleteListingParameters
+        var result = await test.Controller.Post(5333, 0.ToString(), key, new DeleteListingParameters
         {
             ListingId = "95448465132123465",
             PricePerUnit = 300,
@@ -176,19 +184,14 @@ public class DeleteListingControllerTests
     [Fact]
     public async Task Controller_Post_FailsSilently_WhenFlagged()
     {
-        var gameData = new MockGameDataProvider();
-        var flaggedUploaders = new MockFlaggedUploaderDbAccess();
-        var currentlyShown = new MockCurrentlyShownDbAccess();
-        var trustedSources = new MockTrustedSourceDbAccess();
-        var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
-        var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
+        var test = TestResources.Create();
 
         const string key = "blah";
         const string uploaderId = "ffff";
         using (var sha512 = SHA512.Create())
         {
             var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
-            await trustedSources.Create(new ApiKey(hash, "something", true));
+            await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
         string uploaderIdHash;
@@ -197,9 +200,9 @@ public class DeleteListingControllerTests
             uploaderIdHash = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(uploaderId)));
         }
 
-        await flaggedUploaders.Create(new FlaggedUploader { UploaderIdHash = uploaderIdHash });
+        await test.FlaggedUploaders.Create(new FlaggedUploader { UploaderIdHash = uploaderIdHash });
 
-        var result = await controller.Post(5333, 74.ToString(), key, new DeleteListingParameters
+        var result = await test.Controller.Post(5333, 74.ToString(), key, new DeleteListingParameters
         {
             ListingId = "95448465132123465",
             PricePerUnit = 300,
