@@ -225,18 +225,26 @@ public class SocketClient
                 }
                 
                 var subCond = EventCondition.Parse(subChannel);
+                var shouldAdd = true;
                 for (var i = 0; i < _conditions.Count; i++)
                 {
                     if (_conditions[i].Equals(subCond))
                     {
+                        shouldAdd = false;
                         break;
                     }
 
                     if (_conditions[i].IsReplaceableWith(subCond))
                     {
+                        shouldAdd = false;
                         _conditions[i] = subCond;
                         break;
                     }
+                }
+
+                if (shouldAdd)
+                {
+                    _conditions.Add(subCond);
                 }
 
                 break;
