@@ -121,6 +121,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
                     Sales = cleanSales,
                 }, cancellationToken);
+                addedSales.AddRange(cleanSales);
             }
             else
             {

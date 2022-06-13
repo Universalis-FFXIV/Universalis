@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using MongoDB.Bson.Serialization.Attributes;
 using Universalis.Application.Common;
 
 namespace Universalis.Application.Views.V1;
@@ -12,30 +13,35 @@ public class SaleView : IPriceable
     /// <summary>
     /// Whether or not the item was high-quality.
     /// </summary>
+    [BsonElement("hq")]
     [JsonPropertyName("hq")]
     public bool Hq { get; init; }
 
     /// <summary>
     /// The price per unit sold.
     /// </summary>
+    [BsonElement("pricePerUnit")]
     [JsonPropertyName("pricePerUnit")]
     public uint PricePerUnit { get; init; }
 
     /// <summary>
     /// The stack size sold.
     /// </summary>
+    [BsonElement("quantity")]
     [JsonPropertyName("quantity")]
     public uint Quantity { get; init; }
 
     /// <summary>
     /// The sale time, in seconds since the UNIX epoch.
     /// </summary>
+    [BsonElement("timestamp")]
     [JsonPropertyName("timestamp")]
     public long TimestampUnixSeconds { get; init; }
 
     /// <summary>
     /// The world name, if applicable.
     /// </summary>
+    [BsonElement("worldName")]
     [JsonPropertyName("worldName")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string WorldName { get; set; }
@@ -43,6 +49,7 @@ public class SaleView : IPriceable
     /// <summary>
     /// The world ID, if applicable.
     /// </summary>
+    [BsonElement("worldID")]
     [JsonPropertyName("worldID")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public uint? WorldId { get; set; }
@@ -50,12 +57,14 @@ public class SaleView : IPriceable
     /// <summary>
     /// The buyer name.
     /// </summary>
+    [BsonElement("buyerName")]
     [JsonPropertyName("buyerName")]
     public string BuyerName { get; init; }
 
     /// <summary>
     /// The total price.
     /// </summary>
+    [BsonElement("total")]
     [JsonPropertyName("total")]
     public uint Total { get; init; }
 }

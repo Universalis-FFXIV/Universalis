@@ -26,8 +26,9 @@ public class SocketClient
     private readonly WebSocket _ws;
     private readonly TaskCompletionSource<object> _cs;
     private readonly ILogger _logger;
-    private readonly IList<EventCondition> _conditions;
     private readonly object _runningLock;
+    
+    private readonly IList<EventCondition> _conditions;
 
     private SemaphoreSlim _recv;
 
@@ -90,15 +91,15 @@ public class SocketClient
         }
         catch (ObjectDisposedException)
         {
-            _logger.LogWarning("Semaphore is disposed.");
+            _logger.LogWarning("Semaphore is disposed");
         }
         catch (SemaphoreFullException)
         {
-            _logger.LogWarning("Semaphore is full.");
+            _logger.LogWarning("Semaphore is full");
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Semaphore release failed for an unknown reason.");
+            _logger.LogError(e, "Semaphore release failed for an unknown reason");
         }
     }
 
@@ -131,7 +132,7 @@ public class SocketClient
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "WebSocket loop aborted with an exception.");
+            _logger.LogError(e, "WebSocket loop aborted with an exception");
         }
         finally
         {
@@ -179,14 +180,13 @@ public class SocketClient
                 break;
             }
 
-            await ReceiveEvent(buf, res);
+            ReceiveEvent(buf);
         }
     }
 
-    private async Task ReceiveEvent(byte[] buf, WebSocketReceiveResult res)
+    private void ReceiveEvent(byte[] buf)
     {
         BsonDocument data;
-        await using var stream = new MemoryStream(buf[..res.Count]);
         try
         {
             data = BsonSerializer.Deserialize<BsonDocument>(buf);
@@ -222,9 +222,18 @@ public class SocketClient
                 }
                 
                 var subCond = EventCondition.Parse(subChannel);
-                if (!_conditions.Contains(subCond))
+                for (var i = 0; i < _conditions.Count; i++)
                 {
-                    _conditions.Add(subCond);
+                    if (_conditions[i].Equals(subCond))
+                    {
+                        break;
+                    }
+
+                    if (_conditions[i].IsReplaceableWith(subCond))
+                    {
+                        _conditions[i] = subCond;
+                        break;
+                    }
                 }
 
                 break;
@@ -240,9 +249,13 @@ public class SocketClient
                 }
 
                 var unsubCond = EventCondition.Parse(unsubChannel);
-                if (_conditions.Contains(unsubCond))
+                for (var i = 0; i < _conditions.Count; i++)
                 {
-                    _conditions.Remove(unsubCond);
+                    if (_conditions[i].Equals(unsubCond))
+                    {
+                        _conditions.RemoveAt(i);
+                        break;
+                    }
                 }
 
                 break;
@@ -252,6 +265,11 @@ public class SocketClient
     private async Task SendEvent(SocketMessage message, CancellationToken cancellationToken = default)
     {
         await using var stream = MemoryStreamPool.GetStream() as RecyclableMemoryStream;
+        if (stream == null)
+        {
+            return;
+        }
+        
         using var writer = new BsonBinaryWriter(stream);
         BsonSerializer.Serialize(writer, message.GetType(), message);
 
