@@ -262,12 +262,13 @@ public class SocketClient
                 }
 
                 var unsubCond = EventCondition.Parse(unsubChannel);
-                for (var i = 0; i < _conditions.Count; i++)
+                var conditionsCount = _conditions.Count;
+                for (var i = 0; i < conditionsCount; i++)
                 {
-                    if (_conditions[i].Equals(unsubCond))
+                    if (unsubCond.IsReplaceableWith(_conditions[i]))
                     {
                         _conditions.RemoveAt(i);
-                        break;
+                        conditionsCount--;
                     }
                 }
 
