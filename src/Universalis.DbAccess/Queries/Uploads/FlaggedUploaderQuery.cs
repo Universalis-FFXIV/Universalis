@@ -1,16 +1,6 @@
-﻿using MongoDB.Driver;
-using Universalis.Entities.Uploads;
+﻿namespace Universalis.DbAccess.Queries.Uploads;
 
-namespace Universalis.DbAccess.Queries.Uploads;
-
-public class FlaggedUploaderQuery : DbAccessQuery<FlaggedUploader>
+public class FlaggedUploaderQuery
 {
-    public string UploaderIdHash { get; set; }
-
-    internal override FilterDefinition<FlaggedUploader> ToFilterDefinition()
-    {
-        var filterBuilder = Builders<FlaggedUploader>.Filter;
-        var filter = filterBuilder.Eq(o => o.UploaderIdHash, UploaderIdHash);
-        return filter;
-    }
+    public string UploaderIdSha256 { get; init; }
 }

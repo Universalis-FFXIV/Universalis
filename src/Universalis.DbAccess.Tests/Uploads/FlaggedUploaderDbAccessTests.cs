@@ -1,34 +1,37 @@
-﻿using MongoDB.Driver;
-using System;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
+using Universalis.Entities.Uploads;
 using Xunit;
 
 namespace Universalis.DbAccess.Tests.Uploads;
 
-public class FlaggedUploaderDbAccessTests : IDisposable
+public class FlaggedUploaderDbAccessTests
 {
-    private static readonly string Database = CollectionUtils.GetDatabaseName(nameof(FlaggedUploaderDbAccessTests));
-
-    private readonly IMongoClient _client;
+    private class MockFlaggedUploaderStore : IFlaggedUploaderStore
+    {
+        private readonly Dictionary<string, FlaggedUploader> _data = new();
         
-    public FlaggedUploaderDbAccessTests()
-    {
-        _client = new MongoClient("mongodb://localhost:27017");
-        _client.DropDatabase(Database);
-    }
+        public Task Insert(FlaggedUploader uploader, CancellationToken cancellationToken = default)
+        {
+            _data[uploader.IdSha256] = uploader;
+            return Task.CompletedTask;
+        }
 
-    public void Dispose()
-    {
-        _client.DropDatabase(Database);
-        GC.SuppressFinalize(this);
+        public Task<FlaggedUploader> Retrieve(string uploaderIdSha256, CancellationToken cancellationToken = default)
+        {
+            return _data.ContainsKey(uploaderIdSha256)
+                ? Task.FromResult(_data[uploaderIdSha256])
+                : Task.FromResult<FlaggedUploader>(null);
+        }
     }
-
+    
     [Fact]
     public async Task Create_DoesNotThrow()
     {
-        var db = new FlaggedUploaderDbAccess(_client, Database);
+        var db = new FlaggedUploaderDbAccess(new MockFlaggedUploaderStore());
         var document = SeedDataGenerator.MakeFlaggedUploader();
         await db.Create(document);
     }
@@ -36,34 +39,19 @@ public class FlaggedUploaderDbAccessTests : IDisposable
     [Fact]
     public async Task Retrieve_DoesNotThrow()
     {
-        var db = new FlaggedUploaderDbAccess(_client, Database);
-        var output = await db.Retrieve(new FlaggedUploaderQuery { UploaderIdHash = "affffe" });
+        var db = new FlaggedUploaderDbAccess(new MockFlaggedUploaderStore());
+        var output = await db.Retrieve(new FlaggedUploaderQuery { UploaderIdSha256 = "affffe" });
         Assert.Null(output);
-    }
-
-    [Fact]
-    public async Task Update_DoesNotThrow()
-    {
-        var db = new FlaggedUploaderDbAccess(_client, Database);
-        var document = SeedDataGenerator.MakeFlaggedUploader();
-        await db.Update(document, new FlaggedUploaderQuery { UploaderIdHash = document.UploaderIdHash });
-    }
-
-    [Fact]
-    public async Task Delete_DoesNotThrow()
-    {
-        var db = new FlaggedUploaderDbAccess(_client, Database);
-        await db.Delete(new FlaggedUploaderQuery { UploaderIdHash = "affffe" });
     }
 
     [Fact]
     public async Task Create_DoesInsert()
     {
-        var db = new FlaggedUploaderDbAccess(_client, Database);
+        var db = new FlaggedUploaderDbAccess(new MockFlaggedUploaderStore());
         var document = SeedDataGenerator.MakeFlaggedUploader();
         await db.Create(document);
 
-        var output = await db.Retrieve(new FlaggedUploaderQuery { UploaderIdHash = document.UploaderIdHash });
+        var output = await db.Retrieve(new FlaggedUploaderQuery { UploaderIdSha256 = document.IdSha256 });
         Assert.NotNull(output);
     }
 }

@@ -27,10 +27,6 @@ services:
       MYSQL_PASSWORD: dalamud
     volumes:
       - ./sqlinit:/docker-entrypoint-initdb.d
-  mongo:
-    image: mongo:5.0.5
-    ports:
-      - "4051:27017"
   postgres:
     image: postgres:14.3
     command: postgres -c max_connections=100 -c shared_buffers=512MB
