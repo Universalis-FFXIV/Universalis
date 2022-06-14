@@ -1,7 +1,6 @@
 ﻿using FluentMigrator.Runner;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Driver;
 using StackExchange.Redis;
 using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.MarketBoard;
@@ -14,7 +13,6 @@ public static class DbAccessExtensions
 {
     public static void AddDbAccessServices(this IServiceCollection sc, IConfiguration configuration)
     {
-        sc.AddSingleton<IMongoClient>(new MongoClient(configuration["MongoDbConnectionString"]));
         sc.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(configuration["RedisConnectionString"]));
 
         sc.AddFluentMigratorCore()
@@ -37,6 +35,7 @@ public static class DbAccessExtensions
         sc.AddSingleton<ICharacterStore, CharacterStore>(_ => new CharacterStore(configuration["PostgresConnectionString"]));
         sc.AddSingleton<ICharacterDbAccess, CharacterDbAccess>();
 
+        sc.AddSingleton<IFlaggedUploaderStore, FlaggedUploaderStore>(_ => new FlaggedUploaderStore(configuration["PostgresConnectionString"]));
         sc.AddSingleton<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();
 
         sc.AddSingleton<ITaxRatesStore, TaxRatesStore>();

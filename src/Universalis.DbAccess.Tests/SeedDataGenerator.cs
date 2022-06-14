@@ -76,7 +76,7 @@ public static class SeedDataGenerator
 
     public static FlaggedUploader MakeFlaggedUploader()
     {
-        return new FlaggedUploader { UploaderIdHash = "afffff" };
+        return new FlaggedUploader("afffff");
     }
 
     public static ApiKey MakeApiKey()

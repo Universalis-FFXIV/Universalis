@@ -14,14 +14,14 @@ public class MockFlaggedUploaderDbAccess : IFlaggedUploaderDbAccess
 
     public Task Create(FlaggedUploader document, CancellationToken cancellationToken = default)
     {
-        _collection.Add(document.UploaderIdHash, document);
+        _collection.Add(document.IdSha256, document);
         return Task.CompletedTask;
     }
 
     public Task<FlaggedUploader> Retrieve(FlaggedUploaderQuery query, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_collection
-            .FirstOrDefault(s => s.Key == query.UploaderIdHash).Value);
+            .FirstOrDefault(s => s.Key == query.UploaderIdSha256).Value);
     }
 
     public async Task Update(FlaggedUploader document, FlaggedUploaderQuery query, CancellationToken cancellationToken = default)
@@ -32,7 +32,7 @@ public class MockFlaggedUploaderDbAccess : IFlaggedUploaderDbAccess
 
     public Task Delete(FlaggedUploaderQuery query, CancellationToken cancellationToken = default)
     {
-        _collection.Remove(query.UploaderIdHash);
+        _collection.Remove(query.UploaderIdSha256);
         return Task.CompletedTask;
     }
 }

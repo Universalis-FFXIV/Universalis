@@ -200,7 +200,7 @@ public class DeleteListingControllerTests
             uploaderIdHash = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(uploaderId)));
         }
 
-        await test.FlaggedUploaders.Create(new FlaggedUploader { UploaderIdHash = uploaderIdHash });
+        await test.FlaggedUploaders.Create(new FlaggedUploader(uploaderIdHash));
 
         var result = await test.Controller.Post(5333, 74.ToString(), key, new DeleteListingParameters
         {

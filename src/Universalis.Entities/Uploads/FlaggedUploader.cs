@@ -1,9 +1,11 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-
-namespace Universalis.Entities.Uploads;
+﻿namespace Universalis.Entities.Uploads;
 
 public class FlaggedUploader
 {
-    [BsonElement("uploaderID")]
-    public string UploaderIdHash { get; init; }
+    public string IdSha256 { get; }
+
+    public FlaggedUploader(string idSha256)
+    {
+        IdSha256 = idSha256;
+    }
 }
