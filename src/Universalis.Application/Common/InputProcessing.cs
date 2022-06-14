@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Universalis.Application.Common;
@@ -12,6 +13,11 @@ public static class InputProcessing
     /// <returns>An enumerable of parsed uints.</returns>
     public static IEnumerable<uint> ParseIdList(string idList)
     {
+        if (idList == null)
+        {
+            throw new ArgumentNullException(nameof(idList));
+        }
+        
         return idList
             .Replace(" ", "")
             .Split(',')

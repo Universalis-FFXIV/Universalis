@@ -126,6 +126,11 @@ public class UserAlertController : ControllerBase
         var user = (MogboardUser)HttpContext.Items["user"];
         if (user == null) throw new InvalidOperationException();
 
+        if (create == null)
+        {
+            return BadRequest();
+        }
+
         await _alerts.Create(new UserAlert
         {
             Id = new UserAlertId(),
