@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess;
-using Universalis.DbAccess.Queries;
 using Universalis.Entities;
 using Universalis.Entities.AccessControl;
 

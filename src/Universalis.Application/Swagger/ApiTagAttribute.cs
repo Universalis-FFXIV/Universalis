@@ -3,7 +3,7 @@
 namespace Universalis.Application.Swagger;
 
 [AttributeUsage(AttributeTargets.Method)]
-public class ApiTagAttribute : Attribute
+public sealed class ApiTagAttribute : Attribute
 {
     public string Tag { get; }
 

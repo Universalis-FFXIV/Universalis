@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
-using Universalis.Application.Views;
 using Universalis.Application.Views.V1;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Tests;

@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Npgsql;
 using Universalis.Entities.AccessControl;
@@ -16,6 +17,11 @@ public class ApiKeyStore : IApiKeyStore
 
     public async Task Insert(ApiKey apiKey, CancellationToken cancellationToken = default)
     {
+        if (apiKey == null)
+        {
+            throw new ArgumentNullException(nameof(apiKey));
+        }
+        
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
         await using var command =
@@ -34,6 +40,11 @@ public class ApiKeyStore : IApiKeyStore
 
     public async Task<ApiKey> Retrieve(string tokenSha512, CancellationToken cancellationToken = default)
     {
+        if (tokenSha512 == null)
+        {
+            throw new ArgumentNullException(nameof(tokenSha512));
+        }
+        
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
         

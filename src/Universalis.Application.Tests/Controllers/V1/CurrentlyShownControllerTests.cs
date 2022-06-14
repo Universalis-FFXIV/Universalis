@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
-using Universalis.Application.Controllers;
 using Universalis.Application.Controllers.V1;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
@@ -182,8 +181,7 @@ public class CurrentlyShownControllerTests
             joinedSales,
             currentlyShown,
             unixNowMs,
-            worldOrDc,
-            unixNowMs);
+            worldOrDc);
     }
 
     [Theory]
@@ -222,15 +220,13 @@ public class CurrentlyShownControllerTests
             sales1,
             currentlyShown.Items.First(item => item.ItemId == document1.ItemId),
             unixNowMs,
-            worldOrDc,
-            unixNowMs);
+            worldOrDc);
         AssertCurrentlyShownDataCenter(
             document2,
             sales2,
             currentlyShown.Items.First(item => item.ItemId == document2.ItemId),
             unixNowMs,
-            worldOrDc,
-            unixNowMs);
+            worldOrDc);
     }
 
     [Theory]
@@ -465,7 +461,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
     }
 
-    private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, List<Sale> sales, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc, long unixNowMs)
+    private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, List<Sale> sales, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc)
     {
         Assert.Equal(anyWorldDocument.ItemId, currentlyShown.ItemId);
         Assert.Equal(lastUploadTime, currentlyShown.LastUploadTimeUnixMilliseconds);
@@ -495,9 +491,6 @@ public class CurrentlyShownControllerTests
 
         var nqListings = listings.Where(s => !s.Hq).ToList();
         var hqListings = listings.Where(s => s.Hq).ToList();
-
-        var nqHistory = sales.Where(s => !s.Hq).ToList();
-        var hqHistory = sales.Where(s => s.Hq).ToList();
 
         Assert.True(currentlyShown.CurrentAveragePrice > 0);
         Assert.True(currentlyShown.CurrentAveragePriceNq > 0);
@@ -534,10 +527,5 @@ public class CurrentlyShownControllerTests
         Assert.Equal(stackSizeHistogram, currentlyShown.StackSizeHistogram);
         Assert.Equal(stackSizeHistogramNq, currentlyShown.StackSizeHistogramNq);
         Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
-    }
-
-    private static double Round(double value)
-    {
-        return Math.Round(value, 2);
     }
 }

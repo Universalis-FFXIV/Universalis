@@ -28,12 +28,12 @@ To compile web assets in the new web project, install the `WebPack Task Runner` 
 Also build a DataExports and an icon2x by running the exporter solution.
 
 Uncomment/add in php.ini:
-```
+```ini
 extension=redis.so
 ```
 
 MariaDB commands:
-```
+```mysql
 CREATE DATABASE `dalamud`;
 CREATE USER 'dalamud'@localhost IDENTIFIED BY 'dalamud';
 GRANT ALL PRIVILEGES ON `dalamud`.* TO 'dalamud'@localhost IDENTIFIED BY 'dalamud';
@@ -41,7 +41,7 @@ FLUSH PRIVILEGES;
 ```
 
 Setup script (mogboard):
-```
+```bash
 composer install
 php bin/console doctrine:schema:create
 php bin/console PopulateGameDataCommand -vvv
@@ -53,7 +53,7 @@ symfony server:start -vvv --port 8000
 
 ## To update
 Go to the mogboard/ folder, and execute the following commands after adding any new front-end data.
-```
+```bash
 sudo rm -rf var/
 sudo redis-cli FLUSHALL
 sudo php bin/console PopulateGameDataCommand -vvv
@@ -62,6 +62,6 @@ sudo chmod 0777 var/ -R
 ```
 
 ### Single-line form
-```
+```bash
 sudo rm -rf var/ && sudo redis-cli FLUSHALL && sudo php bin/console PopulateGameDataCommand -vvv && sudo php bin/console ImportTranslationsCommand -vvv && sudo chmod 0777 var/ -R
 ```

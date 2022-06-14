@@ -57,7 +57,7 @@ public class HistoryControllerTests
         var result = await test.Controller.Get("5333", worldOrDc, entriesToReturn);
         var history = (HistoryView)Assert.IsType<OkObjectResult>(result).Value;
 
-        AssertHistoryValidWorld(document, history, test.GameData, entriesToReturn, now);
+        AssertHistoryValidWorld(document, history, test.GameData, now);
     }
 
     [Theory]
@@ -86,8 +86,8 @@ public class HistoryControllerTests
         Assert.Equal(test.GameData.AvailableWorlds()[74], history.WorldName);
         Assert.Null(history.DcName);
 
-        AssertHistoryValidWorld(document1, history.Items.First(item => item.Key == document1.ItemId).Value, test.GameData, entriesToReturn, lastUploadTime);
-        AssertHistoryValidWorld(document2, history.Items.First(item => item.Key == document2.ItemId).Value, test.GameData, entriesToReturn, lastUploadTime);
+        AssertHistoryValidWorld(document1, history.Items.First(item => item.Key == document1.ItemId).Value, test.GameData, lastUploadTime);
+        AssertHistoryValidWorld(document2, history.Items.First(item => item.Key == document2.ItemId).Value, test.GameData, lastUploadTime);
     }
 
     [Theory]
@@ -115,9 +115,7 @@ public class HistoryControllerTests
             history,
             sales,
             now,
-            worldOrDc,
-            entriesToReturn,
-            now);
+            worldOrDc);
     }
 
     [Theory]
@@ -150,17 +148,13 @@ public class HistoryControllerTests
             history.Items.First(item => item.Key == document1.ItemId).Value,
             document1.Sales,
             lastUploadTime,
-            worldOrDc,
-            entriesToReturn,
-            lastUploadTime);
+            worldOrDc);
         AssertHistoryValidDataCenter(
             document2,
             history.Items.First(item => item.Key == document2.ItemId).Value,
             document2.Sales,
             lastUploadTime,
-            worldOrDc,
-            entriesToReturn,
-            lastUploadTime);
+            worldOrDc);
     }
 
     [Theory]
@@ -320,7 +314,7 @@ public class HistoryControllerTests
         Assert.Null(history.WorldId);
     }
 
-    private static void AssertHistoryValidWorld(History document, HistoryView history, IGameDataProvider gameData, string entriesToReturn, long unixNowMs)
+    private static void AssertHistoryValidWorld(History document, HistoryView history, IGameDataProvider gameData, long unixNowMs)
     {
         document.Sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
@@ -351,7 +345,7 @@ public class HistoryControllerTests
             history.SaleVelocityHq);
     }
 
-    private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<Sale> sales, long lastUploadTime, string worldOrDc, string entriesToReturn, long unixNowMs)
+    private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<Sale> sales, long lastUploadTime, string worldOrDc)
     {
         sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
@@ -385,10 +379,5 @@ public class HistoryControllerTests
         }
 
         return true;
-    }
-
-    private static double Round(double value)
-    {
-        return Math.Round(value, 2);
     }
 }
