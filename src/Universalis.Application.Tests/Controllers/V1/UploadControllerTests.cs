@@ -135,7 +135,7 @@ public class UploadControllerTests
     [Fact]
     public async Task Controller_Post_Validators_Run_First()
     {
-        var content = new MockContentDbAccess();
+        var content = new MockCharacterDbAccess();
         var gameData = new MockGameDataProvider();
         var worldUploadCounts = new MockWorldUploadCountDbAccess();
         

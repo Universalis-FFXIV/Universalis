@@ -32,9 +32,11 @@ public static class DbAccessExtensions
 
         sc.AddSingleton<IMarketItemStore, MarketItemStore>(_ => new MarketItemStore(configuration["PostgresConnectionString"]));
         sc.AddSingleton<ISaleStore, SaleStore>(_ => new SaleStore(configuration["PostgresConnectionString"]));
-        
         sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
-        sc.AddSingleton<IContentDbAccess, ContentDbAccess>();
+
+        sc.AddSingleton<ICharacterStore, CharacterStore>(_ => new CharacterStore(configuration["PostgresConnectionString"]));
+        sc.AddSingleton<ICharacterDbAccess, CharacterDbAccess>();
+
         sc.AddSingleton<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();
 
         sc.AddSingleton<ITaxRatesStore, TaxRatesStore>();

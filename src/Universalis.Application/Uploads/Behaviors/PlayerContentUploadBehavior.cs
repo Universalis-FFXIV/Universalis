@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Uploads.Schema;
@@ -11,29 +12,34 @@ namespace Universalis.Application.Uploads.Behaviors;
 
 public class PlayerContentUploadBehavior : IUploadBehavior
 {
-    private readonly IContentDbAccess _contentDb;
+    private readonly ICharacterDbAccess _characterDb;
 
-    public PlayerContentUploadBehavior(IContentDbAccess contentDb)
+    public PlayerContentUploadBehavior(ICharacterDbAccess characterDb)
     {
-        _contentDb = contentDb;
+        _characterDb = characterDb;
     }
 
     public bool ShouldExecute(UploadParameters parameters)
     {
-        return !string.IsNullOrEmpty(parameters.ContentId) && !string.IsNullOrEmpty(parameters.CharacterName);
+        return !string.IsNullOrEmpty(parameters.ContentId) && ulong.TryParse(parameters.ContentId, out _) && !string.IsNullOrEmpty(parameters.CharacterName);
     }
 
     public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
-        await _contentDb.Update(new Content
+        using var sha256 = SHA256.Create();
+        var contentIdHash = await Util.Hash(sha256, parameters.ContentId, cancellationToken);
+        
+        var existing = await _characterDb.Retrieve(contentIdHash, cancellationToken);
+        var character = new Character(contentIdHash, parameters.CharacterName, existing?.WorldId);
+        
+        if (existing == null)
         {
-            ContentId = parameters.ContentId,
-            ContentType = ContentKind.Player,
-            CharacterName = parameters.CharacterName,
-        }, new ContentQuery
+            await _characterDb.Create(character, cancellationToken);
+        }
+        else
         {
-            ContentId = parameters.ContentId,
-        }, cancellationToken);
+            await _characterDb.Update(character, cancellationToken);
+        }
 
         return null;
     }
