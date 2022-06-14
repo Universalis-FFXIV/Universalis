@@ -4,7 +4,6 @@ using Priority_Queue;
 using Prometheus;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
@@ -16,7 +15,7 @@ using Universalis.Application.Realtime.Messages;
 
 namespace Universalis.Application.Realtime;
 
-public class SocketClient
+public class SocketClient : IDisposable
 {
     private const int QueueLimit = 30;
 
@@ -80,7 +79,7 @@ public class SocketClient
         }
 
         // Release the semaphore, if applicable
-        if (_recv.CurrentCount != 0)
+        if (_recv?.CurrentCount != 0)
         {
             return;
         }
@@ -142,6 +141,7 @@ public class SocketClient
             OnClose?.Invoke();
             _cs.TrySetResult(true);
             _recv.Dispose();
+            _recv = null;
         }
 
         lock (_runningLock)
@@ -183,11 +183,11 @@ public class SocketClient
                 break;
             }
 
-            ReceiveEvent(buf);
+            await ReceiveEvent(buf, cancellationToken);
         }
     }
 
-    private void ReceiveEvent(byte[] buf)
+    private async Task ReceiveEvent(byte[] buf, CancellationToken cancellationToken = default)
     {
         BsonDocument data;
         try
@@ -273,6 +273,9 @@ public class SocketClient
                 }
 
                 break;
+            default:
+                await SendEvent(new SubscribeFailure("Unknown client event"), cancellationToken);
+                break;
         }
     }
 
@@ -301,5 +304,11 @@ public class SocketClient
             cur += memory.Length;
             await _ws.SendAsync(memory, WebSocketMessageType.Binary, WebSocketMessageFlags.None, cancellationToken);
         }
+    }
+
+    public void Dispose()
+    {
+        _recv?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

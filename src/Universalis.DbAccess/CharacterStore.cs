@@ -17,6 +17,11 @@ public class CharacterStore : ICharacterStore
 
     public async Task Insert(Character character, CancellationToken cancellationToken = default)
     {
+        if (character == null)
+        {
+            throw new ArgumentNullException(nameof(character));
+        }
+        
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
         await using var command =
@@ -43,6 +48,11 @@ public class CharacterStore : ICharacterStore
     
     public async Task Update(Character character, CancellationToken cancellationToken = default)
     {
+        if (character == null)
+        {
+            throw new ArgumentNullException(nameof(character));
+        }
+        
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
 
@@ -68,6 +78,11 @@ public class CharacterStore : ICharacterStore
 
     public async Task<Character> Retrieve(string contentIdSha256, CancellationToken cancellationToken = default)
     {
+        if (contentIdSha256 == null)
+        {
+            throw new ArgumentNullException(nameof(contentIdSha256));
+        }
+        
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
         

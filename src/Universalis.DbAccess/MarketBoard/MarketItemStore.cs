@@ -17,6 +17,11 @@ public class MarketItemStore : IMarketItemStore
 
     public async Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
     {
+        if (marketItem == null)
+        {
+            throw new ArgumentNullException(nameof(marketItem));
+        }
+        
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
         await using var command =
@@ -43,6 +48,11 @@ public class MarketItemStore : IMarketItemStore
     
     public async Task Update(MarketItem marketItem, CancellationToken cancellationToken = default)
     {
+        if (marketItem == null)
+        {
+            throw new ArgumentNullException(nameof(marketItem));
+        }
+        
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
 

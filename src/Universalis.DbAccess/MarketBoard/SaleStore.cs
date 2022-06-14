@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Npgsql;
@@ -19,6 +18,11 @@ public class SaleStore : ISaleStore
 
     public async Task Insert(Sale sale, CancellationToken cancellationToken = default)
     {
+        if (sale == null)
+        {
+            throw new ArgumentNullException(nameof(sale));
+        }
+        
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
         await using var command = new NpgsqlCommand(
@@ -42,9 +46,14 @@ public class SaleStore : ISaleStore
 
     public async Task InsertMany(IEnumerable<Sale> sales, CancellationToken cancellationToken = default)
     {
+        if (sales == null)
+        {
+            throw new ArgumentNullException(nameof(sales));
+        }
+        
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
-        var batch = new NpgsqlBatch(conn);
+        await using var batch = new NpgsqlBatch(conn);
         foreach (var sale in sales)
         {
             batch.BatchCommands.Add(new NpgsqlBatchCommand(

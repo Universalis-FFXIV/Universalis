@@ -11,12 +11,10 @@ namespace Universalis.DbAccess.MarketBoard;
 public class CurrentlyShownStore : ICurrentlyShownStore
 {
     private readonly IConnectionMultiplexer _redis;
-    private readonly ISaleStore _saleStore;
 
-    public CurrentlyShownStore(IConnectionMultiplexer redis, ISaleStore saleStore)
+    public CurrentlyShownStore(IConnectionMultiplexer redis)
     {
         _redis = redis;
-        _saleStore = saleStore;
     }
 
     public async Task<CurrentlyShown> GetData(uint worldId, uint itemId)
@@ -37,7 +35,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         long lastUpdated;
         string source;
         IEnumerable<Listing> listings;
-        IEnumerable<Sale> sales;
         do
         {
             lastUpdated = await EnsureLastUpdated(worldId, itemId);
@@ -47,12 +44,10 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
             var sourceTask = GetSource(db, worldId, itemId);
             var listingsTask = GetListings(db, worldId, itemId);
-            var salesTask = _saleStore.RetrieveBySaleTime(worldId, itemId, 10);
-            await Task.WhenAll(sourceTask, listingsTask, salesTask);
+            await Task.WhenAll(sourceTask, listingsTask);
             
             source = await sourceTask;
             listings = await listingsTask;
-            sales = await salesTask;
 
             transactionExecuted = await trans.ExecuteAsync();
         } while (!transactionExecuted);

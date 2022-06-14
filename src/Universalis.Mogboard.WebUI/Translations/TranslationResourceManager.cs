@@ -12,7 +12,7 @@ internal static class TranslationResourceManager
 
     private static IDictionary<string, string> LoadTranslations(string resourceName)
     {
-        var data = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)
+        var data = typeof(TranslationResourceManager).Assembly.GetManifestResourceStream(resourceName)
                    ?? throw new ArgumentException("Unable to load embedded resource.", nameof(resourceName));
         var terms = JsonSerializer.Deserialize<TranslationTerm[]>(data)
                     ?? throw new ArgumentException("Unable to deserialize embedded resource.", nameof(resourceName));

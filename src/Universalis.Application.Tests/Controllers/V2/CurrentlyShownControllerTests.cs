@@ -54,7 +54,6 @@ public class CurrentlyShownControllerTests
     public async Task Controller_Get_Succeeds_SingleItem_World(string worldOrDc)
     {
         var test = TestResources.Create();
-        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         
         const uint itemId = 5333;
         var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
@@ -66,7 +65,7 @@ public class CurrentlyShownControllerTests
         var result = await test.Controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
-        AssertCurrentlyShownValidWorld(document, sales, currentlyShown, test.GameData, now);
+        AssertCurrentlyShownValidWorld(document, sales, currentlyShown, test.GameData);
     }
 
     [Theory]
@@ -100,10 +99,8 @@ public class CurrentlyShownControllerTests
         Assert.Equal(test.GameData.AvailableWorlds()[document1.WorldId], currentlyShown.WorldName);
         Assert.Null(currentlyShown.DcName);
 
-        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-        AssertCurrentlyShownValidWorld(document1, sales1, currentlyShown.Items.First(item => item.Key == document1.ItemId).Value, test.GameData, now);
-        AssertCurrentlyShownValidWorld(document2, sales2, currentlyShown.Items.First(item => item.Key == document2.ItemId).Value, test.GameData, now);
+        AssertCurrentlyShownValidWorld(document1, sales1, currentlyShown.Items.First(item => item.Key == document1.ItemId).Value, test.GameData);
+        AssertCurrentlyShownValidWorld(document2, sales2, currentlyShown.Items.First(item => item.Key == document2.ItemId).Value, test.GameData);
     }
 
     [Theory]
@@ -138,8 +135,7 @@ public class CurrentlyShownControllerTests
             joinedSales,
             currentlyShown,
             unixNowMs,
-            worldOrDc,
-            unixNowMs);
+            worldOrDc);
     }
 
     [Theory]
@@ -179,15 +175,13 @@ public class CurrentlyShownControllerTests
             sales1,
             currentlyShown.Items.First(item => item.Key == document1.ItemId).Value,
             unixNowMs,
-            worldOrDc,
-            unixNowMs);
+            worldOrDc);
         AssertCurrentlyShownDataCenter(
             document2,
             sales2,
             currentlyShown.Items.First(item => item.Key == document2.ItemId).Value,
             unixNowMs,
-            worldOrDc,
-            unixNowMs);
+            worldOrDc);
     }
 
     [Theory]
@@ -354,7 +348,7 @@ public class CurrentlyShownControllerTests
         Assert.Null(history.WorldId);
     }
 
-    private static void AssertCurrentlyShownValidWorld(CurrentlyShown document, List<Sale> sales, CurrentlyShownView currentlyShown, IGameDataProvider gameData, long unixNowMs)
+    private static void AssertCurrentlyShownValidWorld(CurrentlyShown document, List<Sale> sales, CurrentlyShownView currentlyShown, IGameDataProvider gameData)
     {
         Assert.Equal(document.ItemId, currentlyShown.ItemId);
         Assert.Equal(document.WorldId, currentlyShown.WorldId);
@@ -384,9 +378,6 @@ public class CurrentlyShownControllerTests
 
         var nqListings = listings.Where(s => !s.Hq).ToList();
         var hqListings = listings.Where(s => s.Hq).ToList();
-
-        var nqHistory = sales.Where(s => !s.Hq).ToList();
-        var hqHistory = sales.Where(s => s.Hq).ToList();
 
         Assert.True(currentlyShown.CurrentAveragePrice > 0);
         Assert.True(currentlyShown.CurrentAveragePriceNq > 0);
@@ -425,7 +416,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
     }
 
-    private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, List<Sale> sales, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc, long unixNowMs)
+    private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, List<Sale> sales, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc)
     {
         Assert.Equal(anyWorldDocument.ItemId, currentlyShown.ItemId);
         Assert.Equal(lastUploadTime, currentlyShown.LastUploadTimeUnixMilliseconds);
@@ -491,10 +482,5 @@ public class CurrentlyShownControllerTests
         Assert.Equal(stackSizeHistogram, currentlyShown.StackSizeHistogram);
         Assert.Equal(stackSizeHistogramNq, currentlyShown.StackSizeHistogramNq);
         Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
-    }
-
-    private static double Round(double value)
-    {
-        return Math.Round(value, 2);
     }
 }

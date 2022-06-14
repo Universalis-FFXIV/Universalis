@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Npgsql;
 using Universalis.Entities.Uploads;
@@ -16,6 +17,11 @@ public class FlaggedUploaderStore : IFlaggedUploaderStore
     
     public async Task Insert(FlaggedUploader uploader, CancellationToken cancellationToken = default)
     {
+        if (uploader == null)
+        {
+            throw new ArgumentNullException(nameof(uploader));
+        }
+        
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
         await using var command =
@@ -40,6 +46,11 @@ public class FlaggedUploaderStore : IFlaggedUploaderStore
 
     public async Task<FlaggedUploader> Retrieve(string uploaderIdSha256, CancellationToken cancellationToken = default)
     {
+        if (uploaderIdSha256 == null)
+        {
+            throw new ArgumentNullException(nameof(uploaderIdSha256));
+        }
+        
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
         

@@ -1,6 +1,6 @@
 ﻿namespace Universalis.Mogboard.Entities.Id;
 
-public readonly struct UserAlertEventId
+public readonly struct UserAlertEventId : IEquatable<UserAlertEventId>
 {
     private readonly Guid _id;
 
@@ -19,16 +19,6 @@ public readonly struct UserAlertEventId
         return _id.ToString();
     }
 
-    public override bool Equals(object? obj)
-    {
-        return obj is UserAlertEventId other && _id.Equals(other._id);
-    }
-
-    public override int GetHashCode()
-    {
-        return _id.GetHashCode();
-    }
-
     public static UserAlertEventId Parse(string id)
     {
         var guid = Guid.Parse(id);
@@ -39,6 +29,21 @@ public readonly struct UserAlertEventId
 
     public static explicit operator Guid(UserAlertEventId id) => id._id;
 
+    public bool Equals(UserAlertEventId other)
+    {
+        return _id.Equals(other._id);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is UserAlertEventId other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return _id.GetHashCode();
+    }
+
     public static bool operator ==(UserAlertEventId left, UserAlertEventId right)
     {
         return left.Equals(right);
@@ -46,6 +51,6 @@ public readonly struct UserAlertEventId
 
     public static bool operator !=(UserAlertEventId left, UserAlertEventId right)
     {
-        return !(left == right);
+        return !left.Equals(right);
     }
 }

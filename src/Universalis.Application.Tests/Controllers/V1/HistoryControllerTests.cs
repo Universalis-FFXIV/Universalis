@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
-using Universalis.Application.Views;
 using Universalis.Application.Views.V1;
 using Universalis.DataTransformations;
 using Universalis.DbAccess.MarketBoard;
@@ -57,7 +56,7 @@ public class HistoryControllerTests
 
         var unixNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-        AssertHistoryValidWorld(document, history, test.GameData, entriesToReturn, unixNowMs);
+        AssertHistoryValidWorld(document, history, test.GameData, unixNowMs);
     }
 
     [Theory]
@@ -86,8 +85,8 @@ public class HistoryControllerTests
         Assert.Equal(test.GameData.AvailableWorlds()[74], history.WorldName);
         Assert.Null(history.DcName);
 
-        AssertHistoryValidWorld(document1, history.Items.First(item => item.ItemId == document1.ItemId), test.GameData, entriesToReturn, unixNowMs);
-        AssertHistoryValidWorld(document2, history.Items.First(item => item.ItemId == document2.ItemId), test.GameData, entriesToReturn, unixNowMs);
+        AssertHistoryValidWorld(document1, history.Items.First(item => item.ItemId == document1.ItemId), test.GameData, unixNowMs);
+        AssertHistoryValidWorld(document2, history.Items.First(item => item.ItemId == document2.ItemId), test.GameData, unixNowMs);
     }
 
     [Theory]
@@ -107,19 +106,12 @@ public class HistoryControllerTests
         var history = (HistoryView)Assert.IsType<OkObjectResult>(result).Value;
 
         var sales = document1.Sales.Concat(document2.Sales).ToList();
-        var lastUploadTime = (long)Math.Max(
-            document1.LastUploadTimeUnixMilliseconds,
-            document2.LastUploadTimeUnixMilliseconds);
-        var unixNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         AssertHistoryValidDataCenter(
             document1,
             history,
             sales,
-            lastUploadTime,
-            worldOrDc,
-            entriesToReturn,
-            unixNowMs);
+            worldOrDc);
     }
 
     [Theory]
@@ -151,18 +143,12 @@ public class HistoryControllerTests
             document1,
             history.Items.First(item => item.ItemId == document1.ItemId),
             document1.Sales,
-            unixNowMs,
-            worldOrDc,
-            entriesToReturn,
-            unixNowMs);
+            worldOrDc);
         AssertHistoryValidDataCenter(
             document2,
             history.Items.First(item => item.ItemId == document2.ItemId),
             document2.Sales,
-            unixNowMs,
-            worldOrDc,
-            entriesToReturn,
-            unixNowMs);
+            worldOrDc);
     }
 
     [Theory]
@@ -322,7 +308,7 @@ public class HistoryControllerTests
         Assert.Null(history.WorldId);
     }
 
-    private static void AssertHistoryValidWorld(History document, HistoryView history, IGameDataProvider gameData, string entriesToReturn, long unixNowMs)
+    private static void AssertHistoryValidWorld(History document, HistoryView history, IGameDataProvider gameData, long unixNowMs)
     {
         document.Sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
@@ -354,7 +340,7 @@ public class HistoryControllerTests
         Assert.Equal(Round(saleVelocityHq), Round(history.SaleVelocityHq));
     }
 
-    private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<Sale> sales, long lastUploadTime, string worldOrDc, string entriesToReturn, long unixNowMs)
+    private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<Sale> sales, string worldOrDc)
     {
         sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 

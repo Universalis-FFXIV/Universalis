@@ -20,7 +20,7 @@ public class MockTrustedSourceDbAccess : ITrustedSourceDbAccess
         return Task.CompletedTask;
     }
 
-    Task<ApiKey> ITrustedSourceDbAccess.Retrieve(TrustedSourceQuery query, CancellationToken cancellationToken)
+    public Task<ApiKey> Retrieve(TrustedSourceQuery query, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_collection
             .FirstOrDefault(s => s.Key == query.ApiKeySha512).Value);

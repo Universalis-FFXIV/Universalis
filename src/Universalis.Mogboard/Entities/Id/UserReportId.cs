@@ -1,6 +1,6 @@
 ﻿namespace Universalis.Mogboard.Entities.Id;
 
-public readonly struct UserReportId
+public readonly struct UserReportId : IEquatable<UserReportId>
 {
     private readonly Guid _id;
 
@@ -19,16 +19,6 @@ public readonly struct UserReportId
         return _id.ToString();
     }
 
-    public override bool Equals(object? obj)
-    {
-        return obj is UserReportId other && _id.Equals(other._id);
-    }
-
-    public override int GetHashCode()
-    {
-        return _id.GetHashCode();
-    }
-
     public static UserReportId Parse(string id)
     {
         var guid = Guid.Parse(id);
@@ -39,6 +29,21 @@ public readonly struct UserReportId
 
     public static explicit operator Guid(UserReportId id) => id._id;
 
+    public bool Equals(UserReportId other)
+    {
+        return _id.Equals(other._id);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is UserReportId other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return _id.GetHashCode();
+    }
+
     public static bool operator ==(UserReportId left, UserReportId right)
     {
         return left.Equals(right);
@@ -46,6 +51,6 @@ public readonly struct UserReportId
 
     public static bool operator !=(UserReportId left, UserReportId right)
     {
-        return !(left == right);
+        return !left.Equals(right);
     }
 }
