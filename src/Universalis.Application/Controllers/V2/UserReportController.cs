@@ -16,9 +16,6 @@ namespace Universalis.Application.Controllers.V2;
 [ApiVersion("2")]
 [Route("api")]
 [RequireMogboardAuthorization]
-#if !DEBUG
-[ApiExplorerSettings(IgnoreApi = true)]
-#endif
 public class UserReportController : ControllerBase
 {
     private readonly IMogboardTable<UserReport, UserReportId> _reports;

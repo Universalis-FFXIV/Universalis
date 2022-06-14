@@ -42,7 +42,7 @@ public class UploadController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Post(string apiKey, /* This may cause issues in the LOH during garbage collection. */ [FromBody] UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Post(string apiKey, [FromBody] UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         var source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
         {

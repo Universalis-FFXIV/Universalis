@@ -39,43 +39,8 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         long entriesWithin = -1,
         CancellationToken cancellationToken = default)
     {
-        var fetches = worldIds
-            .Select(async worldId =>
-            {
-                var q = new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId };
-                var d = await Cache.Get(q, cancellationToken);
-                if (d == null)
-                {
-                    var cd = await CurrentlyShown.Retrieve(q, cancellationToken);
-                    if (cd == null)
-                    {
-                        return null;
-                    }
-
-                    var h = await History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 }, cancellationToken);
-                    
-                    return new CachedCurrentlyShownData
-                    {
-                        WorldId = cd.WorldId,
-                        ItemId = cd.ItemId,
-                        LastUploadTimeUnixMilliseconds = cd.LastUploadTimeUnixMilliseconds,
-                        Listings = (await Task.WhenAll((cd.Listings ?? new List<Listing>())
-                                .Select(l => Util.ListingToView(l, cancellationToken))))
-                            .Where(s => s.PricePerUnit > 0)
-                            .Where(s => s.Quantity > 0)
-                            .ToList(),
-                        RecentHistory = (h?.Sales ?? new List<Sale>())
-                            .Select(Util.SaleToView)
-                            .Where(s => s.PricePerUnit > 0)
-                            .Where(s => s.Quantity > 0)
-                            .Where(s => s.TimestampUnixSeconds > 0)
-                            .ToList(),
-                    };
-                }
-
-                return d;
-            });
-        var data = (await Task.WhenAll(fetches))
+        var cached = await Task.WhenAll(worldIds.Select(worldId => FetchCachedCurrentlyShownData(worldId, itemId, cancellationToken)));
+        var data = cached
             .Where(o => o != null)
             .ToList();
         var resolved = data.Count > 0;
@@ -169,6 +134,42 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
         };
 
         return (resolved, view);
+    }
+    
+    private async Task<CachedCurrentlyShownData> FetchCachedCurrentlyShownData(uint worldId, uint itemId, CancellationToken cancellationToken = default)
+    {
+        var q = new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId };
+        var d = await Cache.Get(q, cancellationToken);
+        if (d == null)
+        {
+            var cd = await CurrentlyShown.Retrieve(q, cancellationToken);
+            if (cd == null)
+            {
+                return null;
+            }
+
+            var h = await History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 }, cancellationToken);
+                    
+            return new CachedCurrentlyShownData
+            {
+                WorldId = cd.WorldId,
+                ItemId = cd.ItemId,
+                LastUploadTimeUnixMilliseconds = cd.LastUploadTimeUnixMilliseconds,
+                Listings = (await Task.WhenAll((cd.Listings ?? new List<Listing>())
+                        .Select(l => Util.ListingToView(l, cancellationToken))))
+                    .Where(s => s.PricePerUnit > 0)
+                    .Where(s => s.Quantity > 0)
+                    .ToList(),
+                RecentHistory = (h?.Sales ?? new List<Sale>())
+                    .Select(Util.SaleToView)
+                    .Where(s => s.PricePerUnit > 0)
+                    .Where(s => s.Quantity > 0)
+                    .Where(s => s.TimestampUnixSeconds > 0)
+                    .ToList(),
+            };
+        }
+
+        return d;
     }
 
     private static TDictionary EmptyWorldDictionary<TDictionary, T>(IEnumerable<uint> worldIds) where TDictionary : IDictionary<uint, T>

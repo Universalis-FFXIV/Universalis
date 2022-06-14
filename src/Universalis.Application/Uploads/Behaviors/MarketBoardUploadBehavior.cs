@@ -83,25 +83,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 return new BadRequestResult();
             }
 
-            var cleanSales = parameters.Sales
-                .Where(s => s.TimestampUnixSeconds > 0)
-                .Select(s => new Sale
-                {
-                    Id = Guid.NewGuid(),
-                    WorldId = worldId,
-                    ItemId = itemId,
-                    Hq = Util.ParseUnusualBool(s.Hq),
-                    BuyerName = s.BuyerName,
-                    PricePerUnit = s.PricePerUnit ?? 0,
-                    Quantity = s.Quantity ?? 0,
-                    SaleTime = DateTimeOffset.FromUnixTimeSeconds(s.TimestampUnixSeconds ?? 0).UtcDateTime,
-                    UploaderIdHash = parameters.UploaderId,
-                })
-                .Where(s => s.PricePerUnit > 0)
-                .Where(s => s.Quantity > 0)
-                .Where(s => new DateTimeOffset(s.SaleTime).ToUnixTimeSeconds() > 0)
-                .OrderByDescending(s => s.SaleTime)
-                .ToList();
+            var cleanSales = CleanUploadedSales(parameters.Sales, worldId, itemId, parameters.UploaderId);
 
             var existingHistory = await _historyDb.Retrieve(new HistoryQuery
             {
@@ -163,38 +145,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 return new BadRequestResult();
             }
 
-            newListings = parameters.Listings
-                .Select(l =>
-                {
-                    return new Listing
-                    {
-                        ListingId = l.ListingId ?? "",
-                        Hq = Util.ParseUnusualBool(l.Hq),
-                        OnMannequin = Util.ParseUnusualBool(l.OnMannequin),
-                        Materia = l.Materia?
-                            .Where(s => s.SlotId != null && s.MateriaId != null)
-                            .Select(s => new Materia
-                            {
-                                SlotId = (uint)s.SlotId!,
-                                MateriaId = (uint)s.MateriaId!,
-                            })
-                            .ToList() ?? new List<Materia>(),
-                        PricePerUnit = l.PricePerUnit ?? 0,
-                        Quantity = l.Quantity ?? 0,
-                        DyeId = l.DyeId ?? 0,
-                        CreatorId = Util.ParseUnusualId(l.CreatorId) ?? "",
-                        CreatorName = l.CreatorName,
-                        LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds ?? 0,
-                        RetainerId = Util.ParseUnusualId(l.RetainerId) ?? "",
-                        RetainerName = l.RetainerName,
-                        RetainerCityId = l.RetainerCityId ?? 0,
-                        SellerId = Util.ParseUnusualId(l.SellerId) ?? "",
-                    };
-                })
-                .Where(l => l.PricePerUnit > 0)
-                .Where(l => l.Quantity > 0)
-                .OrderBy(l => l.PricePerUnit)
-                .ToList();
+            newListings = CleanUploadedListings(parameters.Listings);
 
             var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
             var addedListings = newListings.Where(l => !oldListings.Contains(l)).ToList();
@@ -249,5 +200,64 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         }, cancellationToken);
         
         return null;
+    }
+
+    private static List<Listing> CleanUploadedListings(IEnumerable<Schema.Listing> uploadedListings)
+    {
+        return uploadedListings
+            .Select(l =>
+            {
+                return new Listing
+                {
+                    ListingId = l.ListingId ?? "",
+                    Hq = Util.ParseUnusualBool(l.Hq),
+                    OnMannequin = Util.ParseUnusualBool(l.OnMannequin),
+                    Materia = l.Materia?
+                        .Where(s => s.SlotId != null && s.MateriaId != null)
+                        .Select(s => new Materia
+                        {
+                            SlotId = (uint)s.SlotId!,
+                            MateriaId = (uint)s.MateriaId!,
+                        })
+                        .ToList() ?? new List<Materia>(),
+                    PricePerUnit = l.PricePerUnit ?? 0,
+                    Quantity = l.Quantity ?? 0,
+                    DyeId = l.DyeId ?? 0,
+                    CreatorId = Util.ParseUnusualId(l.CreatorId) ?? "",
+                    CreatorName = l.CreatorName,
+                    LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds ?? 0,
+                    RetainerId = Util.ParseUnusualId(l.RetainerId) ?? "",
+                    RetainerName = l.RetainerName,
+                    RetainerCityId = l.RetainerCityId ?? 0,
+                    SellerId = Util.ParseUnusualId(l.SellerId) ?? "",
+                };
+            })
+            .Where(l => l.PricePerUnit > 0)
+            .Where(l => l.Quantity > 0)
+            .OrderBy(l => l.PricePerUnit)
+            .ToList();
+    }
+
+    private static List<Sale> CleanUploadedSales(IEnumerable<Schema.Sale> uploadedSales, uint worldId, uint itemId, string uploaderIdSha256)
+    {
+        return uploadedSales
+            .Where(s => s.TimestampUnixSeconds > 0)
+            .Select(s => new Sale
+            {
+                Id = Guid.NewGuid(),
+                WorldId = worldId,
+                ItemId = itemId,
+                Hq = Util.ParseUnusualBool(s.Hq),
+                BuyerName = s.BuyerName,
+                PricePerUnit = s.PricePerUnit ?? 0,
+                Quantity = s.Quantity ?? 0,
+                SaleTime = DateTimeOffset.FromUnixTimeSeconds(s.TimestampUnixSeconds ?? 0).UtcDateTime,
+                UploaderIdHash = uploaderIdSha256,
+            })
+            .Where(s => s.PricePerUnit > 0)
+            .Where(s => s.Quantity > 0)
+            .Where(s => new DateTimeOffset(s.SaleTime).ToUnixTimeSeconds() > 0)
+            .OrderByDescending(s => s.SaleTime)
+            .ToList();
     }
 }

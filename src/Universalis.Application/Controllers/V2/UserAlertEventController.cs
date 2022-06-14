@@ -16,9 +16,6 @@ namespace Universalis.Application.Controllers.V2;
 [ApiVersion("2")]
 [Route("api")]
 [RequireMogboardAuthorization]
-#if !DEBUG
-[ApiExplorerSettings(IgnoreApi = true)]
-#endif
 public class UserAlertEventController : ControllerBase
 {
     private readonly IMogboardTable<UserAlertEvent, UserAlertEventId> _alertEvents;
