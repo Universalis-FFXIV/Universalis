@@ -13,23 +13,18 @@ public class ContentControllerTests
     [Fact]
     public async Task Controller_Get_Succeeds()
     {
-        var dbAccess = new MockContentDbAccess();
+        var dbAccess = new MockCharacterDbAccess();
         var controller = new ContentController(dbAccess);
 
-        var document = new Content
-        {
-            ContentId = "2A",
-            ContentType = ContentKind.Player,
-            CharacterName = "B B",
-        };
+        var character = new Character("2A", "B B", null);
 
-        await dbAccess.Create(document);
+        await dbAccess.Create(character);
 
         var result = await controller.Get("2A");
         var content = (ContentView)Assert.IsType<OkObjectResult>(result).Value;
 
-        Assert.Equal(document.ContentId, content.ContentId);
-        Assert.Equal(document.ContentType, content.ContentType);
-        Assert.Equal(document.CharacterName, content.CharacterName);
+        Assert.Equal(character.ContentIdSha256, content.ContentId);
+        Assert.Equal("player", content.ContentType);
+        Assert.Equal(character.Name, content.CharacterName);
     }
 }

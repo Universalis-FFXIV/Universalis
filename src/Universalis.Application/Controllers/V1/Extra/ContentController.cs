@@ -13,11 +13,11 @@ namespace Universalis.Application.Controllers.V1.Extra;
 [Route("api/extra/content/{contentId}")]
 public class ContentController : ControllerBase
 {
-    private readonly IContentDbAccess _contentDb;
+    private readonly ICharacterDbAccess _characterDb;
 
-    public ContentController(IContentDbAccess contentDb)
+    public ContentController(ICharacterDbAccess characterDb)
     {
-        _contentDb = contentDb;
+        _characterDb = characterDb;
     }
 
     /// <summary>
@@ -31,17 +31,17 @@ public class ContentController : ControllerBase
     [ProducesResponseType(typeof(ContentView), 200)]
     public async Task<IActionResult> Get(string contentId, CancellationToken cancellationToken = default)
     {
-        var content = await _contentDb.Retrieve(new ContentQuery { ContentId = contentId }, cancellationToken);
-        if (content == null)
+        var character = await _characterDb.Retrieve(contentId, cancellationToken);
+        if (character == null)
         {
             return Ok(new ContentView());
         }
 
         return Ok(new ContentView
         {
-            ContentId = content.ContentId,
-            ContentType = content.ContentType,
-            CharacterName = content.CharacterName,
+            ContentId = character.ContentIdSha256,
+            ContentType = "player",
+            CharacterName = character.Name,
         });
     }
 }

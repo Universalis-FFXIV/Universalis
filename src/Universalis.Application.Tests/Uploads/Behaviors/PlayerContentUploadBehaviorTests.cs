@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Security.Cryptography;
+using System.Threading.Tasks;
 using Universalis.Application.Tests.Mocks.DbAccess;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
@@ -13,25 +14,18 @@ public class PlayerContentUploadBehaviorTests
     [Fact]
     public async Task Behavior_DoesNotRun_WithoutContentIdAndName()
     {
-        var dbAccess = new MockContentDbAccess();
+        var dbAccess = new MockCharacterDbAccess();
         var behavior = new PlayerContentUploadBehavior(dbAccess);
 
         var upload = new UploadParameters();
 
         Assert.False(behavior.ShouldExecute(upload));
-
-        var data = await dbAccess.Retrieve(new ContentQuery
-        {
-            ContentId = upload.ContentId,
-        });
-
-        Assert.Null(data);
     }
 
     [Fact]
     public async Task Behavior_Succeeds()
     {
-        var dbAccess = new MockContentDbAccess();
+        var dbAccess = new MockCharacterDbAccess();
         var behavior = new PlayerContentUploadBehavior(dbAccess);
 
         var upload = new UploadParameters
@@ -44,15 +38,15 @@ public class PlayerContentUploadBehaviorTests
 
         var result = await behavior.Execute(null, upload);
         Assert.Null(result);
+        
+        using var sha256 = SHA256.Create();
+        var contentIdHash = await Util.Hash(sha256, upload.ContentId);
 
-        var data = await dbAccess.Retrieve(new ContentQuery
-        {
-            ContentId = upload.ContentId,
-        });
+        var data = await dbAccess.Retrieve(contentIdHash);
 
         Assert.NotNull(data);
-        Assert.Equal(upload.ContentId, data.ContentId);
-        Assert.Equal(upload.CharacterName, data.CharacterName);
-        Assert.Equal(ContentKind.Player, data.ContentType);
+        Assert.Equal(contentIdHash, data.ContentIdSha256);
+        Assert.Equal(upload.CharacterName, data.Name);
+        Assert.Null(data.WorldId);
     }
 }
