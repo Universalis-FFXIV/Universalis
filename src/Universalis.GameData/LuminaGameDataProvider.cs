@@ -150,7 +150,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
         }
 
         return dcs
-            .Where(dc => dc.RowId is >= 1 and < 99)
+            .Where(dc => dc.RowId > 0)
             .Select(dc => new DataCenter
             {
                 Name = dc.Name,
@@ -159,6 +159,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
                     .Select(w => w.RowId)
                     .ToArray(),
             })
+            .Where(dc => dc.WorldIds.Length > 0)
             .Concat(ChineseServers.DataCenters())
             .ToList();
     }
@@ -166,7 +167,8 @@ internal class LuminaGameDataProvider : IGameDataProvider
     private static IEnumerable<LuminaWorld> GetValidWorlds(IEnumerable<LuminaWorld> worlds)
     {
         return worlds
-            .Where(w => w.DataCenter.Row is >= 1 and < 99)
+            .Where(w => w.DataCenter.Row > 0)
+            .Where(w => w.IsPublic)
             .Where(w => w.RowId != 25); // Chaos (world)
     }
 }

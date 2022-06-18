@@ -85,6 +85,10 @@ public class Startup
             options.SwaggerDoc("v2", new UniversalisApiInfo()
                 .WithLicense(license)
                 .WithVersion(new Version(2, 0)));
+            
+            options.SwaggerDoc("v3", new UniversalisApiInfo()
+                .WithLicense(license)
+                .WithVersion(new Version(3, 0)));
 
             options.OperationFilter<RemoveVersionParameterFilter>();
             options.DocumentFilter<ReplaceVersionWithExactFilter>();
@@ -153,6 +157,7 @@ public class Startup
             // Relative paths
             options.SwaggerEndpoint("v1/swagger.json", "Universalis v1");
             options.SwaggerEndpoint("v2/swagger.json", "Universalis v2");
+            options.SwaggerEndpoint("v3/swagger.json", "Universalis v3");
 
             options.DocumentTitle = "Universalis Documentation";
         });
