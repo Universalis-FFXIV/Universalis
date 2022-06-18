@@ -7,7 +7,8 @@ namespace Universalis.Application.Controllers.V1;
 
 [ApiController]
 [ApiVersion("1")]
-[Route("api/marketable")]
+[ApiVersion("2")]
+[Route("api")]
 public class MarketableController : ControllerBase
 {
     private readonly IGameDataProvider _gameData;
@@ -21,10 +22,25 @@ public class MarketableController : ControllerBase
     /// Returns the set of marketable item IDs.
     /// </summary>
     [HttpGet]
+    [MapToApiVersion("1")]
     [ApiTag("Marketable items")]
+    [Route("marketable")]
     [ProducesResponseType(typeof(IEnumerable<uint>), 200)]
     public IEnumerable<uint> Get()
     {
         return _gameData.MarketableItemIds();
+    }
+    
+    /// <summary>
+    /// Returns the set of marketable item IDs.
+    /// </summary>
+    [HttpGet]
+    [MapToApiVersion("2")]
+    [ApiTag("Marketable items")]
+    [Route("v{version:apiVersion}/marketable")]
+    [ProducesResponseType(typeof(IEnumerable<uint>), 200)]
+    public IEnumerable<uint> GetV2()
+    {
+        return Get();
     }
 }

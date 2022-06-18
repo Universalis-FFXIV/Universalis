@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1.Extra.Stats;
 using Universalis.DbAccess.AccessControl;
-using Universalis.DbAccess.Uploads;
 
 namespace Universalis.Application.Controllers.V1.Extra.Stats;
 
 [ApiController]
 [ApiVersion("1")]
-[Route("api/extra/stats/uploader-upload-counts")]
+[ApiVersion("2")]
+[Route("api")]
 public class SourceUploadCountsController : ControllerBase
 {
     private readonly ITrustedSourceDbAccess _trustedSourceDb;
@@ -26,7 +26,9 @@ public class SourceUploadCountsController : ControllerBase
     /// Returns the total upload counts for each client application that uploads data to Universalis.
     /// </summary>
     [HttpGet]
+    [MapToApiVersion("1")]
     [ApiTag("Upload counts by upload application")]
+    [Route("extra/stats/uploader-upload-counts")]
     [ProducesResponseType(typeof(IEnumerable<SourceUploadCountView>), 200)]
     public async Task<IEnumerable<SourceUploadCountView>> Get(CancellationToken cancellationToken = default)
     {
@@ -38,5 +40,18 @@ public class SourceUploadCountsController : ControllerBase
                 UploadCount = d.UploadCount,
             })
             .ToList();
+    }
+
+    /// <summary>
+    /// Returns the total upload counts for each client application that uploads data to Universalis.
+    /// </summary>
+    [HttpGet]
+    [MapToApiVersion("2")]
+    [ApiTag("Upload counts by upload application")]
+    [Route("v{version:apiVersion}/extra/stats/uploader-upload-counts")]
+    [ProducesResponseType(typeof(IEnumerable<SourceUploadCountView>), 200)]
+    public Task<IEnumerable<SourceUploadCountView>> GetV2(CancellationToken cancellationToken = default)
+    {
+        return Get(cancellationToken);
     }
 }
