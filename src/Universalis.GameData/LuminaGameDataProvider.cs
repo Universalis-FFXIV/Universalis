@@ -167,6 +167,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
     {
         return worlds
             .Where(w => w.DataCenter.Row is >= 1 and < 99)
+            .Where(w => w.IsPublic)
             .Where(w => w.RowId != 25); // Chaos (world)
     }
 }

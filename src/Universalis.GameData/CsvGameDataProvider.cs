@@ -165,6 +165,7 @@ public class CsvGameDataProvider : IGameDataProvider
     {
         return worlds
             .Where(w => w.DataCenter is >= 1 and < 99)
+            .Where(w => w.IsPublic)
             .Where(w => w.RowId != 25); // Chaos (world)
     }
 
