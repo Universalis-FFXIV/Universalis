@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Npgsql;
@@ -89,7 +90,7 @@ public class SaleStore : ISaleStore
                 {
                     new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(worldId) },
                     new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(itemId) },
-                    new NpgsqlParameter<int> { TypedValue = count },
+                    new NpgsqlParameter<int> { TypedValue = count + 20 }, // Give some buffer in case we filter out anything 
                 },
             };
         
@@ -98,7 +99,7 @@ public class SaleStore : ISaleStore
         var sales = new List<Sale>();
         while (await reader.ReadAsync(cancellationToken))
         {
-            sales.Add(new Sale
+            var nextSale = new Sale
             {
                 Id = reader.GetGuid(0),
                 WorldId = Convert.ToUInt32(reader.GetInt32(1)),
@@ -109,9 +110,16 @@ public class SaleStore : ISaleStore
                 BuyerName = reader.IsDBNull(6) ? null : reader.GetString(6),
                 SaleTime = (DateTime)reader.GetValue(7),
                 UploaderIdHash = reader.IsDBNull(8) ? null : reader.GetString(8),
-            });
+            };
+
+            if (sales.Contains(nextSale))
+            {
+                continue;
+            }
+
+            sales.Add(nextSale);
         }
 
-        return sales;
+        return sales.Take(count).ToList();
     }
 }
