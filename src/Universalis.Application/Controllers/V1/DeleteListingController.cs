@@ -17,8 +17,9 @@ namespace Universalis.Application.Controllers.V1;
 
 [ApiController]
 [ApiVersion("1")]
+[ApiVersion("2")]
 [ApiExplorerSettings(IgnoreApi = true)]
-[Route("api/{world}/{itemId}/delete")]
+[Route("api")]
 public class DeleteListingController : WorldDcControllerBase
 {
     private readonly ITrustedSourceDbAccess _trustedSourceDb;
@@ -40,6 +41,8 @@ public class DeleteListingController : WorldDcControllerBase
     }
 
     [HttpPost]
+    [MapToApiVersion("1")]
+    [Route("{world}/{itemId}/delete")]
     [ApiExplorerSettings(IgnoreApi = true)]
     public async Task<IActionResult> Post(uint itemId, string world, [FromHeader] string authorization, [FromBody] DeleteListingParameters parameters, CancellationToken cancellationToken = default)
     {
@@ -103,8 +106,18 @@ public class DeleteListingController : WorldDcControllerBase
 
         await _currentlyShownDb.Update(itemData, query, cancellationToken);
 
-        _cache.Delete(query);
+        await _cache.Delete(query, cancellationToken);
 
         return Ok("Success");
+    }
+
+    [HttpPost]
+    [MapToApiVersion("2")]
+    [Route("v{version:apiVersion}/{world}/{itemId}/delete")]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public Task<IActionResult> PostV2(uint itemId, string world, [FromHeader] string authorization,
+        [FromBody] DeleteListingParameters parameters, CancellationToken cancellationToken = default)
+    {
+        return Post(itemId, world, authorization, parameters, cancellationToken);
     }
 }

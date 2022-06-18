@@ -11,7 +11,8 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats;
 
 [ApiController]
 [ApiVersion("1")]
-[Route("api/extra/stats/upload-history")]
+[ApiVersion("2")]
+[Route("api")]
 public class UploadCountHistoryController : ControllerBase
 {
     private readonly IUploadCountHistoryDbAccess _uploadCountHistoryDb;
@@ -25,7 +26,9 @@ public class UploadCountHistoryController : ControllerBase
     /// Returns the number of uploads per day over the past 30 days.
     /// </summary>
     [HttpGet]
+    [MapToApiVersion("1")]
     [ApiTag("Uploads per day")]
+    [Route("extra/stats/upload-history")]
     [ProducesResponseType(typeof(UploadCountHistoryView), 200)]
     public async Task<UploadCountHistoryView> Get(CancellationToken cancellationToken = default)
     {
@@ -34,5 +37,18 @@ public class UploadCountHistoryController : ControllerBase
         {
             UploadCountByDay = data.Select(Convert.ToDouble).ToList(),
         };
+    }
+    
+    /// <summary>
+    /// Returns the number of uploads per day over the past 30 days.
+    /// </summary>
+    [HttpGet]
+    [MapToApiVersion("2")]
+    [ApiTag("Uploads per day")]
+    [Route("v{version:apiVersion}/extra/stats/upload-history")]
+    [ProducesResponseType(typeof(UploadCountHistoryView), 200)]
+    public Task<UploadCountHistoryView> GetV2(CancellationToken cancellationToken = default)
+    {
+        return Get(cancellationToken);
     }
 }

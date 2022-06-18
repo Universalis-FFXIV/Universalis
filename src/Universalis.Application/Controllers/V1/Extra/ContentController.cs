@@ -10,7 +10,8 @@ namespace Universalis.Application.Controllers.V1.Extra;
 
 [ApiController]
 [ApiVersion("1")]
-[Route("api/extra/content/{contentId}")]
+[ApiVersion("2")]
+[Route("api")]
 public class ContentController : ControllerBase
 {
     private readonly ICharacterDbAccess _characterDb;
@@ -27,7 +28,9 @@ public class ContentController : ControllerBase
     /// <param name="contentId">The ID of the content object to retrieve.</param>
     /// <param name="cancellationToken"></param>
     [HttpGet]
+    [MapToApiVersion("1")]
     [ApiTag("Game entities")]
+    [Route("extra/content/{contentId}")]
     [ProducesResponseType(typeof(ContentView), 200)]
     public async Task<IActionResult> Get(string contentId, CancellationToken cancellationToken = default)
     {
@@ -43,5 +46,21 @@ public class ContentController : ControllerBase
             ContentType = "player",
             CharacterName = character.Name,
         });
+    }
+
+    /// <summary>
+    /// Returns the content object associated with the provided content ID. Please note that this endpoint is largely untested,
+    /// and may return inconsistent data at times.
+    /// </summary>
+    /// <param name="contentId">The ID of the content object to retrieve.</param>
+    /// <param name="cancellationToken"></param>
+    [HttpGet]
+    [MapToApiVersion("2")]
+    [ApiTag("Game entities")]
+    [Route("v{version:apiVersion}/extra/content/{contentId}")]
+    [ProducesResponseType(typeof(ContentView), 200)]
+    public Task<IActionResult> GetV2(string contentId, CancellationToken cancellationToken = default)
+    {
+        return Get(contentId, cancellationToken);
     }
 }

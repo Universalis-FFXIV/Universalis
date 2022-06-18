@@ -11,7 +11,8 @@ namespace Universalis.Application.Controllers.V1;
 
 [ApiController]
 [ApiVersion("1")]
-[Route("api/tax-rates")]
+[ApiVersion("2")]
+[Route("api")]
 public class TaxRatesController : WorldDcControllerBase
 {
     private readonly ITaxRatesDbAccess _taxRatesDb;
@@ -29,7 +30,9 @@ public class TaxRatesController : WorldDcControllerBase
     /// <response code="200">Data retrieved successfully.</response>
     /// <response code="404">The world requested is invalid.</response>
     [HttpGet]
+    [MapToApiVersion("1")]
     [ApiTag("Market tax rates")]
+    [Route("tax-rates")]
     [ProducesResponseType(typeof(TaxRatesView), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> Get([FromQuery] string world, CancellationToken cancellationToken = default)
@@ -61,5 +64,23 @@ public class TaxRatesController : WorldDcControllerBase
             Crystarium = taxRates.Crystarium,
             OldSharlayan = taxRates.OldSharlayan,
         });
+    }
+
+    /// <summary>
+    /// Retrieves the current tax rate data for the specified world. This data is provided by the Retainer Vocate in each major city.
+    /// </summary>
+    /// <param name="world">The world or to retrieve data for. This may be an ID or a name.</param>
+    /// <param name="cancellationToken"></param>
+    /// <response code="200">Data retrieved successfully.</response>
+    /// <response code="404">The world requested is invalid.</response>
+    [HttpGet]
+    [MapToApiVersion("2")]
+    [ApiTag("Market tax rates")]
+    [Route("v{version:apiVersion}/tax-rates")]
+    [ProducesResponseType(typeof(TaxRatesView), 200)]
+    [ProducesResponseType(404)]
+    public Task<IActionResult> GetV2([FromQuery] string world, CancellationToken cancellationToken = default)
+    {
+        return Get(world, cancellationToken);
     }
 }

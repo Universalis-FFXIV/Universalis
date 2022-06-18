@@ -14,7 +14,8 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats;
 
 [ApiController]
 [ApiVersion("1")]
-[Route("api/extra/stats/most-recently-updated")]
+[ApiVersion("2")]
+[Route("api")]
 public class MostRecentlyUpdatedItemsController : WorldDcControllerBase
 {
     private readonly IMostRecentlyUpdatedDbAccess _mostRecentlyUpdatedDb;
@@ -34,7 +35,9 @@ public class MostRecentlyUpdatedItemsController : WorldDcControllerBase
     /// <param name="cancellationToken"></param>
     /// <response code="404">The world/DC requested is invalid.</response>
     [HttpGet]
+    [MapToApiVersion("1")]
     [ApiTag("Most-recently updated items")]
+    [Route("extra/stats/most-recently-updated")]
     [ProducesResponseType(typeof(MostRecentlyUpdatedItemsView), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> Get([FromQuery] string world, [FromQuery] string dcName, [FromQuery(Name = "entries")] string entriesToReturn, CancellationToken cancellationToken = default)
@@ -83,5 +86,25 @@ public class MostRecentlyUpdatedItemsController : WorldDcControllerBase
                 })
                 .ToList(),
         });
+    }
+    
+    /// <summary>
+    /// Get the most-recently updated items on the specified world or data center, along with the upload times for each item.
+    /// </summary>
+    /// <param name="world">The world to request data for.</param>
+    /// <param name="dcName">The data center to request data for.</param>
+    /// <param name="entriesToReturn">The number of entries to return (default 50, max 200).</param>
+    /// <param name="cancellationToken"></param>
+    /// <response code="404">The world/DC requested is invalid.</response>
+    [HttpGet]
+    [MapToApiVersion("2")]
+    [ApiTag("Most-recently updated items")]
+    [Route("v{version:apiVersion}/extra/stats/most-recently-updated")]
+    [ProducesResponseType(typeof(MostRecentlyUpdatedItemsView), 200)]
+    [ProducesResponseType(404)]
+    public Task<IActionResult> GetV2([FromQuery] string world, [FromQuery] string dcName,
+        [FromQuery(Name = "entries")] string entriesToReturn, CancellationToken cancellationToken = default)
+    {
+        return Get(world, dcName, entriesToReturn, cancellationToken);
     }
 }
