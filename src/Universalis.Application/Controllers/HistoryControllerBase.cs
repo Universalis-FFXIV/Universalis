@@ -36,6 +36,7 @@ public class HistoryControllerBase : WorldDcControllerBase
         {
             WorldIds = worldIds,
             ItemId = itemId,
+            Count = entries,
         }, cancellationToken)).ToList();
         var resolved = data.Count > 0;
         var worlds = GameData.AvailableWorlds();
@@ -70,7 +71,7 @@ public class HistoryControllerBase : WorldDcControllerBase
                 return agg;
             }, cancellationToken);
 
-        history.Sales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+        history.Sales = history.Sales.OrderByDescending(s => s.TimestampUnixSeconds).Take(entries).ToList();
 
         var nqSales = history.Sales.Where(s => !s.Hq).ToList();
         var hqSales = history.Sales.Where(s => s.Hq).ToList();

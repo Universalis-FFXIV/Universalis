@@ -53,7 +53,7 @@ public class HistoryDbAccess : IHistoryDbAccess
     public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query, CancellationToken cancellationToken = default)
     {
         return (await Task.WhenAll(query.WorldIds
-            .Select(worldId => Retrieve(new HistoryQuery { WorldId = worldId, ItemId = query.ItemId }, cancellationToken))))
+            .Select(worldId => Retrieve(new HistoryQuery { WorldId = worldId, ItemId = query.ItemId, Count = query.Count }, cancellationToken))))
             .Where(h => h != null);
     }
 
