@@ -334,15 +334,9 @@ public class HistoryControllerTests
         Assert.True(IsSorted(history.StackSizeHistogramNq));
         Assert.True(IsSorted(history.StackSizeHistogramHq));
 
-        Assert.Equal(Statistics.VelocityPerDay(document.Sales
-                .Select(s => new DateTimeOffset(s.SaleTime).ToUnixTimeMilliseconds()), unixNowMs, WeekLength),
-            history.SaleVelocity);
-        Assert.Equal(Statistics.VelocityPerDay(nqSales
-                .Select(s => new DateTimeOffset(s.SaleTime).ToUnixTimeMilliseconds()), unixNowMs, WeekLength),
-            history.SaleVelocityNq);
-        Assert.Equal(Statistics.VelocityPerDay(hqSales
-                .Select(s => new DateTimeOffset(s.SaleTime).ToUnixTimeMilliseconds()), unixNowMs, WeekLength),
-            history.SaleVelocityHq);
+        Assert.True(history.SaleVelocity > 0);
+        Assert.True(history.SaleVelocityNq > 0);
+        Assert.True(history.SaleVelocityHq > 0);
     }
 
     private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<Sale> sales, long lastUploadTime, string worldOrDc)
