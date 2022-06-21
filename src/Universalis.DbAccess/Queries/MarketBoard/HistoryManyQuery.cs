@@ -6,5 +6,5 @@ public class HistoryManyQuery
 
     public uint ItemId { get; init; }
 
-    public int Count { get; init; }
+    public int? Count { get; init; }
 }
