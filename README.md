@@ -10,7 +10,7 @@ A crowdsourced market board aggregator for the game FINAL FANTASY XIV.
 Please refer to the [documentation](https://universalis.app/docs) for basic usage information.
 
 ## API Development
-Developing and testing the API server requires [Visual Studio 2022 Preview](https://docs.microsoft.com/en-us/visualstudio/releases/2022/release-notes-preview), as it targets .NET 6. It also requires [MongoDB Community Edition v4.4](https://docs.mongodb.com/manual/administration/install-community/).
+Developing and testing the API server requires [Visual Studio 2022 Preview](https://docs.microsoft.com/en-us/visualstudio/releases/2022/release-notes-preview), as it targets .NET 6.
 
 This application uses some F# code, which needs to be built before IntelliSense can navigate it. If you get any undefined references to F# code, just build the `Universalis.DataTransformations` project.
 
@@ -21,7 +21,7 @@ The frontend is housed on our [mogboard fork](https://github.com/Universalis-FFX
 Please see goat's [ACT plugin](https://github.com/goaaats/universalis_act_plugin) for an example of how to collect and upload market board data.
 
 ## Development
-Requires .NET 6, [PHP 7.2](https://www.php.net/downloads.php), [MariaDB](https://mariadb.org/download/), [Redis](https://redis.io/download), [Composer 1](https://getcomposer.org/), and [MongoDB Community Edition](https://docs.mongodb.com/manual/administration/install-community/) v4.2 or higher.
+Requires .NET 6, [PHP 7.2](https://www.php.net/downloads.php), PostgreSQL [MariaDB](https://mariadb.org/download/), [Redis](https://redis.io/download), and [Composer 1](https://getcomposer.org/). A development environment is provided as a Docker Compose specification in the `devenv` folder.
 
 To compile web assets in the new web project, install the `WebPack Task Runner` extension in Visual Studio and run `npm install` in the web UI project directory.
 
