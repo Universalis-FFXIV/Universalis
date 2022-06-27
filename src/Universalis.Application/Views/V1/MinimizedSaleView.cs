@@ -32,6 +32,13 @@ public class MinimizedSaleView
     [JsonPropertyName("buyerName")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string BuyerName { get; init; }
+    
+    /// <summary>
+    /// Whether or not this was purchased from a mannequin. This may be null.
+    /// </summary>
+    [JsonPropertyName("onMannequin")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? OnMannequin { get; init; }
 
     /// <summary>
     /// The sale time, in seconds since the UNIX epoch.

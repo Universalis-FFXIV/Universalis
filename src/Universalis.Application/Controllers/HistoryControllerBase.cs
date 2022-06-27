@@ -60,6 +60,7 @@ public class HistoryControllerBase : WorldDcControllerBase
                         PricePerUnit = s.PricePerUnit,
                         Quantity = s.Quantity ?? 0, // This should never be 0 since we're filtering out null and zero quantities
                         BuyerName = s.BuyerName,
+                        OnMannequin = s.OnMannequin,
                         TimestampUnixSeconds = new DateTimeOffset(s.SaleTime).ToUnixTimeSeconds(),
                         WorldId = worldDc.IsDc ? next.WorldId : null,
                         WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
