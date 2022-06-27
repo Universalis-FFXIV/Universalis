@@ -41,6 +41,7 @@ public class SaleView : IPriceable
     /// <summary>
     /// Whether or not this was purchased from a mannequin. This may be null.
     /// </summary>
+    [BsonElement("onMannequin")]
     [JsonPropertyName("onMannequin")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? OnMannequin { get; init; }
