@@ -36,6 +36,7 @@ public static class Util
             Total = s.PricePerUnit * quantity,
             TimestampUnixSeconds = new DateTimeOffset(s.SaleTime).ToUnixTimeSeconds(),
             BuyerName = s.BuyerName,
+            OnMannequin = s.OnMannequin,
         };
     }
 

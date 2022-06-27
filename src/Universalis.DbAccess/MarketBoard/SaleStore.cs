@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +28,7 @@ public class SaleStore : ISaleStore
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
         await using var command = new NpgsqlCommand(
-            "INSERT INTO sale (id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)", conn)
+            "INSERT INTO sale (id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", conn)
         {
             Parameters =
             {
@@ -40,6 +41,7 @@ public class SaleStore : ISaleStore
                 new NpgsqlParameter<string> { TypedValue = sale.BuyerName },
                 new NpgsqlParameter<DateTime> { TypedValue = sale.SaleTime },
                 new NpgsqlParameter<string> { TypedValue = sale.UploaderIdHash },
+                new NpgsqlParameter<bool> { TypedValue = sale.OnMannequin ?? false },
             },
         };
         await command.ExecuteNonQueryAsync(cancellationToken);
@@ -58,7 +60,7 @@ public class SaleStore : ISaleStore
         foreach (var sale in sales)
         {
             batch.BatchCommands.Add(new NpgsqlBatchCommand(
-                "INSERT INTO sale (id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)")
+                "INSERT INTO sale (id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)")
             {
                 Parameters =
                 {
@@ -71,6 +73,7 @@ public class SaleStore : ISaleStore
                     new NpgsqlParameter<string> { TypedValue = sale.BuyerName },
                     new NpgsqlParameter<DateTime> { TypedValue = sale.SaleTime },
                     new NpgsqlParameter<string> { TypedValue = sale.UploaderIdHash },
+                    new NpgsqlParameter<bool> { TypedValue = sale.OnMannequin ?? false },
                 },
             });
         }
@@ -84,7 +87,7 @@ public class SaleStore : ISaleStore
         
         await using var command =
             new NpgsqlCommand(
-                "SELECT id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id FROM sale WHERE world_id = $1 AND item_id = $2 ORDER BY sale_time DESC LIMIT $3", conn)
+                "SELECT id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin FROM sale WHERE world_id = $1 AND item_id = $2 ORDER BY sale_time DESC LIMIT $3", conn)
             {
                 Parameters =
                 {
@@ -110,6 +113,7 @@ public class SaleStore : ISaleStore
                 BuyerName = reader.IsDBNull(6) ? null : reader.GetString(6),
                 SaleTime = (DateTime)reader.GetValue(7),
                 UploaderIdHash = reader.IsDBNull(8) ? null : reader.GetString(8),
+                OnMannequin = reader.IsDBNull(9) ? null : reader.GetBoolean(9),
             };
 
             if (sales.Contains(nextSale))
