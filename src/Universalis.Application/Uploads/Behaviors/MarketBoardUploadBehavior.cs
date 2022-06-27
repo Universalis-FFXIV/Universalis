@@ -249,6 +249,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 ItemId = itemId,
                 Hq = Util.ParseUnusualBool(s.Hq),
                 BuyerName = s.BuyerName,
+                OnMannequin = Util.ParseUnusualBool(s.OnMannequin),
                 PricePerUnit = s.PricePerUnit ?? 0,
                 Quantity = s.Quantity ?? 0,
                 SaleTime = DateTimeOffset.FromUnixTimeSeconds(s.TimestampUnixSeconds ?? 0).UtcDateTime,

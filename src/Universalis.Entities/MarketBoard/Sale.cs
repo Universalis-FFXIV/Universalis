@@ -17,7 +17,11 @@ public class Sale : IEquatable<Sale>
     // Quantities before December 2019 or so weren't stored here, and therefore will be null
     public uint? Quantity { get; init; }
     
+    // Names before May 22, 2022 weren't stored here, and therefore will be null 
     public string BuyerName { get; init; }
+    
+    // Values before June 26, 2022 weren't stored here, and therefore will be null
+    public bool? OnMannequin { get; init; }
 
     public DateTime SaleTime { get; init; }
 

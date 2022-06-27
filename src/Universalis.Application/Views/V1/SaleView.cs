@@ -37,6 +37,13 @@ public class SaleView : IPriceable
     [BsonElement("timestamp")]
     [JsonPropertyName("timestamp")]
     public long TimestampUnixSeconds { get; init; }
+    
+    /// <summary>
+    /// Whether or not this was purchased from a mannequin. This may be null.
+    /// </summary>
+    [JsonPropertyName("onMannequin")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? OnMannequin { get; init; }
 
     /// <summary>
     /// The world name, if applicable.
