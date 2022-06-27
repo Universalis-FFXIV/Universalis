@@ -238,8 +238,13 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             .ToList();
     }
 
-    private static List<Sale> CleanUploadedSales(IEnumerable<Schema.Sale> uploadedSales, uint worldId, uint itemId, string uploaderIdSha256)
+    private static List<Sale> CleanUploadedSales(IList<Schema.Sale> uploadedSales, uint worldId, uint itemId, string uploaderIdSha256)
     {
+        if (uploadedSales.Any(s => s.OnMannequin != null))
+        {
+            Console.WriteLine("set");
+        }
+        
         return uploadedSales
             .Where(s => s.TimestampUnixSeconds > 0)
             .Select(s => new Sale
