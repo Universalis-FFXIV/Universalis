@@ -96,6 +96,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
             if (existingHistory == null)
             {
+                addedSales.AddRange(cleanSales);
                 await _historyDb.Create(new History
                 {
                     WorldId = worldId,
@@ -103,19 +104,17 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
                     Sales = cleanSales,
                 }, cancellationToken);
-                addedSales.AddRange(cleanSales);
             }
             else
             {
                 // Remove duplicates
                 addedSales.AddRange(cleanSales.Where(t => !existingHistory.Sales.Contains(t)));
+                await _historyDb.InsertSales(addedSales, new HistoryQuery
+                {
+                    WorldId = worldId,
+                    ItemId = itemId,
+                }, cancellationToken);
             }
-
-            await _historyDb.InsertSales(addedSales, new HistoryQuery
-            {
-                WorldId = worldId,
-                ItemId = itemId,
-            }, cancellationToken);
 
             if (addedSales.Count > 0)
             {
@@ -238,13 +237,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             .ToList();
     }
 
-    private static List<Sale> CleanUploadedSales(IList<Schema.Sale> uploadedSales, uint worldId, uint itemId, string uploaderIdSha256)
+    private static List<Sale> CleanUploadedSales(IEnumerable<Schema.Sale> uploadedSales, uint worldId, uint itemId, string uploaderIdSha256)
     {
-        if (uploadedSales.Any(s => s.OnMannequin != null))
-        {
-            Console.WriteLine("set");
-        }
-        
         return uploadedSales
             .Where(s => s.TimestampUnixSeconds > 0)
             .Select(s => new Sale

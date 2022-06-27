@@ -28,8 +28,7 @@ public class HistoryDbAccess : IHistoryDbAccess
             LastUploadTime =
                 DateTimeOffset.FromUnixTimeMilliseconds(Convert.ToInt64(document.LastUploadTimeUnixMilliseconds)).UtcDateTime,
         }, cancellationToken);
-
-        await Task.WhenAll(document.Sales.Select(s => _saleStore.Insert(s, cancellationToken)));
+        await _saleStore.InsertMany(document.Sales, cancellationToken);
     }
 
     public async Task<History> Retrieve(HistoryQuery query, CancellationToken cancellationToken = default)
