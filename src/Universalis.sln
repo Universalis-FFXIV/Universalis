@@ -57,8 +57,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Mogboard", "Uni
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Mogboard.Tests", "Universalis.Mogboard.Tests\Universalis.Mogboard.Tests.csproj", "{AEBCC549-4DF0-4FFF-A7F7-3142A69BFE6A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Mogboard.WebUI", "Universalis.Mogboard.WebUI\Universalis.Mogboard.WebUI.csproj", "{415488BF-0191-4DCB-A783-4EB6343CC997}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dev Deployment", "Dev Deployment", "{47BB0929-4369-4D80-8C4A-DBB2F11CBDEF}"
 	ProjectSection(SolutionItems) = preProject
 		..\devenv\docker-compose.yml = ..\devenv\docker-compose.yml
@@ -127,10 +125,6 @@ Global
 		{AEBCC549-4DF0-4FFF-A7F7-3142A69BFE6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AEBCC549-4DF0-4FFF-A7F7-3142A69BFE6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AEBCC549-4DF0-4FFF-A7F7-3142A69BFE6A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{415488BF-0191-4DCB-A783-4EB6343CC997}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{415488BF-0191-4DCB-A783-4EB6343CC997}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{415488BF-0191-4DCB-A783-4EB6343CC997}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{415488BF-0191-4DCB-A783-4EB6343CC997}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
