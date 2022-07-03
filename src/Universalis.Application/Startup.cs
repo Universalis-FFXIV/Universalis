@@ -25,7 +25,6 @@ using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.GameData;
 using Universalis.Mogboard;
-using Universalis.Mogboard.WebUI;
 
 namespace Universalis.Application;
 
@@ -135,7 +134,6 @@ public class Startup
 
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddMogboard(Configuration);
-        services.AddMogboardWebUI();
         services.AddRazorPages();
     }
 
