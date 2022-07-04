@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V3.Game;
 using Universalis.GameData;
+using DataCenter = Universalis.Application.Views.V3.Game.DataCenter;
 
 namespace Universalis.Application.Controllers.V3.Game;
 
@@ -28,8 +29,8 @@ public class DataCentersController
     [MapToApiVersion("1")]
     [ApiTag("Available data centers")]
     [Route("data-centers")]
-    [ProducesResponseType(typeof(IEnumerable<DataCenterView>), 200)]
-    public IEnumerable<DataCenterView> GetV1()
+    [ProducesResponseType(typeof(IEnumerable<DataCenter>), 200)]
+    public IEnumerable<DataCenter> GetV1()
     {
         return GetV3();
     }
@@ -41,8 +42,8 @@ public class DataCentersController
     [MapToApiVersion("2")]
     [ApiTag("Available data centers")]
     [Route("v{version:apiVersion}/data-centers")]
-    [ProducesResponseType(typeof(IEnumerable<DataCenterView>), 200)]
-    public IEnumerable<DataCenterView> GetV2()
+    [ProducesResponseType(typeof(IEnumerable<DataCenter>), 200)]
+    public IEnumerable<DataCenter> GetV2()
     {
         return GetV3();
     }
@@ -54,10 +55,10 @@ public class DataCentersController
     [MapToApiVersion("3")]
     [ApiTag("Available data centers")]
     [Route("v{version:apiVersion}/game/data-centers")]
-    [ProducesResponseType(typeof(IEnumerable<DataCenterView>), 200)]
-    public IEnumerable<DataCenterView> GetV3()
+    [ProducesResponseType(typeof(IEnumerable<DataCenter>), 200)]
+    public IEnumerable<DataCenter> GetV3()
     {
-        return _gameData.DataCenters().Select(dc => new DataCenterView
+        return _gameData.DataCenters().Select(dc => new DataCenter
         {
             Name = dc.Name,
             Worlds = dc.WorldIds,

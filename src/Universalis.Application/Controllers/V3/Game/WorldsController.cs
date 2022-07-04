@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V3.Game;
 using Universalis.GameData;
+using World = Universalis.Application.Views.V3.Game.World;
 
 namespace Universalis.Application.Controllers.V3.Game;
 
@@ -28,8 +29,8 @@ public class WorldsController
     [MapToApiVersion("1")]
     [ApiTag("Available worlds")]
     [Route("worlds")]
-    [ProducesResponseType(typeof(IEnumerable<WorldView>), 200)]
-    public IEnumerable<WorldView> Get()
+    [ProducesResponseType(typeof(IEnumerable<World>), 200)]
+    public IEnumerable<World> Get()
     {
         return GetV3();
     }
@@ -41,8 +42,8 @@ public class WorldsController
     [MapToApiVersion("2")]
     [ApiTag("Available worlds")]
     [Route("v{version:apiVersion}/worlds")]
-    [ProducesResponseType(typeof(IEnumerable<WorldView>), 200)]
-    public IEnumerable<WorldView> GetV2()
+    [ProducesResponseType(typeof(IEnumerable<World>), 200)]
+    public IEnumerable<World> GetV2()
     {
         return GetV3();
     }
@@ -54,10 +55,10 @@ public class WorldsController
     [MapToApiVersion("3")]
     [ApiTag("Available worlds")]
     [Route("v{version:apiVersion}/game/worlds")]
-    [ProducesResponseType(typeof(IEnumerable<WorldView>), 200)]
-    public IEnumerable<WorldView> GetV3()
+    [ProducesResponseType(typeof(IEnumerable<World>), 200)]
+    public IEnumerable<World> GetV3()
     {
-        return _gameData.AvailableWorlds().Select(kvp => new WorldView
+        return _gameData.AvailableWorlds().Select(kvp => new World
         {
             Id = kvp.Key,
             Name = kvp.Value,

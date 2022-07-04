@@ -2,11 +2,11 @@
 
 namespace Universalis.Application.Views.V3.Game;
 
-public class DataCenterView
+public class World
 {
+    [JsonPropertyName("id")]
+    public uint Id { get; init; }
+    
     [JsonPropertyName("name")]
     public string Name { get; init; }
-    
-    [JsonPropertyName("worlds")]
-    public uint[] Worlds { get; init; }
 }

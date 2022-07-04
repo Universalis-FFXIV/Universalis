@@ -59,11 +59,11 @@ public class HistoryDbAccessTests
             }
         }
 
-        public Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, CancellationToken cancellationToken = default)
+        public Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null, CancellationToken cancellationToken = default)
         {
             return Task.FromResult((IEnumerable<Sale>)_data
                 .Select(d => d.Value)
-                .Where(sale => sale.WorldId == worldId && sale.ItemId == itemId)
+                .Where(sale => sale.WorldId == worldId && sale.ItemId == itemId && sale.SaleTime <= (from ?? DateTime.UtcNow))
                 .OrderByDescending(sale => sale.SaleTime)
                 .Take(count)
                 .ToList());
