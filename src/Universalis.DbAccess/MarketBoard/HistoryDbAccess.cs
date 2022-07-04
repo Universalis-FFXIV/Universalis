@@ -39,7 +39,7 @@ public class HistoryDbAccess : IHistoryDbAccess
             return null;
         }
         
-        var sales = await _saleStore.RetrieveBySaleTime(query.WorldId, query.ItemId, query.Count ?? 1000, cancellationToken);
+        var sales = await _saleStore.RetrieveBySaleTime(query.WorldId, query.ItemId, query.Count ?? 1000, cancellationToken: cancellationToken);
         return new History
         {
             WorldId = marketItem.WorldId,

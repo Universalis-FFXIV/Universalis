@@ -2,7 +2,7 @@
 
 namespace Universalis.Application.Views.V3.Miscellaneous;
 
-public class TimeZoneView
+public class TimeZone
 {
     [JsonPropertyName("id")]
     public string Id { get; set; }

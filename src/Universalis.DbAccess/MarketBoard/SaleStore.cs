@@ -85,19 +85,20 @@ public class SaleStore : ISaleStore
         await batch.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null, CancellationToken cancellationToken = default)
     {
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
         
         await using var command =
             new NpgsqlCommand(
-                "SELECT id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin FROM sale WHERE world_id = $1 AND item_id = $2 ORDER BY sale_time DESC LIMIT $3", conn)
+                "SELECT id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin FROM sale WHERE world_id = $1 AND item_id = $2 AND sale_time <= $3 ORDER BY sale_time DESC LIMIT $4", conn)
             {
                 Parameters =
                 {
                     new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(worldId) },
                     new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(itemId) },
+                    new NpgsqlParameter<DateTime> { TypedValue = from ?? DateTime.UtcNow },
                     new NpgsqlParameter<int> { TypedValue = count + 20 }, // Give some buffer in case we filter out anything 
                 },
             };
