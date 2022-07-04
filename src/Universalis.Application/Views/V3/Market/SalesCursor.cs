@@ -24,6 +24,11 @@ public readonly struct SalesCursor
     {
         cursor = default;
         
+        if (string.IsNullOrEmpty(s))
+        {
+            return false;
+        }
+        
         var utf8 = Convert.FromBase64CharArray(s.ToCharArray(), 0, s.Length);
         var data = Encoding.UTF8.GetString(utf8);
 
