@@ -15,7 +15,7 @@ Developing and testing the API server requires [Visual Studio 2022 Preview](http
 This application uses some F# code, which needs to be built before IntelliSense can navigate it. If you get any undefined references to F# code, just build the `Universalis.DataTransformations` project.
 
 ## Frontend Development
-The frontend is housed on our [mogboard fork](https://github.com/Universalis-FFXIV/mogboard), where contributions are welcome.
+The frontend is housed on our [mogboard repo](https://github.com/Universalis-FFXIV/mogboard-next), where contributions are welcome.
 
 ## Upload Software Development
 Please see goat's [ACT plugin](https://github.com/goaaats/universalis_act_plugin) for an example of how to collect and upload market board data.
