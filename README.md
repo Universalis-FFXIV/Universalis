@@ -21,16 +21,7 @@ The frontend is housed on our [mogboard repo](https://github.com/Universalis-FFX
 Please see goat's [ACT plugin](https://github.com/goaaats/universalis_act_plugin) for an example of how to collect and upload market board data.
 
 ## Development
-Requires .NET 6, [PHP 7.2](https://www.php.net/downloads.php), PostgreSQL [MariaDB](https://mariadb.org/download/), [Redis](https://redis.io/download), and [Composer 1](https://getcomposer.org/). A development environment is provided as a Docker Compose specification in the `devenv` folder.
-
-To compile web assets in the new web project, install the `WebPack Task Runner` extension in Visual Studio and run `npm install` in the web UI project directory.
-
-Also build a DataExports and an icon2x by running the exporter solution.
-
-Uncomment/add in php.ini:
-```ini
-extension=redis.so
-```
+Requires .NET 6, PostgreSQL, [MariaDB](https://mariadb.org/download/), and [Redis](https://redis.io/download). A development environment is provided as a Docker Compose specification in the `devenv` folder for simpler setup.
 
 MariaDB commands:
 ```mysql
@@ -38,30 +29,4 @@ CREATE DATABASE `dalamud`;
 CREATE USER 'dalamud'@localhost IDENTIFIED BY 'dalamud';
 GRANT ALL PRIVILEGES ON `dalamud`.* TO 'dalamud'@localhost IDENTIFIED BY 'dalamud';
 FLUSH PRIVILEGES;
-```
-
-Setup script (mogboard):
-```bash
-composer install
-php bin/console doctrine:schema:create
-php bin/console PopulateGameDataCommand -vvv
-php bin/console ImportTranslationsCommand -vvv
-yarn
-yarn dev
-symfony server:start -vvv --port 8000
-```
-
-## To update
-Go to the mogboard/ folder, and execute the following commands after adding any new front-end data.
-```bash
-sudo rm -rf var/
-sudo redis-cli FLUSHALL
-sudo php bin/console PopulateGameDataCommand -vvv
-sudo php bin/console ImportTranslationsCommand -vvv
-sudo chmod 0777 var/ -R
-```
-
-### Single-line form
-```bash
-sudo rm -rf var/ && sudo redis-cli FLUSHALL && sudo php bin/console PopulateGameDataCommand -vvv && sudo php bin/console ImportTranslationsCommand -vvv && sudo chmod 0777 var/ -R
 ```
