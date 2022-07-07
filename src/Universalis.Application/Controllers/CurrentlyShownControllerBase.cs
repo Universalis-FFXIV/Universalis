@@ -92,6 +92,8 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
                     aggData.LastUploadTimeUnixMilliseconds = Math.Max(next.LastUploadTimeUnixMilliseconds, aggData.LastUploadTimeUnixMilliseconds);
 
+                    aggWorldUploadTimes[next.WorldId] = next.LastUploadTimeUnixMilliseconds;
+
                     return (aggWorldUploadTimes, aggData);
                 });
 
