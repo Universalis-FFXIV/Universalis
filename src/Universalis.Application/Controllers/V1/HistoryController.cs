@@ -13,7 +13,7 @@ namespace Universalis.Application.Controllers.V1;
 
 [ApiController]
 [ApiVersion("1")]
-[Route("api/history/{worldOrDc}/{itemIds}")]
+[Route("api/history/{worldDcRegion}/{itemIds}")]
 public class HistoryController : HistoryControllerBase
 {
     public HistoryController(IGameDataProvider gameData, IHistoryDbAccess historyDb) : base(gameData, historyDb) { }
@@ -23,7 +23,7 @@ public class HistoryController : HistoryControllerBase
     /// Item IDs can be comma-separated in order to retrieve data for multiple items at once.
     /// </summary>
     /// <param name="itemIds">The item ID or comma-separated item IDs to retrieve data for.</param>
-    /// <param name="worldOrDc">The world or data center to retrieve data for. This may be an ID or a name.</param>
+    /// <param name="worldDcRegion">The world or data center to retrieve data for. This may be an ID or a name. Regions should be specified as Japan, Europe, North-America, Oceania, China, or 中国.</param>
     /// <param name="entriesToReturn">The number of entries to return. By default, this is set to 1800, but may be set to a maximum of 999999.</param>
     /// <param name="statsWithin">The amount of time before now to calculate stats over, in milliseconds. By default, this is 7 days.</param>
     /// <param name="entriesWithin">The amount of time before now to take entries within, in seconds. Negative values will be ignored.</param>
@@ -40,7 +40,7 @@ public class HistoryController : HistoryControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> Get(
         string itemIds,
-        string worldOrDc,
+        string worldDcRegion,
         [FromQuery(Name = "entries")] string entriesToReturn,
         [FromQuery] string statsWithin = "",
         [FromQuery] string entriesWithin = "",
@@ -51,7 +51,7 @@ public class HistoryController : HistoryControllerBase
             .Take(100)
             .ToList();
 
-        if (!TryGetWorldDc(worldOrDc, out var worldDc))
+        if (!TryGetWorldDc(worldDcRegion, out var worldDc))
         {
             return NotFound();
         }

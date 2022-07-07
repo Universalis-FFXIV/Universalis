@@ -47,6 +47,13 @@ public class CurrentlyShownView
     [JsonPropertyName("dcName")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string DcName { get; init; }
+    
+    /// <summary>
+    /// The region name, if applicable.
+    /// </summary>
+    [JsonPropertyName("regionName")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string RegionName { get; init; }
 
     /// <summary>
     /// The average listing price, with outliers removed beyond 3 standard deviations of the mean.

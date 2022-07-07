@@ -98,48 +98,63 @@ public static class ChineseServers
             _ => worldOrDc,
         };
 
+    public static string RegionToHanzi(string input)
+    {
+        return input.ToLowerInvariant() == "china" ? "中国" : input;
+    }
+
     internal static IEnumerable<DataCenter> DataCenters()
         => new[]
         {
-            new DataCenter {Name = "陆行鸟", WorldIds = new uint[]{ 1167, 1081, 1042, 1044, 1060, 1173, 1174, 1175 }},
-            new DataCenter {Name = "莫古力", WorldIds = new uint[]{ 1172, 1076, 1171, 1170, 1113, 1121, 1166, 1176 }},
-            new DataCenter {Name = "猫小胖", WorldIds = new uint[]{ 1043, 1169, 1106, 1045, 1177, 1178, 1179 }},
-            new DataCenter {Name = "豆豆柴", WorldIds = new uint[]{ 1192, 1183, 1180, 1186, 1201, 1068, 1064, 1187 }},
+            new DataCenter
+            {
+                Name = "陆行鸟", Region = "中国", WorldIds = new uint[] { 1167, 1081, 1042, 1044, 1060, 1173, 1174, 1175 }
+            },
+            new DataCenter
+            {
+                Name = "莫古力", Region = "中国", WorldIds = new uint[] { 1172, 1076, 1171, 1170, 1113, 1121, 1166, 1176 }
+            },
+            new DataCenter
+                { Name = "猫小胖", Region = "中国", WorldIds = new uint[] { 1043, 1169, 1106, 1045, 1177, 1178, 1179 } },
+            new DataCenter
+            {
+                Name = "豆豆柴", Region = "中国", WorldIds = new uint[] { 1192, 1183, 1180, 1186, 1201, 1068, 1064, 1187 }
+            },
         };
 
     internal static IEnumerable<World> Worlds()
         => new[]
         {
-            new World{Name = "红玉海", Id = 1167},
-            new World{Name = "神意之地", Id = 1081},
-            new World{Name = "拉诺西亚", Id = 1042},
-            new World{Name = "幻影群岛", Id = 1044},
-            new World{Name = "萌芽池", Id = 1060},
-            new World{Name = "宇宙和音", Id = 1173},
-            new World{Name = "沃仙曦染", Id = 1174},
-            new World{Name = "晨曦王座", Id = 1175},
-            new World{Name = "白银乡", Id = 1172},
-            new World{Name = "白金幻象", Id = 1076},
-            new World{Name = "神拳痕", Id = 1171},
-            new World{Name = "潮风亭", Id = 1170},
-            new World{Name = "旅人栈桥", Id = 1113},
-            new World{Name = "拂晓之间", Id = 1121},
-            new World{Name = "龙巢神殿", Id = 1166},
-            new World{Name = "梦羽宝境", Id = 1176},
-            new World{Name = "紫水栈桥", Id = 1043},
-            new World{Name = "延夏", Id = 1169},
-            new World{Name = "静语庄园", Id = 1106},
-            new World{Name = "摩杜纳", Id = 1045},
-            new World{Name = "海猫茶屋", Id = 1177},
-            new World{Name = "柔风海湾", Id = 1178},
-            new World{Name = "琥珀原", Id = 1179},
-            new World{Name = "水晶塔", Id = 1192},
-            new World{Name = "银泪湖", Id = 1183},
-            new World{Name = "太阳海岸", Id = 1180},
-            new World{Name = "伊修加德", Id = 1186},
-            new World{Name = "红茶川", Id = 1201},
-            new World{Name = "黄金谷", Id = 1068},
-            new World{Name = "月牙湾", Id = 1064},
-            new World{Name = "雪松原", Id = 1187},
+            new World { Name = "红玉海", Id = 1167 },
+            new World { Name = "神意之地", Id = 1081 },
+            new World { Name = "拉诺西亚", Id = 1042 },
+            new World { Name = "幻影群岛", Id = 1044 },
+            new World { Name = "萌芽池", Id = 1060 },
+            new World { Name = "宇宙和音", Id = 1173 },
+            new World { Name = "沃仙曦染", Id = 1174 },
+            new World { Name = "晨曦王座", Id = 1175 },
+            new World { Name = "白银乡", Id = 1172 },
+            new World { Name = "白金幻象", Id = 1076 },
+            new World { Name = "神拳痕", Id = 1171 },
+            new World { Name = "潮风亭", Id = 1170 },
+            new World { Name = "旅人栈桥", Id = 1113 },
+            new World { Name = "拂晓之间", Id = 1121 },
+            new World { Name = "龙巢神殿", Id = 1166 },
+            new World { Name = "梦羽宝境", Id = 1176 },
+            new World { Name = "紫水栈桥", Id = 1043 },
+            new World { Name = "延夏", Id = 1169 },
+            new World { Name = "静语庄园", Id = 1106 },
+            new World { Name = "摩杜纳", Id = 1045 },
+            new World { Name = "海猫茶屋", Id = 1177 },
+            new World { Name = "柔风海湾", Id = 1178 },
+            new World { Name = "琥珀原", Id = 1179 },
+            new World { Name = "水晶塔", Id = 1192 },
+            new World { Name = "银泪湖", Id = 1183 },
+            new World { Name = "太阳海岸", Id = 1180 },
+            new World { Name = "伊修加德", Id = 1186 },
+            new World { Name = "红茶川", Id = 1201 },
+            new World { Name = "黄金谷", Id = 1068 },
+            new World { Name = "月牙湾", Id = 1064 },
+            new World { Name = "雪松原", Id = 1187 },
         };
 }

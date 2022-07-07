@@ -17,7 +17,7 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats;
 [ApiVersion("1")]
 [ApiVersion("2")]
 [Route("api")]
-public class LeastRecentlyUpdatedItemsController : WorldDcControllerBase
+public class LeastRecentlyUpdatedItemsController : WorldDcRegionControllerBase
 {
     private readonly IMostRecentlyUpdatedDbAccess _mostRecentlyUpdatedDb;
 

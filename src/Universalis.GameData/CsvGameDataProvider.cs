@@ -148,10 +148,11 @@ public class CsvGameDataProvider : IGameDataProvider
         var worlds = worldCsv.GetRecords<CsvWorld>();
         var dcs = dcCsv.GetRecords<CsvDc>();
         return dcs
-            .Where(dc => dc.RowId > 0)
+            .Where(dc => dc.RowId is > 0 and < 99)
             .Select(dc => new DataCenter
             {
                 Name = dc.Name,
+                Region = Regions.Map[dc.Region],
                 WorldIds = GetValidWorlds(worlds)
                     .Where(w => w.DataCenter == dc.RowId)
                     .Select(w => w.RowId)

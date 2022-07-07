@@ -16,7 +16,7 @@ namespace Universalis.Application.Controllers.V2;
 
 [ApiController]
 [ApiVersion("2")]
-[Route("api/v{version:apiVersion}/{worldOrDc}/{itemIds}")]
+[Route("api/v{version:apiVersion}/{worldDcRegion}/{itemIds}")]
 public class CurrentlyShownController : CurrentlyShownControllerBase
 {
     public CurrentlyShownController(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess history, ICache<CurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData, currentlyShownDb, history, cache) { }
@@ -26,7 +26,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
     /// Item IDs can be comma-separated in order to retrieve data for multiple items at once.
     /// </summary>
     /// <param name="itemIds">The item ID or comma-separated item IDs to retrieve data for.</param>
-    /// <param name="worldOrDc">The world or data center to retrieve data for. This may be an ID or a name.</param>
+    /// <param name="worldDcRegion">The world, data center, or region to retrieve data for. This may be an ID or a name. Regions should be specified as Japan, Europe, North-America, Oceania, China, or 中国.</param>
     /// <param name="listingsToReturn">The number of listings to return. By default, all listings will be returned.</param>
     /// <param name="entriesToReturn">The number of entries to return. By default, a maximum of 5 entries will be returned.</param>
     /// <param name="statsWithin">The amount of time before now to calculate stats over, in milliseconds. By default, this is 7 days.</param>
@@ -50,7 +50,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> Get(
         string itemIds,
-        string worldOrDc,
+        string worldDcRegion,
         [FromQuery(Name = "listings")] string listingsToReturn = "",
         [FromQuery(Name = "entries")] string entriesToReturn = "",
         [FromQuery] string noGst = "",
@@ -64,7 +64,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
             .Take(100)
             .ToArray();
 
-        if (!TryGetWorldDc(worldOrDc, out var worldDc))
+        if (!TryGetWorldDc(worldDcRegion, out var worldDc))
         {
             return NotFound();
         }
@@ -107,7 +107,6 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
 
             if (!GameData.MarketableItemIds().Contains(itemId))
             {
-                // TODO: Remove belts
                 return Ok(new CurrentlyShownView());
             }
 
@@ -136,6 +135,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
             WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
             WorldName = worldDc.IsWorld ? worldDc.WorldName : null,
             DcName = worldDc.IsDc ? worldDc.DcName : null,
+            RegionName = worldDc.IsRegion ? worldDc.RegionName : null,
             UnresolvedItemIds = unresolvedItems,
         });
     }

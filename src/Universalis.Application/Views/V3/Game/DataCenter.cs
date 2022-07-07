@@ -7,6 +7,9 @@ public class DataCenter
     [JsonPropertyName("name")]
     public string Name { get; init; }
     
+    [JsonPropertyName("region")]
+    public string Region { get; init; }
+    
     [JsonPropertyName("worlds")]
     public uint[] Worlds { get; init; }
 }

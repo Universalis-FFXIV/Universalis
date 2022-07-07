@@ -10,8 +10,8 @@ public class MockGameDataProvider : IGameDataProvider
     {
         return new Dictionary<uint, string>
         {
-            {74, "Coeurl"},
-            {34, "Brynhildr"},
+            { 74, "Coeurl" },
+            { 34, "Brynhildr" },
         };
     }
 
@@ -19,8 +19,8 @@ public class MockGameDataProvider : IGameDataProvider
     {
         return new Dictionary<string, uint>
         {
-            {"Coeurl", 74},
-            {"Brynhildr", 34},
+            { "Coeurl", 74 },
+            { "Brynhildr", 34 },
         };
     }
 
@@ -33,13 +33,13 @@ public class MockGameDataProvider : IGameDataProvider
     {
         return new SortedSet<uint>(Enumerable.Range(1, 35000).Select(n => (uint)n));
     }
-    
+
     public IReadOnlyDictionary<uint, uint> MarketableItemStackSizes()
     {
         return new Dictionary<uint, uint>
         {
-            {5333, 99},
-            {5, 9999},
+            { 5333, 99 },
+            { 5, 9999 },
         };
     }
 
@@ -50,8 +50,9 @@ public class MockGameDataProvider : IGameDataProvider
             new DataCenter
             {
                 Name = "Crystal",
-                WorldIds = new uint[] {74, 34},
-            }
+                Region = "North-America",
+                WorldIds = new uint[] { 74, 34 },
+            },
         };
     }
 }

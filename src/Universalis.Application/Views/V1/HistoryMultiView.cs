@@ -35,6 +35,13 @@ public class HistoryMultiView
     [JsonPropertyName("dcName")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string DcName { get; init; }
+    
+    /// <summary>
+    /// The name of the region requested, if applicable.
+    /// </summary>
+    [JsonPropertyName("regionName")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string RegionName { get; init; }
 
     /// <summary>
     /// A list of IDs that could not be resolved to any item data.

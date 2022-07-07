@@ -13,7 +13,7 @@ namespace Universalis.Application.Controllers.V1;
 [ApiVersion("1")]
 [ApiVersion("2")]
 [Route("api")]
-public class TaxRatesController : WorldDcControllerBase
+public class TaxRatesController : WorldDcRegionControllerBase
 {
     private readonly ITaxRatesDbAccess _taxRatesDb;
 

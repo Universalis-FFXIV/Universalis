@@ -61,6 +61,7 @@ public class DataCentersController
         return _gameData.DataCenters().Select(dc => new DataCenter
         {
             Name = dc.Name,
+            Region = dc.Region,
             Worlds = dc.WorldIds,
         });
     }
