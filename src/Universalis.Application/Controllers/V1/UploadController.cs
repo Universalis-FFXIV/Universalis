@@ -20,7 +20,6 @@ namespace Universalis.Application.Controllers.V1;
 
 [ApiController]
 [ApiVersion("1")]
-[ApiExplorerSettings(IgnoreApi = true)]
 [Route("upload/{apiKey}")]
 public class UploadController : ControllerBase
 {
