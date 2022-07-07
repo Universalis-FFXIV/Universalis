@@ -150,10 +150,11 @@ internal class LuminaGameDataProvider : IGameDataProvider
         }
 
         return dcs
-            .Where(dc => dc.RowId > 0)
+            .Where(dc => dc.RowId is > 0 and < 99)
             .Select(dc => new DataCenter
             {
                 Name = dc.Name,
+                Region = Regions.Map[dc.Region],
                 WorldIds = GetValidWorlds(worlds)
                     .Where(w => w.DataCenter.Row == dc.RowId)
                     .Select(w => w.RowId)

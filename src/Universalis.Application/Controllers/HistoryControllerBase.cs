@@ -13,7 +13,7 @@ using Universalis.GameData;
 
 namespace Universalis.Application.Controllers;
 
-public class HistoryControllerBase : WorldDcControllerBase
+public class HistoryControllerBase : WorldDcRegionControllerBase
 {
     protected readonly IHistoryDbAccess History;
     
@@ -23,7 +23,7 @@ public class HistoryControllerBase : WorldDcControllerBase
     }
 
     protected async Task<(bool, HistoryView)> GetHistoryView(
-        WorldDc worldDc,
+        WorldDcRegion worldDcRegion,
         uint[] worldIds,
         uint itemId,
         int entries,
@@ -62,8 +62,8 @@ public class HistoryControllerBase : WorldDcControllerBase
                         BuyerName = s.BuyerName,
                         OnMannequin = s.OnMannequin,
                         TimestampUnixSeconds = new DateTimeOffset(s.SaleTime).ToUnixTimeSeconds(),
-                        WorldId = worldDc.IsDc ? next.WorldId : null,
-                        WorldName = worldDc.IsDc ? worlds[next.WorldId] : null,
+                        WorldId = !worldDcRegion.IsWorld ? next.WorldId : null,
+                        WorldName = !worldDcRegion.IsWorld ? worlds[next.WorldId] : null,
                     })
                     .Concat(agg.Sales.ToAsyncEnumerable())
                     .ToListAsync(cancellationToken);
@@ -81,9 +81,10 @@ public class HistoryControllerBase : WorldDcControllerBase
         {
             Sales = history.Sales.Take(entries).ToList(),
             ItemId = itemId,
-            WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
-            WorldName = worldDc.IsWorld ? worldDc.WorldName : null,
-            DcName = worldDc.IsDc ? worldDc.DcName : null,
+            WorldId = worldDcRegion.IsWorld ? worldDcRegion.WorldId : null,
+            WorldName = worldDcRegion.IsWorld ? worldDcRegion.WorldName : null,
+            DcName = worldDcRegion.IsDc ? worldDcRegion.DcName : null,
+            RegionName = worldDcRegion.IsRegion ? worldDcRegion.RegionName : null,
             LastUploadTimeUnixMilliseconds = history.LastUploadTimeUnixMilliseconds,
             StackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(history.Sales
                 .Select(s => s.Quantity)

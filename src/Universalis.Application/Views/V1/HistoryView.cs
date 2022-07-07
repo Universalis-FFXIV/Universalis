@@ -40,6 +40,13 @@ public class HistoryView
     [JsonPropertyName("dcName")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string DcName { get; init; }
+    
+    /// <summary>
+    /// The region name, if applicable.
+    /// </summary>
+    [JsonPropertyName("regionName")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string RegionName { get; init; }
 
     /// <summary>
     /// A map of quantities to sale counts, representing the number of sales of each quantity.

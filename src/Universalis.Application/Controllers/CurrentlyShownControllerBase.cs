@@ -14,7 +14,7 @@ using Universalis.GameData;
 
 namespace Universalis.Application.Controllers;
 
-public class CurrentlyShownControllerBase : WorldDcControllerBase
+public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 {
     protected readonly ICurrentlyShownDbAccess CurrentlyShown;
     protected readonly IHistoryDbAccess History;
@@ -28,7 +28,7 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
     }
 
     protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(
-        WorldDc worldDc,
+        WorldDcRegion worldDcRegion,
         uint[] worldIds,
         uint itemId,
         int nListings = int.MaxValue,
@@ -72,8 +72,8 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
                                 l.Total = (uint)Math.Ceiling(l.Total * 1.05);
                             }
 
-                            l.WorldId = worldDc.IsDc ? next.WorldId : null;
-                            l.WorldName = worldDc.IsDc ? worlds[next.WorldId] : null;
+                            l.WorldId = !worldDcRegion.IsWorld ? next.WorldId : null;
+                            l.WorldName = !worldDcRegion.IsWorld ? worlds[next.WorldId] : null;
                             return l;
                         })
                         .Concat(aggData.Listings)
@@ -83,8 +83,8 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
                         .Where(s => entriesWithin < 0 || nowSeconds - s.TimestampUnixSeconds < entriesWithin)
                         .Select(s =>
                         {
-                            s.WorldId = worldDc.IsDc ? next.WorldId : null;
-                            s.WorldName = worldDc.IsDc ? worlds[next.WorldId] : null;
+                            s.WorldId = !worldDcRegion.IsWorld ? next.WorldId : null;
+                            s.WorldName = !worldDcRegion.IsWorld ? worlds[next.WorldId] : null;
                             return s;
                         })
                         .Concat(aggData.RecentHistory)
@@ -108,9 +108,10 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
             Listings = currentlyShown.Listings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings).ToList(),
             RecentHistory = currentlyShown.RecentHistory.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nEntries).ToList(),
             ItemId = itemId,
-            WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
-            WorldName = worldDc.IsWorld ? worldDc.WorldName : null,
-            DcName = worldDc.IsDc ? worldDc.DcName : null,
+            WorldId = worldDcRegion.IsWorld ? worldDcRegion.WorldId : null,
+            WorldName = worldDcRegion.IsWorld ? worldDcRegion.WorldName : null,
+            DcName = worldDcRegion.IsDc ? worldDcRegion.DcName : null,
+            RegionName = worldDcRegion.IsRegion ? worldDcRegion.RegionName : null,
             LastUploadTimeUnixMilliseconds = currentlyShown.LastUploadTimeUnixMilliseconds,
             StackSizeHistogram = new SortedDictionary<int, int>(GetListingsDistribution(currentlyShown.Listings)),
             StackSizeHistogramNq = new SortedDictionary<int, int>(GetListingsDistribution(nqListings)),
@@ -130,7 +131,7 @@ public class CurrentlyShownControllerBase : WorldDcControllerBase
             AveragePrice = GetAveragePricePerUnit(currentlyShown.RecentHistory),
             AveragePriceNq = GetAveragePricePerUnit(nqSales),
             AveragePriceHq = GetAveragePricePerUnit(hqSales),
-            WorldUploadTimes = worldDc.IsWorld ? null : worldUploadTimes,
+            WorldUploadTimes = worldDcRegion.IsWorld ? null : worldUploadTimes,
         };
 
         return (resolved, view);

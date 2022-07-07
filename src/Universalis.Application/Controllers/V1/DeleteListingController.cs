@@ -20,7 +20,7 @@ namespace Universalis.Application.Controllers.V1;
 [ApiVersion("2")]
 [ApiExplorerSettings(IgnoreApi = true)]
 [Route("api")]
-public class DeleteListingController : WorldDcControllerBase
+public class DeleteListingController : WorldDcRegionControllerBase
 {
     private readonly ITrustedSourceDbAccess _trustedSourceDb;
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
