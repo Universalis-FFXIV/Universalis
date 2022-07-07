@@ -43,6 +43,8 @@ public class UploadController : ControllerBase
 
     [HttpPost]
     [ApiTag("Upload")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
     public async Task<IActionResult> Post(string apiKey, [FromBody] UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         var source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
