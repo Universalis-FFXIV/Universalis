@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Attributes;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
@@ -20,7 +21,6 @@ namespace Universalis.Application.Controllers.V1;
 
 [ApiController]
 [ApiVersion("1")]
-[ApiExplorerSettings(IgnoreApi = true)]
 [Route("upload/{apiKey}")]
 public class UploadController : ControllerBase
 {
@@ -42,6 +42,7 @@ public class UploadController : ControllerBase
     }
 
     [HttpPost]
+    [ApiTag("Upload")]
     public async Task<IActionResult> Post(string apiKey, [FromBody] UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         var source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
