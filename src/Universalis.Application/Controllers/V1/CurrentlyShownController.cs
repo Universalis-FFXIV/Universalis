@@ -106,7 +106,6 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
 
             if (!GameData.MarketableItemIds().Contains(itemId))
             {
-                // TODO: Remove belts
                 return Ok(new CurrentlyShownView());
             }
 
