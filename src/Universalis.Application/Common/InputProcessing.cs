@@ -22,6 +22,7 @@ public static class InputProcessing
             .Replace(" ", "")
             .Split(',')
             .Where(id => uint.TryParse(id, out _))
-            .Select(uint.Parse);
+            .Select(uint.Parse)
+            .Distinct();
     }
 }

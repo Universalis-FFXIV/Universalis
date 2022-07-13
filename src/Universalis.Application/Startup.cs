@@ -64,6 +64,7 @@ public class Startup
         {
             options.Filters.Add<DecoderFallbackExceptionFilter>();
             options.Filters.Add<OperationCancelledExceptionFilter>();
+            options.Filters.Add<PostgresExceptionFilter>();
         });
 
         services.AddApiVersioning(options =>
