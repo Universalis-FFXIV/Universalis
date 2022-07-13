@@ -57,12 +57,7 @@ public class SaleStore : ISaleStore
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
         await using var batch = new NpgsqlBatch(conn);
-        var s = sales.ToList();
-        if (s.Any(ss => ss.OnMannequin != null))
-        {
-            Console.WriteLine("set");
-        }
-        foreach (var sale in s)
+        foreach (var sale in sales)
         {
             batch.BatchCommands.Add(new NpgsqlBatchCommand(
                 "INSERT INTO sale (id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)")
