@@ -11,7 +11,7 @@
     <PackageReference Include="FluentMigrator.Runner.Postgres" Version="3.3.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
-    <PackageReference Include="Npgsql" Version="6.0.5" />
+    <PackageReference Include="Npgsql" Version="6.0.6" />
     <PackageReference Include="OptimizedPriorityQueue" Version="5.1.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.6.48" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
