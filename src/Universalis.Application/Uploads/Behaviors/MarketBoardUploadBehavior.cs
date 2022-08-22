@@ -50,26 +50,29 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var cond = parameters.WorldId != null;
         cond &= parameters.ItemId != null;
         cond &= parameters.Sales != null || parameters.Listings != null;
-        
+
         if (cond)
         {
             var stackSize = _gdp.MarketableItemStackSizes()[parameters.ItemId.Value];
-            
+
             if (parameters.Sales != null)
             {
-                cond &= parameters.Sales.All(l => l.Quantity is > 0 && l.Quantity <= stackSize);
+                cond &= parameters.Sales.All(s =>
+                    s.Quantity is > 0 && s.Quantity <= stackSize && s.PricePerUnit is <= 999_999_999);
             }
 
             if (parameters.Listings != null)
             {
-                cond &= parameters.Listings.All(l => l.Quantity is > 0 && l.Quantity <= stackSize);
+                cond &= parameters.Listings.All(l =>
+                    l.Quantity is > 0 && l.Quantity <= stackSize && l.PricePerUnit is <= 999_999_999);
             }
         }
-        
+
         return cond;
     }
 
-    public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters,
+        CancellationToken cancellationToken = default)
     {
         // ReSharper disable PossibleInvalidOperationException
         var worldId = parameters.WorldId.Value;
@@ -197,7 +200,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             WorldId = worldId,
             ItemId = itemId,
         }, cancellationToken);
-        
+
         return null;
     }
 
@@ -237,7 +240,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             .ToList();
     }
 
-    private static List<Sale> CleanUploadedSales(IEnumerable<Schema.Sale> uploadedSales, uint worldId, uint itemId, string uploaderIdSha256)
+    private static List<Sale> CleanUploadedSales(IEnumerable<Schema.Sale> uploadedSales, uint worldId, uint itemId,
+        string uploaderIdSha256)
     {
         return uploadedSales
             .Where(s => s.TimestampUnixSeconds > 0)
