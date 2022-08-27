@@ -47,7 +47,7 @@ public class Startup
         services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
 
         var cacheSize = int.Parse(Configuration["MarketCurrentDataCacheSize"]);
-        services.AddSingleton<ICache<CurrentlyShownQuery, CachedCurrentlyShownData>>(sc =>
+        services.AddSingleton<ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData>>(sc =>
         {
             var currentlyShownDb = sc.GetRequiredService<ICurrentlyShownDbAccess>();
             var historyDb = sc.GetRequiredService<IHistoryDbAccess>();

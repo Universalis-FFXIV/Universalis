@@ -18,7 +18,7 @@ namespace Universalis.Application.Controllers.V1;
 [Route("api/{worldDcRegion}/{itemIds}")]
 public class CurrentlyShownController : CurrentlyShownControllerBase
 {
-    public CurrentlyShownController(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess historyDb, ICache<CurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData, currentlyShownDb, historyDb, cache) { }
+    public CurrentlyShownController(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess historyDb, ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData, currentlyShownDb, historyDb, cache) { }
 
     /// <summary>
     /// Retrieves the data currently shown on the market board for the requested item and world or data center.

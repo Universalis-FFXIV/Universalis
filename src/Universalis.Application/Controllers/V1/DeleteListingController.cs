@@ -25,14 +25,14 @@ public class DeleteListingController : WorldDcRegionControllerBase
     private readonly ITrustedSourceDbAccess _trustedSourceDb;
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
-    private readonly ICache<CurrentlyShownQuery, CachedCurrentlyShownData> _cache;
+    private readonly ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> _cache;
 
     public DeleteListingController(
         IGameDataProvider gameData,
         ITrustedSourceDbAccess trustedSourceDb,
         ICurrentlyShownDbAccess currentlyShownDb,
         IFlaggedUploaderDbAccess flaggedUploaderDb,
-        ICache<CurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData)
+        ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData)
     {
         _trustedSourceDb = trustedSourceDb;
         _currentlyShownDb = currentlyShownDb;
@@ -106,7 +106,11 @@ public class DeleteListingController : WorldDcRegionControllerBase
 
         await _currentlyShownDb.Update(itemData, query, cancellationToken);
 
-        await _cache.Delete(query, cancellationToken);
+        await _cache.Delete(new CachedCurrentlyShownQuery
+        {
+            WorldId = query.WorldId,
+            ItemId = query.ItemId,
+        }, cancellationToken);
 
         return Ok("Success");
     }

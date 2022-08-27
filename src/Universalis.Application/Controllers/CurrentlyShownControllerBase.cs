@@ -18,9 +18,9 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 {
     protected readonly ICurrentlyShownDbAccess CurrentlyShown;
     protected readonly IHistoryDbAccess History;
-    protected readonly ICache<CurrentlyShownQuery, CachedCurrentlyShownData> Cache;
+    protected readonly ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> Cache;
 
-    public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess history, ICache<CurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData)
+    public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess history, ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData)
     {
         CurrentlyShown = currentlyShownDb;
         History = history;
@@ -142,7 +142,11 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     private async Task<CachedCurrentlyShownData> FetchCachedCurrentlyShownData(uint worldId, uint itemId, CancellationToken cancellationToken = default)
     {
         var q = new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId };
-        var d = await Cache.Get(q, cancellationToken);
+        var d = await Cache.Get(new CachedCurrentlyShownQuery
+        {
+            WorldId = q.WorldId,
+            ItemId = q.ItemId,
+        }, cancellationToken);
         if (d == null)
         {
             var cd = await CurrentlyShown.Retrieve(q, cancellationToken);

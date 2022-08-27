@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using MongoDB.Bson.Serialization.Attributes;
+using Universalis.Application.Caching;
 using Universalis.Application.Common;
 
 namespace Universalis.Application.Views.V1;
@@ -9,7 +10,7 @@ namespace Universalis.Application.Views.V1;
  * Please do not edit the field order unless it is unavoidable.
  */
 
-public class ListingView : IPriceable
+public class ListingView : IPriceable, ICopyable
 {
     /// <summary>
     /// The time that this listing was posted, in seconds since the UNIX epoch.
@@ -144,4 +145,9 @@ public class ListingView : IPriceable
     [BsonElement("total")]
     [JsonPropertyName("total")]
     public uint Total { get; set; }
+
+    public ICopyable Clone()
+    {
+        return (ListingView)MemberwiseClone();
+    }
 }

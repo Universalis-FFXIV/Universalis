@@ -29,7 +29,7 @@ public class DeleteListingControllerTests
         public IFlaggedUploaderDbAccess FlaggedUploaders { get; private init; }
         public ICurrentlyShownDbAccess CurrentlyShown { get; private init; }
         public ITrustedSourceDbAccess TrustedSources { get; private init; }
-        public ICache<CurrentlyShownQuery, CachedCurrentlyShownData> Cache { get; private init; }
+        public ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> Cache { get; private init; }
         public DeleteListingController Controller { get; private init; }
 
         public static TestResources Create()
@@ -38,7 +38,7 @@ public class DeleteListingControllerTests
             var flaggedUploaders = new MockFlaggedUploaderDbAccess();
             var currentlyShown = new MockCurrentlyShownDbAccess();
             var trustedSources = new MockTrustedSourceDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
+            var cache = new MemoryCache<CachedCurrentlyShownQuery, CachedCurrentlyShownData>(1);
             var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
             return new TestResources
             {

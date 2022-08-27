@@ -25,7 +25,7 @@ public class CurrentlyShownControllerTests
         public IGameDataProvider GameData { get; private init; }
         public ICurrentlyShownDbAccess CurrentlyShown { get; private init; }
         public IHistoryDbAccess History { get; private init; }
-        public ICache<CurrentlyShownQuery, CachedCurrentlyShownData> Cache { get; private init; }
+        public ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> Cache { get; private init; }
         public CurrentlyShownController Controller { get; private init; }
 
         public static TestResources Create()
@@ -33,7 +33,7 @@ public class CurrentlyShownControllerTests
             var gameData = new MockGameDataProvider();
             var currentlyShownDb = new MockCurrentlyShownDbAccess();
             var historyDb = new MockHistoryDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
+            var cache = new MemoryCache<CachedCurrentlyShownQuery, CachedCurrentlyShownData>(1);
             var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
             return new TestResources
             {

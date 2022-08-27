@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Priority_Queue;
 
 namespace Universalis.Application.Caching;
 
-public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEquatable<TKey> where TValue : class
+public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
+    where TKey : IEquatable<TKey>, ICopyable where TValue : class, ICopyable
 {
     private readonly object _lock;
     private readonly CacheEntry<TKey, TValue>[] _data;
@@ -30,8 +30,8 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
 
     public virtual Task Set(TKey key, TValue value, CancellationToken cancellationToken = default)
     {
-        var keyCopy = JsonSerializer.Deserialize<TKey>(JsonSerializer.Serialize(key));
-        var valCopy = JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(value));
+        var keyCopy = (TKey)key.Clone();
+        var valCopy = (TValue)value.Clone();
         if (keyCopy == null || valCopy == null) throw new ArgumentException("key or value de/serialized to null.");
 
         Monitor.Enter(_lock);
@@ -53,7 +53,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         {
             Monitor.Exit(_lock);
         }
-        
+
         return Task.CompletedTask;
     }
 
@@ -68,7 +68,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
             val.Hits++;
             _hits.UpdatePriority(idx, val);
 
-            var valCopy = JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(val.Value));
+            var valCopy = (TValue)val.Value.Clone();
             return Task.FromResult(valCopy);
         }
         finally
@@ -96,7 +96,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
             Monitor.Exit(_lock);
         }
     }
-    
+
     /// <summary>
     /// Evicts an entry from the cache, returning the evicted entry's index to the free entry stack.
     /// </summary>
@@ -107,7 +107,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
         {
             return false;
         }
-        
+
         // Find the entry with the *highest* number of hits and remove it.
         // We assume that the older an item is, the more likely it is to be
         // checked soon.
@@ -147,7 +147,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue> where TKey : IEqua
             Key = key,
             Value = value,
         };
-        
+
         _idMap.Add(key, nextIdx);
         _hits.Enqueue(nextIdx, newEntry);
         _data[nextIdx] = newEntry;

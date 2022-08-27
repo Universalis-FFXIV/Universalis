@@ -25,7 +25,7 @@ public class MarketBoardUploadBehaviorTests
     {
         public ICurrentlyShownDbAccess CurrentlyShown { get; private init; }
         public IHistoryDbAccess History { get; private init; }
-        public ICache<CurrentlyShownQuery, CachedCurrentlyShownData> Cache { get; private init; }
+        public ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> Cache { get; private init; }
         public ISocketProcessor Sockets { get; private init; }
         public IGameDataProvider GameData { get; private init; }
         public IUploadBehavior Behavior { get; private init; }
@@ -34,7 +34,7 @@ public class MarketBoardUploadBehaviorTests
         {
             var currentlyShownDb = new MockCurrentlyShownDbAccess();
             var historyDb = new MockHistoryDbAccess();
-            var cache = new MemoryCache<CurrentlyShownQuery, CachedCurrentlyShownData>(1);
+            var cache = new MemoryCache<CachedCurrentlyShownQuery, CachedCurrentlyShownData>(1);
             var sockets = new MockSocketProcessor();
             var gameData = new MockGameDataProvider();
             var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);

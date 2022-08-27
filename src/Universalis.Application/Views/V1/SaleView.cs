@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using MongoDB.Bson.Serialization.Attributes;
+using Universalis.Application.Caching;
 using Universalis.Application.Common;
 
 namespace Universalis.Application.Views.V1;
@@ -8,7 +9,7 @@ namespace Universalis.Application.Views.V1;
  * Please do not edit the field order unless it is unavoidable.
  */
 
-public class SaleView : IPriceable
+public class SaleView : IPriceable, ICopyable
 {
     /// <summary>
     /// Whether or not the item was high-quality.
@@ -75,4 +76,9 @@ public class SaleView : IPriceable
     [BsonElement("total")]
     [JsonPropertyName("total")]
     public uint Total { get; init; }
+
+    public ICopyable Clone()
+    {
+        return (SaleView)MemberwiseClone();
+    }
 }
