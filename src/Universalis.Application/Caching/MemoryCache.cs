@@ -28,7 +28,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
         _hits = new SimplePriorityQueue<int, CacheEntry<TKey, TValue>>((a, b) => a.Hits - b.Hits);
     }
 
-    public virtual Task Set(TKey key, TValue value, CancellationToken cancellationToken = default)
+    public virtual ValueTask Set(TKey key, TValue value, CancellationToken cancellationToken = default)
     {
         var keyCopy = (TKey)key.Clone();
         var valCopy = (TValue)value.Clone();
@@ -44,7 +44,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
                 _data[idx].Hits = 0;
                 _data[idx].Value = valCopy;
                 _hits.UpdatePriority(idx, _data[idx]);
-                return Task.CompletedTask;
+                return ValueTask.CompletedTask;
             }
 
             CleanAdd(keyCopy, valCopy);
@@ -54,22 +54,22 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
             Monitor.Exit(_lock);
         }
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
-    public virtual Task<TValue> Get(TKey key, CancellationToken cancellationToken = default)
+    public virtual ValueTask<TValue> Get(TKey key, CancellationToken cancellationToken = default)
     {
         Monitor.Enter(_lock);
         try
         {
-            if (!_idMap.TryGetValue(key, out var idx)) return Task.FromResult<TValue>(null);
+            if (!_idMap.TryGetValue(key, out var idx)) return ValueTask.FromResult<TValue>(null);
 
             var val = _data[idx];
             val.Hits++;
             _hits.UpdatePriority(idx, val);
 
             var valCopy = (TValue)val.Value.Clone();
-            return Task.FromResult(valCopy);
+            return ValueTask.FromResult(valCopy);
         }
         finally
         {
@@ -77,19 +77,19 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
         }
     }
 
-    public virtual Task<bool> Delete(TKey key, CancellationToken cancellationToken = default)
+    public virtual ValueTask<bool> Delete(TKey key, CancellationToken cancellationToken = default)
     {
         Monitor.Enter(_lock);
         try
         {
             if (!_idMap.TryGetValue(key, out var idx))
             {
-                return Task.FromResult(false);
+                return ValueTask.FromResult(false);
             }
 
             CleanRemove(idx);
 
-            return Task.FromResult(true);
+            return ValueTask.FromResult(true);
         }
         finally
         {
@@ -157,13 +157,13 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
     {
         var val = _data[idx];
 
-        _data[idx] = null;
+        _data[idx] = default;
         _idMap.Remove(val.Key);
         _hits.Remove(idx);
         _freeEntries.Push(idx);
     }
 
-    private class CacheEntry<TCacheKey, TCacheValue>
+    private struct CacheEntry<TCacheKey, TCacheValue>
     {
         public int Hits;
 
