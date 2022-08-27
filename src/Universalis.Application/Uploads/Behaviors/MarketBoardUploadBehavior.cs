@@ -25,7 +25,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 {
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IHistoryDbAccess _historyDb;
-    private readonly ICache<CurrentlyShownQuery, CachedCurrentlyShownData> _cache;
+    private readonly ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> _cache;
     private readonly ISocketProcessor _sockets;
     private readonly IGameDataProvider _gdp;
 
@@ -34,7 +34,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     public MarketBoardUploadBehavior(
         ICurrentlyShownDbAccess currentlyShownDb,
         IHistoryDbAccess historyDb,
-        ICache<CurrentlyShownQuery, CachedCurrentlyShownData> cache,
+        ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> cache,
         ISocketProcessor sockets,
         IGameDataProvider gdp)
     {
@@ -190,7 +190,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var listings = newListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>();
         var document = new CurrentlyShown(worldId, itemId, now, source.Name, listings);
 
-        if (await _cache.Delete(new CurrentlyShownQuery { ItemId = itemId, WorldId = worldId }, cancellationToken))
+        if (await _cache.Delete(new CachedCurrentlyShownQuery { ItemId = itemId, WorldId = worldId }, cancellationToken))
         {
             CacheDeletes.Inc();
         }

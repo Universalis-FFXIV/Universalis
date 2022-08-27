@@ -10,54 +10,58 @@ public class MemoryCacheTests
     [Fact]
     public void Cache_KeyEqualityAssumptionCheck()
     {
-        var q1 = new CurrentlyShownQuery { ItemId = 1, WorldId = 0 };
-        var q2 = new CurrentlyShownQuery { ItemId = 1, WorldId = 0 };
+        var q1 = new CachedCurrentlyShownQuery { ItemId = 1, WorldId = 0 };
+        var q2 = new CachedCurrentlyShownQuery { ItemId = 1, WorldId = 0 };
         Assert.Equal(q1, q2);
 
-        var q3 = new CurrentlyShownQuery { ItemId = 1, WorldId = 2 };
-        var q4 = new CurrentlyShownQuery { ItemId = 1, WorldId = 3 };
+        var q3 = new CachedCurrentlyShownQuery { ItemId = 1, WorldId = 2 };
+        var q4 = new CachedCurrentlyShownQuery { ItemId = 1, WorldId = 3 };
         Assert.NotEqual(q3, q4);
 
-        var q5 = new CurrentlyShownQuery { ItemId = 2, WorldId = 1 };
-        var q6 = new CurrentlyShownQuery { ItemId = 3, WorldId = 1 };
+        var q5 = new CachedCurrentlyShownQuery { ItemId = 2, WorldId = 1 };
+        var q6 = new CachedCurrentlyShownQuery { ItemId = 3, WorldId = 1 };
         Assert.NotEqual(q5, q6);
     }
 
     [Fact]
     public async Task Cache_Delete_DoesRemove()
     {
-        var cache = new MemoryCache<int, Data>(1);
-        await cache.Set(1, new Data(1));
-        var j = await cache.Get(1);
+        var cache = new MemoryCache<CachedCurrentlyShownQuery, Data>(1);
+        var query = new CachedCurrentlyShownQuery { ItemId = 1, WorldId = 0 };
+        await cache.Set(query, new Data(1));
+        var j = await cache.Get(query);
         Assert.True(j?.Value ==  1);
-        await cache.Delete(1);
-        var k = await cache.Get(1);
+        await cache.Delete(query);
+        var k = await cache.Get(query);
         Assert.True(k == null);
     }
 
     [Fact]
     public async Task Cache_Get_ReturnsNewObject()
     {
-        var cache = new MemoryCache<int, Data>(1);
+        var cache = new MemoryCache<CachedCurrentlyShownQuery, Data>(1);
+        var query = new CachedCurrentlyShownQuery { ItemId = 1, WorldId = 0 };
         var a = new Data(1);
-        cache.Set(1, a);
-        var b = await cache.Get(1);
+        cache.Set(query, a);
+        var b = await cache.Get(query);
         Assert.False(ReferenceEquals(a, b));
     }
 
     [Fact]
     public async Task Cache_DoesEviction()
     {
-        var cache = new MemoryCache<int, Data>(4);
-        for (var i = 0; i < 5; i++)
+        var cache = new MemoryCache<CachedCurrentlyShownQuery, Data>(4);
+        for (var i = 0U; i < 5; i++)
         {
-            cache.Set(i, new Data(1));
+            var query = new CachedCurrentlyShownQuery { ItemId = i, WorldId = 0 };
+            await cache.Set(query, new Data(1));
         }
 
         var hits = 0;
-        for (var i = 0; i < 5; i++)
+        for (var i = 0U; i < 5; i++)
         {
-            var j = await cache.Get(i);
+            var query = new CachedCurrentlyShownQuery { ItemId = i, WorldId = 0 };
+            var j = await cache.Get(query);
             if (j?.Value == 1) hits++;
         }
 
@@ -72,7 +76,7 @@ public class MemoryCacheTests
     {
         const uint nIterations = 1000000U;
 
-        var cache = new MemoryCache<CurrentlyShownQuery, Data>(cacheSize);
+        var cache = new MemoryCache<CachedCurrentlyShownQuery, Data>(cacheSize);
 
         var tasks = new Task[4];
 
@@ -80,7 +84,7 @@ public class MemoryCacheTests
         {
             for (var j = 0U; j < nIterations; j++)
             {
-                var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
+                var query = new CachedCurrentlyShownQuery { ItemId = j, WorldId = 0 };
                 await cache.Set(query, new Data(j));
             }
         });
@@ -89,7 +93,7 @@ public class MemoryCacheTests
         {
             for (var j = 0U; j < nIterations; j++)
             {
-                var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
+                var query = new CachedCurrentlyShownQuery { ItemId = j, WorldId = 0 };
                 var cached = await cache.Get(query);
                 if (cached != null)
                 {
@@ -102,7 +106,7 @@ public class MemoryCacheTests
         {
             for (var j = 0U; j < nIterations; j++)
             {
-                var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
+                var query = new CachedCurrentlyShownQuery { ItemId = j, WorldId = 0 };
                 await cache.Set(query, new Data(j));
             }
         });
@@ -111,7 +115,7 @@ public class MemoryCacheTests
         {
             for (var j = 0U; j < nIterations; j++)
             {
-                var query = new CurrentlyShownQuery { ItemId = j, WorldId = 0 };
+                var query = new CachedCurrentlyShownQuery { ItemId = j, WorldId = 0 };
                 await cache.Delete(query);
             }
         });
@@ -126,13 +130,18 @@ public class MemoryCacheTests
         await tasks[3];
     }
 
-    private class Data
+    private class Data : ICopyable
     {
         public uint Value { get; }
 
         public Data(uint value)
         {
             Value = value;
+        }
+
+        public ICopyable Clone()
+        {
+            return (ICopyable)MemberwiseClone();
         }
     }
 }
