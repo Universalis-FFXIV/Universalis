@@ -38,7 +38,7 @@ public class CurrentlyShownCache : MemoryCache<CachedCurrentlyShownQuery, Cached
         _historyDb = historyDb;
     }
 
-    public override async Task<CachedCurrentlyShownData> Get(CachedCurrentlyShownQuery key,
+    public override async ValueTask<CachedCurrentlyShownData> Get(CachedCurrentlyShownQuery key,
         CancellationToken cancellationToken = default)
     {
         // Fetch data from the cache
@@ -103,14 +103,14 @@ public class CurrentlyShownCache : MemoryCache<CachedCurrentlyShownQuery, Cached
         return dataView;
     }
 
-    public override async Task Set(CachedCurrentlyShownQuery key, CachedCurrentlyShownData value,
+    public override async ValueTask Set(CachedCurrentlyShownQuery key, CachedCurrentlyShownData value,
         CancellationToken cancellationToken = default)
     {
         await base.Set(key, value, cancellationToken);
         CacheEntries.Set(Count);
     }
 
-    public override async Task<bool> Delete(CachedCurrentlyShownQuery key,
+    public override async ValueTask<bool> Delete(CachedCurrentlyShownQuery key,
         CancellationToken cancellationToken = default)
     {
         var result = await base.Delete(key, cancellationToken);
