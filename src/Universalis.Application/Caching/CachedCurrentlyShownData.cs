@@ -19,8 +19,8 @@ public class CachedCurrentlyShownData : ICopyable
     public ICopyable Clone()
     {
         var copy = (CachedCurrentlyShownData)MemberwiseClone();
-        copy.Listings = Listings.ToList();
-        copy.RecentHistory = RecentHistory.ToList();
+        copy.Listings = Listings.Select(l => (ListingView)l.Clone()).ToList();
+        copy.RecentHistory = RecentHistory.Select(s => (SaleView)s.Clone()).ToList();
         return copy;
     }
 }
