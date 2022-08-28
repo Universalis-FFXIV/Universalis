@@ -3,7 +3,6 @@ using Prometheus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
@@ -81,7 +80,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
         if (parameters.Sales != null)
         {
-            if (Util.HasHtmlTags(JsonSerializer.Serialize(parameters.Sales)))
+            if (parameters.Sales.Any(s =>
+                    Util.HasHtmlTags(s.BuyerName) || Util.HasHtmlTags(s.SellerId) || Util.HasHtmlTags(s.BuyerId)))
             {
                 return new BadRequestResult();
             }
@@ -142,7 +142,10 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         List<Listing> newListings = null;
         if (parameters.Listings != null)
         {
-            if (Util.HasHtmlTags(JsonSerializer.Serialize(parameters.Listings)))
+            if (parameters.Listings.Any(l =>
+                    Util.HasHtmlTags(l.ListingId) || Util.HasHtmlTags(l.RetainerName) ||
+                    Util.HasHtmlTags(l.RetainerId) || Util.HasHtmlTags(l.CreatorName) || Util.HasHtmlTags(l.SellerId) ||
+                    Util.HasHtmlTags(l.CreatorId)))
             {
                 return new BadRequestResult();
             }
@@ -190,7 +193,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var listings = newListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>();
         var document = new CurrentlyShown(worldId, itemId, now, source.Name, listings);
 
-        if (await _cache.Delete(new CachedCurrentlyShownQuery { ItemId = itemId, WorldId = worldId }, cancellationToken))
+        if (await _cache.Delete(new CachedCurrentlyShownQuery { ItemId = itemId, WorldId = worldId },
+                cancellationToken))
         {
             CacheDeletes.Inc();
         }
