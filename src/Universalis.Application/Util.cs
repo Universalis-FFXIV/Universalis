@@ -120,7 +120,7 @@ public static class Util
     /// <returns><see langword="true" /> if the input contains HTML tags, otherwise <see langword="false" />.</returns>
     public static bool HasHtmlTags(string input)
     {
-        return HtmlTags.IsMatch(input);
+        return !string.IsNullOrEmpty(input) && HtmlTags.IsMatch(input);
     }
 
     /// <summary>
