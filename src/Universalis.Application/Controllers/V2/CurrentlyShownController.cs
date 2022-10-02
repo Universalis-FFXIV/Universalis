@@ -19,7 +19,11 @@ namespace Universalis.Application.Controllers.V2;
 [Route("api/v{version:apiVersion}/{worldDcRegion}/{itemIds}")]
 public class CurrentlyShownController : CurrentlyShownControllerBase
 {
-    public CurrentlyShownController(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess history, ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData, currentlyShownDb, history, cache) { }
+    public CurrentlyShownController(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb,
+        IHistoryDbAccess history, ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData,
+        currentlyShownDb, history, cache)
+    {
+    }
 
     /// <summary>
     /// Retrieves the data currently shown on the market board for the requested item and world or data center.
@@ -39,6 +43,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
     /// <param name="hq">Filter for HQ listings and entries. By default, both HQ and NQ listings and entries will be returned.</param>
     /// <param name="cancellationToken"></param>
     /// <response code="200">Data retrieved successfully.</response>
+    /// <response code="400">The parameters were invalid.</response>
     /// <response code="404">
     /// The world/DC or item requested is invalid. When requesting multiple items at once, an invalid item ID
     /// will not trigger this. Instead, the returned list of unresolved item IDs will contain the invalid item ID or IDs.
@@ -59,6 +64,11 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         [FromQuery] string entriesWithin = "",
         CancellationToken cancellationToken = default)
     {
+        if (itemIds == null || worldDcRegion == null)
+        {
+            return BadRequest();
+        }
+
         // Parameter parsing
         var itemIdsArray = InputProcessing.ParseIdList(itemIds)
             .Take(100)
@@ -111,14 +121,16 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
             }
 
             var (_, currentlyShownView) = await GetCurrentlyShownView(
-                worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds, cancellationToken);
+                worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds,
+                cancellationToken);
             return Ok(currentlyShownView);
         }
 
         // Multi-item handling
         var currentlyShownViewTasks = itemIdsArray
             .Select(itemId => GetCurrentlyShownView(
-                worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds, cancellationToken))
+                worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds,
+                cancellationToken))
             .ToList();
         var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
         var unresolvedItems = currentlyShownViews

@@ -17,7 +17,7 @@ public static class InputProcessing
         {
             throw new ArgumentNullException(nameof(idList));
         }
-        
+
         return idList
             .Replace(" ", "")
             .Split(',')
