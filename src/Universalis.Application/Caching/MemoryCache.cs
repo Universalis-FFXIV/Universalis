@@ -10,7 +10,7 @@ namespace Universalis.Application.Caching;
 public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
     where TKey : IEquatable<TKey>, ICopyable where TValue : class, ICopyable
 {
-    private readonly object _lock;
+    private readonly ReaderWriterLockSlim _lock;
     private readonly CacheEntry<TKey, TValue>[] _data;
     private readonly IDictionary<TKey, int> _idMap;
     private readonly Stack<int> _freeEntries;
@@ -20,7 +20,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
 
     public MemoryCache(int size)
     {
-        _lock = new object();
+        _lock = new ReaderWriterLockSlim();
         _data = new CacheEntry<TKey, TValue>[size];
         _idMap = new Dictionary<TKey, int>();
         _freeEntries = new Stack<int>(Enumerable.Range(0, size));
@@ -34,14 +34,14 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
         var valCopy = (TValue)value.Clone();
         if (keyCopy == null || valCopy == null) throw new ArgumentException("key or value de/serialized to null.");
 
-        Monitor.Enter(_lock);
+        _lock.EnterWriteLock();
         try
         {
             // Check if this key already has an entry associated with it
             // that we can reuse
             if (_idMap.TryGetValue(keyCopy, out var idx))
             {
-                _data[idx].Hits = 0;
+                _data[idx].ResetHits();
                 _data[idx].Value = valCopy;
                 _hits.UpdatePriority(idx, _data[idx]);
                 return ValueTask.CompletedTask;
@@ -51,7 +51,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
         }
         finally
         {
-            Monitor.Exit(_lock);
+            _lock.ExitWriteLock();
         }
 
         return ValueTask.CompletedTask;
@@ -59,13 +59,13 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
 
     public virtual ValueTask<TValue> Get(TKey key, CancellationToken cancellationToken = default)
     {
-        Monitor.Enter(_lock);
+        _lock.EnterReadLock();
         try
         {
             if (!_idMap.TryGetValue(key, out var idx)) return ValueTask.FromResult<TValue>(null);
 
             var val = _data[idx];
-            val.Hits++;
+            val.IncrementHits();
             _hits.UpdatePriority(idx, val);
 
             var valCopy = (TValue)val.Value.Clone();
@@ -73,13 +73,13 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
         }
         finally
         {
-            Monitor.Exit(_lock);
+            _lock.ExitReadLock();
         }
     }
 
     public virtual ValueTask<bool> Delete(TKey key, CancellationToken cancellationToken = default)
     {
-        Monitor.Enter(_lock);
+        _lock.EnterUpgradeableReadLock();
         try
         {
             if (!_idMap.TryGetValue(key, out var idx))
@@ -87,13 +87,21 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
                 return ValueTask.FromResult(false);
             }
 
-            CleanRemove(idx);
+            _lock.EnterWriteLock();
+            try
+            {
+                CleanRemove(idx);
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
 
             return ValueTask.FromResult(true);
         }
         finally
         {
-            Monitor.Exit(_lock);
+            _lock.ExitUpgradeableReadLock();
         }
     }
 
@@ -165,10 +173,22 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
 
     private struct CacheEntry<TCacheKey, TCacheValue>
     {
-        public int Hits;
+        public int Hits => _hits;
 
         public TCacheKey Key;
 
         public TCacheValue Value;
+
+        private int _hits;
+
+        public void IncrementHits()
+        {
+            Interlocked.Increment(ref _hits);
+        }
+
+        public void ResetHits()
+        {
+            Interlocked.Exchange(ref _hits, 0);
+        }
     }
 }
