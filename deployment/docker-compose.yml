@@ -59,10 +59,3 @@ services:
     shm_size: 10gb
     volumes:
       - "${HOME}/postgres:/var/lib/postgres/data"
-  redis:
-    image: redis:7.0.0
-    command: redis-server --save 600 1 --loglevel warning
-    ports:
-      - "4050:6379"
-    volumes:
-      - "${HOME}/redis:/data"
