@@ -10,7 +10,6 @@ services:
     network_mode: "host" # TODO: Containerize or remove MariaDB so all of this can be changed
     depends_on:
       - postgres
-      - redis
   universalis-staging:
     image: ghcr.io/universalis-ffxiv/universalis-staging:v2
     environment:
