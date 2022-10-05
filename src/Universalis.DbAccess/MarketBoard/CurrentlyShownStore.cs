@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Prometheus;
 using StackExchange.Redis;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
@@ -15,15 +12,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 {
     private readonly IConnectionMultiplexer _redis;
 
-    private static readonly Histogram GetTime = Metrics.CreateHistogram("universalis_currently_shown_get_ms",
-        "CurrentlyShownStore GetData Milliseconds");
-
-    private static readonly Histogram SetTime = Metrics.CreateHistogram("universalis_currently_shown_set_ms",
-        "CurrentlyShownStore SetData Milliseconds");
-
-    private static readonly Stopwatch Stopwatch = new();
-    private static int StopwatchInUse = 0;
-
     public CurrentlyShownStore(IConnectionMultiplexer redis)
     {
         _redis = redis;
@@ -31,114 +19,76 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
     public async Task<CurrentlyShown> GetData(uint worldId, uint itemId)
     {
-        var owningStopwatch = false;
-        if (0 == Interlocked.Exchange(ref StopwatchInUse, 1))
+        var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
+        
+        var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
+
+        if (!await db.KeyExistsAsync(lastUpdatedKey))
         {
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            owningStopwatch = true;
+            return new CurrentlyShown(0, 0, 0, "",
+                new List<Listing>());
         }
-
-        try
+        
+        // Fetch all of the data in a consistent manner. This shouldn't usually run more
+        // than once, given that reads are far more frequent than writes.
+        bool transactionExecuted;
+        long lastUpdated;
+        string source;
+        IEnumerable<Listing> listings;
+        do
         {
-            var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
+            lastUpdated = await EnsureLastUpdated(worldId, itemId);
+            
+            var trans = db.CreateTransaction();
+            trans.AddCondition(Condition.StringEqual(lastUpdatedKey, lastUpdated));
 
-            var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
-            if (!await db.KeyExistsAsync(lastUpdatedKey))
-            {
-                return new CurrentlyShown(worldId, itemId, 0, "", new List<Listing>());
-            }
+            var sourceTask = GetSource(db, worldId, itemId);
+            var listingsTask = GetListings(db, worldId, itemId);
+            await Task.WhenAll(sourceTask, listingsTask);
+            
+            source = await sourceTask;
+            listings = await listingsTask;
 
-            // Fetch all of the data in a consistent manner. This shouldn't usually run more
-            // than once, given that reads are far more frequent than writes.
-            bool transactionExecuted;
-            long lastUpdated;
-            string source;
-            IEnumerable<Listing> listings;
-            do
-            {
-                lastUpdated = await EnsureLastUpdated(worldId, itemId);
-
-                var trans = db.CreateTransaction();
-                trans.AddCondition(Condition.StringEqual(lastUpdatedKey, lastUpdated));
-
-                var sourceTask = GetSource(db, worldId, itemId);
-                var listingsTask = GetListings(db, worldId, itemId);
-                await Task.WhenAll(sourceTask, listingsTask);
-
-                source = await sourceTask;
-                listings = await listingsTask;
-
-                transactionExecuted = await trans.ExecuteAsync();
-            } while (!transactionExecuted);
-
-            return new CurrentlyShown(worldId, itemId, lastUpdated, source, listings.ToList());
-        }
-        finally
-        {
-            if (owningStopwatch)
-            {
-                Stopwatch.Stop();
-                GetTime.Observe(Stopwatch.ElapsedMilliseconds);
-                Interlocked.Exchange(ref StopwatchInUse, 0);
-            }
-        }
+            transactionExecuted = await trans.ExecuteAsync();
+        } while (!transactionExecuted);
+        
+        return new CurrentlyShown(worldId, itemId, lastUpdated, source, listings.ToList());
     }
 
     public async Task SetData(CurrentlyShown data)
     {
-        var owningStopwatch = false;
-        if (0 == Interlocked.Exchange(ref StopwatchInUse, 1))
-        {
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            owningStopwatch = true;
-        }
+        var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
 
-        try
-        {
-            var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
+        var worldId = data.WorldId;
+        var itemId = data.ItemId;
+        var lastUploadTime = data.LastUploadTimeUnixMilliseconds;
+        var uploadSource = data.UploadSource;
+        var listings = data.Listings;
 
-            var worldId = data.WorldId;
-            var itemId = data.ItemId;
-            var lastUploadTime = data.LastUploadTimeUnixMilliseconds;
-            var uploadSource = data.UploadSource;
-            var listings = data.Listings;
+        var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
+        var lastUpdated = await EnsureLastUpdated(worldId, itemId);
+        
+        // Create a transaction to update all of the data atomically
+        var trans = db.CreateTransaction();
+        trans.AddCondition(Condition.StringEqual(lastUpdatedKey, lastUpdated));
+        
+        // Queue an update to the listings
+        var listingsKey = GetListingsIndexKey(worldId, itemId);
+        var existingListingIdsRaw = await db.StringGetAsync(listingsKey);
+        var existingListingIds = ParseObjectIds(existingListingIdsRaw);
+        SetListingsAtomic(trans, worldId, itemId, existingListingIds, listings);
+        
+        // Queue an update to the upload source
+        SetSourceAtomic(trans, worldId, itemId, uploadSource);
 
-            var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
-            var lastUpdated = await EnsureLastUpdated(worldId, itemId);
-
-            // Create a transaction to update all of the data atomically
-            var trans = db.CreateTransaction();
-            trans.AddCondition(Condition.StringEqual(lastUpdatedKey, lastUpdated));
-
-            // Queue an update to the listings
-            var listingsKey = GetListingsIndexKey(worldId, itemId);
-            var existingListingIdsRaw = await db.StringGetAsync(listingsKey);
-            var existingListingIds = ParseObjectIds(existingListingIdsRaw);
-            SetListingsAtomic(trans, worldId, itemId, existingListingIds, listings);
-
-            // Queue an update to the upload source
-            SetSourceAtomic(trans, worldId, itemId, uploadSource);
-
-            // Queue an update to the last updated time
-            SetLastUpdatedAtomic(trans, worldId, itemId, lastUploadTime);
-
-            // Execute the transaction. If this fails, we'll just assume that newer data
-            // was written first and move on.
-            await trans.ExecuteAsync();
-        }
-        finally
-        {
-            if (owningStopwatch)
-            {
-                Stopwatch.Stop();
-                SetTime.Observe(Stopwatch.ElapsedMilliseconds);
-                Interlocked.Exchange(ref StopwatchInUse, 0);
-            }
-        }
+        // Queue an update to the last updated time
+        SetLastUpdatedAtomic(trans, worldId, itemId, lastUploadTime);
+        
+        // Execute the transaction. If this fails, we'll just assume that newer data
+        // was written first and move on.
+        await trans.ExecuteAsync();
     }
-
+    
     private async Task<long> EnsureLastUpdated(uint worldId, uint itemId)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
@@ -146,20 +96,20 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         await db.StringSetAsync(lastUpdatedKey, 0, when: When.NotExists);
         return (long)await db.StringGetAsync(lastUpdatedKey);
     }
-
+    
     private static void SetLastUpdatedAtomic(IDatabaseAsync trans, uint worldId, uint itemId, long timestamp)
     {
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
         _ = trans.StringSetAsync(lastUpdatedKey, timestamp);
     }
-
+    
     private static async Task<string> GetSource(IDatabaseAsync db, uint worldId, uint itemId)
     {
         var sourceKey = GetUploadSourceKey(worldId, itemId);
         var source = await db.StringGetAsync(sourceKey);
         return source;
     }
-
+    
     private static void SetSourceAtomic(IDatabaseAsync trans, uint worldId, uint itemId, string source)
     {
         var sourceKey = GetUploadSourceKey(worldId, itemId);
@@ -169,7 +119,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     private static async Task<Listing[]> GetListings(IDatabaseAsync db, uint worldId, uint itemId)
     {
         var listingsKey = GetListingsIndexKey(worldId, itemId);
-
+        
         var listingIdsRaw = await db.StringGetAsync(listingsKey);
         if (listingIdsRaw.IsNullOrEmpty)
         {
@@ -201,28 +151,27 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                     Materia = GetValueMateriaArray(listing, "mat"),
                 };
             });
-
+        
         return await Task.WhenAll(listingFetches);
     }
-
-    private static void SetListingsAtomic(IDatabaseAsync trans, uint worldId, uint itemId,
-        IEnumerable<Guid> existingListingIds, IList<Listing> listings)
+    
+    private static void SetListingsAtomic(IDatabaseAsync trans, uint worldId, uint itemId, IEnumerable<Guid> existingListingIds, IList<Listing> listings)
     {
         var listingsKey = GetListingsIndexKey(worldId, itemId);
-
+        
         // Delete the existing listings
         foreach (var listingId in existingListingIds)
         {
             var listingKey = GetListingKey(worldId, itemId, listingId);
             _ = trans.KeyDeleteAsync(listingKey);
         }
-
+        
         // Set the updated listings
         var newListingIds = listings.Select(_ => Guid.NewGuid()).ToList();
         foreach (var (listing, listingId) in listings.Zip(newListingIds))
         {
             var listingKey = GetListingKey(worldId, itemId, listingId);
-            _ = trans.HashSetAsync(listingKey, new[]
+            _ = trans.HashSetAsync(listingKey, new []
             {
                 new HashEntry("id", listing.ListingId ?? ""),
                 new HashEntry("hq", listing.Hq),
@@ -240,21 +189,21 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 new HashEntry("mat", SerializeMateriaArray(listing.Materia)),
             });
         }
-
+        
         // Update the listings index
         _ = trans.StringSetAsync(listingsKey, SerializeObjectIds(newListingIds));
     }
-
+    
     private static uint GetValueUInt32(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? (uint)hash[key] : 0;
     }
-
+    
     private static int GetValueInt32(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? (int)hash[key] : 0;
     }
-
+    
     private static long GetValueInt64(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? (long)hash[key] : 0;
@@ -264,12 +213,12 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     {
         return hash.ContainsKey(key) && (bool)hash[key];
     }
-
+    
     private static string GetValueString(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? hash[key] : "";
     }
-
+    
     private static List<Materia> GetValueMateriaArray(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? ParseMateria(hash[key]).ToList() : new List<Materia>();
@@ -311,12 +260,12 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     {
         return string.Join(':', materia.Select(m => $"{m.MateriaId}-{m.SlotId}"));
     }
-
+    
     private static string SerializeObjectIds(IEnumerable<Guid> ids)
     {
         return string.Join(':', ids.Select(id => id.ToString()));
     }
-
+    
     private static string GetUploadSourceKey(uint worldId, uint itemId)
     {
         return $"{worldId}:{itemId}:Source";
@@ -326,12 +275,12 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     {
         return $"{worldId}:{itemId}:LastUpdated";
     }
-
+    
     private static string GetListingsIndexKey(uint worldId, uint itemId)
     {
         return $"{worldId}:{itemId}:Listings";
     }
-
+    
     private static string GetListingKey(uint worldId, uint itemId, Guid listingId)
     {
         return $"{worldId}:{itemId}:Listings:{listingId.ToString()}";
