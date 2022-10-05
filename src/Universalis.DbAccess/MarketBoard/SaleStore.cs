@@ -24,6 +24,9 @@ public class SaleStore : ISaleStore
         "universalis_sales_retrievebysaletime_ms",
         "SaleStore RetrieveBySaleTime Milliseconds");
 
+    private static readonly Stopwatch Stopwatch = new();
+    private static int StopwatchInUse = 0;
+
     public SaleStore(string connectionString)
     {
         _connectionString = connectionString;
@@ -31,11 +34,21 @@ public class SaleStore : ISaleStore
 
     public async Task Insert(Sale sale, CancellationToken cancellationToken = default)
     {
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
+        var owningStopwatch = false;
+        if (0 == Interlocked.Exchange(ref StopwatchInUse, 1))
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            owningStopwatch = true;
+        }
 
         if (sale == null)
         {
+            if (owningStopwatch)
+            {
+                Interlocked.Exchange(ref StopwatchInUse, 0);
+            }
+
             throw new ArgumentNullException(nameof(sale));
         }
 
@@ -61,17 +74,31 @@ public class SaleStore : ISaleStore
         };
         await command.ExecuteNonQueryAsync(cancellationToken);
 
-        stopwatch.Stop();
-        InsertTime.Observe(stopwatch.ElapsedMilliseconds);
+        if (owningStopwatch)
+        {
+            Stopwatch.Stop();
+            InsertTime.Observe(Stopwatch.ElapsedMilliseconds);
+            Interlocked.Exchange(ref StopwatchInUse, 0);
+        }
     }
 
     public async Task InsertMany(IEnumerable<Sale> sales, CancellationToken cancellationToken = default)
     {
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
+        var owningStopwatch = false;
+        if (0 == Interlocked.Exchange(ref StopwatchInUse, 1))
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            owningStopwatch = true;
+        }
 
         if (sales == null)
         {
+            if (owningStopwatch)
+            {
+                Interlocked.Exchange(ref StopwatchInUse, 0);
+            }
+
             throw new ArgumentNullException(nameof(sales));
         }
 
@@ -101,15 +128,24 @@ public class SaleStore : ISaleStore
 
         await batch.ExecuteNonQueryAsync(cancellationToken);
 
-        stopwatch.Stop();
-        InsertManyTime.Observe(stopwatch.ElapsedMilliseconds);
+        if (owningStopwatch)
+        {
+            Stopwatch.Stop();
+            InsertManyTime.Observe(Stopwatch.ElapsedMilliseconds);
+            Interlocked.Exchange(ref StopwatchInUse, 0);
+        }
     }
 
     public async Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null,
         CancellationToken cancellationToken = default)
     {
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
+        var owningStopwatch = false;
+        if (0 == Interlocked.Exchange(ref StopwatchInUse, 1))
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            owningStopwatch = true;
+        }
 
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
@@ -158,8 +194,12 @@ public class SaleStore : ISaleStore
 
         var result = sales.Take(count).ToList();
 
-        stopwatch.Stop();
-        RetrieveBySaleTimeTime.Observe(stopwatch.ElapsedMilliseconds);
+        if (owningStopwatch)
+        {
+            Stopwatch.Stop();
+            RetrieveBySaleTimeTime.Observe(Stopwatch.ElapsedMilliseconds);
+            Interlocked.Exchange(ref StopwatchInUse, 0);
+        }
 
         return result;
     }
