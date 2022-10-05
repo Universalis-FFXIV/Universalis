@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using StackExchange.Redis;
 using Universalis.Entities.MarketBoard;
 
@@ -16,7 +17,7 @@ public class TaxRatesStore : ITaxRatesStore
     public Task SetTaxRates(uint worldId, TaxRates taxRates)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.TaxRates);
-        return db.HashSetAsync(worldId.ToString(), new []
+        return db.HashSetAsync(worldId.ToString(), new[]
         {
             new HashEntry("Limsa Lominsa", taxRates.LimsaLominsa),
             new HashEntry("Gridania", taxRates.Gridania),
@@ -33,16 +34,20 @@ public class TaxRatesStore : ITaxRatesStore
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.TaxRates);
         var key = worldId.ToString();
+        var tasks = new[]
+                { "Limsa Lominsa", "Gridania", "Ul'dah", "Ishgard", "Kugane", "Crystarium", "Old Sharlayan", "source" }
+            .Select(k => db.HashGetAsync(key, k));
+        var values = await Task.WhenAll(tasks);
         return new TaxRates
         {
-            LimsaLominsa = (int)await db.HashGetAsync(key, "Limsa Lominsa"),
-            Gridania = (int)await db.HashGetAsync(key, "Gridania"),
-            Uldah = (int)await db.HashGetAsync(key, "Ul'dah"),
-            Ishgard = (int)await db.HashGetAsync(key, "Ishgard"),
-            Kugane = (int)await db.HashGetAsync(key, "Kugane"),
-            Crystarium = (int)await db.HashGetAsync(key, "Crystarium"),
-            OldSharlayan = (int)await db.HashGetAsync(key, "Old Sharlayan"),
-            UploadApplicationName = await db.HashGetAsync(key, "source"),
+            LimsaLominsa = (int)values[0],
+            Gridania = (int)values[1],
+            Uldah = (int)values[2],
+            Ishgard = (int)values[3],
+            Kugane = (int)values[4],
+            Crystarium = (int)values[5],
+            OldSharlayan = (int)values[6],
+            UploadApplicationName = values[7],
         };
     }
 }
