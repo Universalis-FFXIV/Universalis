@@ -39,50 +39,47 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             owningStopwatch = true;
         }
 
-        try
+        var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
+
+        var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
+        if (!await db.KeyExistsAsync(lastUpdatedKey))
         {
-            var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
-
-            var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
-            if (!await db.KeyExistsAsync(lastUpdatedKey))
-            {
-                return new CurrentlyShown(worldId, itemId, 0, "", new List<Listing>());
-            }
-
-            // Fetch all of the data in a consistent manner. This shouldn't usually run more
-            // than once, given that reads are far more frequent than writes.
-            bool transactionExecuted;
-            long lastUpdated;
-            string source;
-            IEnumerable<Listing> listings;
-            do
-            {
-                lastUpdated = await EnsureLastUpdated(worldId, itemId);
-
-                var trans = db.CreateTransaction();
-                trans.AddCondition(Condition.StringEqual(lastUpdatedKey, lastUpdated));
-
-                var sourceTask = GetSource(db, worldId, itemId);
-                var listingsTask = GetListings(db, worldId, itemId);
-                await Task.WhenAll(sourceTask, listingsTask);
-
-                source = await sourceTask;
-                listings = await listingsTask;
-
-                transactionExecuted = await trans.ExecuteAsync();
-            } while (!transactionExecuted);
-
-            return new CurrentlyShown(worldId, itemId, lastUpdated, source, listings.ToList());
+            return new CurrentlyShown(worldId, itemId, 0, "", new List<Listing>());
         }
-        finally
+
+        // Fetch all of the data in a consistent manner. This shouldn't usually run more
+        // than once, given that reads are far more frequent than writes.
+        bool transactionExecuted;
+        long lastUpdated;
+        string source;
+        IEnumerable<Listing> listings;
+        do
         {
-            if (owningStopwatch)
-            {
-                Stopwatch.Stop();
-                GetTime.Observe(Stopwatch.ElapsedMilliseconds);
-                Interlocked.Exchange(ref StopwatchInUse, 0);
-            }
+            lastUpdated = await EnsureLastUpdated(worldId, itemId);
+
+            var trans = db.CreateTransaction();
+            trans.AddCondition(Condition.StringEqual(lastUpdatedKey, lastUpdated));
+
+            var sourceTask = GetSource(db, worldId, itemId);
+            var listingsTask = GetListings(db, worldId, itemId);
+            await Task.WhenAll(sourceTask, listingsTask);
+
+            source = await sourceTask;
+            listings = await listingsTask;
+
+            transactionExecuted = await trans.ExecuteAsync();
+        } while (!transactionExecuted);
+
+        var result = new CurrentlyShown(worldId, itemId, lastUpdated, source, listings.ToList());
+
+        if (owningStopwatch)
+        {
+            Stopwatch.Stop();
+            GetTime.Observe(Stopwatch.ElapsedMilliseconds);
+            Interlocked.Exchange(ref StopwatchInUse, 0);
         }
+
+        return result;
     }
 
     public async Task SetData(CurrentlyShown data)
@@ -95,47 +92,42 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             owningStopwatch = true;
         }
 
-        try
+        var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
+
+        var worldId = data.WorldId;
+        var itemId = data.ItemId;
+        var lastUploadTime = data.LastUploadTimeUnixMilliseconds;
+        var uploadSource = data.UploadSource;
+        var listings = data.Listings;
+
+        var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
+        var lastUpdated = await EnsureLastUpdated(worldId, itemId);
+
+        // Create a transaction to update all of the data atomically
+        var trans = db.CreateTransaction();
+        trans.AddCondition(Condition.StringEqual(lastUpdatedKey, lastUpdated));
+
+        // Queue an update to the listings
+        var listingsKey = GetListingsIndexKey(worldId, itemId);
+        var existingListingIdsRaw = await db.StringGetAsync(listingsKey);
+        var existingListingIds = ParseObjectIds(existingListingIdsRaw);
+        SetListingsAtomic(trans, worldId, itemId, existingListingIds, listings);
+
+        // Queue an update to the upload source
+        SetSourceAtomic(trans, worldId, itemId, uploadSource);
+
+        // Queue an update to the last updated time
+        SetLastUpdatedAtomic(trans, worldId, itemId, lastUploadTime);
+
+        // Execute the transaction. If this fails, we'll just assume that newer data
+        // was written first and move on.
+        await trans.ExecuteAsync();
+
+        if (owningStopwatch)
         {
-            var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
-
-            var worldId = data.WorldId;
-            var itemId = data.ItemId;
-            var lastUploadTime = data.LastUploadTimeUnixMilliseconds;
-            var uploadSource = data.UploadSource;
-            var listings = data.Listings;
-
-            var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
-            var lastUpdated = await EnsureLastUpdated(worldId, itemId);
-
-            // Create a transaction to update all of the data atomically
-            var trans = db.CreateTransaction();
-            trans.AddCondition(Condition.StringEqual(lastUpdatedKey, lastUpdated));
-
-            // Queue an update to the listings
-            var listingsKey = GetListingsIndexKey(worldId, itemId);
-            var existingListingIdsRaw = await db.StringGetAsync(listingsKey);
-            var existingListingIds = ParseObjectIds(existingListingIdsRaw);
-            SetListingsAtomic(trans, worldId, itemId, existingListingIds, listings);
-
-            // Queue an update to the upload source
-            SetSourceAtomic(trans, worldId, itemId, uploadSource);
-
-            // Queue an update to the last updated time
-            SetLastUpdatedAtomic(trans, worldId, itemId, lastUploadTime);
-
-            // Execute the transaction. If this fails, we'll just assume that newer data
-            // was written first and move on.
-            await trans.ExecuteAsync();
-        }
-        finally
-        {
-            if (owningStopwatch)
-            {
-                Stopwatch.Stop();
-                SetTime.Observe(Stopwatch.ElapsedMilliseconds);
-                Interlocked.Exchange(ref StopwatchInUse, 0);
-            }
+            Stopwatch.Stop();
+            SetTime.Observe(Stopwatch.ElapsedMilliseconds);
+            Interlocked.Exchange(ref StopwatchInUse, 0);
         }
     }
 
