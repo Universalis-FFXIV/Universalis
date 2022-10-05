@@ -19,6 +19,6 @@ public class OperationCancelledExceptionFilter : IExceptionFilter
         if (context.Exception is not OperationCanceledException) return;
         _logger.LogInformation("Request was cancelled");
         context.ExceptionHandled = true;
-        context.Result = new StatusCodeResult(400);
+        context.Result = new StatusCodeResult(504);
     }
 }
