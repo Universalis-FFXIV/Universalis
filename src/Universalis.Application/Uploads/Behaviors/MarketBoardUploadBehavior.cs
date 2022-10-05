@@ -78,6 +78,23 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var itemId = parameters.ItemId.Value;
         // ReSharper restore PossibleInvalidOperationException
 
+        // Most uploads have both sales and listings
+        var currentlyShownTask = _currentlyShownDb.Retrieve(new CurrentlyShownQuery
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+        }, cancellationToken);
+        var existingHistoryTask = _historyDb.Retrieve(new HistoryQuery
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+            Count = parameters.Sales?.Count ?? 0,
+        }, cancellationToken);
+
+        await Task.WhenAll(currentlyShownTask, existingHistoryTask);
+        var existingCurrentlyShown = await currentlyShownTask;
+        var existingHistory = await existingHistoryTask;
+
         if (parameters.Sales != null)
         {
             if (parameters.Sales.Any(s =>
@@ -87,13 +104,6 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             }
 
             var cleanSales = CleanUploadedSales(parameters.Sales, worldId, itemId, parameters.UploaderId);
-
-            var existingHistory = await _historyDb.Retrieve(new HistoryQuery
-            {
-                WorldId = worldId,
-                ItemId = itemId,
-                Count = cleanSales.Count,
-            }, cancellationToken);
 
             var addedSales = new List<Sale>();
 
@@ -121,7 +131,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
             if (addedSales.Count > 0)
             {
-                await Task.Run(() =>
+                _ = Task.Run(() =>
                 {
                     _sockets.Publish(new SalesAdd
                     {
@@ -132,12 +142,6 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 }, cancellationToken);
             }
         }
-
-        var existingCurrentlyShown = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-        }, cancellationToken);
 
         List<Listing> newListings = null;
         if (parameters.Listings != null)
@@ -158,7 +162,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
             if (addedListings.Count > 0)
             {
-                await Task.Run(async () =>
+                _ = Task.Run(async () =>
                 {
                     _sockets.Publish(new ListingsAdd
                     {
@@ -174,7 +178,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
             if (removedListings.Count > 0)
             {
-                await Task.Run(async () =>
+                _ = Task.Run(async () =>
                 {
                     _sockets.Publish(new ListingsRemove
                     {
@@ -189,16 +193,18 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             }
         }
 
+        _ = Task.Run(async () =>
+        {
+            if (await _cache.Delete(new CachedCurrentlyShownQuery { ItemId = itemId, WorldId = worldId },
+                    cancellationToken))
+            {
+                CacheDeletes.Inc();
+            }
+        }, cancellationToken);
+
         var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         var listings = newListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>();
         var document = new CurrentlyShown(worldId, itemId, now, source.Name, listings);
-
-        if (await _cache.Delete(new CachedCurrentlyShownQuery { ItemId = itemId, WorldId = worldId },
-                cancellationToken))
-        {
-            CacheDeletes.Inc();
-        }
-
         await _currentlyShownDb.Update(document, new CurrentlyShownQuery
         {
             WorldId = worldId,
