@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Prometheus;
 using StackExchange.Redis;
@@ -21,9 +20,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     private static readonly Histogram SetTime = Metrics.CreateHistogram("universalis_currently_shown_set_ms",
         "CurrentlyShownStore SetData Milliseconds");
 
-    private static readonly Stopwatch Stopwatch = new();
-    private static int StopwatchInUse = 0;
-
     public CurrentlyShownStore(IConnectionMultiplexer redis)
     {
         _redis = redis;
@@ -31,19 +27,16 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
     public async Task<CurrentlyShown> GetData(uint worldId, uint itemId)
     {
-        var owningStopwatch = false;
-        if (0 == Interlocked.Exchange(ref StopwatchInUse, 1))
-        {
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            owningStopwatch = true;
-        }
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
 
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
 
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
         if (!await db.KeyExistsAsync(lastUpdatedKey))
         {
+            stopwatch.Stop();
+            GetTime.Observe(stopwatch.ElapsedMilliseconds);
             return new CurrentlyShown(worldId, itemId, 0, "", new List<Listing>());
         }
 
@@ -72,25 +65,16 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
         var result = new CurrentlyShown(worldId, itemId, lastUpdated, source, listings.ToList());
 
-        if (owningStopwatch)
-        {
-            Stopwatch.Stop();
-            GetTime.Observe(Stopwatch.ElapsedMilliseconds);
-            Interlocked.Exchange(ref StopwatchInUse, 0);
-        }
+        stopwatch.Stop();
+        GetTime.Observe(stopwatch.ElapsedMilliseconds);
 
         return result;
     }
 
     public async Task SetData(CurrentlyShown data)
     {
-        var owningStopwatch = false;
-        if (0 == Interlocked.Exchange(ref StopwatchInUse, 1))
-        {
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            owningStopwatch = true;
-        }
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
 
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
 
@@ -123,12 +107,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         // was written first and move on.
         await trans.ExecuteAsync();
 
-        if (owningStopwatch)
-        {
-            Stopwatch.Stop();
-            SetTime.Observe(Stopwatch.ElapsedMilliseconds);
-            Interlocked.Exchange(ref StopwatchInUse, 0);
-        }
+        stopwatch.Stop();
+        SetTime.Observe(stopwatch.ElapsedMilliseconds);
     }
 
     private async Task<long> EnsureLastUpdated(uint worldId, uint itemId)
