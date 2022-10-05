@@ -26,8 +26,7 @@ public class HistoryDbAccess : IHistoryDbAccess
             WorldId = document.WorldId,
             ItemId = document.ItemId,
             LastUploadTime =
-                DateTimeOffset.FromUnixTimeMilliseconds(Convert.ToInt64(document.LastUploadTimeUnixMilliseconds))
-                    .UtcDateTime,
+                DateTimeOffset.FromUnixTimeMilliseconds(Convert.ToInt64(document.LastUploadTimeUnixMilliseconds)).UtcDateTime,
         }, cancellationToken);
         await _saleStore.InsertMany(document.Sales, cancellationToken);
     }
@@ -39,9 +38,8 @@ public class HistoryDbAccess : IHistoryDbAccess
         {
             return null;
         }
-
-        var sales = await _saleStore.RetrieveBySaleTime(query.WorldId, query.ItemId, query.Count ?? 1000,
-            cancellationToken: cancellationToken);
+        
+        var sales = await _saleStore.RetrieveBySaleTime(query.WorldId, query.ItemId, query.Count ?? 1000, cancellationToken: cancellationToken);
         return new History
         {
             WorldId = marketItem.WorldId,
@@ -51,18 +49,14 @@ public class HistoryDbAccess : IHistoryDbAccess
         };
     }
 
-    public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query, CancellationToken cancellationToken = default)
     {
         return (await Task.WhenAll(query.WorldIds
-                .Select(worldId =>
-                    Retrieve(new HistoryQuery { WorldId = worldId, ItemId = query.ItemId, Count = query.Count },
-                        cancellationToken))))
+            .Select(worldId => Retrieve(new HistoryQuery { WorldId = worldId, ItemId = query.ItemId, Count = query.Count }, cancellationToken))))
             .Where(h => h != null);
     }
 
-    public async Task InsertSales(IEnumerable<Sale> sales, HistoryQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task InsertSales(IEnumerable<Sale> sales, HistoryQuery query, CancellationToken cancellationToken = default)
     {
         await _marketItemStore.Update(new MarketItem
         {
