@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Npgsql;
+using Prometheus;
 using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
@@ -13,6 +14,16 @@ public class SaleStore : ISaleStore
 {
     private readonly string _connectionString;
 
+    private static readonly Histogram InsertTime = Metrics.CreateHistogram("universalis_sales_insert_ms",
+        "SaleStore Insert Milliseconds");
+
+    private static readonly Histogram InsertManyTime = Metrics.CreateHistogram("universalis_sales_insertmany_ms",
+        "SaleStore InsertMany Milliseconds");
+
+    private static readonly Histogram RetrieveBySaleTimeTime = Metrics.CreateHistogram(
+        "universalis_sales_retrievebysaletime_ms",
+        "SaleStore RetrieveBySaleTime Milliseconds");
+
     public SaleStore(string connectionString)
     {
         _connectionString = connectionString;
@@ -20,15 +31,19 @@ public class SaleStore : ISaleStore
 
     public async Task Insert(Sale sale, CancellationToken cancellationToken = default)
     {
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+
         if (sale == null)
         {
             throw new ArgumentNullException(nameof(sale));
         }
-        
+
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
         await using var command = new NpgsqlCommand(
-            "INSERT INTO sale (id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", conn)
+            "INSERT INTO sale (id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+            conn)
         {
             Parameters =
             {
@@ -45,15 +60,21 @@ public class SaleStore : ISaleStore
             },
         };
         await command.ExecuteNonQueryAsync(cancellationToken);
+
+        stopwatch.Stop();
+        InsertTime.Observe(stopwatch.ElapsedMilliseconds);
     }
 
     public async Task InsertMany(IEnumerable<Sale> sales, CancellationToken cancellationToken = default)
     {
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+
         if (sales == null)
         {
             throw new ArgumentNullException(nameof(sales));
         }
-        
+
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
         await using var batch = new NpgsqlBatch(conn);
@@ -77,27 +98,37 @@ public class SaleStore : ISaleStore
                 },
             });
         }
+
         await batch.ExecuteNonQueryAsync(cancellationToken);
+
+        stopwatch.Stop();
+        InsertManyTime.Observe(stopwatch.ElapsedMilliseconds);
     }
 
-    public async Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null,
+        CancellationToken cancellationToken = default)
     {
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
-        
+
         await using var command =
             new NpgsqlCommand(
-                "SELECT id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin FROM sale WHERE world_id = $1 AND item_id = $2 AND sale_time <= $3 ORDER BY sale_time DESC LIMIT $4", conn)
+                "SELECT id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin FROM sale WHERE world_id = $1 AND item_id = $2 AND sale_time <= $3 ORDER BY sale_time DESC LIMIT $4",
+                conn)
             {
                 Parameters =
                 {
                     new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(worldId) },
                     new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(itemId) },
                     new NpgsqlParameter<DateTime> { TypedValue = from ?? DateTime.UtcNow },
-                    new NpgsqlParameter<int> { TypedValue = count + 20 }, // Give some buffer in case we filter out anything 
+                    new NpgsqlParameter<int>
+                        { TypedValue = count + 20 }, // Give some buffer in case we filter out anything 
                 },
             };
-        
+
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
         var sales = new List<Sale>();
@@ -125,6 +156,11 @@ public class SaleStore : ISaleStore
             sales.Add(nextSale);
         }
 
-        return sales.Take(count).ToList();
+        var result = sales.Take(count).ToList();
+
+        stopwatch.Stop();
+        RetrieveBySaleTimeTime.Observe(stopwatch.ElapsedMilliseconds);
+
+        return result;
     }
 }
