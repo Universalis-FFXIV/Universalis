@@ -6,7 +6,6 @@ using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.AccessControl;
-using Universalis.Entities.Uploads;
 using Xunit;
 
 namespace Universalis.Application.Tests.Uploads.Behaviors;

@@ -22,7 +22,6 @@ using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.DbAccess;
 using Universalis.DbAccess.MarketBoard;
-using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.GameData;
 using Universalis.Mogboard;
 

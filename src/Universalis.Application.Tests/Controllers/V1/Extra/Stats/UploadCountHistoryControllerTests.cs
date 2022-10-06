@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1.Extra.Stats;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Views.V1.Extra.Stats;

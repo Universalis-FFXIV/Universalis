@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1.Extra.Stats;
-using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
 using Universalis.GameData;

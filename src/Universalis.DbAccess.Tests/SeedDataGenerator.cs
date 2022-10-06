@@ -15,7 +15,7 @@ public static class SeedDataGenerator
         var rand = new Random();
         var t = lastUploadTime ?? DateTimeOffset.Now.ToUnixTimeMilliseconds();
         var listings = Enumerable.Range(0, 100)
-            .Select(i => new Listing
+            .Select(_ => new Listing
             {
                 ListingId = rand.NextInt64().ToString(),
                 Hq = rand.NextDouble() > 0.5,
@@ -45,7 +45,7 @@ public static class SeedDataGenerator
             ItemId = itemId,
             LastUploadTimeUnixMilliseconds = lastUploadTime ?? DateTimeOffset.Now.ToUnixTimeMilliseconds(),
             Sales = Enumerable.Range(0, 100)
-                .Select(i => new Sale
+                .Select(_ => new Sale
                 {
                     Id = Guid.NewGuid(),
                     WorldId = worldId,

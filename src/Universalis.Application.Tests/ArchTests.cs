@@ -1,7 +1,6 @@
 using NetArchTest.Rules;
 using System;
 using Universalis.Application.Uploads.Behaviors;
-using Universalis.Application.Views;
 using Universalis.Application.Views.V1;
 using Xunit;
 using Xunit.Abstractions;

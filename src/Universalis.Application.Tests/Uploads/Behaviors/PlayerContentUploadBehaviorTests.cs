@@ -3,8 +3,6 @@ using System.Threading.Tasks;
 using Universalis.Application.Tests.Mocks.DbAccess;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
-using Universalis.DbAccess.Queries;
-using Universalis.Entities;
 using Xunit;
 
 namespace Universalis.Application.Tests.Uploads.Behaviors;

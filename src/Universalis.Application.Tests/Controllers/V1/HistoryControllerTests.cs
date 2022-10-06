@@ -7,7 +7,6 @@ using Universalis.Application.Controllers.V1;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views.V1;
-using Universalis.DataTransformations;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Tests;
 using Universalis.Entities.MarketBoard;
@@ -37,8 +36,6 @@ public class HistoryControllerTests
             };
         }
     }
-    
-    private const long WeekLength = 604800000L;
 
     [Theory]
     [InlineData("74", "")]
@@ -77,6 +74,7 @@ public class HistoryControllerTests
         var result = await test.Controller.Get("5,5333", worldOrDc, entriesToReturn);
         var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(history);
         Assert.Contains(5U, history.ItemIds);
         Assert.Contains(5333U, history.ItemIds);
         Assert.Empty(history.UnresolvedItemIds);
@@ -85,8 +83,10 @@ public class HistoryControllerTests
         Assert.Equal(test.GameData.AvailableWorlds()[74], history.WorldName);
         Assert.Null(history.DcName);
 
-        AssertHistoryValidWorld(document1, history.Items.First(item => item.ItemId == document1.ItemId), test.GameData, unixNowMs);
-        AssertHistoryValidWorld(document2, history.Items.First(item => item.ItemId == document2.ItemId), test.GameData, unixNowMs);
+        AssertHistoryValidWorld(document1, history.Items.First(item => item.ItemId == document1.ItemId), test.GameData,
+            unixNowMs);
+        AssertHistoryValidWorld(document2, history.Items.First(item => item.ItemId == document2.ItemId), test.GameData,
+            unixNowMs);
     }
 
     [Theory]
@@ -308,7 +308,8 @@ public class HistoryControllerTests
         Assert.Null(history.WorldId);
     }
 
-    private static void AssertHistoryValidWorld(History document, HistoryView history, IGameDataProvider gameData, long unixNowMs)
+    private static void AssertHistoryValidWorld(History document, HistoryView history, IGameDataProvider gameData,
+        long unixNowMs)
     {
         document.Sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
@@ -330,7 +331,8 @@ public class HistoryControllerTests
         Assert.True(history.SaleVelocityHq > 0);
     }
 
-    private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<Sale> sales, string worldOrDc)
+    private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<Sale> sales,
+        string worldOrDc)
     {
         sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
@@ -354,20 +356,17 @@ public class HistoryControllerTests
 
     private static bool IsSorted(IDictionary<int, int> dict)
     {
-        var lastK = int.MinValue;
+        var lastK = int.MaxValue;
         foreach (var (k, _) in dict)
         {
             if (k < lastK)
             {
                 return false;
             }
+
+            lastK = k;
         }
 
         return true;
-    }
-
-    private static double Round(double value)
-    {
-        return Math.Round(value, 2);
     }
 }

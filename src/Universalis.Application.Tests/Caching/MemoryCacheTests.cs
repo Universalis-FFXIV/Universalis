@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Universalis.Application.Caching;
-using Universalis.DbAccess.Queries.MarketBoard;
 using Xunit;
 
 namespace Universalis.Application.Tests.Caching;
@@ -42,7 +41,7 @@ public class MemoryCacheTests
         var cache = new MemoryCache<CachedCurrentlyShownQuery, Data>(1);
         var query = new CachedCurrentlyShownQuery { ItemId = 1, WorldId = 0 };
         var a = new Data(1);
-        cache.Set(query, a);
+        await cache.Set(query, a);
         var b = await cache.Get(query);
         Assert.False(ReferenceEquals(a, b));
     }
@@ -80,7 +79,7 @@ public class MemoryCacheTests
 
         var tasks = new Task[4];
 
-        tasks[0] = new Task(async () =>
+        tasks[0] = Task.Run(async () =>
         {
             for (var j = 0U; j < nIterations; j++)
             {
@@ -89,7 +88,7 @@ public class MemoryCacheTests
             }
         });
 
-        tasks[1] = new Task(async () =>
+        tasks[1] = Task.Run(async () =>
         {
             for (var j = 0U; j < nIterations; j++)
             {
@@ -102,7 +101,7 @@ public class MemoryCacheTests
             }
         });
 
-        tasks[2] = new Task(async () =>
+        tasks[2] = Task.Run(async () =>
         {
             for (var j = 0U; j < nIterations; j++)
             {
@@ -111,7 +110,7 @@ public class MemoryCacheTests
             }
         });
 
-        tasks[3] = new Task(async () =>
+        tasks[3] = Task.Run(async () =>
         {
             for (var j = 0U; j < nIterations; j++)
             {

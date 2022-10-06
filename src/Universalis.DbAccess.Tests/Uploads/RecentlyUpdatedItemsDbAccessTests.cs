@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Uploads;
 using Xunit;
 

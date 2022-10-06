@@ -9,7 +9,6 @@ using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1;
 using Universalis.Application.Views.V2;
 using Universalis.DbAccess.MarketBoard;
-using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V2;

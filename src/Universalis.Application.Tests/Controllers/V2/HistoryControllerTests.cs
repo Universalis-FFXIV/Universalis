@@ -8,7 +8,6 @@ using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views.V1;
 using Universalis.Application.Views.V2;
-using Universalis.DataTransformations;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Tests;
 using Universalis.Entities.MarketBoard;
@@ -38,8 +37,6 @@ public class HistoryControllerTests
             };
         }
     }
-
-    private const long WeekLength = 604800000L;
 
     [Theory]
     [InlineData("74", "")]
@@ -78,6 +75,7 @@ public class HistoryControllerTests
         var result = await test.Controller.Get("5,5333", worldOrDc, entriesToReturn);
         var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(history);
         Assert.Contains(5U, history.ItemIds);
         Assert.Contains(5333U, history.ItemIds);
         Assert.Empty(history.UnresolvedItemIds);
@@ -363,13 +361,15 @@ public class HistoryControllerTests
 
     private static bool IsSorted(IDictionary<int, int> dict)
     {
-        var lastK = int.MinValue;
+        var lastK = int.MaxValue;
         foreach (var (k, _) in dict)
         {
             if (k < lastK)
             {
                 return false;
             }
+
+            lastK = k;
         }
 
         return true;

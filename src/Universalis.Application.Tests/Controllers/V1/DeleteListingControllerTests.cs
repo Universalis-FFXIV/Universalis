@@ -3,7 +3,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
-using Universalis.Application.Controllers;
 using Universalis.Application.Controllers.V1;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;

@@ -9,7 +9,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.IO;
-using Universalis.Application.Views;
 using Universalis.Application.Views.V1;
 using Universalis.Entities.MarketBoard;
 

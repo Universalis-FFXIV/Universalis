@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1.Extra;
 using Universalis.DbAccess;
-using Universalis.DbAccess.Queries;
 
 namespace Universalis.Application.Controllers.V1.Extra;
 
