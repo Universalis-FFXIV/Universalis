@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Universalis.Application.Caching;
+using Universalis.Common.Caching;
 using Xunit;
 
 namespace Universalis.Application.Tests.Caching;
@@ -119,10 +120,6 @@ public class MemoryCacheTests
             }
         });
 
-        tasks[0].Start();
-        tasks[1].Start();
-        tasks[2].Start();
-        tasks[3].Start();
         await tasks[0];
         await tasks[1];
         await tasks[2];

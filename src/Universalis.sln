@@ -65,6 +65,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dev Deployment", "Dev Deplo
 		..\devenv\.gitignore = ..\devenv\.gitignore
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Universalis.Common", "Universalis.Common\Universalis.Common.csproj", "{99C0B99C-C1C3-410F-895B-D34DA46755D9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,10 @@ Global
 		{AEBCC549-4DF0-4FFF-A7F7-3142A69BFE6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AEBCC549-4DF0-4FFF-A7F7-3142A69BFE6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AEBCC549-4DF0-4FFF-A7F7-3142A69BFE6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99C0B99C-C1C3-410F-895B-D34DA46755D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99C0B99C-C1C3-410F-895B-D34DA46755D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99C0B99C-C1C3-410F-895B-D34DA46755D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99C0B99C-C1C3-410F-895B-D34DA46755D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -328,10 +328,6 @@ public class HistoryControllerTests
         Assert.All(history.Sales.Select(s => (object)s.WorldId), Assert.Null);
         Assert.All(history.Sales.Select(s => s.WorldName), Assert.Null);
 
-        Assert.True(IsSorted(history.StackSizeHistogram));
-        Assert.True(IsSorted(history.StackSizeHistogramNq));
-        Assert.True(IsSorted(history.StackSizeHistogramHq));
-
         Assert.True(history.SaleVelocity > 0);
         Assert.True(history.SaleVelocityNq > 0);
         Assert.True(history.SaleVelocityHq > 0);
@@ -350,28 +346,8 @@ public class HistoryControllerTests
         Assert.Null(history.WorldName);
         Assert.NotNull(history.Sales);
 
-        Assert.True(IsSorted(history.StackSizeHistogram));
-        Assert.True(IsSorted(history.StackSizeHistogramNq));
-        Assert.True(IsSorted(history.StackSizeHistogramHq));
-
         Assert.True(history.SaleVelocity > 0);
         Assert.True(history.SaleVelocityNq > 0);
         Assert.True(history.SaleVelocityHq > 0);
-    }
-
-    private static bool IsSorted(IDictionary<int, int> dict)
-    {
-        var lastK = int.MaxValue;
-        foreach (var (k, _) in dict)
-        {
-            if (k < lastK)
-            {
-                return false;
-            }
-
-            lastK = k;
-        }
-
-        return true;
     }
 }

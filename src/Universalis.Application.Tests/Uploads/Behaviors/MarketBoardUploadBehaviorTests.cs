@@ -8,6 +8,7 @@ using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Tests.Mocks.Realtime;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
+using Universalis.Common.Caching;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.AccessControl;
