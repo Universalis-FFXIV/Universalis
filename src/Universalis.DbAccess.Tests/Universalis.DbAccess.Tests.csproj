@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Universalis.Common\Universalis.Common.csproj" />
     <ProjectReference Include="..\Universalis.DbAccess\Universalis.DbAccess.csproj" />
   </ItemGroup>
 

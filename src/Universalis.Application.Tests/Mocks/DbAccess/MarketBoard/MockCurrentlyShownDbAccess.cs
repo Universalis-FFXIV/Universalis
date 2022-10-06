@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
-using Universalis.Entities.Uploads;
 
 namespace Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 

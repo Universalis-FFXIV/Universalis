@@ -32,6 +32,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Universalis.Alerts\Universalis.Alerts.csproj" />
+    <ProjectReference Include="..\Universalis.Common\Universalis.Common.csproj" />
     <ProjectReference Include="..\Universalis.DataTransformations\Universalis.DataTransformations.fsproj" />
     <ProjectReference Include="..\Universalis.DbAccess\Universalis.DbAccess.csproj" />
     <ProjectReference Include="..\Universalis.Entities\Universalis.Entities.csproj" />

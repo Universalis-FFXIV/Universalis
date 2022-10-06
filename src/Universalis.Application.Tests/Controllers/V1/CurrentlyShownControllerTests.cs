@@ -8,6 +8,7 @@ using Universalis.Application.Controllers.V1;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views.V1;
+using Universalis.Common.Caching;
 using Universalis.DataTransformations;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;

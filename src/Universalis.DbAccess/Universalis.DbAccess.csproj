@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Universalis.Common\Universalis.Common.csproj" />
     <ProjectReference Include="..\Universalis.Entities\Universalis.Entities.csproj" />
   </ItemGroup>
 

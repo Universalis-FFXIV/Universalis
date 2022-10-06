@@ -2,7 +2,6 @@
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Swagger;
-using Universalis.Application.Views.V3.Game;
 using Universalis.GameData;
 using World = Universalis.Application.Views.V3.Game.World;
 

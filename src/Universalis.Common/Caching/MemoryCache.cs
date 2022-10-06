@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Priority_Queue;
+﻿using Priority_Queue;
 
-namespace Universalis.Application.Caching;
+namespace Universalis.Common.Caching;
 
 public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
     where TKey : IEquatable<TKey>, ICopyable where TValue : class, ICopyable
@@ -57,7 +52,7 @@ public class MemoryCache<TKey, TValue> : ICache<TKey, TValue>
         return ValueTask.CompletedTask;
     }
 
-    public virtual ValueTask<TValue> Get(TKey key, CancellationToken cancellationToken = default)
+    public virtual ValueTask<TValue?> Get(TKey key, CancellationToken cancellationToken = default)
     {
         _lock.EnterReadLock();
         try

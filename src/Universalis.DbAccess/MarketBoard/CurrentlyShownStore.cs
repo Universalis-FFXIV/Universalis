@@ -232,7 +232,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         }
 
         var vStr = (string)v;
-        return vStr.Split(':', StringSplitOptions.RemoveEmptyEntries)
+        return vStr!.Split(':', StringSplitOptions.RemoveEmptyEntries)
             .Select(m =>
             {
                 var data = m.Split('-').Select(uint.Parse).ToArray();
@@ -253,7 +253,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         }
 
         var vStr = (string)v;
-        return vStr.Split(':', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse);
+        return vStr!.Split(':', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse);
     }
 
     private static string SerializeMateriaArray(IEnumerable<Materia> materia)

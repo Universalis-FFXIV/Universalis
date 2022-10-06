@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Swagger;
-using Universalis.Application.Views.V3.Miscellaneous;
 using TimeZone = Universalis.Application.Views.V3.Miscellaneous.TimeZone;
 
 namespace Universalis.Application.Controllers.V3.Miscellaneous;
