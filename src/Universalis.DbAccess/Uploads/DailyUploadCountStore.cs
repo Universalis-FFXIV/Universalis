@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using StackExchange.Redis;
 
@@ -15,7 +16,7 @@ public class DailyUploadCountStore : IDailyUploadCountStore
         _redis = redis;
     }
 
-    public async Task Increment(string key, string lastPushKey)
+    public async Task Increment(string key, string lastPushKey, CancellationToken cancellationToken = default)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         
@@ -51,7 +52,7 @@ public class DailyUploadCountStore : IDailyUploadCountStore
         await t2.ExecuteAsync();
     }
 
-    public async Task<IList<long>> GetUploadCounts(string key, int stop = -1)
+    public async Task<IList<long>> GetUploadCounts(string key, int stop = -1, CancellationToken cancellationToken = default)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         var counts = await db.ListRangeAsync(key, stop: stop);
