@@ -15,26 +15,26 @@ public class RecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess, IDisp
 
     private readonly IRecentlyUpdatedItemsStore _store;
     private readonly SimplePriorityQueue<uint, double> _cache;
-    private readonly Mutex _initLock;
+    private readonly SemaphoreSlim _initLock;
     private bool _initialized;
 
     public RecentlyUpdatedItemsDbAccess(IRecentlyUpdatedItemsStore store)
     {
         _store = store;
         _cache = new SimplePriorityQueue<uint, double>();
-        _initLock = new Mutex();
+        _initLock = new SemaphoreSlim(1, 1);
         _initialized = false;
     }
 
     public async Task<RecentlyUpdatedItems> Retrieve(CancellationToken cancellationToken = default)
     {
-        await EnsureInitialized();
+        await EnsureInitialized(cancellationToken);
         return new RecentlyUpdatedItems { Items = _cache.Take(MaxItems).ToList() };
     }
 
     public async Task Push(uint itemId, CancellationToken cancellationToken = default)
     {
-        await EnsureInitialized();
+        await EnsureInitialized(cancellationToken);
         var t = Convert.ToDouble(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
         if (!_cache.TryUpdatePriority(itemId, t))
         {
@@ -44,14 +44,14 @@ public class RecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess, IDisp
         await _store.SetItem(Key, itemId, t);
     }
 
-    private ValueTask EnsureInitialized()
+    private ValueTask EnsureInitialized(CancellationToken cancellationToken = default)
     {
-        return !_initialized ? new ValueTask(Initialize()) : ValueTask.CompletedTask;
+        return !_initialized ? new ValueTask(Initialize(cancellationToken)) : ValueTask.CompletedTask;
     }
 
-    private async Task Initialize()
+    private async Task Initialize(CancellationToken cancellationToken = default)
     {
-        _initLock.WaitOne();
+        await _initLock.WaitAsync(cancellationToken);
         try
         {
             if (!_initialized)
@@ -67,7 +67,7 @@ public class RecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess, IDisp
         }
         finally
         {
-            _initLock.ReleaseMutex();
+            _initLock.Release();
         }
     }
 
