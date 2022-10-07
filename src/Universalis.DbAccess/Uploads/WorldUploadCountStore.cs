@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using StackExchange.Redis;
 
@@ -14,13 +15,14 @@ public class WorldUploadCountStore : IWorldUploadCountStore
         _redis = redis;
     }
 
-    public Task Increment(string key, string worldName)
+    public Task Increment(string key, string worldName, CancellationToken cancellationToken = default)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         return db.SortedSetIncrementAsync(key, worldName, 1);
     }
 
-    public async Task<IList<KeyValuePair<string, long>>> GetWorldUploadCounts(string key)
+    public async Task<IList<KeyValuePair<string, long>>> GetWorldUploadCounts(string key,
+        CancellationToken cancellationToken = default)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         var counts = await db.SortedSetRangeByRankWithScoresAsync(key, order: Order.Descending);

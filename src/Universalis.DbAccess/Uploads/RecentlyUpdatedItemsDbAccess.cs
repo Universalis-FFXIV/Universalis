@@ -30,7 +30,7 @@ public class RecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess, IDisp
             {
                 if (_cached is not null)
                 {
-                    return _cached;
+                    return new RecentlyUpdatedItems { Items = _cached.Items };
                 }
             }
             finally
