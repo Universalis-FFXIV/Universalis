@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Uploads;
 
@@ -12,7 +11,7 @@ public class MockUploadCountHistoryDbAccess : IUploadCountHistoryDbAccess
     private readonly List<long> _counts = new();
     private long _lastPush;
 
-    public Task Increment(CancellationToken cancellationToken = default)
+    public Task Increment()
     {
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         if (now - _lastPush > 86400000)
@@ -26,7 +25,7 @@ public class MockUploadCountHistoryDbAccess : IUploadCountHistoryDbAccess
         return Task.CompletedTask;
     }
 
-    public ValueTask<IList<long>> GetUploadCounts(int stop = -1, CancellationToken cancellationToken = default)
+    public Task<IList<long>> GetUploadCounts(int stop = -1)
     {
         var en = _counts;
         if (stop > -1)
@@ -34,6 +33,6 @@ public class MockUploadCountHistoryDbAccess : IUploadCountHistoryDbAccess
             en = en.Take(stop + 1).ToList();
         }
         
-        return ValueTask.FromResult((IList<long>)en);
+        return Task.FromResult((IList<long>)en);
     }
 }
