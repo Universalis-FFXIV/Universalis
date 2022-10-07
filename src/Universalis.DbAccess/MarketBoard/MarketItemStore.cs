@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Npgsql;
+using Universalis.Common.Caching;
 using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
@@ -9,10 +10,12 @@ namespace Universalis.DbAccess.MarketBoard;
 public class MarketItemStore : IMarketItemStore
 {
     private readonly string _connectionString;
+    private readonly ICache<MarketItemKey, MarketItem> _cache;
 
     public MarketItemStore(string connectionString)
     {
         _connectionString = connectionString;
+        _cache = new MemoryCache<MarketItemKey, MarketItem>(100000);
     }
 
     public async Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
@@ -21,7 +24,7 @@ public class MarketItemStore : IMarketItemStore
         {
             throw new ArgumentNullException(nameof(marketItem));
         }
-        
+
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
         await using var command =
@@ -44,15 +47,18 @@ public class MarketItemStore : IMarketItemStore
         {
             // Race condition; unique constraint violated
         }
+
+        await _cache.Set(new MarketItemKey { WorldId = marketItem.WorldId, ItemId = marketItem.ItemId }, marketItem,
+            cancellationToken);
     }
-    
+
     public async Task Update(MarketItem marketItem, CancellationToken cancellationToken = default)
     {
         if (marketItem == null)
         {
             throw new ArgumentNullException(nameof(marketItem));
         }
-        
+
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
 
@@ -74,13 +80,23 @@ public class MarketItemStore : IMarketItemStore
                 },
             };
         await command.ExecuteNonQueryAsync(cancellationToken);
+
+        await _cache.Set(new MarketItemKey { WorldId = marketItem.WorldId, ItemId = marketItem.ItemId }, marketItem,
+            cancellationToken);
     }
 
-    public async Task<MarketItem> Retrieve(uint worldId, uint itemId, CancellationToken cancellationToken = default)
+    public async ValueTask<MarketItem> Retrieve(uint worldId, uint itemId, CancellationToken cancellationToken = default)
     {
+        var key = new MarketItemKey { WorldId = worldId, ItemId = itemId };
+        var cached = await _cache.Get(key, cancellationToken);
+        if (cached is not null)
+        {
+            return cached;
+        }
+
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
-        
+
         await using var command =
             new NpgsqlCommand(
                 "SELECT world_id, item_id, updated FROM market_item WHERE world_id = $1 AND item_id = $2", conn)
@@ -91,7 +107,7 @@ public class MarketItemStore : IMarketItemStore
                     new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(itemId) },
                 },
             };
-        
+
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         if (!reader.HasRows)
         {
@@ -100,11 +116,55 @@ public class MarketItemStore : IMarketItemStore
 
         await reader.ReadAsync(cancellationToken);
 
-        return new MarketItem
+        var newItem = new MarketItem
         {
             WorldId = Convert.ToUInt32(reader.GetInt32(0)),
             ItemId = Convert.ToUInt32(reader.GetInt32(1)),
             LastUploadTime = (DateTime)reader.GetValue(2),
         };
+
+        await _cache.Set(key, newItem, cancellationToken);
+        return newItem;
+    }
+
+    private class MarketItemKey : IEquatable<MarketItemKey>, ICopyable
+    {
+        public uint WorldId { get; init; }
+
+        public uint ItemId { get; init; }
+
+        public ICopyable Clone()
+        {
+            return (ICopyable)MemberwiseClone();
+        }
+
+        public bool Equals(MarketItemKey other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return WorldId == other.WorldId && ItemId == other.ItemId;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj.GetType() == this.GetType() && Equals((MarketItemKey)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(WorldId, ItemId);
+        }
+
+        public static bool operator ==(MarketItemKey left, MarketItemKey right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(MarketItemKey left, MarketItemKey right)
+        {
+            return !Equals(left, right);
+        }
     }
 }
