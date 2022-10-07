@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
@@ -14,7 +13,7 @@ public class WorldUploadCountDbAccessTests
     {
         private readonly Dictionary<string, long> _counts = new();
 
-        public Task Increment(string key, string worldName, CancellationToken cancellationToken = default)
+        public Task Increment(string key, string worldName)
         {
             if (!_counts.ContainsKey(worldName))
             {
@@ -25,7 +24,7 @@ public class WorldUploadCountDbAccessTests
             return Task.CompletedTask;
         }
 
-        public Task<IList<KeyValuePair<string, long>>> GetWorldUploadCounts(string key, CancellationToken cancellationToken = default)
+        public Task<IList<KeyValuePair<string, long>>> GetWorldUploadCounts(string key)
         {
             return Task.FromResult((IList<KeyValuePair<string, long>>)_counts.ToList());
         }
