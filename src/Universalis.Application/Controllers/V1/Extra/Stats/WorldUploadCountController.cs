@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -40,7 +41,7 @@ public class WorldUploadCountController : ControllerBase
             .ToDictionary(d => d.WorldName, d => new WorldUploadCountView
             {
                 Count = d.Count,
-                Proportion = d.Count / sum,
+                Proportion = Convert.ToDouble(d.Count) / sum,
             });
     }
 
