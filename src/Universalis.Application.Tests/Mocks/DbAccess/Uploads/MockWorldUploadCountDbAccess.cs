@@ -25,9 +25,9 @@ public class MockWorldUploadCountDbAccess : IWorldUploadCountDbAccess
             : Task.FromResult(taxRates);
     }
 
-    public Task<IEnumerable<WorldUploadCount>> GetWorldUploadCounts(CancellationToken cancellationToken = default)
+    public ValueTask<IEnumerable<WorldUploadCount>> GetWorldUploadCounts(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(_collection.Values.AsEnumerable());
+        return ValueTask.FromResult(_collection.Values.AsEnumerable());
     }
 
     public async Task Update(WorldUploadCount document, WorldUploadCountQuery query, CancellationToken cancellationToken = default)

@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Universalis.DbAccess.Uploads;
 
-public class UploadCountHistoryDbAccess : IUploadCountHistoryDbAccess
+public class UploadCountHistoryDbAccess : IUploadCountHistoryDbAccess, IDisposable
 {
     public static readonly string Key = "Universalis.DailyUploads";
     public static readonly string KeyLastPush = "Universalis.DailyUploadsLastPush";
@@ -62,5 +63,11 @@ public class UploadCountHistoryDbAccess : IUploadCountHistoryDbAccess
         {
             _cacheLock.ExitWriteLock();
         }
+    }
+
+    public void Dispose()
+    {
+        _cacheLock.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

@@ -8,7 +8,7 @@ namespace Universalis.DbAccess.Uploads;
 
 public interface IWorldUploadCountDbAccess
 {
-    public Task<IEnumerable<WorldUploadCount>> GetWorldUploadCounts(CancellationToken cancellationToken = default);
+    public ValueTask<IEnumerable<WorldUploadCount>> GetWorldUploadCounts(CancellationToken cancellationToken = default);
         
     public Task Increment(WorldUploadCountQuery query, CancellationToken cancellationToken = default);
 }
