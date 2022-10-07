@@ -11,9 +11,9 @@ public class MockRecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess
 {
     private readonly RecentlyUpdatedItems document = new() { Items = new List<uint>()};
 
-    public Task<RecentlyUpdatedItems> Retrieve(CancellationToken cancellationToken = default)
+    public ValueTask<RecentlyUpdatedItems> Retrieve(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(document);
+        return ValueTask.FromResult(document);
     }
 
     public async Task Push(uint itemId, CancellationToken cancellationToken = default)
