@@ -44,10 +44,11 @@ public class RecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess, IDisp
         try
         {
             var items = await _store.GetAllItems(Key, MaxItems - 1);
-            return new RecentlyUpdatedItems
+            _cached = new RecentlyUpdatedItems
             {
                 Items = items.Take(MaxItems).Select(i => i.Key).ToList(),
             };
+            return _cached;
         }
         finally
         {
