@@ -96,42 +96,4 @@ public class RecentlyUpdatedItemsDbAccessTests
         Assert.NotNull(output);
         Assert.Equal(RecentlyUpdatedItemsDbAccess.MaxItems, output.Items.Count);
     }
-
-    [Fact]
-    public async Task PushMany_IsThreadSafe()
-    {
-        IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(new ScoreBoardStoreMock());
-
-        var task1 = Task.Run(async () =>
-        {
-            for (var i = 0; i < RecentlyUpdatedItemsDbAccess.MaxItems * 5; i++)
-            {
-                await db.Push((uint)i);
-            }
-        });
-
-        var task2 = Task.Run(async () =>
-        {
-            for (var i = 0; i < RecentlyUpdatedItemsDbAccess.MaxItems * 5; i++)
-            {
-                await db.Push((uint)i);
-            }
-        });
-
-        var task3 = Task.Run(async () =>
-        {
-            for (var i = 0; i < RecentlyUpdatedItemsDbAccess.MaxItems * 5; i++)
-            {
-                await db.Push((uint)i);
-            }
-        });
-
-        await task1;
-        await task2;
-        await task3;
-
-        var output = await db.Retrieve();
-        Assert.NotNull(output);
-        Assert.Equal(RecentlyUpdatedItemsDbAccess.MaxItems, output.Items.Count);
-    }
 }
