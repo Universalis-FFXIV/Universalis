@@ -10,5 +10,5 @@ public interface IMarketItemStore
 
     Task Update(MarketItem marketItem, CancellationToken cancellationToken = default);
 
-    Task<MarketItem> Retrieve(uint worldId, uint itemId, CancellationToken cancellationToken = default);
+    ValueTask<MarketItem> Retrieve(uint worldId, uint itemId, CancellationToken cancellationToken = default);
 }
