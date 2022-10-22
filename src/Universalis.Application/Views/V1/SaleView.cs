@@ -10,7 +10,7 @@ namespace Universalis.Application.Views.V1;
  * Please do not edit the field order unless it is unavoidable.
  */
 
-public class SaleView : IPriceable, ICopyable
+public class SaleView : PartiallySerializable, IPriceable, ICopyable
 {
     /// <summary>
     /// Whether or not the item was high-quality.

@@ -2,8 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
+using Universalis.Application.Controllers;
 using Universalis.Application.Controllers.V2;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
@@ -347,6 +349,52 @@ public class CurrentlyShownControllerTests
         Assert.Empty(history.Items);
         Assert.Equal("Crystal", history.DcName);
         Assert.Null(history.WorldId);
+    }
+
+    [Fact]
+    public async Task Controller_Get_Succeeds_SingleItem_Fields()
+    {
+        var test = TestResources.Create();
+        var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
+        await test.CurrentlyShown.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        
+        var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
+        await test.History.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
+
+        var result = await test.Controller.Get("5333", "Crystal", fields: "listings.pricePerUnit,minPrice,recentHistory");
+        var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
+
+        var json = JsonSerializer.Serialize(currentlyShown, new JsonSerializerOptions { Converters = { new PartiallySerializableJsonConverterFactory() } });
+
+        Assert.Matches(@"{""listings"":\[({""pricePerUnit"":\d+},?){100}],""recentHistory"":\[({""hq"":(false|true),""pricePerUnit"":\d+,""quantity"":\d+,""timestamp"":\d+,""worldName"":""Coeurl"",""worldID"":74,""buyerName"":null,""total"":\d+},?){5}],""minPrice"":\d+}", json);
+    }
+
+    [Fact]
+    public async Task Controller_Get_Succeeds_MultiItem_Fields()
+    {
+        var test = TestResources.Create();
+        var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
+        await test.CurrentlyShown.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        
+        var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
+        await test.History.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
+
+        var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5, unixNowMs);
+        await test.CurrentlyShown.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5 });
+        
+        var sales2 = SeedDataGenerator.MakeHistory(34, 5, unixNowMs).Sales;
+        await test.History.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5 });
+
+        var result = await test.Controller.Get("5,5333", "Crystal", fields: "items.listings.pricePerUnit,dcName,items.minPrice");
+        var currentlyShown = (CurrentlyShownMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
+
+        var json = JsonSerializer.Serialize(currentlyShown, new JsonSerializerOptions { Converters = { new PartiallySerializableJsonConverterFactory() } });
+
+        Assert.Matches(@"{""items"":{""5"":{""listings"":\[({""pricePerUnit"":\d+},?){100}],""minPrice"":\d+},""5333"":{""listings"":\[({""pricePerUnit"":\d+},?){100}],""minPrice"":\d+}},""dcName"":""Crystal""}", json);
     }
 
     private static void AssertCurrentlyShownValidWorld(CurrentlyShown document, List<Sale> sales, CurrentlyShownView currentlyShown, IGameDataProvider gameData)

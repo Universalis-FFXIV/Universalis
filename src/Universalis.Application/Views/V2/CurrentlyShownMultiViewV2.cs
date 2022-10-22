@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Universalis.Application.Common;
 using Universalis.Application.Views.V1;
 
 namespace Universalis.Application.Views.V2;
 
-public class CurrentlyShownMultiViewV2
+public class CurrentlyShownMultiViewV2 : PartiallySerializable
 {
     /// <summary>
     /// The item IDs that were requested.

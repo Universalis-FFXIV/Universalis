@@ -32,7 +32,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
     /// <param name="itemIds">The item ID or comma-separated item IDs to retrieve data for.</param>
     /// <param name="worldDcRegion">The world, data center, or region to retrieve data for. This may be an ID or a name. Regions should be specified as Japan, Europe, North-America, Oceania, China, or 中国.</param>
     /// <param name="listingsToReturn">The number of listings to return. By default, all listings will be returned.</param>
-    /// <param name="entriesToReturn">The number of entries to return. By default, a maximum of 5 entries will be returned.</param>
+    /// <param name="entriesToReturn">The number of recent history entries to return. By default, a maximum of 5 entries will be returned.</param>
     /// <param name="statsWithin">The amount of time before now to calculate stats over, in milliseconds. By default, this is 7 days.</param>
     /// <param name="entriesWithin">The amount of time before now to take entries within, in seconds. Negative values will be ignored.</param>
     /// <param name="noGst">
@@ -41,6 +41,10 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
     /// By default, GST is factored in. Set this parameter to true or 1 to prevent this.
     /// </param>
     /// <param name="hq">Filter for HQ listings and entries. By default, both HQ and NQ listings and entries will be returned.</param>
+    /// <param name="fields">
+    /// A comma separated list of fields that should be included in the response, if omitted will return all fields.
+    /// For example if you're only interested in the listings price per unit you can set this to listings.pricePerUnit
+    /// </param>
     /// <param name="cancellationToken"></param>
     /// <response code="200">Data retrieved successfully.</response>
     /// <response code="400">The parameters were invalid.</response>
@@ -62,6 +66,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         [FromQuery] string hq = "",
         [FromQuery] string statsWithin = "",
         [FromQuery] string entriesWithin = "",
+        [FromQuery] string fields = "",
         CancellationToken cancellationToken = default)
     {
         if (itemIds == null || worldDcRegion == null)
@@ -108,6 +113,8 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
             entriesWithinSeconds = Math.Max(0, queryEntriesWithinSeconds);
         }
 
+        var serializableProperties = BuildSerializableProperties(InputProcessing.ParseFields(fields));
+
         var noGstBool = Util.ParseUnusualBool(noGst);
         bool? hqBool = string.IsNullOrEmpty(hq) || hq.ToLowerInvariant() == "null" ? null : Util.ParseUnusualBool(hq);
 
@@ -121,15 +128,16 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
             }
 
             var (_, currentlyShownView) = await GetCurrentlyShownView(
-                worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds,
+                worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds, serializableProperties,
                 cancellationToken);
             return Ok(currentlyShownView);
         }
 
         // Multi-item handling
+        var itemsSerializableProperties = BuildSerializableProperties(serializableProperties, "items");
         var currentlyShownViewTasks = itemIdsArray
             .Select(itemId => GetCurrentlyShownView(
-                worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds,
+                worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds, itemsSerializableProperties,
                 cancellationToken))
             .ToList();
         var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
@@ -149,6 +157,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
             DcName = worldDc.IsDc ? worldDc.DcName : null,
             RegionName = worldDc.IsRegion ? worldDc.RegionName : null,
             UnresolvedItemIds = unresolvedItems,
+            SerializableProperties = serializableProperties,
         });
     }
 }
