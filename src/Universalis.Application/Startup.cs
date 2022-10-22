@@ -16,6 +16,7 @@ using System.Reflection;
 using System.Xml.XPath;
 using Universalis.Alerts;
 using Universalis.Application.Caching;
+using Universalis.Application.Controllers;
 using Universalis.Application.ExceptionFilters;
 using Universalis.Application.Realtime;
 using Universalis.Application.Swagger;
@@ -65,6 +66,8 @@ public class Startup
             options.Filters.Add<DecoderFallbackExceptionFilter>();
             options.Filters.Add<OperationCancelledExceptionFilter>();
             options.Filters.Add<PostgresExceptionFilter>();
+        }).AddJsonOptions(options => {
+            options.JsonSerializerOptions.Converters.Add(new PartiallySerializableJsonConverterFactory());
         });
 
         services.AddApiVersioning(options =>

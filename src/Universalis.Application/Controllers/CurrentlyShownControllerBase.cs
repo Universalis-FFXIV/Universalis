@@ -38,6 +38,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         bool? onlyHq = null,
         long statsWithin = 604800000,
         long entriesWithin = -1,
+        HashSet<string> fields = null,
         CancellationToken cancellationToken = default)
     {
         var cached = await Task.WhenAll(worldIds.Select(worldId => FetchCachedCurrentlyShownData(worldId, itemId, cancellationToken)));
@@ -48,6 +49,9 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
         var worlds = GameData.AvailableWorlds();
 
+        var listingSerializableProperties = BuildSerializableProperties(fields, "listings");
+        var recentHistorySerializableProperties = BuildSerializableProperties(fields, "recentHistory");
+        
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var nowSeconds = now / 1000;
         var (worldUploadTimes, currentlyShown) = data
@@ -75,6 +79,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
                             l.WorldId = !worldDcRegion.IsWorld ? next.WorldId : null;
                             l.WorldName = !worldDcRegion.IsWorld ? worlds[next.WorldId] : null;
+                            l.SerializableProperties = listingSerializableProperties;
                             return l;
                         })
                         .Concat(aggData.Listings)
@@ -86,6 +91,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                         {
                             s.WorldId = !worldDcRegion.IsWorld ? next.WorldId : null;
                             s.WorldName = !worldDcRegion.IsWorld ? worlds[next.WorldId] : null;
+                            s.SerializableProperties = recentHistorySerializableProperties;
                             return s;
                         })
                         .Concat(aggData.RecentHistory)
@@ -135,6 +141,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             AveragePriceNq = GetAveragePricePerUnit(nqSales),
             AveragePriceHq = GetAveragePricePerUnit(hqSales),
             WorldUploadTimes = worldDcRegion.IsWorld ? null : worldUploadTimes,
+            SerializableProperties = BuildSerializableProperties(fields),
         };
 
         return (resolved, view);
@@ -223,5 +230,42 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         return Statistics.GetDistribution(listings
             .Select(s => s.Quantity)
             .Select(q => (int)q));
+    }
+
+    /// <summary>
+    /// Build properties to be serialized given user-specified json paths.
+    ///
+    /// Examples:
+    /// <code>
+    /// | fields                            | forKey | result                     |
+    /// | --------------------------------- | ------ | -------------------------- |
+    /// | foo.bar, bar.foo                  | null   | foo, foo.bar, bar, bar.foo |
+    /// | foo.bar, foo.lorem.ipsum, bar.foo | foo    | bar, lorem, lorem.ipsum    |
+    /// </code>
+    /// </summary>
+    /// <returns>
+    /// A list of properties to be serialized or null if all properties should be serialized.
+    /// </returns>
+    protected static HashSet<string> BuildSerializableProperties(HashSet<string> fields, string forKey = null) {
+        if (fields == null || fields.Count == 0)
+            return null;
+        var properties = new HashSet<string>();
+        foreach (var f in fields) {
+            var field = f;
+            if (forKey != null) {
+                if (field.StartsWith(forKey + "."))
+                    field = field[(forKey.Length + 1)..];
+                else
+                    continue;
+            }
+            var index = field.IndexOf(".", StringComparison.Ordinal);
+            if (index >= 1) {
+                properties.Add(field[..index]); // if the field foo.bar was requested we need to serialize foo
+            }
+            properties.Add(field);
+        }
+        if (forKey != null && properties.Count == 0 && fields.Contains(forKey)) // all properties of the given key were requested
+            return null;
+        return properties;
     }
 }

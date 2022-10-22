@@ -25,4 +25,8 @@ public static class InputProcessing
             .Select(uint.Parse)
             .Distinct();
     }
+
+    public static HashSet<string> ParseFields(string fields) {
+        return new HashSet<string>(fields?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? Array.Empty<string>());
+    }
 }

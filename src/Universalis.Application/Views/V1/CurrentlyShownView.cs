@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Universalis.Application.Common;
 
 namespace Universalis.Application.Views.V1;
 
-public class CurrentlyShownView
+public class CurrentlyShownView : PartiallySerializable
 {
     /*
      * Note for anyone viewing this file: People rely on the field order (even though JSON is defined to be unordered).

@@ -11,7 +11,7 @@ namespace Universalis.Application.Views.V1;
  * Please do not edit the field order unless it is unavoidable.
  */
 
-public class ListingView : IPriceable, ICopyable
+public class ListingView : PartiallySerializable, IPriceable, ICopyable
 {
     /// <summary>
     /// The time that this listing was posted, in seconds since the UNIX epoch.

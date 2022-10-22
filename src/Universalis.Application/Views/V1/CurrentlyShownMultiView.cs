@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Universalis.Application.Common;
 
 namespace Universalis.Application.Views.V1;
 /*
@@ -7,7 +8,7 @@ namespace Universalis.Application.Views.V1;
  * Please do not edit the field order unless it is unavoidable.
  */
 
-public class CurrentlyShownMultiView
+public class CurrentlyShownMultiView : PartiallySerializable
 {
     /// <summary>
     /// The item IDs that were requested.
