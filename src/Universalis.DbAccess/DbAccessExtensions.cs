@@ -1,4 +1,5 @@
-﻿using FluentMigrator.Runner;
+﻿using System;
+using FluentMigrator.Runner;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
@@ -13,12 +14,17 @@ public static class DbAccessExtensions
 {
     public static void AddDbAccessServices(this IServiceCollection sc, IConfiguration configuration)
     {
-        sc.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(configuration["RedisConnectionString"]));
+        var redisConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_REDIS_CONNECTION") ??
+                                    configuration["RedisConnectionString"];
+        var postgresConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_POSTGRES_CONNECTION") ??
+                                       configuration["PostgresConnectionString"];
+        
+        sc.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
 
         sc.AddFluentMigratorCore()
             .ConfigureRunner(rb => rb
                 .AddPostgres()
-                .WithGlobalConnectionString(configuration["PostgresConnectionString"])
+                .WithGlobalConnectionString(postgresConnectionString)
                 .ScanIn(typeof(CreateMarketItemTable).Assembly).For.All())
             .AddLogging(lb => lb.AddFluentMigratorConsole());
 
@@ -28,14 +34,14 @@ public static class DbAccessExtensions
         sc.AddSingleton<ICurrentlyShownStore, CurrentlyShownStore>();
         sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
 
-        sc.AddSingleton<IMarketItemStore, MarketItemStore>(_ => new MarketItemStore(configuration["PostgresConnectionString"]));
-        sc.AddSingleton<ISaleStore, SaleStore>(_ => new SaleStore(configuration["PostgresConnectionString"]));
+        sc.AddSingleton<IMarketItemStore, MarketItemStore>(_ => new MarketItemStore(postgresConnectionString));
+        sc.AddSingleton<ISaleStore, SaleStore>(_ => new SaleStore(postgresConnectionString));
         sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
 
-        sc.AddSingleton<ICharacterStore, CharacterStore>(_ => new CharacterStore(configuration["PostgresConnectionString"]));
+        sc.AddSingleton<ICharacterStore, CharacterStore>(_ => new CharacterStore(postgresConnectionString));
         sc.AddSingleton<ICharacterDbAccess, CharacterDbAccess>();
 
-        sc.AddSingleton<IFlaggedUploaderStore, FlaggedUploaderStore>(_ => new FlaggedUploaderStore(configuration["PostgresConnectionString"]));
+        sc.AddSingleton<IFlaggedUploaderStore, FlaggedUploaderStore>(_ => new FlaggedUploaderStore(postgresConnectionString));
         sc.AddSingleton<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();
 
         sc.AddSingleton<ITaxRatesStore, TaxRatesStore>();
@@ -47,7 +53,7 @@ public static class DbAccessExtensions
         sc.AddSingleton<IDailyUploadCountStore, DailyUploadCountStore>();
         sc.AddSingleton<IUploadCountHistoryDbAccess, UploadCountHistoryDbAccess>();
 
-        sc.AddSingleton<IApiKeyStore, ApiKeyStore>(_ => new ApiKeyStore(configuration["PostgresConnectionString"]));
+        sc.AddSingleton<IApiKeyStore, ApiKeyStore>(_ => new ApiKeyStore(postgresConnectionString));
         sc.AddSingleton<ISourceUploadCountStore, TrustedSourceUploadCountStore>();
         sc.AddSingleton<ITrustedSourceDbAccess, TrustedSourceDbAccess>();
         
