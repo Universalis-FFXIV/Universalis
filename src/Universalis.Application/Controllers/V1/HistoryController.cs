@@ -64,7 +64,7 @@ public class HistoryController : HistoryControllerBase
         var entries = 1800;
         if (int.TryParse(entriesToReturn, out var queryEntries))
         {
-            entries = Math.Min(Math.Max(0, queryEntries), 999999);
+            entries = Math.Min(Math.Max(0, queryEntries), 5000);
         }
 
         var statsWithinMs = 604800000L;
