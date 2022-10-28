@@ -1,3 +1,4 @@
+using System.Threading;
 using FluentMigrator.Runner;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,9 @@ public static class Program
 {
     public static void Main(string[] args)
     {
+        // Increase the size of the initial thread pool
+        ThreadPool.SetMinThreads(10, 10);
+        
         var host = CreateHostBuilder(args).Build();
 
         // Run database migrations
