@@ -12,7 +12,7 @@ public static class Program
     public static void Main(string[] args)
     {
         // Increase the initial size of the thread pool
-        ThreadPool.SetMinThreads(30, 30);
+        ThreadPool.SetMinThreads(50, 10);
         
         var host = CreateHostBuilder(args).Build();
 
