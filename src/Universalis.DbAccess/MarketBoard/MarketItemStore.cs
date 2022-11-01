@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Npgsql;
-using Universalis.Common.Caching;
 using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
@@ -10,12 +9,10 @@ namespace Universalis.DbAccess.MarketBoard;
 public class MarketItemStore : IMarketItemStore
 {
     private readonly string _connectionString;
-    private readonly ICache<MarketItemKey, MarketItem> _cache;
 
     public MarketItemStore(string connectionString)
     {
         _connectionString = connectionString;
-        _cache = new MemoryCache<MarketItemKey, MarketItem>(100000);
     }
 
     public async Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
@@ -47,9 +44,6 @@ public class MarketItemStore : IMarketItemStore
         {
             // Race condition; unique constraint violated
         }
-
-        await _cache.Set(new MarketItemKey { WorldId = marketItem.WorldId, ItemId = marketItem.ItemId }, marketItem,
-            cancellationToken);
     }
 
     public async Task Update(MarketItem marketItem, CancellationToken cancellationToken = default)
@@ -80,20 +74,10 @@ public class MarketItemStore : IMarketItemStore
                 },
             };
         await command.ExecuteNonQueryAsync(cancellationToken);
-
-        await _cache.Set(new MarketItemKey { WorldId = marketItem.WorldId, ItemId = marketItem.ItemId }, marketItem,
-            cancellationToken);
     }
 
     public async ValueTask<MarketItem> Retrieve(uint worldId, uint itemId, CancellationToken cancellationToken = default)
     {
-        var key = new MarketItemKey { WorldId = worldId, ItemId = itemId };
-        var cached = await _cache.Get(key, cancellationToken);
-        if (cached is not null)
-        {
-            return cached;
-        }
-
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
 
@@ -123,48 +107,6 @@ public class MarketItemStore : IMarketItemStore
             LastUploadTime = (DateTime)reader.GetValue(2),
         };
 
-        await _cache.Set(key, newItem, cancellationToken);
         return newItem;
-    }
-
-    private class MarketItemKey : IEquatable<MarketItemKey>, ICopyable
-    {
-        public uint WorldId { get; init; }
-
-        public uint ItemId { get; init; }
-
-        public ICopyable Clone()
-        {
-            return (ICopyable)MemberwiseClone();
-        }
-
-        public bool Equals(MarketItemKey other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return WorldId == other.WorldId && ItemId == other.ItemId;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == this.GetType() && Equals((MarketItemKey)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(WorldId, ItemId);
-        }
-
-        public static bool operator ==(MarketItemKey left, MarketItemKey right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(MarketItemKey left, MarketItemKey right)
-        {
-            return !Equals(left, right);
-        }
     }
 }

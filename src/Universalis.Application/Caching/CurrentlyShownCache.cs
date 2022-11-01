@@ -104,11 +104,12 @@ public class CurrentlyShownCache : MemoryCache<CachedCurrentlyShownQuery, Cached
         return dataView;
     }
 
-    public override async ValueTask Set(CachedCurrentlyShownQuery key, CachedCurrentlyShownData value,
+    public override ValueTask Set(CachedCurrentlyShownQuery key, CachedCurrentlyShownData value,
         CancellationToken cancellationToken = default)
     {
-        await base.Set(key, value, cancellationToken);
+        // await base.Set(key, value, cancellationToken);
         CacheEntries.Set(Count);
+        return ValueTask.CompletedTask;
     }
 
     public override async ValueTask<bool> Delete(CachedCurrentlyShownQuery key,
