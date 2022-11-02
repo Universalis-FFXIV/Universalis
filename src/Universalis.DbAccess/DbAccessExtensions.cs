@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Enyim.Caching.Memcached;
 using FluentMigrator.Runner;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
+using System;
 using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Migrations;
@@ -18,7 +19,12 @@ public static class DbAccessExtensions
                                     configuration["RedisConnectionString"];
         var postgresConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_POSTGRES_CONNECTION") ??
                                        configuration["PostgresConnectionString"];
-        
+        var memcachedConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_MEMCACHED_CONNECTION") ??
+                                       configuration["MemcachedConnectionString"];
+
+        sc.AddMemcached(memcachedConnectionString)
+            .UseKeyFormatter(_ => new NamespacingKeyFormatter("universalis:"));
+
         sc.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
 
         sc.AddFluentMigratorCore()
@@ -56,7 +62,7 @@ public static class DbAccessExtensions
         sc.AddSingleton<IApiKeyStore, ApiKeyStore>(_ => new ApiKeyStore(postgresConnectionString));
         sc.AddSingleton<ISourceUploadCountStore, TrustedSourceUploadCountStore>();
         sc.AddSingleton<ITrustedSourceDbAccess, TrustedSourceDbAccess>();
-        
+
         sc.AddSingleton<IRecentlyUpdatedItemsStore, RecentlyUpdatedItemsStore>();
         sc.AddSingleton<IRecentlyUpdatedItemsDbAccess, RecentlyUpdatedItemsDbAccess>();
     }

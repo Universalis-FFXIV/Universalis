@@ -22,6 +22,10 @@ services:
     image: ghcr.io/universalis-ffxiv/universalis-docs:latest
     ports:
       - "3998:3000"
+  memcached1:
+    image: memcached:1.6.17
+  memcached2:
+    image: memcached:1.6.17
   prometheus:
     image: prom/prometheus:v2.36.0
     network_mode: "host"
