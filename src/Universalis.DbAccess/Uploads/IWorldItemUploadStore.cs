@@ -5,9 +5,9 @@ namespace Universalis.DbAccess.Uploads;
 
 public interface IWorldItemUploadStore
 {
-    Task SetItem(string key, uint id, double val);
+    Task SetItem(uint worldId, uint id, double val);
 
-    Task<IList<KeyValuePair<uint, double>>> GetMostRecent(string key, int stop = -1);
+    Task<IList<KeyValuePair<uint, double>>> GetMostRecent(uint worldId, int stop = -1);
     
-    Task<IList<KeyValuePair<uint, double>>> GetLeastRecent(string key, int stop = -1);
+    Task<IList<KeyValuePair<uint, double>>> GetLeastRecent(uint worldId, int stop = -1);
 }

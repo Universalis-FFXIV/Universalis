@@ -15,13 +15,13 @@ public class MostRecentlyUpdatedDbAccessTests
     {
         private readonly Dictionary<uint, double> _scores = new();
         
-        public Task SetItem(string key, uint id, double val)
+        public Task SetItem(uint worldId, uint id, double val)
         {
             _scores[id] = val;
             return Task.CompletedTask;
         }
 
-        public Task<IList<KeyValuePair<uint, double>>> GetMostRecent(string key, int stop = -1)
+        public Task<IList<KeyValuePair<uint, double>>> GetMostRecent(uint worldId, int stop = -1)
         {
             var en = _scores.OrderByDescending(s => s.Value).ToList();
             if (stop > -1)
@@ -32,7 +32,7 @@ public class MostRecentlyUpdatedDbAccessTests
             return Task.FromResult((IList<KeyValuePair<uint, double>>)en);
         }
         
-        public Task<IList<KeyValuePair<uint, double>>> GetLeastRecent(string key, int stop = -1)
+        public Task<IList<KeyValuePair<uint, double>>> GetLeastRecent(uint worldId, int stop = -1)
         {
             var en = _scores.OrderBy(s => s.Value).ToList();
             if (stop > -1)

@@ -12,13 +12,13 @@ public class RecentlyUpdatedItemsDbAccessTests
     {
         private readonly Dictionary<uint, double> _scores = new();
 
-        public Task SetItem(string key, uint id, double val)
+        public Task SetItem(uint id, double val)
         {
             _scores[id] = val;
             return Task.CompletedTask;
         }
 
-        public Task<IList<KeyValuePair<uint, double>>> GetAllItems(string key, int stop = -1)
+        public Task<IList<KeyValuePair<uint, double>>> GetAllItems(int stop = -1)
         {
             var en = _scores.OrderByDescending(s => s.Value).ToList();
             if (stop > -1)

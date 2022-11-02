@@ -14,7 +14,7 @@ public class UploadCountHistoryDbAccessTests
         private readonly List<long> _counts = new();
         private long _lastPush;
         
-        public Task Increment(string key, string lastPushKey)
+        public Task Increment()
         {
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             if (now - _lastPush > 86400000)
@@ -28,7 +28,7 @@ public class UploadCountHistoryDbAccessTests
             return Task.CompletedTask;
         }
 
-        public Task<IList<long>> GetUploadCounts(string key, int stop = -1)
+        public Task<IList<long>> GetUploadCounts(int stop = -1)
         {
             var en = _counts;
             if (stop > -1)

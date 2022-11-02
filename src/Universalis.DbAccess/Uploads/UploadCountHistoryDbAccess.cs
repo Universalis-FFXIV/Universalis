@@ -5,9 +5,6 @@ namespace Universalis.DbAccess.Uploads;
 
 public class UploadCountHistoryDbAccess : IUploadCountHistoryDbAccess
 {
-    public static readonly string Key = "Universalis.DailyUploads";
-    public static readonly string KeyLastPush = "Universalis.DailyUploadsLastPush";
-
     private readonly IDailyUploadCountStore _store;
     
     public UploadCountHistoryDbAccess(IDailyUploadCountStore store)
@@ -17,11 +14,11 @@ public class UploadCountHistoryDbAccess : IUploadCountHistoryDbAccess
 
     public Task Increment()
     {
-        return _store.Increment(Key, KeyLastPush);
+        return _store.Increment();
     }
 
     public Task<IList<long>> GetUploadCounts(int stop = -1)
     {
-        return _store.GetUploadCounts(Key, stop);
+        return _store.GetUploadCounts(stop);
     }
 }

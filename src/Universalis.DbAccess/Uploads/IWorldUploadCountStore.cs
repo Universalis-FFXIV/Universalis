@@ -5,7 +5,7 @@ namespace Universalis.DbAccess.Uploads;
 
 public interface IWorldUploadCountStore
 {
-    Task Increment(string key, string worldName);
+    Task Increment(string worldName);
 
-    Task<IList<KeyValuePair<string, long>>> GetWorldUploadCounts(string key);
+    Task<IList<KeyValuePair<string, long>>> GetWorldUploadCounts();
 }

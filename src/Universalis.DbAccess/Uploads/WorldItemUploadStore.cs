@@ -7,6 +7,8 @@ namespace Universalis.DbAccess.Uploads;
 
 public class WorldItemUploadStore : IWorldItemUploadStore
 {
+    private static readonly string KeyFormat = "Universalis.WorldItemUploadTimes.{0}";
+
     private readonly IConnectionMultiplexer _redis;
 
     public WorldItemUploadStore(IConnectionMultiplexer redis)
@@ -14,23 +16,28 @@ public class WorldItemUploadStore : IWorldItemUploadStore
         _redis = redis;
     }
     
-    public async Task SetItem(string key, uint id, double val)
+    public async Task SetItem(uint worldId, uint id, double val)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
-        await db.SortedSetAddAsync(key, new[] { new SortedSetEntry(id, val) });
+        await db.SortedSetAddAsync(GetRedisKey(worldId), new[] { new SortedSetEntry(id, val) });
     }
     
-    public async Task<IList<KeyValuePair<uint, double>>> GetMostRecent(string key, int stop = -1)
+    public async Task<IList<KeyValuePair<uint, double>>> GetMostRecent(uint worldId, int stop = -1)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
-        var items = await db.SortedSetRangeByRankWithScoresAsync(key, stop: stop, order: Order.Descending);
+        var items = await db.SortedSetRangeByRankWithScoresAsync(GetRedisKey(worldId), stop: stop, order: Order.Descending);
         return items.Select(i => new KeyValuePair<uint, double>((uint)i.Element, i.Score)).ToList();
     }
     
-    public async Task<IList<KeyValuePair<uint, double>>> GetLeastRecent(string key, int stop = -1)
+    public async Task<IList<KeyValuePair<uint, double>>> GetLeastRecent(uint worldId, int stop = -1)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
-        var items = await db.SortedSetRangeByRankWithScoresAsync(key, stop: stop, order: Order.Ascending);
+        var items = await db.SortedSetRangeByRankWithScoresAsync(GetRedisKey(worldId), stop: stop, order: Order.Ascending);
         return items.Select(i => new KeyValuePair<uint, double>((uint)i.Element, i.Score)).ToList();
+    }
+
+    private static string GetRedisKey(uint worldId)
+    {
+        return string.Format(KeyFormat, worldId);
     }
 }

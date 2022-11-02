@@ -10,8 +10,6 @@ namespace Universalis.DbAccess.Uploads;
 
 public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
 {
-    public static readonly string KeyFormat = "Universalis.WorldItemUploadTimes.{0}";
-
     private readonly IWorldItemUploadStore _store;
 
     public MostRecentlyUpdatedDbAccess(IWorldItemUploadStore store)
@@ -21,13 +19,13 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
 
     public Task Push(uint worldId, WorldItemUpload document, CancellationToken cancellationToken = default)
     {
-        return _store.SetItem(string.Format(KeyFormat, worldId), document.ItemId,
+        return _store.SetItem(worldId, document.ItemId,
             document.LastUploadTimeUnixMilliseconds);
     }
 
     public async Task<IList<WorldItemUpload>> GetMostRecent(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
     {
-        var data = await _store.GetMostRecent(string.Format(KeyFormat, query.WorldId), query.Count - 1);
+        var data = await _store.GetMostRecent(query.WorldId, query.Count - 1);
         return data.Select(kvp => new WorldItemUpload
         {
             WorldId = query.WorldId,
@@ -41,7 +39,7 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
         var data = await query.WorldIds.ToAsyncEnumerable()
             .SelectManyAwait(async world =>
             {
-                return (await _store.GetMostRecent(string.Format(KeyFormat, world), query.Count - 1))
+                return (await _store.GetMostRecent(world, query.Count - 1))
                     .ToAsyncEnumerable()
                     .Select(kvp => new WorldItemUpload
                     {
@@ -74,7 +72,7 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
     
     public async Task<IList<WorldItemUpload>> GetLeastRecent(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
     {
-        var data = await _store.GetLeastRecent(string.Format(KeyFormat, query.WorldId), query.Count - 1);
+        var data = await _store.GetLeastRecent(query.WorldId, query.Count - 1);
         return data.Select(kvp => new WorldItemUpload
         {
             WorldId = query.WorldId,
@@ -88,7 +86,7 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
         var data = await query.WorldIds.ToAsyncEnumerable()
             .SelectManyAwait(async world =>
             {
-                return (await _store.GetLeastRecent(string.Format(KeyFormat, world), query.Count - 1))
+                return (await _store.GetLeastRecent(world, query.Count - 1))
                     .ToAsyncEnumerable()
                     .Select(kvp => new WorldItemUpload
                     {

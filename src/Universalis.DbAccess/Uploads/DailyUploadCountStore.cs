@@ -8,6 +8,9 @@ namespace Universalis.DbAccess.Uploads;
 
 public class DailyUploadCountStore : IDailyUploadCountStore
 {
+    private static readonly string RedisKey = "Universalis.DailyUploads";
+    private static readonly string RedisLastPushKey = "Universalis.DailyUploadsLastPush";
+
     private readonly IConnectionMultiplexer _redis;
 
     public DailyUploadCountStore(IConnectionMultiplexer redis)
@@ -15,46 +18,47 @@ public class DailyUploadCountStore : IDailyUploadCountStore
         _redis = redis;
     }
 
-    public async Task Increment(string key, string lastPushKey)
+    public async Task Increment()
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var lastPush = (long)await db.StringGetAsync(lastPushKey);
+        var lastPush = (long)await db.StringGetAsync(RedisLastPushKey);
 
         // Create the last push time key
         if (lastPush == 0)
         {
-            await db.StringSetAsync(lastPushKey, 0, when: When.NotExists);
+            await db.StringSetAsync(RedisLastPushKey, 0, when: When.NotExists);
         }
 
         // Push a new counter if the date has rolled over
         if (now - lastPush > 86400000)
         {
             var t1 = db.CreateTransaction();
-            t1.AddCondition(Condition.StringEqual(lastPushKey, lastPush));
-            _ = t1.StringSetAsync(lastPushKey, now);
-            _ = t1.ListLeftPushAsync(key, 0);
+            t1.AddCondition(Condition.StringEqual(RedisLastPushKey, lastPush));
+            _ = t1.StringSetAsync(RedisLastPushKey, now);
+            _ = t1.ListLeftPushAsync(RedisKey, 0);
             await t1.ExecuteAsync();
 
             lastPush = now;
         }
         
         // Increment the counter
-        var count = (long)await db.ListGetByIndexAsync(key, 0);
+        var count = (long)await db.ListGetByIndexAsync(RedisKey, 0);
 
         var t2 = db.CreateTransaction();
         // Don't accidentally copy the last count into today's count
-        t2.AddCondition(Condition.StringEqual(lastPushKey, lastPush));
+        t2.AddCondition(Condition.StringEqual(RedisLastPushKey, lastPush));
         count++;
-        _ = t2.ListSetByIndexAsync(key, 0, count);
+        _ = t2.ListSetByIndexAsync(RedisKey, 0, count);
         await t2.ExecuteAsync();
     }
 
-    public async Task<IList<long>> GetUploadCounts(string key, int stop = -1)
+    public async Task<IList<long>> GetUploadCounts(int stop = -1)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
-        var counts = await db.ListRangeAsync(key, stop: stop);
-        return counts.Select(c => (long)c).ToList();
+        var counts = await db.ListRangeAsync(RedisKey, stop: stop);
+        var result = counts.Select(c => (long)c).ToList();
+        return result;
     }
 }
