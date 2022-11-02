@@ -13,7 +13,7 @@ public class WorldUploadCountDbAccessTests
     {
         private readonly Dictionary<string, long> _counts = new();
 
-        public Task Increment(string key, string worldName)
+        public Task Increment(string worldName)
         {
             if (!_counts.ContainsKey(worldName))
             {
@@ -24,7 +24,7 @@ public class WorldUploadCountDbAccessTests
             return Task.CompletedTask;
         }
 
-        public Task<IList<KeyValuePair<string, long>>> GetWorldUploadCounts(string key)
+        public Task<IList<KeyValuePair<string, long>>> GetWorldUploadCounts()
         {
             return Task.FromResult((IList<KeyValuePair<string, long>>)_counts.ToList());
         }

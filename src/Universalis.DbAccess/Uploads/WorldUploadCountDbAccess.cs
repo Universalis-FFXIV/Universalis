@@ -10,8 +10,6 @@ namespace Universalis.DbAccess.Uploads;
 
 public class WorldUploadCountDbAccess : IWorldUploadCountDbAccess, IDisposable
 {
-    public static readonly string Key = "Universalis.WorldUploadCounts";
-
     private readonly IWorldUploadCountStore _store;
 
     public WorldUploadCountDbAccess(IWorldUploadCountStore store)
@@ -21,12 +19,12 @@ public class WorldUploadCountDbAccess : IWorldUploadCountDbAccess, IDisposable
 
     public async Task Increment(WorldUploadCountQuery query, CancellationToken cancellationToken = default)
     {
-        await _store.Increment(Key, query.WorldName);
+        await _store.Increment(query.WorldName);
     }
 
     public async Task<IEnumerable<WorldUploadCount>> GetWorldUploadCounts(CancellationToken cancellationToken = default)
     {
-        var data = await _store.GetWorldUploadCounts(Key);
+        var data = await _store.GetWorldUploadCounts();
         return data.Select(kvp => new WorldUploadCount { Count = kvp.Value, WorldName = kvp.Key })
             .OrderByDescending(w => w.Count);
     }

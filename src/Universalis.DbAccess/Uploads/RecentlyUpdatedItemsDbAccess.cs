@@ -10,8 +10,6 @@ public class RecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess, IDisp
 {
     public static readonly int MaxItems = 200;
 
-    public static readonly string Key = "Universalis.RecentlyUpdated";
-
     private readonly IRecentlyUpdatedItemsStore _store;
 
     public RecentlyUpdatedItemsDbAccess(IRecentlyUpdatedItemsStore store)
@@ -22,13 +20,13 @@ public class RecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess, IDisp
     public async Task<RecentlyUpdatedItems> Retrieve(CancellationToken cancellationToken = default)
     {
         return new RecentlyUpdatedItems
-            { Items = (await _store.GetAllItems(Key, MaxItems - 1)).Select(kvp => kvp.Key).Take(MaxItems).ToList() };
+            { Items = (await _store.GetAllItems(MaxItems - 1)).Select(kvp => kvp.Key).Take(MaxItems).ToList() };
     }
 
     public async Task Push(uint itemId, CancellationToken cancellationToken = default)
     {
         var t = Convert.ToDouble(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
-        await _store.SetItem(Key, itemId, t);
+        await _store.SetItem(itemId, t);
     }
 
     public void Dispose()
