@@ -52,7 +52,7 @@ public class MarketItemStore : IMarketItemStore
         // Write through to the cache
         var cache = _memcached.GetClient();
         var cacheData = JsonSerializer.Serialize(marketItem.Clone());
-        await cache.SetAsync(GetCacheKey(marketItem.WorldId, marketItem.ItemId), cacheData, Expiration.From(TimeSpan.FromSeconds(300)));
+        await cache.SetAsync(GetCacheKey(marketItem.WorldId, marketItem.ItemId), cacheData);
     }
 
     public async Task Update(MarketItem marketItem, CancellationToken cancellationToken = default)

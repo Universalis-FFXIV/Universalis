@@ -53,7 +53,7 @@ public class TaxRatesStore : ITaxRatesStore
         // Write through to the cache
         var cache = _memcached.GetClient();
         var cacheData = JsonSerializer.Serialize(taxRates.Clone());
-        var cacheSet = cache.SetAsync(GetCacheKey(worldId), cacheData, Expiration.From(TimeSpan.FromSeconds(300)));
+        var cacheSet = cache.SetAsync(GetCacheKey(worldId), cacheData);
 
         await Task.WhenAll(dbSet, cacheSet);
     }
