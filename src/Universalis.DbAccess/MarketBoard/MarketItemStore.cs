@@ -95,10 +95,13 @@ public class MarketItemStore : IMarketItemStore
         // Try to fetch data from the cache
         var cache = _memcached.GetClient();
         var cacheData1 = await cache.GetAsync<string>(GetCacheKey(worldId, itemId));
-        if (cacheData1 != null)
+        if (!string.IsNullOrEmpty(cacheData1))
         {
             var cachedObject = JsonSerializer.Deserialize<MarketItem>(cacheData1);
-            return cachedObject;
+            if (cachedObject != null)
+            {
+                return cachedObject;
+            }
         }
 
         // Fetch data from the database
