@@ -27,6 +27,14 @@ services:
       MYSQL_PASSWORD: dalamud
     volumes:
       - "./sqlinit:/docker-entrypoint-initdb.d"
+  memcached1:
+    image: memcached:1.6.17
+    ports:
+      - "4080:11212"
+  memcached2:
+    image: memcached:1.6.17
+    ports:
+      - "4081:11212"
   postgres:
     image: postgres:14.3
     command: postgres -c max_connections=100 -c shared_buffers=512MB
