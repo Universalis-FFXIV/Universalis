@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Enyim.Caching.Memcached;
 using Npgsql;
 using Universalis.Entities.MarketBoard;
 
@@ -9,10 +11,12 @@ namespace Universalis.DbAccess.MarketBoard;
 public class MarketItemStore : IMarketItemStore
 {
     private readonly string _connectionString;
+    private readonly IMemcachedCluster _memcached;
 
-    public MarketItemStore(string connectionString)
+    public MarketItemStore(string connectionString, IMemcachedCluster memcached)
     {
         _connectionString = connectionString;
+        _memcached = memcached;
     }
 
     public async Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
@@ -44,6 +48,11 @@ public class MarketItemStore : IMarketItemStore
         {
             // Race condition; unique constraint violated
         }
+
+        // Write through to the cache
+        var cache = _memcached.GetClient();
+        var cacheData = JsonSerializer.Serialize(marketItem.Clone());
+        await cache.SetAsync(GetCacheKey(marketItem.WorldId, marketItem.ItemId), cacheData);
     }
 
     public async Task Update(MarketItem marketItem, CancellationToken cancellationToken = default)
@@ -74,10 +83,25 @@ public class MarketItemStore : IMarketItemStore
                 },
             };
         await command.ExecuteNonQueryAsync(cancellationToken);
+
+        // Write through to the cache
+        var cache = _memcached.GetClient();
+        var cacheData = JsonSerializer.Serialize(marketItem.Clone());
+        await cache.SetAsync(GetCacheKey(marketItem.WorldId, marketItem.ItemId), cacheData);
     }
 
     public async ValueTask<MarketItem> Retrieve(uint worldId, uint itemId, CancellationToken cancellationToken = default)
     {
+        // Try to fetch data from the cache
+        var cache = _memcached.GetClient();
+        var cacheData1 = await cache.GetAsync<string>(GetCacheKey(worldId, itemId));
+        if (cacheData1 != null)
+        {
+            var cachedObject = JsonSerializer.Deserialize<MarketItem>(cacheData1);
+            return cachedObject;
+        }
+
+        // Fetch data from the database
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
 
@@ -107,6 +131,15 @@ public class MarketItemStore : IMarketItemStore
             LastUploadTime = (DateTime)reader.GetValue(2),
         };
 
+        // Cache the result
+        var cacheData2 = JsonSerializer.Serialize(newItem);
+        await cache.SetAsync(GetCacheKey(worldId, itemId), cacheData2);
+
         return newItem;
+    }
+
+    private static string GetCacheKey(uint worldId, uint itemId)
+    {
+        return $"market-item:{worldId}:{itemId}";
     }
 }
