@@ -10,6 +10,7 @@ using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Universalis.Application.Controllers;
 
@@ -43,8 +44,8 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var nowSeconds = now / 1000;
-        var history = await data
-            .ToAsyncEnumerable()
+        var history = await data.ToAsyncEnumerable()
+            .Where(o => worlds.ContainsKey(o.WorldId))
             .AggregateAwaitAsync(new HistoryView(), async (agg, next) =>
             {
                 // Handle undefined arrays
