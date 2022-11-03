@@ -82,6 +82,11 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         var result = new CurrentlyShown(worldId, itemId, lastUpdated, source, listings.ToList());
 
         // Store the result in the cache
+        if (result.Listings.Count == 0)
+        {
+            _logger.LogDebug("No listings in fetch! (worldID={WorldId}, itemID={ItemID})", worldId, itemId);
+        }
+
         var cacheData2 = JsonSerializer.Serialize(result);
         await cache.SetAsync(GetCacheKey(worldId, itemId), cacheData2, Expiration.From(TimeSpan.FromSeconds(300)));
 
@@ -122,6 +127,11 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         await trans.ExecuteAsync();
 
         // Write through to the cache
+        if (data.Listings.Count == 0)
+        {
+            _logger.LogDebug("No listings in upload! (worldID={WorldId}, itemID={ItemID})", worldId, itemId);
+        }
+
         var cache = _memcached.GetClient();
         var cacheData = JsonSerializer.Serialize(data.Clone());
         await cache.SetAsync(GetCacheKey(worldId, itemId), cacheData, Expiration.From(TimeSpan.FromSeconds(300)));
