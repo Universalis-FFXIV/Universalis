@@ -205,7 +205,14 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
         var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         var listings = newListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>();
-        var document = new CurrentlyShown(worldId, itemId, now, source.Name, listings);
+        var document = new CurrentlyShown
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+            LastUploadTimeUnixMilliseconds = now,
+            UploadSource = source.Name,
+            Listings = listings,
+        };
         await _currentlyShownDb.Update(document, new CurrentlyShownQuery
         {
             WorldId = worldId,

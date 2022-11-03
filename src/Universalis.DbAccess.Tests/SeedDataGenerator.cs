@@ -33,7 +33,14 @@ public static class SeedDataGenerator
                 SellerId = rand.NextInt64().ToString(),
             })
             .ToList();
-        return new CurrentlyShown(worldId, itemId, t, "test runner", listings);
+        return new CurrentlyShown
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+            LastUploadTimeUnixMilliseconds = t,
+            UploadSource = "test runner",
+            Listings = listings,
+        };
     }
 
     public static History MakeHistory(uint worldId, uint itemId, long? lastUploadTime = null, uint? maxStackSize = 999)

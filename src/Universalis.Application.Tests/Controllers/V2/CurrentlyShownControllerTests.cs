@@ -131,7 +131,14 @@ public class CurrentlyShownControllerTests
 
         var joinedListings = document1.Listings.Concat(document2.Listings).ToList();
         var joinedSales = sales1.Concat(sales2).ToList();
-        var joinedDocument = new CurrentlyShown(0, 5333, unixNowMs, "test runner", joinedListings);
+        var joinedDocument = new CurrentlyShown
+        {
+            WorldId = 0,
+            ItemId = 5333,
+            LastUploadTimeUnixMilliseconds = unixNowMs,
+            UploadSource = "test runner",
+            Listings = joinedListings,
+        };
 
         AssertCurrentlyShownDataCenter(
             joinedDocument,
