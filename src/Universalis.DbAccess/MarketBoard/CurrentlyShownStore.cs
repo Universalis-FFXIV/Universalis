@@ -34,7 +34,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             try
             {
                 var cacheObject = JsonSerializer.Deserialize<CurrentlyShown>(cacheData1.Value);
-                if (cacheObject != null && cacheObject.Listings)
+                if (cacheObject != null)
                 {
                     return cacheObject;
                 }
