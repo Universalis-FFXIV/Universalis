@@ -62,10 +62,10 @@ public class TaxRatesStore : ITaxRatesStore
     {
         // Try to get the tax rates from the cache
         var cache = _memcached.GetClient();
-        var cacheData1 = await cache.GetAsync<string>(GetCacheKey(worldId));
-        if (!string.IsNullOrEmpty(cacheData1))
+        var cacheData1 = await cache.GetWithResultAsync<string>(GetCacheKey(worldId));
+        if (cacheData1.Success)
         {
-            var cachedObject = JsonSerializer.Deserialize<TaxRates>(cacheData1);
+            var cachedObject = JsonSerializer.Deserialize<TaxRates>(cacheData1.Value);
             if (cachedObject != null)
             {
                 return cachedObject;

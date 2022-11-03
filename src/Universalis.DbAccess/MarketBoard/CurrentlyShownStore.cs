@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Enyim.Caching.Memcached;
 using StackExchange.Redis;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
@@ -11,14 +13,29 @@ namespace Universalis.DbAccess.MarketBoard;
 public class CurrentlyShownStore : ICurrentlyShownStore
 {
     private readonly IConnectionMultiplexer _redis;
+    private readonly IMemcachedCluster _memcached;
 
-    public CurrentlyShownStore(IConnectionMultiplexer redis)
+    public CurrentlyShownStore(IConnectionMultiplexer redis, IMemcachedCluster memcached)
     {
         _redis = redis;
+        _memcached = memcached;
     }
 
     public async Task<CurrentlyShown> GetData(uint worldId, uint itemId)
     {
+        // Try to fetch data from the cache
+        var cache = _memcached.GetClient();
+        var cacheData1 = await cache.GetWithResultAsync<string>(GetCacheKey(worldId, itemId));
+        if (cacheData1.Success)
+        {
+            var cacheObject = JsonSerializer.Deserialize<CurrentlyShown>(cacheData1.Value);
+            if (cacheObject != null)
+            {
+                return cacheObject;
+            }
+        }
+
+        // Fetch data from the database
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
         
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
@@ -52,7 +69,13 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             transactionExecuted = await trans.ExecuteAsync();
         } while (!transactionExecuted);
         
-        return new CurrentlyShown(worldId, itemId, lastUpdated, source, listings.ToList());
+        var result = new CurrentlyShown(worldId, itemId, lastUpdated, source, listings.ToList());
+
+        // Store the result in the cache
+        var cacheData2 = JsonSerializer.Serialize(result);
+        await cache.SetAsync(GetCacheKey(worldId, itemId), cacheData2);
+
+        return result;
     }
 
     public async Task SetData(CurrentlyShown data)
@@ -87,6 +110,11 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         // Execute the transaction. If this fails, we'll just assume that newer data
         // was written first and move on.
         await trans.ExecuteAsync();
+
+        // Write through to the cache
+        var cache = _memcached.GetClient();
+        var cacheData = JsonSerializer.Serialize(data.Clone());
+        await cache.SetAsync(GetCacheKey(worldId, itemId), cacheData);
     }
     
     private async Task<long> EnsureLastUpdated(uint worldId, uint itemId)
@@ -264,6 +292,11 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     private static string SerializeObjectIds(IEnumerable<Guid> ids)
     {
         return string.Join(':', ids.Select(id => id.ToString()));
+    }
+
+    private static string GetCacheKey(uint worldId, uint itemId)
+    {
+        return $"listings:{worldId}:{itemId}";
     }
     
     private static string GetUploadSourceKey(uint worldId, uint itemId)

@@ -32,10 +32,10 @@ public class WorldUploadCountStore : IWorldUploadCountStore
     {
         // Try getting data from the cache
         var cache = _memcached.GetClient();
-        var cacheData1 = await cache.GetAsync<string>(CacheKey);
-        if (!string.IsNullOrEmpty(cacheData1))
+        var cacheData1 = await cache.GetWithResultAsync<string>(CacheKey);
+        if (cacheData1.Success)
         {
-            var cachedObject = JsonSerializer.Deserialize<IList<KeyValuePair<string, long>>>(cacheData1);
+            var cachedObject = JsonSerializer.Deserialize<IList<KeyValuePair<string, long>>>(cacheData1.Value);
             if (cachedObject != null)
             {
                 return cachedObject;

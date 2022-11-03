@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+using Universalis.Common.Caching;
 
 namespace Universalis.Entities.MarketBoard;
 
-public class CurrentlyShown
+public class CurrentlyShown : ICopyable
 {
     public uint WorldId { get; }
     
@@ -22,5 +23,10 @@ public class CurrentlyShown
         LastUploadTimeUnixMilliseconds = uploadTimeUnixMs;
         UploadSource = source;
         Listings = listings;
+    }
+
+    public ICopyable Clone()
+    {
+        return (ICopyable)MemberwiseClone();
     }
 }
