@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Enyim.Caching.Memcached;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
@@ -14,11 +15,13 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 {
     private readonly IConnectionMultiplexer _redis;
     private readonly IMemcachedCluster _memcached;
+    private readonly ILogger<CurrentlyShownStore> _logger;
 
-    public CurrentlyShownStore(IConnectionMultiplexer redis, IMemcachedCluster memcached)
+    public CurrentlyShownStore(IConnectionMultiplexer redis, IMemcachedCluster memcached, ILogger<CurrentlyShownStore> logger)
     {
         _redis = redis;
         _memcached = memcached;
+        _logger = logger;
     }
 
     public async Task<CurrentlyShown> GetData(uint worldId, uint itemId)
@@ -28,10 +31,17 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         var cacheData1 = await cache.GetWithResultAsync<string>(GetCacheKey(worldId, itemId));
         if (cacheData1.Success)
         {
-            var cacheObject = JsonSerializer.Deserialize<CurrentlyShown>(cacheData1.Value);
-            if (cacheObject != null)
+            try
             {
-                return cacheObject;
+                var cacheObject = JsonSerializer.Deserialize<CurrentlyShown>(cacheData1.Value);
+                if (cacheObject != null)
+                {
+                    return cacheObject;
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to deserialize object.");
             }
         }
 

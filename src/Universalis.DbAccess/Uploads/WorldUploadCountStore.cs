@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Enyim.Caching.Memcached;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
 namespace Universalis.DbAccess.Uploads;
@@ -15,11 +16,13 @@ public class WorldUploadCountStore : IWorldUploadCountStore
 
     private readonly IConnectionMultiplexer _redis;
     private readonly IMemcachedCluster _memcached;
+    private readonly ILogger<WorldUploadCountStore> _logger;
 
-    public WorldUploadCountStore(IConnectionMultiplexer redis, IMemcachedCluster memcached)
+    public WorldUploadCountStore(IConnectionMultiplexer redis, IMemcachedCluster memcached, ILogger<WorldUploadCountStore> logger)
     {
         _redis = redis;
         _memcached = memcached;
+        _logger = logger;
     }
 
     public async Task Increment(string worldName)
@@ -35,10 +38,17 @@ public class WorldUploadCountStore : IWorldUploadCountStore
         var cacheData1 = await cache.GetWithResultAsync<string>(CacheKey);
         if (cacheData1.Success)
         {
-            var cachedObject = JsonSerializer.Deserialize<IList<KeyValuePair<string, long>>>(cacheData1.Value);
-            if (cachedObject != null)
+            try
             {
-                return cachedObject;
+                var cacheObject = JsonSerializer.Deserialize<IList<KeyValuePair<string, long>>>(cacheData1.Value);
+                if (cacheObject != null)
+                {
+                    return cacheObject;
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to deserialize object.");
             }
         }
 

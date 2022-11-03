@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Enyim.Caching.Memcached;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using Universalis.Entities.MarketBoard;
 
@@ -12,11 +13,13 @@ public class MarketItemStore : IMarketItemStore
 {
     private readonly string _connectionString;
     private readonly IMemcachedCluster _memcached;
+    private readonly ILogger<MarketItemStore> _logger;
 
-    public MarketItemStore(string connectionString, IMemcachedCluster memcached)
+    public MarketItemStore(string connectionString, IMemcachedCluster memcached, ILogger<MarketItemStore> logger)
     {
         _connectionString = connectionString;
         _memcached = memcached;
+        _logger = logger;
     }
 
     public async Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
@@ -97,10 +100,17 @@ public class MarketItemStore : IMarketItemStore
         var cacheData1 = await cache.GetWithResultAsync<string>(GetCacheKey(worldId, itemId));
         if (cacheData1.Success)
         {
-            var cachedObject = JsonSerializer.Deserialize<MarketItem>(cacheData1.Value);
-            if (cachedObject != null)
+            try
             {
-                return cachedObject;
+                var cacheObject = JsonSerializer.Deserialize<MarketItem>(cacheData1.Value);
+                if (cacheObject != null)
+                {
+                    return cacheObject;
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to deserialize object.");
             }
         }
 

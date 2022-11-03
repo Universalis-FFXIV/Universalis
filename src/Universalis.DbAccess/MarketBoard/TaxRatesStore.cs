@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Enyim.Caching.Memcached;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Universalis.Entities.MarketBoard;
 
@@ -29,10 +30,13 @@ public class TaxRatesStore : ITaxRatesStore
     /// </summary>
     private readonly IMemcachedCluster _memcached;
 
-    public TaxRatesStore(IConnectionMultiplexer redis, IMemcachedCluster memcached)
+    private readonly ILogger<TaxRatesStore> _logger;
+
+    public TaxRatesStore(IConnectionMultiplexer redis, IMemcachedCluster memcached, ILogger<TaxRatesStore> logger)
     {
         _redis = redis;
         _memcached = memcached;
+        _logger = logger;
     }
 
     public async Task SetTaxRates(uint worldId, TaxRates taxRates)
@@ -65,10 +69,17 @@ public class TaxRatesStore : ITaxRatesStore
         var cacheData1 = await cache.GetWithResultAsync<string>(GetCacheKey(worldId));
         if (cacheData1.Success)
         {
-            var cachedObject = JsonSerializer.Deserialize<TaxRates>(cacheData1.Value);
-            if (cachedObject != null)
+            try
             {
-                return cachedObject;
+                var cacheObject = JsonSerializer.Deserialize<TaxRates>(cacheData1.Value);
+                if (cacheObject != null)
+                {
+                    return cacheObject;
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to deserialize object.");
             }
         }
 
