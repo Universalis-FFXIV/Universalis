@@ -2,6 +2,7 @@
 using FluentMigrator.Runner;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
 using Universalis.DbAccess.AccessControl;
@@ -40,7 +41,7 @@ public static class DbAccessExtensions
         sc.AddSingleton<ICurrentlyShownStore, CurrentlyShownStore>();
         sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
 
-        sc.AddSingleton<IMarketItemStore, MarketItemStore>(sc => new MarketItemStore(postgresConnectionString, sc.GetRequiredService<IMemcachedCluster>()));
+        sc.AddSingleton<IMarketItemStore, MarketItemStore>(sc => new MarketItemStore(postgresConnectionString, sc.GetRequiredService<IMemcachedCluster>(), sc.GetRequiredService<ILogger<MarketItemStore>>()));
         sc.AddSingleton<ISaleStore, SaleStore>(_ => new SaleStore(postgresConnectionString));
         sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
 

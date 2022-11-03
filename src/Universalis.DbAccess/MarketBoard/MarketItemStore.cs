@@ -110,7 +110,7 @@ public class MarketItemStore : IMarketItemStore
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to deserialize object.");
+                _logger.LogError(e, "Failed to deserialize object: {JsonData}", cacheData1.Value);
             }
         }
 
