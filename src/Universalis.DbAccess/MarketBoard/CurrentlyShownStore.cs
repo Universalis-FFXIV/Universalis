@@ -90,7 +90,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         // Store the result in the cache
         if (result.Listings.Count == 0)
         {
-            _logger.LogDebug("No listings in fetch! (worldID={WorldId}, itemID={ItemID})", worldId, itemId);
+            _logger.LogWarning("No listings in fetch! (worldID={WorldId}, itemID={ItemID})", worldId, itemId);
         }
 
         var cacheData2 = JsonSerializer.Serialize(result);
@@ -135,7 +135,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         // Write through to the cache
         if (data.Listings.Count == 0)
         {
-            _logger.LogDebug("No listings in upload! (worldID={WorldId}, itemID={ItemID})", worldId, itemId);
+            _logger.LogWarning("No listings in upload! (worldID={WorldId}, itemID={ItemID})", worldId, itemId);
         }
 
         var cache = _memcached.GetClient();
