@@ -15,13 +15,13 @@ public class CurrentlyShown : ICopyable
 
     public List<Listing> Listings { get; }
 
-    public CurrentlyShown(uint worldId, uint itemId, long uploadTimeUnixMs, string source,
+    public CurrentlyShown(uint worldId, uint itemId, long lastUploadTimeUnixMilliseconds, string uploadSource,
         List<Listing> listings)
     {
         WorldId = worldId;
         ItemId = itemId;
-        LastUploadTimeUnixMilliseconds = uploadTimeUnixMs;
-        UploadSource = source;
+        LastUploadTimeUnixMilliseconds = lastUploadTimeUnixMilliseconds;
+        UploadSource = uploadSource;
         Listings = listings;
     }
 
