@@ -89,7 +89,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
         // Store the result in the cache
         var cacheData2 = JsonSerializer.Serialize(result);
-        _logger.LogInformation("Fetch: {SerializedListings}", result);
+        _logger.LogInformation("Fetch: {SerializedListings}", cacheData2);
         await cache.SetAsync(GetCacheKey(worldId, itemId), cacheData2, Expiration.From(TimeSpan.FromSeconds(300)));
 
         return result;
