@@ -88,16 +88,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         };
 
         // Store the result in the cache
-        if (result.Listings.Count == 0)
-        {
-            _logger.LogWarning("No listings in fetch! (worldID={WorldId}, itemID={ItemID})", worldId, itemId);
-        }
-        else
-        {
-            _logger.LogInformation("Fetch has listings (worldID={WorldId}, itemID={ItemID})", worldId, itemId);
-        }
-
         var cacheData2 = JsonSerializer.Serialize(result);
+        _logger.LogInformation("Fetch: {SerializedListings}", result);
         await cache.SetAsync(GetCacheKey(worldId, itemId), cacheData2, Expiration.From(TimeSpan.FromSeconds(300)));
 
         return result;
@@ -137,17 +129,9 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         await trans.ExecuteAsync();
 
         // Write through to the cache
-        if (data.Listings.Count == 0)
-        {
-            _logger.LogWarning("No listings in upload! (worldID={WorldId}, itemID={ItemID})", worldId, itemId);
-        }
-        else
-        {
-            _logger.LogInformation("Upload has listings (worldID={WorldId}, itemID={ItemID})", worldId, itemId);
-        }
-
         var cache = _memcached.GetClient();
         var cacheData = JsonSerializer.Serialize(data.Clone());
+        _logger.LogInformation("Upload: {SerializedListings}", cacheData);
         await cache.SetAsync(GetCacheKey(worldId, itemId), cacheData, Expiration.From(TimeSpan.FromSeconds(300)));
     }
     
