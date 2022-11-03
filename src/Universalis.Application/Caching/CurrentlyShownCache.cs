@@ -94,7 +94,7 @@ public class CurrentlyShownCache : MemoryCache<CachedCurrentlyShownQuery, Cached
         {
             ItemId = key.ItemId,
             WorldId = key.WorldId,
-            LastUploadTimeUnixMilliseconds = Convert.ToInt64(history.LastUploadTimeUnixMilliseconds),
+            LastUploadTimeUnixMilliseconds = Math.Max(Convert.ToInt64(history.LastUploadTimeUnixMilliseconds), currentData.LastUploadTimeUnixMilliseconds),
             Listings = dataListings,
             RecentHistory = dataHistory,
         };
