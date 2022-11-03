@@ -52,8 +52,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
         if (!await db.KeyExistsAsync(lastUpdatedKey))
         {
-            return new CurrentlyShown(0, 0, 0, "",
-                new List<Listing>());
+            return new CurrentlyShown();
         }
         
         // Fetch all of the data in a consistent manner. This shouldn't usually run more
@@ -78,8 +77,15 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
             transactionExecuted = await trans.ExecuteAsync();
         } while (!transactionExecuted);
-        
-        var result = new CurrentlyShown(worldId, itemId, lastUpdated, source, listings.ToList());
+
+        var result = new CurrentlyShown
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+            LastUploadTimeUnixMilliseconds = lastUpdated,
+            UploadSource = source,
+            Listings = listings.ToList(),
+        };
 
         // Store the result in the cache
         if (result.Listings.Count == 0)

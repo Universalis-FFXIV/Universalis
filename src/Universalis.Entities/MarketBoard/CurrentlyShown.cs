@@ -5,25 +5,15 @@ namespace Universalis.Entities.MarketBoard;
 
 public class CurrentlyShown : ICopyable
 {
-    public uint WorldId { get; }
+    public uint WorldId { get; init; }
     
-    public uint ItemId { get; }
+    public uint ItemId { get; init; }
 
-    public long LastUploadTimeUnixMilliseconds { get; }
-    
-    public string UploadSource { get; }
+    public long LastUploadTimeUnixMilliseconds { get; init; }
 
-    public List<Listing> Listings { get; }
+    public string UploadSource { get; init; } = "";
 
-    public CurrentlyShown(uint worldId, uint itemId, long lastUploadTimeUnixMilliseconds, string uploadSource,
-        List<Listing> listings)
-    {
-        WorldId = worldId;
-        ItemId = itemId;
-        LastUploadTimeUnixMilliseconds = lastUploadTimeUnixMilliseconds;
-        UploadSource = uploadSource;
-        Listings = listings;
-    }
+    public List<Listing> Listings { get; init; } = new List<Listing>();
 
     public ICopyable Clone()
     {

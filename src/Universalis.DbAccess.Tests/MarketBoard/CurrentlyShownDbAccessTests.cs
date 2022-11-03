@@ -17,7 +17,7 @@ public class CurrentlyShownDbAccessTests
         {
             return Task.FromResult(_currentlyShown.TryGetValue((worldId, itemId), out var data)
                 ? data
-                : new CurrentlyShown(0, 0, 0, "", new List<Listing>()));
+                : new CurrentlyShown());
         }
 
         public Task SetData(CurrentlyShown data)
