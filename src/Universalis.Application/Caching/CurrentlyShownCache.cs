@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Prometheus;
 using Universalis.Common.Caching;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -17,21 +15,6 @@ public class CurrentlyShownCache : MemoryCache<CachedCurrentlyShownQuery, Cached
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IHistoryDbAccess _historyDb;
 
-    private static readonly Counter CacheHits = Metrics.CreateCounter("universalis_cache_hits", "Cache Hits");
-    private static readonly Counter CacheMisses = Metrics.CreateCounter("universalis_cache_misses", "Cache Misses");
-    private static readonly Gauge CacheEntries = Metrics.CreateGauge("universalis_cache_entries", "Cache Entries");
-
-    private static readonly Histogram CacheHitMs =
-        Metrics.CreateHistogram("universalis_cache_hit_milliseconds", "Cache Hit Milliseconds");
-
-    private static readonly Histogram CacheMissMs =
-        Metrics.CreateHistogram("universalis_cache_miss_milliseconds", "Cache Miss Milliseconds");
-
-    private static readonly Counter CacheDeletes = Metrics.CreateCounter("universalis_cache_deletes", "Cache Deletes");
-
-    private static readonly Counter CacheEvictions =
-        Metrics.CreateCounter("universalis_cache_evictions", "Cache Evictions");
-
     public CurrentlyShownCache(int size, ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess historyDb) :
         base(size)
     {
@@ -42,19 +25,6 @@ public class CurrentlyShownCache : MemoryCache<CachedCurrentlyShownQuery, Cached
     public override async ValueTask<CachedCurrentlyShownData> Get(CachedCurrentlyShownQuery key,
         CancellationToken cancellationToken = default)
     {
-        // Fetch data from the cache
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
-
-        var cached = await base.Get(key, cancellationToken);
-        if (cached != null)
-        {
-            stopwatch.Stop();
-            CacheHitMs.Observe(stopwatch.ElapsedMilliseconds);
-            CacheHits.Inc();
-
-            return cached;
-        }
 
         // Retrieve data from the database
         var currentData = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
@@ -62,13 +32,11 @@ public class CurrentlyShownCache : MemoryCache<CachedCurrentlyShownQuery, Cached
             WorldId = key.WorldId,
             ItemId = key.ItemId,
         }, cancellationToken);
-        var history =
-            await _historyDb.Retrieve(new HistoryQuery { WorldId = key.WorldId, ItemId = key.ItemId, Count = 20 },
-                cancellationToken);
 
-        stopwatch.Stop();
-        CacheMissMs.Observe(stopwatch.ElapsedMilliseconds);
-        CacheMisses.Inc();
+        // The distributed cache is used here because the number of items is constrained to 20
+        var history =
+            await _historyDb.RetrieveWithCache(new HistoryQuery { WorldId = key.WorldId, ItemId = key.ItemId, Count = 20 },
+                cancellationToken);
 
         if (currentData == null || history == null)
         {
@@ -99,39 +67,18 @@ public class CurrentlyShownCache : MemoryCache<CachedCurrentlyShownQuery, Cached
             RecentHistory = dataHistory,
         };
 
-        await Set(key, dataView, cancellationToken);
-
         return dataView;
     }
 
     public override ValueTask Set(CachedCurrentlyShownQuery key, CachedCurrentlyShownData value,
         CancellationToken cancellationToken = default)
     {
-        // await base.Set(key, value, cancellationToken);
-        CacheEntries.Set(Count);
         return ValueTask.CompletedTask;
     }
 
-    public override async ValueTask<bool> Delete(CachedCurrentlyShownQuery key,
+    public override ValueTask<bool> Delete(CachedCurrentlyShownQuery key,
         CancellationToken cancellationToken = default)
     {
-        var result = await base.Delete(key, cancellationToken);
-        if (result)
-        {
-            CacheDeletes.Inc();
-        }
-
-        return result;
-    }
-
-    protected override bool Evict()
-    {
-        var result = base.Evict();
-        if (result)
-        {
-            CacheEvictions.Inc();
-        }
-
-        return result;
+        return ValueTask.FromResult(false);
     }
 }
