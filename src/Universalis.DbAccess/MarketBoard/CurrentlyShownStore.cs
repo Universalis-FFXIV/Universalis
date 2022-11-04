@@ -129,7 +129,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
         // Write through to the cache
         var cache = _memcached.GetClient();
-        var cacheData = JsonSerializer.Serialize((CurrentlyShown)data.Clone());
+        var cacheData = JsonSerializer.Serialize(data);
         await cache.SetAsync(GetCacheKey(worldId, itemId), cacheData, Expiration.From(TimeSpan.FromSeconds(300)));
     }
     
