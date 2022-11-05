@@ -59,15 +59,21 @@ public class Startup
 
         services.AddMassTransit(options =>
         {
-            options.AddConsumer<ItemUpdateDispatcher>();
-            options.AddConsumer<ListingsAddDispatcher>();
-            options.AddConsumer<ListingsRemoveDispatcher>();
-            options.AddConsumer<SalesAddDispatcher>();
-
             options.SetKebabCaseEndpointNameFormatter();
 
             options.UsingRabbitMq((ctx, config) =>
             {
+                // The machine name is used as the queue name to ensure that each
+                // instance gets its own queue.
+                config.ReceiveEndpoint(Environment.MachineName, conf =>
+                {
+                    conf.AutoDelete = true;
+                    conf.ConfigureConsumer<ItemUpdateDispatcher>(ctx);
+                    conf.ConfigureConsumer<ListingsAddDispatcher>(ctx);
+                    conf.ConfigureConsumer<ListingsRemoveDispatcher>(ctx);
+                    conf.ConfigureConsumer<SalesAddDispatcher>(ctx);
+                });
+
                 config.Host(Environment.GetEnvironmentVariable("UNIVERSALIS_RABBITMQ_HOSTNAME") ??
                     Configuration["RabbitMqHostname"], "/", host =>
                 {
