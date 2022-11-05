@@ -36,7 +36,7 @@ public class MarketBoardUploadBehaviorTests
             var cache = new MemoryCache<CachedCurrentlyShownQuery, CachedCurrentlyShownData>(1);
             var sockets = new MockSocketProcessor();
             var gameData = new MockGameDataProvider();
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, sockets, gameData);
+            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, gameData, null);
 
             return new TestResources
             {

@@ -1,3 +1,4 @@
+using MassTransit;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -53,6 +54,24 @@ public class Startup
             var currentlyShownDb = sc.GetRequiredService<ICurrentlyShownDbAccess>();
             var historyDb = sc.GetRequiredService<IHistoryDbAccess>();
             return new CurrentlyShownCache(cacheSize, currentlyShownDb, historyDb);
+        });
+
+        services.AddMassTransit(options =>
+        {
+            options.AddConsumer<SocketMessageDispatcher>();
+
+            options.SetKebabCaseEndpointNameFormatter();
+
+            options.UsingRabbitMq((ctx, config) =>
+            {
+                config.Host("localhost", "/", host =>
+                {
+                    host.Username("guest");
+                    host.Password("guest");
+                });
+
+                config.ConfigureEndpoints(ctx);
+            });
         });
 
         services.AddSingleton<ISocketProcessor, SocketProcessor>();
