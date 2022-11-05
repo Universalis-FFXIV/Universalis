@@ -68,10 +68,10 @@ public class Startup
                 config.ReceiveEndpoint(Environment.MachineName, conf =>
                 {
                     conf.AutoDelete = true;
-                    conf.ConfigureConsumer<ItemUpdateDispatcher>(ctx);
-                    conf.ConfigureConsumer<ListingsAddDispatcher>(ctx);
-                    conf.ConfigureConsumer<ListingsRemoveDispatcher>(ctx);
-                    conf.ConfigureConsumer<SalesAddDispatcher>(ctx);
+                    conf.Consumer<ItemUpdateDispatcher>(ctx);
+                    conf.Consumer<ListingsAddDispatcher>(ctx);
+                    conf.Consumer<ListingsRemoveDispatcher>(ctx);
+                    conf.Consumer<SalesAddDispatcher>(ctx);
                 });
 
                 config.Host(Environment.GetEnvironmentVariable("UNIVERSALIS_RABBITMQ_HOSTNAME") ??
