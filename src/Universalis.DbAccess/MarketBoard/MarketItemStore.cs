@@ -54,7 +54,7 @@ public class MarketItemStore : IMarketItemStore
 
         // Write through to the cache
         var cache = _memcached.GetClient();
-        var cacheData = JsonSerializer.Serialize(marketItem.Clone());
+        var cacheData = JsonSerializer.Serialize(marketItem);
         await cache.SetAsync(GetCacheKey(marketItem.WorldId, marketItem.ItemId), cacheData);
     }
 
@@ -89,7 +89,7 @@ public class MarketItemStore : IMarketItemStore
 
         // Write through to the cache
         var cache = _memcached.GetClient();
-        var cacheData = JsonSerializer.Serialize(marketItem.Clone());
+        var cacheData = JsonSerializer.Serialize(marketItem);
         await cache.SetAsync(GetCacheKey(marketItem.WorldId, marketItem.ItemId), cacheData);
     }
 
