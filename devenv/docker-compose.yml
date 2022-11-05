@@ -16,6 +16,11 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - "./data:/var/lib/grafana"
+  rabbitmq:
+    image: masstransit/rabbitmq:3.9.15
+    ports:
+      - "15672:15672"
+      - "5672:5672"
   mariadb:
     image: mariadb:10.3.32
     ports:

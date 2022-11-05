@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MassTransit;
+using Microsoft.AspNetCore.Mvc;
 using Prometheus;
 using System;
 using System.Collections.Generic;
@@ -6,7 +7,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
-using Universalis.Application.Realtime;
 using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
 using Universalis.Common.Caching;
@@ -26,8 +26,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IHistoryDbAccess _historyDb;
     private readonly ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> _cache;
-    private readonly ISocketProcessor _sockets;
     private readonly IGameDataProvider _gdp;
+    private readonly IBus _bus;
 
     private static readonly Counter CacheDeletes = Metrics.CreateCounter("universalis_cache_deletes", "Cache Deletes");
 
@@ -35,14 +35,14 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         ICurrentlyShownDbAccess currentlyShownDb,
         IHistoryDbAccess historyDb,
         ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> cache,
-        ISocketProcessor sockets,
-        IGameDataProvider gdp)
+        IGameDataProvider gdp,
+        IBus bus)
     {
         _currentlyShownDb = currentlyShownDb;
         _historyDb = historyDb;
         _cache = cache;
-        _sockets = sockets;
         _gdp = gdp;
+        _bus = bus;
     }
 
     public bool ShouldExecute(UploadParameters parameters)
@@ -132,14 +132,11 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
             if (addedSales.Count > 0)
             {
-                _ = Task.Run(() =>
+                _ = _bus?.Publish<SocketMessage>(new SalesAdd
                 {
-                    _sockets.Publish(new SalesAdd
-                    {
-                        WorldId = worldId,
-                        ItemId = itemId,
-                        Sales = addedSales.Select(Util.SaleToView).ToList(),
-                    });
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    Sales = addedSales.Select(Util.SaleToView).ToList(),
                 }, cancellationToken);
             }
         }
@@ -163,33 +160,27 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
             if (addedListings.Count > 0)
             {
-                _ = Task.Run(async () =>
+                _ = _bus?.Publish<SocketMessage>(new ListingsAdd
                 {
-                    _sockets.Publish(new ListingsAdd
-                    {
-                        WorldId = worldId,
-                        ItemId = itemId,
-                        Listings = await addedListings
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    Listings = await addedListings
                             .ToAsyncEnumerable()
                             .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
                             .ToListAsync(cancellationToken),
-                    });
                 }, cancellationToken);
             }
 
             if (removedListings.Count > 0)
             {
-                _ = Task.Run(async () =>
+                _ = _bus?.Publish<SocketMessage>(new ListingsRemove
                 {
-                    _sockets.Publish(new ListingsRemove
-                    {
-                        WorldId = worldId,
-                        ItemId = itemId,
-                        Listings = await removedListings
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    Listings = await removedListings
                             .ToAsyncEnumerable()
                             .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
                             .ToListAsync(cancellationToken),
-                    });
                 }, cancellationToken);
             }
         }
