@@ -132,7 +132,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
             if (addedSales.Count > 0)
             {
-                _ = _bus?.Publish<SocketMessage>(new SalesAdd
+                _ = _bus?.Publish(new SalesAdd
                 {
                     WorldId = worldId,
                     ItemId = itemId,
@@ -160,7 +160,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
             if (addedListings.Count > 0)
             {
-                _ = _bus?.Publish<SocketMessage>(new ListingsAdd
+                _ = _bus?.Publish(new ListingsAdd
                 {
                     WorldId = worldId,
                     ItemId = itemId,
@@ -173,7 +173,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
             if (removedListings.Count > 0)
             {
-                _ = _bus?.Publish<SocketMessage>(new ListingsRemove
+                _ = _bus?.Publish(new ListingsRemove
                 {
                     WorldId = worldId,
                     ItemId = itemId,
