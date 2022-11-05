@@ -20,6 +20,7 @@ using Universalis.Application.Caching;
 using Universalis.Application.Controllers;
 using Universalis.Application.ExceptionFilters;
 using Universalis.Application.Realtime;
+using Universalis.Application.Realtime.Dispatchers;
 using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Common.Caching;
@@ -58,7 +59,10 @@ public class Startup
 
         services.AddMassTransit(options =>
         {
-            options.AddConsumer<SocketMessageDispatcher>();
+            options.AddConsumer<ItemUpdateDispatcher>();
+            options.AddConsumer<ListingsAddDispatcher>();
+            options.AddConsumer<ListingsRemoveDispatcher>();
+            options.AddConsumer<SalesAddDispatcher>();
 
             options.SetKebabCaseEndpointNameFormatter();
 
