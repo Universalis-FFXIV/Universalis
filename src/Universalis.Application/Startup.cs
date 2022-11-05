@@ -59,6 +59,11 @@ public class Startup
 
         services.AddMassTransit(options =>
         {
+            options.AddConsumer<ItemUpdateDispatcher>();
+            options.AddConsumer<ListingsAddDispatcher>();
+            options.AddConsumer<ListingsRemoveDispatcher>();
+            options.AddConsumer<SalesAddDispatcher>();
+
             options.SetKebabCaseEndpointNameFormatter();
 
             options.UsingRabbitMq((ctx, config) =>
@@ -68,10 +73,10 @@ public class Startup
                 config.ReceiveEndpoint(Environment.MachineName, conf =>
                 {
                     conf.AutoDelete = true;
-                    conf.Consumer<ItemUpdateDispatcher>(ctx);
-                    conf.Consumer<ListingsAddDispatcher>(ctx);
-                    conf.Consumer<ListingsRemoveDispatcher>(ctx);
-                    conf.Consumer<SalesAddDispatcher>(ctx);
+                    conf.ConfigureConsumer<ItemUpdateDispatcher>(ctx);
+                    conf.ConfigureConsumer<ListingsAddDispatcher>(ctx);
+                    conf.ConfigureConsumer<ListingsRemoveDispatcher>(ctx);
+                    conf.ConfigureConsumer<SalesAddDispatcher>(ctx);
                 });
 
                 config.Host(Environment.GetEnvironmentVariable("UNIVERSALIS_RABBITMQ_HOSTNAME") ??
