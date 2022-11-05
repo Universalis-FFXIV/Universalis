@@ -64,7 +64,8 @@ public class Startup
 
             options.UsingRabbitMq((ctx, config) =>
             {
-                config.Host("localhost", "/", host =>
+                config.Host(Environment.GetEnvironmentVariable("UNIVERSALIS_RABBITMQ_HOSTNAME") ??
+                    Configuration["RabbitMqHostname"], "/", host =>
                 {
                     host.Username("guest");
                     host.Password("guest");
