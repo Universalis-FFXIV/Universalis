@@ -10,6 +10,10 @@ public abstract class SocketMessage
     [BsonIgnore]
     public string[] ChannelsInternal { get; }
 
+    public SocketMessage()
+    {
+    }
+
     protected SocketMessage(params string[] channels)
     {
         ChannelsInternal = channels;
