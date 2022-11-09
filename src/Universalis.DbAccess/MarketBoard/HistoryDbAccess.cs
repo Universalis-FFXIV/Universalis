@@ -64,7 +64,7 @@ public class HistoryDbAccess : IHistoryDbAccess
         };
     }
 
-    public async Task<History> RetrieveWithCache(HistoryQuery query, CancellationToken cancellationToken = default)
+    private async Task<History> RetrieveWithCache(HistoryQuery query, CancellationToken cancellationToken = default)
     {
         var cache = _memcached.GetClient();
         var cacheKey = $"history:{query.WorldId}:{query.ItemId}:{query.Count}";
