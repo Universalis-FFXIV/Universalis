@@ -16,17 +16,10 @@ public class HistoryDbAccess : IHistoryDbAccess
     private readonly IMarketItemStore _marketItemStore;
     private readonly ISaleStore _saleStore;
 
-    // This cache is in the service layer because it needs to be accessed conditionally.
-    // There should be a separate service with a cache, eventually.
-    private readonly IMemcachedCluster _memcached;
-    private readonly ILogger<HistoryDbAccess> _logger;
-
-    public HistoryDbAccess(IMarketItemStore marketItemStore, ISaleStore saleStore, IMemcachedCluster memcached, ILogger<HistoryDbAccess> logger)
+    public HistoryDbAccess(IMarketItemStore marketItemStore, ISaleStore saleStore)
     {
         _marketItemStore = marketItemStore;
         _saleStore = saleStore;
-        _memcached = memcached;
-        _logger = logger;
     }
 
     public async Task Create(History document, CancellationToken cancellationToken = default)
@@ -43,11 +36,6 @@ public class HistoryDbAccess : IHistoryDbAccess
 
     public async Task<History> Retrieve(HistoryQuery query, CancellationToken cancellationToken = default)
     {
-        if (query.Count == 20)
-        {
-            return await RetrieveWithCache(query, cancellationToken);
-        }
-
         var marketItem = await _marketItemStore.Retrieve(query.WorldId, query.ItemId, cancellationToken);
         if (marketItem == null)
         {
@@ -64,35 +52,6 @@ public class HistoryDbAccess : IHistoryDbAccess
         };
     }
 
-    private async Task<History> RetrieveWithCache(HistoryQuery query, CancellationToken cancellationToken = default)
-    {
-        var cache = _memcached.GetClient();
-        var cacheKey = $"history:{query.WorldId}:{query.ItemId}:{query.Count}";
-        var cacheData1 = await cache.GetWithResultAsync<string>(cacheKey);
-        if (cacheData1.Success)
-        {
-            try
-            {
-                var cacheObject = JsonSerializer.Deserialize<History>(cacheData1.Value);
-                if (cacheObject != null)
-                {
-                    return cacheObject;
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failed to deserialize object: {JsonData}", cacheData1.Value);
-            }
-        }
-
-        var result = await Retrieve(query, cancellationToken);
-
-        var cacheData2 = JsonSerializer.Serialize(result);
-        await cache.SetAsync(cacheKey, cacheData2, Expiration.From(TimeSpan.FromSeconds(300)));
-
-        return result;
-    }
-
     public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query, CancellationToken cancellationToken = default)
     {
         return (await Task.WhenAll(query.WorldIds
@@ -102,21 +61,6 @@ public class HistoryDbAccess : IHistoryDbAccess
 
     public async Task InsertSales(IEnumerable<Sale> sales, HistoryQuery query, CancellationToken cancellationToken = default)
     {
-        // Dirty hack that needs to be cleaned up later
-        var cache = _memcached?.GetClient();
-        var cacheKey1 = $"history:{query.WorldId}:{query.ItemId}:20";
-        if (cache != null)
-        {
-            try
-            {
-                await cache.DeleteAsync(cacheKey1);
-            }
-            catch (Exception e)
-            {
-                _logger?.LogError(e, "Failed to delete object with key \"{CacheKey}\"", cacheKey1);
-            }
-        }
-
         await _marketItemStore.Update(new MarketItem
         {
             WorldId = query.WorldId,
