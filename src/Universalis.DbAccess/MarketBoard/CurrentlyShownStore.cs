@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Enyim.Caching.Memcached;
-using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
@@ -14,37 +13,14 @@ namespace Universalis.DbAccess.MarketBoard;
 public class CurrentlyShownStore : ICurrentlyShownStore
 {
     private readonly IConnectionMultiplexer _redis;
-    private readonly IMemcachedCluster _memcached;
-    private readonly ILogger<CurrentlyShownStore> _logger;
 
-    public CurrentlyShownStore(IConnectionMultiplexer redis, IMemcachedCluster memcached, ILogger<CurrentlyShownStore> logger)
+    public CurrentlyShownStore(IConnectionMultiplexer redis)
     {
         _redis = redis;
-        _memcached = memcached;
-        _logger = logger;
     }
 
     public async Task<CurrentlyShown> GetData(uint worldId, uint itemId)
     {
-        // Try to fetch data from the cache
-        var cache = _memcached.GetClient();
-        var cacheData1 = await cache.GetWithResultAsync<string>(GetCacheKey(worldId, itemId));
-        if (cacheData1.Success)
-        {
-            try
-            {
-                var cacheObject = JsonSerializer.Deserialize<CurrentlyShown>(cacheData1.Value);
-                if (cacheObject != null)
-                {
-                    return cacheObject;
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failed to deserialize object: {JsonData}", cacheData1.Value);
-            }
-        }
-
         // Fetch data from the database
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
         
@@ -87,13 +63,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             Listings = listings.ToList(),
         };
 
-        // Store the result in the cache
-        if (result.Listings.Count <= 20)
-        {
-            var cacheData2 = JsonSerializer.Serialize(result);
-            await cache.SetAsync(GetCacheKey(worldId, itemId), cacheData2, Expiration.From(TimeSpan.FromSeconds(300)));
-        }
-
         return result;
     }
 
@@ -129,11 +98,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         // Execute the transaction. If this fails, we'll just assume that newer data
         // was written first and move on.
         await trans.ExecuteAsync();
-
-        // Write through to the cache
-        var cache = _memcached.GetClient();
-        var cacheData = JsonSerializer.Serialize(data);
-        await cache.SetAsync(GetCacheKey(worldId, itemId), cacheData, Expiration.From(TimeSpan.FromSeconds(300)));
     }
     
     private async Task<long> EnsureLastUpdated(uint worldId, uint itemId)
