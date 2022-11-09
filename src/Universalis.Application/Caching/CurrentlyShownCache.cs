@@ -32,11 +32,12 @@ public class CurrentlyShownCache : MemoryCache<CachedCurrentlyShownQuery, Cached
             WorldId = key.WorldId,
             ItemId = key.ItemId,
         }, cancellationToken);
-
-        // The distributed cache is used here because the number of items is constrained to 20
-        var history =
-            await _historyDb.RetrieveWithCache(new HistoryQuery { WorldId = key.WorldId, ItemId = key.ItemId, Count = 20 },
-                cancellationToken);
+        var history = await _historyDb.Retrieve(new HistoryQuery
+        {
+            WorldId = key.WorldId,
+            ItemId = key.ItemId,
+            Count = 20,
+        }, cancellationToken);
 
         if (currentData == null || history == null)
         {
