@@ -40,11 +40,6 @@ public class MockHistoryDbAccess : IHistoryDbAccess
         });
     }
 
-    public Task<History> RetrieveWithCache(HistoryQuery query, CancellationToken cancellationToken = default)
-    {
-        return Retrieve(query, cancellationToken);
-    }
-
     public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query, CancellationToken cancellationToken = default)
     {
         return (await Task.WhenAll(query.WorldIds
