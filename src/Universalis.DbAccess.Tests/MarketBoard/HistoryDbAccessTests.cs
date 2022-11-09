@@ -75,7 +75,7 @@ public class HistoryDbAccessTests
     [Fact]
     public async Task Create_DoesNotThrow()
     {
-        var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore(), null, null);
+        var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore());
         var document = SeedDataGenerator.MakeHistory(74, 5333);
         await db.Create(document);
     }
@@ -83,7 +83,7 @@ public class HistoryDbAccessTests
     [Fact]
     public async Task Retrieve_DoesNotThrow()
     {
-        var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore(), null, null);
+        var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore());
         var output = await db.Retrieve(new HistoryQuery { WorldId = 74, ItemId = 5333 });
         Assert.Null(output);
     }
@@ -91,7 +91,7 @@ public class HistoryDbAccessTests
     [Fact]
     public async Task RetrieveMany_DoesNotThrow()
     {
-        var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore(), null, null);
+        var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore());
         var output = await db.RetrieveMany(new HistoryManyQuery { WorldIds = new uint[] { 74 }, ItemId = 5333 });
         Assert.NotNull(output);
         Assert.Empty(output);
@@ -100,7 +100,7 @@ public class HistoryDbAccessTests
     [Fact]
     public async Task InsertSales_Works()
     {
-        var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore(), null, null);
+        var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore());
         var history1 = SeedDataGenerator.MakeHistory(74, 5333);
         var history2 = SeedDataGenerator.MakeHistory(74, 5333);
         var history3 = SeedDataGenerator.MakeHistory(74, 5333);
@@ -122,7 +122,7 @@ public class HistoryDbAccessTests
     [Fact]
     public async Task Create_DoesInsert()
     {
-        var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore(), null, null);
+        var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore());
 
         var document = SeedDataGenerator.MakeHistory(74, 5333);
         await db.Create(document);
@@ -134,7 +134,7 @@ public class HistoryDbAccessTests
     [Fact]
     public async Task RetrieveMany_ReturnsData()
     {
-        var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore(), null, null);
+        var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore());
 
         var document = SeedDataGenerator.MakeHistory(74, 5333);
         await db.Create(document);
