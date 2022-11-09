@@ -43,6 +43,11 @@ public class HistoryDbAccess : IHistoryDbAccess
 
     public async Task<History> Retrieve(HistoryQuery query, CancellationToken cancellationToken = default)
     {
+        if (query.Count == 20 || query.Count == 1800)
+        {
+            return await RetrieveWithCache(query, cancellationToken);
+        }
+
         var marketItem = await _marketItemStore.Retrieve(query.WorldId, query.ItemId, cancellationToken);
         if (marketItem == null)
         {
@@ -99,17 +104,27 @@ public class HistoryDbAccess : IHistoryDbAccess
     {
         // Dirty hack that needs to be cleaned up later
         var cache = _memcached?.GetClient();
-        var cacheKey = $"history:{query.WorldId}:{query.ItemId}:20";
-        try
+        var cacheKey1 = $"history:{query.WorldId}:{query.ItemId}:20";
+        var cacheKey2 = $"history:{query.WorldId}:{query.ItemId}:1800";
+        if (cache != null)
         {
-            if (cache != null)
+            try
             {
-                await cache.DeleteAsync(cacheKey);
+                await cache.DeleteAsync(cacheKey1);
             }
-        }
-        catch (Exception e)
-        {
-            _logger?.LogError(e, "Failed to delete object with key \"{CacheKey}\"", cacheKey);
+            catch (Exception e)
+            {
+                _logger?.LogError(e, "Failed to delete object with key \"{CacheKey}\"", cacheKey1);
+            }
+
+            try
+            {
+                await cache.DeleteAsync(cacheKey2);
+            }
+            catch (Exception e)
+            {
+                _logger?.LogError(e, "Failed to delete object with key \"{CacheKey}\"", cacheKey2);
+            }
         }
 
         await _marketItemStore.Update(new MarketItem
