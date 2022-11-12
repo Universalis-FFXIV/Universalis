@@ -24,7 +24,7 @@ public static class DbAccessExtensions
         var memcachedConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_MEMCACHED_CONNECTION") ??
                                        configuration["MemcachedConnectionString"];
 
-        sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(ConnectionMultiplexer.Connect(redisConnectionString)));
+        sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(ConnectionMultiplexer.Connect(redisCacheConnectionString)));
         sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(ConnectionMultiplexer.Connect(redisConnectionString)));
 
         sc.AddFluentMigratorCore()
