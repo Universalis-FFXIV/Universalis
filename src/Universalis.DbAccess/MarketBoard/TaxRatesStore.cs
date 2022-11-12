@@ -37,10 +37,13 @@ public class TaxRatesStore : ITaxRatesStore
     {
         // Try to retrieve data from the cache
         var cache = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
-        var cachedObject = await FetchTaxRates(cache, worldId);
-        if (cachedObject != null)
+        if (await HasTaxRates(cache, worldId))
         {
-            return cachedObject;
+            var cachedObject = await FetchTaxRates(cache, worldId);
+            if (cachedObject != null)
+            {
+                return cachedObject;
+            }
         }
 
         // Fetch the tax rates from the database
@@ -72,6 +75,20 @@ public class TaxRatesStore : ITaxRatesStore
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to store TaxRates \"{TaxRatesCacheKey}\"", worldId);
+        }
+    }
+
+    private async Task<bool> HasTaxRates(IDatabase db, uint worldId)
+    {
+        var key = worldId.ToString();
+        try
+        {
+            return await db.KeyExistsAsync(key);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to query existence of TaxRates \"{TaxRatesCacheKey}\"", worldId);
+            return false;
         }
     }
 
