@@ -192,7 +192,7 @@ public class SaleStore : ISaleStore
                     .Select(cachedSale =>
                     {
                         var (saleId, sale) = cachedSale;
-                        return (saleId, sale.ToDictionary(kvp => kvp.Name.ToString(), kvp => kvp.Value));
+                        return (saleId, sale.ToDictionary());
                     })
                     .Select(cachedSale =>
                     {
