@@ -245,7 +245,7 @@ public class SaleStore : ISaleStore
             var s0 = await cache.ListGetByIndexAsync(cacheIndexKey, 0);
             var tx = cache.CreateTransaction();
             tx.AddCondition(Condition.ListIndexEqual(cacheIndexKey, 0, s0));
-            _ = tx.ListLeftPushAsync(cacheIndexKey, saleIds.Cast<RedisValue>().ToArray());
+            _ = tx.ListLeftPushAsync(cacheIndexKey, saleIds.Select(id => (RedisValue)id).ToArray());
             _ = tx.ListTrimAsync(cacheIndexKey, 0, MaxCachedSales);
             await tx.ExecuteAsync(CommandFlags.FireAndForget);
         }
