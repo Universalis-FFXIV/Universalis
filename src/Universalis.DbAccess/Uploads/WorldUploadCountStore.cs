@@ -63,6 +63,9 @@ public class WorldUploadCountStore : IWorldUploadCountStore
         {
             var tasks = counts.Select(entry => cache.SortedSetAddAsync(CacheKey, entry.Element, (long)entry.Score));
             await Task.WhenAll(tasks);
+
+            // Cap the cache time at 5 minutes to recover from any potential inconsistencies
+            await cache.KeyExpireAsync(CacheKey, TimeSpan.FromMinutes(5), CommandFlags.FireAndForget);
         }
         catch (Exception e)
         {
