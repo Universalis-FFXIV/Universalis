@@ -126,6 +126,10 @@ public class MarketItemStore : IMarketItemStore
                         LastUploadTime = t,
                     };
                 }
+                else
+                {
+                    _logger.LogWarning("Failed to parse timestamp \"{RedisValue}\" for cached MarketItem \"{MarketItemCacheKey}\"", timestamp, cacheKey);
+                }
             }
         }
         catch (Exception e)

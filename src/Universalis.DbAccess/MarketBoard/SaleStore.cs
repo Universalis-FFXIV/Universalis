@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Entities.MarketBoard;
-using static Universalis.DbAccess.RedisDatabases;
 
 namespace Universalis.DbAccess.MarketBoard;
 
@@ -54,6 +53,11 @@ public class SaleStore : ISaleStore
             },
         };
         await command.ExecuteNonQueryAsync(cancellationToken);
+
+        // Purge the cache
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
+        var cacheIndexKey = GetIndexCacheKey(sale.WorldId, sale.ItemId);
+        await cache.KeyDeleteAsync(cacheIndexKey, CommandFlags.FireAndForget);
     }
 
     public async Task InsertMany(IEnumerable<Sale> sales, CancellationToken cancellationToken = default)
@@ -69,6 +73,15 @@ public class SaleStore : ISaleStore
         var purgedCaches = new Dictionary<string, bool>();
         foreach (var sale in sales)
         {
+            // Purge the cache
+            var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
+            var cacheIndexKey = GetIndexCacheKey(sale.WorldId, sale.ItemId);
+            if (!purgedCaches.TryGetValue(cacheIndexKey, out var purged) || !purged)
+            {
+                await cache.KeyDeleteAsync(cacheIndexKey, CommandFlags.FireAndForget);
+                purgedCaches[cacheIndexKey] = true;
+            }
+
             batch.BatchCommands.Add(new NpgsqlBatchCommand(
                 "INSERT INTO sale (id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)")
             {
@@ -92,6 +105,18 @@ public class SaleStore : ISaleStore
 
     public async Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null, CancellationToken cancellationToken = default)
     {
+        // Try retrieving data from the cache
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
+        var cacheIndexKey = GetIndexCacheKey(worldId, itemId);
+        if (from == null && count <= MaxCachedSales)
+        {
+            var cachedSales = await FetchSalesFromCache(cache, cacheIndexKey, worldId, itemId, count);
+            if (cachedSales.Any())
+            {
+                return cachedSales;
+            }
+        }
+
         // Fetch data from the database
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
@@ -137,6 +162,13 @@ public class SaleStore : ISaleStore
         }
 
         var results = sales.Take(count).ToList();
+
+        // Store the results in the cache
+        if (results.Count >= MaxCachedSales)
+        {
+            await CacheSales(cache, cacheIndexKey, results);
+        }
+
         return results;
     }
 
@@ -147,21 +179,16 @@ public class SaleStore : ISaleStore
             if (await cache.KeyExistsAsync(cacheIndexKey, CommandFlags.PreferReplica))
             {
                 var cachedSaleIds = await cache.ListRangeAsync(cacheIndexKey, flags: CommandFlags.PreferReplica);
-                var cachedSalesExist = await Task.WhenAll(cachedSaleIds.Select(id => cache.KeyExistsAsync(cacheIndexKey, CommandFlags.PreferReplica)));
-                if (!cachedSalesExist.All(e => e))
-                {
-                    return new List<Sale>();
-                }
-
                 var cachedSaleTasks = cachedSaleIds
                     .Take(count)
-                    .Select(async id =>
+                    .Select(saleId => Guid.Parse(saleId))
+                    .Select(async saleId =>
                     {
-                        var saleId = Guid.Parse(id);
                         var cacheKey = GetSaleCacheKey(saleId);
                         return (saleId, await cache.HashGetAllAsync(cacheKey, CommandFlags.PreferReplica));
                     });
-                return (await Task.WhenAll(cachedSaleTasks))
+                var cachedSales = await Task.WhenAll(cachedSaleTasks);
+                return cachedSales
                     .Select(cachedSale =>
                     {
                         var (saleId, sale) = cachedSale;
@@ -170,19 +197,7 @@ public class SaleStore : ISaleStore
                     .Select(cachedSale =>
                     {
                         var (saleId, sale) = cachedSale;
-                        return new Sale
-                        {
-                            Id = saleId,
-                            WorldId = worldId,
-                            ItemId = itemId,
-                            Hq = GetValueBool(sale, "hq"),
-                            PricePerUnit = GetValueUInt32(sale, "ppu"),
-                            Quantity = GetValueUInt32(sale, "q"),
-                            BuyerName = GetValueString(sale, "bn"),
-                            SaleTime = DateTime.Parse(GetValueString(sale, "t")),
-                            UploaderIdHash = GetValueString(sale, "uid"),
-                            OnMannequin = GetValueBool(sale, "mann"),
-                        };
+                        return ParseSaleFromHash(saleId, worldId, itemId, sale);
                     })
                     .OrderByDescending(sale => sale.SaleTime)
                     .ToList();
@@ -233,19 +248,33 @@ public class SaleStore : ISaleStore
         }
     }
 
+    private Sale ParseSaleFromHash(Guid saleId, uint worldId, uint itemId, IDictionary<RedisValue, RedisValue> hash)
+    {
+        var saleTimeStr = GetValueString(hash, "t");
+        if (!DateTime.TryParse(saleTimeStr, out var saleTime))
+        {
+            saleTime = default;
+            _logger.LogWarning("Failed to parse sale time  \"{RedisValue}\" for cached sale \"{SaleId}\", using default value", saleTimeStr, saleId);
+        }
+
+        return new Sale
+        {
+            Id = saleId,
+            WorldId = worldId,
+            ItemId = itemId,
+            Hq = GetValueBool(hash, "hq"),
+            PricePerUnit = GetValueUInt32(hash, "ppu"),
+            Quantity = GetValueUInt32(hash, "q"),
+            BuyerName = GetValueString(hash, "bn"),
+            SaleTime = saleTime,
+            UploaderIdHash = GetValueString(hash, "uid"),
+            OnMannequin = GetValueBool(hash, "mann"),
+        };
+    }
+
     private static uint GetValueUInt32(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? (uint)hash[key] : 0;
-    }
-
-    private static int GetValueInt32(IDictionary<RedisValue, RedisValue> hash, string key)
-    {
-        return hash.ContainsKey(key) ? (int)hash[key] : 0;
-    }
-
-    private static long GetValueInt64(IDictionary<RedisValue, RedisValue> hash, string key)
-    {
-        return hash.ContainsKey(key) ? (long)hash[key] : 0;
     }
 
     private static bool GetValueBool(IDictionary<RedisValue, RedisValue> hash, string key)
