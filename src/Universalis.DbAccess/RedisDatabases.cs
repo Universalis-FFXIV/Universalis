@@ -15,5 +15,6 @@ internal static class RedisDatabases
         public const int TaxRates = 1;
         public const int Stats = 2;
         public const int Sales = 3;
+        public const int Listings = 4;
     }
 }
