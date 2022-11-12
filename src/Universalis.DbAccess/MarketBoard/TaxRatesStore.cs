@@ -27,7 +27,7 @@ public class TaxRatesStore : ITaxRatesStore
         var dbTask = StoreTaxRates(db, taxRates, worldId);
 
         // Write through to the cache
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.TaxRates);
         var cacheTask = StoreTaxRates(cache, taxRates, worldId);
 
         await Task.WhenAll(dbTask, cacheTask);
@@ -36,7 +36,7 @@ public class TaxRatesStore : ITaxRatesStore
     public async Task<TaxRates> GetTaxRates(uint worldId)
     {
         // Try to retrieve data from the cache
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.TaxRates);
         if (await HasTaxRates(cache, worldId))
         {
             var cachedObject = await FetchTaxRates(cache, worldId);

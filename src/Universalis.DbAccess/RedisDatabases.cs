@@ -12,5 +12,6 @@ internal static class RedisDatabases
     public static class Cache
     {
         public const int MarketItem = 0;
+        public const int TaxRates = 1;
     }
 }
