@@ -8,4 +8,9 @@ internal static class RedisDatabases
         public const int TaxRates = 1;
         public const int CurrentData = 2;
     }
+
+    public static class Cache
+    {
+        public const int MarketItem = 0;
+    }
 }
