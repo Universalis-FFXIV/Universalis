@@ -83,7 +83,7 @@ public class TaxRatesStore : ITaxRatesStore
         var key = worldId.ToString();
         try
         {
-            return await db.KeyExistsAsync(key);
+            return await db.KeyExistsAsync(key, CommandFlags.PreferReplica);
         }
         catch (Exception e)
         {
@@ -99,7 +99,7 @@ public class TaxRatesStore : ITaxRatesStore
         {
             var tasks = new[]
                 { "Limsa Lominsa", "Gridania", "Ul'dah", "Ishgard", "Kugane", "Crystarium", "Old Sharlayan", "source" }
-            .Select(k => db.HashGetAsync(key, k));
+            .Select(k => db.HashGetAsync(key, k, CommandFlags.PreferReplica));
             var values = await Task.WhenAll(tasks);
             return new TaxRates
             {
