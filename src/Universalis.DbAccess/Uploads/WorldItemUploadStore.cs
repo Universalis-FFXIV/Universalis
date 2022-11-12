@@ -9,9 +9,9 @@ public class WorldItemUploadStore : IWorldItemUploadStore
 {
     private static readonly string KeyFormat = "Universalis.WorldItemUploadTimes.{0}";
 
-    private readonly IConnectionMultiplexer _redis;
+    private readonly IPersistentRedisMultiplexer _redis;
 
-    public WorldItemUploadStore(IConnectionMultiplexer redis)
+    public WorldItemUploadStore(IPersistentRedisMultiplexer redis)
     {
         _redis = redis;
     }

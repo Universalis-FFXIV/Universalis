@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Enyim.Caching.Memcached;
 using StackExchange.Redis;
 
 namespace Universalis.DbAccess.Uploads;
@@ -10,9 +9,9 @@ public class RecentlyUpdatedItemsStore : IRecentlyUpdatedItemsStore
 {
     private static readonly string RedisKey = "Universalis.RecentlyUpdated";
 
-    private readonly IConnectionMultiplexer _redis;
+    private readonly IPersistentRedisMultiplexer _redis;
 
-    public RecentlyUpdatedItemsStore(IConnectionMultiplexer redis)
+    public RecentlyUpdatedItemsStore(IPersistentRedisMultiplexer redis)
     {
         _redis = redis;
     }

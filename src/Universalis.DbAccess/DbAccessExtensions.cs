@@ -1,5 +1,4 @@
-﻿using Enyim.Caching.Memcached;
-using FluentMigrator.Runner;
+﻿using FluentMigrator.Runner;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -16,6 +15,8 @@ public static class DbAccessExtensions
 {
     public static void AddDbAccessServices(this IServiceCollection sc, IConfiguration configuration)
     {
+        var redisCacheConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_REDIS_CACHE_CONNECTION") ??
+                                    configuration["RedisCacheConnectionString"];
         var redisConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_REDIS_CONNECTION") ??
                                     configuration["RedisConnectionString"];
         var postgresConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_POSTGRES_CONNECTION") ??
@@ -23,10 +24,8 @@ public static class DbAccessExtensions
         var memcachedConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_MEMCACHED_CONNECTION") ??
                                        configuration["MemcachedConnectionString"];
 
-        sc.AddMemcached(memcachedConnectionString)
-            .UseKeyFormatter(_ => new NamespacingKeyFormatter("universalis:"));
-
-        sc.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
+        sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(ConnectionMultiplexer.Connect(redisConnectionString)));
+        sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(ConnectionMultiplexer.Connect(redisConnectionString)));
 
         sc.AddFluentMigratorCore()
             .ConfigureRunner(rb => rb
@@ -41,7 +40,7 @@ public static class DbAccessExtensions
         sc.AddSingleton<ICurrentlyShownStore, CurrentlyShownStore>();
         sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
 
-        sc.AddSingleton<IMarketItemStore, MarketItemStore>(sc => new MarketItemStore(postgresConnectionString, sc.GetRequiredService<IMemcachedCluster>(), sc.GetRequiredService<ILogger<MarketItemStore>>()));
+        sc.AddSingleton<IMarketItemStore, MarketItemStore>(sc => new MarketItemStore(postgresConnectionString, sc.GetRequiredService<ICacheRedisMultiplexer>(), sc.GetRequiredService<ILogger<MarketItemStore>>()));
         sc.AddSingleton<ISaleStore, SaleStore>(_ => new SaleStore(postgresConnectionString));
         sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
 

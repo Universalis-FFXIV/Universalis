@@ -7,9 +7,9 @@ namespace Universalis.DbAccess.AccessControl;
 
 public class TrustedSourceUploadCountStore : ISourceUploadCountStore
 {
-    private readonly IConnectionMultiplexer _redis;
+    private readonly IPersistentRedisMultiplexer _redis;
 
-    public TrustedSourceUploadCountStore(IConnectionMultiplexer redis)
+    public TrustedSourceUploadCountStore(IPersistentRedisMultiplexer redis)
     {
         _redis = redis;
     }

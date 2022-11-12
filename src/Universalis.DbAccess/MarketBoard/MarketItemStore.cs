@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Text.Json;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Enyim.Caching.Memcached;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Universalis.Entities.MarketBoard;
@@ -11,14 +10,14 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public class MarketItemStore : IMarketItemStore
 {
-    private readonly string _connectionString;
-    private readonly IMemcachedCluster _memcached;
+    private readonly ICacheRedisMultiplexer _cache;
     private readonly ILogger<MarketItemStore> _logger;
+    private readonly string _connectionString;
 
-    public MarketItemStore(string connectionString, IMemcachedCluster memcached, ILogger<MarketItemStore> logger)
+    public MarketItemStore(string connectionString, ICacheRedisMultiplexer cache, ILogger<MarketItemStore> logger)
     {
         _connectionString = connectionString;
-        _memcached = memcached;
+        _cache = cache;
         _logger = logger;
     }
 
@@ -51,11 +50,18 @@ public class MarketItemStore : IMarketItemStore
         {
             // Race condition; unique constraint violated
         }
-
+        
         // Write through to the cache
-        var cache = _memcached.GetClient();
-        var cacheData = JsonSerializer.Serialize(marketItem);
-        await cache.SetAsync(GetCacheKey(marketItem.WorldId, marketItem.ItemId), cacheData);
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
+        var cacheKey = GetCacheKey(marketItem.WorldId, marketItem.ItemId);
+        try
+        {
+            await cache.StringSetAsync(cacheKey, marketItem.LastUploadTime.ToString());
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to store MarketItem \"{MarketItemCacheKey}\" in cache", cacheKey);
+        }
     }
 
     public async Task Update(MarketItem marketItem, CancellationToken cancellationToken = default)
@@ -88,30 +94,39 @@ public class MarketItemStore : IMarketItemStore
         await command.ExecuteNonQueryAsync(cancellationToken);
 
         // Write through to the cache
-        var cache = _memcached.GetClient();
-        var cacheData = JsonSerializer.Serialize(marketItem);
-        await cache.SetAsync(GetCacheKey(marketItem.WorldId, marketItem.ItemId), cacheData);
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
+        var cacheKey = GetCacheKey(marketItem.WorldId, marketItem.ItemId);
+        try
+        {
+            await cache.StringSetAsync(cacheKey, marketItem.LastUploadTime.ToString());
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to store MarketItem \"{MarketItemCacheKey}\" in cache", cacheKey);
+        }
     }
 
     public async ValueTask<MarketItem> Retrieve(uint worldId, uint itemId, CancellationToken cancellationToken = default)
     {
-        // Try to fetch data from the cache
-        var cache = _memcached.GetClient();
-        var cacheData1 = await cache.GetWithResultAsync<string>(GetCacheKey(worldId, itemId));
-        if (cacheData1.Success)
+        // Try to retrieve data from the cache
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
+        var cacheKey = GetCacheKey(worldId, itemId);
+        try
         {
-            try
+            if (await cache.KeyExistsAsync(cacheKey))
             {
-                var cacheObject = JsonSerializer.Deserialize<MarketItem>(cacheData1.Value);
-                if (cacheObject != null)
+                var timestamp = await cache.StringGetAsync(cacheKey);
+                return new MarketItem
                 {
-                    return cacheObject;
-                }
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    LastUploadTime = DateTime.Parse(timestamp),
+                };
             }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failed to deserialize object: {JsonData}", cacheData1.Value);
-            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to retrieve MarketItem \"{MarketItemCacheKey}\" from the cache", cacheKey);
         }
 
         // Fetch data from the database
@@ -145,8 +160,14 @@ public class MarketItemStore : IMarketItemStore
         };
 
         // Cache the result
-        var cacheData2 = JsonSerializer.Serialize(newItem);
-        await cache.SetAsync(GetCacheKey(worldId, itemId), cacheData2);
+        try
+        {
+            await cache.StringSetAsync(cacheKey, newItem.LastUploadTime.ToString());
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to store MarketItem \"{MarketItemCacheKey}\" in cache", cacheKey);
+        }
 
         return newItem;
     }
