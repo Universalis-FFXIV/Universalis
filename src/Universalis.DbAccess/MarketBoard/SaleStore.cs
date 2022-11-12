@@ -111,7 +111,7 @@ public class SaleStore : ISaleStore
         var cacheIndexKey = GetIndexCacheKey(worldId, itemId);
         if (from == null && count <= MaxCachedSales)
         {
-            var cachedSales = await FetchSalesFromCache(cache, cacheIndexKey, worldId, itemId);
+            var cachedSales = await FetchSalesFromCache(cache, cacheIndexKey, worldId, itemId, count);
             if (cachedSales.Any())
             {
                 return cachedSales;
@@ -173,7 +173,7 @@ public class SaleStore : ISaleStore
         return results;
     }
 
-    private async Task<IList<Sale>> FetchSalesFromCache(IDatabase cache, string cacheIndexKey, uint worldId, uint itemId)
+    private async Task<IList<Sale>> FetchSalesFromCache(IDatabase cache, string cacheIndexKey, uint worldId, uint itemId, int count)
     {
         try
         {
@@ -181,6 +181,7 @@ public class SaleStore : ISaleStore
             {
                 var cachedSaleIds = await cache.ListRangeAsync(cacheIndexKey);
                 var cachedSaleTasks = cachedSaleIds
+                    .Take(count)
                     .Select(async id =>
                     {
                         var saleId = Guid.Parse(id);
