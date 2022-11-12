@@ -11,9 +11,9 @@ public class DailyUploadCountStore : IDailyUploadCountStore
     private static readonly string RedisKey = "Universalis.DailyUploads";
     private static readonly string RedisLastPushKey = "Universalis.DailyUploadsLastPush";
 
-    private readonly IConnectionMultiplexer _redis;
+    private readonly IPersistentRedisMultiplexer _redis;
 
-    public DailyUploadCountStore(IConnectionMultiplexer redis)
+    public DailyUploadCountStore(IPersistentRedisMultiplexer redis)
     {
         _redis = redis;
     }

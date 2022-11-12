@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
-using Enyim.Caching.Memcached;
 using StackExchange.Redis;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
@@ -12,9 +10,9 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public class CurrentlyShownStore : ICurrentlyShownStore
 {
-    private readonly IConnectionMultiplexer _redis;
+    private readonly IPersistentRedisMultiplexer _redis;
 
-    public CurrentlyShownStore(IConnectionMultiplexer redis)
+    public CurrentlyShownStore(IPersistentRedisMultiplexer redis)
     {
         _redis = redis;
     }
