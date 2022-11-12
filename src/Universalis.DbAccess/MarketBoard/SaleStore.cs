@@ -180,15 +180,19 @@ public class SaleStore : ISaleStore
             if (await cache.KeyExistsAsync(cacheIndexKey))
             {
                 var cachedSaleIds = await cache.ListRangeAsync(cacheIndexKey);
-                var cachedSaleKeys = new[] { "hq", "ppu", "q", "bn", "t", "uid", "mann" };
                 var cachedSaleTasks = cachedSaleIds
                     .Select(async id =>
                     {
                         var saleId = Guid.Parse(id);
                         var cacheKey = GetSaleCacheKey(saleId);
-                        return (saleId, await Task.WhenAll(cachedSaleKeys.Select(k => cache.HashGetAsync(cacheKey, k))));
+                        return (saleId, await cache.HashGetAllAsync(cacheKey));
                     });
                 return (await Task.WhenAll(cachedSaleTasks))
+                    .Select(cachedSale =>
+                    {
+                        var (saleId, sale) = cachedSale;
+                        return (saleId, sale.ToDictionary(kvp => kvp.Name.ToString(), kvp => kvp.Value));
+                    })
                     .Select(cachedSale =>
                     {
                         var (saleId, sale) = cachedSale;
@@ -197,13 +201,13 @@ public class SaleStore : ISaleStore
                             Id = saleId,
                             WorldId = worldId,
                             ItemId = itemId,
-                            Hq = (bool)sale[0],
-                            PricePerUnit = (uint)sale[1],
-                            Quantity = (uint)sale[2],
-                            BuyerName = sale[3],
-                            SaleTime = DateTime.Parse(sale[4]),
-                            UploaderIdHash = sale[5],
-                            OnMannequin = (bool)sale[6],
+                            Hq = (bool)sale["hq"],
+                            PricePerUnit = (uint)sale["ppu"],
+                            Quantity = (uint)sale["q"],
+                            BuyerName = sale["bn"],
+                            SaleTime = DateTime.Parse(sale["t"]),
+                            UploaderIdHash = sale["uid"],
+                            OnMannequin = (bool)sale["mann"],
                         };
                     })
                     .OrderByDescending(sale => sale.SaleTime)
