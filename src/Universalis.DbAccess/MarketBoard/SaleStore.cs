@@ -180,6 +180,12 @@ public class SaleStore : ISaleStore
             if (await cache.KeyExistsAsync(cacheIndexKey, CommandFlags.PreferReplica))
             {
                 var cachedSaleIds = await cache.ListRangeAsync(cacheIndexKey, flags: CommandFlags.PreferReplica);
+                var cachedSalesExist = await Task.WhenAll(cachedSaleIds.Select(id => cache.KeyExistsAsync(cacheIndexKey, CommandFlags.PreferReplica)));
+                if (!cachedSalesExist.All(e => e))
+                {
+                    return new List<Sale>();
+                }
+
                 var cachedSaleTasks = cachedSaleIds
                     .Take(count)
                     .Select(async id =>
