@@ -117,12 +117,15 @@ public class MarketItemStore : IMarketItemStore
             if (await cache.KeyExistsAsync(cacheKey))
             {
                 var timestamp = await cache.StringGetAsync(cacheKey);
-                return new MarketItem
+                if (DateTime.TryParse(timestamp, out var t))
                 {
-                    WorldId = worldId,
-                    ItemId = itemId,
-                    LastUploadTime = DateTime.Parse(timestamp),
-                };
+                    return new MarketItem
+                    {
+                        WorldId = worldId,
+                        ItemId = itemId,
+                        LastUploadTime = t,
+                    };
+                }
             }
         }
         catch (Exception e)
