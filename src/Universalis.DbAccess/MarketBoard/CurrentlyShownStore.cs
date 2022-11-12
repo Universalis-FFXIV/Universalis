@@ -38,7 +38,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     public async Task SetData(CurrentlyShown data)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.Listings);
         await StoreData(db, data);
     }
 
@@ -81,7 +80,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         return (long)await db.StringGetAsync(lastUpdatedKey);
     }
     
-    private static void SetLastUpdatedAtomic(IDatabaseAsync trans, uint worldId, uint itemId, long timestamp, TimeSpan? expiry = null)
+    private static void SetLastUpdatedAtomic(ITransaction trans, uint worldId, uint itemId, long timestamp, TimeSpan? expiry = null)
     {
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
         _ = trans.StringSetAsync(lastUpdatedKey, timestamp, expiry);
@@ -94,7 +93,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         return source;
     }
     
-    private static void SetSourceAtomic(IDatabaseAsync trans, uint worldId, uint itemId, string source, TimeSpan? expiry = null)
+    private static void SetSourceAtomic(ITransaction trans, uint worldId, uint itemId, string source, TimeSpan? expiry = null)
     {
         var sourceKey = GetUploadSourceKey(worldId, itemId);
         _ = trans.StringSetAsync(sourceKey, source, expiry);
@@ -108,28 +107,14 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             return null;
         }
 
-        // Fetch all of the data in a consistent manner. This shouldn't usually run more
-        // than once, given that reads are far more frequent than writes.
-        bool transactionExecuted;
-        long lastUpdated;
-        string source;
-        IEnumerable<Listing> listings;
-        do
-        {
-            lastUpdated = await EnsureLastUpdated(db, worldId, itemId);
+        var lastUpdated = await EnsureLastUpdated(db, worldId, itemId);
 
-            var trans = db.CreateTransaction();
-            trans.AddCondition(Condition.StringEqual(lastUpdatedKey, lastUpdated));
+        var sourceTask = GetSource(db, worldId, itemId);
+        var listingsTask = GetListings(db, worldId, itemId);
+        await Task.WhenAll(sourceTask, listingsTask);
 
-            var sourceTask = GetSource(db, worldId, itemId);
-            var listingsTask = GetListings(db, worldId, itemId);
-            await Task.WhenAll(sourceTask, listingsTask);
-
-            source = await sourceTask;
-            listings = await listingsTask;
-
-            transactionExecuted = await trans.ExecuteAsync();
-        } while (!transactionExecuted);
+        var source = await sourceTask;
+        var listings = await listingsTask;
 
         return new CurrentlyShown
         {
@@ -180,7 +165,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         return await Task.WhenAll(listingFetches);
     }
     
-    private static void SetListingsAtomic(IDatabaseAsync trans, uint worldId, uint itemId, IEnumerable<Guid> existingListingIds, IList<Listing> listings, TimeSpan? expiry = null)
+    private static void SetListingsAtomic(ITransaction trans, uint worldId, uint itemId, IEnumerable<Guid> existingListingIds, IList<Listing> listings, TimeSpan? expiry = null)
     {
         var listingsKey = GetListingsIndexKey(worldId, itemId);
         
