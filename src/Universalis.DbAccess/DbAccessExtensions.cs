@@ -41,7 +41,7 @@ public static class DbAccessExtensions
         sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
 
         sc.AddSingleton<IMarketItemStore, MarketItemStore>(sc => new MarketItemStore(postgresConnectionString, sc.GetRequiredService<ICacheRedisMultiplexer>(), sc.GetRequiredService<ILogger<MarketItemStore>>()));
-        sc.AddSingleton<ISaleStore, SaleStore>(_ => new SaleStore(postgresConnectionString));
+        sc.AddSingleton<ISaleStore, SaleStore>(sc => new SaleStore(postgresConnectionString, sc.GetRequiredService<ICacheRedisMultiplexer>(), sc.GetRequiredService<ILogger<SaleStore>>()));
         sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
 
         sc.AddSingleton<ICharacterStore, CharacterStore>(_ => new CharacterStore(postgresConnectionString));
