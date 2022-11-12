@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using StackExchange.Redis;
 using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
@@ -56,7 +57,7 @@ public class MarketItemStore : IMarketItemStore
         var cacheKey = GetCacheKey(marketItem.WorldId, marketItem.ItemId);
         try
         {
-            await cache.StringSetAsync(cacheKey, marketItem.LastUploadTime.ToString());
+            await cache.StringSetAsync(cacheKey, marketItem.LastUploadTime.ToString(), flags: CommandFlags.FireAndForget);
         }
         catch (Exception e)
         {

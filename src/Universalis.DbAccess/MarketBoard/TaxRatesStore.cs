@@ -70,7 +70,7 @@ public class TaxRatesStore : ITaxRatesStore
                 new HashEntry("Crystarium", taxRates.Crystarium),
                 new HashEntry("Old Sharlayan", taxRates.OldSharlayan),
                 new HashEntry("source", taxRates.UploadApplicationName),
-            });
+            }, CommandFlags.FireAndForget);
         }
         catch (Exception e)
         {
