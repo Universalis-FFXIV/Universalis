@@ -41,9 +41,9 @@ public class WorldUploadCountStore : IWorldUploadCountStore
         try
         {
             
-            if (await cache.KeyExistsAsync(CacheKey))
+            if (await cache.KeyExistsAsync(CacheKey, CommandFlags.PreferReplica))
             {
-                var cached = await cache.SortedSetRangeByRankWithScoresAsync(CacheKey, order: Order.Descending);
+                var cached = await cache.SortedSetRangeByRankWithScoresAsync(CacheKey, order: Order.Descending, flags: CommandFlags.PreferReplica);
                 var cachedObject = cached.Select(entry => new KeyValuePair<string, long>(entry.Element, (long)entry.Score)).ToList();
                 return cachedObject;
             }

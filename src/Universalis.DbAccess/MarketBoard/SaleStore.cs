@@ -177,16 +177,16 @@ public class SaleStore : ISaleStore
     {
         try
         {
-            if (await cache.KeyExistsAsync(cacheIndexKey))
+            if (await cache.KeyExistsAsync(cacheIndexKey, CommandFlags.PreferReplica))
             {
-                var cachedSaleIds = await cache.ListRangeAsync(cacheIndexKey);
+                var cachedSaleIds = await cache.ListRangeAsync(cacheIndexKey, flags: CommandFlags.PreferReplica);
                 var cachedSaleTasks = cachedSaleIds
                     .Take(count)
                     .Select(async id =>
                     {
                         var saleId = Guid.Parse(id);
                         var cacheKey = GetSaleCacheKey(saleId);
-                        return (saleId, await cache.HashGetAllAsync(cacheKey));
+                        return (saleId, await cache.HashGetAllAsync(cacheKey, CommandFlags.PreferReplica));
                     });
                 return (await Task.WhenAll(cachedSaleTasks))
                     .Select(cachedSale =>
