@@ -54,11 +54,6 @@ public class SaleStore : ISaleStore
             },
         };
         await command.ExecuteNonQueryAsync(cancellationToken);
-
-        // Purge the cache
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
-        var cacheIndexKey = GetIndexCacheKey(sale.WorldId, sale.ItemId);
-        await cache.KeyDeleteAsync(cacheIndexKey, CommandFlags.FireAndForget);
     }
 
     public async Task InsertMany(IEnumerable<Sale> sales, CancellationToken cancellationToken = default)
@@ -74,15 +69,6 @@ public class SaleStore : ISaleStore
         var purgedCaches = new Dictionary<string, bool>();
         foreach (var sale in sales)
         {
-            // Purge the cache
-            var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
-            var cacheIndexKey = GetIndexCacheKey(sale.WorldId, sale.ItemId);
-            if (!purgedCaches.TryGetValue(cacheIndexKey, out var purged) || !purged)
-            {
-                await cache.KeyDeleteAsync(cacheIndexKey, CommandFlags.FireAndForget);
-                purgedCaches[cacheIndexKey] = true;
-            }
-
             batch.BatchCommands.Add(new NpgsqlBatchCommand(
                 "INSERT INTO sale (id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)")
             {
@@ -106,18 +92,6 @@ public class SaleStore : ISaleStore
 
     public async Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null, CancellationToken cancellationToken = default)
     {
-        // Try retrieving data from the cache
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
-        var cacheIndexKey = GetIndexCacheKey(worldId, itemId);
-        if (from == null && count <= MaxCachedSales)
-        {
-            var cachedSales = await FetchSalesFromCache(cache, cacheIndexKey, worldId, itemId, count);
-            if (cachedSales.Any())
-            {
-                return cachedSales;
-            }
-        }
-
         // Fetch data from the database
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
@@ -163,13 +137,6 @@ public class SaleStore : ISaleStore
         }
 
         var results = sales.Take(count).ToList();
-
-        // Store the results in the cache
-        if (results.Count >= MaxCachedSales)
-        {
-            await CacheSales(cache, cacheIndexKey, results);
-        }
-
         return results;
     }
 
