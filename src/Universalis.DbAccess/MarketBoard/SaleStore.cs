@@ -238,8 +238,9 @@ public class SaleStore : ISaleStore
             var s0 = await cache.ListGetByIndexAsync(cacheIndexKey, 0);
             var tx = cache.CreateTransaction();
             tx.AddCondition(Condition.ListIndexEqual(cacheIndexKey, 0, s0));
+            _ = tx.KeyDeleteAsync(cacheIndexKey);
             _ = tx.ListLeftPushAsync(cacheIndexKey, saleIds.Select(id => (RedisValue)id).ToArray());
-            _ = tx.ListTrimAsync(cacheIndexKey, 0, MaxCachedSales);
+            _ = tx.KeyExpireAsync(cacheIndexKey, TimeSpan.FromMinutes(5));
             await tx.ExecuteAsync(CommandFlags.FireAndForget);
         }
         catch (Exception e)
