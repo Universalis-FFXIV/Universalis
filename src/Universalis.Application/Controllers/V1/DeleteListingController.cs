@@ -1,11 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
+using Universalis.Application.Realtime;
+using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
+using Universalis.Application.Views.V1;
 using Universalis.Common.Caching;
 using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.MarketBoard;
@@ -27,18 +31,21 @@ public class DeleteListingController : WorldDcRegionControllerBase
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
     private readonly ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> _cache;
+    private readonly ISocketProcessor _sockets;
 
     public DeleteListingController(
         IGameDataProvider gameData,
         ITrustedSourceDbAccess trustedSourceDb,
         ICurrentlyShownDbAccess currentlyShownDb,
         IFlaggedUploaderDbAccess flaggedUploaderDb,
-        ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData)
+        ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> cache,
+        ISocketProcessor sockets) : base(gameData)
     {
         _trustedSourceDb = trustedSourceDb;
         _currentlyShownDb = currentlyShownDb;
         _flaggedUploaderDb = flaggedUploaderDb;
         _cache = cache;
+        _sockets = sockets;
     }
 
     [HttpPost]
@@ -81,9 +88,9 @@ public class DeleteListingController : WorldDcRegionControllerBase
             WorldId = worldDc.WorldId,
             ItemId = itemId,
         }, cancellationToken);
-
         if (itemData == null)
         {
+            // No item data; nothing to remove
             return Ok("Success");
         }
 
@@ -91,12 +98,15 @@ public class DeleteListingController : WorldDcRegionControllerBase
             listing.RetainerId == parameters.RetainerId
             && listing.Quantity == parameters.Quantity
             && listing.PricePerUnit == parameters.PricePerUnit);
-
         if (listingIndex == -1)
         {
+            // No matching listing; nothing to remove
             return Ok("Success");
         }
 
+        var listing = itemData.Listings[listingIndex];
+
+        // TODO: Allow for deleting a single listing directly
         itemData.Listings.RemoveAt(listingIndex);
 
         var query = new CurrentlyShownQuery
@@ -112,6 +122,13 @@ public class DeleteListingController : WorldDcRegionControllerBase
             WorldId = query.WorldId,
             ItemId = query.ItemId,
         }, cancellationToken);
+
+        _sockets.Publish(new ListingsRemove
+        {
+            WorldId = query.WorldId,
+            ItemId = query.ItemId,
+            Listings = new List<ListingView> { await Util.ListingToView(listing, cancellationToken) },
+        });
 
         return Ok("Success");
     }

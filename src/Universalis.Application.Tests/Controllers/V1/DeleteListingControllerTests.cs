@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Universalis.Application.Caching;
 using Universalis.Application.Controllers.V1;
+using Universalis.Application.Realtime;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
@@ -30,6 +31,8 @@ public class DeleteListingControllerTests
         public ICurrentlyShownDbAccess CurrentlyShown { get; private init; }
         public ITrustedSourceDbAccess TrustedSources { get; private init; }
         public ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> Cache { get; private init; }
+        public LogFixture<SocketProcessor> SocketLogFixture { get; private init; }
+        public ISocketProcessor Sockets { get; private init; }
         public DeleteListingController Controller { get; private init; }
 
         public static TestResources Create()
@@ -39,7 +42,9 @@ public class DeleteListingControllerTests
             var currentlyShown = new MockCurrentlyShownDbAccess();
             var trustedSources = new MockTrustedSourceDbAccess();
             var cache = new MemoryCache<CachedCurrentlyShownQuery, CachedCurrentlyShownData>(1);
-            var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache);
+            var socketLogFixture = new LogFixture<SocketProcessor>();
+            var sockets = new SocketProcessor(socketLogFixture);
+            var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, cache, sockets);
             return new TestResources
             {
                 GameData = gameData,
@@ -48,6 +53,8 @@ public class DeleteListingControllerTests
                 TrustedSources = trustedSources,
                 Cache = cache,
                 Controller = controller,
+                SocketLogFixture = socketLogFixture,
+                Sockets = sockets,
             };
         }
     }
