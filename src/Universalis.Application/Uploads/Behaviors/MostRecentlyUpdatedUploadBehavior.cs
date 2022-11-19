@@ -36,7 +36,7 @@ public class MostRecentlyUpdatedUploadBehavior : IUploadBehavior
         {
             ItemId = parameters.ItemId!.Value,
             WorldId = worldId,
-            LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+            LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
         }, cancellationToken);
 
         return null;
