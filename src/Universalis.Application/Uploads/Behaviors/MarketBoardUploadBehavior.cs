@@ -115,7 +115,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 {
                     WorldId = worldId,
                     ItemId = itemId,
-                    LastUploadTimeUnixMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                    LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Sales = cleanSales,
                 }, cancellationToken);
             }
@@ -194,7 +194,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             }
         }, cancellationToken);
 
-        var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var listings = newListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>();
         var document = new CurrentlyShown
         {
