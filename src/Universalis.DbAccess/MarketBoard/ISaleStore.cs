@@ -14,4 +14,7 @@ public interface ISaleStore
 
     Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null,
         CancellationToken cancellationToken = default);
+
+    Task<IDictionary<SaleVolumeWindow, long>> RetrieveUnitTradeVolume(uint worldId, uint itemId,
+        CancellationToken cancellationToken = default);
 }

@@ -44,6 +44,8 @@ public static class DbAccessExtensions
         sc.AddSingleton<ISaleStore, SaleStore>(sc => new SaleStore(postgresConnectionString, sc.GetRequiredService<ICacheRedisMultiplexer>(), sc.GetRequiredService<ILogger<SaleStore>>()));
         sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
 
+        sc.AddSingleton<ISaleStatisticsDbAccess, SaleStatisticsDbAccess>();
+
         sc.AddSingleton<ICharacterStore, CharacterStore>(_ => new CharacterStore(postgresConnectionString));
         sc.AddSingleton<ICharacterDbAccess, CharacterDbAccess>();
 

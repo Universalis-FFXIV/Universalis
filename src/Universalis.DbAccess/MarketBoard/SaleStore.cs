@@ -172,6 +172,82 @@ public class SaleStore : ISaleStore
         return results;
     }
 
+    public async Task<IDictionary<SaleVolumeWindow, long>> RetrieveUnitTradeVolume(uint worldId, uint itemId, CancellationToken cancellationToken = default)
+    {
+        // Check if the data needed is cached
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
+        var cacheKey = GetTradeVolumeCacheKey(worldId, itemId);
+        try
+        {
+            if (await cache.KeyExistsAsync(cacheKey))
+            {
+                var saleVolumes = await cache.HashGetAllAsync(cacheKey);
+                var saleVolumesDict = saleVolumes.ToDictionary();
+                var windowKeys = Enum.GetNames<SaleVolumeWindow>()
+                    .Zip(Enum.GetValues<SaleVolumeWindow>())
+                    .ToDictionary(t => t.First, t => t.Second);
+                return saleVolumes.ToDictionary(kvp => windowKeys[kvp.Name], kvp => (long)kvp.Value);
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to retrieve cached unit trade volumes for key \"{TradeVolumeCacheKey}\"", cacheKey);
+        }
+
+        // Request the sale velocity for the allowed intervals
+        var windows = Enum.GetValues<SaleVolumeWindow>();
+        var amounts = await Task.WhenAll(windows.Select(async w =>
+        {
+            var amount = await GetUnitTradeVolume(worldId, itemId, w, cancellationToken);
+            return new KeyValuePair<SaleVolumeWindow, long>(w, amount);
+        }));
+        var result = new Dictionary<SaleVolumeWindow, long>(amounts);
+
+        // Cache it
+        try
+        {
+            var hash = result.Select(kvp => new HashEntry(kvp.Key.ToString(), kvp.Value)).ToArray();
+            await cache.HashSetAsync(cacheKey, hash, CommandFlags.FireAndForget);
+            await cache.KeyExpireAsync(cacheKey, TimeSpan.FromHours(1), CommandFlags.FireAndForget);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to store unit trade volumes \"{TradeVolumeCacheKey}\" in cache", cacheKey);
+        }
+
+        return result;
+    }
+
+    private async Task<long> GetUnitTradeVolume(uint worldId, uint itemId, SaleVolumeWindow window, CancellationToken cancellationToken = default)
+    {
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync(cancellationToken);
+
+        // This is a relatively slow query that often causes cache misses.
+        // I don't think anything can be done about this besides using more memory.
+        await using var command =
+            new NpgsqlCommand(
+                "SELECT SUM(quantity) FROM sale WHERE world_id = $1 AND item_id = $2 AND sale_time > $3", conn)
+            {
+                Parameters =
+                {
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(worldId) },
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(itemId) },
+                    new NpgsqlParameter<DateTime> { TypedValue = GetWindowStart(window) },
+                },
+            };
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!reader.HasRows)
+        {
+            return 0;
+        }
+
+        await reader.ReadAsync(cancellationToken);
+
+        return reader.GetInt64(0);
+    }
+
     private async Task<IList<Sale>> FetchSalesFromCache(IDatabase cache, string cacheIndexKey, uint worldId, uint itemId, int count)
     {
         try
@@ -285,6 +361,26 @@ public class SaleStore : ISaleStore
     private static string GetValueString(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? hash[key] : "";
+    }
+
+    private static DateTime GetWindowStart(SaleVolumeWindow window)
+    {
+        return window switch
+        {
+            SaleVolumeWindow.OneDay => DateTime.UtcNow - TimeSpan.FromDays(1),
+            SaleVolumeWindow.OneWeek => DateTime.UtcNow - TimeSpan.FromDays(7),
+            SaleVolumeWindow.OneMonth => DateTime.UtcNow - TimeSpan.FromDays(30),
+            SaleVolumeWindow.ThreeMonths => DateTime.UtcNow - TimeSpan.FromDays(90),
+            SaleVolumeWindow.SixMonths => DateTime.UtcNow - TimeSpan.FromDays(180),
+            SaleVolumeWindow.OneYear => DateTime.UtcNow - TimeSpan.FromDays(365),
+            SaleVolumeWindow.All => DateTime.MinValue,
+            _ => throw new ArgumentOutOfRangeException(nameof(window)),
+        };
+    }
+
+    private static string GetTradeVolumeCacheKey(uint worldId, uint itemId)
+    {
+        return $"sale-volume:{worldId}:{itemId}";
     }
 
     private static string GetIndexCacheKey(uint worldId, uint itemId)

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
-using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.Uploads;
 
