@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1.Extra.Stats;
 using Universalis.DbAccess.Uploads;
+using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1.Extra.Stats;
 
@@ -15,10 +17,12 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats;
 public class RecentlyUpdatedItemsController : ControllerBase
 {
     private readonly IRecentlyUpdatedItemsDbAccess _recentlyUpdatedItemsDb;
+    private readonly IGameDataProvider _gameData;
     
-    public RecentlyUpdatedItemsController(IRecentlyUpdatedItemsDbAccess recentlyUpdatedItemsDb)
+    public RecentlyUpdatedItemsController(IRecentlyUpdatedItemsDbAccess recentlyUpdatedItemsDb, IGameDataProvider gameData)
     {
         _recentlyUpdatedItemsDb = recentlyUpdatedItemsDb;
+        _gameData = gameData;
     }
 
     /// <summary>
@@ -32,7 +36,10 @@ public class RecentlyUpdatedItemsController : ControllerBase
     [ProducesResponseType(typeof(RecentlyUpdatedItemsView), 200)]
     public async Task<RecentlyUpdatedItemsView> Get(CancellationToken cancellationToken = default)
     {
-        var data = (await _recentlyUpdatedItemsDb.Retrieve(cancellationToken))?.Items;
+        var marketable = _gameData.MarketableItemIds();
+        var data = (await _recentlyUpdatedItemsDb.Retrieve(cancellationToken))?.Items
+            .Intersect(marketable)
+            .ToList();
         return data == null
             ? new RecentlyUpdatedItemsView { Items = new List<uint>() }
             : new RecentlyUpdatedItemsView { Items = data };
