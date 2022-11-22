@@ -14,9 +14,9 @@ public class SaleStatisticsDbAccess : ISaleStatisticsDbAccess
         _store = store;
     }
 
-    public Task<IDictionary<SaleVolumeWindow, long>> RetrieveUnitTradeVolume(UnitTradeVolumeQuery query,
+    public Task<long> RetrieveUnitTradeVolume(UnitTradeVolumeQuery query,
         CancellationToken cancellationToken = default)
     {
-        return _store.RetrieveUnitTradeVolume(query.WorldId, query.ItemId, cancellationToken);
+        return _store.RetrieveUnitTradeVolume(query.WorldId, query.ItemId, query.From, cancellationToken);
     }
 }
