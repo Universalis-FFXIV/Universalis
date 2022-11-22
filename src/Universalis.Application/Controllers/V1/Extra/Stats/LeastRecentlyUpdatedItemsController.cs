@@ -69,13 +69,16 @@ public class LeastRecentlyUpdatedItemsController : WorldDcRegionControllerBase
         }
 
         var documents = await _mostRecentlyUpdatedDb.GetAllLeastRecent(
-            new MostRecentlyUpdatedManyQuery { WorldIds = worldIds, Count = count },
+            new MostRecentlyUpdatedManyQuery { WorldIds = worldIds, Count = Convert.ToInt32(count * 1.5) },
             cancellationToken);
 
+        var marketable = GameData.MarketableItemIds();
         var worlds = GameData.AvailableWorlds();
         return Ok(new LeastRecentlyUpdatedItemsView
         {
             Items = documents
+                .Where(o => marketable.Contains(o.ItemId))
+                .Take(count)
                 .Select(o => new WorldItemRecencyView
                 {
                     WorldId = o.WorldId,
