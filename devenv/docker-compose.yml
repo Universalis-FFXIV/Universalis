@@ -34,12 +34,12 @@ services:
       - "./sqlinit:/docker-entrypoint-initdb.d"
   cache1:
     image: redis:7.0.0
-    command: redis-server --save no --loglevel warning
+    command: redis-server --save '' --loglevel warning
     ports:
       - "4080:6379"
   cache2:
     image: redis:7.0.0
-    command: redis-server --save no --loglevel warning
+    command: redis-server --save '' --replicaof cache1 6379 --loglevel warning
     ports:
       - "4081:6379"
   postgres:

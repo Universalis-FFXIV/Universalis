@@ -172,6 +172,83 @@ public class SaleStore : ISaleStore
         return results;
     }
 
+    public async Task<long> RetrieveUnitTradeVolume(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    {
+        // Check if the data needed is cached
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
+        var cacheKey = GetTradeVolumeCacheKey(worldId, itemId);
+        try
+        {
+            var cachedFromRaw = await cache.HashGetAsync(cacheKey, "cached-from");
+            var cachedToRaw = await cache.HashGetAsync(cacheKey, "cached-to");
+            if (DateTime.TryParse(cachedFromRaw, out var cachedFrom) && DateTime.TryParse(cachedToRaw, out var cachedTo) && cachedFrom <= from && cachedTo >= to)
+            {
+                var saleVolumes = await cache.HashGetAllAsync(cacheKey, flags: CommandFlags.PreferReplica);
+                return saleVolumes
+                    .Where(e => DateTime.TryParse(e.Name, out _))
+                    .Select(e => new KeyValuePair<DateTime, long>(DateTime.Parse(e.Name), (long)e.Value))
+                    .Where(kvp => kvp.Key >= from)
+                    .Select(kvp => kvp.Value)
+                    .Sum();
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to retrieve cached unit trade volumes for key \"{TradeVolumeCacheKey}\"", cacheKey);
+        }
+
+        // Request the sale velocity for the allowed intervals
+        var result = await GetDailyUnitsTraded(worldId, itemId, from, to, cancellationToken);
+
+        // Cache it
+        try
+        {
+            var hash = result.Select(kvp => new HashEntry(kvp.Key.ToString(), kvp.Value)).ToList();
+            hash.Add(new HashEntry("cached-to", from.ToString()));
+            await cache.HashSetAsync(cacheKey, hash.ToArray(), CommandFlags.FireAndForget);
+            await cache.KeyExpireAsync(cacheKey, TimeSpan.FromHours(1), CommandFlags.FireAndForget);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to store unit trade volumes \"{TradeVolumeCacheKey}\" in cache", cacheKey);
+        }
+
+        return result.Select(e => e.Value).Sum();
+    }
+
+    private async Task<IDictionary<DateTime, long>> GetDailyUnitsTraded(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    {
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync(cancellationToken);
+
+        // This is a relatively slow query that often causes cache misses.
+        // I don't think anything can be done about this besides using more memory.
+        await using var command =
+            new NpgsqlCommand(
+                "SELECT SUM(quantity), sale_time::date AS sale_date FROM sale WHERE world_id = $1 AND item_id = $2 AND sale_time >= $3 AND sale_time <= $4 GROUP BY sale_date", conn)
+            {
+                Parameters =
+                {
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(worldId) },
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(itemId) },
+                    new NpgsqlParameter<DateTime> { TypedValue = from },
+                    new NpgsqlParameter<DateTime> { TypedValue = to },
+                },
+            };
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        var sales = new Dictionary<DateTime, long>();
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var quantity = reader.GetInt64(0);
+            var date = (DateTime)reader.GetValue(1);
+            sales.Add(date, quantity);
+        }
+
+        return sales;
+    }
+
     private async Task<IList<Sale>> FetchSalesFromCache(IDatabase cache, string cacheIndexKey, uint worldId, uint itemId, int count)
     {
         try
@@ -285,6 +362,11 @@ public class SaleStore : ISaleStore
     private static string GetValueString(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? hash[key] : "";
+    }
+
+    private static string GetTradeVolumeCacheKey(uint worldId, uint itemId)
+    {
+        return $"sale-volume:{worldId}:{itemId}";
     }
 
     private static string GetIndexCacheKey(uint worldId, uint itemId)

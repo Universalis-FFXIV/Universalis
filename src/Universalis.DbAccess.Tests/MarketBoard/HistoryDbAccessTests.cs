@@ -70,6 +70,11 @@ public class HistoryDbAccessTests
                 .Take(count)
                 .ToList());
         }
+
+        public Task<long> RetrieveUnitTradeVolume(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Fact]
