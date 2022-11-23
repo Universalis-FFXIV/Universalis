@@ -6,6 +6,6 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public interface ISaleStatisticsDbAccess
 {
-    public Task<long> RetrieveUnitTradeVolume(UnitTradeVolumeQuery query,
+    public ValueTask<long> RetrieveUnitTradeVolume(UnitTradeVolumeQuery query,
         CancellationToken cancellationToken = default);
 }

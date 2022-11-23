@@ -71,7 +71,7 @@ public class HistoryDbAccessTests
                 .ToList());
         }
 
-        public Task<long> RetrieveUnitTradeVolume(uint worldId, uint itemId, DateTime from, CancellationToken cancellationToken = default)
+        public Task<long> RetrieveUnitTradeVolume(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }

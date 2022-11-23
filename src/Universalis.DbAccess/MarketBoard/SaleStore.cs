@@ -172,15 +172,16 @@ public class SaleStore : ISaleStore
         return results;
     }
 
-    public async Task<long> RetrieveUnitTradeVolume(uint worldId, uint itemId, DateTime from, CancellationToken cancellationToken = default)
+    public async Task<long> RetrieveUnitTradeVolume(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
         // Check if the data needed is cached
         var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
         var cacheKey = GetTradeVolumeCacheKey(worldId, itemId);
         try
         {
+            var cachedFromRaw = await cache.HashGetAsync(cacheKey, "cached-from");
             var cachedToRaw = await cache.HashGetAsync(cacheKey, "cached-to");
-            if (DateTime.TryParse(cachedToRaw, out var cachedTo) && cachedTo <= from)
+            if (DateTime.TryParse(cachedFromRaw, out var cachedFrom) && DateTime.TryParse(cachedToRaw, out var cachedTo) && cachedFrom <= from && cachedTo >= to)
             {
                 var saleVolumes = await cache.HashGetAllAsync(cacheKey, flags: CommandFlags.PreferReplica);
                 return saleVolumes
@@ -197,7 +198,7 @@ public class SaleStore : ISaleStore
         }
 
         // Request the sale velocity for the allowed intervals
-        var result = await GetDailyUnitsTraded(worldId, itemId, from, cancellationToken);
+        var result = await GetDailyUnitsTraded(worldId, itemId, from, to, cancellationToken);
 
         // Cache it
         try
@@ -215,7 +216,7 @@ public class SaleStore : ISaleStore
         return result.Select(e => e.Value).Sum();
     }
 
-    private async Task<IDictionary<DateTime, long>> GetDailyUnitsTraded(uint worldId, uint itemId, DateTime from, CancellationToken cancellationToken = default)
+    private async Task<IDictionary<DateTime, long>> GetDailyUnitsTraded(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
@@ -224,13 +225,14 @@ public class SaleStore : ISaleStore
         // I don't think anything can be done about this besides using more memory.
         await using var command =
             new NpgsqlCommand(
-                "SELECT SUM(quantity), sale_time::date AS sale_date FROM sale WHERE world_id = $1 AND item_id = $2 AND sale_time > $3 GROUP BY sale_date", conn)
+                "SELECT SUM(quantity), sale_time::date AS sale_date FROM sale WHERE world_id = $1 AND item_id = $2 AND sale_time >= $3 AND sale_time <= $4 GROUP BY sale_date", conn)
             {
                 Parameters =
                 {
                     new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(worldId) },
                     new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(itemId) },
                     new NpgsqlParameter<DateTime> { TypedValue = from },
+                    new NpgsqlParameter<DateTime> { TypedValue = to },
                 },
             };
 
