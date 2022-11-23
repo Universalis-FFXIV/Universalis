@@ -214,7 +214,7 @@ public class SaleStore : ISaleStore
     {
         // Check if the data needed is cached
         var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
-        var cacheKey = GetUnitTradeVolumeCacheKey(worldId, itemId);
+        var cacheKey = GetGilTradeVolumeCacheKey(worldId, itemId);
         try
         {
             var cachedFromRaw = await cache.HashGetAsync(cacheKey, "cached-from", flags: CommandFlags.PreferReplica);
@@ -248,7 +248,7 @@ public class SaleStore : ISaleStore
         return result.Select(e => e.Value).Sum();
     }
 
-    private async Task CacheTradeVolume(IDatabase cache, string cacheKey, IDictionary<DateTime, int> hashData, DateTime from, DateTime to)
+    private static async Task CacheTradeVolume(IDatabase cache, string cacheKey, IDictionary<DateTime, int> hashData, DateTime from, DateTime to)
     {
         var hash = hashData.Select(kvp => new HashEntry(kvp.Key.ToString(), kvp.Value)).ToList();
         hash.Add(new HashEntry("cached-from", from.ToString()));
