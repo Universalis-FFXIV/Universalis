@@ -189,6 +189,7 @@ public class SaleStore : ISaleStore
                     .Where(e => DateTime.TryParse(e.Name, out _))
                     .Select(e => new KeyValuePair<DateTime, long>(DateTime.Parse(e.Name), (long)e.Value))
                     .Where(kvp => kvp.Key >= from)
+                    .Where(kvp => kvp.Key <= to)
                     .Select(kvp => kvp.Value)
                     .Sum();
             }
