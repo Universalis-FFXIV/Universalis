@@ -41,7 +41,7 @@ public class UnitTradeVolumeController : WorldDcRegionControllerBase
     /// <response code="404">The world/DC/item requested is invalid.</response>
     [HttpGet]
     [MapToApiVersion("1")]
-    [ApiTag("Unit trade volume")]
+    [ApiTag("(Unstable) Unit trade volume")]
     [Route("extra/stats/unit-trade-volume")]
     [ProducesResponseType(typeof(UnitTradeVolumeView), 200)]
     public async Task<IActionResult> Get(
@@ -104,7 +104,7 @@ public class UnitTradeVolumeController : WorldDcRegionControllerBase
 
     [HttpGet]
     [MapToApiVersion("2")]
-    [ApiTag("Unit trade volume")]
+    [ApiTag("(Unstable) Unit trade volume")]
     [Route("v{version:apiVersion}/extra/stats/unit-trade-volume")]
     [ProducesResponseType(typeof(UnitTradeVolumeView), 200)]
     public Task<IActionResult> GetV2(
