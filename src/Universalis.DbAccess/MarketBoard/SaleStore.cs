@@ -233,7 +233,7 @@ public class SaleStore : ISaleStore
 
         // Request the sale velocity for the allowed intervals
         // TODO: Don't re-request cached values
-        var result = await GetDailyUnitsTraded(worldId, itemId, from, to, cancellationToken);
+        var result = await GetDailyGilTraded(worldId, itemId, from, to, cancellationToken);
 
         // Cache it
         try
