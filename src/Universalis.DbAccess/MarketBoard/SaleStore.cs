@@ -179,9 +179,10 @@ public class SaleStore : ISaleStore
         var cacheKey = GetTradeVolumeCacheKey(worldId, itemId);
         try
         {
-            var cachedFromRaw = await cache.HashGetAsync(cacheKey, "cached-from");
-            var cachedToRaw = await cache.HashGetAsync(cacheKey, "cached-to");
-            if (DateTime.TryParse(cachedFromRaw, out var cachedFrom) && DateTime.TryParse(cachedToRaw, out var cachedTo) && cachedFrom <= from && cachedTo >= to)
+            var cachedFromRaw = await cache.HashGetAsync(cacheKey, "cached-from", flags: CommandFlags.PreferReplica);
+
+            // It's fine if new data is missing for a bit, but needing older data should be treated as a cache miss
+            if (DateTime.TryParse(cachedFromRaw, out var cachedFrom) && cachedFrom <= from)
             {
                 var saleVolumes = await cache.HashGetAllAsync(cacheKey, flags: CommandFlags.PreferReplica);
                 return saleVolumes
@@ -204,7 +205,8 @@ public class SaleStore : ISaleStore
         try
         {
             var hash = result.Select(kvp => new HashEntry(kvp.Key.ToString(), kvp.Value)).ToList();
-            hash.Add(new HashEntry("cached-to", from.ToString()));
+            hash.Add(new HashEntry("cached-from", from.ToString()));
+            hash.Add(new HashEntry("cached-to", to.ToString()));
             await cache.HashSetAsync(cacheKey, hash.ToArray(), CommandFlags.FireAndForget);
             await cache.KeyExpireAsync(cacheKey, TimeSpan.FromHours(1), CommandFlags.FireAndForget);
         }
