@@ -9,20 +9,21 @@ using Xunit;
 
 namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats;
 
-public class UnitTradeVolumeControllerTests
+public class TradeVolumeControllerTests
 {
     [Fact]
     public async Task Controller_Get_Suceeds()
     {
         var gameData = new MockGameDataProvider();
         var saleStatistics = new MockSaleStatisticsDbAccess();
-        var controller = new UnitTradeVolumeController(saleStatistics, gameData);
+        var controller = new TradeVolumeController(saleStatistics, gameData);
         var startTime = new DateTimeOffset(2020, 9, 1, 0, 0, 0, TimeSpan.Zero);
         var endTime = new DateTimeOffset(2020, 9, 2, 0, 0, 0, TimeSpan.Zero);
         var result = await controller.Get("Brynhildr", null, 5333,
             startTime.ToUnixTimeMilliseconds(), endTime.ToUnixTimeMilliseconds());
-        var data = (UnitTradeVolumeView)Assert.IsType<OkObjectResult>(result).Value;
-        Assert.Equal(100, data.Quantity);
+        var data = (TradeVolumeView)Assert.IsType<OkObjectResult>(result).Value;
+        Assert.Equal(100, data.Units);
+        Assert.Equal(100, data.Gil);
         Assert.Equal(startTime.ToUnixTimeMilliseconds(), data.From);
         Assert.Equal(endTime.ToUnixTimeMilliseconds(), data.To);
     }
@@ -32,7 +33,7 @@ public class UnitTradeVolumeControllerTests
     {
         var gameData = new MockGameDataProvider();
         var saleStatistics = new MockSaleStatisticsDbAccess();
-        var controller = new UnitTradeVolumeController(saleStatistics, gameData);
+        var controller = new TradeVolumeController(saleStatistics, gameData);
         var startTime = new DateTimeOffset(2020, 9, 1, 0, 0, 0, TimeSpan.Zero);
         var endTime = new DateTimeOffset(2020, 9, 2, 0, 0, 0, TimeSpan.Zero);
         var result = await controller.Get("0", null, 5333,
@@ -45,7 +46,7 @@ public class UnitTradeVolumeControllerTests
     {
         var gameData = new MockGameDataProvider();
         var saleStatistics = new MockSaleStatisticsDbAccess();
-        var controller = new UnitTradeVolumeController(saleStatistics, gameData);
+        var controller = new TradeVolumeController(saleStatistics, gameData);
         var startTime = new DateTimeOffset(2020, 9, 1, 0, 0, 0, TimeSpan.Zero);
         var endTime = new DateTimeOffset(2020, 9, 2, 0, 0, 0, TimeSpan.Zero);
         var result = await controller.Get(null, "Hello", 5333,
@@ -58,7 +59,7 @@ public class UnitTradeVolumeControllerTests
     {
         var gameData = new MockGameDataProvider();
         var saleStatistics = new MockSaleStatisticsDbAccess();
-        var controller = new UnitTradeVolumeController(saleStatistics, gameData);
+        var controller = new TradeVolumeController(saleStatistics, gameData);
         var startTime = new DateTimeOffset(2020, 9, 1, 0, 0, 0, TimeSpan.Zero);
         var endTime = new DateTimeOffset(2020, 9, 2, 0, 0, 0, TimeSpan.Zero);
         var result = await controller.Get("Brynhildr", null, 0,
@@ -71,7 +72,7 @@ public class UnitTradeVolumeControllerTests
     {
         var gameData = new MockGameDataProvider();
         var saleStatistics = new MockSaleStatisticsDbAccess();
-        var controller = new UnitTradeVolumeController(saleStatistics, gameData);
+        var controller = new TradeVolumeController(saleStatistics, gameData);
         var startTime = new DateTimeOffset(2020, 9, 1, 0, 0, 0, TimeSpan.Zero);
         var endTime = new DateTimeOffset(2020, 9, 2, 0, 0, 0, TimeSpan.Zero);
         var result = await controller.Get(null, null, 5333,

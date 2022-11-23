@@ -7,7 +7,12 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 
 public class MockSaleStatisticsDbAccess : ISaleStatisticsDbAccess
 {
-    public ValueTask<long> RetrieveUnitTradeVolume(UnitTradeVolumeQuery query, CancellationToken cancellationToken = default)
+    public ValueTask<long> RetrieveGilTradeVolume(TradeVolumeQuery query, CancellationToken cancellationToken = default)
+    {
+        return ValueTask.FromResult<long>(100);
+    }
+
+    public ValueTask<long> RetrieveUnitTradeVolume(TradeVolumeQuery query, CancellationToken cancellationToken = default)
     {
         return ValueTask.FromResult<long>(100);
     }
