@@ -1,11 +1,16 @@
 ﻿namespace Universalis.Application.Views.V1.Extra.Stats;
 
-public class UnitTradeVolumeView
+public class TradeVolumeView
 {
     /// <summary>
     /// The number of units sold over the query interval.
     /// </summary>
-    public long Quantity { get; set; }
+    public long Units { get; set; }
+
+    /// <summary>
+    /// The total Gil exchanged over the query interval.
+    /// </summary>
+    public long Gil { get; set; }
 
     /// <summary>
     /// The start time for the query interval.

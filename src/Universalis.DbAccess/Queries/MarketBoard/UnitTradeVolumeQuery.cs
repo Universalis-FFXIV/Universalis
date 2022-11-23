@@ -2,7 +2,7 @@
 
 namespace Universalis.DbAccess.Queries.MarketBoard;
 
-public class UnitTradeVolumeQuery
+public class TradeVolumeQuery
 {
     public uint WorldId { get; init; }
 

@@ -17,4 +17,7 @@ public interface ISaleStore
 
     Task<long> RetrieveUnitTradeVolume(uint worldId, uint itemId, DateTime from, DateTime to,
         CancellationToken cancellationToken = default);
+
+    Task<long> RetrieveGilTradeVolume(uint worldId, uint itemId, DateTime from, DateTime to,
+        CancellationToken cancellationToken = default);
 }

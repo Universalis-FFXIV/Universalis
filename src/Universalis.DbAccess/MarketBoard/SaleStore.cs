@@ -176,7 +176,7 @@ public class SaleStore : ISaleStore
     {
         // Check if the data needed is cached
         var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
-        var cacheKey = GetTradeVolumeCacheKey(worldId, itemId);
+        var cacheKey = GetUnitTradeVolumeCacheKey(worldId, itemId);
         try
         {
             var cachedFromRaw = await cache.HashGetAsync(cacheKey, "cached-from", flags: CommandFlags.PreferReplica);
@@ -185,13 +185,7 @@ public class SaleStore : ISaleStore
             if (DateTime.TryParse(cachedFromRaw, out var cachedFrom) && cachedFrom <= from)
             {
                 var saleVolumes = await cache.HashGetAllAsync(cacheKey, flags: CommandFlags.PreferReplica);
-                return saleVolumes
-                    .Where(e => DateTime.TryParse(e.Name, out _))
-                    .Select(e => new KeyValuePair<DateTime, long>(DateTime.Parse(e.Name), (long)e.Value))
-                    .Where(kvp => kvp.Key >= from)
-                    .Where(kvp => kvp.Key <= to)
-                    .Select(kvp => kvp.Value)
-                    .Sum();
+                return AggregateHashVolume(saleVolumes, from, to);
             }
         }
         catch (Exception e)
@@ -200,16 +194,13 @@ public class SaleStore : ISaleStore
         }
 
         // Request the sale velocity for the allowed intervals
+        // TODO: Don't re-request cached values
         var result = await GetDailyUnitsTraded(worldId, itemId, from, to, cancellationToken);
 
         // Cache it
         try
         {
-            var hash = result.Select(kvp => new HashEntry(kvp.Key.ToString(), kvp.Value)).ToList();
-            hash.Add(new HashEntry("cached-from", from.ToString()));
-            hash.Add(new HashEntry("cached-to", to.ToString()));
-            await cache.HashSetAsync(cacheKey, hash.ToArray(), CommandFlags.FireAndForget);
-            await cache.KeyExpireAsync(cacheKey, TimeSpan.FromHours(1), CommandFlags.FireAndForget);
+            await CacheTradeVolume(cache, cacheKey, result, from, to);
         }
         catch (Exception e)
         {
@@ -219,7 +210,54 @@ public class SaleStore : ISaleStore
         return result.Select(e => e.Value).Sum();
     }
 
-    private async Task<IDictionary<DateTime, long>> GetDailyUnitsTraded(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    public async Task<long> RetrieveGilTradeVolume(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    {
+        // Check if the data needed is cached
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
+        var cacheKey = GetUnitTradeVolumeCacheKey(worldId, itemId);
+        try
+        {
+            var cachedFromRaw = await cache.HashGetAsync(cacheKey, "cached-from", flags: CommandFlags.PreferReplica);
+
+            // It's fine if new data is missing for a bit, but needing older data should be treated as a cache miss
+            if (DateTime.TryParse(cachedFromRaw, out var cachedFrom) && cachedFrom <= from)
+            {
+                var saleVolumes = await cache.HashGetAllAsync(cacheKey, flags: CommandFlags.PreferReplica);
+                return AggregateHashVolume(saleVolumes, from, to);
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to retrieve cached unit trade volumes for key \"{TradeVolumeCacheKey}\"", cacheKey);
+        }
+
+        // Request the sale velocity for the allowed intervals
+        // TODO: Don't re-request cached values
+        var result = await GetDailyUnitsTraded(worldId, itemId, from, to, cancellationToken);
+
+        // Cache it
+        try
+        {
+            await CacheTradeVolume(cache, cacheKey, result, from, to);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to store unit trade volumes \"{TradeVolumeCacheKey}\" in cache", cacheKey);
+        }
+
+        return result.Select(e => e.Value).Sum();
+    }
+
+    private async Task CacheTradeVolume(IDatabase cache, string cacheKey, IDictionary<DateTime, int> hashData, DateTime from, DateTime to)
+    {
+        var hash = hashData.Select(kvp => new HashEntry(kvp.Key.ToString(), kvp.Value)).ToList();
+        hash.Add(new HashEntry("cached-from", from.ToString()));
+        hash.Add(new HashEntry("cached-to", to.ToString()));
+        await cache.HashSetAsync(cacheKey, hash.ToArray(), CommandFlags.FireAndForget);
+        await cache.KeyExpireAsync(cacheKey, TimeSpan.FromHours(1), CommandFlags.FireAndForget);
+    }
+
+    private async Task<IDictionary<DateTime, int>> GetDailyUnitsTraded(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
@@ -241,12 +279,43 @@ public class SaleStore : ISaleStore
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
-        var sales = new Dictionary<DateTime, long>();
+        var sales = new Dictionary<DateTime, int>();
         while (await reader.ReadAsync(cancellationToken))
         {
-            var quantity = reader.GetInt64(0);
+            var quantity = reader.GetInt32(0);
             var date = (DateTime)reader.GetValue(1);
             sales.Add(date, quantity);
+        }
+
+        return sales;
+    }
+
+    private async Task<IDictionary<DateTime, int>> GetDailyGilTraded(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    {
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync(cancellationToken);
+
+        await using var command =
+            new NpgsqlCommand(
+                "SELECT SUM(unit_price), sale_time::date AS sale_date FROM sale WHERE world_id = $1 AND item_id = $2 AND sale_time >= $3 AND sale_time <= $4 GROUP BY sale_date", conn)
+            {
+                Parameters =
+                {
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(worldId) },
+                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(itemId) },
+                    new NpgsqlParameter<DateTime> { TypedValue = from },
+                    new NpgsqlParameter<DateTime> { TypedValue = to },
+                },
+            };
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        var sales = new Dictionary<DateTime, int>();
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var gil = reader.GetInt32(0);
+            var date = (DateTime)reader.GetValue(1);
+            sales.Add(date, gil);
         }
 
         return sales;
@@ -352,6 +421,17 @@ public class SaleStore : ISaleStore
         };
     }
 
+    private long AggregateHashVolume(IEnumerable<HashEntry> hash, DateTime from, DateTime to)
+    {
+        return hash
+            .Where(e => DateTime.TryParse(e.Name, out _))
+            .Select(e => new KeyValuePair<DateTime, long>(DateTime.Parse(e.Name), (long)e.Value))
+            .Where(kvp => kvp.Key >= from)
+            .Where(kvp => kvp.Key <= to)
+            .Select(kvp => kvp.Value)
+            .Sum();
+    }
+
     private static uint GetValueUInt32(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? (uint)hash[key] : 0;
@@ -367,9 +447,14 @@ public class SaleStore : ISaleStore
         return hash.ContainsKey(key) ? hash[key] : "";
     }
 
-    private static string GetTradeVolumeCacheKey(uint worldId, uint itemId)
+    private static string GetUnitTradeVolumeCacheKey(uint worldId, uint itemId)
     {
         return $"sale-volume:{worldId}:{itemId}";
+    }
+
+    private static string GetGilTradeVolumeCacheKey(uint worldId, uint itemId)
+    {
+        return $"sale-volume-gil:{worldId}:{itemId}";
     }
 
     private static string GetIndexCacheKey(uint worldId, uint itemId)

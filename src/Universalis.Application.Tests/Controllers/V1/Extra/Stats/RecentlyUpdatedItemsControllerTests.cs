@@ -3,7 +3,6 @@ using Universalis.Application.Controllers.V1.Extra.Stats;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views.V1.Extra.Stats;
-using Universalis.GameData;
 using Xunit;
 
 namespace Universalis.Application.Tests.Controllers.V1.Extra.Stats;

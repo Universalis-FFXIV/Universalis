@@ -16,17 +16,18 @@ namespace Universalis.Application.Controllers.V1.Extra.Stats;
 [ApiVersion("1")]
 [ApiVersion("2")]
 [Route("api")]
-public class UnitTradeVolumeController : WorldDcRegionControllerBase
+public class TradeVolumeController : WorldDcRegionControllerBase
 {
     private readonly ISaleStatisticsDbAccess _saleStatistics;
 
-    public UnitTradeVolumeController(ISaleStatisticsDbAccess saleStatistics, IGameDataProvider gameData) : base(gameData)
+    public TradeVolumeController(ISaleStatisticsDbAccess saleStatistics, IGameDataProvider gameData) : base(gameData)
     {
         _saleStatistics = saleStatistics;
     }
 
     /// <summary>
-    /// Retrieves the unit sale volume (total units sold) of the specified item over the provided period.
+    /// Retrieves the unit trade volume (total units sold) and Gil trade volume (total Gil exchanged) of the
+    /// specified item over the provided period. Tax is not included in this calculation.
     /// </summary>
     /// <param name="world">The world to query.</param>
     /// <param name="dcName">The data center to query.</param>
@@ -41,9 +42,9 @@ public class UnitTradeVolumeController : WorldDcRegionControllerBase
     /// <response code="404">The world/DC/item requested is invalid.</response>
     [HttpGet]
     [MapToApiVersion("1")]
-    [ApiTag("(Unstable) Unit trade volume")]
-    [Route("extra/stats/unit-trade-volume")]
-    [ProducesResponseType(typeof(UnitTradeVolumeView), 200)]
+    [ApiTag("(Unstable) Trade volume")]
+    [Route("extra/stats/trade-volume")]
+    [ProducesResponseType(typeof(TradeVolumeView), 200)]
     public async Task<IActionResult> Get(
         [FromQuery] string world,
         [FromQuery] string dcName,
@@ -85,8 +86,8 @@ public class UnitTradeVolumeController : WorldDcRegionControllerBase
 
         var fromTime = DateTimeOffset.FromUnixTimeMilliseconds(from).UtcDateTime;
         var toTime = DateTimeOffset.FromUnixTimeMilliseconds(to).UtcDateTime;
-        var quantity = await worldIds.ToAsyncEnumerable()
-            .SelectAwaitWithCancellation((w, ct) => _saleStatistics.RetrieveUnitTradeVolume(new UnitTradeVolumeQuery
+        var units = await worldIds.ToAsyncEnumerable()
+            .SelectAwaitWithCancellation((w, ct) => _saleStatistics.RetrieveUnitTradeVolume(new TradeVolumeQuery
             {
                 WorldId = w,
                 ItemId = item,
@@ -94,19 +95,45 @@ public class UnitTradeVolumeController : WorldDcRegionControllerBase
                 To = toTime,
             }, ct))
             .SumAsync(cancellationToken);
-        return Ok(new UnitTradeVolumeView
+        var gil = await worldIds.ToAsyncEnumerable()
+            .SelectAwaitWithCancellation((w, ct) => _saleStatistics.RetrieveGilTradeVolume(new TradeVolumeQuery
+            {
+                WorldId = w,
+                ItemId = item,
+                From = fromTime,
+                To = toTime,
+            }, ct))
+            .SumAsync(cancellationToken);
+
+        return Ok(new TradeVolumeView
         {
-            Quantity = quantity,
+            Units = units,
+            Gil = gil,
             From = new DateTimeOffset(fromTime).ToUnixTimeMilliseconds(),
             To = new DateTimeOffset(toTime).ToUnixTimeMilliseconds(),
         });
     }
 
+    /// <summary>
+    /// Retrieves the unit trade volume (total units sold) and Gil trade volume (total Gil exchanged) of the
+    /// specified item over the provided period. Tax is not included in this calculation.
+    /// </summary>
+    /// <param name="world">The world to query.</param>
+    /// <param name="dcName">The data center to query.</param>
+    /// <param name="item">The ID of the item to query.</param>
+    /// <param name="from">The time, in milliseconds since the UNIX epoch, to begin the interval over.</param>
+    /// <param name="to">
+    /// The time, in milliseconds since the UNIX epoch, to end the interval over. If this is not provided, it
+    /// will be set to the current time.
+    /// </param>
+    /// <param name="cancellationToken"></param>
+    /// <response code="400">No world or data center was provided.</response>
+    /// <response code="404">The world/DC/item requested is invalid.</response>
     [HttpGet]
     [MapToApiVersion("2")]
-    [ApiTag("(Unstable) Unit trade volume")]
-    [Route("v{version:apiVersion}/extra/stats/unit-trade-volume")]
-    [ProducesResponseType(typeof(UnitTradeVolumeView), 200)]
+    [ApiTag("(Unstable) Trade volume")]
+    [Route("v{version:apiVersion}/extra/stats/trade-volume")]
+    [ProducesResponseType(typeof(TradeVolumeView), 200)]
     public Task<IActionResult> GetV2(
         [FromQuery] string world,
         [FromQuery] string dcName,
