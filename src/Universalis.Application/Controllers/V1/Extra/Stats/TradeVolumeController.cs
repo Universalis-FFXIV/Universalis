@@ -26,7 +26,7 @@ public class TradeVolumeController : WorldDcRegionControllerBase
     }
 
     /// <summary>
-    /// Retrieves the unit sale volume (total units sold) and Gil sale volume (total Gil exchanged) of the
+    /// Retrieves the unit trade volume (total units sold) and Gil trade volume (total Gil exchanged) of the
     /// specified item over the provided period. Tax is not included in this calculation.
     /// </summary>
     /// <param name="world">The world to query.</param>
@@ -115,7 +115,7 @@ public class TradeVolumeController : WorldDcRegionControllerBase
     }
 
     /// <summary>
-    /// Retrieves the unit sale volume (total units sold) and Gil sale volume (total Gil exchanged) of the
+    /// Retrieves the unit trade volume (total units sold) and Gil trade volume (total Gil exchanged) of the
     /// specified item over the provided period. Tax is not included in this calculation.
     /// </summary>
     /// <param name="world">The world to query.</param>
