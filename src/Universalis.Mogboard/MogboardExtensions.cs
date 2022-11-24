@@ -8,25 +8,19 @@ namespace Universalis.Mogboard;
 
 public static class MogboardExtensions
 {
-    public static void AddMogboard(this IServiceCollection sc, IConfiguration config)
+    public static void AddMogboard(this IServiceCollection sc, IConfiguration configuration)
     {
-        var username = config["MogboardDatabaseUsername"];
-        var password = config["MogboardDatabasePassword"];
-        var database = config["MogboardDatabase"];
-        if (!int.TryParse(config["MogboardPort"], out var port))
-        {
-            Console.Error.WriteLine("Failed to parse mogboard database port: {0}", config["MogboardPort"]);
-            return;
-        }
+        var connectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_MOGBOARD_CONNECTION") ??
+            configuration["MogboardConnectionString"];
 
-        sc.AddSingleton<IMogboardTable<User, UserId>>(new UsersService(username, password, database, port));
-        sc.AddSingleton<IMogboardTable<UserList, UserListId>>(new UserListsService(username, password, database, port));
-        sc.AddSingleton<IMogboardTable<UserRetainer, UserRetainerId>>(new UserRetainersService(username, password, database, port));
-        sc.AddSingleton<IMogboardTable<UserCharacter, UserCharacterId>>(new UserCharactersService(username, password, database, port));
-        sc.AddSingleton<IMogboardSessionTable>(new UserSessionsService(username, password, database, port));
-        sc.AddSingleton<IMogboardTable<UserAlert, UserAlertId>>(new UserAlertsService(username, password, database, port));
-        sc.AddSingleton<IMogboardTable<UserAlertEvent, UserAlertEventId>>(new UserAlertEventsService(username, password, database, port));
-        sc.AddSingleton<IMogboardTable<UserReport, UserReportId>>(new UserReportsService(username, password, database, port));
+        sc.AddSingleton<IMogboardTable<User, UserId>>(new UsersService(connectionString));
+        sc.AddSingleton<IMogboardTable<UserList, UserListId>>(new UserListsService(connectionString));
+        sc.AddSingleton<IMogboardTable<UserRetainer, UserRetainerId>>(new UserRetainersService(connectionString));
+        sc.AddSingleton<IMogboardTable<UserCharacter, UserCharacterId>>(new UserCharactersService(connectionString));
+        sc.AddSingleton<IMogboardSessionTable>(new UserSessionsService(connectionString));
+        sc.AddSingleton<IMogboardTable<UserAlert, UserAlertId>>(new UserAlertsService(connectionString));
+        sc.AddSingleton<IMogboardTable<UserAlertEvent, UserAlertEventId>>(new UserAlertEventsService(connectionString));
+        sc.AddSingleton<IMogboardTable<UserReport, UserReportId>>(new UserReportsService(connectionString));
         sc.AddSingleton<IMogboardAuthenticationService, MogboardAuthenticationService>();
     }
 }

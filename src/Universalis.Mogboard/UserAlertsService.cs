@@ -6,22 +6,16 @@ namespace Universalis.Mogboard;
 
 internal class UserAlertsService : IMogboardTable<UserAlert, UserAlertId>
 {
-    private readonly string _username;
-    private readonly string _password;
-    private readonly string _database;
-    private readonly int _port;
+    private readonly string _connectionString;
 
-    public UserAlertsService(string username, string password, string database, int port)
+    public UserAlertsService(string connectionString)
     {
-        _username = username;
-        _password = password;
-        _database = database;
-        _port = port;
+        _connectionString = connectionString;
     }
 
     public async Task<UserAlert?> Get(UserAlertId id, CancellationToken cancellationToken = default)
     {
-        await using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Server=localhost;Port={_port}");
+        await using var db = new MySqlConnection(_connectionString);
         await db.OpenAsync(cancellationToken);
 
         await using var command = db.CreateCommand();
@@ -35,7 +29,7 @@ internal class UserAlertsService : IMogboardTable<UserAlert, UserAlertId>
 
     public async Task Create(UserAlert entity, CancellationToken cancellationToken = default)
     {
-        await using var db = new MySqlConnection($"User ID={_username};Password={_password};Database={_database};Server=localhost;Port={_port}");
+        await using var db = new MySqlConnection(_connectionString);
         await db.OpenAsync(cancellationToken);
 
         await using var command = db.CreateCommand();
