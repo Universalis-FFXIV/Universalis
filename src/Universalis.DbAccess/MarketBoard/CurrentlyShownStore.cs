@@ -91,7 +91,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         await trans.ExecuteAsync();
     }
     
-    private async Task<long> EnsureLastUpdated(IDatabase db, uint worldId, uint itemId)
+    private static async Task<long> EnsureLastUpdated(IDatabase db, uint worldId, uint itemId)
     {
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
         await db.StringSetAsync(lastUpdatedKey, 0, when: When.NotExists);
@@ -107,7 +107,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     private static async Task<string> GetSource(IDatabaseAsync db, uint worldId, uint itemId)
     {
         var sourceKey = GetUploadSourceKey(worldId, itemId);
-        var source = await db.StringGetAsync(sourceKey);
+        var source = await db.StringGetAsync(sourceKey, flags: CommandFlags.PreferReplica);
         return source;
     }
     
@@ -117,10 +117,10 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _ = trans.StringSetAsync(sourceKey, source, expiry);
     }
 
-    private async Task<CurrentlyShown> FetchData(IDatabase db, uint worldId, uint itemId)
+    private static async Task<CurrentlyShown> FetchData(IDatabase db, uint worldId, uint itemId)
     {
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
-        if (!await db.KeyExistsAsync(lastUpdatedKey))
+        if (!await db.KeyExistsAsync(lastUpdatedKey, flags: CommandFlags.PreferReplica))
         {
             return null;
         }
@@ -148,7 +148,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     {
         var listingsKey = GetListingsIndexKey(worldId, itemId);
         
-        var listingIdsRaw = await db.StringGetAsync(listingsKey);
+        var listingIdsRaw = await db.StringGetAsync(listingsKey, flags: CommandFlags.PreferReplica);
         if (listingIdsRaw.IsNullOrEmpty)
         {
             return Array.Empty<Listing>();
@@ -159,7 +159,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             .Select(async id =>
             {
                 var listingKey = GetListingKey(worldId, itemId, id);
-                var listingEntries = await db.HashGetAllAsync(listingKey);
+                var listingEntries = await db.HashGetAllAsync(listingKey, flags: CommandFlags.PreferReplica);
                 var listing = listingEntries.ToDictionary();
                 return new Listing
                 {
@@ -295,11 +295,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         return string.Join(':', ids.Select(id => id.ToString()));
     }
 
-    private static string GetCacheKey(uint worldId, uint itemId)
-    {
-        return $"listings:{worldId}:{itemId}";
-    }
-    
     private static string GetUploadSourceKey(uint worldId, uint itemId)
     {
         return $"{worldId}:{itemId}:Source";
@@ -317,6 +312,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     
     private static string GetListingKey(uint worldId, uint itemId, Guid listingId)
     {
-        return $"{worldId}:{itemId}:Listings:{listingId.ToString()}";
+        return $"{worldId}:{itemId}:Listings:{listingId}";
     }
 }
