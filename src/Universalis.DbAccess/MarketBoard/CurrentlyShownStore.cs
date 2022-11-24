@@ -24,6 +24,21 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
     public async Task<CurrentlyShown> GetData(uint worldId, uint itemId)
     {
+        // Try to fetch data from the cache
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        try
+        {
+            var cachedObject = await FetchData(cache, worldId, itemId);
+            if (cachedObject != null)
+            {
+                return cachedObject;
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to retrieve currently shown data from the cache (world={WorldId}, item={ItemId})", worldId, itemId);
+        }
+
         // Fetch data from the database
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
         var result = await FetchData(db, worldId, itemId);
@@ -31,6 +46,9 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         {
             return new CurrentlyShown();
         }
+
+        // Store the result in the cache
+        await StoreData(cache, result, TimeSpan.FromSeconds(30));
 
         return result;
     }
