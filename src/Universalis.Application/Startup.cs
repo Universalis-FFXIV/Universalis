@@ -49,12 +49,11 @@ public class Startup
 
         services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
 
-        var cacheSize = int.Parse(Configuration["MarketCurrentDataCacheSize"]);
         services.AddSingleton<ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData>>(sc =>
         {
             var currentlyShownDb = sc.GetRequiredService<ICurrentlyShownDbAccess>();
             var historyDb = sc.GetRequiredService<IHistoryDbAccess>();
-            return new CurrentlyShownCache(cacheSize, currentlyShownDb, historyDb);
+            return new CurrentlyShownCache(100, currentlyShownDb, historyDb);
         });
 
         services.AddMassTransit(options =>
