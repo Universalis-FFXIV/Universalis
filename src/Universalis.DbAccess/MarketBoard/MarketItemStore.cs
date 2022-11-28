@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
-using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Universalis.Entities.MarketBoard;
@@ -58,15 +57,7 @@ public class MarketItemStore : IMarketItemStore
             throw new ArgumentNullException(nameof(marketItem));
         }
 
-        var results = await _ddbContext
-            .ScanAsync<MarketItem>(new List<ScanCondition> {
-                new ScanCondition("ItemId", ScanOperator.Equal, marketItem.ItemId),
-                new ScanCondition("WorldId", ScanOperator.Equal, marketItem.WorldId),
-            })
-            .GetRemainingAsync(cancellationToken);
-        var match = results.FirstOrDefault() ?? marketItem;
-        match.LastUploadTime = marketItem.LastUploadTime;
-        await _ddbContext.SaveAsync(match, cancellationToken);
+        await _ddbContext.SaveAsync(marketItem, cancellationToken);
 
         // Write through to the cache
         var cache = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
