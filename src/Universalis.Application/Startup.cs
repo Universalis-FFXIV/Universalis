@@ -100,7 +100,6 @@ public class Startup
         {
             options.Filters.Add<DecoderFallbackExceptionFilter>();
             options.Filters.Add<OperationCancelledExceptionFilter>();
-            options.Filters.Add<PostgresExceptionFilter>();
         }).AddJsonOptions(options => {
             options.JsonSerializerOptions.Converters.Add(new PartiallySerializableJsonConverterFactory());
         });

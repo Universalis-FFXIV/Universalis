@@ -1,12 +1,10 @@
-﻿using FluentMigrator.Runner;
+﻿using Amazon.DynamoDBv2;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
 using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.MarketBoard;
-using Universalis.DbAccess.Migrations;
 using Universalis.DbAccess.Uploads;
 
 namespace Universalis.DbAccess;
@@ -19,20 +17,25 @@ public static class DbAccessExtensions
                                     configuration["RedisCacheConnectionString"];
         var redisConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_REDIS_CONNECTION") ??
                                     configuration["RedisConnectionString"];
-        var postgresConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_POSTGRES_CONNECTION") ??
-                                       configuration["PostgresConnectionString"];
-        var memcachedConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_MEMCACHED_CONNECTION") ??
-                                       configuration["MemcachedConnectionString"];
+
+        var awsOptions = configuration.GetAWSOptions();
+        sc.AddDefaultAWSOptions(awsOptions);
+
+        // This needs to be initialized early so we can't use the extension methods that
+        // configure things correctly automatically.
+        // TODO: Move table initialization into middleware to avoid this
+        var dynamoDb = new AmazonDynamoDBClient("None", "None", new AmazonDynamoDBConfig
+        {
+            LogMetrics = bool.TryParse(configuration.GetSection("AWS:LogMetrics").Value, out var logMetrics) && logMetrics,
+            LogResponse = bool.TryParse(configuration.GetSection("AWS:LogResponse").Value, out var logResponse) && logResponse,
+            ServiceURL = configuration.GetSection("AWS:ServiceURL").Value,
+        });
+        sc.AddSingleton<IAmazonDynamoDB>(dynamoDb);
+
+        DynamoDBTableInitializer.InitializeTables(dynamoDb).GetAwaiter().GetResult();
 
         sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(ConnectionMultiplexer.Connect(redisCacheConnectionString)));
         sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(ConnectionMultiplexer.Connect(redisConnectionString)));
-
-        sc.AddFluentMigratorCore()
-            .ConfigureRunner(rb => rb
-                .AddPostgres()
-                .WithGlobalConnectionString(postgresConnectionString)
-                .ScanIn(typeof(CreateMarketItemTable).Assembly).For.All())
-            .AddLogging(lb => lb.AddFluentMigratorConsole());
 
         sc.AddSingleton<IWorldItemUploadStore, WorldItemUploadStore>();
         sc.AddSingleton<IMostRecentlyUpdatedDbAccess, MostRecentlyUpdatedDbAccess>();
@@ -40,16 +43,16 @@ public static class DbAccessExtensions
         sc.AddSingleton<ICurrentlyShownStore, CurrentlyShownStore>();
         sc.AddSingleton<ICurrentlyShownDbAccess, CurrentlyShownDbAccess>();
 
-        sc.AddSingleton<IMarketItemStore, MarketItemStore>(sc => new MarketItemStore(postgresConnectionString, sc.GetRequiredService<ICacheRedisMultiplexer>(), sc.GetRequiredService<ILogger<MarketItemStore>>()));
-        sc.AddSingleton<ISaleStore, SaleStore>(sc => new SaleStore(postgresConnectionString, sc.GetRequiredService<ICacheRedisMultiplexer>(), sc.GetRequiredService<ILogger<SaleStore>>()));
+        sc.AddSingleton<IMarketItemStore, MarketItemStore>();
+        sc.AddSingleton<ISaleStore, SaleStore>();
         sc.AddSingleton<IHistoryDbAccess, HistoryDbAccess>();
 
         sc.AddSingleton<ISaleStatisticsDbAccess, SaleStatisticsDbAccess>();
 
-        sc.AddSingleton<ICharacterStore, CharacterStore>(_ => new CharacterStore(postgresConnectionString));
+        sc.AddSingleton<ICharacterStore, CharacterStore>();
         sc.AddSingleton<ICharacterDbAccess, CharacterDbAccess>();
 
-        sc.AddSingleton<IFlaggedUploaderStore, FlaggedUploaderStore>(_ => new FlaggedUploaderStore(postgresConnectionString));
+        sc.AddSingleton<IFlaggedUploaderStore, FlaggedUploaderStore>();
         sc.AddSingleton<IFlaggedUploaderDbAccess, FlaggedUploaderDbAccess>();
 
         sc.AddSingleton<ITaxRatesStore, TaxRatesStore>();
@@ -61,7 +64,7 @@ public static class DbAccessExtensions
         sc.AddSingleton<IDailyUploadCountStore, DailyUploadCountStore>();
         sc.AddSingleton<IUploadCountHistoryDbAccess, UploadCountHistoryDbAccess>();
 
-        sc.AddSingleton<IApiKeyStore, ApiKeyStore>(_ => new ApiKeyStore(postgresConnectionString));
+        sc.AddSingleton<IApiKeyStore, ApiKeyStore>();
         sc.AddSingleton<ISourceUploadCountStore, TrustedSourceUploadCountStore>();
         sc.AddSingleton<ITrustedSourceDbAccess, TrustedSourceDbAccess>();
 

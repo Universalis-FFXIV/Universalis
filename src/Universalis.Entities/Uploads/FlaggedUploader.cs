@@ -1,8 +1,16 @@
-﻿namespace Universalis.Entities.Uploads;
+﻿using Amazon.DynamoDBv2.DataModel;
 
+namespace Universalis.Entities.Uploads;
+
+[DynamoDBTable("flagged_uploader")]
 public class FlaggedUploader
 {
-    public string IdSha256 { get; }
+    [DynamoDBHashKey("id_sha256")]
+    public string IdSha256 { get; init; }
+
+    public FlaggedUploader()
+    {
+    }
 
     public FlaggedUploader(string idSha256)
     {
