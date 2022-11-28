@@ -1,5 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
-using Npgsql;
+﻿using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
+using Amazon.DynamoDBv2.Model;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -7,6 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Entities.MarketBoard;
+using Condition = StackExchange.Redis.Condition;
 
 namespace Universalis.DbAccess.MarketBoard;
 
@@ -15,13 +19,16 @@ public class SaleStore : ISaleStore
     // The maximum number of cached sales, per item, per world
     private const int MaxCachedSales = 50;
 
-    private readonly string _connectionString;
+    private readonly IAmazonDynamoDB _dynamoDb;
+    private readonly DynamoDBContext _ddbContext;
     private readonly ICacheRedisMultiplexer _cache;
     private readonly ILogger<SaleStore> _logger;
 
-    public SaleStore(string connectionString, ICacheRedisMultiplexer cache, ILogger<SaleStore> logger)
+    public SaleStore(IAmazonDynamoDB dynamoDb, ICacheRedisMultiplexer cache, ILogger<SaleStore> logger)
     {
-        _connectionString = connectionString;
+        _dynamoDb = dynamoDb;
+        _ddbContext = new DynamoDBContext(_dynamoDb);
+
         _cache = cache;
         _logger = logger;
     }
@@ -33,26 +40,7 @@ public class SaleStore : ISaleStore
             throw new ArgumentNullException(nameof(sale));
         }
 
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync(cancellationToken);
-        await using var command = new NpgsqlCommand(
-            "INSERT INTO sale (id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", conn)
-        {
-            Parameters =
-            {
-                new NpgsqlParameter<Guid> { TypedValue = Guid.NewGuid() },
-                new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(sale.WorldId) },
-                new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(sale.ItemId) },
-                new NpgsqlParameter<bool> { TypedValue = sale.Hq },
-                new NpgsqlParameter<long> { TypedValue = Convert.ToInt64(sale.PricePerUnit) },
-                new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(sale.Quantity) },
-                new NpgsqlParameter<string> { TypedValue = sale.BuyerName },
-                new NpgsqlParameter<DateTime> { TypedValue = sale.SaleTime },
-                new NpgsqlParameter<string> { TypedValue = sale.UploaderIdHash },
-                new NpgsqlParameter<bool> { TypedValue = sale.OnMannequin ?? false },
-            },
-        };
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        await _ddbContext.SaveAsync(sale, cancellationToken);
 
         // Purge the cache
         var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
@@ -67,12 +55,12 @@ public class SaleStore : ISaleStore
             throw new ArgumentNullException(nameof(sales));
         }
 
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync(cancellationToken);
-        await using var batch = new NpgsqlBatch(conn);
         var purgedCaches = new Dictionary<string, bool>();
+        var batch = _ddbContext.CreateBatchWrite<Sale>();
         foreach (var sale in sales)
         {
+            batch.AddPutItem(sale);
+
             // Purge the cache
             var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
             var cacheIndexKey = GetIndexCacheKey(sale.WorldId, sale.ItemId);
@@ -81,26 +69,9 @@ public class SaleStore : ISaleStore
                 await cache.KeyDeleteAsync(cacheIndexKey, CommandFlags.FireAndForget);
                 purgedCaches[cacheIndexKey] = true;
             }
-
-            batch.BatchCommands.Add(new NpgsqlBatchCommand(
-                "INSERT INTO sale (id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)")
-            {
-                Parameters =
-                {
-                    new NpgsqlParameter<Guid> { TypedValue = Guid.NewGuid() },
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(sale.WorldId) },
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(sale.ItemId) },
-                    new NpgsqlParameter<bool> { TypedValue = sale.Hq },
-                    new NpgsqlParameter<long> { TypedValue = Convert.ToInt64(sale.PricePerUnit) },
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(sale.Quantity) },
-                    new NpgsqlParameter<string> { TypedValue = sale.BuyerName },
-                    new NpgsqlParameter<DateTime> { TypedValue = sale.SaleTime },
-                    new NpgsqlParameter<string> { TypedValue = sale.UploaderIdHash },
-                    new NpgsqlParameter<bool> { TypedValue = sale.OnMannequin ?? false },
-                },
-            });
         }
-        await batch.ExecuteNonQueryAsync(cancellationToken);
+
+        await batch.ExecuteAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null, CancellationToken cancellationToken = default)
@@ -118,50 +89,39 @@ public class SaleStore : ISaleStore
         }
 
         // Fetch data from the database
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync(cancellationToken);
-
-        await using var command =
-            new NpgsqlCommand(
-                "SELECT id, world_id, item_id, hq, unit_price, quantity, buyer_name, sale_time, uploader_id, mannequin FROM sale WHERE world_id = $1 AND item_id = $2 AND sale_time <= $3 ORDER BY sale_time DESC LIMIT $4", conn)
-            {
-                Parameters =
-                {
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(worldId) },
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(itemId) },
-                    new NpgsqlParameter<DateTime> { TypedValue = from ?? DateTime.UtcNow },
-                    new NpgsqlParameter<int> { TypedValue = count + 20 }, // Give some buffer in case we filter out anything 
-                },
-            };
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-        var sales = new List<Sale>();
-        while (await reader.ReadAsync(cancellationToken))
+        var conditions = new List<ScanCondition>
         {
-            var nextSale = new Sale
-            {
-                Id = reader.GetGuid(0),
-                WorldId = Convert.ToUInt32(reader.GetInt32(1)),
-                ItemId = Convert.ToUInt32(reader.GetInt32(2)),
-                Hq = reader.GetBoolean(3),
-                PricePerUnit = Convert.ToUInt32(reader.GetInt64(4)),
-                Quantity = reader.IsDBNull(5) ? null : Convert.ToUInt32(reader.GetInt32(5)),
-                BuyerName = reader.IsDBNull(6) ? null : reader.GetString(6),
-                SaleTime = (DateTime)reader.GetValue(7),
-                UploaderIdHash = reader.IsDBNull(8) ? null : reader.GetString(8),
-                OnMannequin = reader.IsDBNull(9) ? null : reader.GetBoolean(9),
-            };
+            new ScanCondition("ItemId", ScanOperator.Equal, itemId),
+            new ScanCondition("WorldId", ScanOperator.Equal, worldId),
+        };
 
-            if (sales.Contains(nextSale))
-            {
-                continue;
-            }
-
-            sales.Add(nextSale);
+        if (from != null)
+        {
+            var timestamp = new DateTimeOffset(from.Value).ToUnixTimeMilliseconds();
+            conditions.Add(new ScanCondition("SaleTime", ScanOperator.GreaterThanOrEqual, timestamp));
         }
 
-        var results = sales.Take(count).ToList();
+        var scan = _ddbContext.ScanAsync<Sale>(conditions);
+
+        var sales = new List<Sale>();
+        while (!scan.IsDone && sales.Count <= count)
+        {
+            var batch = await scan.GetNextSetAsync(cancellationToken);
+            foreach (var nextSale in batch)
+            {
+                if (sales.Contains(nextSale))
+                {
+                    continue;
+                }
+
+                sales.Add(nextSale);
+            }
+        }
+
+        var results = sales
+            .Take(count)
+            .OrderByDescending(sale => sale.SaleTime)
+            .ToList();
 
         // Store the results in the cache
         if (results.Count >= MaxCachedSales)
@@ -259,66 +219,14 @@ public class SaleStore : ISaleStore
 
     private async Task<IDictionary<DateTime, int>> GetDailyUnitsTraded(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync(cancellationToken);
-
-        // This is a relatively slow query that often causes cache misses.
-        // I don't think anything can be done about this besides using more memory.
-        await using var command =
-            new NpgsqlCommand(
-                "SELECT SUM(quantity), sale_time::date AS sale_date FROM sale WHERE world_id = $1 AND item_id = $2 AND sale_time >= $3 AND sale_time <= $4 GROUP BY sale_date", conn)
-            {
-                Parameters =
-                {
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(worldId) },
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(itemId) },
-                    new NpgsqlParameter<DateTime> { TypedValue = from },
-                    new NpgsqlParameter<DateTime> { TypedValue = to },
-                },
-            };
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-        var sales = new Dictionary<DateTime, int>();
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            var quantity = reader.GetInt32(0);
-            var date = (DateTime)reader.GetValue(1);
-            sales.Add(date, quantity);
-        }
-
-        return sales;
+        // TODO: Make this work with Scylla or DynamoDB
+        return new Dictionary<DateTime, int>();
     }
 
     private async Task<IDictionary<DateTime, int>> GetDailyGilTraded(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync(cancellationToken);
-
-        await using var command =
-            new NpgsqlCommand(
-                "SELECT SUM(unit_price), sale_time::date AS sale_date FROM sale WHERE world_id = $1 AND item_id = $2 AND sale_time >= $3 AND sale_time <= $4 GROUP BY sale_date", conn)
-            {
-                Parameters =
-                {
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(worldId) },
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(itemId) },
-                    new NpgsqlParameter<DateTime> { TypedValue = from },
-                    new NpgsqlParameter<DateTime> { TypedValue = to },
-                },
-            };
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-        var sales = new Dictionary<DateTime, int>();
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            var gil = reader.GetInt32(0);
-            var date = (DateTime)reader.GetValue(1);
-            sales.Add(date, gil);
-        }
-
-        return sales;
+        // TODO: Make this work with Scylla or DynamoDB
+        return new Dictionary<DateTime, int>();
     }
 
     private async Task<IList<Sale>> FetchSalesFromCache(IDatabase cache, string cacheIndexKey, uint worldId, uint itemId, int count)

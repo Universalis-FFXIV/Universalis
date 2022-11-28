@@ -13,7 +13,7 @@ public static class SeedDataGenerator
     public static CurrentlyShown MakeCurrentlyShown(uint worldId, uint itemId, long? lastUploadTime = null, uint maxStackSize = 999)
     {
         var rand = new Random();
-        var t = lastUploadTime ?? DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        var t = lastUploadTime ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var listings = Enumerable.Range(0, 100)
             .Select(_ => new Listing
             {
@@ -26,7 +26,7 @@ public static class SeedDataGenerator
                 DyeId = (byte)rand.Next(0, 255),
                 CreatorId = rand.NextInt64().ToString(),
                 CreatorName = "Bingus Bongus",
-                LastReviewTimeUnixSeconds = (uint)(DateTimeOffset.Now.ToUnixTimeSeconds() - rand.Next(0, 360000)),
+                LastReviewTimeUnixSeconds = (uint)(DateTimeOffset.UtcNow.ToUnixTimeSeconds() - rand.Next(0, 360000)),
                 RetainerId = rand.NextInt64().ToString(),
                 RetainerName = "xpotato",
                 RetainerCityId = 0xA,
@@ -50,7 +50,7 @@ public static class SeedDataGenerator
         {
             WorldId = worldId,
             ItemId = itemId,
-            LastUploadTimeUnixMilliseconds = lastUploadTime ?? DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+            LastUploadTimeUnixMilliseconds = lastUploadTime ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             Sales = Enumerable.Range(0, 100)
                 .Select(_ => new Sale
                 {

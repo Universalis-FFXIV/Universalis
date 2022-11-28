@@ -1,78 +1,40 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Npgsql;
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DataModel;
 using Universalis.Entities.Uploads;
 
 namespace Universalis.DbAccess.Uploads;
 
 public class FlaggedUploaderStore : IFlaggedUploaderStore
 {
-    private readonly string _connectionString;
+    private readonly IAmazonDynamoDB _dynamoDb;
 
-    public FlaggedUploaderStore(string connectionString)
+    public FlaggedUploaderStore(IAmazonDynamoDB dynamoDb)
     {
-        _connectionString = connectionString;
+        _dynamoDb = dynamoDb;
     }
-    
-    public async Task Insert(FlaggedUploader uploader, CancellationToken cancellationToken = default)
+
+    public Task Insert(FlaggedUploader uploader, CancellationToken cancellationToken = default)
     {
         if (uploader == null)
         {
             throw new ArgumentNullException(nameof(uploader));
         }
-        
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync(cancellationToken);
-        await using var command =
-            new NpgsqlCommand(
-                "INSERT INTO flagged_uploader (id_sha256) VALUES ($1)", conn)
-            {
-                Parameters =
-                {
-                    new NpgsqlParameter<string> { TypedValue = uploader.IdSha256 },
-                },
-            };
 
-        try
-        {
-            await command.ExecuteNonQueryAsync(cancellationToken);
-        }
-        catch (PostgresException e) when (e.ConstraintName == "PK_flagged_uploader_id_sha256")
-        {
-            // Race condition; unique constraint violated
-        }
+        var context = new DynamoDBContext(_dynamoDb);
+        return context.SaveAsync(uploader, cancellationToken);
     }
 
-    public async Task<FlaggedUploader> Retrieve(string uploaderIdSha256, CancellationToken cancellationToken = default)
+    public Task<FlaggedUploader> Retrieve(string uploaderIdSha256, CancellationToken cancellationToken = default)
     {
         if (uploaderIdSha256 == null)
         {
             throw new ArgumentNullException(nameof(uploaderIdSha256));
         }
-        
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync(cancellationToken);
-        
-        await using var command =
-            new NpgsqlCommand(
-                "SELECT id_sha256 FROM flagged_uploader WHERE id_sha256 = $1", conn)
-            {
-                Parameters =
-                {
-                    new NpgsqlParameter<string> { TypedValue = uploaderIdSha256 },
-                },
-            };
-        
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        if (!reader.HasRows)
-        {
-            return null;
-        }
 
-        await reader.ReadAsync(cancellationToken);
-
-        var uploaderIdHash = reader.GetString(0);
-        return new FlaggedUploader(uploaderIdHash);
+        var context = new DynamoDBContext(_dynamoDb);
+        return context.LoadAsync<FlaggedUploader>(uploaderIdSha256, cancellationToken);
     }
 }

@@ -1,14 +1,19 @@
-﻿using System;
+﻿using Amazon.DynamoDBv2.DataModel;
+using System;
 using Universalis.Common.Caching;
 
 namespace Universalis.Entities.MarketBoard;
 
+[DynamoDBTable("market_item")]
 public class MarketItem : ICopyable
 {
-    public uint WorldId { get; init; }
-
+    [DynamoDBHashKey("item_id")]
     public uint ItemId { get; init; }
 
+    [DynamoDBRangeKey("world_id")]
+    public uint WorldId { get; init; }
+
+    [DynamoDBProperty("last_upload_time", typeof(UnixMsDateTimeConverter))]
     public DateTime LastUploadTime { get; set; }
 
     public ICopyable Clone()

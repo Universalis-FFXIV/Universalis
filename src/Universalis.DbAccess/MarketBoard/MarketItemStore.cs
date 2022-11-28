@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
+using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 using StackExchange.Redis;
 using Universalis.Entities.MarketBoard;
 
@@ -13,11 +17,14 @@ public class MarketItemStore : IMarketItemStore
 {
     private readonly ICacheRedisMultiplexer _cache;
     private readonly ILogger<MarketItemStore> _logger;
-    private readonly string _connectionString;
+    private readonly IAmazonDynamoDB _dynamoDb;
+    private readonly DynamoDBContext _ddbContext;
 
-    public MarketItemStore(string connectionString, ICacheRedisMultiplexer cache, ILogger<MarketItemStore> logger)
+    public MarketItemStore(IAmazonDynamoDB dynamoDb, ICacheRedisMultiplexer cache, ILogger<MarketItemStore> logger)
     {
-        _connectionString = connectionString;
+        _dynamoDb = dynamoDb;
+        _ddbContext = new DynamoDBContext(_dynamoDb);
+
         _cache = cache;
         _logger = logger;
     }
@@ -29,29 +36,8 @@ public class MarketItemStore : IMarketItemStore
             throw new ArgumentNullException(nameof(marketItem));
         }
 
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync(cancellationToken);
-        await using var command =
-            new NpgsqlCommand(
-                "INSERT INTO market_item (world_id, item_id, updated) VALUES ($1, $2, $3)", conn)
-            {
-                Parameters =
-                {
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(marketItem.WorldId) },
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(marketItem.ItemId) },
-                    new NpgsqlParameter<DateTime> { TypedValue = marketItem.LastUploadTime },
-                },
-            };
+        await _ddbContext.SaveAsync(marketItem, cancellationToken);
 
-        try
-        {
-            await command.ExecuteNonQueryAsync(cancellationToken);
-        }
-        catch (PostgresException e) when (e.ConstraintName == "PK_market_item_item_id_world_id")
-        {
-            // Race condition; unique constraint violated
-        }
-        
         // Write through to the cache
         var cache = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
         var cacheKey = GetCacheKey(marketItem.WorldId, marketItem.ItemId);
@@ -72,27 +58,15 @@ public class MarketItemStore : IMarketItemStore
             throw new ArgumentNullException(nameof(marketItem));
         }
 
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync(cancellationToken);
-
-        if (await Retrieve(marketItem.WorldId, marketItem.ItemId, cancellationToken) == null)
-        {
-            await Insert(marketItem, cancellationToken);
-            return;
-        }
-
-        await using var command =
-            new NpgsqlCommand(
-                "UPDATE market_item SET updated = $1 WHERE world_id = $2 AND item_id = $3", conn)
-            {
-                Parameters =
-                {
-                    new NpgsqlParameter<DateTime> { TypedValue = marketItem.LastUploadTime },
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(marketItem.WorldId) },
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(marketItem.ItemId) },
-                },
-            };
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        var results = await _ddbContext
+            .ScanAsync<MarketItem>(new List<ScanCondition> {
+                new ScanCondition("ItemId", ScanOperator.Equal, marketItem.ItemId),
+                new ScanCondition("WorldId", ScanOperator.Equal, marketItem.WorldId),
+            })
+            .GetRemainingAsync(cancellationToken);
+        var match = results.FirstOrDefault() ?? marketItem;
+        match.LastUploadTime = marketItem.LastUploadTime;
+        await _ddbContext.SaveAsync(match, cancellationToken);
 
         // Write through to the cache
         var cache = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
@@ -138,46 +112,30 @@ public class MarketItemStore : IMarketItemStore
         }
 
         // Fetch data from the database
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync(cancellationToken);
-
-        await using var command =
-            new NpgsqlCommand(
-                "SELECT world_id, item_id, updated FROM market_item WHERE world_id = $1 AND item_id = $2", conn)
+        var results = await _ddbContext
+            .ScanAsync<MarketItem>(new List<ScanCondition>
             {
-                Parameters =
-                {
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(worldId) },
-                    new NpgsqlParameter<int> { TypedValue = Convert.ToInt32(itemId) },
-                },
-            };
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        if (!reader.HasRows)
+                new ScanCondition("ItemId", ScanOperator.Equal, itemId),
+                new ScanCondition("WorldId", ScanOperator.Equal, worldId),
+            })
+            .GetRemainingAsync(cancellationToken);
+        var match = results.FirstOrDefault();
+        if (match != null)
         {
             return null;
         }
 
-        await reader.ReadAsync(cancellationToken);
-
-        var newItem = new MarketItem
-        {
-            WorldId = Convert.ToUInt32(reader.GetInt32(0)),
-            ItemId = Convert.ToUInt32(reader.GetInt32(1)),
-            LastUploadTime = (DateTime)reader.GetValue(2),
-        };
-
         // Cache the result
         try
         {
-            await cache.StringSetAsync(cacheKey, newItem.LastUploadTime.ToString());
+            await cache.StringSetAsync(cacheKey, match.LastUploadTime.ToString());
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to store MarketItem \"{MarketItemCacheKey}\" in cache", cacheKey);
         }
 
-        return newItem;
+        return match;
     }
 
     private static string GetCacheKey(uint worldId, uint itemId)
