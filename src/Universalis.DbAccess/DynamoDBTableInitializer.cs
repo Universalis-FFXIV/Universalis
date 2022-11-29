@@ -58,13 +58,27 @@ internal class DynamoDBTableInitializer
                 {
                     new AttributeDefinition("id", ScalarAttributeType.S),
                     new AttributeDefinition("sale_time", ScalarAttributeType.N),
+                    new AttributeDefinition("item_id", ScalarAttributeType.N),
+                    new AttributeDefinition("world_id", ScalarAttributeType.N),
                 },
                 BillingMode = BillingMode.PAY_PER_REQUEST,
-                TableName = "sale",
+                TableName = "sale_entry",
                 KeySchema = new List<KeySchemaElement>
                 {
                     new KeySchemaElement("id", KeyType.HASH),
                     new KeySchemaElement("sale_time", KeyType.RANGE),
+                },
+                GlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
+                {
+                    new GlobalSecondaryIndex
+                    {
+                        IndexName = "sale_entry_item_id_world_id",
+                        KeySchema = new List<KeySchemaElement>
+                        {
+                            new KeySchemaElement("item_id", KeyType.HASH),
+                            new KeySchemaElement("world_id", KeyType.RANGE),
+                        },
+                    }
                 },
             };
 

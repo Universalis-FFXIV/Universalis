@@ -1,7 +1,6 @@
 ﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
-using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
@@ -101,12 +100,16 @@ public class SaleStore : ISaleStore
             conditions.Add(new ScanCondition("SaleTime", ScanOperator.GreaterThanOrEqual, timestamp));
         }
 
-        var scan = _ddbContext.ScanAsync<Sale>(conditions);
+        var query = _ddbContext.QueryAsync<Sale>(itemId, new DynamoDBOperationConfig
+        {
+            IndexName = "sale_entry_item_id_world_id",
+            QueryFilter = conditions,
+        });
 
         var sales = new List<Sale>();
-        while (!scan.IsDone && sales.Count <= count)
+        while (!query.IsDone && sales.Count <= count)
         {
-            var batch = await scan.GetNextSetAsync(cancellationToken);
+            var batch = await query.GetNextSetAsync(cancellationToken);
             foreach (var nextSale in batch)
             {
                 if (sales.Contains(nextSale))
