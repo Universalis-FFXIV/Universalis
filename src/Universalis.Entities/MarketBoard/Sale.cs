@@ -3,7 +3,7 @@ using System;
 
 namespace Universalis.Entities.MarketBoard;
 
-[DynamoDBTable("sale")]
+[DynamoDBTable("sale_entry")]
 public class Sale : IEquatable<Sale>
 {
     [DynamoDBHashKey]
