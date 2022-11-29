@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Universalis.DbAccess.Uploads;
@@ -12,13 +13,13 @@ public class UploadCountHistoryDbAccess : IUploadCountHistoryDbAccess
         _store = store;
     }
 
-    public Task Increment()
+    public Task Increment(CancellationToken cancellationToken = default)
     {
-        return _store.Increment();
+        return _store.Increment(cancellationToken);
     }
 
-    public Task<IList<long>> GetUploadCounts(int stop = -1)
+    public Task<IList<long>> GetUploadCounts(int stop = -1, CancellationToken cancellationToken = default)
     {
-        return _store.GetUploadCounts(stop);
+        return _store.GetUploadCounts(stop, cancellationToken);
     }
 }

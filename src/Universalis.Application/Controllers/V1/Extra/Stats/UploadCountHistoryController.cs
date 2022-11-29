@@ -32,7 +32,10 @@ public class UploadCountHistoryController : ControllerBase
     [ProducesResponseType(typeof(UploadCountHistoryView), 200)]
     public async Task<UploadCountHistoryView> Get(CancellationToken cancellationToken = default)
     {
-        var data = await _uploadCountHistoryDb.GetUploadCounts(29);
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        cts.CancelAfter(5000);
+
+        var data = await _uploadCountHistoryDb.GetUploadCounts(29, cts.Token);
         return new UploadCountHistoryView
         {
             UploadCountByDay = data.Select(Convert.ToDouble).ToList(),

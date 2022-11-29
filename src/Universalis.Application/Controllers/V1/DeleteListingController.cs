@@ -76,8 +76,11 @@ public class DeleteListingController : WorldDcRegionControllerBase
             parameters.UploaderId = Util.BytesToString(await sha256.ComputeHashAsync(uploaderIdStream, cancellationToken));
         }
 
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        cts.CancelAfter(5000);
+
         // Check if this uploader is flagged, cancel if they are
-        if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdSha256 = parameters.UploaderId }, cancellationToken) != null)
+        if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdSha256 = parameters.UploaderId }, cts.Token) != null)
         {
             return Ok("Success");
         }
@@ -87,7 +90,7 @@ public class DeleteListingController : WorldDcRegionControllerBase
         {
             WorldId = worldDc.WorldId,
             ItemId = itemId,
-        }, cancellationToken);
+        }, cts.Token);
         if (itemData == null)
         {
             // No item data; nothing to remove
@@ -115,19 +118,19 @@ public class DeleteListingController : WorldDcRegionControllerBase
             ItemId = itemId,
         };
 
-        await _currentlyShownDb.Update(itemData, query, cancellationToken);
+        await _currentlyShownDb.Update(itemData, query, cts.Token);
 
         await _cache.Delete(new CachedCurrentlyShownQuery
         {
             WorldId = query.WorldId,
             ItemId = query.ItemId,
-        }, cancellationToken);
+        }, cts.Token);
 
         _sockets.Publish(new ListingsRemove
         {
             WorldId = query.WorldId,
             ItemId = query.ItemId,
-            Listings = new List<ListingView> { await Util.ListingToView(listing, cancellationToken) },
+            Listings = new List<ListingView> { await Util.ListingToView(listing, cts.Token) },
         });
 
         return Ok("Success");

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -118,6 +117,10 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
 
         var serializableProperties = BuildSerializableProperties(InputProcessing.ParseFields(fields));
 
+        // Database logic
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        cts.CancelAfter(5000);
+
         if (itemIdsArray.Length == 1)
         {
             var itemId = itemIdsArray[0];
@@ -129,7 +132,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
 
             var (_, currentlyShownView) = await GetCurrentlyShownView(
                 worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds, serializableProperties,
-                cancellationToken);
+                cts.Token);
             return Ok(currentlyShownView);
         }
 
@@ -138,7 +141,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         var currentlyShownViewTasks = itemIdsArray
             .Select(itemId => GetCurrentlyShownView(
                 worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds, itemsSerializableProperties,
-                cancellationToken))
+                cts.Token))
             .ToList();
         var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
         var unresolvedItems = currentlyShownViews
