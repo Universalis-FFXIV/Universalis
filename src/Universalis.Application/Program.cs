@@ -9,6 +9,9 @@ public static class Program
 {
     public static void Main(string[] args)
     {
+        // Increase the initial size of the thread pool
+        ThreadPool.SetMinThreads(100, 100);
+
         var host = CreateHostBuilder(args).Build();
         host.Run();
     }
