@@ -9,10 +9,12 @@ public class Sale : IEquatable<Sale>
     [DynamoDBHashKey("id", typeof(GuidConverter))]
     public Guid Id { get; init; }
 
-    [DynamoDBGlobalSecondaryIndexRangeKey("world_id")]
+    [DynamoDBProperty("world_id")]
+    [DynamoDBGlobalSecondaryIndexRangeKey("sale_entry_item_id_world_id")]
     public uint WorldId { get; init; }
 
-    [DynamoDBGlobalSecondaryIndexHashKey("item_id")]
+    [DynamoDBProperty("item_id")]
+    [DynamoDBGlobalSecondaryIndexHashKey("sale_entry_item_id_world_id")]
     public uint ItemId { get; init; }
 
     [DynamoDBProperty("hq")]
