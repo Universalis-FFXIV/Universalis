@@ -104,10 +104,12 @@ public class MarketItemStore : IMarketItemStore
 
         // Fetch data from the database
         var results = await _ddbContext
-            .ScanAsync<MarketItem>(new List<ScanCondition>
+            .QueryAsync<MarketItem>(itemId, new DynamoDBOperationConfig
             {
-                new ScanCondition("ItemId", ScanOperator.Equal, itemId),
-                new ScanCondition("WorldId", ScanOperator.Equal, worldId),
+                QueryFilter = new List<ScanCondition>
+                {
+                    new ScanCondition("WorldId", ScanOperator.Equal, worldId),
+                },
             })
             .GetRemainingAsync(cancellationToken);
         var match = results.FirstOrDefault();
