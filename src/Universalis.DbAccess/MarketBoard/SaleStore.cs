@@ -1,6 +1,7 @@
 ﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
+using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
@@ -73,23 +74,34 @@ public class SaleStore : ISaleStore
 
     public async Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null, CancellationToken cancellationToken = default)
     {
-        var conditions = new List<ScanCondition>
+        var req = new QueryOperationConfig
         {
-            new ScanCondition("ItemId", ScanOperator.Equal, itemId),
-            new ScanCondition("WorldId", ScanOperator.Equal, worldId),
+            IndexName = "sale_entry_item_id_world_id",
+            KeyExpression = new Expression
+            {
+                ExpressionStatement = "item_id = :v_item_id and world_id = :v_world_id",
+                ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+                {
+                    { ":v_item_id", new Primitive { Type = DynamoDBEntryType.Numeric, Value = itemId.ToString() } },
+                    { ":v_world_id", new Primitive { Type = DynamoDBEntryType.Numeric, Value = worldId.ToString() } },
+                },
+            },
         };
 
         if (from != null)
         {
             var timestamp = new DateTimeOffset(from.Value).ToUnixTimeMilliseconds();
-            conditions.Add(new ScanCondition("SaleTime", ScanOperator.GreaterThanOrEqual, timestamp));
+            req.FilterExpression = new Expression
+            {
+                ExpressionStatement = "sale_time >= :v_sale_time",
+                ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
+                {
+                    { ":v_sale_time", new Primitive { Type = DynamoDBEntryType.Numeric, Value = timestamp.ToString() } },
+                },
+            };
         }
 
-        var query = _ddbContext.QueryAsync<Sale>(itemId, new DynamoDBOperationConfig
-        {
-            IndexName = "sale_entry_item_id_world_id",
-            QueryFilter = conditions,
-        });
+        var query = _ddbContext.FromQueryAsync<Sale>(req);
 
         var sales = new List<Sale>();
         try
