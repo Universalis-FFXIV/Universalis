@@ -1,7 +1,6 @@
 ﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
-using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
@@ -47,6 +46,11 @@ public class SaleStore : ISaleStore
         {
             _logger.LogError(e, "Failed to insert sale (world={WorldId}, item={ItemId})", sale.WorldId, sale.ItemId);
         }
+
+        // Purge the cache
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
+        var cacheIndexKey = GetIndexCacheKey(sale.WorldId, sale.ItemId);
+        await cache.KeyDeleteAsync(cacheIndexKey, CommandFlags.FireAndForget);
     }
 
     public async Task InsertMany(IEnumerable<Sale> sales, CancellationToken cancellationToken = default)
@@ -56,10 +60,20 @@ public class SaleStore : ISaleStore
             throw new ArgumentNullException(nameof(sales));
         }
 
+        var purgedCaches = new Dictionary<string, bool>();
         var batch = _ddbContext.CreateBatchWrite<Sale>();
         foreach (var sale in sales)
         {
             batch.AddPutItem(sale);
+
+            // Purge the cache
+            var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
+            var cacheIndexKey = GetIndexCacheKey(sale.WorldId, sale.ItemId);
+            if (!purgedCaches.TryGetValue(cacheIndexKey, out var purged) || !purged)
+            {
+                await cache.KeyDeleteAsync(cacheIndexKey, CommandFlags.FireAndForget);
+                purgedCaches[cacheIndexKey] = true;
+            }
         }
 
         try
@@ -74,6 +88,21 @@ public class SaleStore : ISaleStore
 
     public async Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null, CancellationToken cancellationToken = default)
     {
+        // Try retrieving data from the cache
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
+        var cacheIndexKey = GetIndexCacheKey(worldId, itemId);
+        if (from == null && count <= MaxCachedSales)
+        {
+            var cachedSales = await FetchSalesFromCache(cache, cacheIndexKey, worldId, itemId, count);
+            if (cachedSales.Any())
+            {
+                return cachedSales;
+            }
+        }
+
+        // Fetch data from the database
+        // All of this extra query setup needs to be done because this
+        // queries a global secondary index.
         var req = new QueryOperationConfig
         {
             IndexName = "sale_entry_item_id_world_id",
@@ -129,6 +158,12 @@ public class SaleStore : ISaleStore
             .Take(count)
             .OrderByDescending(sale => sale.SaleTime)
             .ToList();
+
+        // Store the results in the cache
+        if (results.Count >= MaxCachedSales)
+        {
+            await CacheSales(cache, cacheIndexKey, results);
+        }
 
         return results;
     }
