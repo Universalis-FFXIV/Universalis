@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -13,14 +14,14 @@ public class CurrentlyShownDbAccessTests
     {
         private readonly Dictionary<(uint, uint), CurrentlyShown> _currentlyShown = new();
         
-        public Task<CurrentlyShown> GetData(uint worldId, uint itemId)
+        public Task<CurrentlyShown> GetData(uint worldId, uint itemId, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(_currentlyShown.TryGetValue((worldId, itemId), out var data)
                 ? data
                 : new CurrentlyShown());
         }
 
-        public Task SetData(CurrentlyShown data)
+        public Task SetData(CurrentlyShown data, CancellationToken cancellationToken = default)
         {
             _currentlyShown[(data.WorldId, data.ItemId)] = data;
             return Task.CompletedTask;

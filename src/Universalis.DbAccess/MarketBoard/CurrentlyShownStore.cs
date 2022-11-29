@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
@@ -18,10 +18,10 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _redis = redis;
     }
 
-    public async Task<CurrentlyShown> GetData(uint worldId, uint itemId)
+    public async Task<CurrentlyShown> GetData(uint worldId, uint itemId, CancellationToken cancellationToken = default)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
-        var result = await FetchData(db, worldId, itemId);
+        var result = await FetchData(db, worldId, itemId, cancellationToken);
         if (result == null)
         {
             return new CurrentlyShown();
@@ -30,7 +30,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         return result;
     }
 
-    public async Task SetData(CurrentlyShown data)
+    public async Task SetData(CurrentlyShown data, CancellationToken cancellationToken = default)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
         await StoreData(db, data);
@@ -68,11 +68,11 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         await trans.ExecuteAsync();
     }
     
-    private static async Task<long> EnsureLastUpdated(IDatabase db, uint worldId, uint itemId)
+    private static async Task<RedisValue> EnsureLastUpdated(IDatabase db, uint worldId, uint itemId)
     {
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
         await db.StringSetAsync(lastUpdatedKey, 0, when: When.NotExists);
-        return (long)await db.StringGetAsync(lastUpdatedKey);
+        return await db.StringGetAsync(lastUpdatedKey);
     }
     
     private static void SetLastUpdatedAtomic(ITransaction trans, uint worldId, uint itemId, long timestamp, TimeSpan? expiry = null)
@@ -94,18 +94,16 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _ = trans.StringSetAsync(sourceKey, source, expiry);
     }
 
-    private static async Task<CurrentlyShown> FetchData(IDatabase db, uint worldId, uint itemId)
+    private static async Task<CurrentlyShown> FetchData(IDatabase db, uint worldId, uint itemId, CancellationToken cancellationToken = default)
     {
-        var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
-        if (!await db.KeyExistsAsync(lastUpdatedKey, flags: CommandFlags.PreferReplica))
+        var lastUpdated = await EnsureLastUpdated(db, worldId, itemId);
+        if (lastUpdated.IsNullOrEmpty || (long)lastUpdated == 0)
         {
             return null;
         }
 
-        var lastUpdated = await EnsureLastUpdated(db, worldId, itemId);
-
         var sourceTask = GetSource(db, worldId, itemId);
-        var listingsTask = GetListings(db, worldId, itemId);
+        var listingsTask = GetListings(db, worldId, itemId, cancellationToken);
         await Task.WhenAll(sourceTask, listingsTask);
 
         var source = await sourceTask;
@@ -115,25 +113,26 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         {
             WorldId = worldId,
             ItemId = itemId,
-            LastUploadTimeUnixMilliseconds = lastUpdated,
+            LastUploadTimeUnixMilliseconds = (long)lastUpdated,
             UploadSource = source,
-            Listings = listings.ToList(),
+            Listings = listings,
         };
     }
 
-    private static async Task<Listing[]> GetListings(IDatabaseAsync db, uint worldId, uint itemId)
+    private static async Task<List<Listing>> GetListings(IDatabaseAsync db, uint worldId, uint itemId, CancellationToken cancellationToken = default)
     {
         var listingsKey = GetListingsIndexKey(worldId, itemId);
         
         var listingIdsRaw = await db.StringGetAsync(listingsKey, flags: CommandFlags.PreferReplica);
         if (listingIdsRaw.IsNullOrEmpty)
         {
-            return Array.Empty<Listing>();
+            return new List<Listing>(0);
         }
 
         var listingIds = ParseObjectIds(listingIdsRaw);
-        var listingFetches = listingIds
-            .Select(async id =>
+        return await listingIds
+            .ToAsyncEnumerable()
+            .SelectAwait(async id =>
             {
                 var listingKey = GetListingKey(worldId, itemId, id);
                 var listingEntries = await db.HashGetAllAsync(listingKey, flags: CommandFlags.PreferReplica);
@@ -155,9 +154,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                     SellerId = GetValueString(listing, "sid"),
                     Materia = GetValueMateriaArray(listing, "mat"),
                 };
-            });
-        
-        return await Task.WhenAll(listingFetches);
+            })
+            .ToListAsync(cancellationToken);
     }
     
     private static void SetListingsAtomic(ITransaction trans, uint worldId, uint itemId, IEnumerable<Guid> existingListingIds, IList<Listing> listings, TimeSpan? expiry = null)
@@ -253,7 +251,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
     private static IEnumerable<Guid> ParseObjectIds(RedisValue v)
     {
-        if (v.IsNull)
+        if (v.IsNullOrEmpty)
         {
             return Enumerable.Empty<Guid>();
         }
