@@ -12,34 +12,14 @@ namespace Universalis.DbAccess.MarketBoard;
 public class CurrentlyShownStore : ICurrentlyShownStore
 {
     private readonly IPersistentRedisMultiplexer _redis;
-    private readonly ICacheRedisMultiplexer _cache;
-    private readonly ILogger<CurrentlyShownStore> _logger;
 
-    public CurrentlyShownStore(IPersistentRedisMultiplexer redis, ICacheRedisMultiplexer cache, ILogger<CurrentlyShownStore> logger)
+    public CurrentlyShownStore(IPersistentRedisMultiplexer redis)
     {
         _redis = redis;
-        _cache = cache;
-        _logger = logger;
     }
 
     public async Task<CurrentlyShown> GetData(uint worldId, uint itemId)
     {
-        // Try to fetch data from the cache
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.Listings);
-        try
-        {
-            var cachedObject = await FetchData(cache, worldId, itemId);
-            if (cachedObject != null)
-            {
-                return cachedObject;
-            }
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to retrieve currently shown data from the cache (world={WorldId}, item={ItemId})", worldId, itemId);
-        }
-
-        // Fetch data from the database
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
         var result = await FetchData(db, worldId, itemId);
         if (result == null)
@@ -47,18 +27,13 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             return new CurrentlyShown();
         }
 
-        // Store the result in the cache
-        await StoreData(cache, result, TimeSpan.FromSeconds(30));
-
         return result;
     }
 
     public async Task SetData(CurrentlyShown data)
     {
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.Listings);
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
         await StoreData(db, data);
-        await StoreData(cache, data, TimeSpan.FromSeconds(30));
     }
 
     private static async Task StoreData(IDatabase db, CurrentlyShown data, TimeSpan? expiry = null)
