@@ -57,7 +57,7 @@ public class DbFixture : IAsyncLifetime
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile(
-                 path: "appsettings.json",
+                 path: "appsettings.Testing.json",
                  optional: false,
                  reloadOnChange: true)
             .AddInMemoryCollection(new Dictionary<string, string>
