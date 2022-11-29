@@ -131,14 +131,15 @@ public class MarketItemStore : IMarketItemStore
             })
             .GetRemainingAsync(cancellationToken);
             match = results.FirstOrDefault();
-            if (match == null)
-            {
-                return null;
-            }
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to retrieve market item (world={WorldId}, item={ItemId})", worldId, itemId);
+        }
+
+        if (match == null)
+        {
+            return null;
         }
 
         // Cache the result
