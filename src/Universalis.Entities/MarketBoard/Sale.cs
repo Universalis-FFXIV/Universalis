@@ -6,14 +6,13 @@ namespace Universalis.Entities.MarketBoard;
 [DynamoDBTable("sale_entry")]
 public class Sale : IEquatable<Sale>
 {
-    [DynamoDBHashKey]
-    [DynamoDBProperty("id", typeof(GuidConverter))]
+    [DynamoDBHashKey("id", typeof(GuidConverter))]
     public Guid Id { get; init; }
 
-    [DynamoDBProperty("world_id")]
+    [DynamoDBGlobalSecondaryIndexRangeKey("world_id")]
     public uint WorldId { get; init; }
 
-    [DynamoDBProperty("item_id")]
+    [DynamoDBGlobalSecondaryIndexHashKey("item_id")]
     public uint ItemId { get; init; }
 
     [DynamoDBProperty("hq")]
@@ -34,8 +33,7 @@ public class Sale : IEquatable<Sale>
     [DynamoDBProperty("on_mannequin")]
     public bool? OnMannequin { get; init; }
 
-    [DynamoDBRangeKey]
-    [DynamoDBProperty("sale_time", typeof(UnixMsDateTimeConverter))]
+    [DynamoDBRangeKey("sale_time", typeof(UnixMsDateTimeConverter))]
     public DateTime SaleTime { get; init; }
 
     [DynamoDBProperty("uploader_id")]
