@@ -98,6 +98,7 @@ public class Startup
         services.AddControllers(options =>
         {
             options.Filters.Add<DecoderFallbackExceptionFilter>();
+            options.Filters.Add<InvalidOperationExceptionFilter>();
             options.Filters.Add<OperationCancelledExceptionFilter>();
         }).AddJsonOptions(options => {
             options.JsonSerializerOptions.Converters.Add(new PartiallySerializableJsonConverterFactory());
