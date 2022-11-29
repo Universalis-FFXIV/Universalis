@@ -113,7 +113,7 @@ public class MarketItemStore : IMarketItemStore
             })
             .GetRemainingAsync(cancellationToken);
         var match = results.FirstOrDefault();
-        if (match != null)
+        if (match == null)
         {
             return null;
         }
