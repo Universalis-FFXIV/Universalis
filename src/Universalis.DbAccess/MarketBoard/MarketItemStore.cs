@@ -125,7 +125,7 @@ public class MarketItemStore : IMarketItemStore
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to store MarketItem \"{MarketItemCacheKey}\" in cache", cacheKey);
+            _logger.LogError(e, "Failed to store MarketItem \"{MarketItemCacheKey}\" in cache (t={LastUploadTime})", cacheKey, match.LastUploadTime);
         }
 
         return match;
