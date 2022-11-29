@@ -16,12 +16,12 @@ public class CurrentlyShownDbAccess : ICurrentlyShownDbAccess
 
     public async Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
     {
-        var data = await _store.GetData(query.WorldId, query.ItemId);
+        var data = await _store.GetData(query.WorldId, query.ItemId, cancellationToken);
         return data.LastUploadTimeUnixMilliseconds == 0 ? null : data;
     }
 
     public Task Update(CurrentlyShown document, CurrentlyShownQuery query, CancellationToken cancellationToken = default)
     {
-        return _store.SetData(document);
+        return _store.SetData(document, cancellationToken);
     }
 }
