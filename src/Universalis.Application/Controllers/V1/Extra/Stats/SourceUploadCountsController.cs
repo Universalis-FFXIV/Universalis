@@ -32,7 +32,10 @@ public class SourceUploadCountsController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<SourceUploadCountView>), 200)]
     public async Task<IEnumerable<SourceUploadCountView>> Get(CancellationToken cancellationToken = default)
     {
-        var data = await _trustedSourceDb.GetUploaderCounts(cancellationToken);
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        cts.CancelAfter(5000);
+
+        var data = await _trustedSourceDb.GetUploaderCounts(cts.Token);
         return data
             .Select(d => new SourceUploadCountView
             {

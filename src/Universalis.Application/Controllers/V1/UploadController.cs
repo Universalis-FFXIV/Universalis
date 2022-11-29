@@ -69,8 +69,11 @@ public class UploadController : ControllerBase
             parameters.UploaderId = Util.BytesToString(await sha256.ComputeHashAsync(uploaderIdStream, cancellationToken));
         }
 
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        cts.CancelAfter(5000);
+
         // Check if this uploader is flagged, cancel if they are
-        if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdSha256 = parameters.UploaderId }, cancellationToken) !=
+        if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdSha256 = parameters.UploaderId }, cts.Token) !=
             null)
         {
             return Ok("Success");
@@ -81,7 +84,7 @@ public class UploadController : ControllerBase
         {
             if (!uploadBehavior.ShouldExecute(parameters)) continue;
             
-            var actionResult = await uploadBehavior.Execute(source, parameters, cancellationToken);
+            var actionResult = await uploadBehavior.Execute(source, parameters, cts.Token);
             if (actionResult != null)
             {
                 return actionResult;
@@ -94,7 +97,7 @@ public class UploadController : ControllerBase
             await Task.WhenAll(_uploadBehaviors
                 .Where(b => b.GetType().GetCustomAttribute<ValidatorAttribute>() == null)
                 .Where(b => b.ShouldExecute(parameters))
-                .Select(b => b.Execute(source, parameters, cancellationToken)));
+                .Select(b => b.Execute(source, parameters, cts.Token)));
         }
         catch (Exception e)
         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Uploads;
 using Xunit;
@@ -14,7 +15,7 @@ public class UploadCountHistoryDbAccessTests
         private readonly List<long> _counts = new();
         private long _lastPush;
         
-        public Task Increment()
+        public Task Increment(CancellationToken cancellationToken = default)
         {
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             if (now - _lastPush > 86400000)
@@ -28,7 +29,7 @@ public class UploadCountHistoryDbAccessTests
             return Task.CompletedTask;
         }
 
-        public Task<IList<long>> GetUploadCounts(int stop = -1)
+        public Task<IList<long>> GetUploadCounts(int stop = -1, CancellationToken cancellationToken = default)
         {
             var en = _counts;
             if (stop > -1)
