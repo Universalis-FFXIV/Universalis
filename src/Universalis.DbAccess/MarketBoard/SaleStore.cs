@@ -27,7 +27,6 @@ public class SaleStore : ISaleStore
     {
         _dynamoDb = dynamoDb;
         _ddbContext = new DynamoDBContext(_dynamoDb);
-
         _cache = cache;
         _logger = logger;
     }
@@ -39,12 +38,14 @@ public class SaleStore : ISaleStore
             throw new ArgumentNullException(nameof(sale));
         }
 
-        await _ddbContext.SaveAsync(sale, cancellationToken);
-
-        // Purge the cache
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
-        var cacheIndexKey = GetIndexCacheKey(sale.WorldId, sale.ItemId);
-        await cache.KeyDeleteAsync(cacheIndexKey, CommandFlags.FireAndForget);
+        try
+        {
+            await _ddbContext.SaveAsync(sale, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to insert sale (world={WorldId}, item={ItemId})", sale.WorldId, sale.ItemId);
+        }
     }
 
     public async Task InsertMany(IEnumerable<Sale> sales, CancellationToken cancellationToken = default)
@@ -54,40 +55,24 @@ public class SaleStore : ISaleStore
             throw new ArgumentNullException(nameof(sales));
         }
 
-        var purgedCaches = new Dictionary<string, bool>();
         var batch = _ddbContext.CreateBatchWrite<Sale>();
         foreach (var sale in sales)
         {
             batch.AddPutItem(sale);
-
-            // Purge the cache
-            var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
-            var cacheIndexKey = GetIndexCacheKey(sale.WorldId, sale.ItemId);
-            if (!purgedCaches.TryGetValue(cacheIndexKey, out var purged) || !purged)
-            {
-                await cache.KeyDeleteAsync(cacheIndexKey, CommandFlags.FireAndForget);
-                purgedCaches[cacheIndexKey] = true;
-            }
         }
 
-        await batch.ExecuteAsync(cancellationToken);
+        try
+        {
+            await batch.ExecuteAsync(cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to insert sales");
+        }
     }
 
     public async Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null, CancellationToken cancellationToken = default)
     {
-        // Try retrieving data from the cache
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
-        var cacheIndexKey = GetIndexCacheKey(worldId, itemId);
-        if (from == null && count <= MaxCachedSales)
-        {
-            var cachedSales = await FetchSalesFromCache(cache, cacheIndexKey, worldId, itemId, count);
-            if (cachedSales.Any())
-            {
-                return cachedSales;
-            }
-        }
-
-        // Fetch data from the database
         var conditions = new List<ScanCondition>
         {
             new ScanCondition("ItemId", ScanOperator.Equal, itemId),
@@ -107,30 +92,31 @@ public class SaleStore : ISaleStore
         });
 
         var sales = new List<Sale>();
-        while (!query.IsDone && sales.Count <= count)
+        try
         {
-            var batch = await query.GetNextSetAsync(cancellationToken);
-            foreach (var nextSale in batch)
+            while (!query.IsDone && sales.Count <= count)
             {
-                if (sales.Contains(nextSale))
+                var batch = await query.GetNextSetAsync(cancellationToken);
+                foreach (var nextSale in batch)
                 {
-                    continue;
-                }
+                    if (sales.Contains(nextSale))
+                    {
+                        continue;
+                    }
 
-                sales.Add(nextSale);
+                    sales.Add(nextSale);
+                }
             }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to retrieve sales (world={WorldId}, item={ItemId})", worldId, itemId);
         }
 
         var results = sales
             .Take(count)
             .OrderByDescending(sale => sale.SaleTime)
             .ToList();
-
-        // Store the results in the cache
-        if (results.Count >= MaxCachedSales)
-        {
-            await CacheSales(cache, cacheIndexKey, results);
-        }
 
         return results;
     }
