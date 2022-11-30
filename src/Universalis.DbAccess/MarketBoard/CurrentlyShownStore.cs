@@ -9,55 +9,31 @@ using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
 
-public class CurrentlyShownStore : ICurrentlyShownStore, IDisposable
+public class CurrentlyShownStore : ICurrentlyShownStore
 {
-    private readonly IDatabase _db;
-    private readonly SemaphoreSlim _lock;
+    private readonly IPersistentRedisMultiplexer _redis;
 
     public CurrentlyShownStore(IPersistentRedisMultiplexer redis)
     {
-        _db = redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
-        _lock = new SemaphoreSlim(500, 500);
+        _redis = redis;
     }
 
     public async Task<CurrentlyShown> GetData(uint worldId, uint itemId, CancellationToken cancellationToken = default)
     {
-        if (!await _lock.WaitAsync(2000, cancellationToken))
+        var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
+        var result = await FetchData(db, worldId, itemId, cancellationToken);
+        if (result == null)
         {
             return new CurrentlyShown();
         }
 
-        try
-        {
-            var result = await FetchData(_db, worldId, itemId, cancellationToken);
-            if (result == null)
-            {
-                return new CurrentlyShown();
-            }
-
-            return result;
-        }
-        finally
-        {
-            _lock.Release();
-        }
+        return result;
     }
 
     public async Task SetData(CurrentlyShown data, CancellationToken cancellationToken = default)
     {
-        if (!await _lock.WaitAsync(2000, cancellationToken))
-        {
-            throw new InvalidOperationException("The semaphore timed out.");
-        }
-
-        try
-        {
-            await StoreData(_db, data);
-        }
-        finally
-        {
-            _lock.Release();
-        }
+        var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
+        await StoreData(db, data);
     }
 
     private static async Task StoreData(IDatabase db, CurrentlyShown data, TimeSpan? expiry = null)
@@ -91,27 +67,27 @@ public class CurrentlyShownStore : ICurrentlyShownStore, IDisposable
         // was written first and move on.
         await trans.ExecuteAsync();
     }
-    
+
     private static async Task<RedisValue> EnsureLastUpdated(IDatabase db, uint worldId, uint itemId)
     {
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
         await db.StringSetAsync(lastUpdatedKey, 0, when: When.NotExists);
         return await db.StringGetAsync(lastUpdatedKey);
     }
-    
+
     private static void SetLastUpdatedAtomic(ITransaction trans, uint worldId, uint itemId, long timestamp, TimeSpan? expiry = null)
     {
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
         _ = trans.StringSetAsync(lastUpdatedKey, timestamp, expiry);
     }
-    
+
     private static async Task<string> GetSource(IDatabaseAsync db, uint worldId, uint itemId)
     {
         var sourceKey = GetUploadSourceKey(worldId, itemId);
         var source = await db.StringGetAsync(sourceKey, flags: CommandFlags.PreferReplica);
         return source;
     }
-    
+
     private static void SetSourceAtomic(ITransaction trans, uint worldId, uint itemId, string source, TimeSpan? expiry = null)
     {
         var sourceKey = GetUploadSourceKey(worldId, itemId);
@@ -146,7 +122,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore, IDisposable
     private static async Task<List<Listing>> GetListings(IDatabaseAsync db, uint worldId, uint itemId, CancellationToken cancellationToken = default)
     {
         var listingsKey = GetListingsIndexKey(worldId, itemId);
-        
+
         var listingIdsRaw = await db.StringGetAsync(listingsKey, flags: CommandFlags.PreferReplica);
         if (listingIdsRaw.IsNullOrEmpty)
         {
@@ -181,24 +157,24 @@ public class CurrentlyShownStore : ICurrentlyShownStore, IDisposable
             })
             .ToListAsync(cancellationToken);
     }
-    
+
     private static void SetListingsAtomic(ITransaction trans, uint worldId, uint itemId, IEnumerable<Guid> existingListingIds, IList<Listing> listings, TimeSpan? expiry = null)
     {
         var listingsKey = GetListingsIndexKey(worldId, itemId);
-        
+
         // Delete the existing listings
         foreach (var listingId in existingListingIds)
         {
             var listingKey = GetListingKey(worldId, itemId, listingId);
             _ = trans.KeyDeleteAsync(listingKey);
         }
-        
+
         // Set the updated listings
         var newListingIds = listings.Select(_ => Guid.NewGuid()).ToList();
         foreach (var (listing, listingId) in listings.Zip(newListingIds))
         {
             var listingKey = GetListingKey(worldId, itemId, listingId);
-            _ = trans.HashSetAsync(listingKey, new []
+            _ = trans.HashSetAsync(listingKey, new[]
             {
                 new HashEntry("id", listing.ListingId ?? ""),
                 new HashEntry("hq", listing.Hq),
@@ -217,21 +193,21 @@ public class CurrentlyShownStore : ICurrentlyShownStore, IDisposable
             });
             _ = trans.KeyExpireAsync(listingKey, expiry);
         }
-        
+
         // Update the listings index
         _ = trans.StringSetAsync(listingsKey, SerializeObjectIds(newListingIds), expiry);
     }
-    
+
     private static uint GetValueUInt32(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? (uint)hash[key] : 0;
     }
-    
+
     private static int GetValueInt32(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? (int)hash[key] : 0;
     }
-    
+
     private static long GetValueInt64(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? (long)hash[key] : 0;
@@ -241,12 +217,12 @@ public class CurrentlyShownStore : ICurrentlyShownStore, IDisposable
     {
         return hash.ContainsKey(key) && (bool)hash[key];
     }
-    
+
     private static string GetValueString(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? hash[key] : "";
     }
-    
+
     private static List<Materia> GetValueMateriaArray(IDictionary<RedisValue, RedisValue> hash, string key)
     {
         return hash.ContainsKey(key) ? ParseMateria(hash[key]).ToList() : new List<Materia>();
@@ -288,7 +264,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore, IDisposable
     {
         return string.Join(':', materia.Select(m => $"{m.MateriaId}-{m.SlotId}"));
     }
-    
+
     private static string SerializeObjectIds(IEnumerable<Guid> ids)
     {
         return string.Join(':', ids.Select(id => id.ToString()));
@@ -303,20 +279,14 @@ public class CurrentlyShownStore : ICurrentlyShownStore, IDisposable
     {
         return $"{worldId}:{itemId}:LastUpdated";
     }
-    
+
     private static string GetListingsIndexKey(uint worldId, uint itemId)
     {
         return $"{worldId}:{itemId}:Listings";
     }
-    
+
     private static string GetListingKey(uint worldId, uint itemId, Guid listingId)
     {
         return $"{worldId}:{itemId}:Listings:{listingId}";
-    }
-
-    public void Dispose()
-    {
-        _lock.Dispose();
-        GC.SuppressFinalize(this);
     }
 }
