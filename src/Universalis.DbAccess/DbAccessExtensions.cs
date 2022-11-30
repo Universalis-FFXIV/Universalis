@@ -34,8 +34,12 @@ public static class DbAccessExtensions
 
         DynamoDBTableInitializer.InitializeTables(dynamoDb).GetAwaiter().GetResult();
 
-        var cache = ConnectionMultiplexer.Connect(redisCacheConnectionString);
-        var db = ConnectionMultiplexer.Connect(redisConnectionString);
+        var cacheOptions = ConfigurationOptions.Parse(redisCacheConnectionString);
+        cacheOptions.SocketManager = SocketManager.ThreadPool;
+        var cache = ConnectionMultiplexer.Connect(cacheOptions);
+        var dbOptions = ConfigurationOptions.Parse(redisConnectionString);
+        dbOptions.SocketManager = SocketManager.ThreadPool;
+        var db = ConnectionMultiplexer.Connect(dbOptions);
         sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(cache));
         sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(db));
 
