@@ -38,7 +38,7 @@ public static class DbAccessExtensions
         var cacheOptions = ConfigurationOptions.Parse(redisCacheConnectionString);
         var cache = Enumerable.Range(0, 3).Select(_ => ConnectionMultiplexer.Connect(cacheOptions)).ToArray();
         var dbOptions = ConfigurationOptions.Parse(redisConnectionString);
-        var db = Enumerable.Range(0, 5).Select(_ => ConnectionMultiplexer.Connect(dbOptions)).ToArray();
+        var db = Enumerable.Range(0, 8).Select(_ => ConnectionMultiplexer.Connect(dbOptions)).ToArray();
         sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(cache));
         sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(db));
 
