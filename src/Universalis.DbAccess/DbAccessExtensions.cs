@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
 using System;
+using System.Linq;
 using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Uploads;
@@ -35,13 +36,11 @@ public static class DbAccessExtensions
         DynamoDBTableInitializer.InitializeTables(dynamoDb).GetAwaiter().GetResult();
 
         var cacheOptions = ConfigurationOptions.Parse(redisCacheConnectionString);
-        var cache = ConnectionMultiplexer.Connect(cacheOptions);
+        var cache = Enumerable.Range(0, 3).Select(_ => ConnectionMultiplexer.Connect(cacheOptions)).ToArray();
         var dbOptions = ConfigurationOptions.Parse(redisConnectionString);
-        var db1 = ConnectionMultiplexer.Connect(dbOptions);
-        var db2 = ConnectionMultiplexer.Connect(dbOptions);
-        var db3 = ConnectionMultiplexer.Connect(dbOptions);
+        var db = Enumerable.Range(0, 5).Select(_ => ConnectionMultiplexer.Connect(dbOptions)).ToArray();
         sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(cache));
-        sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(db1, db2, db3));
+        sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(db));
 
         sc.AddSingleton<IWorldItemUploadStore, WorldItemUploadStore>();
         sc.AddSingleton<IMostRecentlyUpdatedDbAccess, MostRecentlyUpdatedDbAccess>();
