@@ -16,15 +16,16 @@ internal class WrappedRedisMultiplexer : ICacheRedisMultiplexer, IPersistentRedi
 
     IDatabase ICacheRedisMultiplexer.GetDatabase(int db, object asyncObject)
     {
-        var muxIdx = Interlocked.Exchange(ref _next, _next++ % _connectionMultiplexers.Length);
-        var mux = _connectionMultiplexers[muxIdx];
+        // No, this isn't thread-safe.
+        var mux = _connectionMultiplexers[_next];
+        _next = _next++ % _connectionMultiplexers.Length;
         return mux.GetDatabase(db, asyncObject);
     }
 
     IDatabase IPersistentRedisMultiplexer.GetDatabase(int db, object asyncObject)
     {
-        var muxIdx = Interlocked.Exchange(ref _next, _next++ % _connectionMultiplexers.Length);
-        var mux = _connectionMultiplexers[muxIdx];
+        var mux = _connectionMultiplexers[_next];
+        _next = _next++ % _connectionMultiplexers.Length;
         return mux.GetDatabase(db, asyncObject);
     }
 }
