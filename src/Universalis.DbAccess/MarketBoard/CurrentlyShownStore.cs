@@ -11,17 +11,16 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public class CurrentlyShownStore : ICurrentlyShownStore
 {
-    private readonly IPersistentRedisMultiplexer _redis;
+    private readonly IDatabase _db;
 
     public CurrentlyShownStore(IPersistentRedisMultiplexer redis)
     {
-        _redis = redis;
+        _db = redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
     }
 
     public async Task<CurrentlyShown> GetData(uint worldId, uint itemId, CancellationToken cancellationToken = default)
     {
-        var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
-        var result = await FetchData(db, worldId, itemId, cancellationToken);
+        var result = await FetchData(_db, worldId, itemId, cancellationToken);
         if (result == null)
         {
             return new CurrentlyShown();
@@ -32,8 +31,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
     public async Task SetData(CurrentlyShown data, CancellationToken cancellationToken = default)
     {
-        var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
-        await StoreData(db, data);
+        await StoreData(_db, data);
     }
 
     private static async Task StoreData(IDatabase db, CurrentlyShown data, TimeSpan? expiry = null)
