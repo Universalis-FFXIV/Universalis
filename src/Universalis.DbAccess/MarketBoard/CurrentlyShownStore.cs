@@ -9,17 +9,24 @@ using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
 
-public class CurrentlyShownStore : ICurrentlyShownStore
+public class CurrentlyShownStore : ICurrentlyShownStore, IDisposable
 {
     private readonly IDatabase _db;
+    private readonly SemaphoreSlim _lock;
 
     public CurrentlyShownStore(IPersistentRedisMultiplexer redis)
     {
         _db = redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
+        _lock = new SemaphoreSlim(500, 500);
     }
 
     public async Task<CurrentlyShown> GetData(uint worldId, uint itemId, CancellationToken cancellationToken = default)
     {
+        if (!await _lock.WaitAsync(2000, cancellationToken))
+        {
+            return new CurrentlyShown();
+        }
+
         var result = await FetchData(_db, worldId, itemId, cancellationToken);
         if (result == null)
         {
@@ -31,6 +38,11 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
     public async Task SetData(CurrentlyShown data, CancellationToken cancellationToken = default)
     {
+        if (!await _lock.WaitAsync(2000, cancellationToken))
+        {
+            throw new InvalidOperationException("The semaphore timed out.");
+        }
+
         await StoreData(_db, data);
     }
 
@@ -286,5 +298,11 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     private static string GetListingKey(uint worldId, uint itemId, Guid listingId)
     {
         return $"{worldId}:{itemId}:Listings:{listingId}";
+    }
+
+    public void Dispose()
+    {
+        _lock.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
