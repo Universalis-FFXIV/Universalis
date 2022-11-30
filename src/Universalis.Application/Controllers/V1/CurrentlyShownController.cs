@@ -118,9 +118,6 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         var serializableProperties = BuildSerializableProperties(InputProcessing.ParseFields(fields));
 
         // Database logic
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(5000);
-
         if (itemIdsArray.Length == 1)
         {
             var itemId = itemIdsArray[0];
@@ -132,7 +129,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
 
             var (_, currentlyShownView) = await GetCurrentlyShownView(
                 worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds, serializableProperties,
-                cts.Token);
+                cancellationToken);
             return Ok(currentlyShownView);
         }
 
@@ -141,7 +138,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         var currentlyShownViewTasks = itemIdsArray
             .Select(itemId => GetCurrentlyShownView(
                 worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds, itemsSerializableProperties,
-                cts.Token))
+                cancellationToken))
             .ToList();
         var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
         var unresolvedItems = currentlyShownViews

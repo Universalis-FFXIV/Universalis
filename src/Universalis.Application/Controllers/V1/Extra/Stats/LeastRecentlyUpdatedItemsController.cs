@@ -68,12 +68,9 @@ public class LeastRecentlyUpdatedItemsController : WorldDcRegionControllerBase
             count = Math.Min(Math.Max(0, queryCount), 200);
         }
 
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(5000);
-
         var documents = await _mostRecentlyUpdatedDb.GetAllLeastRecent(
             new MostRecentlyUpdatedManyQuery { WorldIds = worldIds, Count = Convert.ToInt32(count * 1.5) },
-            cts.Token);
+            cancellationToken);
 
         var marketable = GameData.MarketableItemIds();
         var worlds = GameData.AvailableWorlds();
