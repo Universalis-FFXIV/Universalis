@@ -77,7 +77,7 @@ public class DeleteListingController : WorldDcRegionControllerBase
         }
 
         // Check if this uploader is flagged, cancel if they are
-        if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdSha256 = parameters.UploaderId }, cancellationToken) != null)
+        if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdSha256 = parameters.UploaderId }, cts.Token) != null)
         {
             return Ok("Success");
         }
