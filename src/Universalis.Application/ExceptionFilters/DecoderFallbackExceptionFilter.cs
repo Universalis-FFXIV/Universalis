@@ -17,8 +17,7 @@ public class DecoderFallbackExceptionFilter : IExceptionFilter
     public void OnException(ExceptionContext context)
     {
         if (context.Exception is not DecoderFallbackException) return;
-        _logger.LogInformation("Failed to translate bytes from specified code page to Unicode");
-        context.ExceptionHandled = true;
+        _logger.LogWarning("Failed to translate bytes from specified code page to Unicode");
         // It may be insecure to just dump in the exception message, so we'll
         // just assume it's always something like this... hopefully.
         context.Result = new BadRequestObjectResult(

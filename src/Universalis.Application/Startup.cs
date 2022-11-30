@@ -111,6 +111,7 @@ public class Startup
             options.Filters.Add<DecoderFallbackExceptionFilter>();
             options.Filters.Add<InvalidOperationExceptionFilter>();
             options.Filters.Add<OperationCancelledExceptionFilter>();
+            options.Filters.Add<TaskCanceledExceptionFilter>();
         }).AddJsonOptions(options => {
             options.JsonSerializerOptions.Converters.Add(new PartiallySerializableJsonConverterFactory());
         });
