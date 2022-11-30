@@ -78,7 +78,10 @@ public class HistoryController : HistoryControllerBase
         {
             entriesWithinSeconds = Math.Max(0, queryEntriesWithinSeconds);
         }
-        
+
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        cts.CancelAfter(5000);
+
         if (itemIdsArray.Count == 1)
         {
             var itemId = itemIdsArray[0];
@@ -88,13 +91,13 @@ public class HistoryController : HistoryControllerBase
                 return NotFound();
             }
 
-            var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entries, statsWithinMs, entriesWithinSeconds, cancellationToken);
+            var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entries, statsWithinMs, entriesWithinSeconds, cts.Token);
             return Ok(historyView);
         }
 
         // Multi-item handling
         var historyViewTasks = itemIdsArray
-            .Select(itemId => GetHistoryView(worldDc, worldIds, itemId, entries, statsWithinMs, entriesWithinSeconds, cancellationToken))
+            .Select(itemId => GetHistoryView(worldDc, worldIds, itemId, entries, statsWithinMs, entriesWithinSeconds, cts.Token))
             .ToList();
         var historyViews = await Task.WhenAll(historyViewTasks);
         var unresolvedItems = historyViews
