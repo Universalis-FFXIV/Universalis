@@ -67,16 +67,23 @@ public class Startup
 
             options.UsingRabbitMq((ctx, config) =>
             {
-                // The machine name is used as the queue name to ensure that each
-                // instance gets its own queue.
-                config.ReceiveEndpoint(Environment.MachineName, conf =>
+                var receiveMessagesStr = Environment.GetEnvironmentVariable("RECEIVE_STREAMING_EVENTS") ??
+                    Configuration["ReceiveStreamingEvents"];
+                var receiveMessages = bool.TryParse(receiveMessagesStr, out var recv) && recv || false;
+
+                if (receiveMessages)
                 {
-                    conf.AutoDelete = true;
-                    conf.ConfigureConsumer<ItemUpdateDispatcher>(ctx);
-                    conf.ConfigureConsumer<ListingsAddDispatcher>(ctx);
-                    conf.ConfigureConsumer<ListingsRemoveDispatcher>(ctx);
-                    conf.ConfigureConsumer<SalesAddDispatcher>(ctx);
-                });
+                    // The machine name is used as the queue name to ensure that each
+                    // instance gets its own queue.
+                    config.ReceiveEndpoint(Environment.MachineName, conf =>
+                    {
+                        conf.AutoDelete = true;
+                        conf.ConfigureConsumer<ItemUpdateDispatcher>(ctx);
+                        conf.ConfigureConsumer<ListingsAddDispatcher>(ctx);
+                        conf.ConfigureConsumer<ListingsRemoveDispatcher>(ctx);
+                        conf.ConfigureConsumer<SalesAddDispatcher>(ctx);
+                    });
+                }
 
                 config.Host(Environment.GetEnvironmentVariable("UNIVERSALIS_RABBITMQ_HOSTNAME") ??
                     Configuration["RabbitMqHostname"], "/", host =>
