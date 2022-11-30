@@ -1,23 +1,30 @@
 ﻿using StackExchange.Redis;
+using System.Threading;
 
 namespace Universalis.DbAccess;
 
 internal class WrappedRedisMultiplexer : ICacheRedisMultiplexer, IPersistentRedisMultiplexer
 {
-    private readonly IConnectionMultiplexer _connectionMultiplexer;
+    private readonly IConnectionMultiplexer[] _connectionMultiplexers;
+    private int _next;
     
-    public WrappedRedisMultiplexer(IConnectionMultiplexer connectionMultiplexer)
+    public WrappedRedisMultiplexer(params IConnectionMultiplexer[] connectionMultiplexers)
     {
-        _connectionMultiplexer = connectionMultiplexer;
+        _connectionMultiplexers = connectionMultiplexers;
+        _next = 0;
     }
 
     IDatabase ICacheRedisMultiplexer.GetDatabase(int db, object asyncObject)
     {
-        return _connectionMultiplexer.GetDatabase(db, asyncObject);
+        var muxIdx = Interlocked.Exchange(ref _next, _next++ % _connectionMultiplexers.Length);
+        var mux = _connectionMultiplexers[muxIdx];
+        return mux.GetDatabase(db, asyncObject);
     }
 
     IDatabase IPersistentRedisMultiplexer.GetDatabase(int db, object asyncObject)
     {
-        return _connectionMultiplexer.GetDatabase(db, asyncObject);
+        var muxIdx = Interlocked.Exchange(ref _next, _next++ % _connectionMultiplexers.Length);
+        var mux = _connectionMultiplexers[muxIdx];
+        return mux.GetDatabase(db, asyncObject);
     }
 }

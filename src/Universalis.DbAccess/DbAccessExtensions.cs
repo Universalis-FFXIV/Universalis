@@ -37,9 +37,11 @@ public static class DbAccessExtensions
         var cacheOptions = ConfigurationOptions.Parse(redisCacheConnectionString);
         var cache = ConnectionMultiplexer.Connect(cacheOptions);
         var dbOptions = ConfigurationOptions.Parse(redisConnectionString);
-        var db = ConnectionMultiplexer.Connect(dbOptions);
+        var db1 = ConnectionMultiplexer.Connect(dbOptions);
+        var db2 = ConnectionMultiplexer.Connect(dbOptions);
+        var db3 = ConnectionMultiplexer.Connect(dbOptions);
         sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(cache));
-        sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(db));
+        sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(db1, db2, db3));
 
         sc.AddSingleton<IWorldItemUploadStore, WorldItemUploadStore>();
         sc.AddSingleton<IMostRecentlyUpdatedDbAccess, MostRecentlyUpdatedDbAccess>();
