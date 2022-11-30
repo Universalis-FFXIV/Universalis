@@ -33,10 +33,7 @@ public class WorldUploadCountController : ControllerBase
     [ProducesResponseType(typeof(IDictionary<string, WorldUploadCountView>), 200)]
     public async Task<IDictionary<string, WorldUploadCountView>> Get(CancellationToken cancellationToken = default)
     {
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(5000);
-
-        var data = (await _worldUploadCountDb.GetWorldUploadCounts(cts.Token))
+        var data = (await _worldUploadCountDb.GetWorldUploadCounts(cancellationToken))
             .Where(d => !string.IsNullOrEmpty(d.WorldName))
             .ToList();
         var sum = data.Sum(d => d.Count);

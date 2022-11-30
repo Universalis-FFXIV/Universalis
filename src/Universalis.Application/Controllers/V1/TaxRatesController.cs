@@ -47,10 +47,7 @@ public class TaxRatesController : WorldDcRegionControllerBase
             return NotFound();
         }
 
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(5000);
-
-        var taxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = worldDc.WorldId }, cts.Token);
+        var taxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = worldDc.WorldId }, cancellationToken);
         
         if (taxRates == null)
         {

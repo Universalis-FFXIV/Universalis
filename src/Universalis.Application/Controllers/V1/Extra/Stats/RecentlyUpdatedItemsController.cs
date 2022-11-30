@@ -36,11 +36,8 @@ public class RecentlyUpdatedItemsController : ControllerBase
     [ProducesResponseType(typeof(RecentlyUpdatedItemsView), 200)]
     public async Task<RecentlyUpdatedItemsView> Get(CancellationToken cancellationToken = default)
     {
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(5000);
-
         var marketable = _gameData.MarketableItemIds();
-        var data = (await _recentlyUpdatedItemsDb.Retrieve(cts.Token))?.Items
+        var data = (await _recentlyUpdatedItemsDb.Retrieve(cancellationToken))?.Items
             .Intersect(marketable)
             .ToList();
         return data == null

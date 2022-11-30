@@ -84,9 +84,6 @@ public class TradeVolumeController : WorldDcRegionControllerBase
             return NotFound("world or data center not found");
         }
 
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(5000);
-
         var fromTime = DateTimeOffset.FromUnixTimeMilliseconds(from).UtcDateTime;
         var toTime = DateTimeOffset.FromUnixTimeMilliseconds(to).UtcDateTime;
         var units = await worldIds.ToAsyncEnumerable()
@@ -97,7 +94,7 @@ public class TradeVolumeController : WorldDcRegionControllerBase
                 From = fromTime,
                 To = toTime,
             }, ct))
-            .SumAsync(cts.Token);
+            .SumAsync(cancellationToken);
         var gil = await worldIds.ToAsyncEnumerable()
             .SelectAwaitWithCancellation((w, ct) => _saleStatistics.RetrieveGilTradeVolume(new TradeVolumeQuery
             {
@@ -106,7 +103,7 @@ public class TradeVolumeController : WorldDcRegionControllerBase
                 From = fromTime,
                 To = toTime,
             }, ct))
-            .SumAsync(cts.Token);
+            .SumAsync(cancellationToken);
 
         return Ok(new TradeVolumeView
         {
