@@ -27,13 +27,20 @@ public class CurrentlyShownStore : ICurrentlyShownStore, IDisposable
             return new CurrentlyShown();
         }
 
-        var result = await FetchData(_db, worldId, itemId, cancellationToken);
-        if (result == null)
+        try
         {
-            return new CurrentlyShown();
-        }
+            var result = await FetchData(_db, worldId, itemId, cancellationToken);
+            if (result == null)
+            {
+                return new CurrentlyShown();
+            }
 
-        return result;
+            return result;
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     public async Task SetData(CurrentlyShown data, CancellationToken cancellationToken = default)
@@ -43,7 +50,14 @@ public class CurrentlyShownStore : ICurrentlyShownStore, IDisposable
             throw new InvalidOperationException("The semaphore timed out.");
         }
 
-        await StoreData(_db, data);
+        try
+        {
+            await StoreData(_db, data);
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     private static async Task StoreData(IDatabase db, CurrentlyShown data, TimeSpan? expiry = null)
