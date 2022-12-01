@@ -21,6 +21,7 @@ public class MarketItemStore : IMarketItemStore
     private readonly DynamoDBContext _ddbContext;
 
     private readonly PreparedStatement _retrieveStatement;
+    private readonly PreparedStatement _insertStatement;
 
     public MarketItemStore(ICluster scylla, IAmazonDynamoDB dynamoDb, ICacheRedisMultiplexer cache, ILogger<MarketItemStore> logger)
     {
@@ -31,6 +32,7 @@ public class MarketItemStore : IMarketItemStore
 
         _scylla = scylla.Connect("alternator_market_item");
         _retrieveStatement = _scylla.Prepare("SELECT \":attrs\" FROM market_item WHERE world_id=? AND item_id=? LIMIT 1");
+        _insertStatement = _scylla.Prepare("INSERT INTO market_item (world_id, item_id, \":attrs\") VALUES (?, ?, ?)");
     }
 
     public async Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
@@ -42,7 +44,11 @@ public class MarketItemStore : IMarketItemStore
 
         try
         {
-            await _ddbContext.SaveAsync(marketItem, cancellationToken);
+            var bound = _insertStatement.Bind(marketItem.WorldId, marketItem.ItemId, new Dictionary<string, long>
+            {
+                { "last_upload_time", new DateTimeOffset(marketItem.LastUploadTime).ToUnixTimeMilliseconds() },
+            });
+            await _scylla.ExecuteAsync(bound);
         }
         catch (Exception e)
         {
@@ -71,7 +77,11 @@ public class MarketItemStore : IMarketItemStore
 
         try
         {
-            await _ddbContext.SaveAsync(marketItem, cancellationToken);
+            var bound = _insertStatement.Bind(marketItem.WorldId, marketItem.ItemId, new Dictionary<string, long>
+            {
+                { "last_upload_time", new DateTimeOffset(marketItem.LastUploadTime).ToUnixTimeMilliseconds() },
+            });
+            await _scylla.ExecuteAsync(bound);
         }
         catch (Exception e)
         {
