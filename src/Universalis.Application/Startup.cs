@@ -98,17 +98,6 @@ public class Startup
 
         services.AddSingleton<ISocketProcessor, SocketProcessor>();
 
-        services.AddCors(options =>
-        {
-            options.AddDefaultPolicy(policy =>
-            {
-                policy
-                    .AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
-            });
-        });
-
         services
             .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
             .AddNegotiate();
