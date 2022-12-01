@@ -32,14 +32,8 @@ public class CurrentlyShownCache : MemoryCache<CachedCurrentlyShownQuery, Cached
             WorldId = key.WorldId,
             ItemId = key.ItemId,
         }, cancellationToken);
-        var history = await _historyDb.Retrieve(new HistoryQuery
-        {
-            WorldId = key.WorldId,
-            ItemId = key.ItemId,
-            Count = 20,
-        }, cancellationToken);
 
-        if (currentData == null || history == null)
+        if (currentData == null)
         {
             return null;
         }
@@ -52,7 +46,7 @@ public class CurrentlyShownCache : MemoryCache<CachedCurrentlyShownQuery, Cached
             .Where(s => s.Quantity > 0)
             .ToList();
 
-        var dataHistory = (history.Sales ?? new List<Sale>())
+        var dataHistory = new List<Sale>()
             .Where(s => s.PricePerUnit > 0)
             .Where(s => s.Quantity > 0)
             .Where(s => new DateTimeOffset(s.SaleTime).ToUnixTimeSeconds() > 0)
@@ -63,7 +57,7 @@ public class CurrentlyShownCache : MemoryCache<CachedCurrentlyShownQuery, Cached
         {
             ItemId = key.ItemId,
             WorldId = key.WorldId,
-            LastUploadTimeUnixMilliseconds = Math.Max(Convert.ToInt64(history.LastUploadTimeUnixMilliseconds), currentData.LastUploadTimeUnixMilliseconds),
+            LastUploadTimeUnixMilliseconds = currentData.LastUploadTimeUnixMilliseconds,
             Listings = dataListings,
             RecentHistory = dataHistory,
         };
