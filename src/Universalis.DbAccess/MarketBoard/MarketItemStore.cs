@@ -42,12 +42,15 @@ public class MarketItemStore : IMarketItemStore
             throw new ArgumentNullException(nameof(marketItem));
         }
 
-        try
-        {
-            var bound = _insertStatement.Bind(marketItem.WorldId, marketItem.ItemId, new Dictionary<string, long>
+        var bound = _insertStatement.Bind(
+            Convert.ToInt64(marketItem.WorldId),
+            Convert.ToInt64(marketItem.ItemId),
+            new Dictionary<string, long>
             {
                 { "last_upload_time", new DateTimeOffset(marketItem.LastUploadTime).ToUnixTimeMilliseconds() },
             });
+        try
+        {
             await _scylla.ExecuteAsync(bound);
         }
         catch (Exception e)
@@ -75,12 +78,15 @@ public class MarketItemStore : IMarketItemStore
             throw new ArgumentNullException(nameof(marketItem));
         }
 
-        try
-        {
-            var bound = _insertStatement.Bind(marketItem.WorldId, marketItem.ItemId, new Dictionary<string, long>
+        var bound = _insertStatement.Bind(
+            Convert.ToInt64(marketItem.WorldId),
+            Convert.ToInt64(marketItem.ItemId),
+            new Dictionary<string, long>
             {
                 { "last_upload_time", new DateTimeOffset(marketItem.LastUploadTime).ToUnixTimeMilliseconds() },
             });
+        try
+        {
             await _scylla.ExecuteAsync(bound);
         }
         catch (Exception e)
@@ -132,7 +138,7 @@ public class MarketItemStore : IMarketItemStore
         }
 
         // Fetch data from the database
-        var res = await _scylla.ExecuteAsync(_retrieveStatement.Bind(itemId, worldId));
+        var res = await _scylla.ExecuteAsync(_retrieveStatement.Bind(Convert.ToInt64(itemId), Convert.ToInt64(worldId)));
         var data = res.FirstOrDefault();
         if (data == null)
         {
