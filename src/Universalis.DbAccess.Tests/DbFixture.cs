@@ -1,4 +1,5 @@
-﻿using DotNet.Testcontainers.Builders;
+﻿using Amazon.Runtime.Internal.Transform;
+using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -65,6 +66,7 @@ public class DbFixture : IAsyncLifetime
                 { "AWS:ServiceURL", $"http://{_scylla.Hostname}:{_scylla.GetMappedPublicPort(8000)}" },
                 { "RedisCacheConnectionString", $"{_cache.Hostname}:{_cache.GetMappedPublicPort(6379)}" },
                 { "RedisConnectionString", $"{_redis.Hostname}:{_redis.GetMappedPublicPort(6379)}" },
+                { "ScyllaConnectionString", $"{_scylla.Hostname}" },
             })
             .Build();
         services.AddLogging();
