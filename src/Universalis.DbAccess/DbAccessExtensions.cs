@@ -1,4 +1,5 @@
 ﻿using Amazon.DynamoDBv2;
+using Cassandra;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
@@ -18,6 +19,8 @@ public static class DbAccessExtensions
                                     configuration["RedisCacheConnectionString"];
         var redisConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_REDIS_CONNECTION") ??
                                     configuration["RedisConnectionString"];
+        var scyllaConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_SCYLLA_CONNECTION") ??
+                                    configuration["ScyllaConnectionString"];
 
         var awsOptions = configuration.GetAWSOptions();
         sc.AddDefaultAWSOptions(awsOptions);
@@ -34,6 +37,12 @@ public static class DbAccessExtensions
         sc.AddSingleton<IAmazonDynamoDB>(dynamoDb);
 
         DynamoDBTableInitializer.InitializeTables(dynamoDb).GetAwaiter().GetResult();
+
+        // Initialize this after the DDB interface so that can handle initialization
+        var scyllaCluster = Cluster.Builder()
+            .AddContactPoints(scyllaConnectionString.Split(','))
+            .Build();
+        sc.AddSingleton<ICluster>(scyllaCluster);
 
         var cacheOptions = ConfigurationOptions.Parse(redisCacheConnectionString);
         var cache = Enumerable.Range(0, 3).Select(_ => ConnectionMultiplexer.Connect(cacheOptions)).ToArray();

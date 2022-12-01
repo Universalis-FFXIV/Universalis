@@ -63,12 +63,16 @@ services:
     image: scylladb/scylla:5.0.5
     command: ["--smp", "1", "--overprovisioned", "1", "--memory", "512M", "--seeds=scylla1,scylla2", "--alternator-port", "8000", "--alternator-write-isolation", "only_rmw_uses_lwt"]
     cpu_count: 1
+    ports:
+      - "4054:80"
     volumes:
       - scylla-data1:/var/lib/scylla
   scylla2:
     image: scylladb/scylla:5.0.5
     command: ["--smp", "1", "--overprovisioned", "1", "--memory", "512M", "--seeds=scylla1,scylla2", "--alternator-port", "8000", "--alternator-write-isolation", "only_rmw_uses_lwt"]
     cpu_count: 1
+    ports:
+      - "4055:80"
     volumes:
       - scylla-data2:/var/lib/scylla
   redis:

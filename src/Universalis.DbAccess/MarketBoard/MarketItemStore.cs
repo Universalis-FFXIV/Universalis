@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
+using Cassandra;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Universalis.Entities.MarketBoard;
@@ -19,14 +17,20 @@ public class MarketItemStore : IMarketItemStore
     private readonly ILogger<MarketItemStore> _logger;
     private readonly ICacheRedisMultiplexer _cache;
     private readonly IAmazonDynamoDB _dynamoDb;
+    private readonly ISession _scylla;
     private readonly DynamoDBContext _ddbContext;
 
-    public MarketItemStore(IAmazonDynamoDB dynamoDb, ICacheRedisMultiplexer cache, ILogger<MarketItemStore> logger)
+    private readonly PreparedStatement _retrieveStatement;
+
+    public MarketItemStore(ICluster scylla, IAmazonDynamoDB dynamoDb, ICacheRedisMultiplexer cache, ILogger<MarketItemStore> logger)
     {
         _dynamoDb = dynamoDb;
         _ddbContext = new DynamoDBContext(_dynamoDb);
         _cache = cache;
         _logger = logger;
+
+        _scylla = scylla.Connect("alternator_market_item");
+        _retrieveStatement = _scylla.Prepare("SELECT \":attrs\" FROM market_item WHERE world_id=? AND item_id=? LIMIT 1");
     }
 
     public async Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
@@ -118,29 +122,25 @@ public class MarketItemStore : IMarketItemStore
         }
 
         // Fetch data from the database
-        MarketItem match = null;
-        try
-        {
-            var results = await _ddbContext
-            .QueryAsync<MarketItem>(itemId, new DynamoDBOperationConfig
-            {
-                QueryFilter = new List<ScanCondition>
-                {
-                    new ScanCondition("WorldId", ScanOperator.Equal, worldId),
-                },
-            })
-            .GetRemainingAsync(cancellationToken);
-            match = results.FirstOrDefault();
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to retrieve market item (world={WorldId}, item={ItemId})", worldId, itemId);
-        }
-
-        if (match == null)
+        var res = await _scylla.ExecuteAsync(_retrieveStatement.Bind(itemId, worldId));
+        var data = res.FirstOrDefault();
+        if (data == null)
         {
             return null;
         }
+
+        var attrs = data.GetValue<Dictionary<string, string>>(0);
+        if (!attrs.TryGetValue("last_upload_time", out var s) || !long.TryParse(s, out var lastUploadTime))
+        {
+            return null;
+        }
+
+        var match = new MarketItem
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+            LastUploadTime = DateTimeOffset.FromUnixTimeMilliseconds(lastUploadTime).UtcDateTime,
+        };
 
         // Cache the result
         try
