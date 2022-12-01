@@ -18,6 +18,8 @@ public static class DbAccessExtensions
                                     configuration["RedisCacheConnectionString"];
         var redisConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_REDIS_CONNECTION") ??
                                     configuration["RedisConnectionString"];
+        var ddbConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_DYNAMODB_CONNECTION") ??
+                                    configuration["AWS:ServiceURL"];
 
         var awsOptions = configuration.GetAWSOptions();
         sc.AddDefaultAWSOptions(awsOptions);
@@ -29,7 +31,7 @@ public static class DbAccessExtensions
         {
             LogMetrics = bool.TryParse(configuration.GetSection("AWS:LogMetrics").Value, out var logMetrics) && logMetrics,
             LogResponse = bool.TryParse(configuration.GetSection("AWS:LogResponse").Value, out var logResponse) && logResponse,
-            ServiceURL = configuration.GetSection("AWS:ServiceURL").Value,
+            ServiceURL = ddbConnectionString,
         });
         sc.AddSingleton<IAmazonDynamoDB>(dynamoDb);
 
