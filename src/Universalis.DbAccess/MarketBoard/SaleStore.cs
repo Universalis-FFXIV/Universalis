@@ -115,6 +115,7 @@ public class SaleStore : ISaleStore
                     { ":v_world_id", new Primitive { Type = DynamoDBEntryType.Numeric, Value = worldId.ToString() } },
                 },
             },
+            BackwardSearch = true,
         };
 
         if (from != null)
