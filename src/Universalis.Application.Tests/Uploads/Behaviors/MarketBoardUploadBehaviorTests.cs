@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Universalis.Application.Caching;
 using Universalis.Application.Realtime;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
@@ -24,7 +23,6 @@ public class MarketBoardUploadBehaviorTests
     {
         public ICurrentlyShownDbAccess CurrentlyShown { get; private init; }
         public IHistoryDbAccess History { get; private init; }
-        public ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> Cache { get; private init; }
         public ISocketProcessor Sockets { get; private init; }
         public IGameDataProvider GameData { get; private init; }
         public IUploadBehavior Behavior { get; private init; }
@@ -33,16 +31,14 @@ public class MarketBoardUploadBehaviorTests
         {
             var currentlyShownDb = new MockCurrentlyShownDbAccess();
             var historyDb = new MockHistoryDbAccess();
-            var cache = new MemoryCache<CachedCurrentlyShownQuery, CachedCurrentlyShownData>(1);
             var sockets = new MockSocketProcessor();
             var gameData = new MockGameDataProvider();
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, cache, gameData, null);
+            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, gameData, null);
 
             return new TestResources
             {
                 CurrentlyShown = currentlyShownDb,
                 History = historyDb,
-                Cache = cache,
                 Sockets = sockets,
                 GameData = gameData,
                 Behavior = behavior,

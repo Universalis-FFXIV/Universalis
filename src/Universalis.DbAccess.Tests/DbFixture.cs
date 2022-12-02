@@ -1,5 +1,4 @@
-﻿using Amazon.Runtime.Internal.Transform;
-using DotNet.Testcontainers.Builders;
+﻿using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,7 +26,9 @@ public class DbFixture : IAsyncLifetime
             .WithName(Guid.NewGuid().ToString("D"))
             .WithImage("scylladb/scylla:5.0.5")
             .WithExposedPort(8000)
+            .WithExposedPort(9042)
             .WithPortBinding(8000, true)
+            .WithPortBinding(9042, false)
             .WithCommand("--smp", "1", "--overprovisioned", "1", "--memory", "512M", "--alternator-port", "8000", "--alternator-write-isolation", "only_rmw_uses_lwt")
             .WithCreateContainerParametersModifier(o =>
             {
@@ -71,6 +72,7 @@ public class DbFixture : IAsyncLifetime
             .Build();
         services.AddLogging();
         services.AddSingleton<IConfiguration>(configuration);
+        Task.Delay(10000).GetAwaiter().GetResult();
         services.AddDbAccessServices(configuration);
         Task.Delay(5000).GetAwaiter().GetResult();
         return services.BuildServiceProvider();

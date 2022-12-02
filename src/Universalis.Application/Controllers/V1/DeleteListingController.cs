@@ -5,12 +5,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Universalis.Application.Caching;
 using Universalis.Application.Realtime;
 using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
 using Universalis.Application.Views.V1;
-using Universalis.Common.Caching;
 using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -30,7 +28,6 @@ public class DeleteListingController : WorldDcRegionControllerBase
     private readonly ITrustedSourceDbAccess _trustedSourceDb;
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
-    private readonly ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> _cache;
     private readonly ISocketProcessor _sockets;
 
     public DeleteListingController(
@@ -38,13 +35,11 @@ public class DeleteListingController : WorldDcRegionControllerBase
         ITrustedSourceDbAccess trustedSourceDb,
         ICurrentlyShownDbAccess currentlyShownDb,
         IFlaggedUploaderDbAccess flaggedUploaderDb,
-        ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> cache,
         ISocketProcessor sockets) : base(gameData)
     {
         _trustedSourceDb = trustedSourceDb;
         _currentlyShownDb = currentlyShownDb;
         _flaggedUploaderDb = flaggedUploaderDb;
-        _cache = cache;
         _sockets = sockets;
     }
 
@@ -119,12 +114,6 @@ public class DeleteListingController : WorldDcRegionControllerBase
         };
 
         await _currentlyShownDb.Update(itemData, query, cts.Token);
-
-        await _cache.Delete(new CachedCurrentlyShownQuery
-        {
-            WorldId = query.WorldId,
-            ItemId = query.ItemId,
-        }, cts.Token);
 
         _sockets.Publish(new ListingsRemove
         {

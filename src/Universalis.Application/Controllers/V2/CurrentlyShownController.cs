@@ -3,12 +3,10 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Universalis.Application.Caching;
 using Universalis.Application.Common;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1;
 using Universalis.Application.Views.V2;
-using Universalis.Common.Caching;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.GameData;
 
@@ -20,8 +18,7 @@ namespace Universalis.Application.Controllers.V2;
 public class CurrentlyShownController : CurrentlyShownControllerBase
 {
     public CurrentlyShownController(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb,
-        IHistoryDbAccess history, ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> cache) : base(gameData,
-        currentlyShownDb, history, cache)
+        IHistoryDbAccess history) : base(gameData, currentlyShownDb, history)
     {
     }
 

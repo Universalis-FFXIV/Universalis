@@ -4,13 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Universalis.Application.Caching;
 using Universalis.Application.Controllers;
 using Universalis.Application.Controllers.V1;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views.V1;
-using Universalis.Common.Caching;
 using Universalis.DataTransformations;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -28,7 +26,6 @@ public class CurrentlyShownControllerTests
         public IGameDataProvider GameData { get; private init; }
         public ICurrentlyShownDbAccess CurrentlyShown { get; private init; }
         public IHistoryDbAccess History { get; private init; }
-        public ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> Cache { get; private init; }
         public CurrentlyShownController Controller { get; private init; }
 
         public static TestResources Create()
@@ -36,14 +33,12 @@ public class CurrentlyShownControllerTests
             var gameData = new MockGameDataProvider();
             var currentlyShownDb = new MockCurrentlyShownDbAccess();
             var historyDb = new MockHistoryDbAccess();
-            var cache = new MemoryCache<CachedCurrentlyShownQuery, CachedCurrentlyShownData>(1);
-            var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb, cache);
+            var controller = new CurrentlyShownController(gameData, currentlyShownDb, historyDb);
             return new TestResources
             {
                 GameData = gameData,
                 CurrentlyShown = currentlyShownDb,
                 History = historyDb,
-                Cache = cache,
                 Controller = controller,
             };
         }
