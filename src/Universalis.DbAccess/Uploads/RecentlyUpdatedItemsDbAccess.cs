@@ -23,7 +23,7 @@ public class RecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess, IDisp
             { Items = (await _store.GetAllItems(MaxItems - 1)).Select(kvp => kvp.Key).Take(MaxItems).ToList() };
     }
 
-    public async Task Push(uint itemId, CancellationToken cancellationToken = default)
+    public async Task Push(int itemId, CancellationToken cancellationToken = default)
     {
         var t = Convert.ToDouble(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
         await _store.SetItem(itemId, t);

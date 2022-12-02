@@ -7,10 +7,10 @@ namespace Universalis.Application.Realtime.Messages;
 public class SalesAdd : SocketMessage
 {
     [BsonElement("item")]
-    public uint ItemId { get; init; }
+    public int ItemId { get; init; }
 
     [BsonElement("world")]
-    public uint WorldId { get; init; }
+    public int WorldId { get; init; }
 
     [BsonElement("sales")]
     public IList<SaleView> Sales { get; init; }

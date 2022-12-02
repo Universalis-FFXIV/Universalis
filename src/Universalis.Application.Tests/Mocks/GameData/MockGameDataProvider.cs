@@ -6,37 +6,37 @@ namespace Universalis.Application.Tests.Mocks.GameData;
 
 public class MockGameDataProvider : IGameDataProvider
 {
-    public IReadOnlyDictionary<uint, string> AvailableWorlds()
+    public IReadOnlyDictionary<int, string> AvailableWorlds()
     {
-        return new Dictionary<uint, string>
+        return new Dictionary<int, string>
         {
             { 74, "Coeurl" },
             { 34, "Brynhildr" },
         };
     }
 
-    public IReadOnlyDictionary<string, uint> AvailableWorldsReversed()
+    public IReadOnlyDictionary<string, int> AvailableWorldsReversed()
     {
-        return new Dictionary<string, uint>
+        return new Dictionary<string, int>
         {
             { "Coeurl", 74 },
             { "Brynhildr", 34 },
         };
     }
 
-    public IReadOnlySet<uint> AvailableWorldIds()
+    public IReadOnlySet<int> AvailableWorldIds()
     {
-        return new SortedSet<uint>(new uint[] { 74, 34 });
+        return new SortedSet<int>(new int[] { 74, 34 });
     }
 
-    public IReadOnlySet<uint> MarketableItemIds()
+    public IReadOnlySet<int> MarketableItemIds()
     {
-        return new SortedSet<uint>(Enumerable.Range(1, 35000).Select(n => (uint)n));
+        return new SortedSet<int>(Enumerable.Range(1, 35000));
     }
 
-    public IReadOnlyDictionary<uint, uint> MarketableItemStackSizes()
+    public IReadOnlyDictionary<int, int> MarketableItemStackSizes()
     {
-        return new Dictionary<uint, uint>
+        return new Dictionary<int, int>
         {
             { 5333, 99 },
             { 5, 9999 },
@@ -51,7 +51,7 @@ public class MockGameDataProvider : IGameDataProvider
             {
                 Name = "Crystal",
                 Region = "North-America",
-                WorldIds = new uint[] { 74, 34 },
+                WorldIds = new int[] { 74, 34 },
             },
         };
     }

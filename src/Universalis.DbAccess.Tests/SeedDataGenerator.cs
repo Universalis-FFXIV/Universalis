@@ -10,7 +10,7 @@ namespace Universalis.DbAccess.Tests;
 
 public static class SeedDataGenerator
 {
-    public static CurrentlyShown MakeCurrentlyShown(uint worldId, uint itemId, long? lastUploadTime = null, uint maxStackSize = 999)
+    public static CurrentlyShown MakeCurrentlyShown(int worldId, int itemId, long? lastUploadTime = null, int maxStackSize = 999)
     {
         var rand = new Random();
         var t = lastUploadTime ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -21,12 +21,12 @@ public static class SeedDataGenerator
                 Hq = rand.NextDouble() > 0.5,
                 OnMannequin = rand.NextDouble() > 0.5,
                 Materia = new List<Materia>(),
-                PricePerUnit = (uint)rand.Next(100, 60000),
-                Quantity = (uint)rand.Next(1, (int)maxStackSize),
+                PricePerUnit = rand.Next(100, 60000),
+                Quantity = rand.Next(1, (int)maxStackSize),
                 DyeId = (byte)rand.Next(0, 255),
                 CreatorId = rand.NextInt64().ToString(),
                 CreatorName = "Bingus Bongus",
-                LastReviewTimeUnixSeconds = (uint)(DateTimeOffset.UtcNow.ToUnixTimeSeconds() - rand.Next(0, 360000)),
+                LastReviewTimeUnixSeconds = (int)(DateTimeOffset.UtcNow.ToUnixTimeSeconds() - rand.Next(0, 360000)),
                 RetainerId = rand.NextInt64().ToString(),
                 RetainerName = "xpotato",
                 RetainerCityId = 0xA,
@@ -43,7 +43,7 @@ public static class SeedDataGenerator
         };
     }
 
-    public static History MakeHistory(uint worldId, uint itemId, long? lastUploadTime = null, uint? maxStackSize = 999)
+    public static History MakeHistory(int worldId, int itemId, long? lastUploadTime = null, int? maxStackSize = 999)
     {
         var rand = new Random();
         return new History
@@ -58,8 +58,8 @@ public static class SeedDataGenerator
                     WorldId = worldId,
                     ItemId = itemId,
                     Hq = rand.NextDouble() > 0.5,
-                    PricePerUnit = (uint)rand.Next(100, 60000),
-                    Quantity = (uint)rand.Next(1, (int)maxStackSize),
+                    PricePerUnit = rand.Next(100, 60000),
+                    Quantity = rand.Next(1, (int)maxStackSize),
                     SaleTime = DateTime.UtcNow - new TimeSpan(rand.Next(0, 80000)),
                     UploaderIdHash = "2A",
                 })
@@ -67,7 +67,7 @@ public static class SeedDataGenerator
         };
     }
     
-    public static TaxRates MakeTaxRates(uint worldId)
+    public static TaxRates MakeTaxRates(int worldId)
     {
         return new TaxRates
         {

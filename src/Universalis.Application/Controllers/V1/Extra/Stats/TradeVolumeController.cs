@@ -48,7 +48,7 @@ public class TradeVolumeController : WorldDcRegionControllerBase
     public async Task<IActionResult> Get(
         [FromQuery] string world,
         [FromQuery] string dcName,
-        [FromQuery, BindRequired] uint item,
+        [FromQuery, BindRequired] int item,
         [FromQuery, BindRequired] long from,
         [FromQuery] long to = -1,
         CancellationToken cancellationToken = default)
@@ -140,7 +140,7 @@ public class TradeVolumeController : WorldDcRegionControllerBase
     public Task<IActionResult> GetV2(
         [FromQuery] string world,
         [FromQuery] string dcName,
-        [FromQuery] uint item,
+        [FromQuery] int item,
         [FromQuery] long from,
         [FromQuery] long to = -1,
         CancellationToken cancellationToken = default)

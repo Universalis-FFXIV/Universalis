@@ -20,15 +20,15 @@ public class RobustGameDataProvider : IGameDataProvider
         }
     }
 
-    public IReadOnlySet<uint> AvailableWorldIds() => _gdp.AvailableWorldIds();
+    public IReadOnlySet<int> AvailableWorldIds() => _gdp.AvailableWorldIds();
 
-    public IReadOnlyDictionary<uint, string> AvailableWorlds() => _gdp.AvailableWorlds();
+    public IReadOnlyDictionary<int, string> AvailableWorlds() => _gdp.AvailableWorlds();
 
-    public IReadOnlyDictionary<string, uint> AvailableWorldsReversed() => _gdp.AvailableWorldsReversed();
+    public IReadOnlyDictionary<string, int> AvailableWorldsReversed() => _gdp.AvailableWorldsReversed();
 
     public IEnumerable<DataCenter> DataCenters() => _gdp.DataCenters();
 
-    public IReadOnlySet<uint> MarketableItemIds() => _gdp.MarketableItemIds();
+    public IReadOnlySet<int> MarketableItemIds() => _gdp.MarketableItemIds();
     
-    public IReadOnlyDictionary<uint, uint> MarketableItemStackSizes() => _gdp.MarketableItemStackSizes();
+    public IReadOnlyDictionary<int, int> MarketableItemStackSizes() => _gdp.MarketableItemStackSizes();
 }

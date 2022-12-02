@@ -26,5 +26,5 @@ public class Retainer
     /// Crystarium = 10
     /// </summary>
     [JsonPropertyName("city")]
-    public uint City { get; init; }
+    public int City { get; init; }
 }

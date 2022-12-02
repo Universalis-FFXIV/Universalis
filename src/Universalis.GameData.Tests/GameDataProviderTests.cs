@@ -15,7 +15,7 @@ public class GameDataProviderTests
     [InlineData(44, "Anima")]
     [InlineData(74, "Coeurl")]
     [InlineData(82, "Mandragora")]
-    public void AvailableWorlds_Should_Return_Correct_Ids(uint worldId, string expectedWorldName)
+    public void AvailableWorlds_Should_Return_Correct_Ids(int worldId, string expectedWorldName)
     {
         var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
         var actualWorldName = gameData.AvailableWorlds()[worldId];
@@ -25,7 +25,7 @@ public class GameDataProviderTests
     [InlineData("Anima", 44)]
     [InlineData("Coeurl", 74)]
     [InlineData("Mandragora", 82)]
-    public void AvailableWorldsReversed_Should_Return_Correct_Names(string worldName, uint expectedWorldId)
+    public void AvailableWorldsReversed_Should_Return_Correct_Names(string worldName, int expectedWorldId)
     {
         var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
         var actualWorldId = gameData.AvailableWorldsReversed()[worldName];
@@ -36,7 +36,7 @@ public class GameDataProviderTests
     [InlineData(74, true)]
     [InlineData(0, false)]
     [InlineData(1, false)]
-    public void AvailableWorldIds_Should_Only_Contain_Real_World_Ids(uint worldId, bool expectedToContain)
+    public void AvailableWorldIds_Should_Only_Contain_Real_World_Ids(int worldId, bool expectedToContain)
     {
         var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
         var worldIds = gameData.AvailableWorldIds();
@@ -48,7 +48,7 @@ public class GameDataProviderTests
     [InlineData(30759, true)]
     [InlineData(0, false)]
     [InlineData(1, false)]
-    public void MarketableItemIds_Should_Only_Contain_Real_Item_Ids(uint itemId, bool expectedToContain)
+    public void MarketableItemIds_Should_Only_Contain_Real_Item_Ids(int itemId, bool expectedToContain)
     {
         var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
         var worldIds = gameData.MarketableItemIds();

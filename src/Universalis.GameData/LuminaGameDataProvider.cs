@@ -11,12 +11,12 @@ internal class LuminaGameDataProvider : IGameDataProvider
 {
     private const string ExcelLoadError = "Excel sheet could not be loaded!";
 
-    private readonly IReadOnlyDictionary<uint, string> _availableWorlds;
-    private readonly IReadOnlyDictionary<string, uint> _availableWorldsReversed;
-    private readonly IReadOnlySet<uint> _availableWorldIds;
+    private readonly IReadOnlyDictionary<int, string> _availableWorlds;
+    private readonly IReadOnlyDictionary<string, int> _availableWorldsReversed;
+    private readonly IReadOnlySet<int> _availableWorldIds;
 
-    private readonly IReadOnlySet<uint> _marketableItemIds;
-    private readonly IReadOnlyDictionary<uint, uint> _marketableItemStackSizes;
+    private readonly IReadOnlySet<int> _marketableItemIds;
+    private readonly IReadOnlyDictionary<int, int> _marketableItemStackSizes;
 
     private readonly IReadOnlyList<DataCenter> _dataCenters;
 
@@ -34,19 +34,19 @@ internal class LuminaGameDataProvider : IGameDataProvider
         _dataCenters = LoadDataCenters(lumina);
     }
 
-    IReadOnlyDictionary<uint, string> IGameDataProvider.AvailableWorlds()
+    IReadOnlyDictionary<int, string> IGameDataProvider.AvailableWorlds()
         => _availableWorlds;
 
-    IReadOnlyDictionary<string, uint> IGameDataProvider.AvailableWorldsReversed()
+    IReadOnlyDictionary<string, int> IGameDataProvider.AvailableWorldsReversed()
         => _availableWorldsReversed;
 
-    IReadOnlySet<uint> IGameDataProvider.AvailableWorldIds()
+    IReadOnlySet<int> IGameDataProvider.AvailableWorldIds()
         => _availableWorldIds;
 
-    IReadOnlySet<uint> IGameDataProvider.MarketableItemIds()
+    IReadOnlySet<int> IGameDataProvider.MarketableItemIds()
         => _marketableItemIds;
 
-    IReadOnlyDictionary<uint, uint> IGameDataProvider.MarketableItemStackSizes()
+    IReadOnlyDictionary<int, int> IGameDataProvider.MarketableItemStackSizes()
         => _marketableItemStackSizes;
 
     IEnumerable<DataCenter> IGameDataProvider.DataCenters()
@@ -55,7 +55,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
     /// <summary>
     /// Gets a read-only dictionary of all available worlds.
     /// </summary>
-    private static IReadOnlyDictionary<uint, string> LoadAvailableWorlds(Lumina.GameData lumina)
+    private static IReadOnlyDictionary<int, string> LoadAvailableWorlds(Lumina.GameData lumina)
     {
         var worlds = lumina.GetExcelSheet<LuminaWorld>();
         if (worlds == null)
@@ -64,7 +64,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
         }
 
         return GetValidWorlds(worlds)
-            .Select(w => new World { Name = w.Name, Id = w.RowId })
+            .Select(w => new World { Name = w.Name, Id = Convert.ToInt32(w.RowId) })
             .Concat(ChineseServers.Worlds())
             .ToDictionary(w => w.Id, w => w.Name);
     }
@@ -72,7 +72,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
     /// <summary>
     /// Gets a read-only dictionary of all available worlds.
     /// </summary>
-    private static IReadOnlyDictionary<string, uint> LoadAvailableWorldsReversed(Lumina.GameData lumina)
+    private static IReadOnlyDictionary<string, int> LoadAvailableWorldsReversed(Lumina.GameData lumina)
     {
         var worlds = lumina.GetExcelSheet<LuminaWorld>();
         if (worlds == null)
@@ -81,7 +81,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
         }
 
         return GetValidWorlds(worlds)
-            .Select(w => new World { Name = w.Name, Id = w.RowId })
+            .Select(w => new World { Name = w.Name, Id = Convert.ToInt32(w.RowId) })
             .Concat(ChineseServers.Worlds())
             .ToDictionary(w => w.Name, w => w.Id);
     }
@@ -89,7 +89,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
     /// <summary>
     /// Gets a read-only sorted set of all available world IDs.
     /// </summary>
-    private static IReadOnlySet<uint> LoadAvailableWorldIds(Lumina.GameData lumina)
+    private static IReadOnlySet<int> LoadAvailableWorldIds(Lumina.GameData lumina)
     {
         var worlds = lumina.GetExcelSheet<LuminaWorld>();
         if (worlds == null)
@@ -97,17 +97,17 @@ internal class LuminaGameDataProvider : IGameDataProvider
             throw new InvalidOperationException(ExcelLoadError);
         }
 
-        return new SortedSet<uint>(GetValidWorlds(worlds)
-            .Select(w => new World { Name = w.Name, Id = w.RowId })
+        return new SortedSet<int>(GetValidWorlds(worlds)
+            .Select(w => new World { Name = w.Name, Id = Convert.ToInt32(w.RowId) })
             .Concat(ChineseServers.Worlds())
-            .Select(w => w.Id)
+            .Select(w => Convert.ToInt32(w.Id))
             .ToList());
     }
 
     /// <summary>
     /// Gets a read-only sorted set of all marketable item IDs.
     /// </summary>
-    private static IReadOnlySet<uint> LoadMarketableItems(Lumina.GameData lumina)
+    private static IReadOnlySet<int> LoadMarketableItems(Lumina.GameData lumina)
     {
         var items = lumina.GetExcelSheet<Item>();
         if (items == null)
@@ -115,16 +115,16 @@ internal class LuminaGameDataProvider : IGameDataProvider
             throw new InvalidOperationException(ExcelLoadError);
         }
 
-        return new SortedSet<uint>(items
+        return new SortedSet<int>(items
             .Where(i => i.ItemSearchCategory.Value?.RowId >= 1)
-            .Select(i => i.RowId)
+            .Select(i => Convert.ToInt32(i.RowId))
             .ToList());
     }
     
     /// <summary>
     /// Gets a read-only dictionary of the stack size limits for all marketable items.
     /// </summary>
-    private static IReadOnlyDictionary<uint, uint> LoadMarketableItemStackSizes(Lumina.GameData lumina)
+    private static IReadOnlyDictionary<int, int> LoadMarketableItemStackSizes(Lumina.GameData lumina)
     {
         var items = lumina.GetExcelSheet<Item>();
         if (items == null)
@@ -134,7 +134,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
 
         return items
             .Where(i => i.ItemSearchCategory.Value?.RowId >= 1)
-            .ToDictionary(i => i.RowId, i => i.StackSize);
+            .ToDictionary(i => Convert.ToInt32(i.RowId), i => Convert.ToInt32(i.StackSize));
     }
 
     /// <summary>
@@ -157,7 +157,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
                 Region = Regions.Map[dc.Region],
                 WorldIds = GetValidWorlds(worlds)
                     .Where(w => w.DataCenter.Row == dc.RowId)
-                    .Select(w => w.RowId)
+                    .Select(w => Convert.ToInt32(w.RowId))
                     .ToArray(),
             })
             .Where(dc => dc.WorldIds.Length > 0)

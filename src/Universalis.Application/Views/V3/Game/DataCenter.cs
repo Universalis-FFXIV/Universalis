@@ -11,5 +11,5 @@ public class DataCenter
     public string Region { get; init; }
     
     [JsonPropertyName("worlds")]
-    public uint[] Worlds { get; init; }
+    public int[] Worlds { get; init; }
 }

@@ -13,7 +13,7 @@ public class HistoryMultiView
     /// The item IDs that were requested.
     /// </summary>
     [JsonPropertyName("itemIDs")]
-    public List<uint> ItemIds { get; init; } = new();
+    public List<int> ItemIds { get; init; } = new();
 
     /// <summary>
     /// The item data that was requested, as a list. Use the nested item IDs
@@ -27,7 +27,7 @@ public class HistoryMultiView
     /// </summary>
     [JsonPropertyName("worldID")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public uint? WorldId { get; init; }
+    public int? WorldId { get; init; }
 
     /// <summary>
     /// The name of the DC requested, if applicable.
@@ -47,7 +47,7 @@ public class HistoryMultiView
     /// A list of IDs that could not be resolved to any item data.
     /// </summary>
     [JsonPropertyName("unresolvedItems")]
-    public uint[] UnresolvedItemIds { get; init; }
+    public int[] UnresolvedItemIds { get; init; }
 
     /// <summary>
     /// The name of the world requested, if applicable.

@@ -10,12 +10,12 @@ public class MateriaView
     /// </summary>
     [BsonElement("slotID")]
     [JsonPropertyName("slotID")]
-    public uint SlotId { get; init; }
+    public int SlotId { get; init; }
 
     /// <summary>
     /// The materia item ID.
     /// </summary>
     [BsonElement("materiaID")]
     [JsonPropertyName("materiaID")]
-    public uint MateriaId { get; init; }
+    public int MateriaId { get; init; }
 }

@@ -8,7 +8,7 @@ namespace Universalis.DbAccess.Uploads;
 
 public interface IMostRecentlyUpdatedDbAccess
 {
-    public Task Push(uint worldId, WorldItemUpload document, CancellationToken cancellationToken = default);
+    public Task Push(int worldId, WorldItemUpload document, CancellationToken cancellationToken = default);
 
     public Task<IList<WorldItemUpload>> GetMostRecent(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default);
 

@@ -2,5 +2,5 @@
 
 public interface IPriceable
 {
-    public uint PricePerUnit { get; }
+    public int PricePerUnit { get; }
 }

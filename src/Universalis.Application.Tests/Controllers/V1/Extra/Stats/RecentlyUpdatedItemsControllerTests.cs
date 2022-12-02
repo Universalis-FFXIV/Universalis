@@ -22,7 +22,7 @@ public class RecentlyUpdatedItemsControllerTests
         Assert.IsAssignableFrom<RecentlyUpdatedItemsView>(result);
 
         Assert.Single(result.Items);
-        Assert.Equal(5333U, result.Items[0]);
+        Assert.Equal(5333, result.Items[0]);
     }
 
     [Fact]

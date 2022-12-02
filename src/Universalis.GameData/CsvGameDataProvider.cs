@@ -11,12 +11,12 @@ namespace Universalis.GameData;
 
 public class CsvGameDataProvider : IGameDataProvider
 {
-    private readonly IReadOnlyDictionary<uint, string> _availableWorlds;
-    private readonly IReadOnlyDictionary<string, uint> _availableWorldsReversed;
-    private readonly IReadOnlySet<uint> _availableWorldIds;
+    private readonly IReadOnlyDictionary<int, string> _availableWorlds;
+    private readonly IReadOnlyDictionary<string, int> _availableWorldsReversed;
+    private readonly IReadOnlySet<int> _availableWorldIds;
 
-    private readonly IReadOnlySet<uint> _marketableItemIds;
-    private readonly IReadOnlyDictionary<uint, uint> _marketableItemStackSizes;
+    private readonly IReadOnlySet<int> _marketableItemIds;
+    private readonly IReadOnlyDictionary<int, int> _marketableItemStackSizes;
 
     private readonly IReadOnlyList<DataCenter> _dataCenters;
 
@@ -36,25 +36,25 @@ public class CsvGameDataProvider : IGameDataProvider
         _dataCenters = LoadDataCenters().GetAwaiter().GetResult();
     }
 
-    IReadOnlyDictionary<uint, string> IGameDataProvider.AvailableWorlds()
+    IReadOnlyDictionary<int, string> IGameDataProvider.AvailableWorlds()
         => _availableWorlds;
 
-    IReadOnlyDictionary<string, uint> IGameDataProvider.AvailableWorldsReversed()
+    IReadOnlyDictionary<string, int> IGameDataProvider.AvailableWorldsReversed()
         => _availableWorldsReversed;
 
-    IReadOnlySet<uint> IGameDataProvider.AvailableWorldIds()
+    IReadOnlySet<int> IGameDataProvider.AvailableWorldIds()
         => _availableWorldIds;
 
-    IReadOnlySet<uint> IGameDataProvider.MarketableItemIds()
+    IReadOnlySet<int> IGameDataProvider.MarketableItemIds()
         => _marketableItemIds;
     
-    IReadOnlyDictionary<uint, uint> IGameDataProvider.MarketableItemStackSizes()
+    IReadOnlyDictionary<int, int> IGameDataProvider.MarketableItemStackSizes()
         => _marketableItemStackSizes;
 
     IEnumerable<DataCenter> IGameDataProvider.DataCenters()
         => _dataCenters;
 
-    private async Task<IReadOnlyDictionary<uint, string>> LoadAvailableWorlds()
+    private async Task<IReadOnlyDictionary<int, string>> LoadAvailableWorlds()
     {
         var csvData =
             await _http.GetStreamAsync("https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/World.csv");
@@ -68,7 +68,7 @@ public class CsvGameDataProvider : IGameDataProvider
             .ToDictionary(w => w.Id, w => w.Name);
     }
 
-    private async Task<IReadOnlyDictionary<string, uint>> LoadAvailableWorldsReversed()
+    private async Task<IReadOnlyDictionary<string, int>> LoadAvailableWorldsReversed()
     {
         var csvData =
             await _http.GetStreamAsync("https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/World.csv");
@@ -82,7 +82,7 @@ public class CsvGameDataProvider : IGameDataProvider
             .ToDictionary(w => w.Name, w => w.Id);
     }
 
-    private async Task<IReadOnlySet<uint>> LoadAvailableWorldIds()
+    private async Task<IReadOnlySet<int>> LoadAvailableWorldIds()
     {
         var csvData =
             await _http.GetStreamAsync("https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/World.csv");
@@ -90,14 +90,14 @@ public class CsvGameDataProvider : IGameDataProvider
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         for (var i = 0; i < 3; i++) await csv.ReadAsync();
         var worlds = csv.GetRecords<CsvWorld>();
-        return new SortedSet<uint>(GetValidWorlds(worlds)
+        return new SortedSet<int>(GetValidWorlds(worlds)
             .Select(w => new World { Name = w.Name, Id = w.RowId })
             .Concat(ChineseServers.Worlds())
             .Select(w => w.Id)
             .ToList());
     }
 
-    private async Task<IReadOnlySet<uint>> LoadMarketableItems()
+    private async Task<IReadOnlySet<int>> LoadMarketableItems()
     {
         var csvData =
             await _http.GetStreamAsync("https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/Item.csv");
@@ -108,13 +108,13 @@ public class CsvGameDataProvider : IGameDataProvider
         csv.ReadHeader();
         await csv.ReadAsync();
         var items = csv.GetRecords<CsvItem>();
-        return new SortedSet<uint>(items
+        return new SortedSet<int>(items
             .Where(i => i.ItemSearchCategory >= 1)
             .Select(i => i.RowId)
             .ToList());
     }
     
-    private async Task<IReadOnlyDictionary<uint, uint>> LoadMarketableItemStackSizes()
+    private async Task<IReadOnlyDictionary<int, int>> LoadMarketableItemStackSizes()
     {
         var csvData =
             await _http.GetStreamAsync("https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/Item.csv");
@@ -174,19 +174,19 @@ public class CsvGameDataProvider : IGameDataProvider
     private class CsvItem
     {
         [Index(0)]
-        public uint RowId { get; set; }
+        public int RowId { get; set; }
 
         [Name("ItemSearchCategory")]
-        public uint ItemSearchCategory { get; set; }
+        public int ItemSearchCategory { get; set; }
         
         [Name("StackSize")]
-        public uint StackSize { get; set; }
+        public int StackSize { get; set; }
     }
 
     private class CsvWorld
     {
         [Index(0)]
-        public uint RowId { get; set; }
+        public int RowId { get; set; }
 
         [Index(1)]
         public string InternalName { get; set; }

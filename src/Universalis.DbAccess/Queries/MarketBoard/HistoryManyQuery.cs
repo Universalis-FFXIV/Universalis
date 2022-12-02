@@ -2,9 +2,9 @@
 
 public class HistoryManyQuery
 {
-    public uint[] WorldIds { get; init; }
+    public int[] WorldIds { get; init; }
 
-    public uint ItemId { get; init; }
+    public int ItemId { get; init; }
 
     public int? Count { get; init; }
 }

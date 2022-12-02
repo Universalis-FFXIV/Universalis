@@ -8,7 +8,7 @@ namespace Universalis.Application.Tests;
 
 public static class SchemaSeedDataGenerator
 {
-    public static (List<Listing>, List<Sale>) GetUploadListingsAndSales(uint worldId, uint itemId, uint maxStackSize = 999)
+    public static (List<Listing>, List<Sale>) GetUploadListingsAndSales(int worldId, int itemId, int maxStackSize = 999)
     {
         var seed = SeedDataGenerator.MakeCurrentlyShown(worldId, itemId, maxStackSize: maxStackSize);
         var seedHistory = SeedDataGenerator.MakeHistory(worldId, itemId, maxStackSize: maxStackSize);

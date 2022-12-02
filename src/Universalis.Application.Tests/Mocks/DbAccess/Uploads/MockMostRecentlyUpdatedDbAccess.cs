@@ -12,7 +12,7 @@ public class MockMostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
 {
     private readonly List<WorldItemUpload> _store = new();
 
-    public Task Push(uint worldId, WorldItemUpload document, CancellationToken cancellationToken = default)
+    public Task Push(int worldId, WorldItemUpload document, CancellationToken cancellationToken = default)
     {
         var existingIndex = _store.FindIndex(o => o.WorldId == worldId && o.ItemId == document.ItemId);
         if (existingIndex != -1)

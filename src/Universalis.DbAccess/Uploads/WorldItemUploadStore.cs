@@ -16,27 +16,27 @@ public class WorldItemUploadStore : IWorldItemUploadStore
         _redis = redis;
     }
     
-    public async Task SetItem(uint worldId, uint id, double val)
+    public async Task SetItem(int worldId, int id, double val)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         await db.SortedSetAddAsync(GetRedisKey(worldId), new[] { new SortedSetEntry(id, val) });
     }
     
-    public async Task<IList<KeyValuePair<uint, double>>> GetMostRecent(uint worldId, int stop = -1)
+    public async Task<IList<KeyValuePair<int, double>>> GetMostRecent(int worldId, int stop = -1)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         var items = await db.SortedSetRangeByRankWithScoresAsync(GetRedisKey(worldId), stop: stop, order: Order.Descending);
-        return items.Select(i => new KeyValuePair<uint, double>((uint)i.Element, i.Score)).ToList();
+        return items.Select(i => new KeyValuePair<int, double>((int)i.Element, i.Score)).ToList();
     }
     
-    public async Task<IList<KeyValuePair<uint, double>>> GetLeastRecent(uint worldId, int stop = -1)
+    public async Task<IList<KeyValuePair<int, double>>> GetLeastRecent(int worldId, int stop = -1)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         var items = await db.SortedSetRangeByRankWithScoresAsync(GetRedisKey(worldId), stop: stop, order: Order.Ascending);
-        return items.Select(i => new KeyValuePair<uint, double>((uint)i.Element, i.Score)).ToList();
+        return items.Select(i => new KeyValuePair<int, double>((int)i.Element, i.Score)).ToList();
     }
 
-    private static string GetRedisKey(uint worldId)
+    private static string GetRedisKey(int worldId)
     {
         return string.Format(KeyFormat, worldId);
     }

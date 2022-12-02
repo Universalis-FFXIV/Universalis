@@ -16,10 +16,10 @@ public class UploadParameters
     }
 
     [JsonPropertyName("worldID")]
-    public uint? WorldId { get; set; }
+    public int? WorldId { get; set; }
 
     [JsonPropertyName("itemID")]
-    public uint? ItemId { get; set; }
+    public int? ItemId { get; set; }
 
     [JsonPropertyName("marketTaxRates")]
     public MarketTaxRates TaxRates { get; set; }

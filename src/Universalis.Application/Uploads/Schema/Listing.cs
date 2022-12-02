@@ -19,10 +19,10 @@ public class Listing
     public object Hq { get; init; }
         
     [JsonPropertyName("pricePerUnit")]
-    public uint? PricePerUnit { get; init; }
+    public int? PricePerUnit { get; init; }
         
     [JsonPropertyName("quantity")]
-    public uint? Quantity { get; set; }
+    public int? Quantity { get; set; }
         
     [JsonPropertyName("retainerName")]
     public string RetainerName { get; init; }
@@ -67,7 +67,7 @@ public class Listing
     }
 
     [JsonPropertyName("stainID")]
-    public uint? DyeId { get; init; }
+    public int? DyeId { get; init; }
 
     [JsonPropertyName("lastReviewTime")]
     public long? LastReviewTimeUnixSeconds { get; init; }

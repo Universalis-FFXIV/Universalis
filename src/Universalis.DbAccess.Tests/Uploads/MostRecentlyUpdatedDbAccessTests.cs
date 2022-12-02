@@ -13,15 +13,15 @@ public class MostRecentlyUpdatedDbAccessTests
 {
     private class MockWorldItemUploadStore : IWorldItemUploadStore
     {
-        private readonly Dictionary<uint, double> _scores = new();
+        private readonly Dictionary<int, double> _scores = new();
         
-        public Task SetItem(uint worldId, uint id, double val)
+        public Task SetItem(int worldId, int id, double val)
         {
             _scores[id] = val;
             return Task.CompletedTask;
         }
 
-        public Task<IList<KeyValuePair<uint, double>>> GetMostRecent(uint worldId, int stop = -1)
+        public Task<IList<KeyValuePair<int, double>>> GetMostRecent(int worldId, int stop = -1)
         {
             var en = _scores.OrderByDescending(s => s.Value).ToList();
             if (stop > -1)
@@ -29,10 +29,10 @@ public class MostRecentlyUpdatedDbAccessTests
                 en = en.Take(stop + 1).ToList();
             }
 
-            return Task.FromResult((IList<KeyValuePair<uint, double>>)en);
+            return Task.FromResult((IList<KeyValuePair<int, double>>)en);
         }
         
-        public Task<IList<KeyValuePair<uint, double>>> GetLeastRecent(uint worldId, int stop = -1)
+        public Task<IList<KeyValuePair<int, double>>> GetLeastRecent(int worldId, int stop = -1)
         {
             var en = _scores.OrderBy(s => s.Value).ToList();
             if (stop > -1)
@@ -40,7 +40,7 @@ public class MostRecentlyUpdatedDbAccessTests
                 en = en.Take(stop + 1).ToList();
             }
 
-            return Task.FromResult((IList<KeyValuePair<uint, double>>)en);
+            return Task.FromResult((IList<KeyValuePair<int, double>>)en);
         }
     }
 
@@ -89,7 +89,7 @@ public class MostRecentlyUpdatedDbAccessTests
         
         Assert.NotNull(output);
         Assert.Single(output);
-        Assert.Equal(5333U, output[0].ItemId);
+        Assert.Equal(5333, output[0].ItemId);
     }
 
     [Fact]
@@ -118,8 +118,8 @@ public class MostRecentlyUpdatedDbAccessTests
         Assert.NotNull(output);
         
         var uploads = output.Select(u => u.ItemId).ToList();
-        Assert.Contains(5U, uploads);
-        Assert.Contains(5333U, uploads);
+        Assert.Contains(5, uploads);
+        Assert.Contains(5333, uploads);
     }
 
     [Fact]
@@ -154,8 +154,8 @@ public class MostRecentlyUpdatedDbAccessTests
         });
         
         Assert.NotNull(output);
-        Assert.Equal(5333U, output[0].ItemId);
-        Assert.Equal(5U, output[1].ItemId);
+        Assert.Equal(5333, output[0].ItemId);
+        Assert.Equal(5, output[1].ItemId);
         Assert.Equal(2, output.Count);
     }
     
@@ -168,7 +168,7 @@ public class MostRecentlyUpdatedDbAccessTests
             await db.Push(74, new WorldItemUpload
             {
                 WorldId = 74,
-                ItemId = (uint)i,
+                ItemId = (int)i,
                 LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             });
         }

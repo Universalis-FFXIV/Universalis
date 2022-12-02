@@ -4,5 +4,5 @@ namespace Universalis.Entities.Uploads;
 
 public class RecentlyUpdatedItems
 {
-    public List<uint> Items { get; set; }
+    public List<int> Items { get; set; }
 }

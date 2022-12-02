@@ -44,7 +44,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
 #if DEBUG
     [Fact]
 #endif
-    public async Task Insert_Null_OnMannequin_Works()
+    public async Task Insert_Null_OnMannequin_DoesNotWork()
     {
         var store = _fixture.Services.GetRequiredService<ISaleStore>();
         var sale = new Sale
@@ -61,13 +61,22 @@ public class SaleStoreTests : IClassFixture<DbFixture>
             UploaderIdHash = "efuwhafejgj3weg0wrkporeh"
         };
 
-        await store.Insert(sale);
+        await Assert.ThrowsAsync<ArgumentException>(() => store.Insert(sale));
     }
 
 #if DEBUG
     [Fact]
 #endif
-    public async Task Insert_Null_BuyerName_Works()
+    public async Task Insert_Null_DoesNotWork()
+    {
+        var store = _fixture.Services.GetRequiredService<ISaleStore>();
+        await Assert.ThrowsAsync<ArgumentNullException>(() => store.Insert(null));
+    }
+
+#if DEBUG
+    [Fact]
+#endif
+    public async Task Insert_Null_BuyerName_DoesNotWork()
     {
         var store = _fixture.Services.GetRequiredService<ISaleStore>();
         var sale = new Sale
@@ -84,13 +93,13 @@ public class SaleStoreTests : IClassFixture<DbFixture>
             UploaderIdHash = "efuwhafejgj3weg0wrkporeh"
         };
 
-        await store.Insert(sale);
+        await Assert.ThrowsAsync<ArgumentException>(() => store.Insert(sale));
     }
 
 #if DEBUG
     [Fact]
 #endif
-    public async Task Insert_Null_Quantity_Works()
+    public async Task Insert_Null_Quantity_DoesNotWork()
     {
         var store = _fixture.Services.GetRequiredService<ISaleStore>();
         var sale = new Sale
@@ -107,7 +116,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
             UploaderIdHash = "efuwhafejgj3weg0wrkporeh"
         };
 
-        await store.Insert(sale);
+        await Assert.ThrowsAsync<ArgumentException>(() => store.Insert(sale));
     }
 
 #if DEBUG

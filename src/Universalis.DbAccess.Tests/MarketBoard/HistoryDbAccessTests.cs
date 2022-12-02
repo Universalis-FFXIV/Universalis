@@ -14,7 +14,7 @@ public class HistoryDbAccessTests
 {
     private class MockMarketItemStore : IMarketItemStore
     {
-        private readonly Dictionary<(uint, uint), MarketItem> _data = new();
+        private readonly Dictionary<(int, int), MarketItem> _data = new();
 
         public Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
         {
@@ -33,7 +33,7 @@ public class HistoryDbAccessTests
             return Task.CompletedTask;
         }
 
-        public ValueTask<MarketItem> Retrieve(uint worldId, uint itemId, CancellationToken cancellationToken = default)
+        public ValueTask<MarketItem> Retrieve(int worldId, int itemId, CancellationToken cancellationToken = default)
         {
             return _data.TryGetValue((worldId, itemId), out var marketItem)
                 ? ValueTask.FromResult(marketItem)
@@ -59,7 +59,7 @@ public class HistoryDbAccessTests
             }
         }
 
-        public Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null,
+        public Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null,
             CancellationToken cancellationToken = default)
         {
             return Task.FromResult((IEnumerable<Sale>)_data
@@ -71,12 +71,12 @@ public class HistoryDbAccessTests
                 .ToList());
         }
 
-        public Task<long> RetrieveGilTradeVolume(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+        public Task<long> RetrieveGilTradeVolume(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public Task<long> RetrieveUnitTradeVolume(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+        public Task<long> RetrieveUnitTradeVolume(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
@@ -102,7 +102,7 @@ public class HistoryDbAccessTests
     public async Task RetrieveMany_DoesNotThrow()
     {
         var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore());
-        var output = await db.RetrieveMany(new HistoryManyQuery { WorldIds = new uint[] { 74 }, ItemId = 5333 });
+        var output = await db.RetrieveMany(new HistoryManyQuery { WorldIds = new int[] { 74 }, ItemId = 5333 });
         Assert.NotNull(output);
         Assert.Empty(output);
     }

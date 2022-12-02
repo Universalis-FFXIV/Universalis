@@ -212,8 +212,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                         .Where(s => s.SlotId != null && s.MateriaId != null)
                         .Select(s => new Materia
                         {
-                            SlotId = (uint)s.SlotId!,
-                            MateriaId = (uint)s.MateriaId!,
+                            SlotId = (int)s.SlotId!,
+                            MateriaId = (int)s.MateriaId!,
                         })
                         .ToList() ?? new List<Materia>(),
                     PricePerUnit = l.PricePerUnit ?? 0,
@@ -234,7 +234,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             .ToList();
     }
 
-    private static List<Sale> CleanUploadedSales(IEnumerable<Schema.Sale> uploadedSales, uint worldId, uint itemId,
+    private static List<Sale> CleanUploadedSales(IEnumerable<Schema.Sale> uploadedSales, int worldId, int itemId,
         string uploaderIdSha256)
     {
         return uploadedSales

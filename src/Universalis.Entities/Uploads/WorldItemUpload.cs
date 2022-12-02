@@ -5,10 +5,10 @@ namespace Universalis.Entities.Uploads;
 public class WorldItemUpload
 {
     [BsonElement("itemID")]
-    public uint ItemId { get; init; }
+    public int ItemId { get; init; }
 
     [BsonElement("worldID")]
-    public uint WorldId { get; init; }
+    public int WorldId { get; init; }
 
     [BsonElement("lastUploadTime")]
     public double LastUploadTimeUnixMilliseconds { get; init; }

@@ -5,10 +5,10 @@ namespace Universalis.Application.Realtime.Messages;
 public class ItemUpdate : SocketMessage
 {
     [BsonElement("item")]
-    public uint ItemId { get; init; }
+    public int ItemId { get; init; }
 
     [BsonElement("world")]
-    public uint WorldId { get; init; }
+    public int WorldId { get; init; }
 
     public ItemUpdate() : base("item", "update")
     {

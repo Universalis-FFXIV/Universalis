@@ -75,11 +75,11 @@ public class HistoryControllerTests
         var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
         Assert.NotNull(history);
-        Assert.Contains(5U, history.ItemIds);
-        Assert.Contains(5333U, history.ItemIds);
+        Assert.Contains(5, history.ItemIds);
+        Assert.Contains(5333, history.ItemIds);
         Assert.Empty(history.UnresolvedItemIds);
         Assert.Equal(2, history.Items.Count);
-        Assert.Equal(74U, history.WorldId);
+        Assert.Equal(74, history.WorldId);
         Assert.Equal(test.GameData.AvailableWorlds()[74], history.WorldName);
         Assert.Null(history.DcName);
 
@@ -131,8 +131,8 @@ public class HistoryControllerTests
         var result = await test.Controller.Get("5,5333", worldOrDc, entriesToReturn);
         var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
-        Assert.Contains(5U, history.ItemIds);
-        Assert.Contains(5333U, history.ItemIds);
+        Assert.Contains(5, history.ItemIds);
+        Assert.Contains(5333, history.ItemIds);
         Assert.Empty(history.UnresolvedItemIds);
         Assert.Equal(2, history.Items.Count);
         Assert.Null(history.WorldId);
@@ -159,18 +159,18 @@ public class HistoryControllerTests
     {
         var test = TestResources.Create();
 
-        const uint itemId = 5333;
+        const int itemId = 5333;
         var result = await test.Controller.Get(itemId.ToString(), worldOrDc, entriesToReturn);
 
         var history = (HistoryView)Assert.IsType<OkObjectResult>(result).Value;
 
         Assert.Equal(itemId, history.ItemId);
-        Assert.Equal(74U, history.WorldId);
+        Assert.Equal(74, history.WorldId);
         Assert.Equal("Coeurl", history.WorldName);
         Assert.Null(history.DcName);
         Assert.NotNull(history.Sales);
         Assert.Empty(history.Sales);
-        Assert.Equal(0U, history.LastUploadTimeUnixMilliseconds);
+        Assert.Equal(0, history.LastUploadTimeUnixMilliseconds);
         Assert.NotNull(history.StackSizeHistogram);
         Assert.Empty(history.StackSizeHistogram);
         Assert.NotNull(history.StackSizeHistogramNq);
@@ -194,12 +194,12 @@ public class HistoryControllerTests
 
         var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
-        Assert.Contains(5U, history.UnresolvedItemIds);
-        Assert.Contains(5333U, history.UnresolvedItemIds);
-        Assert.Contains(5U, history.ItemIds);
-        Assert.Contains(5333U, history.ItemIds);
+        Assert.Contains(5, history.UnresolvedItemIds);
+        Assert.Contains(5333, history.UnresolvedItemIds);
+        Assert.Contains(5, history.ItemIds);
+        Assert.Contains(5333, history.ItemIds);
         Assert.Empty(history.Items);
-        Assert.Equal(74U, history.WorldId);
+        Assert.Equal(74, history.WorldId);
         Assert.Equal(test.GameData.AvailableWorlds()[74], history.WorldName);
         Assert.Null(history.DcName);
     }
@@ -211,7 +211,7 @@ public class HistoryControllerTests
     {
         var test = TestResources.Create();
 
-        const uint itemId = 5333;
+        const int itemId = 5333;
         var result = await test.Controller.Get(itemId.ToString(), worldOrDc, entriesToReturn);
 
         var history = (HistoryView)Assert.IsType<OkObjectResult>(result).Value;
@@ -220,7 +220,7 @@ public class HistoryControllerTests
         Assert.Equal("Crystal", history.DcName);
         Assert.NotNull(history.Sales);
         Assert.Empty(history.Sales);
-        Assert.Equal(0U, history.LastUploadTimeUnixMilliseconds);
+        Assert.Equal(0, history.LastUploadTimeUnixMilliseconds);
         Assert.NotNull(history.StackSizeHistogram);
         Assert.Empty(history.StackSizeHistogram);
         Assert.NotNull(history.StackSizeHistogramNq);
@@ -243,10 +243,10 @@ public class HistoryControllerTests
 
         var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
-        Assert.Contains(5U, history.UnresolvedItemIds);
-        Assert.Contains(5333U, history.UnresolvedItemIds);
-        Assert.Contains(5U, history.ItemIds);
-        Assert.Contains(5333U, history.ItemIds);
+        Assert.Contains(5, history.UnresolvedItemIds);
+        Assert.Contains(5333, history.UnresolvedItemIds);
+        Assert.Contains(5, history.ItemIds);
+        Assert.Contains(5333, history.ItemIds);
         Assert.Empty(history.Items);
         Assert.Equal("Crystal", history.DcName);
         Assert.Null(history.WorldId);
@@ -257,7 +257,7 @@ public class HistoryControllerTests
     {
         var test = TestResources.Create();
 
-        const uint itemId = 0;
+        const int itemId = 0;
         var result = await test.Controller.Get(itemId.ToString(), "74", "");
 
         Assert.IsType<NotFoundResult>(result);
@@ -268,14 +268,14 @@ public class HistoryControllerTests
     {
         var test = TestResources.Create();
 
-        var result = await test.Controller.Get("0, 4294967295", "74", "");
+        var result = await test.Controller.Get("0, 494967295", "74", "");
 
         var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
-        Assert.Contains(0U, history.UnresolvedItemIds);
-        Assert.Contains(4294967295U, history.UnresolvedItemIds);
+        Assert.Contains(0, history.UnresolvedItemIds);
+        Assert.Contains(494967295, history.UnresolvedItemIds);
         Assert.Empty(history.Items);
-        Assert.Equal(74U, history.WorldId);
+        Assert.Equal(74, history.WorldId);
         Assert.Null(history.DcName);
     }
 
@@ -284,7 +284,7 @@ public class HistoryControllerTests
     {
         var test = TestResources.Create();
 
-        const uint itemId = 0;
+        const int itemId = 0;
         var result = await test.Controller.Get(itemId.ToString(), "Crystal", "");
 
         Assert.IsType<NotFoundResult>(result);
@@ -295,14 +295,14 @@ public class HistoryControllerTests
     {
         var test = TestResources.Create();
 
-        var result = await test.Controller.Get("0 ,4294967295", "crystal", "");
+        var result = await test.Controller.Get("0 ,494967295", "crystal", "");
 
         var history = (HistoryMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
-        Assert.Contains(0U, history.UnresolvedItemIds);
-        Assert.Contains(4294967295U, history.UnresolvedItemIds);
-        Assert.Contains(0U, history.ItemIds);
-        Assert.Contains(4294967295U, history.ItemIds);
+        Assert.Contains(0, history.UnresolvedItemIds);
+        Assert.Contains(494967295, history.UnresolvedItemIds);
+        Assert.Contains(0, history.ItemIds);
+        Assert.Contains(494967295, history.ItemIds);
         Assert.Empty(history.Items);
         Assert.Equal("Crystal", history.DcName);
         Assert.Null(history.WorldId);

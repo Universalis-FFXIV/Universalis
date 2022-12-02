@@ -12,9 +12,9 @@ public class CurrentlyShownDbAccessTests
 {
     private class MockCurrentlyShownStore : ICurrentlyShownStore
     {
-        private readonly Dictionary<(uint, uint), CurrentlyShown> _currentlyShown = new();
+        private readonly Dictionary<(int, int), CurrentlyShown> _currentlyShown = new();
         
-        public Task<CurrentlyShown> GetData(uint worldId, uint itemId, CancellationToken cancellationToken = default)
+        public Task<CurrentlyShown> GetData(int worldId, int itemId, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(_currentlyShown.TryGetValue((worldId, itemId), out var data)
                 ? data

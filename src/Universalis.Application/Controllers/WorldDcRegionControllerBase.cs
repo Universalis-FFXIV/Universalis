@@ -32,9 +32,9 @@ public class WorldDcRegionControllerBase : ControllerBase
     /// <param name="worldDcRegion">The input data.</param>
     /// <param name="worldIds">The resulting array of world IDs.</param>
     /// <returns><see langword="true" /> if the operation succeeded, otherwise <see langword="false" />.</returns>
-    protected bool TryGetWorldIds(WorldDcRegion worldDcRegion, out uint[] worldIds)
+    protected bool TryGetWorldIds(WorldDcRegion worldDcRegion, out int[] worldIds)
     {
-        worldIds = Array.Empty<uint>();
+        worldIds = Array.Empty<int>();
 
         if (worldDcRegion.IsWorld)
         {

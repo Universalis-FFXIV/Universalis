@@ -26,8 +26,8 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
     protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(
         WorldDcRegion worldDcRegion,
-        uint[] worldIds,
-        uint itemId,
+        int[] worldIds,
+        int itemId,
         int nListings = int.MaxValue,
         int nEntries = int.MaxValue,
         bool noGst = false,
@@ -52,7 +52,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         var nowSeconds = now / 1000;
         var (worldUploadTimes, currentlyShown) = data
             .Aggregate(
-                (EmptyWorldDictionary<Dictionary<uint, long>, long>(worldIds),
+                (EmptyWorldDictionary<Dictionary<int, long>, long>(worldIds),
                     new CurrentlyShownView { Listings = new List<ListingView>(), RecentHistory = new List<SaleView>() }),
                 (agg, next) =>
                 {
@@ -74,8 +74,8 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                         {
                             if (!noGst)
                             {
-                                l.PricePerUnit = (uint)Math.Ceiling(l.PricePerUnit * 1.05);
-                                l.Total = (uint)Math.Ceiling(l.Total * 1.05);
+                                l.PricePerUnit = (int)Math.Ceiling(l.PricePerUnit * 1.05);
+                                l.Total = (int)Math.Ceiling(l.Total * 1.05);
                             }
 
                             l.WorldId = !worldDcRegion.IsWorld ? next.WorldId : null;
@@ -148,7 +148,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         return (resolved, view);
     }
     
-    private async Task<CurrentlyShownView> FetchCurrentlyShownData(uint worldId, uint itemId, CancellationToken cancellationToken = default)
+    private async Task<CurrentlyShownView> FetchCurrentlyShownData(int worldId, int itemId, CancellationToken cancellationToken = default)
     {
         var cd = await CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId }, cancellationToken);
         if (cd == null)
@@ -184,7 +184,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         };
     }
 
-    private static TDictionary EmptyWorldDictionary<TDictionary, T>(IEnumerable<uint> worldIds) where TDictionary : IDictionary<uint, T>
+    private static TDictionary EmptyWorldDictionary<TDictionary, T>(IEnumerable<int> worldIds) where TDictionary : IDictionary<int, T>
     {
         var dict = (TDictionary)Activator.CreateInstance(typeof(TDictionary));
         foreach (var worldId in worldIds)
@@ -196,12 +196,12 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         return dict;
     }
 
-    private static uint GetMinPricePerUnit<TPriceable>(IList<TPriceable> items) where TPriceable : IPriceable
+    private static int GetMinPricePerUnit<TPriceable>(IList<TPriceable> items) where TPriceable : IPriceable
     {
         return !items.Any() ? 0 : items.Select(s => s.PricePerUnit).Min();
     }
 
-    private static uint GetMaxPricePerUnit<TPriceable>(IList<TPriceable> items) where TPriceable : IPriceable
+    private static int GetMaxPricePerUnit<TPriceable>(IList<TPriceable> items) where TPriceable : IPriceable
     {
         return !items.Any() ? 0 : items.Select(s => s.PricePerUnit).Max();
     }

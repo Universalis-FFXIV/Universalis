@@ -6,5 +6,5 @@ namespace Universalis.Application.Views.V1;
 public class CheapestView
 {
     [JsonPropertyName("items")]
-    public SortedDictionary<uint, ListingView> Items { get; init; }
+    public SortedDictionary<int, ListingView> Items { get; init; }
 }

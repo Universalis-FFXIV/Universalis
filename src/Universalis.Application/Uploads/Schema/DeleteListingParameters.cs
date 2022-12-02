@@ -11,10 +11,10 @@ public class DeleteListingParameters
     public string ListingId { get; set; }
 
     [JsonPropertyName("quantity")]
-    public uint? Quantity { get; set; }
+    public int? Quantity { get; set; }
 
     [JsonPropertyName("pricePerUnit")]
-    public uint? PricePerUnit { get; set; }
+    public int? PricePerUnit { get; set; }
 
     [JsonPropertyName("uploaderID")]
     public string UploaderId { get; set; }

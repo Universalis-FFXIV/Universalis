@@ -40,7 +40,7 @@ public class SalesController : ControllerBase
     [ApiTag("Market board sales")]
     [ProducesResponseType(typeof(SalesPage), 200)]
     [ProducesResponseType(404)]
-    public async Task<ActionResult<SalesPage>> Get(Servers servers, uint itemId,
+    public async Task<ActionResult<SalesPage>> Get(Servers servers, int itemId,
         [FromQuery(Name = "cursor")] string cursor,
         CancellationToken cancellationToken = default)
     {

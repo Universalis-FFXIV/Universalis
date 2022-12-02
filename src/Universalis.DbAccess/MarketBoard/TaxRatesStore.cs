@@ -20,7 +20,7 @@ public class TaxRatesStore : ITaxRatesStore
         _logger = logger;
     }
 
-    public async Task SetTaxRates(uint worldId, TaxRates taxRates)
+    public async Task SetTaxRates(int worldId, TaxRates taxRates)
     {
         // Store data in the database
         var db = _redis.GetDatabase(RedisDatabases.Instance0.TaxRates);
@@ -33,7 +33,7 @@ public class TaxRatesStore : ITaxRatesStore
         await Task.WhenAll(dbTask, cacheTask);
     }
 
-    public async Task<TaxRates> GetTaxRates(uint worldId)
+    public async Task<TaxRates> GetTaxRates(int worldId)
     {
         // Try to retrieve data from the cache
         var cache = _cache.GetDatabase(RedisDatabases.Cache.TaxRates);
@@ -56,7 +56,7 @@ public class TaxRatesStore : ITaxRatesStore
         return taxRates;
     }
 
-    private async Task StoreTaxRates(IDatabase db, TaxRates taxRates, uint worldId)
+    private async Task StoreTaxRates(IDatabase db, TaxRates taxRates, int worldId)
     {
         try
         {
@@ -78,7 +78,7 @@ public class TaxRatesStore : ITaxRatesStore
         }
     }
 
-    private async Task<bool> HasTaxRates(IDatabase db, uint worldId)
+    private async Task<bool> HasTaxRates(IDatabase db, int worldId)
     {
         var key = worldId.ToString();
         try
@@ -92,7 +92,7 @@ public class TaxRatesStore : ITaxRatesStore
         }
     }
 
-    private async Task<TaxRates> FetchTaxRates(IDatabase db, uint worldId)
+    private async Task<TaxRates> FetchTaxRates(IDatabase db, int worldId)
     {
         var key = worldId.ToString();
         try
