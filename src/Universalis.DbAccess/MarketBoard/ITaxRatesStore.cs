@@ -5,7 +5,7 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public interface ITaxRatesStore
 {
-    Task SetTaxRates(uint worldId, TaxRates taxRates);
+    Task SetTaxRates(int worldId, TaxRates taxRates);
 
-    Task<TaxRates> GetTaxRates(uint worldId);
+    Task<TaxRates> GetTaxRates(int worldId);
 }

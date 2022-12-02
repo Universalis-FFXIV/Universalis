@@ -17,7 +17,7 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
         _store = store;
     }
 
-    public Task Push(uint worldId, WorldItemUpload document, CancellationToken cancellationToken = default)
+    public Task Push(int worldId, WorldItemUpload document, CancellationToken cancellationToken = default)
     {
         return _store.SetItem(worldId, document.ItemId,
             document.LastUploadTimeUnixMilliseconds);

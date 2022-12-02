@@ -8,7 +8,7 @@ public class Sale
     /// The sale world's ID.
     /// </summary>
     [JsonPropertyName("world")]
-    public uint World { get; init; }
+    public int World { get; init; }
     
     /// <summary>
     /// Whether or not the item was high-quality.
@@ -20,13 +20,13 @@ public class Sale
     /// The untaxed price per unit sold.
     /// </summary>
     [JsonPropertyName("price")]
-    public uint PricePerUnit { get; init; }
+    public int PricePerUnit { get; init; }
 
     /// <summary>
     /// The stack size sold. This may be null.
     /// </summary>
     [JsonPropertyName("quantity")]
-    public uint? Quantity { get; init; }
+    public int? Quantity { get; init; }
 
     /// <summary>
     /// The sale time, in milliseconds since the UNIX epoch.

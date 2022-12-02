@@ -43,7 +43,7 @@ public class OverviewController : ControllerBase
     [ApiTag("Market board overview")]
     [ProducesResponseType(typeof(MarketOverview), 200)]
     [ProducesResponseType(404)]
-    public async Task<ActionResult<MarketOverview>> Get(Servers servers, uint itemId,
+    public async Task<ActionResult<MarketOverview>> Get(Servers servers, int itemId,
         CancellationToken cancellationToken = default)
     {
         if (!servers.TryResolveWorlds(GameData, out var worlds))
@@ -53,7 +53,7 @@ public class OverviewController : ControllerBase
 
         var sales = new List<Sale>();
         var listings = new List<Listing>();
-        var uploadTimes = new Dictionary<uint, long?>();
+        var uploadTimes = new Dictionary<int, long?>();
         foreach (var world in worlds)
         {
             var currentData = await CurrentlyShown.Retrieve(
@@ -86,7 +86,7 @@ public class OverviewController : ControllerBase
 
     private static Listing ToListingView(World world, Universalis.Entities.MarketBoard.Listing listing)
     {
-        var total = (uint)Math.Ceiling(listing.PricePerUnit * listing.Quantity * 1.05);
+        var total = (int)Math.Ceiling(listing.PricePerUnit * listing.Quantity * 1.05);
         return new Listing
         {
             ListingIdHash = listing.ListingId,
@@ -100,7 +100,7 @@ public class OverviewController : ControllerBase
             Creator = !string.IsNullOrEmpty(listing.CreatorName)
                 ? new Creator { IdHash = listing.CreatorId, Name = listing.CreatorName }
                 : null,
-            Materia = new List<uint>(),
+            Materia = new List<int>(),
             OnMannequin = listing.OnMannequin,
             Retainer = new Retainer { IdHash = listing.RetainerId, Name = listing.RetainerName },
             Seller = new Seller { IdHash = listing.SellerId },

@@ -4,9 +4,9 @@ namespace Universalis.Entities.MarketBoard;
 
 public class History
 {
-    public uint ItemId { get; init; }
+    public int ItemId { get; init; }
 
-    public uint WorldId { get; init; }
+    public int WorldId { get; init; }
 
     public double LastUploadTimeUnixMilliseconds { get; set; }
 

@@ -71,7 +71,7 @@ public class MostRecentlyUpdatedUploadBehaviorTests
         var result = await behavior.Execute(null, upload);
         Assert.Null(result);
 
-        var data = await mostRecentlyUpdatedDb.GetAllMostRecent(new MostRecentlyUpdatedManyQuery { WorldIds = new[] { 74U } });
+        var data = await mostRecentlyUpdatedDb.GetAllMostRecent(new MostRecentlyUpdatedManyQuery { WorldIds = new[] { 74 } });
         Assert.NotNull(data);
         Assert.Single(data);
         Assert.Equal(upload.ItemId.Value, data[0].ItemId);

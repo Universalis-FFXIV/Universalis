@@ -5,7 +5,7 @@ namespace Universalis.DbAccess.Uploads;
 
 public interface IRecentlyUpdatedItemsStore
 {
-    Task SetItem(uint id, double val);
+    Task SetItem(int id, double val);
     
-    Task<IList<KeyValuePair<uint, double>>> GetAllItems(int stop = -1);
+    Task<IList<KeyValuePair<int, double>>> GetAllItems(int stop = -1);
 }

@@ -15,7 +15,7 @@ public class Listing
     /// The listing world's ID.
     /// </summary>
     [JsonPropertyName("world")]
-    public uint World { get; init; }
+    public int World { get; init; }
     
     /// <summary>
     /// The time that this listing was posted by its seller, in milliseconds since the UNIX epoch.
@@ -34,13 +34,13 @@ public class Listing
     /// The stack size sold.
     /// </summary>
     [JsonPropertyName("quantity")]
-    public uint Quantity { get; init; }
+    public int Quantity { get; init; }
     
     /// <summary>
     /// The total price of the listing.
     /// </summary>
     [JsonPropertyName("total")]
-    public uint Total { get; init; }
+    public int Total { get; init; }
 
     /// <summary>
     /// Whether or not the item is high-quality.
@@ -52,7 +52,7 @@ public class Listing
     /// The ID of the dye color (from the Stain sheet) on this item.
     /// </summary>
     [JsonPropertyName("dye")]
-    public uint DyeId { get; init; }
+    public int DyeId { get; init; }
 
     /// <summary>
     /// The item's creator/crafter, if applicable. This may be null, for items with no creator.
@@ -64,7 +64,7 @@ public class Listing
     /// The item IDs of the materia on this item.
     /// </summary>
     [JsonPropertyName("materia")]
-    public IList<uint> Materia { get; init; }
+    public IList<int> Materia { get; init; }
 
     /// <summary>
     /// Whether or not the item is being sold on a mannequin.

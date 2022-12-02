@@ -9,5 +9,5 @@ public class RecentlyUpdatedItemsView
     /// A list of item IDs, with the most recent first.
     /// </summary>
     [JsonPropertyName("items")]
-    public List<uint> Items { get; init; } = new();
+    public List<int> Items { get; init; } = new();
 }

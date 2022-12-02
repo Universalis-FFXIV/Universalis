@@ -2,7 +2,7 @@
 
 public class MostRecentlyUpdatedManyQuery
 {
-    public uint[] WorldIds { get; init; }
+    public int[] WorldIds { get; init; }
     
     public int Count { get; init; }
 }

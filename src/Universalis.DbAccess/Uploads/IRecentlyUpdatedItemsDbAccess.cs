@@ -8,5 +8,5 @@ public interface IRecentlyUpdatedItemsDbAccess
 {
     public Task<RecentlyUpdatedItems> Retrieve(CancellationToken cancellationToken = default);
 
-    public Task Push(uint itemId, CancellationToken cancellationToken = default);
+    public Task Push(int itemId, CancellationToken cancellationToken = default);
 }

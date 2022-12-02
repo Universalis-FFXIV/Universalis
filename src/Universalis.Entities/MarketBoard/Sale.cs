@@ -11,21 +11,21 @@ public class Sale : IEquatable<Sale>
 
     [DynamoDBProperty("world_id")]
     [DynamoDBGlobalSecondaryIndexRangeKey("sale_entry_item_id_world_id")]
-    public uint WorldId { get; init; }
+    public int WorldId { get; init; }
 
     [DynamoDBProperty("item_id")]
     [DynamoDBGlobalSecondaryIndexHashKey("sale_entry_item_id_world_id")]
-    public uint ItemId { get; init; }
+    public int ItemId { get; init; }
 
     [DynamoDBProperty("hq")]
     public bool Hq { get; init; }
 
     [DynamoDBProperty("unit_price")]
-    public uint PricePerUnit { get; init; }
+    public int PricePerUnit { get; init; }
 
     // Quantities before December 2019 or so weren't stored here, and therefore will be null
     [DynamoDBProperty("quantity")]
-    public uint? Quantity { get; init; }
+    public int? Quantity { get; init; }
 
     // Names before May 22, 2022 weren't stored here, and therefore will be null
     [DynamoDBProperty("buyer_name")]

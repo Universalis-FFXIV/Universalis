@@ -8,10 +8,10 @@ public class Sale
     public object Hq { get; init; }
 
     [JsonPropertyName("pricePerUnit")]
-    public uint? PricePerUnit { get; init; }
+    public int? PricePerUnit { get; init; }
         
     [JsonPropertyName("quantity")]
-    public uint? Quantity { get; set; }
+    public int? Quantity { get; set; }
         
     [JsonPropertyName("buyerName")]
     public string BuyerName { get; init; }

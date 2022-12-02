@@ -70,8 +70,8 @@ public class CurrentlyShownStoreTests : IClassFixture<DbFixture>
         var store = _fixture.Services.GetRequiredService<ICurrentlyShownStore>();
         var results = await store.GetData(74, 4);
         Assert.NotNull(results);
-        Assert.Equal(0U, results.WorldId);
-        Assert.Equal(0U, results.ItemId);
+        Assert.Equal(0, results.WorldId);
+        Assert.Equal(0, results.ItemId);
         Assert.Equal(0, results.LastUploadTimeUnixMilliseconds);
         Assert.Equal("", results.UploadSource);
         Assert.Empty(results.Listings);

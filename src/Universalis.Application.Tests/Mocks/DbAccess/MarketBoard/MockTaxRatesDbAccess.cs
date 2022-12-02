@@ -9,7 +9,7 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 
 public class MockTaxRatesDbAccess : ITaxRatesDbAccess
 {
-    private readonly Dictionary<uint, TaxRates> _collection = new();
+    private readonly Dictionary<int, TaxRates> _collection = new();
 
     public ValueTask<TaxRates> Retrieve(TaxRatesQuery query, CancellationToken cancellationToken = default)
     {

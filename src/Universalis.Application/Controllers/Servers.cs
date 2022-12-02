@@ -10,14 +10,14 @@ public class Servers
 {
     private readonly List<string> _names = new();
 
-    private readonly List<uint> _worldIds = new();
+    private readonly List<int> _worldIds = new();
 
     private void AddServerName(string serverName)
     {
         _names.Add(serverName);
     }
 
-    private void AddWorldId(uint worldId)
+    private void AddWorldId(int worldId)
     {
         _worldIds.Add(worldId);
     }
@@ -67,7 +67,7 @@ public class Servers
         var parts = s.Split(',');
         foreach (var part in parts)
         {
-            if (uint.TryParse(part, out var id))
+            if (int.TryParse(part, out var id))
             {
                 servers.AddWorldId(id);
             }

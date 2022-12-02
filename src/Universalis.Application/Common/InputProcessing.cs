@@ -7,11 +7,11 @@ namespace Universalis.Application.Common;
 public static class InputProcessing
 {
     /// <summary>
-    /// Parses a string list of IDs into an enumerable of uints. Invalid IDs will be ignored.
+    /// Parses a string list of IDs into an enumerable of ints. Invalid IDs will be ignored.
     /// </summary>
     /// <param name="idList">The list to parse.</param>
-    /// <returns>An enumerable of parsed uints.</returns>
-    public static IEnumerable<uint> ParseIdList(string idList)
+    /// <returns>An enumerable of parsed ints.</returns>
+    public static IEnumerable<int> ParseIdList(string idList)
     {
         if (idList == null)
         {
@@ -21,8 +21,8 @@ public static class InputProcessing
         return idList
             .Replace(" ", "")
             .Split(',')
-            .Where(id => uint.TryParse(id, out _))
-            .Select(uint.Parse)
+            .Where(id => int.TryParse(id, out _))
+            .Select(int.Parse)
             .Distinct();
     }
 

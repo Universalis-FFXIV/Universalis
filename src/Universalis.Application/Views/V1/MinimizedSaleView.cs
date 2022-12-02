@@ -18,13 +18,13 @@ public class MinimizedSaleView
     /// The price per unit sold.
     /// </summary>
     [JsonPropertyName("pricePerUnit")]
-    public uint PricePerUnit { get; init; }
+    public int PricePerUnit { get; init; }
 
     /// <summary>
     /// The stack size sold.
     /// </summary>
     [JsonPropertyName("quantity")]
-    public uint Quantity { get; init; }
+    public int Quantity { get; init; }
     
     /// <summary>
     /// The buyer's character name. This may be null.
@@ -58,5 +58,5 @@ public class MinimizedSaleView
     /// </summary>
     [JsonPropertyName("worldID")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public uint? WorldId { get; init; }
+    public int? WorldId { get; init; }
 }

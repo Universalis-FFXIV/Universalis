@@ -8,7 +8,7 @@ public class WorldItemRecencyView
     /// The item ID.
     /// </summary>
     [JsonPropertyName("itemID")]
-    public uint ItemId { get; init; }
+    public int ItemId { get; init; }
 
     /// <summary>
     /// The last upload time for the item on the listed world.
@@ -20,7 +20,7 @@ public class WorldItemRecencyView
     /// The world ID.
     /// </summary>
     [JsonPropertyName("worldID")]
-    public uint WorldId { get; init; }
+    public int WorldId { get; init; }
 
     /// <summary>
     /// The world name.

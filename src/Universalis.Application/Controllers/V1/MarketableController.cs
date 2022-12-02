@@ -26,8 +26,8 @@ public class MarketableController : ControllerBase
     [MapToApiVersion("1")]
     [ApiTag("Marketable items")]
     [Route("marketable")]
-    [ProducesResponseType(typeof(IEnumerable<uint>), 200)]
-    public IEnumerable<uint> Get()
+    [ProducesResponseType(typeof(IEnumerable<int>), 200)]
+    public IEnumerable<int> Get()
     {
         return _gameData.MarketableItemIds();
     }
@@ -39,8 +39,8 @@ public class MarketableController : ControllerBase
     [MapToApiVersion("2")]
     [ApiTag("Marketable items")]
     [Route("v{version:apiVersion}/marketable")]
-    [ProducesResponseType(typeof(IEnumerable<uint>), 200)]
-    public IEnumerable<uint> GetV2()
+    [ProducesResponseType(typeof(IEnumerable<int>), 200)]
+    public IEnumerable<int> GetV2()
     {
         return Get();
     }
@@ -52,8 +52,8 @@ public class MarketableController : ControllerBase
     [MapToApiVersion("3")]
     [ApiTag("Marketable items")]
     [Route("v{version:apiVersion}/game/marketable-items")]
-    [ProducesResponseType(typeof(IEnumerable<uint>), 200)]
-    public IEnumerable<uint> GetV3()
+    [ProducesResponseType(typeof(IEnumerable<int>), 200)]
+    public IEnumerable<int> GetV3()
     {
         return Get();
     }

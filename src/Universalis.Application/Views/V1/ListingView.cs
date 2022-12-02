@@ -24,21 +24,21 @@ public class ListingView : PartiallySerializable, IPriceable, ICopyable
     /// </summary>
     [BsonElement("pricePerUnit")]
     [JsonPropertyName("pricePerUnit")]
-    public uint PricePerUnit { get; set; }
+    public int PricePerUnit { get; set; }
 
     /// <summary>
     /// The stack size sold.
     /// </summary>
     [BsonElement("quantity")]
     [JsonPropertyName("quantity")]
-    public uint Quantity { get; init; }
+    public int Quantity { get; init; }
 
     /// <summary>
     /// The ID of the dye on this item.
     /// </summary>
     [BsonElement("stainID")]
     [JsonPropertyName("stainID")]
-    public uint DyeId { get; init; }
+    public int DyeId { get; init; }
 
     /// <summary>
     /// The world name, if applicable.
@@ -54,7 +54,7 @@ public class ListingView : PartiallySerializable, IPriceable, ICopyable
     [BsonElement("worldID")]
     [JsonPropertyName("worldID")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public uint? WorldId { get; set; }
+    public int? WorldId { get; set; }
 
     /// <summary>
     /// The creator's character name.
@@ -144,7 +144,7 @@ public class ListingView : PartiallySerializable, IPriceable, ICopyable
     /// </summary>
     [BsonElement("total")]
     [JsonPropertyName("total")]
-    public uint Total { get; set; }
+    public int Total { get; set; }
 
     public ICopyable Clone()
     {

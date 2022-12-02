@@ -44,7 +44,7 @@ public class RecentlyUpdatedItemsController : ControllerBase
             .Intersect(marketable)
             .ToList();
         return data == null
-            ? new RecentlyUpdatedItemsView { Items = new List<uint>() }
+            ? new RecentlyUpdatedItemsView { Items = new List<int>() }
             : new RecentlyUpdatedItemsView { Items = data };
     }
 

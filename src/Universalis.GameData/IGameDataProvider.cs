@@ -7,27 +7,27 @@ public interface IGameDataProvider
     /// <summary>
     /// Returns a read-only dictionary of all available worlds and world IDs.
     /// </summary>
-    IReadOnlyDictionary<uint, string> AvailableWorlds();
+    IReadOnlyDictionary<int, string> AvailableWorlds();
 
     /// <summary>
     /// Returns a read-only dictionary of all available world IDs and worlds.
     /// </summary>
-    IReadOnlyDictionary<string, uint> AvailableWorldsReversed();
+    IReadOnlyDictionary<string, int> AvailableWorldsReversed();
 
     /// <summary>
     /// Returns a sorted set of all available world IDs. This is useful for performing binary searches.
     /// </summary>
-    IReadOnlySet<uint> AvailableWorldIds();
+    IReadOnlySet<int> AvailableWorldIds();
 
     /// <summary>
     /// Returns a sorted set of all marketable item IDs. This is useful for performing binary searches.
     /// </summary>
-    IReadOnlySet<uint> MarketableItemIds();
+    IReadOnlySet<int> MarketableItemIds();
 
     /// <summary>
     /// Returns a read-only dictionary of the stack size limits for all marketable items.
     /// </summary>
-    IReadOnlyDictionary<uint, uint> MarketableItemStackSizes();
+    IReadOnlyDictionary<int, int> MarketableItemStackSizes();
 
     /// <summary>
     /// Returns a sorted set of all data centers.

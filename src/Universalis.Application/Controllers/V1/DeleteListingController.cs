@@ -47,7 +47,7 @@ public class DeleteListingController : WorldDcRegionControllerBase
     [MapToApiVersion("1")]
     [Route("{world}/{itemId}/delete")]
     [ApiExplorerSettings(IgnoreApi = true)]
-    public async Task<IActionResult> Post(uint itemId, string world, [FromHeader] string authorization, [FromBody] DeleteListingParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Post(int itemId, string world, [FromHeader] string authorization, [FromBody] DeleteListingParameters parameters, CancellationToken cancellationToken = default)
     {
         var source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
         {
@@ -129,7 +129,7 @@ public class DeleteListingController : WorldDcRegionControllerBase
     [MapToApiVersion("2")]
     [Route("v{version:apiVersion}/{world}/{itemId}/delete")]
     [ApiExplorerSettings(IgnoreApi = true)]
-    public Task<IActionResult> PostV2(uint itemId, string world, [FromHeader] string authorization,
+    public Task<IActionResult> PostV2(int itemId, string world, [FromHeader] string authorization,
         [FromBody] DeleteListingParameters parameters, CancellationToken cancellationToken = default)
     {
         return Post(itemId, world, authorization, parameters, cancellationToken);

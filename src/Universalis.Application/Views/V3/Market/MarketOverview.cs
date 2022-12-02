@@ -9,14 +9,14 @@ public class MarketOverview
     /// The item's ID.
     /// </summary>
     [JsonPropertyName("item")]
-    public uint ItemId { get; init; }
+    public int ItemId { get; init; }
 
     /// <summary>
     /// The time that this item was last updated on each world requested, in milliseconds since the UNIX epoch.
     /// If an item has never been checked, the timestamp will be null.
     /// </summary>
     [JsonPropertyName("updatedAt")]
-    public IDictionary<uint, long?> LastUpdateTimeUnixMilliseconds { get; init; }
+    public IDictionary<int, long?> LastUpdateTimeUnixMilliseconds { get; init; }
 
     /// <summary>
     /// The current listings.

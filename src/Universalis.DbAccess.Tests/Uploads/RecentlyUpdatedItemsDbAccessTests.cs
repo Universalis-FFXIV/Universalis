@@ -10,15 +10,15 @@ public class RecentlyUpdatedItemsDbAccessTests
 {
     private class ScoreBoardStoreMock : IRecentlyUpdatedItemsStore
     {
-        private readonly Dictionary<uint, double> _scores = new();
+        private readonly Dictionary<int, double> _scores = new();
 
-        public Task SetItem(uint id, double val)
+        public Task SetItem(int id, double val)
         {
             _scores[id] = val;
             return Task.CompletedTask;
         }
 
-        public Task<IList<KeyValuePair<uint, double>>> GetAllItems(int stop = -1)
+        public Task<IList<KeyValuePair<int, double>>> GetAllItems(int stop = -1)
         {
             var en = _scores.OrderByDescending(s => s.Value).ToList();
             if (stop > -1)
@@ -26,7 +26,7 @@ public class RecentlyUpdatedItemsDbAccessTests
                 en = en.Take(stop + 1).ToList();
             }
 
-            return Task.FromResult((IList<KeyValuePair<uint, double>>)en);
+            return Task.FromResult((IList<KeyValuePair<int, double>>)en);
         }
     }
 
@@ -54,7 +54,7 @@ public class RecentlyUpdatedItemsDbAccessTests
         var output = await db.Retrieve();
         Assert.NotNull(output);
         Assert.Single(output.Items);
-        Assert.Equal(5333U, output.Items[0]);
+        Assert.Equal(5333, output.Items[0]);
     }
 
     [Fact]
@@ -65,8 +65,8 @@ public class RecentlyUpdatedItemsDbAccessTests
         await db.Push(5);
         var output = await db.Retrieve();
         Assert.NotNull(output);
-        Assert.Contains(5U, output.Items);
-        Assert.Contains(5333U, output.Items);
+        Assert.Contains(5, output.Items);
+        Assert.Contains(5333, output.Items);
     }
 
     [Fact]
@@ -78,8 +78,8 @@ public class RecentlyUpdatedItemsDbAccessTests
         await db.Push(5333);
         var output = await db.Retrieve();
         Assert.NotNull(output);
-        Assert.Equal(5333U, output.Items[0]);
-        Assert.Equal(5U, output.Items[1]);
+        Assert.Equal(5333, output.Items[0]);
+        Assert.Equal(5, output.Items[1]);
         Assert.Equal(2, output.Items.Count);
     }
 
@@ -89,7 +89,7 @@ public class RecentlyUpdatedItemsDbAccessTests
         IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(new ScoreBoardStoreMock());
         for (var i = 0; i < RecentlyUpdatedItemsDbAccess.MaxItems * 2; i++)
         {
-            await db.Push((uint)i);
+            await db.Push((int)i);
         }
 
         var output = await db.Retrieve();

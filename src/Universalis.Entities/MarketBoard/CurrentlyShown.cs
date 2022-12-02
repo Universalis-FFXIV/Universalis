@@ -5,9 +5,9 @@ namespace Universalis.Entities.MarketBoard;
 
 public class CurrentlyShown : ICopyable
 {
-    public uint WorldId { get; init; }
+    public int WorldId { get; init; }
     
-    public uint ItemId { get; init; }
+    public int ItemId { get; init; }
 
     public long LastUploadTimeUnixMilliseconds { get; init; }
 

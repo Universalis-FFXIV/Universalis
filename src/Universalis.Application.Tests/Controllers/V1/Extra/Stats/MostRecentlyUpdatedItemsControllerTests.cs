@@ -25,7 +25,7 @@ public class MostRecentlyUpdatedItemsControllerTests
             await dbAccess.Push(74, new WorldItemUpload
             {
                 WorldId = 74,
-                ItemId = (uint)itemId,
+                ItemId = (int)itemId,
                 LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             });
         }

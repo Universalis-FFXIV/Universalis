@@ -9,14 +9,14 @@ namespace Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 
 public class MockRecentlyUpdatedItemsDbAccess : IRecentlyUpdatedItemsDbAccess
 {
-    private readonly RecentlyUpdatedItems document = new() { Items = new List<uint>()};
+    private readonly RecentlyUpdatedItems document = new() { Items = new List<int>()};
 
     public Task<RecentlyUpdatedItems> Retrieve(CancellationToken cancellationToken = default)
     {
         return Task.FromResult(document);
     }
 
-    public async Task Push(uint itemId, CancellationToken cancellationToken = default)
+    public async Task Push(int itemId, CancellationToken cancellationToken = default)
     {
         var existing = await Retrieve(cancellationToken);
         var newItems = existing.Items;

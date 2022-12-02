@@ -5,7 +5,7 @@ namespace Universalis.DbAccess.Queries.MarketBoard;
 
 public class TaxRatesQuery : IEquatable<TaxRatesQuery>, ICopyable
 {
-    public uint WorldId { get; init; }
+    public int WorldId { get; init; }
 
     public bool Equals(TaxRatesQuery other)
     {

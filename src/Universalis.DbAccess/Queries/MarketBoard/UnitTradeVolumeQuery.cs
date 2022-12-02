@@ -4,9 +4,9 @@ namespace Universalis.DbAccess.Queries.MarketBoard;
 
 public class TradeVolumeQuery
 {
-    public uint WorldId { get; init; }
+    public int WorldId { get; init; }
 
-    public uint ItemId { get; set; }
+    public int ItemId { get; set; }
 
     public DateTime From { get; set; }
 

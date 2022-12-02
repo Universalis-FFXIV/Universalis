@@ -5,7 +5,7 @@ namespace Universalis.Application.Views.V3.Game;
 public class World
 {
     [JsonPropertyName("id")]
-    public uint Id { get; init; }
+    public int Id { get; init; }
     
     [JsonPropertyName("name")]
     public string Name { get; init; }

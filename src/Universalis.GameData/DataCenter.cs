@@ -6,5 +6,5 @@ public class DataCenter
     
     public string Region { get; init; }
 
-    public uint[] WorldIds { get; init; }
+    public int[] WorldIds { get; init; }
 }

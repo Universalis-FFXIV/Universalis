@@ -7,7 +7,7 @@ public class WorldDcRegion
 {
     public bool IsWorld { get; private init; }
 
-    public uint WorldId { get; private init; }
+    public int WorldId { get; private init; }
 
     public string WorldName { get; private init; }
 
@@ -38,7 +38,7 @@ public class WorldDcRegion
         string worldName = null;
         string dcName = null;
         string regionName = null;
-        var worldIdParsed = uint.TryParse(worldOrDc, out var worldId);
+        var worldIdParsed = int.TryParse(worldOrDc, out var worldId);
         if (!worldIdParsed)
         {
             var cleanText = string.Join('-',

@@ -13,14 +13,14 @@ public class HistoryView
     /// The item ID.
     /// </summary>
     [JsonPropertyName("itemID")]
-    public uint ItemId { get; init; }
+    public int ItemId { get; init; }
 
     /// <summary>
     /// The world ID, if applicable.
     /// </summary>
     [JsonPropertyName("worldID")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public uint? WorldId { get; init; }
+    public int? WorldId { get; init; }
 
     /// <summary>
     /// The last upload time for this endpoint, in milliseconds since the UNIX epoch.

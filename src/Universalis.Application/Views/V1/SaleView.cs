@@ -23,14 +23,14 @@ public class SaleView : PartiallySerializable, IPriceable, ICopyable
     /// </summary>
     [BsonElement("pricePerUnit")]
     [JsonPropertyName("pricePerUnit")]
-    public uint PricePerUnit { get; init; }
+    public int PricePerUnit { get; init; }
 
     /// <summary>
     /// The stack size sold.
     /// </summary>
     [BsonElement("quantity")]
     [JsonPropertyName("quantity")]
-    public uint Quantity { get; init; }
+    public int Quantity { get; init; }
 
     /// <summary>
     /// The sale time, in seconds since the UNIX epoch.
@@ -61,7 +61,7 @@ public class SaleView : PartiallySerializable, IPriceable, ICopyable
     [BsonElement("worldID")]
     [JsonPropertyName("worldID")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public uint? WorldId { get; set; }
+    public int? WorldId { get; set; }
 
     /// <summary>
     /// The buyer name.
@@ -75,7 +75,7 @@ public class SaleView : PartiallySerializable, IPriceable, ICopyable
     /// </summary>
     [BsonElement("total")]
     [JsonPropertyName("total")]
-    public uint Total { get; init; }
+    public int Total { get; init; }
 
     public ICopyable Clone()
     {

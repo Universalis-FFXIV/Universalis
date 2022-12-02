@@ -15,14 +15,14 @@ public class CurrentlyShownView : PartiallySerializable
     /// The item ID.
     /// </summary>
     [JsonPropertyName("itemID")]
-    public uint ItemId { get; init; }
+    public int ItemId { get; init; }
 
     /// <summary>
     /// The world ID, if applicable.
     /// </summary>
     [JsonPropertyName("worldID")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public uint? WorldId { get; init; }
+    public int? WorldId { get; init; }
 
     /// <summary>
     /// The last upload time for this endpoint, in milliseconds since the UNIX epoch.
@@ -120,37 +120,37 @@ public class CurrentlyShownView : PartiallySerializable
     /// The minimum listing price.
     /// </summary>
     [JsonPropertyName("minPrice")]
-    public uint MinPrice { get; set; }
+    public int MinPrice { get; set; }
 
     /// <summary>
     /// The minimum NQ listing price.
     /// </summary>
     [JsonPropertyName("minPriceNQ")]
-    public uint MinPriceNq { get; set; }
+    public int MinPriceNq { get; set; }
 
     /// <summary>
     /// The minimum HQ listing price.
     /// </summary>
     [JsonPropertyName("minPriceHQ")]
-    public uint MinPriceHq { get; set; }
+    public int MinPriceHq { get; set; }
 
     /// <summary>
     /// The maximum listing price.
     /// </summary>
     [JsonPropertyName("maxPrice")]
-    public uint MaxPrice { get; set; }
+    public int MaxPrice { get; set; }
 
     /// <summary>
     /// The maximum NQ listing price.
     /// </summary>
     [JsonPropertyName("maxPriceNQ")]
-    public uint MaxPriceNq { get; set; }
+    public int MaxPriceNq { get; set; }
 
     /// <summary>
     /// The maximum HQ listing price.
     /// </summary>
     [JsonPropertyName("maxPriceHQ")]
-    public uint MaxPriceHq { get; set; }
+    public int MaxPriceHq { get; set; }
 
     /// <summary>
     /// A map of quantities to listing counts, representing the number of listings of each quantity.
@@ -182,5 +182,5 @@ public class CurrentlyShownView : PartiallySerializable
     /// </summary>
     [JsonPropertyName("worldUploadTimes")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public Dictionary<uint, long> WorldUploadTimes { get; set; }
+    public Dictionary<int, long> WorldUploadTimes { get; set; }
 }

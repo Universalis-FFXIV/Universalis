@@ -25,8 +25,8 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
 
     protected async Task<(bool, HistoryView)> GetHistoryView(
         WorldDcRegion worldDcRegion,
-        uint[] worldIds,
-        uint itemId,
+        int[] worldIds,
+        int itemId,
         int entries,
         long statsWithin = 604800000,
         long entriesWithin = -1,

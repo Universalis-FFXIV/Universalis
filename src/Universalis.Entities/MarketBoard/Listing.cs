@@ -12,11 +12,11 @@ public class Listing
 
     public List<Materia> Materia { get; set; }
 
-    public uint PricePerUnit { get; set; }
+    public int PricePerUnit { get; set; }
 
-    public uint Quantity { get; set; }
+    public int Quantity { get; set; }
 
-    public uint DyeId { get; set; }
+    public int DyeId { get; set; }
 
     public string CreatorId { get; set; }
 

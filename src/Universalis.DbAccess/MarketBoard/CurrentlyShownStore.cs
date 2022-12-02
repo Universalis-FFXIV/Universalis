@@ -18,7 +18,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _redis = redis;
     }
 
-    public async Task<CurrentlyShown> GetData(uint worldId, uint itemId, CancellationToken cancellationToken = default)
+    public async Task<CurrentlyShown> GetData(int worldId, int itemId, CancellationToken cancellationToken = default)
     {
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
         var result = await FetchData(db, worldId, itemId, cancellationToken);
@@ -68,33 +68,33 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         await trans.ExecuteAsync();
     }
 
-    private static async Task<RedisValue> EnsureLastUpdated(IDatabase db, uint worldId, uint itemId)
+    private static async Task<RedisValue> EnsureLastUpdated(IDatabase db, int worldId, int itemId)
     {
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
         await db.StringSetAsync(lastUpdatedKey, 0, when: When.NotExists);
         return await db.StringGetAsync(lastUpdatedKey);
     }
 
-    private static void SetLastUpdatedAtomic(ITransaction trans, uint worldId, uint itemId, long timestamp, TimeSpan? expiry = null)
+    private static void SetLastUpdatedAtomic(ITransaction trans, int worldId, int itemId, long timestamp, TimeSpan? expiry = null)
     {
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
         _ = trans.StringSetAsync(lastUpdatedKey, timestamp, expiry);
     }
 
-    private static async Task<string> GetSource(IDatabaseAsync db, uint worldId, uint itemId)
+    private static async Task<string> GetSource(IDatabaseAsync db, int worldId, int itemId)
     {
         var sourceKey = GetUploadSourceKey(worldId, itemId);
         var source = await db.StringGetAsync(sourceKey, flags: CommandFlags.PreferReplica);
         return source;
     }
 
-    private static void SetSourceAtomic(ITransaction trans, uint worldId, uint itemId, string source, TimeSpan? expiry = null)
+    private static void SetSourceAtomic(ITransaction trans, int worldId, int itemId, string source, TimeSpan? expiry = null)
     {
         var sourceKey = GetUploadSourceKey(worldId, itemId);
         _ = trans.StringSetAsync(sourceKey, source, expiry);
     }
 
-    private static async Task<CurrentlyShown> FetchData(IDatabase db, uint worldId, uint itemId, CancellationToken cancellationToken = default)
+    private static async Task<CurrentlyShown> FetchData(IDatabase db, int worldId, int itemId, CancellationToken cancellationToken = default)
     {
         var lastUpdated = await EnsureLastUpdated(db, worldId, itemId);
         if (lastUpdated.IsNullOrEmpty || (long)lastUpdated == 0)
@@ -119,7 +119,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         };
     }
 
-    private static async Task<List<Listing>> GetListings(IDatabaseAsync db, uint worldId, uint itemId, CancellationToken cancellationToken = default)
+    private static async Task<List<Listing>> GetListings(IDatabaseAsync db, int worldId, int itemId, CancellationToken cancellationToken = default)
     {
         var listingsKey = GetListingsIndexKey(worldId, itemId);
 
@@ -150,13 +150,13 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                             agg.OnMannequin = (bool)next.Value;
                             break;
                         case "ppu":
-                            agg.PricePerUnit = (uint)next.Value;
+                            agg.PricePerUnit = (int)next.Value;
                             break;
                         case "q":
-                            agg.Quantity = (uint)next.Value;
+                            agg.Quantity = (int)next.Value;
                             break;
                         case "did":
-                            agg.DyeId = (uint)next.Value;
+                            agg.DyeId = (int)next.Value;
                             break;
                         case "cid":
                             agg.CreatorId = next.Value;
@@ -190,7 +190,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             .ToListAsync(cancellationToken);
     }
 
-    private static void SetListingsAtomic(ITransaction trans, uint worldId, uint itemId, IEnumerable<Guid> existingListingIds, IList<Listing> listings, TimeSpan? expiry = null)
+    private static void SetListingsAtomic(ITransaction trans, int worldId, int itemId, IEnumerable<Guid> existingListingIds, IList<Listing> listings, TimeSpan? expiry = null)
     {
         var listingsKey = GetListingsIndexKey(worldId, itemId);
 
@@ -230,9 +230,9 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _ = trans.StringSetAsync(listingsKey, SerializeObjectIds(newListingIds), expiry);
     }
 
-    private static uint GetValueUInt32(IDictionary<RedisValue, RedisValue> hash, string key)
+    private static int GetValueint32(IDictionary<RedisValue, RedisValue> hash, string key)
     {
-        return hash.ContainsKey(key) ? (uint)hash[key] : 0;
+        return hash.ContainsKey(key) ? (int)hash[key] : 0;
     }
 
     private static int GetValueInt32(IDictionary<RedisValue, RedisValue> hash, string key)
@@ -271,7 +271,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         return vStr!.Split(':', StringSplitOptions.RemoveEmptyEntries)
             .Select(m =>
             {
-                var data = m.Split('-').Select(uint.Parse).ToArray();
+                var data = m.Split('-').Select(int.Parse).ToArray();
                 return new Materia
                 {
                     MateriaId = data[0],
@@ -302,22 +302,22 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         return string.Join(':', ids.Select(id => id.ToString()));
     }
 
-    private static string GetUploadSourceKey(uint worldId, uint itemId)
+    private static string GetUploadSourceKey(int worldId, int itemId)
     {
         return $"{worldId}:{itemId}:Source";
     }
 
-    private static string GetLastUpdatedKey(uint worldId, uint itemId)
+    private static string GetLastUpdatedKey(int worldId, int itemId)
     {
         return $"{worldId}:{itemId}:LastUpdated";
     }
 
-    private static string GetListingsIndexKey(uint worldId, uint itemId)
+    private static string GetListingsIndexKey(int worldId, int itemId)
     {
         return $"{worldId}:{itemId}:Listings";
     }
 
-    private static string GetListingKey(uint worldId, uint itemId, Guid listingId)
+    private static string GetListingKey(int worldId, int itemId, Guid listingId)
     {
         return $"{worldId}:{itemId}:Listings:{listingId}";
     }

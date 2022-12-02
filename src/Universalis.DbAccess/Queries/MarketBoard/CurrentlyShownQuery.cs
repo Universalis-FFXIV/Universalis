@@ -4,9 +4,9 @@ namespace Universalis.DbAccess.Queries.MarketBoard;
 
 public class CurrentlyShownQuery : IEquatable<CurrentlyShownQuery>
 {
-    public uint WorldId { get; init; }
+    public int WorldId { get; init; }
 
-    public uint ItemId { get; init; }
+    public int ItemId { get; init; }
         
     public bool Equals(CurrentlyShownQuery other)
     {

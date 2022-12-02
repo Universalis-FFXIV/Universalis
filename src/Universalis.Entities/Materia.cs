@@ -6,10 +6,10 @@ namespace Universalis.Entities;
 public class Materia : IEquatable<Materia>
 {
     [BsonElement("slotID")]
-    public uint SlotId { get; init; }
+    public int SlotId { get; init; }
 
     [BsonElement("materiaID")]
-    public uint MateriaId { get; init; }
+    public int MateriaId { get; init; }
 
     public bool Equals(Materia other)
     {
