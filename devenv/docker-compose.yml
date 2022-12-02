@@ -53,28 +53,14 @@ services:
     shm_size: 512mb
     volumes:
       - ./postgres:/var/lib/postgres/data
-  scylla-lb:
-    image: nginx:1.23.2
-    ports:
-      - "4053:80"
-    volumes:
-      - "./nginx.conf:/etc/nginx/nginx.conf"
-  scylla1:
-    image: scylladb/scylla:5.0.5
-    command: ["--smp", "1", "--overprovisioned", "1", "--memory", "512M", "--seeds=scylla1,scylla2", "--alternator-port", "8000", "--alternator-write-isolation", "only_rmw_uses_lwt"]
+  scylla:
+    image: scylladb/scylla:5.1.0
+    command: ["--smp", "1", "--overprovisioned", "1", "--memory", "512M", "--alternator-port", "8000", "--alternator-write-isolation", "only_rmw_uses_lwt"]
     cpu_count: 1
     ports:
       - "4054:80"
     volumes:
-      - scylla-data1:/var/lib/scylla
-  scylla2:
-    image: scylladb/scylla:5.0.5
-    command: ["--smp", "1", "--overprovisioned", "1", "--memory", "512M", "--seeds=scylla1,scylla2", "--alternator-port", "8000", "--alternator-write-isolation", "only_rmw_uses_lwt"]
-    cpu_count: 1
-    ports:
-      - "4055:80"
-    volumes:
-      - scylla-data2:/var/lib/scylla
+      - scylla-data:/var/lib/scylla
   redis:
     image: redis:7.0.0
     command: redis-server --save 600 1 --loglevel warning
@@ -83,5 +69,4 @@ services:
     volumes:
       - "./redis:/data"
 volumes:
-  scylla-data1:
-  scylla-data2:
+  scylla-data:
