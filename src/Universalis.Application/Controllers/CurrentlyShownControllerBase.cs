@@ -37,7 +37,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         HashSet<string> fields = null,
         CancellationToken cancellationToken = default)
     {
-        var cached = await Task.WhenAll(worldIds.Select(worldId => FetchCachedCurrentlyShownData(worldId, itemId, cancellationToken)));
+        var cached = await Task.WhenAll(worldIds.Select(worldId => FetchCurrentlyShownData(worldId, itemId, cancellationToken)));
         var data = cached
             .Where(o => o != null)
             .ToList();
@@ -148,7 +148,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         return (resolved, view);
     }
     
-    private async Task<CurrentlyShownView> FetchCachedCurrentlyShownData(uint worldId, uint itemId, CancellationToken cancellationToken = default)
+    private async Task<CurrentlyShownView> FetchCurrentlyShownData(uint worldId, uint itemId, CancellationToken cancellationToken = default)
     {
         var cd = await CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId }, cancellationToken);
         if (cd == null)
@@ -156,13 +156,20 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             return null;
         }
 
-        var h = await History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 }, cancellationToken);
+        // TODO: Link in sales again
+        var h = new History
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+            LastUploadTimeUnixMilliseconds = cd.LastUploadTimeUnixMilliseconds,
+            Sales = new List<Sale>()
+        };
 
         return new CurrentlyShownView
         {
             WorldId = cd.WorldId,
             ItemId = cd.ItemId,
-            LastUploadTimeUnixMilliseconds = cd.LastUploadTimeUnixMilliseconds,
+            LastUploadTimeUnixMilliseconds = Math.Max(cd.LastUploadTimeUnixMilliseconds, Convert.ToInt64(h.LastUploadTimeUnixMilliseconds)),
             Listings = (await Task.WhenAll((cd.Listings ?? new List<Listing>())
                     .Select(l => Util.ListingToView(l, cancellationToken))))
                 .Where(s => s.PricePerUnit > 0)
