@@ -1,6 +1,7 @@
 ﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
+using Cassandra;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
@@ -22,13 +23,19 @@ public class SaleStore : ISaleStore
     private readonly DynamoDBContext _ddbContext;
     private readonly ICacheRedisMultiplexer _cache;
     private readonly ILogger<SaleStore> _logger;
+    private readonly ISession _scylla;
 
-    public SaleStore(IAmazonDynamoDB dynamoDb, ICacheRedisMultiplexer cache, ILogger<SaleStore> logger)
+    private readonly PreparedStatement _insertOneStatement;
+
+    public SaleStore(ICluster scylla, IAmazonDynamoDB dynamoDb, ICacheRedisMultiplexer cache, ILogger<SaleStore> logger)
     {
         _dynamoDb = dynamoDb;
         _ddbContext = new DynamoDBContext(_dynamoDb);
         _cache = cache;
         _logger = logger;
+
+        _scylla = scylla.Connect("alternator_sale_entry");
+        _insertOneStatement = _scylla.Prepare("INSERT INTO sale_entry (id, sale_time, item_id, world_id, \":attrs\") VALUES (?, ?, ?, ?, ?)");
     }
 
     public async Task Insert(Sale sale, CancellationToken cancellationToken = default)
@@ -40,7 +47,20 @@ public class SaleStore : ISaleStore
 
         try
         {
-            await _ddbContext.SaveAsync(sale, cancellationToken);
+            var id = sale.Id.ToString();
+            var saleTime = new DateTimeOffset(sale.SaleTime).ToUnixTimeMilliseconds();
+            var itemId = Convert.ToInt64(sale.ItemId);
+            var worldId = Convert.ToInt64(sale.WorldId);
+            var bound = _insertOneStatement.Bind(id, saleTime, itemId, worldId, new Dictionary<string, object>
+            {
+                { "hq", sale.Hq },
+                { "unit_price", sale.PricePerUnit },
+                { "quantity", sale.Quantity },
+                { "buyer_name", sale.BuyerName },
+                { "on_mannequin", sale.OnMannequin },
+                { "uploader_id", sale.UploaderIdHash },
+            });
+            await _scylla.ExecuteAsync(bound);
         }
         catch (Exception e)
         {
@@ -103,6 +123,7 @@ public class SaleStore : ISaleStore
         // Fetch data from the database
         // All of this extra query setup needs to be done because this
         // queries a global secondary index.
+        var timestamp = from == null ? 0 : new DateTimeOffset(from.Value).ToUnixTimeMilliseconds();
         var req = new QueryOperationConfig
         {
             IndexName = "sale_entry_item_id_world_id",
@@ -115,21 +136,16 @@ public class SaleStore : ISaleStore
                     { ":v_world_id", new Primitive { Type = DynamoDBEntryType.Numeric, Value = worldId.ToString() } },
                 },
             },
-            BackwardSearch = true,
-        };
-
-        if (from != null)
-        {
-            var timestamp = new DateTimeOffset(from.Value).ToUnixTimeMilliseconds();
-            req.FilterExpression = new Expression
+            FilterExpression = new Expression
             {
                 ExpressionStatement = "sale_time >= :v_sale_time",
                 ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
                 {
                     { ":v_sale_time", new Primitive { Type = DynamoDBEntryType.Numeric, Value = timestamp.ToString() } },
                 },
-            };
-        }
+            },
+            BackwardSearch = true,
+        };
 
         var query = _ddbContext.FromQueryAsync<Sale>(req);
 

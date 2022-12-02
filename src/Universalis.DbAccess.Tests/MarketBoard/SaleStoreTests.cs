@@ -131,6 +131,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
         };
 
         await store.Insert(sale);
+        await Task.Delay(1000);
         var results = (await store.RetrieveBySaleTime(24, 5333, 1)).ToList();
 
         Assert.Single(results);
@@ -186,6 +187,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
         };
 
         await store.InsertMany(sales);
+        await Task.Delay(1000);
         var results = (await store.RetrieveBySaleTime(25, 5333, 2)).ToList();
 
         Assert.Equal(2, results.Count);
@@ -242,6 +244,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
         };
 
         await store.InsertMany(sales);
+        await Task.Delay(1000);
         var results1 = (await store.RetrieveBySaleTime(26, 5333, 2)).ToList();
 
         Assert.Equal(2, results1.Count);
