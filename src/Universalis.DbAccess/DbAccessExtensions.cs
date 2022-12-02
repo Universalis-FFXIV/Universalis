@@ -1,5 +1,6 @@
 ﻿using Amazon.DynamoDBv2;
 using Cassandra;
+using Cassandra.Mapping;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
@@ -8,6 +9,7 @@ using System.Linq;
 using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Uploads;
+using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess;
 
@@ -41,6 +43,22 @@ public static class DbAccessExtensions
         DynamoDBTableInitializer.InitializeTables(dynamoDb).GetAwaiter().GetResult();
 
         // Initialize this after the DDB interface so that can handle initialization
+        MappingConfiguration.Global.Define(
+            new Map<Sale>()
+                .TableName("sale")
+                .PartitionKey(s => s.Id)
+                .ClusteringKey(s => s.SaleTime, SortOrder.Descending)
+                .Column(s => s.Id, col => col.WithName("id"))
+                .Column(s => s.SaleTime, col => col.WithName("sale_time"))
+                .Column(s => s.ItemId, col => col.WithName("item_id"))
+                .Column(s => s.WorldId, col => col.WithName("world_id"))
+                .Column(s => s.BuyerName, col => col.WithName("buyer_name"))
+                .Column(s => s.Hq, col => col.WithName("hq"))
+                .Column(s => s.OnMannequin, col => col.WithName("on_mannequin"))
+                .Column(s => s.Quantity, col => col.WithName("quantity"))
+                .Column(s => s.PricePerUnit, col => col.WithName("unit_price"))
+                .Column(s => s.UploaderIdHash, col => col.WithName("uploader_id")));
+
         var scyllaCluster = Cluster.Builder()
             .AddContactPoints(scyllaConnectionString.Split(','))
             .Build();
