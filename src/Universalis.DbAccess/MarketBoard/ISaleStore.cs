@@ -12,12 +12,12 @@ public interface ISaleStore
 
     Task InsertMany(IEnumerable<Sale> sales, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null,
+    Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null,
         CancellationToken cancellationToken = default);
 
-    Task<long> RetrieveUnitTradeVolume(uint worldId, uint itemId, DateTime from, DateTime to,
+    Task<long> RetrieveUnitTradeVolume(int worldId, int itemId, DateTime from, DateTime to,
         CancellationToken cancellationToken = default);
 
-    Task<long> RetrieveGilTradeVolume(uint worldId, uint itemId, DateTime from, DateTime to,
+    Task<long> RetrieveGilTradeVolume(int worldId, int itemId, DateTime from, DateTime to,
         CancellationToken cancellationToken = default);
 }

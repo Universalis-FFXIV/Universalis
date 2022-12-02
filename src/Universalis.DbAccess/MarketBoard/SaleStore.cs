@@ -2,6 +2,8 @@
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Cassandra;
+using Cassandra.Data.Linq;
+using Cassandra.Mapping;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
@@ -24,8 +26,10 @@ public class SaleStore : ISaleStore
     private readonly ICacheRedisMultiplexer _cache;
     private readonly ILogger<SaleStore> _logger;
     private readonly ISession _scylla;
+    private readonly IMapper _mapper;
 
-    private readonly PreparedStatement _insertOneStatement;
+    private readonly PreparedStatement _insertStatement;
+    private readonly PreparedStatement _retrieveStatement;
 
     public SaleStore(ICluster scylla, IAmazonDynamoDB dynamoDb, ICacheRedisMultiplexer cache, ILogger<SaleStore> logger)
     {
@@ -35,7 +39,14 @@ public class SaleStore : ISaleStore
         _logger = logger;
 
         _scylla = scylla.Connect("alternator_sale_entry");
-        _insertOneStatement = _scylla.Prepare("INSERT INTO sale_entry (id, sale_time, item_id, world_id, \":attrs\") VALUES (?, ?, ?, ?, ?)");
+        var table = _scylla.GetTable<Sale>();
+        table.CreateIfNotExists();
+
+        _mapper = new Mapper(_scylla);
+
+        _insertStatement = _scylla.Prepare("INSERT INTO sale (id, sale_time, item_id, world_id, buyer_name, hq, on_mannequin, quantity, unit_price, uploader_id) VALUES " +
+            "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        _retrieveStatement = _scylla.Prepare("SELECT id, sale_time, buyer_name, hq, on_mannequin, quantity, unit_price, uploader_id FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? LIMIT ? ALLOW FILTERING");
     }
 
     public async Task Insert(Sale sale, CancellationToken cancellationToken = default)
@@ -45,22 +56,25 @@ public class SaleStore : ISaleStore
             throw new ArgumentNullException(nameof(sale));
         }
 
+        if (sale.BuyerName == null)
+        {
+            throw new ArgumentException("Sale buyer name may not be null.", nameof(sale));
+        }
+
+        if (sale.Quantity == null)
+        {
+            throw new ArgumentException("Sale quantity may not be null.", nameof(sale));
+        }
+
+        if (sale.OnMannequin == null)
+        {
+            throw new ArgumentException("Mannequin state may not be null.", nameof(sale));
+        }
+
+        await _mapper.InsertAsync(sale);
         try
         {
-            var id = sale.Id.ToString();
-            var saleTime = new DateTimeOffset(sale.SaleTime).ToUnixTimeMilliseconds();
-            var itemId = Convert.ToInt64(sale.ItemId);
-            var worldId = Convert.ToInt64(sale.WorldId);
-            var bound = _insertOneStatement.Bind(id, saleTime, itemId, worldId, new Dictionary<string, object>
-            {
-                { "hq", sale.Hq },
-                { "unit_price", sale.PricePerUnit },
-                { "quantity", sale.Quantity },
-                { "buyer_name", sale.BuyerName },
-                { "on_mannequin", sale.OnMannequin },
-                { "uploader_id", sale.UploaderIdHash },
-            });
-            await _scylla.ExecuteAsync(bound);
+            //
         }
         catch (Exception e)
         {
@@ -81,11 +95,22 @@ public class SaleStore : ISaleStore
         }
 
         var purgedCaches = new Dictionary<string, bool>();
-        var batch = _ddbContext.CreateBatchWrite<Sale>();
+        var batch = new BatchStatement();
         foreach (var sale in sales)
         {
-            batch.AddPutItem(sale);
-
+            var bound = _insertStatement.Bind(
+                sale.Id,
+                sale.SaleTime,
+                sale.ItemId,
+                sale.WorldId,
+                sale.BuyerName,
+                sale.Hq,
+                sale.OnMannequin,
+                sale.Quantity,
+                sale.PricePerUnit,
+                sale.UploaderIdHash);
+            batch.Add(bound);
+            
             // Purge the cache
             var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
             var cacheIndexKey = GetIndexCacheKey(sale.WorldId, sale.ItemId);
@@ -96,9 +121,10 @@ public class SaleStore : ISaleStore
             }
         }
 
+        await _scylla.ExecuteAsync(batch);
         try
         {
-            await batch.ExecuteAsync(cancellationToken);
+            //
         }
         catch (Exception e)
         {
@@ -106,7 +132,7 @@ public class SaleStore : ISaleStore
         }
     }
 
-    public async Task<IEnumerable<Sale>> RetrieveBySaleTime(uint worldId, uint itemId, int count, DateTime? from = null, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null, CancellationToken cancellationToken = default)
     {
         // Try retrieving data from the cache
         var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
@@ -121,50 +147,29 @@ public class SaleStore : ISaleStore
         }
 
         // Fetch data from the database
-        // All of this extra query setup needs to be done because this
-        // queries a global secondary index.
         var timestamp = from == null ? 0 : new DateTimeOffset(from.Value).ToUnixTimeMilliseconds();
-        var req = new QueryOperationConfig
-        {
-            IndexName = "sale_entry_item_id_world_id",
-            KeyExpression = new Expression
-            {
-                ExpressionStatement = "item_id = :v_item_id and world_id = :v_world_id",
-                ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
-                {
-                    { ":v_item_id", new Primitive { Type = DynamoDBEntryType.Numeric, Value = itemId.ToString() } },
-                    { ":v_world_id", new Primitive { Type = DynamoDBEntryType.Numeric, Value = worldId.ToString() } },
-                },
-            },
-            FilterExpression = new Expression
-            {
-                ExpressionStatement = "sale_time >= :v_sale_time",
-                ExpressionAttributeValues = new Dictionary<string, DynamoDBEntry>
-                {
-                    { ":v_sale_time", new Primitive { Type = DynamoDBEntryType.Numeric, Value = timestamp.ToString() } },
-                },
-            },
-            BackwardSearch = true,
-        };
-
-        var query = _ddbContext.FromQueryAsync<Sale>(req);
-
+        //var bound = _retrieveStatement.Bind(Convert.ToInt64(itemId), Convert.ToInt64(worldId), timestamp, count);
+        
         var sales = new List<Sale>();
+        //var res = await _scylla.ExecuteAsync(bound);
+        var page = await _mapper.FetchPageAsync<Sale>(Cql.New("SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? LIMIT ? ALLOW FILTERING", itemId, worldId, timestamp, count));
+        foreach (var nextSale in page)
+        {
+            if (sales.Count > count)
+            {
+                break;
+            }
+
+            if (sales.Contains(nextSale))
+            {
+                continue;
+            }
+
+            sales.Add(nextSale);
+        }
         try
         {
-            while (!query.IsDone && sales.Count <= count)
-            {
-                var batch = await query.GetNextSetAsync(cancellationToken);
-                foreach (var nextSale in batch)
-                {
-                    if (sales.Contains(nextSale))
-                    {
-                        continue;
-                    }
-
-                    sales.Add(nextSale);
-                }
-            }
+            //
         }
         catch (Exception e)
         {
@@ -185,7 +190,7 @@ public class SaleStore : ISaleStore
         return results;
     }
 
-    public async Task<long> RetrieveUnitTradeVolume(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    public async Task<long> RetrieveUnitTradeVolume(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
         // Check if the data needed is cached
         var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
@@ -223,7 +228,7 @@ public class SaleStore : ISaleStore
         return result.Select(e => e.Value).Sum();
     }
 
-    public async Task<long> RetrieveGilTradeVolume(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    public async Task<long> RetrieveGilTradeVolume(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
         // Check if the data needed is cached
         var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
@@ -270,19 +275,19 @@ public class SaleStore : ISaleStore
         await cache.KeyExpireAsync(cacheKey, TimeSpan.FromHours(1), CommandFlags.FireAndForget);
     }
 
-    private async Task<IDictionary<DateTime, int>> GetDailyUnitsTraded(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    private async Task<IDictionary<DateTime, int>> GetDailyUnitsTraded(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
         // TODO: Make this work with Scylla or DynamoDB
         return new Dictionary<DateTime, int>();
     }
 
-    private async Task<IDictionary<DateTime, int>> GetDailyGilTraded(uint worldId, uint itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    private async Task<IDictionary<DateTime, int>> GetDailyGilTraded(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
         // TODO: Make this work with Scylla or DynamoDB
         return new Dictionary<DateTime, int>();
     }
 
-    private async Task<IList<Sale>> FetchSalesFromCache(IDatabase cache, string cacheIndexKey, uint worldId, uint itemId, int count)
+    private async Task<IList<Sale>> FetchSalesFromCache(IDatabase cache, string cacheIndexKey, int worldId, int itemId, int count)
     {
         try
         {
@@ -358,7 +363,7 @@ public class SaleStore : ISaleStore
         }
     }
 
-    private Sale ParseSaleFromHash(Guid saleId, uint worldId, uint itemId, IDictionary<RedisValue, RedisValue> hash)
+    private Sale ParseSaleFromHash(Guid saleId, int worldId, int itemId, IDictionary<RedisValue, RedisValue> hash)
     {
         var saleTimeStr = GetValueString(hash, "t");
         if (!DateTime.TryParse(saleTimeStr, out var saleTime))
@@ -373,8 +378,8 @@ public class SaleStore : ISaleStore
             WorldId = worldId,
             ItemId = itemId,
             Hq = GetValueBool(hash, "hq"),
-            PricePerUnit = GetValueUInt32(hash, "ppu"),
-            Quantity = GetValueUInt32(hash, "q"),
+            PricePerUnit = GetValueInt32(hash, "ppu"),
+            Quantity = GetValueInt32(hash, "q"),
             BuyerName = GetValueString(hash, "bn"),
             SaleTime = saleTime,
             UploaderIdHash = GetValueString(hash, "uid"),
@@ -393,9 +398,9 @@ public class SaleStore : ISaleStore
             .Sum();
     }
 
-    private static uint GetValueUInt32(IDictionary<RedisValue, RedisValue> hash, string key)
+    private static int GetValueInt32(IDictionary<RedisValue, RedisValue> hash, string key)
     {
-        return hash.ContainsKey(key) ? (uint)hash[key] : 0;
+        return hash.ContainsKey(key) ? (int)hash[key] : 0;
     }
 
     private static bool GetValueBool(IDictionary<RedisValue, RedisValue> hash, string key)
@@ -408,17 +413,17 @@ public class SaleStore : ISaleStore
         return hash.ContainsKey(key) ? hash[key] : "";
     }
 
-    private static string GetUnitTradeVolumeCacheKey(uint worldId, uint itemId)
+    private static string GetUnitTradeVolumeCacheKey(int worldId, int itemId)
     {
         return $"sale-volume:{worldId}:{itemId}";
     }
 
-    private static string GetGilTradeVolumeCacheKey(uint worldId, uint itemId)
+    private static string GetGilTradeVolumeCacheKey(int worldId, int itemId)
     {
         return $"sale-volume-gil:{worldId}:{itemId}";
     }
 
-    private static string GetIndexCacheKey(uint worldId, uint itemId)
+    private static string GetIndexCacheKey(int worldId, int itemId)
     {
         return $"sale-index:{worldId}:{itemId}";
     }
