@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
 using Cassandra;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
@@ -16,17 +14,13 @@ public class MarketItemStore : IMarketItemStore
 {
     private readonly ILogger<MarketItemStore> _logger;
     private readonly ICacheRedisMultiplexer _cache;
-    private readonly IAmazonDynamoDB _dynamoDb;
     private readonly ISession _scylla;
-    private readonly DynamoDBContext _ddbContext;
 
     private readonly PreparedStatement _retrieveStatement;
     private readonly PreparedStatement _insertStatement;
 
-    public MarketItemStore(ICluster scylla, IAmazonDynamoDB dynamoDb, ICacheRedisMultiplexer cache, ILogger<MarketItemStore> logger)
+    public MarketItemStore(ICluster scylla, ICacheRedisMultiplexer cache, ILogger<MarketItemStore> logger)
     {
-        _dynamoDb = dynamoDb;
-        _ddbContext = new DynamoDBContext(_dynamoDb);
         _cache = cache;
         _logger = logger;
 

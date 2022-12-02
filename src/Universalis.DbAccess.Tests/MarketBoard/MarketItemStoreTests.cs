@@ -46,8 +46,10 @@ public class MarketItemStoreTests : IClassFixture<DbFixture>
         };
 
         await store.Insert(marketItem);
+        await Task.Delay(1000);
         var result = await store.Retrieve(93, 5);
 
+        Assert.NotNull(result);
         Assert.Equal(marketItem.WorldId, result.WorldId);
         Assert.Equal(marketItem.ItemId, result.ItemId);
         Assert.Equal(marketItem.LastUploadTime, result.LastUploadTime);
@@ -70,8 +72,10 @@ public class MarketItemStoreTests : IClassFixture<DbFixture>
         await store.Insert(marketItem);
         marketItem.LastUploadTime = updatedTime;
         await store.Update(marketItem);
+        await Task.Delay(1000);
         var result = await store.Retrieve(93, 5333);
 
+        Assert.NotNull(result);
         Assert.Equal(marketItem.WorldId, result.WorldId);
         Assert.Equal(marketItem.ItemId, result.ItemId);
         Assert.Equal(marketItem.LastUploadTime, result.LastUploadTime);
@@ -91,8 +95,10 @@ public class MarketItemStoreTests : IClassFixture<DbFixture>
         };
         
         await store.Update(marketItem);
+        await Task.Delay(1000);
         var result = await store.Retrieve(93, 32000);
 
+        Assert.NotNull(result);
         Assert.Equal(marketItem.WorldId, result.WorldId);
         Assert.Equal(marketItem.ItemId, result.ItemId);
         Assert.Equal(marketItem.LastUploadTime, result.LastUploadTime);

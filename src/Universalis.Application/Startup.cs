@@ -16,7 +16,6 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.XPath;
 using Universalis.Alerts;
-using Universalis.Application.Caching;
 using Universalis.Application.Controllers;
 using Universalis.Application.ExceptionFilters;
 using Universalis.Application.Realtime;
@@ -48,13 +47,6 @@ public class Startup
         services.AddUserAlerts();
 
         services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
-
-        services.AddSingleton<ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData>>(sc =>
-        {
-            var currentlyShownDb = sc.GetRequiredService<ICurrentlyShownDbAccess>();
-            var historyDb = sc.GetRequiredService<IHistoryDbAccess>();
-            return new CurrentlyShownCache(100, currentlyShownDb, historyDb);
-        });
 
         services.AddMassTransit(options =>
         {

@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Universalis.Application.Caching;
 using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
 using Universalis.Common.Caching;
@@ -25,22 +24,17 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 {
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IHistoryDbAccess _historyDb;
-    private readonly ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> _cache;
     private readonly IGameDataProvider _gdp;
     private readonly IBus _bus;
-
-    private static readonly Counter CacheDeletes = Metrics.CreateCounter("universalis_cache_deletes", "Cache Deletes");
 
     public MarketBoardUploadBehavior(
         ICurrentlyShownDbAccess currentlyShownDb,
         IHistoryDbAccess historyDb,
-        ICache<CachedCurrentlyShownQuery, CachedCurrentlyShownData> cache,
         IGameDataProvider gdp,
         IBus bus)
     {
         _currentlyShownDb = currentlyShownDb;
         _historyDb = historyDb;
-        _cache = cache;
         _gdp = gdp;
         _bus = bus;
     }
@@ -184,15 +178,6 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 }, cancellationToken);
             }
         }
-
-        _ = Task.Run(async () =>
-        {
-            if (await _cache.Delete(new CachedCurrentlyShownQuery { ItemId = itemId, WorldId = worldId },
-                    cancellationToken))
-            {
-                CacheDeletes.Inc();
-            }
-        }, cancellationToken);
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var listings = newListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>();
