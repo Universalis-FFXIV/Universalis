@@ -135,7 +135,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             .SelectAwait(async id =>
             {
                 var listingKey = GetListingKey(worldId, itemId, id);
-                var listingValues = db.HashScanAsync(listingKey, flags: CommandFlags.PreferReplica);
+                var listingValues = db.HashScanAsync(listingKey, pageSize: 4, flags: CommandFlags.PreferReplica);
                 return await listingValues.AggregateAsync(new Listing(), (agg, next) =>
                 {
                     switch (next.Name)
