@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Cassandra;
+using Cassandra.Data.Linq;
+using Cassandra.Mapping;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Universalis.Entities.MarketBoard;
@@ -15,18 +17,20 @@ public class MarketItemStore : IMarketItemStore
     private readonly ILogger<MarketItemStore> _logger;
     private readonly ICacheRedisMultiplexer _cache;
     private readonly ISession _scylla;
-
-    private readonly PreparedStatement _retrieveStatement;
-    private readonly PreparedStatement _insertStatement;
-
+    private readonly IMapper _mapper;
+    
     public MarketItemStore(ICluster scylla, ICacheRedisMultiplexer cache, ILogger<MarketItemStore> logger)
     {
         _cache = cache;
         _logger = logger;
 
-        _scylla = scylla.Connect("alternator_market_item");
-        _retrieveStatement = _scylla.Prepare("SELECT \":attrs\" FROM market_item WHERE world_id=? AND item_id=? LIMIT 1");
-        _insertStatement = _scylla.Prepare("INSERT INTO market_item (world_id, item_id, \":attrs\") VALUES (?, ?, ?)");
+        _scylla = scylla.Connect();
+        _scylla.CreateKeyspaceIfNotExists("market_item");
+        _scylla.ChangeKeyspace("market_item");
+        var table = _scylla.GetTable<MarketItem>();
+        table.CreateIfNotExists();
+
+        _mapper = new Mapper(_scylla);
     }
 
     public async Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
@@ -36,20 +40,14 @@ public class MarketItemStore : IMarketItemStore
             throw new ArgumentNullException(nameof(marketItem));
         }
 
-        var bound = _insertStatement.Bind(
-            Convert.ToInt64(marketItem.WorldId),
-            Convert.ToInt64(marketItem.ItemId),
-            new Dictionary<string, long>
-            {
-                { "last_upload_time", new DateTimeOffset(marketItem.LastUploadTime).ToUnixTimeMilliseconds() },
-            });
         try
         {
-            await _scylla.ExecuteAsync(bound);
+            await _mapper.InsertAsync(marketItem);
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to insert market item (world={WorldId}, item={ItemId})", marketItem.WorldId, marketItem.ItemId);
+            throw;
         }
 
         // Write through to the cache
@@ -72,20 +70,14 @@ public class MarketItemStore : IMarketItemStore
             throw new ArgumentNullException(nameof(marketItem));
         }
 
-        var bound = _insertStatement.Bind(
-            Convert.ToInt64(marketItem.WorldId),
-            Convert.ToInt64(marketItem.ItemId),
-            new Dictionary<string, long>
-            {
-                { "last_upload_time", new DateTimeOffset(marketItem.LastUploadTime).ToUnixTimeMilliseconds() },
-            });
         try
         {
-            await _scylla.ExecuteAsync(bound);
+            await _mapper.InsertAsync(marketItem);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to update market item (world={WorldId}, item={ItemId})", marketItem.WorldId, marketItem.ItemId);
+            _logger.LogError(e, "Failed to insert market item (world={WorldId}, item={ItemId})", marketItem.WorldId, marketItem.ItemId);
+            throw;
         }
 
         // Write through to the cache
@@ -132,26 +124,12 @@ public class MarketItemStore : IMarketItemStore
         }
 
         // Fetch data from the database
-        var res = await _scylla.ExecuteAsync(_retrieveStatement.Bind(Convert.ToInt64(itemId), Convert.ToInt64(worldId)));
-        var data = res.FirstOrDefault();
-        if (data == null)
+        var match = await _mapper.FirstOrDefaultAsync<MarketItem>("SELECT * FROM market_item WHERE item_id=? AND world_id=?", itemId, worldId);
+        if (match == null)
         {
             return null;
         }
-
-        var attrs = data.GetValue<Dictionary<string, string>>(0);
-        if (!attrs.TryGetValue("last_upload_time", out var s) || !long.TryParse(s, out var lastUploadTime))
-        {
-            return null;
-        }
-
-        var match = new MarketItem
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-            LastUploadTime = DateTimeOffset.FromUnixTimeMilliseconds(lastUploadTime).UtcDateTime,
-        };
-
+        
         // Cache the result
         try
         {
@@ -160,6 +138,7 @@ public class MarketItemStore : IMarketItemStore
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to store MarketItem \"{MarketItemCacheKey}\" in cache (t={LastUploadTime})", cacheKey, match.LastUploadTime);
+            throw;
         }
 
         return match;

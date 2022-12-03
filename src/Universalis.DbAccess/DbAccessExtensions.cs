@@ -42,7 +42,15 @@ public static class DbAccessExtensions
 
         DynamoDBTableInitializer.InitializeTables(dynamoDb).GetAwaiter().GetResult();
 
-        // Initialize this after the DDB interface so that can handle initialization
+        MappingConfiguration.Global.Define(
+            new Map<MarketItem>()
+                .TableName("market_item")
+                .PartitionKey(s => s.ItemId)
+                .ClusteringKey(s => s.WorldId)
+                .Column(s => s.ItemId, col => col.WithName("item_id"))
+                .Column(s => s.WorldId, col => col.WithName("world_id"))
+                .Column(s => s.LastUploadTime, col => col.WithName("last_upload_time")));
+
         MappingConfiguration.Global.Define(
             new Map<Sale>()
                 .TableName("sale")
