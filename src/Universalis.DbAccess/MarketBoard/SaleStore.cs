@@ -139,16 +139,22 @@ public class SaleStore : ISaleStore
             }
         }
 
+
+        var sales = new List<Sale>();
+        if (count == 0)
+        {
+            return sales;
+        }
+
         // Fetch data from the database
         var timestamp = from == null ? 0 : new DateTimeOffset(from.Value).ToUnixTimeMilliseconds();
-        var sales = new List<Sale>();
         byte[] pagingState = null;
         do
         {
             IPage<Sale> page;
             try
             {
-                page = await _mapper.FetchPageAsync<Sale>(50, pagingState, "SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? LIMIT ? ALLOW FILTERING", new object[] { itemId, worldId, timestamp, count });
+                page = await _mapper.FetchPageAsync<Sale>(50, pagingState, "SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? ALLOW FILTERING", new object[] { itemId, worldId, timestamp });
             }
             catch (Exception e)
             {
