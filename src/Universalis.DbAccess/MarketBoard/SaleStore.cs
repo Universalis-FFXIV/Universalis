@@ -1,7 +1,4 @@
-﻿using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
-using Cassandra;
+﻿using Cassandra;
 using Cassandra.Data.Linq;
 using Cassandra.Mapping;
 using Microsoft.Extensions.Logging;
@@ -21,20 +18,15 @@ public class SaleStore : ISaleStore
     // The maximum number of cached sales, per item, per world
     private const int MaxCachedSales = 50;
 
-    private readonly IAmazonDynamoDB _dynamoDb;
-    private readonly DynamoDBContext _ddbContext;
     private readonly ICacheRedisMultiplexer _cache;
     private readonly ILogger<SaleStore> _logger;
     private readonly ISession _scylla;
     private readonly IMapper _mapper;
 
     private readonly PreparedStatement _insertStatement;
-    private readonly PreparedStatement _retrieveStatement;
 
-    public SaleStore(ICluster scylla, IAmazonDynamoDB dynamoDb, ICacheRedisMultiplexer cache, ILogger<SaleStore> logger)
+    public SaleStore(ICluster scylla, ICacheRedisMultiplexer cache, ILogger<SaleStore> logger)
     {
-        _dynamoDb = dynamoDb;
-        _ddbContext = new DynamoDBContext(_dynamoDb);
         _cache = cache;
         _logger = logger;
 
@@ -44,9 +36,10 @@ public class SaleStore : ISaleStore
 
         _mapper = new Mapper(_scylla);
 
-        _insertStatement = _scylla.Prepare("INSERT INTO sale (id, sale_time, item_id, world_id, buyer_name, hq, on_mannequin, quantity, unit_price, uploader_id) VALUES " +
-            "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        _retrieveStatement = _scylla.Prepare("SELECT id, sale_time, buyer_name, hq, on_mannequin, quantity, unit_price, uploader_id FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? LIMIT ? ALLOW FILTERING");
+        _insertStatement = _scylla.Prepare("" +
+            "INSERT INTO sale" +
+            "(id, sale_time, item_id, world_id, buyer_name, hq, on_mannequin, quantity, unit_price, uploader_id)" +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     }
 
     public async Task Insert(Sale sale, CancellationToken cancellationToken = default)
@@ -71,14 +64,14 @@ public class SaleStore : ISaleStore
             throw new ArgumentException("Mannequin state may not be null.", nameof(sale));
         }
 
-        await _mapper.InsertAsync(sale);
         try
         {
-            //
+            await _mapper.InsertAsync(sale);
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to insert sale (world={WorldId}, item={ItemId})", sale.WorldId, sale.ItemId);
+            throw;
         }
 
         // Purge the cache
@@ -121,14 +114,14 @@ public class SaleStore : ISaleStore
             }
         }
 
-        await _scylla.ExecuteAsync(batch);
         try
         {
-            //
+            await _scylla.ExecuteAsync(batch);
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to insert sales");
+            throw;
         }
     }
 
@@ -148,33 +141,42 @@ public class SaleStore : ISaleStore
 
         // Fetch data from the database
         var timestamp = from == null ? 0 : new DateTimeOffset(from.Value).ToUnixTimeMilliseconds();
-        //var bound = _retrieveStatement.Bind(Convert.ToInt64(itemId), Convert.ToInt64(worldId), timestamp, count);
-        
         var sales = new List<Sale>();
-        //var res = await _scylla.ExecuteAsync(bound);
-        var page = await _mapper.FetchPageAsync<Sale>(Cql.New("SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? LIMIT ? ALLOW FILTERING", itemId, worldId, timestamp, count));
-        foreach (var nextSale in page)
+        byte[] pagingState = null;
+        do
         {
-            if (sales.Count > count)
+            IPage<Sale> page;
+            try
+            {
+                page = await _mapper.FetchPageAsync<Sale>(50, pagingState, "SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? LIMIT ? ALLOW FILTERING", new object[] { itemId, worldId, timestamp, count });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to retrieve sales (world={WorldId}, item={ItemId})", worldId, itemId);
+                throw;
+            }
+
+            if (page.Count == 0)
             {
                 break;
             }
 
-            if (sales.Contains(nextSale))
+            pagingState = page.PagingState;
+            foreach (var nextSale in page)
             {
-                continue;
-            }
+                if (sales.Count >= count)
+                {
+                    break;
+                }
 
-            sales.Add(nextSale);
-        }
-        try
-        {
-            //
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to retrieve sales (world={WorldId}, item={ItemId})", worldId, itemId);
-        }
+                if (sales.Contains(nextSale))
+                {
+                    continue;
+                }
+
+                sales.Add(nextSale);
+            }
+        } while (sales.Count < count);
 
         var results = sales
             .Take(count)
