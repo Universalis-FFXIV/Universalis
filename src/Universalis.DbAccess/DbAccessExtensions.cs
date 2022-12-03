@@ -70,7 +70,7 @@ public static class DbAccessExtensions
         MappingConfiguration.Global.Define(
             new Map<Sale>()
                 .TableName("sale")
-                .PartitionKey(s => s.Id)
+                .PartitionKey(s => s.ItemId, s => s.WorldId)
                 .ClusteringKey(s => s.SaleTime, SortOrder.Descending)
                 .Column(s => s.Id, col => col.WithName("id"))
                 .Column(s => s.SaleTime, col => col.WithName("sale_time"))
