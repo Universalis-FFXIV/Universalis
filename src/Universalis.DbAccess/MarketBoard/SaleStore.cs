@@ -30,7 +30,9 @@ public class SaleStore : ISaleStore
         _cache = cache;
         _logger = logger;
 
-        _scylla = scylla.Connect("alternator_sale_entry");
+        _scylla = scylla.Connect();
+        _scylla.CreateKeyspaceIfNotExists("sale");
+        _scylla.ChangeKeyspace("sale");
         var table = _scylla.GetTable<Sale>();
         table.CreateIfNotExists();
 
@@ -154,7 +156,7 @@ public class SaleStore : ISaleStore
             IPage<Sale> page;
             try
             {
-                page = await _mapper.FetchPageAsync<Sale>(50, pagingState, "SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? ALLOW FILTERING", new object[] { itemId, worldId, timestamp });
+                page = await _mapper.FetchPageAsync<Sale>(50, pagingState, "SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=?", new object[] { itemId, worldId, timestamp });
             }
             catch (Exception e)
             {
