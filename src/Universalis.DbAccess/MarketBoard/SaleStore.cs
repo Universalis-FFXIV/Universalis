@@ -156,7 +156,11 @@ public class SaleStore : ISaleStore
             IPage<Sale> page;
             try
             {
-                page = await _mapper.FetchPageAsync<Sale>(50, pagingState, "SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=?", new object[] { itemId, worldId, timestamp });
+                page = await _mapper.FetchPageAsync<Sale>(Cql.New("SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=?", new object[] { itemId, worldId, timestamp })
+                    .WithOptions(options => options
+                        .SetConsistencyLevel(ConsistencyLevel.One)
+                        .SetPageSize(50)
+                        .SetPagingState(pagingState)));
             }
             catch (Exception e)
             {

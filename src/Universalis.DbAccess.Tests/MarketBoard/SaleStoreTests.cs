@@ -128,7 +128,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
         var sale = new Sale
         {
             Id = Guid.NewGuid(),
-            WorldId = 24,
+            WorldId = 27,
             ItemId = 5333,
             Hq = true,
             PricePerUnit = 300,
@@ -141,7 +141,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
 
         await store.Insert(sale);
         await Task.Delay(1000);
-        var results = (await store.RetrieveBySaleTime(24, 5333, 1)).ToList();
+        var results = (await store.RetrieveBySaleTime(27, 5333, 1)).ToList();
 
         Assert.Single(results);
         Assert.All(results, result =>

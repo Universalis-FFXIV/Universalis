@@ -10,7 +10,6 @@ using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Universalis.Application.Controllers;
 
