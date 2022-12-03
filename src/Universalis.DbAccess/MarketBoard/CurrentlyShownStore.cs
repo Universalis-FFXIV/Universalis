@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
@@ -11,17 +12,22 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public class CurrentlyShownStore : ICurrentlyShownStore
 {
+    private readonly ICacheRedisMultiplexer _cache;
     private readonly IPersistentRedisMultiplexer _redis;
+    private readonly ILogger<CurrentlyShownStore> _logger;
 
-    public CurrentlyShownStore(IPersistentRedisMultiplexer redis)
+    public CurrentlyShownStore(ICacheRedisMultiplexer cache, IPersistentRedisMultiplexer redis, ILogger<CurrentlyShownStore> logger)
     {
+        _cache = cache;
         _redis = redis;
+        _logger = logger;
     }
 
     public async Task<CurrentlyShown> GetData(int worldId, int itemId, CancellationToken cancellationToken = default)
     {
+        var cache = _redis.GetDatabase(RedisDatabases.Cache.Listings);
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
-        var result = await FetchData(db, worldId, itemId, cancellationToken);
+        var result = await FetchData(db, cache, worldId, itemId, cancellationToken);
         if (result == null)
         {
             return new CurrentlyShown();
@@ -81,11 +87,17 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _ = trans.StringSetAsync(lastUpdatedKey, timestamp, expiry);
     }
 
-    private static async Task<string> GetSource(IDatabaseAsync db, int worldId, int itemId)
+    private static async Task<RedisValue> GetSource(IDatabaseAsync db, int worldId, int itemId)
     {
         var sourceKey = GetUploadSourceKey(worldId, itemId);
         var source = await db.StringGetAsync(sourceKey, flags: CommandFlags.PreferReplica);
         return source;
+    }
+
+    private static async Task SetSource(IDatabaseAsync db, int worldId, int itemId, string source, TimeSpan? expiry = null)
+    {
+        var sourceKey = GetUploadSourceKey(worldId, itemId);
+        await db.StringSetAsync(sourceKey, source, expiry);
     }
 
     private static void SetSourceAtomic(ITransaction trans, int worldId, int itemId, string source, TimeSpan? expiry = null)
@@ -94,7 +106,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _ = trans.StringSetAsync(sourceKey, source, expiry);
     }
 
-    private static async Task<CurrentlyShown> FetchData(IDatabase db, int worldId, int itemId, CancellationToken cancellationToken = default)
+    private async Task<CurrentlyShown> FetchData(IDatabase db, IDatabase cache, int worldId, int itemId, CancellationToken cancellationToken = default)
     {
         var lastUpdated = await EnsureLastUpdated(db, worldId, itemId);
         if (lastUpdated.IsNullOrEmpty || (long)lastUpdated == 0)
@@ -102,12 +114,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             return null;
         }
 
-        var sourceTask = GetSource(db, worldId, itemId);
-        var listingsTask = GetListings(db, worldId, itemId, cancellationToken);
-        await Task.WhenAll(sourceTask, listingsTask);
-
-        var source = await sourceTask;
-        var listings = await listingsTask;
+        var source = await GetSourceWithCache(db, cache, worldId, itemId);
+        var listings = await GetListings(db, cache, worldId, itemId, cancellationToken);
 
         return new CurrentlyShown
         {
@@ -119,12 +127,77 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         };
     }
 
-    private static async Task<List<Listing>> GetListings(IDatabaseAsync db, int worldId, int itemId, CancellationToken cancellationToken = default)
+    private async Task<string> GetSourceWithCache(IDatabase db, IDatabase cache, int worldId, int itemId)
+    {
+        // Try to retrieve the source from the cache
+        try
+        {
+            var cached = await GetSource(cache, worldId, itemId);
+            if (!cached.IsNullOrEmpty)
+            {
+                return cached;
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to retrieve upload source from cache (item={ItemId}, world={WorldId})", itemId, worldId);
+        }
+
+        // Fetch the source from the database
+        var source = await GetSource(db, worldId, itemId);
+
+        // Store the result in the cache
+        try
+        {
+            await SetSource(cache, worldId, itemId, source, TimeSpan.FromHours(1));
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to store upload source in the cache (item={ItemId}, world={WorldId})", itemId, worldId);
+        }
+
+        return source;
+    }
+
+    private async Task<string> GetListingIdsWithCache(IDatabaseAsync db, IDatabaseAsync cache, int worldId, int itemId)
+    {
+        // Try to retrieve the listing IDs from the cache
+        var listingsKey = GetListingsIndexKey(worldId, itemId);
+        try
+        {
+            var cached = await cache.StringGetAsync(listingsKey, flags: CommandFlags.PreferReplica);
+            if (!cached.IsNullOrEmpty)
+            {
+                return cached;
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to retrieve listing IDs from cache (item={ItemId}, world={WorldId})", itemId, worldId);
+        }
+
+        // Fetch the listing IDs from the database
+        var listingIds = await db.StringGetAsync(listingsKey, flags: CommandFlags.PreferReplica);
+
+        // Store the result in the cache
+        try
+        {
+            await cache.StringSetAsync(listingsKey, listingIds, expiry: TimeSpan.FromHours(1));
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to store listing IDs in the cache (item={ItemId}, world={WorldId})", itemId, worldId);
+        }
+
+        return listingIds;
+    }
+
+    private async Task<List<Listing>> GetListings(IDatabaseAsync db, IDatabaseAsync cache, int worldId, int itemId, CancellationToken cancellationToken = default)
     {
         var listingsKey = GetListingsIndexKey(worldId, itemId);
 
-        var listingIdsRaw = await db.StringGetAsync(listingsKey, flags: CommandFlags.PreferReplica);
-        if (listingIdsRaw.IsNullOrEmpty)
+        var listingIdsRaw = await GetListingIdsWithCache(db, cache, worldId, itemId);
+        if (string.IsNullOrEmpty(listingIdsRaw))
         {
             return new List<Listing>(0);
         }
