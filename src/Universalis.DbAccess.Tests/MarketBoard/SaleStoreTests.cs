@@ -222,42 +222,14 @@ public class SaleStoreTests : IClassFixture<DbFixture>
     public async Task InsertManyRetrieveBySaleTime_Works_2()
     {
         var store = _fixture.Services.GetRequiredService<ISaleStore>();
-        var sales = new List<Sale>
-        {
-            new Sale
-            {
-                Id = Guid.NewGuid(),
-                WorldId = 26,
-                ItemId = 5333,
-                Hq = true,
-                PricePerUnit = 300,
-                Quantity = 20,
-                BuyerName = "Hello World",
-                OnMannequin = false,
-                SaleTime = new DateTime(2022, 10, 2, 0, 0, 0, DateTimeKind.Utc),
-                UploaderIdHash = "efuwhafejgj3weg0wrkporeh"
-            },
-            new Sale
-            {
-                Id = Guid.NewGuid(),
-                WorldId = 26,
-                ItemId = 5333,
-                Hq = true,
-                PricePerUnit = 300,
-                Quantity = 20,
-                BuyerName = "Hello World",
-                OnMannequin = false,
-                SaleTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
-                UploaderIdHash = "efuwhafejgj3weg0wrkporeh"
-            }
-        };
+        var sales = SeedDataGenerator.MakeHistory(74, 33922).Sales.OrderByDescending(s => s.SaleTime).ToList();
 
         await store.InsertMany(sales);
         await Task.Delay(1000);
-        var results1 = (await store.RetrieveBySaleTime(26, 5333, 2)).ToList();
+        var results1 = (await store.RetrieveBySaleTime(74, 33922, sales.Count)).ToList();
 
-        Assert.Equal(2, results1.Count);
-        Assert.All(sales.Zip(results1), pair =>
+        Assert.Equal(sales.Count, results1.Count);
+        Assert.All(sales.Zip(results1.OrderByDescending(s => s.SaleTime)), pair =>
         {
             var (sale, result) = pair;
             Assert.Equal(sale.Id, result.Id);
@@ -268,25 +240,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
             Assert.Equal(sale.Quantity, result.Quantity);
             Assert.Equal(sale.BuyerName, result.BuyerName);
             Assert.Equal(sale.OnMannequin, result.OnMannequin);
-            Assert.Equal(sale.SaleTime, result.SaleTime);
-            Assert.Equal(sale.UploaderIdHash, result.UploaderIdHash);
-        });
-
-        var results2 = (await store.RetrieveBySaleTime(26, 5333, 2)).ToList();
-
-        Assert.Equal(2, results2.Count);
-        Assert.All(sales.Zip(results2), pair =>
-        {
-            var (sale, result) = pair;
-            Assert.Equal(sale.Id, result.Id);
-            Assert.Equal(sale.WorldId, result.WorldId);
-            Assert.Equal(sale.ItemId, result.ItemId);
-            Assert.Equal(sale.Hq, result.Hq);
-            Assert.Equal(sale.PricePerUnit, result.PricePerUnit);
-            Assert.Equal(sale.Quantity, result.Quantity);
-            Assert.Equal(sale.BuyerName, result.BuyerName);
-            Assert.Equal(sale.OnMannequin, result.OnMannequin);
-            Assert.Equal(sale.SaleTime, result.SaleTime);
+            Assert.Equal(new DateTimeOffset(sale.SaleTime).ToUnixTimeSeconds(), new DateTimeOffset(result.SaleTime).ToUnixTimeSeconds());
             Assert.Equal(sale.UploaderIdHash, result.UploaderIdHash);
         });
     }
