@@ -159,7 +159,6 @@ public class SaleStore : ISaleStore
                 page = await _mapper.FetchPageAsync<Sale>(Cql.New("SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=?", new object[] { itemId, worldId, timestamp })
                     .WithOptions(options => options
                         .SetConsistencyLevel(ConsistencyLevel.One)
-                        .SetSerialConsistencyLevel(ConsistencyLevel.One)
                         .SetPageSize(50)
                         .SetPagingState(pagingState)));
             }
