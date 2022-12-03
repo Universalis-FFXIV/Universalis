@@ -38,11 +38,12 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
     public async Task SetData(CurrentlyShown data, CancellationToken cancellationToken = default)
     {
+        var cache = _redis.GetDatabase(RedisDatabases.Cache.Listings);
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
-        await StoreData(db, data);
+        await StoreData(db, cache, data);
     }
 
-    private static async Task StoreData(IDatabase db, CurrentlyShown data, TimeSpan? expiry = null)
+    private static async Task StoreData(IDatabase db, IDatabase cache, CurrentlyShown data, TimeSpan? expiry = null)
     {
         var worldId = data.WorldId;
         var itemId = data.ItemId;
@@ -72,6 +73,10 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         // Execute the transaction. If this fails, we'll just assume that newer data
         // was written first and move on.
         await trans.ExecuteAsync();
+
+        // Purge the cache
+        await cache.KeyDeleteAsync(GetUploadSourceKey(worldId, itemId));
+        await cache.KeyDeleteAsync(GetListingsIndexKey(worldId, itemId));
     }
 
     private static async Task<RedisValue> EnsureLastUpdated(IDatabase db, int worldId, int itemId)
