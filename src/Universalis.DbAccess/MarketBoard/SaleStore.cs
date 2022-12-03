@@ -151,16 +151,16 @@ public class SaleStore : ISaleStore
         // Fetch data from the database
         var timestamp = from == null ? 0 : new DateTimeOffset(from.Value).ToUnixTimeMilliseconds();
         byte[] pagingState = null;
+        IPage<Sale> page = null;
         do
         {
-            IPage<Sale> page;
             try
             {
                 page = await _mapper.FetchPageAsync<Sale>(Cql.New("SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=?", new object[] { itemId, worldId, timestamp })
                     .WithOptions(options => options
-                        .SetConsistencyLevel(ConsistencyLevel.One)
                         .SetPageSize(50)
                         .SetPagingState(pagingState)));
+                pagingState = page.PagingState;
             }
             catch (Exception e)
             {
@@ -168,27 +168,17 @@ public class SaleStore : ISaleStore
                 throw;
             }
 
-            if (page.Count == 0)
-            {
-                break;
-            }
-
-            pagingState = page.PagingState;
             foreach (var nextSale in page)
             {
-                if (sales.Count >= count)
-                {
-                    break;
-                }
-
                 if (sales.Contains(nextSale))
                 {
                     continue;
                 }
 
+                nextSale.SaleTime = DateTime.SpecifyKind(nextSale.SaleTime, DateTimeKind.Utc);
                 sales.Add(nextSale);
             }
-        } while (sales.Count < count);
+        } while (page.PagingState != null && (count == -1 || sales.Count < count));
 
         var results = sales
             .Take(count)

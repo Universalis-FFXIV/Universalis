@@ -60,7 +60,7 @@ public static class SeedDataGenerator
                     Hq = rand.NextDouble() > 0.5,
                     PricePerUnit = rand.Next(100, 60000),
                     Quantity = rand.Next(1, (int)maxStackSize),
-                    SaleTime = DateTime.UtcNow - new TimeSpan(rand.Next(0, 80000)),
+                    SaleTime = DateTime.UtcNow - new TimeSpan(rand.Next(0, 2100000000)),
                     UploaderIdHash = "2A",
                 })
                 .ToList(),
