@@ -3,28 +3,36 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Cassandra;
+using Cassandra.Data.Linq;
+using Cassandra.Mapping;
 using Universalis.Entities.AccessControl;
 
 namespace Universalis.DbAccess.AccessControl;
 
 public class ApiKeyStore : IApiKeyStore
 {
-    private readonly IAmazonDynamoDB _dynamoDb;
+    private readonly IMapper _mapper;
 
-    public ApiKeyStore(IAmazonDynamoDB dynamoDb)
+    public ApiKeyStore(ICluster cluster)
     {
-        _dynamoDb = dynamoDb;
+        var scylla = cluster.Connect();
+        scylla.CreateKeyspaceIfNotExists("api_key");
+        scylla.ChangeKeyspace("api_key");
+        var table = scylla.GetTable<ApiKey>();
+        table.CreateIfNotExists();
+
+        _mapper = new Mapper(scylla);
     }
 
-    public async Task Insert(ApiKey apiKey, CancellationToken cancellationToken = default)
+    public Task Insert(ApiKey apiKey, CancellationToken cancellationToken = default)
     {
         if (apiKey == null)
         {
             throw new ArgumentNullException(nameof(apiKey));
         }
 
-        var context = new DynamoDBContext(_dynamoDb);
-        await context.SaveAsync(apiKey, cancellationToken);
+        return _mapper.InsertAsync(apiKey);
     }
 
     public Task<ApiKey> Retrieve(string tokenSha512, CancellationToken cancellationToken = default)
@@ -34,7 +42,6 @@ public class ApiKeyStore : IApiKeyStore
             throw new ArgumentNullException(nameof(tokenSha512));
         }
 
-        var context = new DynamoDBContext(_dynamoDb);
-        return context.LoadAsync<ApiKey>(tokenSha512, cancellationToken);
+        return _mapper.FirstOrDefaultAsync<ApiKey>("SELECT * FROM api_key WHERE token_sha512=?", tokenSha512);
     }
 }
