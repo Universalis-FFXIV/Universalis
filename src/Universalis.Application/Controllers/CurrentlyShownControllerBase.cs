@@ -157,12 +157,20 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         }
 
         var h = await History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 }, cancellationToken);
+        h ??= new History
+            {
+                WorldId = worldId,
+                ItemId = itemId,
+                LastUploadTimeUnixMilliseconds = 0,
+                Sales = new List<Sale>(),
+            };
 
+        var lastUploadTime = Math.Max(cd.LastUploadTimeUnixMilliseconds, Convert.ToInt64(h.LastUploadTimeUnixMilliseconds));
         return new CurrentlyShownView
         {
             WorldId = cd.WorldId,
             ItemId = cd.ItemId,
-            LastUploadTimeUnixMilliseconds = Math.Max(cd.LastUploadTimeUnixMilliseconds, Convert.ToInt64(h.LastUploadTimeUnixMilliseconds)),
+            LastUploadTimeUnixMilliseconds = lastUploadTime,
             Listings = (await Task.WhenAll((cd.Listings ?? new List<Listing>())
                     .Select(l => Util.ListingToView(l, cancellationToken))))
                 .Where(s => s.PricePerUnit > 0)
