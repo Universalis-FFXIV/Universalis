@@ -1,19 +1,26 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
+using Cassandra;
+using Cassandra.Data.Linq;
+using Cassandra.Mapping;
 using Universalis.Entities.Uploads;
 
 namespace Universalis.DbAccess.Uploads;
 
 public class FlaggedUploaderStore : IFlaggedUploaderStore
 {
-    private readonly IAmazonDynamoDB _dynamoDb;
+    private readonly IMapper _mapper;
 
-    public FlaggedUploaderStore(IAmazonDynamoDB dynamoDb)
+    public FlaggedUploaderStore(ICluster cluster)
     {
-        _dynamoDb = dynamoDb;
+        var scylla = cluster.Connect();
+        scylla.CreateKeyspaceIfNotExists("flagged_uploader");
+        scylla.ChangeKeyspace("flagged_uploader");
+        var table = scylla.GetTable<FlaggedUploader>();
+        table.CreateIfNotExists();
+
+        _mapper = new Mapper(scylla);
     }
 
     public Task Insert(FlaggedUploader uploader, CancellationToken cancellationToken = default)
@@ -23,8 +30,7 @@ public class FlaggedUploaderStore : IFlaggedUploaderStore
             throw new ArgumentNullException(nameof(uploader));
         }
 
-        var context = new DynamoDBContext(_dynamoDb);
-        return context.SaveAsync(uploader, cancellationToken);
+        return _mapper.InsertAsync(uploader);
     }
 
     public Task<FlaggedUploader> Retrieve(string uploaderIdSha256, CancellationToken cancellationToken = default)
@@ -34,7 +40,6 @@ public class FlaggedUploaderStore : IFlaggedUploaderStore
             throw new ArgumentNullException(nameof(uploaderIdSha256));
         }
 
-        var context = new DynamoDBContext(_dynamoDb);
-        return context.LoadAsync<FlaggedUploader>(uploaderIdSha256, cancellationToken);
+        return _mapper.FirstOrDefaultAsync<FlaggedUploader>("SELECT * FROM flagged_uploader WHERE id_sha256=?", uploaderIdSha256);
     }
 }

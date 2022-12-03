@@ -10,6 +10,7 @@ using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Uploads;
 using Universalis.Entities.MarketBoard;
+using Universalis.Entities.Uploads;
 
 namespace Universalis.DbAccess;
 
@@ -41,6 +42,12 @@ public static class DbAccessExtensions
         sc.AddSingleton<IAmazonDynamoDB>(dynamoDb);
 
         DynamoDBTableInitializer.InitializeTables(dynamoDb).GetAwaiter().GetResult();
+
+        MappingConfiguration.Global.Define(
+            new Map<FlaggedUploader>()
+                .TableName("flagged_uploader")
+                .PartitionKey(s => s.IdSha256)
+                .Column(s => s.IdSha256, col => col.WithName("id_sha256")));
 
         MappingConfiguration.Global.Define(
             new Map<MarketItem>()
