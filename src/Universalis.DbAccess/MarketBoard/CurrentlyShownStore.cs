@@ -213,57 +213,25 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             .SelectAwait(async id =>
             {
                 var listingKey = GetListingKey(worldId, itemId, id);
-                var listingValues = db.HashScanAsync(listingKey, flags: CommandFlags.PreferReplica);
-                return await listingValues.AggregateAsync(new Listing(), (agg, next) =>
+                var listingEntries = await db.HashGetAllAsync(listingKey, flags: CommandFlags.PreferReplica);
+                var listing = listingEntries.ToDictionary();
+                return new Listing
                 {
-                    switch (next.Name)
-                    {
-                        case "id":
-                            agg.ListingId = next.Value;
-                            break;
-                        case "hq":
-                            agg.Hq = (bool)next.Value;
-                            break;
-                        case "mann":
-                            agg.OnMannequin = (bool)next.Value;
-                            break;
-                        case "ppu":
-                            agg.PricePerUnit = (int)next.Value;
-                            break;
-                        case "q":
-                            agg.Quantity = (int)next.Value;
-                            break;
-                        case "did":
-                            agg.DyeId = (int)next.Value;
-                            break;
-                        case "cid":
-                            agg.CreatorId = next.Value;
-                            break;
-                        case "cname":
-                            agg.CreatorName = next.Value;
-                            break;
-                        case "t":
-                            agg.LastReviewTimeUnixSeconds = (long)next.Value;
-                            break;
-                        case "rid":
-                            agg.RetainerId = next.Value;
-                            break;
-                        case "rname":
-                            agg.RetainerName = next.Value;
-                            break;
-                        case "rcid":
-                            agg.RetainerCityId = (int)next.Value;
-                            break;
-                        case "sid":
-                            agg.SellerId = next.Value;
-                            break;
-                        case "mat":
-                            agg.Materia = ParseMateria(next.Value).ToList();
-                            break;
-                    }
-
-                    return agg;
-                }, cancellationToken);
+                    ListingId = GetValueString(listing, "id"),
+                    Hq = GetValueBool(listing, "hq"),
+                    OnMannequin = GetValueBool(listing, "mann"),
+                    PricePerUnit = GetValueInt32(listing, "ppu"),
+                    Quantity = GetValueInt32(listing, "q"),
+                    DyeId = GetValueInt32(listing, "did"),
+                    CreatorId = GetValueString(listing, "cid"),
+                    CreatorName = GetValueString(listing, "cname"),
+                    LastReviewTimeUnixSeconds = GetValueInt64(listing, "t"),
+                    RetainerId = GetValueString(listing, "rid"),
+                    RetainerName = GetValueString(listing, "rname"),
+                    RetainerCityId = GetValueInt32(listing, "rcid"),
+                    SellerId = GetValueString(listing, "sid"),
+                    Materia = GetValueMateriaArray(listing, "mat"),
+                };
             })
             .ToListAsync(cancellationToken);
     }
