@@ -14,21 +14,20 @@ public class MarketItemStore : IMarketItemStore
 {
     private readonly ILogger<MarketItemStore> _logger;
     private readonly ICacheRedisMultiplexer _cache;
-    private readonly ISession _scylla;
     private readonly IMapper _mapper;
     
-    public MarketItemStore(ICluster scylla, ICacheRedisMultiplexer cache, ILogger<MarketItemStore> logger)
+    public MarketItemStore(ICluster cluster, ICacheRedisMultiplexer cache, ILogger<MarketItemStore> logger)
     {
         _cache = cache;
         _logger = logger;
 
-        _scylla = scylla.Connect();
-        _scylla.CreateKeyspaceIfNotExists("market_item");
-        _scylla.ChangeKeyspace("market_item");
-        var table = _scylla.GetTable<MarketItem>();
+        var scylla = cluster.Connect();
+        scylla.CreateKeyspaceIfNotExists("market_item");
+        scylla.ChangeKeyspace("market_item");
+        var table = scylla.GetTable<MarketItem>();
         table.CreateIfNotExists();
 
-        _mapper = new Mapper(_scylla);
+        _mapper = new Mapper(scylla);
     }
 
     public async Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)

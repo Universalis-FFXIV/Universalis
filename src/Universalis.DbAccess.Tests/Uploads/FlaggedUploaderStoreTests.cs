@@ -32,10 +32,10 @@ public class FlaggedUploaderStoreTests : IClassFixture<DbFixture>
     public async Task InsertRetrieve_Works()
     {
         var store = _fixture.Services.GetRequiredService<IFlaggedUploaderStore>();
-        var flaggedUploader = new FlaggedUploader("15084143697577");
+        var flaggedUploader = new FlaggedUploader("15084143697578");
 
         await store.Insert(flaggedUploader);
-        var result = await store.Retrieve("15084143697577");
+        var result = await store.Retrieve("15084143697578");
 
         Assert.Equal(flaggedUploader.IdSha256, result.IdSha256);
     }
@@ -46,7 +46,7 @@ public class FlaggedUploaderStoreTests : IClassFixture<DbFixture>
     public async Task Retrieve_Missing_ReturnsNull()
     {
         var store = _fixture.Services.GetRequiredService<IFlaggedUploaderStore>();
-        var result = await store.Retrieve("15084143697577");
+        var result = await store.Retrieve("15084143697579");
 
         Assert.Null(result);
     }

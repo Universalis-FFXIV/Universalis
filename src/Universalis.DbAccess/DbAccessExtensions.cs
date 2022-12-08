@@ -1,5 +1,4 @@
-﻿using Amazon.DynamoDBv2;
-using Cassandra;
+﻿using Cassandra;
 using Cassandra.Mapping;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +8,7 @@ using System.Linq;
 using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Uploads;
+using Universalis.Entities;
 using Universalis.Entities.AccessControl;
 using Universalis.Entities.MarketBoard;
 using Universalis.Entities.Uploads;
@@ -20,68 +20,19 @@ public static class DbAccessExtensions
     public static void AddDbAccessServices(this IServiceCollection sc, IConfiguration configuration)
     {
         var redisCacheConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_REDIS_CACHE_CONNECTION") ??
-                                    configuration["RedisCacheConnectionString"];
+                                         configuration["RedisCacheConnectionString"] ??
+                                         throw new InvalidOperationException(
+                                             "Redis cache connection string not provided.");
         var redisConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_REDIS_CONNECTION") ??
-                                    configuration["RedisConnectionString"];
+                                    configuration["RedisConnectionString"] ??
+                                    throw new InvalidOperationException(
+                                        "Redis primary connection string not provided.");
         var scyllaConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_SCYLLA_CONNECTION") ??
-                                    configuration["ScyllaConnectionString"];
-        var ddbConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_DYNAMODB_CONNECTION") ??
-                                    configuration["AWS:ServiceURL"];
+                                     configuration["ScyllaConnectionString"] ??
+                                     throw new InvalidOperationException(
+                                         "ScyllaDB cache connection string not provided.");
 
-        var awsOptions = configuration.GetAWSOptions();
-        sc.AddDefaultAWSOptions(awsOptions);
-
-        // This needs to be initialized early so we can't use the extension methods that
-        // configure things correctly automatically.
-        // TODO: Move table initialization into middleware to avoid this
-        var dynamoDb = new AmazonDynamoDBClient("None", "None", new AmazonDynamoDBConfig
-        {
-            LogMetrics = bool.TryParse(configuration.GetSection("AWS:LogMetrics").Value, out var logMetrics) && logMetrics,
-            LogResponse = bool.TryParse(configuration.GetSection("AWS:LogResponse").Value, out var logResponse) && logResponse,
-            ServiceURL = ddbConnectionString,
-        });
-        sc.AddSingleton<IAmazonDynamoDB>(dynamoDb);
-
-        DynamoDBTableInitializer.InitializeTables(dynamoDb).GetAwaiter().GetResult();
-
-        MappingConfiguration.Global.Define(
-            new Map<ApiKey>()
-                .TableName("api_key")
-                .PartitionKey(s => s.TokenSha512)
-                .Column(s => s.TokenSha512, col => col.WithName("token_sha512"))
-                .Column(s => s.Name, col => col.WithName("name"))
-                .Column(s => s.CanUpload, col => col.WithName("can_upload")));
-
-        MappingConfiguration.Global.Define(
-            new Map<FlaggedUploader>()
-                .TableName("flagged_uploader")
-                .PartitionKey(s => s.IdSha256)
-                .Column(s => s.IdSha256, col => col.WithName("id_sha256")));
-
-        MappingConfiguration.Global.Define(
-            new Map<MarketItem>()
-                .TableName("market_item")
-                .PartitionKey(s => s.ItemId)
-                .ClusteringKey(s => s.WorldId)
-                .Column(s => s.ItemId, col => col.WithName("item_id"))
-                .Column(s => s.WorldId, col => col.WithName("world_id"))
-                .Column(s => s.LastUploadTime, col => col.WithName("last_upload_time")));
-
-        MappingConfiguration.Global.Define(
-            new Map<Sale>()
-                .TableName("sale")
-                .PartitionKey(s => s.ItemId, s => s.WorldId)
-                .ClusteringKey(s => s.SaleTime, SortOrder.Descending)
-                .Column(s => s.Id, col => col.WithName("id"))
-                .Column(s => s.SaleTime, col => col.WithName("sale_time"))
-                .Column(s => s.ItemId, col => col.WithName("item_id"))
-                .Column(s => s.WorldId, col => col.WithName("world_id"))
-                .Column(s => s.BuyerName, col => col.WithName("buyer_name"))
-                .Column(s => s.Hq, col => col.WithName("hq"))
-                .Column(s => s.OnMannequin, col => col.WithName("on_mannequin"))
-                .Column(s => s.Quantity, col => col.WithName("quantity"))
-                .Column(s => s.PricePerUnit, col => col.WithName("unit_price"))
-                .Column(s => s.UploaderIdHash, col => col.WithName("uploader_id")));
+        MappingConfiguration.Global.Define<ObjectMappings>();
 
         var scyllaCluster = Cluster.Builder()
             .AddContactPoints(scyllaConnectionString.Split(','))
@@ -89,9 +40,13 @@ public static class DbAccessExtensions
         sc.AddSingleton<ICluster>(scyllaCluster);
 
         var cacheOptions = ConfigurationOptions.Parse(redisCacheConnectionString);
-        var cache = Enumerable.Range(0, 3).Select(_ => ConnectionMultiplexer.Connect(cacheOptions)).ToArray();
+        var cache = Enumerable.Range(0, 3)
+            .Select(_ => ConnectionMultiplexer.Connect(cacheOptions))
+            .ToArray<IConnectionMultiplexer>();
         var dbOptions = ConfigurationOptions.Parse(redisConnectionString);
-        var db = Enumerable.Range(0, 10).Select(_ => ConnectionMultiplexer.Connect(dbOptions)).ToArray();
+        var db = Enumerable.Range(0, 10)
+            .Select(_ => ConnectionMultiplexer.Connect(dbOptions))
+            .ToArray<IConnectionMultiplexer>();
         sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(cache));
         sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(db));
 
