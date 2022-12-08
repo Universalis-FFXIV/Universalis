@@ -25,9 +25,7 @@ public class DbFixture : IAsyncLifetime
         _scylla = new TestcontainersBuilder<TestcontainersContainer>()
             .WithName(Guid.NewGuid().ToString("D"))
             .WithImage("scylladb/scylla:5.1.0")
-            .WithExposedPort(8000)
             .WithExposedPort(9042)
-            .WithPortBinding(8000, true)
             .WithPortBinding(9042, false)
             .WithCommand("--smp", "1", "--overprovisioned", "1", "--memory", "512M", "--alternator-port", "8000", "--alternator-write-isolation", "only_rmw_uses_lwt")
             .WithCreateContainerParametersModifier(o =>
@@ -50,7 +48,7 @@ public class DbFixture : IAsyncLifetime
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(6379))
             .Build();
 
-        _services = new Lazy<IServiceProvider>(() => CreateServiceProvider());
+        _services = new Lazy<IServiceProvider>(CreateServiceProvider);
     }
 
     private IServiceProvider CreateServiceProvider()
@@ -64,17 +62,15 @@ public class DbFixture : IAsyncLifetime
                  reloadOnChange: true)
             .AddInMemoryCollection(new Dictionary<string, string>
             {
-                { "AWS:ServiceURL", $"http://{_scylla.Hostname}:{_scylla.GetMappedPublicPort(8000)}" },
                 { "RedisCacheConnectionString", $"{_cache.Hostname}:{_cache.GetMappedPublicPort(6379)}" },
                 { "RedisConnectionString", $"{_redis.Hostname}:{_redis.GetMappedPublicPort(6379)}" },
-                { "ScyllaConnectionString", $"{_scylla.Hostname}" },
+                { "ScyllaConnectionString", "localhost" },
             })
             .Build();
         services.AddLogging();
         services.AddSingleton<IConfiguration>(configuration);
-        Task.Delay(10000).GetAwaiter().GetResult();
+        Task.Delay(60000).GetAwaiter().GetResult();
         services.AddDbAccessServices(configuration);
-        Task.Delay(5000).GetAwaiter().GetResult();
         return services.BuildServiceProvider();
     }
 

@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.100.22" />
     <PackageReference Include="MongoDB.Bson" Version="2.18.0" />
   </ItemGroup>
 

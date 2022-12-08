@@ -1,20 +1,15 @@
-﻿using Amazon.DynamoDBv2.DataModel;
-using System;
+﻿using System;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace Universalis.Entities.AccessControl;
 
-[DynamoDBTable("api_key")]
 public class ApiKey
 {
-    [DynamoDBHashKey("token_sha512")]
     public string TokenSha512 { get; init; }
 
-    [DynamoDBProperty("name")]
     public string Name { get; init; }
 
-    [DynamoDBProperty("can_upload")]
     public bool CanUpload { get; init; }
 
     public ApiKey()

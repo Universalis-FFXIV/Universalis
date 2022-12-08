@@ -1,19 +1,26 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
+using Cassandra;
+using Cassandra.Data.Linq;
+using Cassandra.Mapping;
 using Universalis.Entities;
 
 namespace Universalis.DbAccess;
 
 public class CharacterStore : ICharacterStore
 {
-    private readonly IAmazonDynamoDB _dynamoDb;
+    private readonly IMapper _mapper;
 
-    public CharacterStore(IAmazonDynamoDB dynamoDb)
+    public CharacterStore(ICluster cluster)
     {
-        _dynamoDb = dynamoDb;
+        var scylla = cluster.Connect();
+        scylla.CreateKeyspaceIfNotExists("character");
+        scylla.ChangeKeyspace("character");
+        var table = scylla.GetTable<Character>();
+        table.CreateIfNotExists();
+
+        _mapper = new Mapper(scylla);
     }
 
     public Task Insert(Character character, CancellationToken cancellationToken = default)
@@ -23,8 +30,7 @@ public class CharacterStore : ICharacterStore
             throw new ArgumentNullException(nameof(character));
         }
 
-        var context = new DynamoDBContext(_dynamoDb);
-        return context.SaveAsync(character, cancellationToken);
+        return _mapper.InsertAsync(character);
     }
     
     public Task Update(Character character, CancellationToken cancellationToken = default)
@@ -34,8 +40,7 @@ public class CharacterStore : ICharacterStore
             throw new ArgumentNullException(nameof(character));
         }
 
-        var context = new DynamoDBContext(_dynamoDb);
-        return context.SaveAsync(character, cancellationToken);
+        return _mapper.InsertAsync(character);
     }
 
     public Task<Character> Retrieve(string contentIdSha256, CancellationToken cancellationToken = default)
@@ -45,7 +50,6 @@ public class CharacterStore : ICharacterStore
             throw new ArgumentNullException(nameof(contentIdSha256));
         }
 
-        var context = new DynamoDBContext(_dynamoDb);
-        return context.LoadAsync<Character>(contentIdSha256, cancellationToken);
+        return _mapper.FirstOrDefaultAsync<Character>("SELECT * FROM character WHERE content_id_sha256=?", contentIdSha256);
     }
 }

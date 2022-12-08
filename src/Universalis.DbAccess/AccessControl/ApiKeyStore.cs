@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
 using Cassandra;
 using Cassandra.Data.Linq;
 using Cassandra.Mapping;

@@ -279,16 +279,16 @@ public class SaleStore : ISaleStore
         await cache.KeyExpireAsync(cacheKey, TimeSpan.FromHours(1), CommandFlags.FireAndForget);
     }
 
-    private async Task<IDictionary<DateTime, int>> GetDailyUnitsTraded(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    private Task<IDictionary<DateTime, int>> GetDailyUnitsTraded(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
         // TODO: Make this work with Scylla or DynamoDB
-        return new Dictionary<DateTime, int>();
+        return Task.FromResult<IDictionary<DateTime, int>>(new Dictionary<DateTime, int>());
     }
 
-    private async Task<IDictionary<DateTime, int>> GetDailyGilTraded(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    private Task<IDictionary<DateTime, int>> GetDailyGilTraded(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
         // TODO: Make this work with Scylla or DynamoDB
-        return new Dictionary<DateTime, int>();
+        return Task.FromResult<IDictionary<DateTime, int>>(new Dictionary<DateTime, int>());
     }
 
     private async Task<IList<Sale>> FetchSalesFromCache(IDatabase cache, string cacheIndexKey, int worldId, int itemId, int count)

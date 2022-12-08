@@ -34,31 +34,20 @@ services:
       - "./sqlinit:/docker-entrypoint-initdb.d"
   cache1:
     image: redis:7.0.0
-    command: redis-server --save \"\" --loglevel warning
+    command: redis-server --save "" --loglevel warning
     ports:
       - "4080:6379"
   cache2:
     image: redis:7.0.0
-    command: redis-server --save \"\" --replicaof cache1 6379 --loglevel warning
+    command: redis-server --save "" --replicaof cache1 6379 --loglevel warning
     ports:
       - "4081:6379"
-  postgres:
-    image: postgres:14.3
-    command: postgres -c max_connections=100 -c shared_buffers=512MB
-    ports:
-      - "4052:5432"
-    environment:
-      POSTGRES_USER: universalis
-      POSTGRES_PASSWORD: universalis
-    shm_size: 512mb
-    volumes:
-      - ./postgres:/var/lib/postgres/data
   scylla:
     image: scylladb/scylla:5.1.0
     command: ["--smp", "1", "--overprovisioned", "1", "--memory", "512M", "--alternator-port", "8000", "--alternator-write-isolation", "only_rmw_uses_lwt"]
     cpu_count: 1
     ports:
-      - "4054:80"
+      - "9042:9042"
     volumes:
       - scylla-data:/var/lib/scylla
   redis:
