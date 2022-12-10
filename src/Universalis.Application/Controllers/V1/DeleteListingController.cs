@@ -116,7 +116,7 @@ public class DeleteListingController : WorldDcRegionControllerBase
         {
             WorldId = query.WorldId,
             ItemId = query.ItemId,
-            Listings = new List<ListingView> { await Util.ListingToView(listing, cts.Token) },
+            Listings = new List<ListingView> { Util.ListingToView(listing) },
         });
 
         return Ok("Success");

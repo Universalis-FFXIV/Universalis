@@ -43,9 +43,8 @@ public static class Util
     /// Converts a database listing into a listing view to be returned to external clients.
     /// </summary>
     /// <param name="l">The database listing.</param>
-    /// <param name="cancellationToken"></param>
     /// <returns>A listing view associated with the provided listing.</returns>
-    public static async Task<ListingView> ListingToView(Listing l, CancellationToken cancellationToken = default)
+    public static ListingView ListingToView(Listing l)
     {
         var ppu = l.PricePerUnit;
         var listingView = new ListingView

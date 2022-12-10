@@ -171,12 +171,12 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             WorldId = cd.WorldId,
             ItemId = cd.ItemId,
             LastUploadTimeUnixMilliseconds = lastUploadTime,
-            Listings = (await Task.WhenAll((cd.Listings ?? new List<Listing>())
-                    .Select(l => Util.ListingToView(l, cancellationToken))))
+            Listings = (cd.Listings ?? Enumerable.Empty<Listing>())
+                .Select(Util.ListingToView)
                 .Where(s => s.PricePerUnit > 0)
                 .Where(s => s.Quantity > 0)
                 .ToList(),
-            RecentHistory = (h?.Sales ?? new List<Sale>())
+            RecentHistory = (h?.Sales ?? Enumerable.Empty<Sale>())
                 .Select(Util.SaleToView)
                 .Where(s => s.PricePerUnit > 0)
                 .Where(s => s.Quantity > 0)
