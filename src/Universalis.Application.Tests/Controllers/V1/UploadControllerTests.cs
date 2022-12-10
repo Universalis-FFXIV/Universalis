@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1;
 using Universalis.Application.Tests.Mocks.DbAccess;
@@ -48,7 +47,7 @@ public class UploadControllerTests
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
-            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            var hash = Util.Hash(sha512, key);
             await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
@@ -77,7 +76,7 @@ public class UploadControllerTests
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
-            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            var hash = Util.Hash(sha512, key);
             await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
@@ -95,7 +94,7 @@ public class UploadControllerTests
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
-            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            var hash = Util.Hash(sha512, key);
             await test.TrustedSources.Create(new ApiKey(hash, "something", false));
         }
 
@@ -114,14 +113,14 @@ public class UploadControllerTests
         const string uploaderId = "ffff";
         using (var sha512 = SHA512.Create())
         {
-            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            var hash = Util.Hash(sha512, key);
             await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
         string uploaderIdHash;
         using (var sha256 = SHA256.Create())
         {
-            uploaderIdHash = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(uploaderId)));
+            uploaderIdHash = Util.Hash(sha256, uploaderId);
         }
 
         await test.FlaggedUploaders.Create(new FlaggedUploader(uploaderIdHash));
@@ -148,7 +147,7 @@ public class UploadControllerTests
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
-            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            var hash = Util.Hash(sha512, key);
             await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 

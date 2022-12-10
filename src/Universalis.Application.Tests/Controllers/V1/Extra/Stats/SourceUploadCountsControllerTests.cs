@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1.Extra.Stats;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
@@ -22,7 +21,7 @@ public class SourceUploadCountsControllerTests
         
         const string key = "blah";
         using var sha512 = SHA512.Create();
-        var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+        var hash = Util.Hash(sha512, key);
         var document = new ApiKey(hash, "something", true);
 
         await dbAccess.Create(document);

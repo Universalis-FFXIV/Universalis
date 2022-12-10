@@ -9,7 +9,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Entities.MarketBoard;
-using Condition = StackExchange.Redis.Condition;
 
 namespace Universalis.DbAccess.MarketBoard;
 

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Universalis.Application.Common;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1;
-using Universalis.Common.Caching;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.GameData;
 

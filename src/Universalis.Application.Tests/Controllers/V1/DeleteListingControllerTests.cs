@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1;
 using Universalis.Application.Realtime;
@@ -8,7 +7,6 @@ using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Uploads.Schema;
-using Universalis.Common.Caching;
 using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
@@ -63,7 +61,7 @@ public class DeleteListingControllerTests
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
-            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            var hash = Util.Hash(sha512, key);
             await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
@@ -104,7 +102,7 @@ public class DeleteListingControllerTests
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
-            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            var hash = Util.Hash(sha512, key);
             await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
@@ -145,7 +143,7 @@ public class DeleteListingControllerTests
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
-            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            var hash = Util.Hash(sha512, key);
             await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
@@ -168,7 +166,7 @@ public class DeleteListingControllerTests
         const string key = "blah";
         using (var sha512 = SHA512.Create())
         {
-            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            var hash = Util.Hash(sha512, key);
             await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
@@ -193,14 +191,14 @@ public class DeleteListingControllerTests
         const string uploaderId = "ffff";
         using (var sha512 = SHA512.Create())
         {
-            var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+            var hash = Util.Hash(sha512, key);
             await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
         string uploaderIdHash;
         using (var sha256 = SHA256.Create())
         {
-            uploaderIdHash = Util.BytesToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(uploaderId)));
+            uploaderIdHash = Util.Hash(sha256, uploaderId);
         }
 
         await test.FlaggedUploaders.Create(new FlaggedUploader(uploaderIdHash));

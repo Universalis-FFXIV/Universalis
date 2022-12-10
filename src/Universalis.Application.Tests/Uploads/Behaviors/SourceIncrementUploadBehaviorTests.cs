@@ -1,7 +1,5 @@
-﻿using System.IO;
-using System.Linq;
+﻿using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Uploads.Behaviors;
@@ -25,8 +23,7 @@ public class SourceIncrementUploadBehaviorTests
             string keyHash;
             using (var sha256 = SHA256.Create())
             {
-                await using var keyStream = new MemoryStream(Encoding.UTF8.GetBytes(key));
-                keyHash = Util.BytesToString(await sha256.ComputeHashAsync(keyStream));
+                keyHash = Util.Hash(sha256, key);
             }
 
             var source = new ApiKey(keyHash, "something", true);

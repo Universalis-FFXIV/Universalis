@@ -1,5 +1,4 @@
 ﻿using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Uploads.Behaviors;
@@ -78,7 +77,7 @@ public class TaxRatesUploadBehaviorTests
 
         const string key = "blah";
         using var sha512 = SHA512.Create();
-        var hash = Util.BytesToString(sha512.ComputeHash(Encoding.UTF8.GetBytes(key)));
+        var hash = Util.Hash(sha512, key);
         var source = new ApiKey(hash, "something", true);
 
         var upload = new UploadParameters
