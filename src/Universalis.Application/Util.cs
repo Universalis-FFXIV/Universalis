@@ -98,7 +98,7 @@ public static class Util
     {
         var bytes = Encoding.UTF8.GetBytes(input ?? "");
         var hash = hasher.ComputeHash(bytes);
-        return Convert.ToHexString(hash).ToLowerInvariant(); // https://github.com/dotnet/runtime/issues/60393
+        return BytesToString(hash);
     }
 
     /// <summary>
@@ -108,7 +108,7 @@ public static class Util
     /// <returns>A lowercase hexadecimal string representing the provided byte array.</returns>
     public static string BytesToString(byte[] bytes)
     {
-        return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
+        return Convert.ToHexString(bytes).ToLowerInvariant(); // https://github.com/dotnet/runtime/issues/60393
     }
 
     /// <summary>
