@@ -219,19 +219,19 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
                 return new Listing
                 {
-                    ListingId = GetValueString(listingEntries[0]),
-                    Hq = GetValueBool(listingEntries[1]),
-                    OnMannequin = GetValueBool(listingEntries[2]),
-                    PricePerUnit = GetValueInt32(listingEntries[3]),
-                    Quantity = GetValueInt32(listingEntries[4]),
-                    DyeId = GetValueInt32(listingEntries[5]),
-                    CreatorId = GetValueString(listingEntries[6]),
-                    CreatorName = GetValueString(listingEntries[7]),
-                    LastReviewTimeUnixSeconds = GetValueInt64(listingEntries[8]),
-                    RetainerId = GetValueString(listingEntries[9]),
-                    RetainerName = GetValueString(listingEntries[10]),
-                    RetainerCityId = GetValueInt32(listingEntries[11]),
-                    SellerId = GetValueString(listingEntries[12]),
+                    ListingId = (string)listingEntries[0] ?? "",
+                    Hq = (bool)listingEntries[1],
+                    OnMannequin = (bool)listingEntries[2],
+                    PricePerUnit = (int)listingEntries[3],
+                    Quantity = (int)listingEntries[4],
+                    DyeId = (int)listingEntries[5],
+                    CreatorId = (string)listingEntries[6] ?? "",
+                    CreatorName = (string)listingEntries[7] ?? "",
+                    LastReviewTimeUnixSeconds = (long)listingEntries[8],
+                    RetainerId = (string)listingEntries[9] ?? "",
+                    RetainerName = (string)listingEntries[10] ?? "",
+                    RetainerCityId = (int)listingEntries[11],
+                    SellerId = (string)listingEntries[12] ?? "",
                     Materia = GetValueMateriaArray(listingEntries[13]),
                 };
             })
@@ -276,26 +276,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
         // Update the listings index
         _ = trans.StringSetAsync(listingsKey, SerializeObjectIds(newListingIds), expiry);
-    }
-
-    private static int GetValueInt32(RedisValue value)
-    {
-        return (int)value;
-    }
-
-    private static long GetValueInt64(RedisValue value)
-    {
-        return (long)value;
-    }
-
-    private static bool GetValueBool(RedisValue value)
-    {
-        return (bool)value;
-    }
-
-    private static string GetValueString(RedisValue value)
-    {
-        return value.IsNull ? "" : value;
     }
 
     private static List<Materia> GetValueMateriaArray(RedisValue value)
