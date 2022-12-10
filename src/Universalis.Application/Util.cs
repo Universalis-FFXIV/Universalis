@@ -98,7 +98,7 @@ public static class Util
     {
         var bytes = Encoding.UTF8.GetBytes(input ?? "");
         var hash = hasher.ComputeHash(bytes);
-        return Convert.ToHexString(hash);
+        return Convert.ToHexString(hash).ToLowerInvariant(); // https://github.com/dotnet/runtime/issues/60393
     }
 
     /// <summary>
