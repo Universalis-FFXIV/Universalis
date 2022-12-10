@@ -74,32 +74,31 @@ public static class Util
 
         if (!string.IsNullOrEmpty(l.CreatorId))
         {
-            listingView.CreatorIdHash = await Hash(sha256, l.CreatorId, cancellationToken);
+            listingView.CreatorIdHash = Hash(sha256, l.CreatorId);
         }
 
         if (!string.IsNullOrEmpty(l.ListingId))
         {
-            listingView.ListingIdHash = await Hash(sha256, l.ListingId, cancellationToken);
+            listingView.ListingIdHash = Hash(sha256, l.ListingId);
         }
 
-        listingView.SellerIdHash = await Hash(sha256, l.SellerId, cancellationToken);
-        listingView.RetainerIdHash = await Hash(sha256, l.RetainerId, cancellationToken);
+        listingView.SellerIdHash = Hash(sha256, l.SellerId);
+        listingView.RetainerIdHash = Hash(sha256, l.RetainerId);
 
         return listingView;
     }
 
     /// <summary>
-    /// Hashes the provided string asynchronously.
+    /// Hashes the provided string.
     /// </summary>
     /// <param name="hasher">The hashing algorithm to use.</param>
     /// <param name="input">The input string.</param>
-    /// <param name="cancellationToken"></param>
     /// <returns>A hash representing the input string.</returns>
-    public static async Task<string> Hash(HashAlgorithm hasher, string input, CancellationToken cancellationToken = default)
+    public static string Hash(HashAlgorithm hasher, string input)
     {
-        var idBytes = Encoding.UTF8.GetBytes(input ?? "");
-        await using var dataStream = MemoryStreamPool.GetStream(idBytes);
-        return BytesToString(await hasher.ComputeHashAsync(dataStream, cancellationToken));
+        var bytes = Encoding.UTF8.GetBytes(input ?? "");
+        var hash = hasher.ComputeHash(bytes);
+        return Convert.ToHexString(hash);
     }
 
     /// <summary>

@@ -38,7 +38,7 @@ public class PlayerContentUploadBehaviorTests
         Assert.Null(result);
         
         using var sha256 = SHA256.Create();
-        var contentIdHash = await Util.Hash(sha256, upload.ContentId);
+        var contentIdHash = Util.Hash(sha256, upload.ContentId);
 
         var data = await dbAccess.Retrieve(contentIdHash);
 

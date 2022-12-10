@@ -26,7 +26,7 @@ public class PlayerContentUploadBehavior : IUploadBehavior
     public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
         using var sha256 = SHA256.Create();
-        var contentIdHash = await Util.Hash(sha256, parameters.ContentId, cancellationToken);
+        var contentIdHash = Util.Hash(sha256, parameters.ContentId);
         
         var existing = await _characterDb.Retrieve(contentIdHash, cancellationToken);
         var character = new Character(contentIdHash, parameters.CharacterName, existing?.WorldId);
