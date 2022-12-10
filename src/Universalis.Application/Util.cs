@@ -95,19 +95,11 @@ public static class Util
     /// <returns>A hash representing the input string.</returns>
     public static string Hash(HashAlgorithm hasher, string input)
     {
-        var bytes = Encoding.UTF8.GetBytes(input ?? "");
-        var hash = hasher.ComputeHash(bytes);
-        return BytesToString(hash);
-    }
-
-    /// <summary>
-    /// Converts an array of bytes into a lowercase hexadecimal string.
-    /// </summary>
-    /// <param name="bytes">The input byte array.</param>
-    /// <returns>A lowercase hexadecimal string representing the provided byte array.</returns>
-    public static string BytesToString(byte[] bytes)
-    {
-        return Convert.ToHexString(bytes).ToLowerInvariant(); // https://github.com/dotnet/runtime/issues/60393
+        Span<byte> hash = stackalloc byte[hasher.HashSize/8];
+        ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(input ?? "");
+        if (hasher.TryComputeHash(bytes, hash, out var _written)) // Since we stackalloc the hash buffer, written is not needed
+            return Convert.ToHexString(hash).ToLowerInvariant(); // https://github.com/dotnet/runtime/issues/60393
+        throw new InvalidOperationException("Destination buffer was too small, this should never occur");
     }
 
     /// <summary>
