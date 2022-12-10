@@ -207,30 +207,32 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             return new List<Listing>(0);
         }
 
+        var listingKeys = new RedisValue[] { "id", "hq", "mann", "ppu", "q", "did", "cid", "cname", "t", "rid", "rname", "rcid", "sid", "mat" };
         var listingIds = ParseObjectIds(listingIdsRaw);
         return await listingIds
             .ToAsyncEnumerable()
             .SelectAwait(async id =>
             {
+                
                 var listingKey = GetListingKey(worldId, itemId, id);
-                var listingEntries = await db.HashGetAllAsync(listingKey, flags: CommandFlags.PreferReplica);
-                var listing = listingEntries.ToDictionary();
+                var listingEntries = await db.HashGetAsync(listingKey, listingKeys, flags: CommandFlags.PreferReplica);
+
                 return new Listing
                 {
-                    ListingId = GetValueString(listing, "id"),
-                    Hq = GetValueBool(listing, "hq"),
-                    OnMannequin = GetValueBool(listing, "mann"),
-                    PricePerUnit = GetValueInt32(listing, "ppu"),
-                    Quantity = GetValueInt32(listing, "q"),
-                    DyeId = GetValueInt32(listing, "did"),
-                    CreatorId = GetValueString(listing, "cid"),
-                    CreatorName = GetValueString(listing, "cname"),
-                    LastReviewTimeUnixSeconds = GetValueInt64(listing, "t"),
-                    RetainerId = GetValueString(listing, "rid"),
-                    RetainerName = GetValueString(listing, "rname"),
-                    RetainerCityId = GetValueInt32(listing, "rcid"),
-                    SellerId = GetValueString(listing, "sid"),
-                    Materia = GetValueMateriaArray(listing, "mat"),
+                    ListingId = GetValueString(listingEntries[0]),
+                    Hq = GetValueBool(listingEntries[1]),
+                    OnMannequin = GetValueBool(listingEntries[2]),
+                    PricePerUnit = GetValueInt32(listingEntries[3]),
+                    Quantity = GetValueInt32(listingEntries[4]),
+                    DyeId = GetValueInt32(listingEntries[5]),
+                    CreatorId = GetValueString(listingEntries[6]),
+                    CreatorName = GetValueString(listingEntries[7]),
+                    LastReviewTimeUnixSeconds = GetValueInt64(listingEntries[8]),
+                    RetainerId = GetValueString(listingEntries[9]),
+                    RetainerName = GetValueString(listingEntries[10]),
+                    RetainerCityId = GetValueInt32(listingEntries[11]),
+                    SellerId = GetValueString(listingEntries[12]),
+                    Materia = GetValueMateriaArray(listingEntries[13]),
                 };
             })
             .ToListAsync(cancellationToken);
@@ -276,34 +278,29 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _ = trans.StringSetAsync(listingsKey, SerializeObjectIds(newListingIds), expiry);
     }
 
-    private static int GetValueint32(IDictionary<RedisValue, RedisValue> hash, string key)
+    private static int GetValueInt32(RedisValue value)
     {
-        return hash.ContainsKey(key) ? (int)hash[key] : 0;
+        return (int)value;
     }
 
-    private static int GetValueInt32(IDictionary<RedisValue, RedisValue> hash, string key)
+    private static long GetValueInt64(RedisValue value)
     {
-        return hash.ContainsKey(key) ? (int)hash[key] : 0;
+        return (long)value;
     }
 
-    private static long GetValueInt64(IDictionary<RedisValue, RedisValue> hash, string key)
+    private static bool GetValueBool(RedisValue value)
     {
-        return hash.ContainsKey(key) ? (long)hash[key] : 0;
+        return (bool)value;
     }
 
-    private static bool GetValueBool(IDictionary<RedisValue, RedisValue> hash, string key)
+    private static string GetValueString(RedisValue value)
     {
-        return hash.ContainsKey(key) && (bool)hash[key];
+        return value.IsNull ? "" : value;
     }
 
-    private static string GetValueString(IDictionary<RedisValue, RedisValue> hash, string key)
+    private static List<Materia> GetValueMateriaArray(RedisValue value)
     {
-        return hash.ContainsKey(key) ? hash[key] : "";
-    }
-
-    private static List<Materia> GetValueMateriaArray(IDictionary<RedisValue, RedisValue> hash, string key)
-    {
-        return hash.ContainsKey(key) ? ParseMateria(hash[key]).ToList() : new List<Materia>();
+        return (value.IsNullOrEmpty ? Enumerable.Empty<Materia>() : ParseMateria(value)).ToList();
     }
 
     private static IEnumerable<Materia> ParseMateria(RedisValue v)
