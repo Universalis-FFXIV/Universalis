@@ -129,20 +129,7 @@ public class SaleStore : ISaleStore
 
     public async Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null, CancellationToken cancellationToken = default)
     {
-        // Try retrieving data from the cache
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
-        var cacheIndexKey = GetIndexCacheKey(worldId, itemId);
-        if (from == null && count <= MaxCachedSales)
-        {
-            var cachedSales = await FetchSalesFromCache(cache, cacheIndexKey, worldId, itemId, count);
-            if (cachedSales.Any())
-            {
-                return cachedSales;
-            }
-        }
-
-
-        var sales = new List<Sale>();
+        var sales = Enumerable.Empty<Sale>();
         if (count == 0)
         {
             return sales;
@@ -150,48 +137,22 @@ public class SaleStore : ISaleStore
 
         // Fetch data from the database
         var timestamp = from == null ? 0 : new DateTimeOffset(from.Value).ToUnixTimeMilliseconds();
-        byte[] pagingState = null;
-        IPage<Sale> page = null;
-        do
+        try
         {
-            try
-            {
-                page = await _mapper.FetchPageAsync<Sale>(Cql.New("SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=?", new object[] { itemId, worldId, timestamp })
-                    .WithOptions(options => options
-                        .SetPageSize(50)
-                        .SetPagingState(pagingState)));
-                pagingState = page.PagingState;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failed to retrieve sales (world={WorldId}, item={ItemId})", worldId, itemId);
-                throw;
-            }
-
-            foreach (var nextSale in page)
-            {
-                if (sales.Contains(nextSale))
-                {
-                    continue;
-                }
-
-                nextSale.SaleTime = DateTime.SpecifyKind(nextSale.SaleTime, DateTimeKind.Utc);
-                sales.Add(nextSale);
-            }
-        } while (page.PagingState != null && (count == -1 || sales.Count < count));
-
-        var results = sales
-            .Take(count)
-            .OrderByDescending(sale => sale.SaleTime)
-            .ToList();
-
-        // Store the results in the cache
-        if (results.Count >= MaxCachedSales)
+            sales = await _mapper.FetchAsync<Sale>("SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? ORDER BY sale_time DESC LIMIT ?", itemId, worldId, timestamp, count);
+        }
+        catch (Exception e)
         {
-            await CacheSales(cache, cacheIndexKey, results);
+            _logger.LogError(e, "Failed to retrieve sales (world={WorldId}, item={ItemId})", worldId, itemId);
+            throw;
         }
 
-        return results;
+        return sales
+            .Select(sale =>
+            {
+                sale.SaleTime = DateTime.SpecifyKind(sale.SaleTime, DateTimeKind.Utc);
+                return sale;
+            });
     }
 
     public async Task<long> RetrieveUnitTradeVolume(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
@@ -289,106 +250,6 @@ public class SaleStore : ISaleStore
     {
         // TODO: Make this work with Scylla or DynamoDB
         return Task.FromResult<IDictionary<DateTime, int>>(new Dictionary<DateTime, int>());
-    }
-
-    private async Task<IList<Sale>> FetchSalesFromCache(IDatabase cache, string cacheIndexKey, int worldId, int itemId, int count)
-    {
-        try
-        {
-            if (await cache.KeyExistsAsync(cacheIndexKey, CommandFlags.PreferReplica))
-            {
-                var cachedSaleIds = await cache.ListRangeAsync(cacheIndexKey, flags: CommandFlags.PreferReplica);
-                var cachedSaleTasks = cachedSaleIds
-                    .Take(count)
-                    .Select(saleId => Guid.Parse(saleId))
-                    .Select(async saleId =>
-                    {
-                        var cacheKey = GetSaleCacheKey(saleId);
-                        return (saleId, await cache.HashGetAllAsync(cacheKey, CommandFlags.PreferReplica));
-                    });
-                var cachedSales = await Task.WhenAll(cachedSaleTasks);
-                return cachedSales
-                    .Select(cachedSale =>
-                    {
-                        var (saleId, sale) = cachedSale;
-                        return (saleId, sale.ToDictionary());
-                    })
-                    .Select(cachedSale =>
-                    {
-                        var (saleId, sale) = cachedSale;
-                        return ParseSaleFromHash(saleId, worldId, itemId, sale);
-                    })
-                    .OrderByDescending(sale => sale.SaleTime)
-                    .ToList();
-            }
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to retrieve sales from cache \"{SaleIndexCacheKey}\"", cacheIndexKey);
-        }
-
-        return new List<Sale>();
-    }
-
-    private async Task CacheSales(IDatabase cache, string cacheIndexKey, IEnumerable<Sale> sales)
-    {
-        var salesTrimmed = sales.Take(MaxCachedSales).ToList();
-        var saleIds = salesTrimmed.Select(sale => sale.Id.ToString());
-        try
-        {
-            // Add all of the sales
-            await Task.WhenAll(salesTrimmed.Select(async sale =>
-            {
-                var saleKey = GetSaleCacheKey(sale.Id);
-                await cache.HashSetAsync(saleKey, new[]
-                {
-                    new HashEntry("hq", sale.Hq),
-                    new HashEntry("ppu", sale.PricePerUnit),
-                    new HashEntry("q", sale.Quantity),
-                    new HashEntry("bn", sale.BuyerName),
-                    new HashEntry("t", sale.SaleTime.ToString()),
-                    new HashEntry("uid", sale.UploaderIdHash),
-                    new HashEntry("mann", sale.OnMannequin)
-                });
-                await cache.KeyExpireAsync(saleKey, TimeSpan.FromMinutes(5), flags: CommandFlags.FireAndForget);
-            }));
-
-            // Update the index
-            var s0 = await cache.ListGetByIndexAsync(cacheIndexKey, 0);
-            var tx = cache.CreateTransaction();
-            tx.AddCondition(Condition.ListIndexEqual(cacheIndexKey, 0, s0));
-            _ = tx.ListLeftPushAsync(cacheIndexKey, saleIds.Select(id => (RedisValue)id).ToArray());
-            _ = tx.KeyExpireAsync(cacheIndexKey, TimeSpan.FromMinutes(5));
-            await tx.ExecuteAsync(CommandFlags.FireAndForget);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to store sales in cache \"{SaleIndexCacheKey}\"", cacheIndexKey);
-        }
-    }
-
-    private Sale ParseSaleFromHash(Guid saleId, int worldId, int itemId, IDictionary<RedisValue, RedisValue> hash)
-    {
-        var saleTimeStr = GetValueString(hash, "t");
-        if (!DateTime.TryParse(saleTimeStr, out var saleTime))
-        {
-            saleTime = default;
-            _logger.LogWarning("Failed to parse sale time  \"{RedisValue}\" for cached sale \"{SaleId}\", using default value", saleTimeStr, saleId);
-        }
-
-        return new Sale
-        {
-            Id = saleId,
-            WorldId = worldId,
-            ItemId = itemId,
-            Hq = GetValueBool(hash, "hq"),
-            PricePerUnit = GetValueInt32(hash, "ppu"),
-            Quantity = GetValueInt32(hash, "q"),
-            BuyerName = GetValueString(hash, "bn"),
-            SaleTime = saleTime,
-            UploaderIdHash = GetValueString(hash, "uid"),
-            OnMannequin = GetValueBool(hash, "mann"),
-        };
     }
 
     private long AggregateHashVolume(IEnumerable<HashEntry> hash, DateTime from, DateTime to)
