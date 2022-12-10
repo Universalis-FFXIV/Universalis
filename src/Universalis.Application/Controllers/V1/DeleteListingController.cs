@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using System.IO;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Realtime;
@@ -67,8 +65,7 @@ public class DeleteListingController : WorldDcRegionControllerBase
         // Hash the uploader ID
         using (var sha256 = SHA256.Create())
         {
-            await using var uploaderIdStream = new MemoryStream(Encoding.UTF8.GetBytes(parameters.UploaderId));
-            parameters.UploaderId = Util.BytesToString(await sha256.ComputeHashAsync(uploaderIdStream, cancellationToken));
+            parameters.UploaderId = Util.Hash(sha256, parameters.UploaderId);
         }
 
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -119,7 +116,7 @@ public class DeleteListingController : WorldDcRegionControllerBase
         {
             WorldId = query.WorldId,
             ItemId = query.ItemId,
-            Listings = new List<ListingView> { await Util.ListingToView(listing, cts.Token) },
+            Listings = new List<ListingView> { Util.ListingToView(listing) },
         });
 
         return Ok("Success");

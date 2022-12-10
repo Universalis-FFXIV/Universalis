@@ -1,7 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using System.IO;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.AccessControl;
@@ -23,9 +21,7 @@ public static class TrustedSourceHashCache
         }
 
         using var sha512 = SHA512.Create();
-        await using var authStream = new MemoryStream(Encoding.UTF8.GetBytes(apiKey));
-        var hash = await sha512.ComputeHashAsync(authStream, cancellationToken);
-        hashString = Util.BytesToString(hash);
+        hashString = Util.Hash(sha512, apiKey);
 
         var source = await dbAccess.Retrieve(new TrustedSourceQuery { ApiKeySha512 = hashString }, cancellationToken);
         if (source == null)

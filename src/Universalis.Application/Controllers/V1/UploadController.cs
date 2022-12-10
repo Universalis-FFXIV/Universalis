@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -65,8 +63,7 @@ public class UploadController : ControllerBase
         // Hash the uploader ID
         using (var sha256 = SHA256.Create())
         {
-            await using var uploaderIdStream = new MemoryStream(Encoding.UTF8.GetBytes(parameters.UploaderId));
-            parameters.UploaderId = Util.BytesToString(await sha256.ComputeHashAsync(uploaderIdStream, cancellationToken));
+            parameters.UploaderId = Util.Hash(sha256, parameters.UploaderId);
         }
 
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);

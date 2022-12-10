@@ -1,6 +1,5 @@
 ﻿using MassTransit;
 using Microsoft.AspNetCore.Mvc;
-using Prometheus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
-using Universalis.Common.Caching;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.AccessControl;
@@ -158,10 +156,9 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 {
                     WorldId = worldId,
                     ItemId = itemId,
-                    Listings = await addedListings
-                            .ToAsyncEnumerable()
-                            .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
-                            .ToListAsync(cancellationToken),
+                    Listings = addedListings
+                            .Select(Util.ListingToView)
+                            .ToList(),
                 }, cancellationToken);
             }
 
@@ -171,10 +168,9 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 {
                     WorldId = worldId,
                     ItemId = itemId,
-                    Listings = await removedListings
-                            .ToAsyncEnumerable()
-                            .SelectAwait(async l => await Util.ListingToView(l, cancellationToken))
-                            .ToListAsync(cancellationToken),
+                    Listings = removedListings
+                            .Select(Util.ListingToView)
+                            .ToList(),
                 }, cancellationToken);
             }
         }

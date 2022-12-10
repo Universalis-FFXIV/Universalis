@@ -32,7 +32,7 @@ public class ApiKey
     {
         using var sha512 = SHA512.Create();
         var hashBytes = sha512.ComputeHash(Encoding.UTF8.GetBytes(token));
-        var hashStr = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+        var hashStr = Convert.ToHexString(hashBytes).ToLowerInvariant();
         return new ApiKey(hashStr, name, canUpload);
     }
 }
