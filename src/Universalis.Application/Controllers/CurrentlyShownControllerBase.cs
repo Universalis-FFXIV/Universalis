@@ -82,7 +82,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                     // described in the property names (e.g. CreatorIdHash in the view and CreatorId in
                     // the database entity).
 
-                    aggData.Listings = next.Listings
+                    aggData.Listings.AddRange(next.Listings
                         .Select(l =>
                         {
                             if (!noGst)
@@ -95,11 +95,9 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                             l.WorldName = !worldDcRegion.IsWorld ? worlds[next.WorldId.Value] : null;
                             l.SerializableProperties = listingSerializableProperties;
                             return l;
-                        })
-                        .Concat(aggData.Listings)
-                        .ToList();
+                        }));
 
-                    aggData.RecentHistory = next.RecentHistory
+                    aggData.RecentHistory.AddRange(next.RecentHistory
                         .Where(s => entriesWithin < 0 || nowSeconds - s.TimestampUnixSeconds < entriesWithin)
                         .Select(s =>
                         {
@@ -107,9 +105,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                             s.WorldName = !worldDcRegion.IsWorld ? worlds[next.WorldId.Value] : null;
                             s.SerializableProperties = recentHistorySerializableProperties;
                             return s;
-                        })
-                        .Concat(aggData.RecentHistory)
-                        .ToList();
+                        }));
 
                     aggData.LastUploadTimeUnixMilliseconds = Math.Max(next.LastUploadTimeUnixMilliseconds, aggData.LastUploadTimeUnixMilliseconds);
 
