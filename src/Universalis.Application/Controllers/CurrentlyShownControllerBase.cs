@@ -37,6 +37,19 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         HashSet<string> fields = null,
         CancellationToken cancellationToken = default)
     {
+        if (!GameData.MarketableItemIds().Contains(itemId))
+        {
+            return (false, new CurrentlyShownView
+            {
+                ItemId = itemId,
+                WorldId = worldDcRegion.IsWorld ? worldDcRegion.WorldId : null,
+                WorldName = worldDcRegion.IsWorld ? worldDcRegion.WorldName : null,
+                DcName = worldDcRegion.IsDc ? worldDcRegion.DcName : null,
+                RegionName = worldDcRegion.IsRegion ? worldDcRegion.RegionName : null,
+                SerializableProperties = BuildSerializableProperties(fields),
+            });
+        }
+
         var cached = await Task.WhenAll(worldIds.Select(worldId => FetchCurrentlyShownData(worldId, itemId, cancellationToken)));
         var data = cached
             .Where(o => o != null)
