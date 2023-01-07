@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Universalis.Entities.MarketBoard;
 
@@ -22,7 +23,7 @@ public class Listing
 
     public string CreatorName { get; set; }
 
-    public long LastReviewTimeUnixSeconds { get; set; }
+    public DateTime LastReviewTime { get; set; }
 
     public string RetainerId { get; set; }
 
@@ -31,4 +32,10 @@ public class Listing
     public int RetainerCityId { get; set; }
 
     public string SellerId { get; set; }
+    
+    public int ItemId { get; set; }
+    
+    public int WorldId { get; set; }
+    
+    public bool Live { get; set; }
 }

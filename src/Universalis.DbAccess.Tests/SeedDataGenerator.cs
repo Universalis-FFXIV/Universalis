@@ -26,7 +26,7 @@ public static class SeedDataGenerator
                 DyeId = (byte)rand.Next(0, 255),
                 CreatorId = rand.NextInt64().ToString(),
                 CreatorName = "Bingus Bongus",
-                LastReviewTimeUnixSeconds = (int)(DateTimeOffset.UtcNow.ToUnixTimeSeconds() - rand.Next(0, 360000)),
+                LastReviewTime = DateTime.UtcNow - TimeSpan.FromSeconds(rand.Next(0, 360000)),
                 RetainerId = rand.NextInt64().ToString(),
                 RetainerName = "xpotato",
                 RetainerCityId = 0xA,

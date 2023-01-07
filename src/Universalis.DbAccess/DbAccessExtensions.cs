@@ -30,10 +30,10 @@ public static class DbAccessExtensions
                                      throw new InvalidOperationException(
                                          "ScyllaDB connection string not provided.");
         var postgresConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_POSTGRES_CONNECTION") ??
-                                     configuration["PostgresConnectionString"] ??
-                                     throw new InvalidOperationException(
-                                         "PostgreSQL connection string not provided.");
-        
+                                       configuration["PostgresConnectionString"] ??
+                                       throw new InvalidOperationException(
+                                           "PostgreSQL connection string not provided.");
+
         sc.AddFluentMigratorCore()
             .ConfigureRunner(rb => rb
                 .AddPostgres()
@@ -41,8 +41,9 @@ public static class DbAccessExtensions
                 .ScanIn(typeof(DbAccessExtensions).Assembly).For.All())
             .AddLogging(lb => lb.AddFluentMigratorConsole());
 
-        var dataSource = NpgsqlDataSource.Create(postgresConnectionString);
-        sc.AddSingleton(dataSource);
+        var dataSourceBuilder = new NpgsqlDataSourceBuilder(postgresConnectionString);
+        dataSourceBuilder.UseJsonNet();
+        sc.AddSingleton(dataSourceBuilder.Build());
 
         MappingConfiguration.Global.Define<ObjectMappings>();
 
@@ -61,6 +62,8 @@ public static class DbAccessExtensions
             .ToArray<IConnectionMultiplexer>();
         sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(cache));
         sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(db));
+
+        sc.AddSingleton<IListingStore, ListingStore>();
 
         sc.AddSingleton<IWorldItemUploadStore, WorldItemUploadStore>();
         sc.AddSingleton<IMostRecentlyUpdatedDbAccess, MostRecentlyUpdatedDbAccess>();
