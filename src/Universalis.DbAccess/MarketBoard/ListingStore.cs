@@ -76,7 +76,7 @@ public class ListingStore : IListingStore
         CancellationToken cancellationToken = default)
     {
         await using var command = _dataSource.CreateCommand(
-            "SELECT listing_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id FROM listing WHERE item_id = $1 AND world_id = $2 AND live ORDER BY unit_price");
+            "SELECT listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id FROM listing WHERE item_id = $1 AND world_id = $2 AND live ORDER BY unit_price");
         command.Parameters.Add(new NpgsqlParameter<int>
         {
             TypedValue = query.ItemId,
@@ -92,23 +92,23 @@ public class ListingStore : IListingStore
         {
             listings.Add(new Listing
             {
-                ItemId = query.ItemId,
-                WorldId = query.WorldId,
-                Live = true,
                 ListingId = reader.GetString(0),
-                Hq = reader.GetBoolean(1),
-                OnMannequin = reader.GetBoolean(2),
-                Materia = ConvertMateriaFromJArray(reader.GetFieldValue<JArray>(3)),
-                PricePerUnit = reader.GetInt32(4),
-                Quantity = reader.GetInt32(5),
-                DyeId = reader.GetInt32(6),
-                CreatorId = reader.GetString(7),
-                CreatorName = reader.GetString(8),
-                LastReviewTime = reader.GetDateTime(9),
-                RetainerId = reader.GetString(10),
-                RetainerName = reader.GetString(11),
-                RetainerCityId = reader.GetInt32(12),
-                SellerId = reader.GetString(13),
+                ItemId = reader.GetInt32(1),
+                WorldId = reader.GetInt32(2),
+                Hq = reader.GetBoolean(3),
+                OnMannequin = reader.GetBoolean(4),
+                Materia = ConvertMateriaFromJArray(reader.GetFieldValue<JArray>(5)),
+                PricePerUnit = reader.GetInt32(6),
+                Quantity = reader.GetInt32(7),
+                DyeId = reader.GetInt32(8),
+                CreatorId = reader.GetString(9),
+                CreatorName = reader.GetString(10),
+                LastReviewTime = reader.GetDateTime(11),
+                RetainerId = reader.GetString(12),
+                RetainerName = reader.GetString(13),
+                RetainerCityId = reader.GetInt32(14),
+                SellerId = reader.GetString(15),
+                Live = true,
             });
         }
 
