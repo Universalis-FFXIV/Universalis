@@ -91,7 +91,7 @@ public class OverviewController : ControllerBase
         {
             ListingIdHash = listing.ListingId,
             World = world.Id,
-            LastReviewTimeUnixMilliseconds = listing.LastReviewTimeUnixSeconds * 1000,
+            LastReviewTimeUnixMilliseconds = new DateTimeOffset(listing.LastReviewTime).ToUnixTimeMilliseconds(),
             PricePerUnit = total / Convert.ToDecimal(listing.Quantity),
             Quantity = listing.Quantity,
             Total = total,

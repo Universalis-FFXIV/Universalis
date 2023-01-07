@@ -28,7 +28,7 @@ public static class SchemaSeedDataGenerator
                 SellerId = l.SellerId,
                 CreatorId = l.CreatorId,
                 DyeId = l.DyeId,
-                LastReviewTimeUnixSeconds = Convert.ToInt64(l.LastReviewTimeUnixSeconds),
+                LastReviewTimeUnixSeconds = new DateTimeOffset(l.LastReviewTime).ToUnixTimeSeconds(),
                 Materia = l.Materia
                     .Select(m => new Materia
                     {

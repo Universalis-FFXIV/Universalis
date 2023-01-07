@@ -53,7 +53,7 @@ services:
   postgres:
     image: postgres:14.3
     ports:
-      - "4051:5432"
+      - "4052:5432"
     environment:
       POSTGRES_USER: universalis
       POSTGRES_PASSWORD: universalis

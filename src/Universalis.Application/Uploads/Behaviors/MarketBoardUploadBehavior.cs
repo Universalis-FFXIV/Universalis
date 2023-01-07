@@ -217,7 +217,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     DyeId = l.DyeId ?? 0,
                     CreatorId = Util.ParseUnusualId(l.CreatorId) ?? "",
                     CreatorName = l.CreatorName,
-                    LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds ?? 0,
+                    LastReviewTime = DateTimeOffset.FromUnixTimeSeconds(l.LastReviewTimeUnixSeconds ?? 0).UtcDateTime,
                     RetainerId = Util.ParseUnusualId(l.RetainerId) ?? "",
                     RetainerName = l.RetainerName,
                     RetainerCityId = l.RetainerCityId ?? 0,

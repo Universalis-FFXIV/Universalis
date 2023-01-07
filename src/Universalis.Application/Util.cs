@@ -64,7 +64,7 @@ public static class Util
             DyeId = l.DyeId,
             CreatorName = l.CreatorName ?? "",
             IsCrafted = !string.IsNullOrEmpty(l.CreatorId),
-            LastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds,
+            LastReviewTimeUnixSeconds = new DateTimeOffset(l.LastReviewTime).ToUnixTimeSeconds(),
             RetainerName = l.RetainerName,
             RetainerCityId = l.RetainerCityId,
         };

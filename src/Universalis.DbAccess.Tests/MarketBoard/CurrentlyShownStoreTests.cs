@@ -54,7 +54,7 @@ public class CurrentlyShownStoreTests : IClassFixture<DbFixture>
             Assert.Equal(expected.DyeId, actual.DyeId);
             Assert.Equal(expected.CreatorId, actual.CreatorId);
             Assert.Equal(expected.CreatorName, actual.CreatorName);
-            Assert.Equal(expected.LastReviewTimeUnixSeconds, actual.LastReviewTimeUnixSeconds);
+            Assert.Equal(expected.LastReviewTime, actual.LastReviewTime);
             Assert.Equal(expected.SellerId, actual.SellerId);
         });
     }
