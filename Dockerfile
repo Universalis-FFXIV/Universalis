@@ -1,5 +1,5 @@
 # Build stage
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
 WORKDIR /source
 COPY ./ ./
 
@@ -7,7 +7,7 @@ COPY ./ ./
 RUN ./build.sh --target Test Compile --configuration Release
 
 # Run stage
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
 
 # Download sheets
 WORKDIR /sqpack/ffxiv
