@@ -35,7 +35,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
             BuyerName = "Hello World",
             OnMannequin = false,
             SaleTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
-            UploaderIdHash = "efuwhafejgj3weg0wrkporeh"
+            UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
         };
 
         await store.Insert(sale);
@@ -58,7 +58,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
             BuyerName = "Hello World",
             OnMannequin = null,
             SaleTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
-            UploaderIdHash = "efuwhafejgj3weg0wrkporeh"
+            UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
         };
 
         await Assert.ThrowsAsync<ArgumentException>(() => store.Insert(sale));
@@ -90,7 +90,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
             BuyerName = null,
             OnMannequin = false,
             SaleTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
-            UploaderIdHash = "efuwhafejgj3weg0wrkporeh"
+            UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
         };
 
         await Assert.ThrowsAsync<ArgumentException>(() => store.Insert(sale));
@@ -113,7 +113,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
             BuyerName = "Hello World",
             OnMannequin = false,
             SaleTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
-            UploaderIdHash = "efuwhafejgj3weg0wrkporeh"
+            UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
         };
 
         await Assert.ThrowsAsync<ArgumentException>(() => store.Insert(sale));
@@ -136,7 +136,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
             BuyerName = "Hello World",
             OnMannequin = false,
             SaleTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
-            UploaderIdHash = "efuwhafejgj3weg0wrkporeh"
+            UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
         };
 
         await store.Insert(sale);
@@ -155,6 +155,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
             Assert.Equal(sale.BuyerName, result.BuyerName);
             Assert.Equal(sale.OnMannequin, result.OnMannequin);
             Assert.Equal(sale.SaleTime, result.SaleTime);
+            Assert.Equal(DateTimeKind.Utc, result.SaleTime.Kind);
             Assert.Equal(sale.UploaderIdHash, result.UploaderIdHash);
         });
     }
@@ -167,7 +168,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
         var store = _fixture.Services.GetRequiredService<ISaleStore>();
         var sales = new List<Sale>
         {
-            new Sale
+            new()
             {
                 Id = Guid.NewGuid(),
                 WorldId = 25,
@@ -178,9 +179,9 @@ public class SaleStoreTests : IClassFixture<DbFixture>
                 BuyerName = "Hello World",
                 OnMannequin = false,
                 SaleTime = new DateTime(2022, 10, 2, 0, 0, 0, DateTimeKind.Utc),
-                UploaderIdHash = "efuwhafejgj3weg0wrkporeh"
+                UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
             },
-            new Sale
+            new()
             {
                 Id = Guid.NewGuid(),
                 WorldId = 25,
@@ -191,7 +192,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
                 BuyerName = "Hello World",
                 OnMannequin = false,
                 SaleTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
-                UploaderIdHash = "efuwhafejgj3weg0wrkporeh"
+                UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
             }
         };
 
@@ -212,6 +213,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
             Assert.Equal(sale.BuyerName, result.BuyerName);
             Assert.Equal(sale.OnMannequin, result.OnMannequin);
             Assert.Equal(sale.SaleTime, result.SaleTime);
+            Assert.Equal(DateTimeKind.Utc, result.SaleTime.Kind);
             Assert.Equal(sale.UploaderIdHash, result.UploaderIdHash);
         });
     }
@@ -241,6 +243,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
             Assert.Equal(sale.BuyerName, result.BuyerName);
             Assert.Equal(sale.OnMannequin, result.OnMannequin);
             Assert.Equal(new DateTimeOffset(sale.SaleTime).ToUnixTimeSeconds(), new DateTimeOffset(result.SaleTime).ToUnixTimeSeconds());
+            Assert.Equal(DateTimeKind.Utc, result.SaleTime.Kind);
             Assert.Equal(sale.UploaderIdHash, result.UploaderIdHash);
         });
     }
