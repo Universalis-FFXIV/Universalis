@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using FluentMigrator.Runner;
 using Xunit;
 
 namespace Universalis.DbAccess.Tests;
@@ -15,6 +16,7 @@ public class DbFixture : IAsyncLifetime
     private readonly TestcontainersContainer _scylla;
     private readonly TestcontainersContainer _cache;
     private readonly TestcontainersContainer _redis;
+    private readonly TestcontainersContainer _postgres;
 
     private readonly Lazy<IServiceProvider> _services;
 
@@ -47,12 +49,25 @@ public class DbFixture : IAsyncLifetime
             .WithCommand("redis-server", "--save", "", "--loglevel", "warning")
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(6379))
             .Build();
+        _postgres = new TestcontainersBuilder<TestcontainersContainer>()
+            .WithName(Guid.NewGuid().ToString("D"))
+            .WithImage("postgres:14.3")
+            .WithEnvironment("POSTGRES_USER", "universalis")
+            .WithEnvironment("POSTGRES_PASSWORD", "universalis")
+            .WithPortBinding(5432, true)
+            .WithCreateContainerParametersModifier(o =>
+            {
+                o.HostConfig.ShmSize = 512 * 1024 * 1024;
+            })
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5432))
+            .Build();
 
         _services = new Lazy<IServiceProvider>(CreateServiceProvider);
     }
 
     private IServiceProvider CreateServiceProvider()
     {
+        Task.Delay(60000).GetAwaiter().GetResult();
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
@@ -65,17 +80,24 @@ public class DbFixture : IAsyncLifetime
                 { "RedisCacheConnectionString", $"{_cache.Hostname}:{_cache.GetMappedPublicPort(6379)}" },
                 { "RedisConnectionString", $"{_redis.Hostname}:{_redis.GetMappedPublicPort(6379)}" },
                 { "ScyllaConnectionString", "localhost" },
+                { "PostgresConnectionString", $"Host={_postgres.Hostname};Port={_postgres.GetMappedPublicPort(5432)};Username=universalis;Password=universalis;Database=universalis" },
             })
             .Build();
         services.AddLogging();
         services.AddSingleton<IConfiguration>(configuration);
-        Task.Delay(60000).GetAwaiter().GetResult();
         services.AddDbAccessServices(configuration);
-        return services.BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
+        
+        // Run database migrations
+        var runner = provider.GetRequiredService<IMigrationRunner>();
+        runner.MigrateUp();
+
+        return provider;
     }
 
     public async Task InitializeAsync()
     {
+        await _postgres.StartAsync().ConfigureAwait(false);
         await _scylla.StartAsync().ConfigureAwait(false);
         await _cache.StartAsync().ConfigureAwait(false);
         await _redis.StartAsync().ConfigureAwait(false);
@@ -86,5 +108,6 @@ public class DbFixture : IAsyncLifetime
         await _redis.DisposeAsync().ConfigureAwait(false);
         await _cache.DisposeAsync().ConfigureAwait(false);
         await _scylla.DisposeAsync().ConfigureAwait(false);
+        await _postgres.DisposeAsync().ConfigureAwait(false);
     }
 }

@@ -1,5 +1,7 @@
 using System.Threading;
+using FluentMigrator.Runner;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -13,6 +15,14 @@ public static class Program
         ThreadPool.SetMinThreads(100, 100);
 
         var host = CreateHostBuilder(args).Build();
+
+        // Run database migrations
+        using (var scope = host.Services.CreateScope())
+        {
+            var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
+            runner.MigrateUp();
+        }
+
         host.Run();
     }
 
@@ -33,6 +43,6 @@ public static class Program
 #else
                         "wwwroot/_content/Universalis.Mogboard.WebUI"
 #endif
-                        );
+                    );
             });
 }

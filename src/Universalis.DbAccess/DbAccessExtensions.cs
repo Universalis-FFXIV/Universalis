@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
 using System;
 using System.Linq;
+using FluentMigrator.Runner;
+using Npgsql;
 using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Uploads;
@@ -26,7 +28,21 @@ public static class DbAccessExtensions
         var scyllaConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_SCYLLA_CONNECTION") ??
                                      configuration["ScyllaConnectionString"] ??
                                      throw new InvalidOperationException(
-                                         "ScyllaDB cache connection string not provided.");
+                                         "ScyllaDB connection string not provided.");
+        var postgresConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_POSTGRES_CONNECTION") ??
+                                     configuration["PostgresConnectionString"] ??
+                                     throw new InvalidOperationException(
+                                         "PostgreSQL connection string not provided.");
+        
+        sc.AddFluentMigratorCore()
+            .ConfigureRunner(rb => rb
+                .AddPostgres()
+                .WithGlobalConnectionString(postgresConnectionString)
+                .ScanIn(typeof(DbAccessExtensions).Assembly).For.All())
+            .AddLogging(lb => lb.AddFluentMigratorConsole());
+
+        var dataSource = NpgsqlDataSource.Create(postgresConnectionString);
+        sc.AddSingleton(dataSource);
 
         MappingConfiguration.Global.Define<ObjectMappings>();
 

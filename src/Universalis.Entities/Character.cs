@@ -8,6 +8,10 @@ public class Character
 
     public int? WorldId { get; init; }
 
+    public Character()
+    {
+    }
+
     public Character(string contentIdSha256, string name, int? worldId)
     {
         ContentIdSha256 = contentIdSha256;
