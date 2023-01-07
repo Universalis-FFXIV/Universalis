@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
 using Universalis.DbAccess.MarketBoard;
 using Xunit;
@@ -55,6 +56,7 @@ public class CurrentlyShownStoreTests : IClassFixture<DbFixture>
             Assert.Equal(expected.CreatorId, actual.CreatorId);
             Assert.Equal(expected.CreatorName, actual.CreatorName);
             Assert.Equal(expected.LastReviewTime, actual.LastReviewTime);
+            Assert.Equal(DateTimeKind.Utc, actual.LastReviewTime.Kind);
             Assert.Equal(expected.SellerId, actual.SellerId);
         });
     }
