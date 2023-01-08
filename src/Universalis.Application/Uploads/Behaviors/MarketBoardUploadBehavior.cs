@@ -185,7 +185,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             UploadSource = source.Name,
             Listings = listings,
         };
-        _ = _currentlyShownDb.Update(document, new CurrentlyShownQuery
+        await _currentlyShownDb.Update(document, new CurrentlyShownQuery
         {
             WorldId = worldId,
             ItemId = itemId,
