@@ -25,13 +25,22 @@ public class ListingStore : IListingStore
     {
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
 
+        // (ItemId, WorldId) => [ListingId]
+        // This is used to keep track of which listings we want to *keep*,
+        // so we can set *everything else* to dead.
         var listingIds = new Dictionary<(int, int), List<string>>();
+        
+        // Npgsql batches have an implicit transaction around them
+        // https://www.npgsql.org/doc/basic-usage.html#batching
         await using var batch = new NpgsqlBatch(connection);
         foreach (var listing in listingGroup)
         {
-            // It's not clear to me what happens when a listing is updated.
-            // Until I have more data, I'm assuming that all updates are the same
-            // as new listings.
+            // If a listing is uploaded multiple times in separate uploads, it
+            // can already be in the database, causing a conflict. To handle that,
+            // we just update the existing record and ensure that it's made live
+            // again. It's not clear to me what happens on the game servers when
+            // a listing is updated. Until we have more data, I'm assuming that
+            // all updates are the same as new listings.
             batch.BatchCommands.Add(new NpgsqlBatchCommand("INSERT INTO listing " +
                                                            "(listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id, live) " +
                                                            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) " +
@@ -60,6 +69,7 @@ public class ListingStore : IListingStore
                 },
             });
 
+            // Create an entry for the listing ID
             var key = (listing.ItemId, listing.WorldId);
             if (!listingIds.ContainsKey(key))
             {
@@ -69,6 +79,7 @@ public class ListingStore : IListingStore
             listingIds[key].Add(listing.ListingId);
         }
         
+        // Kill the old listings from previous uploads
         foreach (var (itemId, worldId) in listingIds.Keys)
         {
             var ids = listingIds[(itemId, worldId)];
@@ -90,7 +101,8 @@ public class ListingStore : IListingStore
         CancellationToken cancellationToken = default)
     {
         await using var command = _dataSource.CreateCommand(
-            "SELECT listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id FROM listing WHERE item_id = $1 AND world_id = $2 AND live ORDER BY unit_price");
+            "SELECT listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id " +
+            "FROM listing WHERE item_id = $1 AND world_id = $2 AND live ORDER BY unit_price");
         command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.ItemId });
         command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.WorldId });
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
