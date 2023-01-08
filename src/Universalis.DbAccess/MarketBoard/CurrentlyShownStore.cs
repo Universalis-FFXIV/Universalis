@@ -89,7 +89,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             return null;
         }
 
-        var source = await GetSourceWithCache(db, worldId, itemId);
+        var source = await GetSource(db, worldId, itemId);
 
         // Attempt to retrieve listings from Postgres
         var listings = new List<Listing>();
@@ -163,12 +163,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 "Failed to store listings from secondary database in primary database (item={ItemId}, world={WorldId})",
                 itemId, worldId);
         }
-    }
-
-    private async Task<string> GetSourceWithCache(IDatabaseAsync db, int worldId, int itemId)
-    {
-        var source = await GetSource(db, worldId, itemId);
-        return source;
     }
 
     private async Task<string> GetListingIds(IDatabaseAsync db, int worldId, int itemId)
