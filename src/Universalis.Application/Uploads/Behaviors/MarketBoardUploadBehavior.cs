@@ -199,9 +199,12 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         return uploadedListings
             .Select(l =>
             {
+                // Listing IDs from some uploaders are empty; this needs to be fixed
+                // but this should be a decent workaround that still enables data
+                // collection.
                 return new Listing
                 {
-                    ListingId = l.ListingId ?? "",
+                    ListingId = l.ListingId ?? $"dirty:{Guid.NewGuid()}",
                     ItemId = itemId,
                     WorldId = worldId,
                     Hq = Util.ParseUnusualBool(l.Hq),

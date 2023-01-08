@@ -120,6 +120,14 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                         // be added back separately.
                         l.ItemId = itemId;
                         l.WorldId = worldId;
+
+                        if (string.IsNullOrEmpty(l.ListingId))
+                        {
+                            // Listing IDs from some uploaders are empty; this needs to be fixed
+                            // but this should be a decent workaround.
+                            l.ListingId = $"dirty:{Guid.NewGuid()}";
+                        }
+                        
                         return l;
                     })
                     .ToList();
