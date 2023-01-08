@@ -26,7 +26,7 @@ public class ListingStore : IListingStore
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
-        var listingIds = new List<string>();
+        var listingIds = new Dictionary<(int, int), List<string>>();
         foreach (var listing in listingGroup)
         {
             await using var command = new NpgsqlCommand(
@@ -56,18 +56,31 @@ public class ListingStore : IListingStore
             };
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
             await reader.ReadAsync(cancellationToken);
-            listingIds.Add(reader.GetString(0));
+
+            var key = (listing.ItemId, listing.WorldId);
+            if (!listingIds.ContainsKey(key))
+            {
+                listingIds[key] = new List<string>();
+            }
+            
+            listingIds[key].Add(reader.GetString(0));
         }
 
-        await using var killOld = new NpgsqlCommand("UPDATE listing SET live = FALSE WHERE listing_id != ANY($1)", connection, transaction)
+        foreach (var (itemId, worldId) in listingIds.Keys)
         {
-            Parameters =
+            var ids = listingIds[(itemId, worldId)];
+            await using var killOld = new NpgsqlCommand("UPDATE listing SET live = FALSE WHERE item_id = $1 AND world_id = $2 AND listing_id != ANY($3)", connection, transaction)
             {
-                new NpgsqlParameter<string[]> { TypedValue = listingIds.ToArray() },
-            },
-        };
+                Parameters =
+                {
+                    new NpgsqlParameter<int> { TypedValue = itemId },
+                    new NpgsqlParameter<int> { TypedValue = worldId },
+                    new NpgsqlParameter<string[]> { TypedValue = ids.ToArray() },
+                },
+            };
 
-        await killOld.ExecuteNonQueryAsync(cancellationToken);
+            await killOld.ExecuteNonQueryAsync(cancellationToken);
+        }
 
         await transaction.CommitAsync(cancellationToken);
     }
