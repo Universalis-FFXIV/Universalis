@@ -24,14 +24,18 @@ public class ListingStore : IListingStore
     public async Task UpsertLive(IEnumerable<Listing> listingGroup, CancellationToken cancellationToken = default)
     {
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
-        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
-        var listingIds = new List<string>();
+        var listingIds = new Dictionary<(int, int), List<string>>();
+        await using var batch = new NpgsqlBatch(connection);
         foreach (var listing in listingGroup)
         {
-            await using var command = new NpgsqlCommand(
-                "INSERT INTO listing (listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id, live) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING listing_id",
-                connection, transaction)
+            // It's not clear to me what happens when a listing is updated.
+            // Until I have more data, I'm assuming that all updates are the same
+            // as new listings.
+            batch.BatchCommands.Add(new NpgsqlBatchCommand("INSERT INTO listing " +
+                                                           "(listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id, live) " +
+                                                           "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) " +
+                                                           "ON CONFLICT (listing_id) DO UPDATE SET live = TRUE")
             {
                 Parameters =
                 {
@@ -40,7 +44,8 @@ public class ListingStore : IListingStore
                     new NpgsqlParameter<int> { TypedValue = listing.WorldId },
                     new NpgsqlParameter<bool> { TypedValue = listing.Hq },
                     new NpgsqlParameter<bool> { TypedValue = listing.OnMannequin },
-                    new NpgsqlParameter { Value = ConvertMateriaToJArray(listing.Materia), NpgsqlDbType = NpgsqlDbType.Jsonb },
+                    new NpgsqlParameter
+                        { Value = ConvertMateriaToJArray(listing.Materia), NpgsqlDbType = NpgsqlDbType.Jsonb },
                     new NpgsqlParameter<int> { TypedValue = listing.PricePerUnit },
                     new NpgsqlParameter<int> { TypedValue = listing.Quantity },
                     new NpgsqlParameter<int> { TypedValue = listing.DyeId },
@@ -53,23 +58,32 @@ public class ListingStore : IListingStore
                     new NpgsqlParameter<string> { TypedValue = listing.SellerId },
                     new NpgsqlParameter<bool> { TypedValue = true }, // listing.Live
                 },
-            };
-            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            await reader.ReadAsync(cancellationToken);
-            listingIds.Add(reader.GetString(0));
+            });
+
+            var key = (listing.ItemId, listing.WorldId);
+            if (!listingIds.ContainsKey(key))
+            {
+                listingIds[key] = new List<string>();
+            }
+
+            listingIds[key].Add(listing.ListingId);
+        }
+        
+        foreach (var (itemId, worldId) in listingIds.Keys)
+        {
+            var ids = listingIds[(itemId, worldId)];
+            batch.BatchCommands.Add(new NpgsqlBatchCommand("UPDATE listing SET live = FALSE WHERE item_id = $1 AND world_id = $2 AND live AND listing_id != ANY($3)")
+            {
+                Parameters =
+                {
+                    new NpgsqlParameter<int> { TypedValue = itemId },
+                    new NpgsqlParameter<int> { TypedValue = worldId },
+                    new NpgsqlParameter<string[]> { TypedValue = ids.ToArray() },
+                },
+            });
         }
 
-        await using var killOld = new NpgsqlCommand("UPDATE listing SET live = FALSE WHERE listing_id != ANY($1)", connection, transaction)
-        {
-            Parameters =
-            {
-                new NpgsqlParameter<string[]> { TypedValue = listingIds.ToArray() },
-            },
-        };
-
-        await killOld.ExecuteNonQueryAsync(cancellationToken);
-
-        await transaction.CommitAsync(cancellationToken);
+        await batch.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<Listing>> RetrieveLive(ListingQuery query,
@@ -77,14 +91,8 @@ public class ListingStore : IListingStore
     {
         await using var command = _dataSource.CreateCommand(
             "SELECT listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id FROM listing WHERE item_id = $1 AND world_id = $2 AND live ORDER BY unit_price");
-        command.Parameters.Add(new NpgsqlParameter<int>
-        {
-            TypedValue = query.ItemId,
-        });
-        command.Parameters.Add(new NpgsqlParameter<int>
-        {
-            TypedValue = query.WorldId,
-        });
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.ItemId });
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.WorldId });
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
         var listings = new List<Listing>();
@@ -114,7 +122,7 @@ public class ListingStore : IListingStore
 
         return listings;
     }
-    
+
     private static JArray ConvertMateriaToJArray(IEnumerable<Materia> materia)
     {
         return materia
@@ -125,7 +133,7 @@ public class ListingStore : IListingStore
                 return array;
             });
     }
-    
+
     private static List<Materia> ConvertMateriaFromJArray(IEnumerable<JToken> materia)
     {
         return materia

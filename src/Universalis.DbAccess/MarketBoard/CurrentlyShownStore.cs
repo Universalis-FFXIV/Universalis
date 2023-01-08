@@ -19,7 +19,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     private readonly IListingStore _listingStore;
     private readonly ILogger<CurrentlyShownStore> _logger;
 
-    public CurrentlyShownStore(ICacheRedisMultiplexer cache, IPersistentRedisMultiplexer redis, IListingStore listingStore, ILogger<CurrentlyShownStore> logger)
+    public CurrentlyShownStore(ICacheRedisMultiplexer cache, IPersistentRedisMultiplexer redis,
+        IListingStore listingStore, ILogger<CurrentlyShownStore> logger)
     {
         _cache = cache;
         _redis = redis;
@@ -42,7 +43,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         await StoreData(db, cache, data, null, cancellationToken);
     }
 
-    private async Task StoreData(IDatabaseAsync db, IDatabaseAsync cache, CurrentlyShown data, TimeSpan? expiry = null, CancellationToken cancellationToken = default)
+    private async Task StoreData(IDatabaseAsync db, IDatabaseAsync cache, CurrentlyShown data, TimeSpan? expiry = null,
+        CancellationToken cancellationToken = default)
     {
         var worldId = data.WorldId;
         var itemId = data.ItemId;
@@ -66,7 +68,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         return await db.StringGetAsync(lastUpdatedKey);
     }
 
-    private static Task SetLastUpdated(IDatabaseAsync db, int worldId, int itemId, long timestamp, TimeSpan? expiry = null)
+    private static Task SetLastUpdated(IDatabaseAsync db, int worldId, int itemId, long timestamp,
+        TimeSpan? expiry = null)
     {
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
         return db.StringSetAsync(lastUpdatedKey, timestamp, expiry);
@@ -85,7 +88,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         return db.StringSetAsync(sourceKey, source, expiry);
     }
 
-    private async Task<CurrentlyShown> FetchData(IDatabaseAsync db, IDatabaseAsync cache, int worldId, int itemId, CancellationToken cancellationToken = default)
+    private async Task<CurrentlyShown> FetchData(IDatabaseAsync db, IDatabaseAsync cache, int worldId, int itemId,
+        CancellationToken cancellationToken = default)
     {
         var lastUpdated = await EnsureLastUpdated(db, worldId, itemId);
         if (lastUpdated.IsNullOrEmpty || (long)lastUpdated == 0)
@@ -106,7 +110,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to retrieve listings from primary database (item={ItemId}, world={WorldId})", itemId, worldId);
+            _logger.LogError(e, "Failed to retrieve listings from primary database (item={ItemId}, world={WorldId})",
+                itemId, worldId);
         }
 
         if (!listings.Any())
@@ -128,25 +133,20 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                             // but this should be a decent workaround.
                             l.ListingId = $"dirty:{Guid.NewGuid()}";
                         }
-                        
+
                         return l;
                     })
                     .ToList();
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to retrieve listings from secondary database (item={ItemId}, world={WorldId})", itemId, worldId);
+                _logger.LogError(e,
+                    "Failed to retrieve listings from secondary database (item={ItemId}, world={WorldId})", itemId,
+                    worldId);
             }
-            
+
             // Re-save the listings in Postgres
-            try
-            {
-                await _listingStore.UpsertLive(listings, cancellationToken);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failed to store listings from secondary database in primary database (item={ItemId}, world={WorldId})", itemId, worldId);
-            }
+            _ = SaveListings(listings, itemId, worldId);
         }
 
         return new CurrentlyShown
@@ -157,6 +157,20 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             UploadSource = source,
             Listings = listings,
         };
+    }
+
+    private async Task SaveListings(IEnumerable<Listing> listings, int itemId, int worldId)
+    {
+        try
+        {
+            await _listingStore.UpsertLive(listings);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e,
+                "Failed to store listings from secondary database in primary database (item={ItemId}, world={WorldId})",
+                itemId, worldId);
+        }
     }
 
     private async Task<string> GetSourceWithCache(IDatabaseAsync db, IDatabaseAsync cache, int worldId, int itemId)
@@ -172,7 +186,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to retrieve upload source from cache (item={ItemId}, world={WorldId})", itemId, worldId);
+            _logger.LogError(e, "Failed to retrieve upload source from cache (item={ItemId}, world={WorldId})", itemId,
+                worldId);
         }
 
         // Fetch the source from the database
@@ -185,7 +200,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to store upload source in the cache (item={ItemId}, world={WorldId})", itemId, worldId);
+            _logger.LogError(e, "Failed to store upload source in the cache (item={ItemId}, world={WorldId})", itemId,
+                worldId);
         }
 
         return source;
@@ -205,7 +221,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to retrieve listing IDs from cache (item={ItemId}, world={WorldId})", itemId, worldId);
+            _logger.LogError(e, "Failed to retrieve listing IDs from cache (item={ItemId}, world={WorldId})", itemId,
+                worldId);
         }
 
         // Fetch the listing IDs from the database
@@ -218,13 +235,15 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to store listing IDs in the cache (item={ItemId}, world={WorldId})", itemId, worldId);
+            _logger.LogError(e, "Failed to store listing IDs in the cache (item={ItemId}, world={WorldId})", itemId,
+                worldId);
         }
 
         return listingIds;
     }
 
-    private async Task<List<Listing>> GetListings(IDatabaseAsync db, IDatabaseAsync cache, int worldId, int itemId, CancellationToken cancellationToken = default)
+    private async Task<List<Listing>> GetListings(IDatabaseAsync db, IDatabaseAsync cache, int worldId, int itemId,
+        CancellationToken cancellationToken = default)
     {
         var listingIdsRaw = await GetListingIdsWithCache(db, cache, worldId, itemId);
         if (string.IsNullOrEmpty(listingIdsRaw))
