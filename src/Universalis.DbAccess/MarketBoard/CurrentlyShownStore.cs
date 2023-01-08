@@ -280,7 +280,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 SellerId = (string)listingEntries[12] ?? "",
                 Materia = GetValueMateriaArray(listingEntries[13]),
             };
-        });
+        }, opts);
 
         foreach (var id in ParseObjectIds(listingIdsRaw))
         {
