@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="30.0.1" />
-    <PackageReference Include="MassTransit" Version="8.0.8" />
+    <PackageReference Include="MassTransit" Version="8.0.10" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="8.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="6.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />
