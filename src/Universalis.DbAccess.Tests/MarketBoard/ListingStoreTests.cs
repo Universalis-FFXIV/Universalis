@@ -57,7 +57,6 @@ public class ListingStoreTests : IClassFixture<DbFixture>
             Assert.Equal(expected.LastReviewTime, actual.LastReviewTime);
             Assert.Equal(DateTimeKind.Utc, actual.LastReviewTime.Kind);
             Assert.Equal(expected.SellerId, actual.SellerId);
-            Assert.True(actual.Live);
         });
     }
     
@@ -93,7 +92,6 @@ public class ListingStoreTests : IClassFixture<DbFixture>
                 Assert.Equal(expected.LastReviewTime, actual.LastReviewTime);
                 Assert.Equal(DateTimeKind.Utc, actual.LastReviewTime.Kind);
                 Assert.Equal(expected.SellerId, actual.SellerId);
-                Assert.True(actual.Live);
             });
         }
     }

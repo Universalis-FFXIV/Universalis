@@ -246,7 +246,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 RetainerName = (string)listingEntries[10] ?? "",
                 RetainerCityId = (int)listingEntries[11],
                 SellerId = (string)listingEntries[12] ?? "",
-                Materia = GetValueMateriaArray(listingEntries[13]),
+                Materia = GetValueMateriaArray(listingEntries[13])
             };
         }, opts);
 
