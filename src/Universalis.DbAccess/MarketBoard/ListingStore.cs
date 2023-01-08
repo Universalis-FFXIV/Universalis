@@ -40,7 +40,8 @@ public class ListingStore : IListingStore
                     new NpgsqlParameter<int> { TypedValue = listing.WorldId },
                     new NpgsqlParameter<bool> { TypedValue = listing.Hq },
                     new NpgsqlParameter<bool> { TypedValue = listing.OnMannequin },
-                    new NpgsqlParameter { Value = ConvertMateriaToJArray(listing.Materia), NpgsqlDbType = NpgsqlDbType.Jsonb },
+                    new NpgsqlParameter
+                        { Value = ConvertMateriaToJArray(listing.Materia), NpgsqlDbType = NpgsqlDbType.Jsonb },
                     new NpgsqlParameter<int> { TypedValue = listing.PricePerUnit },
                     new NpgsqlParameter<int> { TypedValue = listing.Quantity },
                     new NpgsqlParameter<int> { TypedValue = listing.DyeId },
@@ -62,22 +63,25 @@ public class ListingStore : IListingStore
             {
                 listingIds[key] = new List<string>();
             }
-            
+
             listingIds[key].Add(reader.GetString(0));
         }
 
         foreach (var (itemId, worldId) in listingIds.Keys)
         {
             var ids = listingIds[(itemId, worldId)];
-            await using var killOld = new NpgsqlCommand("UPDATE listing SET live = FALSE WHERE item_id = $1 AND world_id = $2 AND listing_id != ANY($3)", connection, transaction)
-            {
-                Parameters =
+            await using var killOld =
+                new NpgsqlCommand(
+                    "UPDATE listing SET live = FALSE WHERE item_id = $1 AND world_id = $2 AND live AND listing_id != ANY($3)",
+                    connection, transaction)
                 {
-                    new NpgsqlParameter<int> { TypedValue = itemId },
-                    new NpgsqlParameter<int> { TypedValue = worldId },
-                    new NpgsqlParameter<string[]> { TypedValue = ids.ToArray() },
-                },
-            };
+                    Parameters =
+                    {
+                        new NpgsqlParameter<int> { TypedValue = itemId },
+                        new NpgsqlParameter<int> { TypedValue = worldId },
+                        new NpgsqlParameter<string[]> { TypedValue = ids.ToArray() },
+                    },
+                };
 
             await killOld.ExecuteNonQueryAsync(cancellationToken);
         }
@@ -90,14 +94,8 @@ public class ListingStore : IListingStore
     {
         await using var command = _dataSource.CreateCommand(
             "SELECT listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id FROM listing WHERE item_id = $1 AND world_id = $2 AND live ORDER BY unit_price");
-        command.Parameters.Add(new NpgsqlParameter<int>
-        {
-            TypedValue = query.ItemId,
-        });
-        command.Parameters.Add(new NpgsqlParameter<int>
-        {
-            TypedValue = query.WorldId,
-        });
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.ItemId });
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.WorldId });
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
         var listings = new List<Listing>();
@@ -127,7 +125,7 @@ public class ListingStore : IListingStore
 
         return listings;
     }
-    
+
     private static JArray ConvertMateriaToJArray(IEnumerable<Materia> materia)
     {
         return materia
@@ -138,7 +136,7 @@ public class ListingStore : IListingStore
                 return array;
             });
     }
-    
+
     private static List<Materia> ConvertMateriaFromJArray(IEnumerable<JToken> materia)
     {
         return materia
