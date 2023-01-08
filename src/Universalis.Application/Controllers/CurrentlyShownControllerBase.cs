@@ -82,7 +82,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                     // described in the property names (e.g. CreatorIdHash in the view and CreatorId in
                     // the database entity).
 
-                    aggData.Listings = next.Listings
+                    aggData.Listings.AddRange(next.Listings
                         .Select(l =>
                         {
                             if (!noGst)
@@ -95,11 +95,9 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                             l.WorldName = !worldDcRegion.IsWorld ? worlds[next.WorldId.Value] : null;
                             l.SerializableProperties = listingSerializableProperties;
                             return l;
-                        })
-                        .Concat(aggData.Listings)
-                        .ToList();
+                        }));
 
-                    aggData.RecentHistory = next.RecentHistory
+                    aggData.RecentHistory.AddRange(next.RecentHistory
                         .Where(s => entriesWithin < 0 || nowSeconds - s.TimestampUnixSeconds < entriesWithin)
                         .Select(s =>
                         {
@@ -107,9 +105,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                             s.WorldName = !worldDcRegion.IsWorld ? worlds[next.WorldId.Value] : null;
                             s.SerializableProperties = recentHistorySerializableProperties;
                             return s;
-                        })
-                        .Concat(aggData.RecentHistory)
-                        .ToList();
+                        }));
 
                     aggData.LastUploadTimeUnixMilliseconds = Math.Max(next.LastUploadTimeUnixMilliseconds, aggData.LastUploadTimeUnixMilliseconds);
 
@@ -163,13 +159,17 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     
     private async Task<CurrentlyShownView> FetchCurrentlyShownData(int worldId, int itemId, CancellationToken cancellationToken = default)
     {
-        var cd = await CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId }, cancellationToken);
+        var csTask = CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId }, cancellationToken);
+        var hTask = History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 }, cancellationToken);
+        await Task.WhenAll(csTask, hTask);
+
+        var cd = await csTask;
         if (cd == null)
         {
             return null;
         }
 
-        var h = await History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 }, cancellationToken);
+        var h = await hTask;
         h ??= new History
             {
                 WorldId = worldId,
@@ -239,8 +239,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     private static IDictionary<int, int> GetListingsDistribution(IEnumerable<ListingView> listings)
     {
         return Statistics.GetDistribution(listings
-            .Select(s => s.Quantity)
-            .Select(q => (int)q));
+            .Select(s => s.Quantity));
     }
 
     /// <summary>
