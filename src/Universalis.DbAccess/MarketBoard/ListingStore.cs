@@ -46,7 +46,7 @@ public class ListingStore : IListingStore
             batch.BatchCommands.Add(new NpgsqlBatchCommand("INSERT INTO listing " +
                                                            "(listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id, uploaded_at) " +
                                                            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) " +
-                                                           "ON CONFLICT (listing_id) DO UPDATE")
+                                                           "ON CONFLICT (listing_id) DO UPDATE SET last_review_time = EXCLUDED.last_review_time, uploaded_at = EXCLUDED.uploaded_at")
             {
                 Parameters =
                 {
@@ -96,7 +96,7 @@ public class ListingStore : IListingStore
             SELECT t.*
             FROM public.listing t
             WHERE t.item_id = $1 AND t.world_id = $2 AND t.uploaded_at = (SELECT max_uploaded_at FROM cte)
-            ORDER BY unit_price;
+            ORDER BY unit_price
             """);
         command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.ItemId });
         command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.WorldId });
