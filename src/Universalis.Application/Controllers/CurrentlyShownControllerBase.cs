@@ -159,13 +159,17 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     
     private async Task<CurrentlyShownView> FetchCurrentlyShownData(int worldId, int itemId, CancellationToken cancellationToken = default)
     {
-        var cd = await CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId }, cancellationToken);
+        var csTask = CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId }, cancellationToken);
+        var hTask = History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 }, cancellationToken);
+        await Task.WhenAll(csTask, hTask);
+
+        var cd = await csTask;
         if (cd == null)
         {
             return null;
         }
 
-        var h = await History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 }, cancellationToken);
+        var h = await hTask;
         h ??= new History
             {
                 WorldId = worldId,
@@ -235,8 +239,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     private static IDictionary<int, int> GetListingsDistribution(IEnumerable<ListingView> listings)
     {
         return Statistics.GetDistribution(listings
-            .Select(s => s.Quantity)
-            .Select(q => (int)q));
+            .Select(s => s.Quantity));
     }
 
     /// <summary>
