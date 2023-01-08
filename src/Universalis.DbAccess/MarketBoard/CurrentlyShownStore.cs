@@ -175,7 +175,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             }
 
             // Re-save the listings in Postgres
-            _ = SaveListings(listings, itemId, worldId);
+            // _ = SaveListings(listings, itemId, worldId);
         }
 
         return new CurrentlyShown
