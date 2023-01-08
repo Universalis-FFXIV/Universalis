@@ -93,18 +93,18 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
         // Attempt to retrieve listings from Postgres
         var listings = new List<Listing>();
-        try
-        {
-            var listingsEnumerable = await _listingStore.RetrieveLive(
-                new ListingQuery { ItemId = itemId, WorldId = worldId },
-                cancellationToken);
-            listings = listingsEnumerable.ToList();
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to retrieve listings from primary database (item={ItemId}, world={WorldId})",
-                itemId, worldId);
-        }
+        // try
+        // {
+        //     var listingsEnumerable = await _listingStore.RetrieveLive(
+        //         new ListingQuery { ItemId = itemId, WorldId = worldId },
+        //         cancellationToken);
+        //     listings = listingsEnumerable.ToList();
+        // }
+        // catch (Exception e)
+        // {
+        //     _logger.LogError(e, "Failed to retrieve listings from primary database (item={ItemId}, world={WorldId})",
+        //         itemId, worldId);
+        // }
 
         if (!listings.Any())
         {
