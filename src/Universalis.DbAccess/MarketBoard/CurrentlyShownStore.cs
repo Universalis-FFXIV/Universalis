@@ -113,7 +113,16 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             // Attempt to retrieve listings from the Redis primary
             try
             {
-                listings = await GetListings(db, cache, worldId, itemId, cancellationToken);
+                listings = (await GetListings(db, cache, worldId, itemId, cancellationToken))
+                    .Select(l =>
+                    {
+                        // These are implicit in the index key, so they need to
+                        // be added back separately.
+                        l.ItemId = itemId;
+                        l.WorldId = worldId;
+                        return l;
+                    })
+                    .ToList();
             }
             catch (Exception e)
             {

@@ -144,7 +144,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 return new BadRequestResult();
             }
 
-            newListings = CleanUploadedListings(parameters.Listings);
+            newListings = CleanUploadedListings(parameters.Listings, itemId, worldId);
 
             var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
             var addedListings = newListings.Where(l => !oldListings.Contains(l)).ToList();
@@ -194,7 +194,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         return null;
     }
 
-    private static List<Listing> CleanUploadedListings(IEnumerable<Schema.Listing> uploadedListings)
+    private static List<Listing> CleanUploadedListings(IEnumerable<Schema.Listing> uploadedListings, int itemId, int worldId)
     {
         return uploadedListings
             .Select(l =>
@@ -202,6 +202,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 return new Listing
                 {
                     ListingId = l.ListingId ?? "",
+                    ItemId = itemId,
+                    WorldId = worldId,
                     Hq = Util.ParseUnusualBool(l.Hq),
                     OnMannequin = Util.ParseUnusualBool(l.OnMannequin),
                     Materia = l.Materia?
