@@ -29,7 +29,13 @@ public class ListingStore : IListingStore
         await using var batch = new NpgsqlBatch(connection);
         foreach (var listing in listingGroup)
         {
-            batch.BatchCommands.Add(new NpgsqlBatchCommand("INSERT INTO listing (listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id, live) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)")
+            // It's not clear to me what happens when a listing is updated.
+            // Until I have more data, I'm assuming that all updates are the same
+            // as new listings.
+            batch.BatchCommands.Add(new NpgsqlBatchCommand("INSERT INTO listing " +
+                                                           "(listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id, live) " +
+                                                           "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) " +
+                                                           "ON CONFLICT DO UPDATE SET live = TRUE")
             {
                 Parameters =
                 {
