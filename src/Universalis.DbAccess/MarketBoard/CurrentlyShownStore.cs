@@ -298,9 +298,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             });
             _ = trans.KeyExpireAsync(listingKey, expiry);
         }
-        
-        // Update the listings index
-        _ = trans.StringSetAsync(listingsKey, SerializeObjectIds(newListingIds), expiry);
     }
 
     private static string SerializeMateriaArray(IEnumerable<Materia> materia)
