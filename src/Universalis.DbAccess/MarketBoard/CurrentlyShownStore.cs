@@ -39,7 +39,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         await StoreData(db, data, null, cancellationToken);
     }
 
-    private async Task StoreData(IDatabase db, CurrentlyShown data, TimeSpan? expiry = null,
+    private async Task StoreData(IDatabaseAsync db, CurrentlyShown data, TimeSpan? expiry = null,
         CancellationToken cancellationToken = default)
     {
         var worldId = data.WorldId;
@@ -47,33 +47,10 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         var lastUploadTime = data.LastUploadTimeUnixMilliseconds;
         var uploadSource = data.UploadSource;
         var listings = data.Listings;
-        
-        // await _listingStore.UpsertLive(listings, cancellationToken);
-        // await SetSource(db, worldId, itemId, uploadSource, expiry);
-        // await SetLastUpdated(db, worldId, itemId, lastUploadTime, expiry);
 
-        var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
-        var lastUpdated = await EnsureLastUpdated(db, worldId, itemId);
-
-        // Create a transaction to update all of the data atomically
-        var trans = db.CreateTransaction();
-        trans.AddCondition(Condition.StringEqual(lastUpdatedKey, lastUpdated));
-
-        // Queue an update to the listings
-        var listingsKey = GetListingsIndexKey(worldId, itemId);
-        var existingListingIdsRaw = await db.StringGetAsync(listingsKey);
-        var existingListingIds = ParseObjectIds(existingListingIdsRaw);
-        SetListingsAtomic(trans, worldId, itemId, existingListingIds, listings, expiry);
-
-        // Queue an update to the upload source
-        SetSourceAtomic(trans, worldId, itemId, uploadSource, expiry);
-
-        // Queue an update to the last updated time
-        SetLastUpdatedAtomic(trans, worldId, itemId, lastUploadTime, expiry);
-
-        // Execute the transaction. If this fails, we'll just assume that newer data
-        // was written first and move on.
-        await trans.ExecuteAsync();
+        await _listingStore.UpsertLive(listings, cancellationToken);
+        await SetSource(db, worldId, itemId, uploadSource, expiry);
+        await SetLastUpdated(db, worldId, itemId, lastUploadTime, expiry);
     }
 
     private static async Task<RedisValue> EnsureLastUpdated(IDatabaseAsync db, int worldId, int itemId)
@@ -97,20 +74,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         return source;
     }
 
-    private static void SetLastUpdatedAtomic(ITransaction trans, int worldId, int itemId, long timestamp,
-        TimeSpan? expiry = null)
-    {
-        var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
-        _ = trans.StringSetAsync(lastUpdatedKey, timestamp, expiry);
-    }
-
-    private static void SetSourceAtomic(ITransaction trans, int worldId, int itemId, string source,
-        TimeSpan? expiry = null)
-    {
-        var sourceKey = GetUploadSourceKey(worldId, itemId);
-        _ = trans.StringSetAsync(sourceKey, source, expiry);
-    }
-
     private static Task SetSource(IDatabaseAsync db, int worldId, int itemId, string source, TimeSpan? expiry = null)
     {
         var sourceKey = GetUploadSourceKey(worldId, itemId);
@@ -130,19 +93,22 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
         // Attempt to retrieve listings from Postgres
         var listings = new List<Listing>();
-        // try
-        // {
-        //     var listingsEnumerable = await _listingStore.RetrieveLive(
-        //         new ListingQuery { ItemId = itemId, WorldId = worldId },
-        //         cancellationToken);
-        //     listings = listingsEnumerable.ToList();
-        // }
-        // catch (Exception e)
-        // {
-        //     _logger.LogError(e, "Failed to retrieve listings from primary database (item={ItemId}, world={WorldId})",
-        //         itemId, worldId);
-        // }
+        var postgresFailed = false;
+        try
+        {
+            var listingsEnumerable = await _listingStore.RetrieveLive(
+                new ListingQuery { ItemId = itemId, WorldId = worldId },
+                cancellationToken);
+            listings = listingsEnumerable.ToList();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to retrieve listings from primary database (item={ItemId}, world={WorldId})",
+                itemId, worldId);
+            postgresFailed = true;
+        }
 
+        var redisFailed = false;
         if (!listings.Any())
         {
             // Attempt to retrieve listings from the Redis primary
@@ -166,16 +132,23 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                         return l;
                     })
                     .ToList();
+
+                // Re-save the listings in Postgres
+                _ = SaveListings(listings, itemId, worldId);
             }
             catch (Exception e)
             {
                 _logger.LogError(e,
                     "Failed to retrieve listings from secondary database (item={ItemId}, world={WorldId})", itemId,
                     worldId);
+                redisFailed = true;
             }
+        }
 
-            // Re-save the listings in Postgres
-            // _ = SaveListings(listings, itemId, worldId);
+        if (postgresFailed && redisFailed)
+        {
+            throw new InvalidOperationException(
+                $"Failed to fetch data from the database (item={itemId}, world={worldId})");
         }
 
         return new CurrentlyShown
@@ -260,54 +233,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         return await transformBlock
             .ReceiveAllAsync(cancellationToken)
             .ToListAsync(cancellationToken);
-    }
-
-    private static void SetListingsAtomic(ITransaction trans, int worldId, int itemId,
-        IEnumerable<Guid> existingListingIds, IList<Listing> listings, TimeSpan? expiry = null)
-    {
-        var listingsKey = GetListingsIndexKey(worldId, itemId);
-
-        // Delete the existing listings
-        foreach (var listingId in existingListingIds)
-        {
-            var listingKey = GetListingKey(worldId, itemId, listingId);
-            _ = trans.KeyDeleteAsync(listingKey);
-        }
-
-        // Set the updated listings
-        var newListingIds = listings.Select(_ => Guid.NewGuid()).ToList();
-        foreach (var (listing, listingId) in listings.Zip(newListingIds))
-        {
-            var listingKey = GetListingKey(worldId, itemId, listingId);
-            _ = trans.HashSetAsync(listingKey, new[]
-            {
-                new HashEntry("id", listing.ListingId ?? ""),
-                new HashEntry("hq", listing.Hq),
-                new HashEntry("mann", listing.OnMannequin),
-                new HashEntry("ppu", listing.PricePerUnit),
-                new HashEntry("q", listing.Quantity),
-                new HashEntry("did", listing.DyeId),
-                new HashEntry("cid", listing.CreatorId ?? ""),
-                new HashEntry("cname", listing.CreatorName ?? ""),
-                new HashEntry("t", new DateTimeOffset(listing.LastReviewTime).ToUnixTimeSeconds()),
-                new HashEntry("rid", listing.RetainerId ?? ""),
-                new HashEntry("rname", listing.RetainerName ?? ""),
-                new HashEntry("rcid", listing.RetainerCityId),
-                new HashEntry("sid", listing.SellerId ?? ""),
-                new HashEntry("mat", SerializeMateriaArray(listing.Materia)),
-            });
-            _ = trans.KeyExpireAsync(listingKey, expiry);
-        }
-    }
-
-    private static string SerializeMateriaArray(IEnumerable<Materia> materia)
-    {
-        return string.Join(':', materia.Select(m => $"{m.MateriaId}-{m.SlotId}"));
-    }
-
-    private static string SerializeObjectIds(IEnumerable<Guid> ids)
-    {
-        return string.Join(':', ids.Select(id => id.ToString()));
     }
 
     private static List<Materia> GetValueMateriaArray(RedisValue value)
