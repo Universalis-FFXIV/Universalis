@@ -67,7 +67,7 @@ public class ListingStore : IListingStore
                     new NpgsqlParameter<string> { TypedValue = listing.RetainerName },
                     new NpgsqlParameter<int> { TypedValue = listing.RetainerCityId },
                     new NpgsqlParameter<string> { TypedValue = listing.SellerId },
-                    new NpgsqlParameter<DateTimeOffset> { TypedValue = uploadedAt },
+                    new NpgsqlParameter<DateTime> { TypedValue = uploadedAt.UtcDateTime },
                 },
             });
 
