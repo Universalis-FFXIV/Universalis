@@ -36,6 +36,4 @@ public class Listing
     public int ItemId { get; set; }
     
     public int WorldId { get; set; }
-    
-    public bool Live { get; set; }
 }

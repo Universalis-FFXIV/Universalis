@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Realtime.Messages;
@@ -185,7 +186,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             UploadSource = source.Name,
             Listings = listings,
         };
-        _ = _currentlyShownDb.Update(document, new CurrentlyShownQuery
+        await _currentlyShownDb.Update(document, new CurrentlyShownQuery
         {
             WorldId = worldId,
             ItemId = itemId,
@@ -202,9 +203,18 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 // Listing IDs from some uploaders are empty; this needs to be fixed
                 // but this should be a decent workaround that still enables data
                 // collection.
+                var listingId = l.ListingId;
+                if (listingId == null)
+                {
+                    using var sha256 = SHA256.Create();
+                    var hashString =
+                        $"{l.CreatorId}:{l.CreatorName}:${l.RetainerName}:${l.RetainerId}:${l.SellerId}:${l.LastReviewTimeUnixSeconds}:${l.Quantity}:${l.PricePerUnit}:${string.Join(',', l.Materia)}:${itemId}:${worldId}";
+                    listingId = $"dirty:{Util.Hash(sha256, hashString)}";
+                }
+
                 return new Listing
                 {
-                    ListingId = l.ListingId ?? $"dirty:{Guid.NewGuid()}",
+                    ListingId = listingId,
                     ItemId = itemId,
                     WorldId = worldId,
                     Hq = Util.ParseUnusualBool(l.Hq),

@@ -29,7 +29,9 @@ public class ListingStore : IListingStore
         // This is used to keep track of which listings we want to *keep*,
         // so we can set *everything else* to dead.
         var listingIds = new Dictionary<(int, int), List<string>>();
-        
+        // Get the currently timestamp for the batch
+        var uploadedAt = DateTimeOffset.Now;
+
         // Npgsql batches have an implicit transaction around them
         // https://www.npgsql.org/doc/basic-usage.html#batching
         await using var batch = new NpgsqlBatch(connection);
@@ -42,9 +44,9 @@ public class ListingStore : IListingStore
             // a listing is updated. Until we have more data, I'm assuming that
             // all updates are the same as new listings.
             batch.BatchCommands.Add(new NpgsqlBatchCommand("INSERT INTO listing " +
-                                                           "(listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id, live) " +
+                                                           "(listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id, uploaded_at) " +
                                                            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) " +
-                                                           "ON CONFLICT (listing_id) DO UPDATE SET live = TRUE")
+                                                           "ON CONFLICT (listing_id) DO UPDATE SET last_review_time = EXCLUDED.last_review_time, uploaded_at = EXCLUDED.uploaded_at")
             {
                 Parameters =
                 {
@@ -65,7 +67,7 @@ public class ListingStore : IListingStore
                     new NpgsqlParameter<string> { TypedValue = listing.RetainerName },
                     new NpgsqlParameter<int> { TypedValue = listing.RetainerCityId },
                     new NpgsqlParameter<string> { TypedValue = listing.SellerId },
-                    new NpgsqlParameter<bool> { TypedValue = true }, // listing.Live
+                    new NpgsqlParameter<DateTimeOffset> { TypedValue = uploadedAt },
                 },
             });
 
@@ -78,21 +80,6 @@ public class ListingStore : IListingStore
 
             listingIds[key].Add(listing.ListingId);
         }
-        
-        // Kill the old listings from previous uploads
-        foreach (var (itemId, worldId) in listingIds.Keys)
-        {
-            var ids = listingIds[(itemId, worldId)];
-            batch.BatchCommands.Add(new NpgsqlBatchCommand("UPDATE listing SET live = FALSE WHERE item_id = $1 AND world_id = $2 AND live AND listing_id != ANY($3)")
-            {
-                Parameters =
-                {
-                    new NpgsqlParameter<int> { TypedValue = itemId },
-                    new NpgsqlParameter<int> { TypedValue = worldId },
-                    new NpgsqlParameter<string[]> { TypedValue = ids.ToArray() },
-                },
-            });
-        }
 
         await batch.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -101,8 +88,16 @@ public class ListingStore : IListingStore
         CancellationToken cancellationToken = default)
     {
         await using var command = _dataSource.CreateCommand(
-            "SELECT listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id " +
-            "FROM listing WHERE item_id = $1 AND world_id = $2 AND live ORDER BY unit_price");
+            """
+            WITH cte AS(
+                SELECT MAX(uploaded_at) as max_uploaded_at FROM listing
+                WHERE item_id = $1 AND world_id = $2
+            )
+            SELECT t.*
+            FROM public.listing t
+            WHERE t.item_id = $1 AND t.world_id = $2 AND t.uploaded_at = (SELECT max_uploaded_at FROM cte)
+            ORDER BY unit_price
+            """);
         command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.ItemId });
         command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.WorldId });
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
@@ -128,7 +123,6 @@ public class ListingStore : IListingStore
                 RetainerName = reader.GetString(13),
                 RetainerCityId = reader.GetInt32(14),
                 SellerId = reader.GetString(15),
-                Live = true,
             });
         }
 
