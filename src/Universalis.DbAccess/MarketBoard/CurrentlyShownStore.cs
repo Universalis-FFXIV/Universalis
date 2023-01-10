@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -125,8 +126,15 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                         if (string.IsNullOrEmpty(l.ListingId))
                         {
                             // Listing IDs from some uploaders are empty; this needs to be fixed
-                            // but this should be a decent workaround.
-                            l.ListingId = $"dirty:{Guid.NewGuid()}";
+                            // but this should be a decent workaround that still enables data
+                            // collection.
+                            if (string.IsNullOrEmpty(l.ListingId))
+                            {
+                                using var sha256 = SHA256.Create();
+                                var hashString =
+                                    $"{l.CreatorId}:{l.CreatorName}:${l.RetainerName}:${l.RetainerId}:${l.SellerId}:${new DateTimeOffset(l.LastReviewTime).ToUnixTimeSeconds()}:${l.Quantity}:${l.PricePerUnit}:${string.Join(',', l.Materia)}:${itemId}:${worldId}";
+                                l.ListingId = $"dirty:{Util.Hash(sha256, hashString)}";
+                            }
                         }
 
                         return l;

@@ -204,7 +204,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 // but this should be a decent workaround that still enables data
                 // collection.
                 var listingId = l.ListingId;
-                if (listingId == null)
+                if (string.IsNullOrEmpty(listingId))
                 {
                     using var sha256 = SHA256.Create();
                     var hashString =
