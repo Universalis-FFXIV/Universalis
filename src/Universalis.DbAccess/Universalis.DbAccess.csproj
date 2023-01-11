@@ -16,7 +16,7 @@
     <PackageReference Include="Npgsql" Version="7.0.1" />
     <PackageReference Include="Npgsql.Json.NET" Version="7.0.1" />
     <PackageReference Include="OptimizedPriorityQueue" Version="5.1.0" />
-    <PackageReference Include="StackExchange.Redis" Version="2.6.80" />
+    <PackageReference Include="StackExchange.Redis" Version="2.6.90" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>
 
