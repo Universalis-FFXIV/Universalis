@@ -93,8 +93,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         var source = await GetSource(db, worldId, itemId);
 
         // Attempt to retrieve listings from Postgres
-        var listings = new List<Listing>();
-        var postgresFailed = false;
+        List<Listing> listings;
         try
         {
             var listingsEnumerable = await _listingStore.RetrieveLive(
@@ -106,57 +105,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         {
             _logger.LogError(e, "Failed to retrieve listings from primary database (item={ItemId}, world={WorldId})",
                 itemId, worldId);
-            postgresFailed = true;
-        }
-
-        var redisFailed = false;
-        if (!listings.Any())
-        {
-            // Attempt to retrieve listings from the Redis primary
-            try
-            {
-                listings = (await GetListings(db, worldId, itemId, cancellationToken))
-                    .Select(l =>
-                    {
-                        // These are implicit in the index key, so they need to
-                        // be added back separately.
-                        l.ItemId = itemId;
-                        l.WorldId = worldId;
-
-                        if (string.IsNullOrEmpty(l.ListingId))
-                        {
-                            // Listing IDs from some uploaders are empty; this needs to be fixed
-                            // but this should be a decent workaround that still enables data
-                            // collection.
-                            if (string.IsNullOrEmpty(l.ListingId))
-                            {
-                                using var sha256 = SHA256.Create();
-                                var hashString =
-                                    $"{l.CreatorId}:{l.CreatorName}:${l.RetainerName}:${l.RetainerId}:${l.SellerId}:${new DateTimeOffset(l.LastReviewTime).ToUnixTimeSeconds()}:${l.Quantity}:${l.PricePerUnit}:${string.Join(',', l.Materia)}:${itemId}:${worldId}";
-                                l.ListingId = $"dirty:{Util.Hash(sha256, hashString)}";
-                            }
-                        }
-
-                        return l;
-                    })
-                    .ToList();
-
-                // Re-save the listings in Postgres
-                _ = SaveListings(listings, itemId, worldId);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e,
-                    "Failed to retrieve listings from secondary database (item={ItemId}, world={WorldId})", itemId,
-                    worldId);
-                redisFailed = true;
-            }
-        }
-
-        if (postgresFailed && redisFailed)
-        {
-            throw new InvalidOperationException(
-                $"Failed to fetch data from the database (item={itemId}, world={worldId})");
+            throw;
         }
 
         return new CurrentlyShown
