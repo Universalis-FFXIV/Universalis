@@ -108,6 +108,12 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             throw;
         }
 
+        // Fetch data from Redis to save in Postgres
+        if (!listings.Any())
+        {
+            _ = FetchDataRedis(db, worldId, itemId);
+        }
+
         return new CurrentlyShown
         {
             WorldId = worldId,
@@ -118,7 +124,49 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         };
     }
 
-    private async Task SaveListings(IEnumerable<Listing> listings, int itemId, int worldId)
+    private async Task FetchDataRedis(IDatabaseAsync db, int worldId, int itemId)
+    {
+        // Attempt to retrieve listings from the Redis primary
+        try
+        {
+            var listings = (await GetListings(db, worldId, itemId))
+                .Select(l =>
+                {
+                    // These are implicit in the index key, so they need to
+                    // be added back separately.
+                    l.ItemId = itemId;
+                    l.WorldId = worldId;
+
+                    if (string.IsNullOrEmpty(l.ListingId))
+                    {
+                        // Listing IDs from some uploaders are empty; this needs to be fixed
+                        // but this should be a decent workaround that still enables data
+                        // collection.
+                        if (string.IsNullOrEmpty(l.ListingId))
+                        {
+                            using var sha256 = SHA256.Create();
+                            var hashString =
+                                $"{l.CreatorId}:{l.CreatorName}:${l.RetainerName}:${l.RetainerId}:${l.SellerId}:${new DateTimeOffset(l.LastReviewTime).ToUnixTimeSeconds()}:${l.Quantity}:${l.PricePerUnit}:${string.Join(',', l.Materia)}:${itemId}:${worldId}";
+                            l.ListingId = $"dirty:{Util.Hash(sha256, hashString)}";
+                        }
+                    }
+
+                    return l;
+                })
+                .ToList();
+
+            // Re-save the listings in Postgres
+            _ = ResaveListings(listings, itemId, worldId);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e,
+                "Failed to retrieve listings from secondary database (item={ItemId}, world={WorldId})", itemId,
+                worldId);
+        }
+    }
+
+    private async Task ResaveListings(IEnumerable<Listing> listings, int itemId, int worldId)
     {
         try
         {
