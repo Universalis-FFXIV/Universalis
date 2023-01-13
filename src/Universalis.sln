@@ -67,10 +67,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dev Deployment", "Dev Deplo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Universalis.Common", "Universalis.Common\Universalis.Common.csproj", "{99C0B99C-C1C3-410F-895B-D34DA46755D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lumina", "..\lib\Lumina\src\Lumina\Lumina.csproj", "{11A8248C-F95B-4CB0-87FD-0852A3EB2969}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lumina.Excel", "..\lib\Lumina\src\Lumina.Excel\Lumina.Excel.csproj", "{EBAA36B6-DCD3-4CFD-A860-7FAA846C1299}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -135,14 +131,6 @@ Global
 		{99C0B99C-C1C3-410F-895B-D34DA46755D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99C0B99C-C1C3-410F-895B-D34DA46755D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99C0B99C-C1C3-410F-895B-D34DA46755D9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{11A8248C-F95B-4CB0-87FD-0852A3EB2969}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{11A8248C-F95B-4CB0-87FD-0852A3EB2969}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{11A8248C-F95B-4CB0-87FD-0852A3EB2969}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{11A8248C-F95B-4CB0-87FD-0852A3EB2969}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EBAA36B6-DCD3-4CFD-A860-7FAA846C1299}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EBAA36B6-DCD3-4CFD-A860-7FAA846C1299}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EBAA36B6-DCD3-4CFD-A860-7FAA846C1299}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EBAA36B6-DCD3-4CFD-A860-7FAA846C1299}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
