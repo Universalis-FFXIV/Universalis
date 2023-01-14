@@ -19,7 +19,7 @@ public class MarketItemStoreTests : IClassFixture<DbFixture>
 #if DEBUG
     [Fact]
 #endif
-    public async Task Insert_Works()
+    public async Task SetData_Works()
     {
         var store = _fixture.Services.GetRequiredService<IMarketItemStore>();
         var marketItem = new MarketItem
@@ -29,13 +29,30 @@ public class MarketItemStoreTests : IClassFixture<DbFixture>
             LastUploadTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
         };
 
-        await store.Insert(marketItem);
+        await store.SetData(marketItem);
+    }
+    
+#if DEBUG
+    [Fact]
+#endif
+    public async Task SetData_Multiple_Works()
+    {
+        var store = _fixture.Services.GetRequiredService<IMarketItemStore>();
+        var marketItem = new MarketItem
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            LastUploadTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
+        };
+
+        await store.SetData(marketItem);
+        await store.SetData(marketItem);
     }
 
 #if DEBUG
     [Fact]
 #endif
-    public async Task InsertRetrieve_Works()
+    public async Task SetDataGetData_Works()
     {
         var store = _fixture.Services.GetRequiredService<IMarketItemStore>();
         var marketItem = new MarketItem
@@ -45,9 +62,9 @@ public class MarketItemStoreTests : IClassFixture<DbFixture>
             LastUploadTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
         };
 
-        await store.Insert(marketItem);
+        await store.SetData(marketItem);
         await Task.Delay(1000);
-        var result = await store.Retrieve(93, 5);
+        var result = await store.GetData(93, 5);
 
         Assert.NotNull(result);
         Assert.Equal(marketItem.WorldId, result.WorldId);
@@ -58,59 +75,10 @@ public class MarketItemStoreTests : IClassFixture<DbFixture>
 #if DEBUG
     [Fact]
 #endif
-    public async Task InsertUpdateRetrieve_Works()
+    public async Task GetData_Missing_ReturnsNull()
     {
         var store = _fixture.Services.GetRequiredService<IMarketItemStore>();
-        var marketItem = new MarketItem
-        {
-            WorldId = 93,
-            ItemId = 5333,
-            LastUploadTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
-        };
-        var updatedTime = new DateTime(2022, 10, 2, 0, 0, 0, DateTimeKind.Utc);
-
-        await store.Insert(marketItem);
-        marketItem.LastUploadTime = updatedTime;
-        await store.Update(marketItem);
-        await Task.Delay(1000);
-        var result = await store.Retrieve(93, 5333);
-
-        Assert.NotNull(result);
-        Assert.Equal(marketItem.WorldId, result.WorldId);
-        Assert.Equal(marketItem.ItemId, result.ItemId);
-        Assert.Equal(marketItem.LastUploadTime, result.LastUploadTime);
-    }
-
-#if DEBUG
-    [Fact]
-#endif
-    public async Task Update_Missing_Inserts()
-    {
-        var store = _fixture.Services.GetRequiredService<IMarketItemStore>();
-        var marketItem = new MarketItem
-        {
-            WorldId = 93,
-            ItemId = 32000,
-            LastUploadTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
-        };
-        
-        await store.Update(marketItem);
-        await Task.Delay(1000);
-        var result = await store.Retrieve(93, 32000);
-
-        Assert.NotNull(result);
-        Assert.Equal(marketItem.WorldId, result.WorldId);
-        Assert.Equal(marketItem.ItemId, result.ItemId);
-        Assert.Equal(marketItem.LastUploadTime, result.LastUploadTime);
-    }
-
-#if DEBUG
-    [Fact]
-#endif
-    public async Task Retrieve_Missing_ReturnsNull()
-    {
-        var store = _fixture.Services.GetRequiredService<IMarketItemStore>();
-        var result = await store.Retrieve(93, 4);
+        var result = await store.GetData(93, 4);
 
         Assert.Null(result);
     }

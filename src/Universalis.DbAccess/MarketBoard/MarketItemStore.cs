@@ -5,6 +5,7 @@ using Cassandra;
 using Cassandra.Data.Linq;
 using Cassandra.Mapping;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using StackExchange.Redis;
 using Universalis.Entities.MarketBoard;
 
@@ -13,24 +14,15 @@ namespace Universalis.DbAccess.MarketBoard;
 public class MarketItemStore : IMarketItemStore
 {
     private readonly ILogger<MarketItemStore> _logger;
-    private readonly ICacheRedisMultiplexer _cache;
-    private readonly IMapper _mapper;
-    
-    public MarketItemStore(ICluster cluster, ICacheRedisMultiplexer cache, ILogger<MarketItemStore> logger)
+    private readonly NpgsqlDataSource _dataSource;
+
+    public MarketItemStore(NpgsqlDataSource dataSource, ILogger<MarketItemStore> logger)
     {
-        _cache = cache;
+        _dataSource = dataSource;
         _logger = logger;
-
-        var scylla = cluster.Connect();
-        scylla.CreateKeyspaceIfNotExists("market_item");
-        scylla.ChangeKeyspace("market_item");
-        var table = scylla.GetTable<MarketItem>();
-        table.CreateIfNotExists();
-
-        _mapper = new Mapper(scylla);
     }
 
-    public async Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
+    public async Task SetData(MarketItem marketItem, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.Insert");
 
@@ -39,116 +31,53 @@ public class MarketItemStore : IMarketItemStore
             throw new ArgumentNullException(nameof(marketItem));
         }
 
-        try
-        {
-            await _mapper.InsertAsync(marketItem);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to insert market item (world={WorldId}, item={ItemId})", marketItem.WorldId, marketItem.ItemId);
-            throw;
-        }
+        await using var command =
+            _dataSource.CreateCommand(
+                "INSERT INTO market_item (item_id, world_id, updated) VALUES ($1, $2, $3) ON CONFLICT (item_id, world_id) DO UPDATE SET updated = $3");
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = marketItem.ItemId });
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = marketItem.WorldId });
+        command.Parameters.Add(new NpgsqlParameter<DateTime> { TypedValue = marketItem.LastUploadTime });
 
-        // Write through to the cache
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
-        var cacheKey = GetCacheKey(marketItem.WorldId, marketItem.ItemId);
         try
         {
-            await cache.StringSetAsync(cacheKey, marketItem.LastUploadTime.ToString(), flags: CommandFlags.FireAndForget);
+            await command.ExecuteNonQueryAsync(cancellationToken);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to store MarketItem \"{MarketItemCacheKey}\" in cache", cacheKey);
+            _logger.LogError(e, "Failed to insert market item (world={}, item={})", marketItem.WorldId,
+                marketItem.ItemId);
+            throw;
         }
     }
 
-    public async Task Update(MarketItem marketItem, CancellationToken cancellationToken = default)
-    {
-        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.Update");
-
-        if (marketItem == null)
-        {
-            throw new ArgumentNullException(nameof(marketItem));
-        }
-
-        try
-        {
-            await _mapper.InsertAsync(marketItem);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to insert market item (world={WorldId}, item={ItemId})", marketItem.WorldId, marketItem.ItemId);
-            throw;
-        }
-
-        // Write through to the cache
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
-        var cacheKey = GetCacheKey(marketItem.WorldId, marketItem.ItemId);
-        try
-        {
-            await cache.StringSetAsync(cacheKey, marketItem.LastUploadTime.ToString());
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to store MarketItem \"{MarketItemCacheKey}\" in cache", cacheKey);
-        }
-    }
-
-    public async ValueTask<MarketItem> Retrieve(int worldId, int itemId, CancellationToken cancellationToken = default)
+    public async ValueTask<MarketItem> GetData(int worldId, int itemId, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.Retrieve");
 
-        // Try to retrieve data from the cache
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
-        var cacheKey = GetCacheKey(worldId, itemId);
-        try
-        {
-            if (await cache.KeyExistsAsync(cacheKey))
-            {
-                var timestamp = await cache.StringGetAsync(cacheKey);
-                if (DateTime.TryParse(timestamp, out var t))
-                {
-                    return new MarketItem
-                    {
-                        WorldId = worldId,
-                        ItemId = itemId,
-                        LastUploadTime = t,
-                    };
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to parse timestamp \"{RedisValue}\" for cached MarketItem \"{MarketItemCacheKey}\"", timestamp, cacheKey);
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to retrieve MarketItem \"{MarketItemCacheKey}\" from the cache", cacheKey);
-        }
+        await using var command =
+            _dataSource.CreateCommand("SELECT updated FROM market_item VALUES WHERE item_id = $1 AND world_id = $2");
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = itemId });
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = worldId });
 
-        // Fetch data from the database
-        var match = await _mapper.FirstOrDefaultAsync<MarketItem>("SELECT * FROM market_item WHERE item_id=? AND world_id=?", itemId, worldId);
-        if (match == null)
-        {
-            return null;
-        }
-        
-        // Cache the result
         try
         {
-            await cache.StringSetAsync(cacheKey, match.LastUploadTime.ToString());
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                return null;
+            }
+
+            return new MarketItem
+            {
+                ItemId = itemId,
+                WorldId = worldId,
+                LastUploadTime = reader.GetDateTime(0),
+            };
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to store MarketItem \"{MarketItemCacheKey}\" in cache (t={LastUploadTime})", cacheKey, match.LastUploadTime);
+            _logger.LogError(e, "Failed to retrieve market item (world={}, item={})", worldId, itemId);
             throw;
         }
-
-        return match;
-    }
-
-    private static string GetCacheKey(int worldId, int itemId)
-    {
-        return $"market-item:{worldId}:{itemId}";
     }
 }

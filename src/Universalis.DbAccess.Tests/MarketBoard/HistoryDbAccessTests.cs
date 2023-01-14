@@ -16,7 +16,7 @@ public class HistoryDbAccessTests
     {
         private readonly Dictionary<(int, int), MarketItem> _data = new();
 
-        public Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
+        public Task SetData(MarketItem marketItem, CancellationToken cancellationToken = default)
         {
             _data[(marketItem.WorldId, marketItem.ItemId)] = marketItem;
             return Task.CompletedTask;
@@ -26,14 +26,14 @@ public class HistoryDbAccessTests
         {
             if (!_data.ContainsKey((marketItem.WorldId, marketItem.ItemId)))
             {
-                return Insert(marketItem, cancellationToken);
+                return SetData(marketItem, cancellationToken);
             }
 
             _data[(marketItem.WorldId, marketItem.ItemId)].LastUploadTime = marketItem.LastUploadTime;
             return Task.CompletedTask;
         }
 
-        public ValueTask<MarketItem> Retrieve(int worldId, int itemId, CancellationToken cancellationToken = default)
+        public ValueTask<MarketItem> GetData(int worldId, int itemId, CancellationToken cancellationToken = default)
         {
             return _data.TryGetValue((worldId, itemId), out var marketItem)
                 ? ValueTask.FromResult(marketItem)
