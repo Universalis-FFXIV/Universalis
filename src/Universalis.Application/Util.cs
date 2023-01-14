@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -182,4 +184,9 @@ public static class Util
             _ => null,
         };
     }
+
+    internal static readonly AssemblyName Assembly
+        = typeof(Util).Assembly.GetName();
+    internal static readonly ActivitySource ActivitySource
+        = new(Assembly.Name ?? "Universalis.Application", Assembly.Version?.ToString() ?? "0.0");
 }

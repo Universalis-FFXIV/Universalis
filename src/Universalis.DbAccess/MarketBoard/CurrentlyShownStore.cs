@@ -29,6 +29,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
     public async Task<CurrentlyShown> GetData(int worldId, int itemId, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.GetData");
+
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
         var result = await FetchData(db, worldId, itemId, cancellationToken);
         return result ?? new CurrentlyShown();
@@ -36,6 +38,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
     public async Task SetData(CurrentlyShown data, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.SetData");
+
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
         await StoreData(db, data, null, cancellationToken);
     }
@@ -43,6 +47,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     private async Task StoreData(IDatabaseAsync db, CurrentlyShown data, TimeSpan? expiry = null,
         CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.StoreData");
+
         var worldId = data.WorldId;
         var itemId = data.ItemId;
         var lastUploadTime = data.LastUploadTimeUnixMilliseconds;
@@ -56,6 +62,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
     private static async Task<RedisValue> EnsureLastUpdated(IDatabaseAsync db, int worldId, int itemId)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.EnsureLastUpdated");
+
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
         await db.StringSetAsync(lastUpdatedKey, 0, when: When.NotExists);
         return await db.StringGetAsync(lastUpdatedKey);
@@ -64,12 +72,16 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     private static Task SetLastUpdated(IDatabaseAsync db, int worldId, int itemId, long timestamp,
         TimeSpan? expiry = null)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.SetLastUpdated");
+
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
         return db.StringSetAsync(lastUpdatedKey, timestamp, expiry);
     }
 
     private static async Task<RedisValue> GetSource(IDatabaseAsync db, int worldId, int itemId)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.GetSource");
+
         var sourceKey = GetUploadSourceKey(worldId, itemId);
         var source = await db.StringGetAsync(sourceKey, flags: CommandFlags.PreferReplica);
         return source;
@@ -77,6 +89,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
     private static Task SetSource(IDatabaseAsync db, int worldId, int itemId, string source, TimeSpan? expiry = null)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.SetSource");
+
         var sourceKey = GetUploadSourceKey(worldId, itemId);
         return db.StringSetAsync(sourceKey, source, expiry);
     }
@@ -84,6 +98,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     private async Task<CurrentlyShown> FetchData(IDatabaseAsync db, int worldId, int itemId,
         CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.FetchData");
+
         var lastUpdated = await EnsureLastUpdated(db, worldId, itemId);
         if (lastUpdated.IsNullOrEmpty || (long)lastUpdated == 0)
         {
@@ -126,6 +142,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
     private async Task FetchDataRedis(IDatabaseAsync db, int worldId, int itemId)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.FetchDataRedis");
+
         // Attempt to retrieve listings from the Redis primary
         try
         {
@@ -168,6 +186,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
     private async Task ResaveListings(IEnumerable<Listing> listings, int itemId, int worldId)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.ResaveListings");
+
         try
         {
             await _listingStore.UpsertLive(listings);
@@ -190,6 +210,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     private async Task<List<Listing>> GetListings(IDatabaseAsync db, int worldId, int itemId,
         CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.GetListings");
+
         var listingIdsRaw = await GetListingIds(db, worldId, itemId);
         if (string.IsNullOrEmpty(listingIdsRaw))
         {
@@ -247,6 +269,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
     private static IEnumerable<Materia> ParseMateria(RedisValue v)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.ParseMateria");
+
         if (v.IsNull)
         {
             return Enumerable.Empty<Materia>();

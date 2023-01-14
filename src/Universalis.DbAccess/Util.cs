@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -20,4 +22,9 @@ public static class Util
             return Convert.ToHexString(hash).ToLowerInvariant(); // https://github.com/dotnet/runtime/issues/60393
         throw new InvalidOperationException("Destination buffer was too small, this should never occur");
     }
+
+    internal static readonly AssemblyName Assembly
+        = typeof(Util).Assembly.GetName();
+    internal static readonly ActivitySource ActivitySource
+        = new(Assembly.Name ?? "Universalis.DbAccess", Assembly.Version?.ToString() ?? "0.0");
 }

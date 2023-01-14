@@ -18,12 +18,16 @@ public class WorldItemUploadStore : IWorldItemUploadStore
     
     public async Task SetItem(int worldId, int id, double val)
     {
+        using var activity = Util.ActivitySource.StartActivity("WorldItemUploadStore.SetItem");
+
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         await db.SortedSetAddAsync(GetRedisKey(worldId), new[] { new SortedSetEntry(id, val) });
     }
     
     public async Task<IList<KeyValuePair<int, double>>> GetMostRecent(int worldId, int stop = -1)
     {
+        using var activity = Util.ActivitySource.StartActivity("WorldItemUploadStore.GetMostRecent");
+
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         var items = await db.SortedSetRangeByRankWithScoresAsync(GetRedisKey(worldId), stop: stop, order: Order.Descending);
         return items.Select(i => new KeyValuePair<int, double>((int)i.Element, i.Score)).ToList();
@@ -31,6 +35,8 @@ public class WorldItemUploadStore : IWorldItemUploadStore
     
     public async Task<IList<KeyValuePair<int, double>>> GetLeastRecent(int worldId, int stop = -1)
     {
+        using var activity = Util.ActivitySource.StartActivity("WorldItemUploadStore.GetLeastRecent");
+
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         var items = await db.SortedSetRangeByRankWithScoresAsync(GetRedisKey(worldId), stop: stop, order: Order.Ascending);
         return items.Select(i => new KeyValuePair<int, double>((int)i.Element, i.Score)).ToList();

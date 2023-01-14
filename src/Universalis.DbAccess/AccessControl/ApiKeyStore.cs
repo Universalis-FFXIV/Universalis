@@ -25,6 +25,7 @@ public class ApiKeyStore : IApiKeyStore
 
     public Task Insert(ApiKey apiKey, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("ApiKeyStore.Insert");
         if (apiKey == null)
         {
             throw new ArgumentNullException(nameof(apiKey));
@@ -35,6 +36,8 @@ public class ApiKeyStore : IApiKeyStore
 
     public Task<ApiKey> Retrieve(string tokenSha512, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("ApiKeyStore.Retrieve");
+
         if (tokenSha512 == null)
         {
             throw new ArgumentNullException(nameof(tokenSha512));

@@ -37,6 +37,8 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         HashSet<string> fields = null,
         CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.View");
+
         if (!GameData.MarketableItemIds().Contains(itemId))
         {
             return (false, new CurrentlyShownView
@@ -159,6 +161,8 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     
     private async Task<CurrentlyShownView> FetchCurrentlyShownData(int worldId, int itemId, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.FetchData");
+
         var csTask = CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId }, cancellationToken);
         var hTask = History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 }, cancellationToken);
         await Task.WhenAll(csTask, hTask);

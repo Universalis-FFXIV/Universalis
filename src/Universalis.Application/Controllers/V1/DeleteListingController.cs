@@ -47,6 +47,8 @@ public class DeleteListingController : WorldDcRegionControllerBase
     [ApiExplorerSettings(IgnoreApi = true)]
     public async Task<IActionResult> Post(int itemId, string world, [FromHeader] string authorization, [FromBody] DeleteListingParameters parameters, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("DeleteListingControllerV1.Post");
+
         var source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
         {
             ApiKeySha512 = await TrustedSourceHashCache.GetHash(authorization, _trustedSourceDb, cancellationToken),

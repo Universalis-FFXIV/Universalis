@@ -45,6 +45,8 @@ public class UploadController : ControllerBase
     [ProducesResponseType(400)]
     public async Task<IActionResult> Post(string apiKey, [FromBody] UploadParameters parameters, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("UploadControllerV1.Post");
+
         var source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
         {
             ApiKeySha512 = await TrustedSourceHashCache.GetHash(apiKey, _trustedSourceDb, cancellationToken),

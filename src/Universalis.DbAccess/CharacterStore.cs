@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Cassandra;
@@ -25,6 +26,8 @@ public class CharacterStore : ICharacterStore
 
     public Task Insert(Character character, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("CharacterStore.Insert");
+
         if (character == null)
         {
             throw new ArgumentNullException(nameof(character));
@@ -35,6 +38,8 @@ public class CharacterStore : ICharacterStore
     
     public Task Update(Character character, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("CharacterStore.Update");
+
         if (character == null)
         {
             throw new ArgumentNullException(nameof(character));
@@ -45,6 +50,8 @@ public class CharacterStore : ICharacterStore
 
     public Task<Character> Retrieve(string contentIdSha256, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("CharacterStore.Retrieve");
+
         if (contentIdSha256 == null)
         {
             throw new ArgumentNullException(nameof(contentIdSha256));
