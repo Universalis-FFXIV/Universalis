@@ -66,6 +66,8 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         [FromQuery] string fields = "",
         CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownControllerV2.Get");
+
         if (itemIds == null || worldDcRegion == null)
         {
             return BadRequest();

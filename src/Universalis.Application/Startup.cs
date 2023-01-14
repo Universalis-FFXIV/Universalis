@@ -179,20 +179,20 @@ public class Startup
             services.AddOpenTelemetry()
                 .WithTracing(tracerProviderBuilder =>
                 {
-                    var assemblyName = typeof(Startup).Assembly.GetName().Name ?? "Universalis.Application";
-                    var assemblyVersion = typeof(Startup).Assembly.GetName().Version ?? new Version(0, 0);
                     tracerProviderBuilder
                         .AddOtlpExporter(exporter =>
                         {
                             exporter.Protocol = OtlpExportProtocol.Grpc;
                             exporter.Endpoint = oltpUri;
                         })
-                        .AddSource(assemblyName)
-                        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: assemblyName,
-                            serviceVersion: assemblyVersion.ToString()))
+                        .AddSource(Util.ActivitySource.Name, DbAccess.Util.ActivitySource.Name)
+                        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(
+                            serviceName: Util.ActivitySource.Name,
+                            serviceVersion: Util.ActivitySource.Version))
                         .AddHttpClientInstrumentation()
                         .AddAspNetCoreInstrumentation()
-                        .AddNpgsql();
+                        .AddNpgsql()
+                        .AddRedisInstrumentation();
                 })
                 .StartWithHost();
         }

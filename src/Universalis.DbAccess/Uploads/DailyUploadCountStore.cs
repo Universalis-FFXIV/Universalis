@@ -21,6 +21,8 @@ public class DailyUploadCountStore : IDailyUploadCountStore
 
     public async Task Increment(CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("DailyUploadCountStore.Increment");
+
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -57,6 +59,8 @@ public class DailyUploadCountStore : IDailyUploadCountStore
 
     public async Task<IList<long>> GetUploadCounts(int stop = -1, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("DailyUploadCountStore.GetUploadCounts");
+
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         var counts = await db.ListRangeAsync(RedisKey, stop: stop);
         var result = counts.Select(c => (long)c).ToList();

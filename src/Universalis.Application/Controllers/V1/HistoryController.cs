@@ -46,6 +46,8 @@ public class HistoryController : HistoryControllerBase
         [FromQuery] string entriesWithin = "",
         CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("HistoryControllerV1.Get");
+
         // Parameter parsing
         var itemIdsArray = InputProcessing.ParseIdList(itemIds)
             .Take(100)

@@ -45,6 +45,8 @@ public class SaleStore : ISaleStore
 
     public async Task Insert(Sale sale, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.Insert");
+
         if (sale == null)
         {
             throw new ArgumentNullException(nameof(sale));
@@ -83,6 +85,8 @@ public class SaleStore : ISaleStore
 
     public async Task InsertMany(IEnumerable<Sale> sales, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.InsertMany");
+
         if (sales == null)
         {
             throw new ArgumentNullException(nameof(sales));
@@ -130,6 +134,8 @@ public class SaleStore : ISaleStore
 
     public async Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.RetrieveBySaleTime");
+
         var sales = Enumerable.Empty<Sale>();
         if (count == 0)
         {
@@ -158,6 +164,8 @@ public class SaleStore : ISaleStore
 
     public async Task<long> RetrieveUnitTradeVolume(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.RetrieveUnitTradeVolume");
+
         // Check if the data needed is cached
         var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
         var cacheKey = GetUnitTradeVolumeCacheKey(worldId, itemId);
@@ -196,6 +204,8 @@ public class SaleStore : ISaleStore
 
     public async Task<long> RetrieveGilTradeVolume(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.RetrieveGilTradeVolume");
+
         // Check if the data needed is cached
         var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
         var cacheKey = GetGilTradeVolumeCacheKey(worldId, itemId);
@@ -234,6 +244,8 @@ public class SaleStore : ISaleStore
 
     private static async Task CacheTradeVolume(IDatabase cache, string cacheKey, IDictionary<DateTime, int> hashData, DateTime from, DateTime to)
     {
+        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.CacheTradeVolume");
+
         var hash = hashData.Select(kvp => new HashEntry(kvp.Key.ToString(), kvp.Value)).ToList();
         hash.Add(new HashEntry("cached-from", from.ToString()));
         hash.Add(new HashEntry("cached-to", to.ToString()));

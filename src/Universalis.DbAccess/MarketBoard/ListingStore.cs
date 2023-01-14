@@ -23,6 +23,8 @@ public class ListingStore : IListingStore
 
     public async Task UpsertLive(IEnumerable<Listing> listingGroup, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.UpsertLive");
+
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
 
         // Get the currently timestamp for the batch
@@ -74,6 +76,8 @@ public class ListingStore : IListingStore
     public async Task<IEnumerable<Listing>> RetrieveLive(ListingQuery query,
         CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveLive");
+
         await using var command = _dataSource.CreateCommand(
             """
             WITH cte AS(

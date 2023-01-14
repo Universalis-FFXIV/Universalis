@@ -31,6 +31,8 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
         long entriesWithin = -1,
         CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("HistoryControllerBase.View");
+
         // Fetch the data
         var data = (await History.RetrieveMany(new HistoryManyQuery
         {

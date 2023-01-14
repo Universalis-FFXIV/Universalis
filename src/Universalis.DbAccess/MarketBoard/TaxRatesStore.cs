@@ -22,6 +22,8 @@ public class TaxRatesStore : ITaxRatesStore
 
     public async Task SetTaxRates(int worldId, TaxRates taxRates)
     {
+        using var activity = Util.ActivitySource.StartActivity("TaxRatesStore.SetTaxRates");
+
         // Store data in the database
         var db = _redis.GetDatabase(RedisDatabases.Instance0.TaxRates);
         var dbTask = StoreTaxRates(db, taxRates, worldId);
@@ -35,6 +37,8 @@ public class TaxRatesStore : ITaxRatesStore
 
     public async Task<TaxRates> GetTaxRates(int worldId)
     {
+        using var activity = Util.ActivitySource.StartActivity("TaxRatesStore.GetTaxRates");
+
         // Try to retrieve data from the cache
         var cache = _cache.GetDatabase(RedisDatabases.Cache.TaxRates);
         if (await HasTaxRates(cache, worldId))
@@ -58,6 +62,8 @@ public class TaxRatesStore : ITaxRatesStore
 
     private async Task StoreTaxRates(IDatabase db, TaxRates taxRates, int worldId)
     {
+        using var activity = Util.ActivitySource.StartActivity("TaxRatesStore.StoreTaxRates");
+
         try
         {
             await db.HashSetAsync(worldId.ToString(), new[]
@@ -80,6 +86,8 @@ public class TaxRatesStore : ITaxRatesStore
 
     private async Task<bool> HasTaxRates(IDatabase db, int worldId)
     {
+        using var activity = Util.ActivitySource.StartActivity("TaxRatesStore.HasTaxRates");
+
         var key = worldId.ToString();
         try
         {
@@ -94,6 +102,8 @@ public class TaxRatesStore : ITaxRatesStore
 
     private async Task<TaxRates> FetchTaxRates(IDatabase db, int worldId)
     {
+        using var activity = Util.ActivitySource.StartActivity("TaxRatesStore.FetchTaxRates");
+
         var key = worldId.ToString();
         try
         {

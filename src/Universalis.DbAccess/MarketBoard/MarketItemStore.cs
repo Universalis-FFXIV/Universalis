@@ -32,6 +32,8 @@ public class MarketItemStore : IMarketItemStore
 
     public async Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.Insert");
+
         if (marketItem == null)
         {
             throw new ArgumentNullException(nameof(marketItem));
@@ -62,6 +64,8 @@ public class MarketItemStore : IMarketItemStore
 
     public async Task Update(MarketItem marketItem, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.Update");
+
         if (marketItem == null)
         {
             throw new ArgumentNullException(nameof(marketItem));
@@ -92,6 +96,8 @@ public class MarketItemStore : IMarketItemStore
 
     public async ValueTask<MarketItem> Retrieve(int worldId, int itemId, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.Retrieve");
+
         // Try to retrieve data from the cache
         var cache = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
         var cacheKey = GetCacheKey(worldId, itemId);

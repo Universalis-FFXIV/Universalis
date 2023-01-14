@@ -25,6 +25,8 @@ public class WorldUploadCountStore : IWorldUploadCountStore
 
     public async Task Increment(string worldName)
     {
+        using var activity = Util.ActivitySource.StartActivity("WorldUploadCountStore.Increment");
+
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         await db.SortedSetIncrementAsync(RedisKey, worldName, 1, CommandFlags.FireAndForget);
 
@@ -35,6 +37,8 @@ public class WorldUploadCountStore : IWorldUploadCountStore
 
     public async Task<IList<KeyValuePair<string, long>>> GetWorldUploadCounts()
     {
+        using var activity = Util.ActivitySource.StartActivity("WorldUploadCountStore.GetWorldUploadCounts");
+
         // Try to fetch data from the cache
         var cache = _cache.GetDatabase(RedisDatabases.Cache.Stats);
         try

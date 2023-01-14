@@ -25,6 +25,8 @@ public class FlaggedUploaderStore : IFlaggedUploaderStore
 
     public Task Insert(FlaggedUploader uploader, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("FlaggedUploaderStore.Insert");
+
         if (uploader == null)
         {
             throw new ArgumentNullException(nameof(uploader));
@@ -35,6 +37,8 @@ public class FlaggedUploaderStore : IFlaggedUploaderStore
 
     public Task<FlaggedUploader> Retrieve(string uploaderIdSha256, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("FlaggedUploaderStore.Retrieve");
+
         if (uploaderIdSha256 == null)
         {
             throw new ArgumentNullException(nameof(uploaderIdSha256));
