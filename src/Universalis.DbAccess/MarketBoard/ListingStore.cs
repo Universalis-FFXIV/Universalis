@@ -25,10 +25,6 @@ public class ListingStore : IListingStore
     {
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
 
-        // (ItemId, WorldId) => [ListingId]
-        // This is used to keep track of which listings we want to *keep*,
-        // so we can set *everything else* to dead.
-        var listingIds = new Dictionary<(int, int), List<string>>();
         // Get the currently timestamp for the batch
         var uploadedAt = DateTimeOffset.Now;
 
@@ -70,15 +66,6 @@ public class ListingStore : IListingStore
                     new NpgsqlParameter<DateTime> { TypedValue = uploadedAt.UtcDateTime },
                 },
             });
-
-            // Create an entry for the listing ID
-            var key = (listing.ItemId, listing.WorldId);
-            if (!listingIds.ContainsKey(key))
-            {
-                listingIds[key] = new List<string>();
-            }
-
-            listingIds[key].Add(listing.ListingId);
         }
 
         await batch.ExecuteNonQueryAsync(cancellationToken);
