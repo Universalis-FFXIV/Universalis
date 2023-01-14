@@ -62,6 +62,9 @@ public static class DbAccessExtensions
             .ToArray<IConnectionMultiplexer>();
         sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(cache));
         sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(db));
+        
+        // Install an IConnectionMultiplexer directly for OpenTelemetry
+        sc.AddSingleton(db[0]);
 
         sc.AddSingleton<IListingStore, ListingStore>();
 
