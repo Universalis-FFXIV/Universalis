@@ -25,6 +25,7 @@ public static class Util
 
     internal static readonly AssemblyName Assembly
         = typeof(Util).Assembly.GetName();
-    internal static readonly ActivitySource ActivitySource
+
+    public static readonly ActivitySource ActivitySource
         = new(Assembly.Name ?? "Universalis.DbAccess", Assembly.Version?.ToString() ?? "0.0");
 }
