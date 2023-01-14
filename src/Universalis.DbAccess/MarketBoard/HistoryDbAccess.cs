@@ -21,7 +21,7 @@ public class HistoryDbAccess : IHistoryDbAccess
 
     public async Task Create(History document, CancellationToken cancellationToken = default)
     {
-        await _marketItemStore.Insert(new MarketItem
+        await _marketItemStore.SetData(new MarketItem
         {
             WorldId = document.WorldId,
             ItemId = document.ItemId,
@@ -33,7 +33,7 @@ public class HistoryDbAccess : IHistoryDbAccess
 
     public async Task<History> Retrieve(HistoryQuery query, CancellationToken cancellationToken = default)
     {
-        var marketItem = await _marketItemStore.Retrieve(query.WorldId, query.ItemId, cancellationToken);
+        var marketItem = await _marketItemStore.GetData(query.WorldId, query.ItemId, cancellationToken);
         if (marketItem == null)
         {
             return null;
@@ -58,7 +58,7 @@ public class HistoryDbAccess : IHistoryDbAccess
 
     public async Task InsertSales(IEnumerable<Sale> sales, HistoryQuery query, CancellationToken cancellationToken = default)
     {
-        await _marketItemStore.Update(new MarketItem
+        await _marketItemStore.SetData(new MarketItem
         {
             WorldId = query.WorldId,
             ItemId = query.ItemId,
