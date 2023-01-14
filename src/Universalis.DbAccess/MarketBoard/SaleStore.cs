@@ -88,41 +88,43 @@ public class SaleStore : ISaleStore
             throw new ArgumentNullException(nameof(sales));
         }
 
-        var purgedCaches = new Dictionary<string, bool>();
-        var batch = new BatchStatement();
-        foreach (var sale in sales)
+        // NOTE: the Tuple should match the PartitionKey for the sales table.
+        var groupedSales = sales.GroupBy(sale => Tuple.Create(sale.ItemId, sale.WorldId));
+
+        foreach (var groupSale in groupedSales)
         {
-            var bound = _insertStatement.Bind(
-                sale.Id,
-                sale.SaleTime,
-                sale.ItemId,
-                sale.WorldId,
-                sale.BuyerName,
-                sale.Hq,
-                sale.OnMannequin,
-                sale.Quantity,
-                sale.PricePerUnit,
-                sale.UploaderIdHash);
-            batch.Add(bound);
-            
+            var (itemId, worldId) = groupSale.Key; // this must match the tuple order.
+            var batch = new BatchStatement();
+            foreach (var sale in groupSale)
+            {
+                var bound = _insertStatement.Bind(
+                    sale.Id,
+                    sale.SaleTime,
+                    sale.ItemId,
+                    sale.WorldId,
+                    sale.BuyerName,
+                    sale.Hq,
+                    sale.OnMannequin,
+                    sale.Quantity,
+                    sale.PricePerUnit,
+                    sale.UploaderIdHash);
+                batch.Add(bound);
+            }
+
+            try
+            {
+                await _scylla.ExecuteAsync(batch);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to insert sales for itemID: {} on worldID: {}", itemId, worldId);
+                throw;
+            }
+
             // Purge the cache
             var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
-            var cacheIndexKey = GetIndexCacheKey(sale.WorldId, sale.ItemId);
-            if (!purgedCaches.TryGetValue(cacheIndexKey, out var purged) || !purged)
-            {
-                await cache.KeyDeleteAsync(cacheIndexKey, CommandFlags.FireAndForget);
-                purgedCaches[cacheIndexKey] = true;
-            }
-        }
-
-        try
-        {
-            await _scylla.ExecuteAsync(batch);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to insert sales");
-            throw;
+            var cacheIndexKey = GetIndexCacheKey(worldId, itemId);
+            await cache.KeyDeleteAsync(cacheIndexKey, CommandFlags.FireAndForget);
         }
     }
 
