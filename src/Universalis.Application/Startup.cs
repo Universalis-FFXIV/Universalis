@@ -15,6 +15,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.XPath;
+using Npgsql;
+using OpenTelemetry;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Universalis.Alerts;
 using Universalis.Application.Controllers;
 using Universalis.Application.ExceptionFilters;
@@ -167,6 +172,30 @@ public class Startup
 
             options.IncludeXmlComments(() => new XPathDocument(apiDocs));
         });
+
+        var otlpExporter = Environment.GetEnvironmentVariable("UNIVERSALIS_OLTP_ENDPOINT") ?? Configuration["OtlpEndpoint"];
+        if (Uri.TryCreate(otlpExporter, UriKind.Absolute, out var oltpUri))
+        {
+            services.AddOpenTelemetry()
+                .WithTracing(tracerProviderBuilder =>
+                {
+                    var assemblyName = typeof(Startup).Assembly.GetName().Name ?? "Universalis.Application";
+                    var assemblyVersion = typeof(Startup).Assembly.GetName().Version ?? new Version(0, 0);
+                    tracerProviderBuilder
+                        .AddOtlpExporter(exporter =>
+                        {
+                            exporter.Protocol = OtlpExportProtocol.Grpc;
+                            exporter.Endpoint = oltpUri;
+                        })
+                        .AddSource(assemblyName)
+                        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: assemblyName,
+                            serviceVersion: assemblyVersion.ToString()))
+                        .AddHttpClientInstrumentation()
+                        .AddAspNetCoreInstrumentation()
+                        .AddNpgsql();
+                })
+                .StartWithHost();
+        }
 
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddMogboard(Configuration);
