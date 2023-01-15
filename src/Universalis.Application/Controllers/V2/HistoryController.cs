@@ -48,6 +48,11 @@ public class HistoryController : HistoryControllerBase
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("HistoryControllerV2.Get");
+        activity?.AddTag("itemIds", itemIds);
+        activity?.AddTag("worldDcRegion", worldDcRegion);
+        activity?.AddTag("entriesToReturn", entriesToReturn);
+        activity?.AddTag("statsWithin", statsWithin);
+        activity?.AddTag("entriesWithin", entriesWithin);
 
         // Parameter parsing
         var itemIdsArray = InputProcessing.ParseIdList(itemIds)

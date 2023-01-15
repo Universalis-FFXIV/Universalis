@@ -57,6 +57,8 @@ public class UploadController : ControllerBase
             return Forbid();
         }
 
+        activity?.AddTag("source", source.Name);
+
         if (string.IsNullOrEmpty(parameters.UploaderId))
         {
             return BadRequest();

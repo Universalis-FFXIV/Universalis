@@ -67,6 +67,10 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownControllerV2.Get");
+        activity?.AddTag("itemIds", itemIds);
+        activity?.AddTag("worldDcRegion", worldDcRegion);
+        activity?.AddTag("listingsToReturn", listingsToReturn);
+        activity?.AddTag("entriesToReturn", entriesToReturn);
 
         if (itemIds == null || worldDcRegion == null)
         {

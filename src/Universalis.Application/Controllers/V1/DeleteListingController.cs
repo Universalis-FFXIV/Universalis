@@ -48,6 +48,8 @@ public class DeleteListingController : WorldDcRegionControllerBase
     public async Task<IActionResult> Post(int itemId, string world, [FromHeader] string authorization, [FromBody] DeleteListingParameters parameters, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("DeleteListingControllerV1.Post");
+        activity?.AddTag("itemId", itemId);
+        activity?.AddTag("worldDcRegion", world);
 
         var source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
         {
@@ -58,6 +60,8 @@ public class DeleteListingController : WorldDcRegionControllerBase
         {
             return Forbid();
         }
+
+        activity?.AddTag("source", source.Name);
 
         if (!TryGetWorldDc(world, out var worldDc) || !worldDc.IsWorld || string.IsNullOrEmpty(parameters.UploaderId))
         {

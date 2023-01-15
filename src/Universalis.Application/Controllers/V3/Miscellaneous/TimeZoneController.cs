@@ -22,6 +22,8 @@ public class TimeZoneController
     [ProducesResponseType(typeof(IEnumerable<TimeZone>), 200)]
     public IEnumerable<TimeZone> Get()
     {
+        using var activity = Util.ActivitySource.StartActivity("TimeZoneController.Get");
+
         var tzList = TimeZoneInfo.GetSystemTimeZones().Where(tz => tz.HasIanaId).ToArray();
         var toReturn = new List<TimeZoneInfo>();
         for (var i = 0; i < tzList.Length; i++)
