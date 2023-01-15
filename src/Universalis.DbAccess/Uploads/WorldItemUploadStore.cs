@@ -21,7 +21,7 @@ public class WorldItemUploadStore : IWorldItemUploadStore
         using var activity = Util.ActivitySource.StartActivity("WorldItemUploadStore.SetItem");
 
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
-        await db.SortedSetAddAsync(GetRedisKey(worldId), new[] { new SortedSetEntry(id, val) });
+        await db.SortedSetAddAsync(GetRedisKey(worldId), new[] { new SortedSetEntry(id, val) }, flags: CommandFlags.FireAndForget);
     }
     
     public async Task<IList<KeyValuePair<int, double>>> GetMostRecent(int worldId, int stop = -1)
