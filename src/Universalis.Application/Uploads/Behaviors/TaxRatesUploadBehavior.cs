@@ -25,6 +25,8 @@ public class TaxRatesUploadBehavior : IUploadBehavior
 
     public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("TaxRatesUploadBehavior.Execute");
+
         var existingTaxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = parameters.WorldId!.Value }, cancellationToken);
         
         await _taxRatesDb.Update(new TaxRates

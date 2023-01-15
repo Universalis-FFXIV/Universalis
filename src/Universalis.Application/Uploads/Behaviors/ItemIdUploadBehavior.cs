@@ -28,6 +28,8 @@ public class ItemIdUploadBehavior : IUploadBehavior
 
     public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("ItemIdUploadBehavior.Execute");
+
         if (!_gameData.MarketableItemIds().Contains(parameters.ItemId!.Value))
         {
             return new NotFoundObjectResult(parameters.ItemId);

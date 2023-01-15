@@ -23,6 +23,8 @@ public class DailyUploadIncrementUploadBehavior : IUploadBehavior
 
     public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("DailyUploadIncrementUploadBehavior.Execute");
+
         await _uploadCountHistoryDb.Increment();
         return null;
     }

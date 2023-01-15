@@ -30,8 +30,6 @@ using Universalis.Application.Uploads.Behaviors;
 using Universalis.DbAccess;
 using Universalis.GameData;
 using Universalis.Mogboard;
-using OpenTelemetry.Instrumentation.StackExchangeRedis;
-using StackExchange.Redis;
 
 namespace Universalis.Application;
 

@@ -30,6 +30,8 @@ public class MostRecentlyUpdatedUploadBehavior : IUploadBehavior
 
     public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("MostRecentlyUpdatedUploadBehavior.Execute");
+
         var worldId = parameters.WorldId!.Value;
 
         await _mostRecentlyUpdatedDb.Push(worldId, new WorldItemUpload
