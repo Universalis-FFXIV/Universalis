@@ -21,7 +21,7 @@ public class RecentlyUpdatedItemsStore : IRecentlyUpdatedItemsStore
         using var activity = Util.ActivitySource.StartActivity("RecentlyUpdatedItemsStore.SetItem");
 
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
-        await db.SortedSetAddAsync(RedisKey, new[] { new SortedSetEntry(id, val) });
+        await db.SortedSetAddAsync(RedisKey, new[] { new SortedSetEntry(id, val) }, CommandFlags.FireAndForget);
     }
 
     public async Task<IList<KeyValuePair<int, double>>> GetAllItems(int stop = -1)
