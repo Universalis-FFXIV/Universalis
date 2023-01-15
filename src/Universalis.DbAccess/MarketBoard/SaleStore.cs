@@ -14,33 +14,36 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public class SaleStore : ISaleStore
 {
-    // The maximum number of cached sales, per item, per world
-    private const int MaxCachedSales = 50;
-
     private readonly ICacheRedisMultiplexer _cache;
     private readonly ILogger<SaleStore> _logger;
-    private readonly ISession _scylla;
-    private readonly IMapper _mapper;
 
-    private readonly PreparedStatement _insertStatement;
+    private readonly Lazy<ISession> _scylla;
+    private readonly Lazy<IMapper> _mapper;
+    private readonly Lazy<PreparedStatement> _insertStatement;
 
     public SaleStore(ICluster scylla, ICacheRedisMultiplexer cache, ILogger<SaleStore> logger)
     {
         _cache = cache;
         _logger = logger;
 
-        _scylla = scylla.Connect();
-        _scylla.CreateKeyspaceIfNotExists("sale");
-        _scylla.ChangeKeyspace("sale");
-        var table = _scylla.GetTable<Sale>();
-        table.CreateIfNotExists();
+        // Doing database initialization in a constructor is a Bad Idea and
+        // can lead to timeouts killing the application, so this just gets
+        // stuffed in a lazy loader for later.
+        _scylla = new Lazy<ISession>(() =>
+        {
+            var db = scylla.Connect();
+            db.CreateKeyspaceIfNotExists("sale");
+            db.ChangeKeyspace("sale");
+            var table = db.GetTable<Sale>();
+            table.CreateIfNotExists();
+            return db;
+        });
 
-        _mapper = new Mapper(_scylla);
-
-        _insertStatement = _scylla.Prepare("" +
+        _insertStatement = new Lazy<PreparedStatement>(() => _scylla.Value.Prepare("" +
             "INSERT INTO sale" +
             "(id, sale_time, item_id, world_id, buyer_name, hq, on_mannequin, quantity, unit_price, uploader_id)" +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"));
+        _mapper = new Lazy<IMapper>(() => new Mapper(_scylla.Value));
     }
 
     public async Task Insert(Sale sale, CancellationToken cancellationToken = default)
@@ -69,7 +72,7 @@ public class SaleStore : ISaleStore
 
         try
         {
-            await _mapper.InsertAsync(sale);
+            await _mapper.Value.InsertAsync(sale);
         }
         catch (Exception e)
         {
@@ -101,7 +104,7 @@ public class SaleStore : ISaleStore
             var batch = new BatchStatement();
             foreach (var sale in groupSale)
             {
-                var bound = _insertStatement.Bind(
+                var bound = _insertStatement.Value.Bind(
                     sale.Id,
                     sale.SaleTime,
                     sale.ItemId,
@@ -117,7 +120,7 @@ public class SaleStore : ISaleStore
 
             try
             {
-                await _scylla.ExecuteAsync(batch);
+                await _scylla.Value.ExecuteAsync(batch);
             }
             catch (Exception e)
             {
@@ -132,7 +135,8 @@ public class SaleStore : ISaleStore
         }
     }
 
-    public async Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null,
+        CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.RetrieveBySaleTime");
 
@@ -146,7 +150,9 @@ public class SaleStore : ISaleStore
         var timestamp = from == null ? 0 : new DateTimeOffset(from.Value).ToUnixTimeMilliseconds();
         try
         {
-            sales = await _mapper.FetchAsync<Sale>("SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? ORDER BY sale_time DESC LIMIT ?", itemId, worldId, timestamp, count);
+            sales = await _mapper.Value.FetchAsync<Sale>(
+                "SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? ORDER BY sale_time DESC LIMIT ?",
+                itemId, worldId, timestamp, count);
         }
         catch (Exception e)
         {
@@ -162,7 +168,8 @@ public class SaleStore : ISaleStore
             });
     }
 
-    public async Task<long> RetrieveUnitTradeVolume(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    public async Task<long> RetrieveUnitTradeVolume(int worldId, int itemId, DateTime from, DateTime to,
+        CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.RetrieveUnitTradeVolume");
 
@@ -182,7 +189,8 @@ public class SaleStore : ISaleStore
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to retrieve cached unit trade volumes for key \"{TradeVolumeCacheKey}\"", cacheKey);
+            _logger.LogError(e, "Failed to retrieve cached unit trade volumes for key \"{TradeVolumeCacheKey}\"",
+                cacheKey);
         }
 
         // Request the sale velocity for the allowed intervals
@@ -202,7 +210,8 @@ public class SaleStore : ISaleStore
         return result.Select(e => e.Value).Sum();
     }
 
-    public async Task<long> RetrieveGilTradeVolume(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    public async Task<long> RetrieveGilTradeVolume(int worldId, int itemId, DateTime from, DateTime to,
+        CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.RetrieveGilTradeVolume");
 
@@ -222,7 +231,8 @@ public class SaleStore : ISaleStore
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to retrieve cached unit trade volumes for key \"{TradeVolumeCacheKey}\"", cacheKey);
+            _logger.LogError(e, "Failed to retrieve cached unit trade volumes for key \"{TradeVolumeCacheKey}\"",
+                cacheKey);
         }
 
         // Request the sale velocity for the allowed intervals
@@ -242,7 +252,8 @@ public class SaleStore : ISaleStore
         return result.Select(e => e.Value).Sum();
     }
 
-    private static async Task CacheTradeVolume(IDatabase cache, string cacheKey, IDictionary<DateTime, int> hashData, DateTime from, DateTime to)
+    private static async Task CacheTradeVolume(IDatabase cache, string cacheKey, IDictionary<DateTime, int> hashData,
+        DateTime from, DateTime to)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.CacheTradeVolume");
 
@@ -253,19 +264,21 @@ public class SaleStore : ISaleStore
         await cache.KeyExpireAsync(cacheKey, TimeSpan.FromHours(1), CommandFlags.FireAndForget);
     }
 
-    private Task<IDictionary<DateTime, int>> GetDailyUnitsTraded(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    private Task<IDictionary<DateTime, int>> GetDailyUnitsTraded(int worldId, int itemId, DateTime from, DateTime to,
+        CancellationToken cancellationToken = default)
     {
         // TODO: Make this work with Scylla or DynamoDB
         return Task.FromResult<IDictionary<DateTime, int>>(new Dictionary<DateTime, int>());
     }
 
-    private Task<IDictionary<DateTime, int>> GetDailyGilTraded(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    private Task<IDictionary<DateTime, int>> GetDailyGilTraded(int worldId, int itemId, DateTime from, DateTime to,
+        CancellationToken cancellationToken = default)
     {
         // TODO: Make this work with Scylla or DynamoDB
         return Task.FromResult<IDictionary<DateTime, int>>(new Dictionary<DateTime, int>());
     }
 
-    private long AggregateHashVolume(IEnumerable<HashEntry> hash, DateTime from, DateTime to)
+    private static long AggregateHashVolume(IEnumerable<HashEntry> hash, DateTime from, DateTime to)
     {
         return hash
             .Where(e => DateTime.TryParse(e.Name, out _))
@@ -274,21 +287,6 @@ public class SaleStore : ISaleStore
             .Where(kvp => kvp.Key <= to)
             .Select(kvp => kvp.Value)
             .Sum();
-    }
-
-    private static int GetValueInt32(IDictionary<RedisValue, RedisValue> hash, string key)
-    {
-        return hash.ContainsKey(key) ? (int)hash[key] : 0;
-    }
-
-    private static bool GetValueBool(IDictionary<RedisValue, RedisValue> hash, string key)
-    {
-        return hash.ContainsKey(key) && (bool)hash[key];
-    }
-
-    private static string GetValueString(IDictionary<RedisValue, RedisValue> hash, string key)
-    {
-        return hash.ContainsKey(key) ? hash[key] : "";
     }
 
     private static string GetUnitTradeVolumeCacheKey(int worldId, int itemId)
