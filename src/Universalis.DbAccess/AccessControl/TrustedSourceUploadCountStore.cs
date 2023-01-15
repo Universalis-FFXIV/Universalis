@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using StackExchange.Redis;
 
 namespace Universalis.DbAccess.AccessControl;
 
@@ -18,7 +19,7 @@ public class TrustedSourceUploadCountStore : ISourceUploadCountStore
         using var activity = Util.ActivitySource.StartActivity("TrustedSourceUploadCountStore.IncrementCounter");
 
         var db = _redis.GetDatabase();
-        return db.HashIncrementAsync(key, counterName);
+        return db.HashIncrementAsync(key, counterName, flags: CommandFlags.FireAndForget);
     }
 
     public async Task<IList<KeyValuePair<string, long>>> GetCounterValues(string key)
