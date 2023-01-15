@@ -2,7 +2,7 @@
 
 namespace Universalis.DbAccess;
 
-internal class WrappedRedisMultiplexer : ICacheRedisMultiplexer, IPersistentRedisMultiplexer
+public class WrappedRedisMultiplexer : ICacheRedisMultiplexer, IPersistentRedisMultiplexer
 {
     private readonly IConnectionMultiplexer[] _connectionMultiplexers;
     private int _next;
@@ -27,4 +27,6 @@ internal class WrappedRedisMultiplexer : ICacheRedisMultiplexer, IPersistentRedi
         _next = (_next + 1) % _connectionMultiplexers.Length;
         return mux.GetDatabase(db, asyncObject);
     }
+
+    public IConnectionMultiplexer[] GeConnectionMultiplexers() => _connectionMultiplexers;
 }

@@ -30,6 +30,8 @@ using Universalis.Application.Uploads.Behaviors;
 using Universalis.DbAccess;
 using Universalis.GameData;
 using Universalis.Mogboard;
+using OpenTelemetry.Instrumentation.StackExchangeRedis;
+using StackExchange.Redis;
 
 namespace Universalis.Application;
 
@@ -191,8 +193,34 @@ public class Startup
                             serviceVersion: Util.ActivitySource.Version))
                         .AddHttpClientInstrumentation()
                         .AddAspNetCoreInstrumentation()
-                        .AddNpgsql()
-                        .AddRedisInstrumentation();
+                        .AddNpgsql();
+
+                    if (tracerProviderBuilder is IDeferredTracerProviderBuilder deferredTracerProviderBuilder)
+                    {
+                        deferredTracerProviderBuilder.Configure((sp, builder) =>
+                        {
+                            try
+                            {
+                                var cacheConnections = (WrappedRedisMultiplexer)sp.GetService<ICacheRedisMultiplexer>();
+                                var dbConnections =
+                                    (WrappedRedisMultiplexer)sp.GetService<IPersistentRedisMultiplexer>();
+
+                                foreach (var connection in cacheConnections.GeConnectionMultiplexers())
+                                {
+                                    builder.AddRedisInstrumentation(connection);
+                                }
+
+                                foreach (var connection in dbConnections.GeConnectionMultiplexers())
+                                {
+                                    builder.AddRedisInstrumentation(connection);
+                                }
+                            }
+                            catch (Exception _)
+                            {
+                                // ignored
+                            }
+                        });
+                    }
                 })
                 .StartWithHost();
         }
