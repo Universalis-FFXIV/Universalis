@@ -124,12 +124,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             throw;
         }
 
-        // Fetch data from Redis to save in Postgres
-        if (!listings.Any())
-        {
-            _ = FetchDataRedis(db, worldId, itemId);
-        }
-
         return new CurrentlyShown
         {
             WorldId = worldId,
