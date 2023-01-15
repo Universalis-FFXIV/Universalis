@@ -64,7 +64,7 @@ public class Startup
             {
                 var receiveMessagesStr = Environment.GetEnvironmentVariable("RECEIVE_STREAMING_EVENTS") ??
                     Configuration["ReceiveStreamingEvents"];
-                var receiveMessages = bool.TryParse(receiveMessagesStr, out var recv) && recv || false;
+                var receiveMessages = bool.TryParse(receiveMessagesStr, out var recv) && recv;
 
                 if (receiveMessages)
                 {
@@ -199,21 +199,13 @@ public class Startup
                         {
                             try
                             {
-                                var cacheConnections = (WrappedRedisMultiplexer)sp.GetService<ICacheRedisMultiplexer>();
-                                var dbConnections =
+                                var cacheConnection = (WrappedRedisMultiplexer)sp.GetService<ICacheRedisMultiplexer>();
+                                var dbConnection =
                                     (WrappedRedisMultiplexer)sp.GetService<IPersistentRedisMultiplexer>();
-
-                                foreach (var connection in cacheConnections.GetConnectionMultiplexers())
-                                {
-                                    builder.AddRedisInstrumentation(connection);
-                                }
-
-                                foreach (var connection in dbConnections.GetConnectionMultiplexers())
-                                {
-                                    builder.AddRedisInstrumentation(connection);
-                                }
+                                builder.AddRedisInstrumentation(cacheConnection.GetConnectionMultiplexer());
+                                builder.AddRedisInstrumentation(dbConnection.GetConnectionMultiplexer());
                             }
-                            catch (Exception _)
+                            catch (Exception)
                             {
                                 // ignored
                             }
