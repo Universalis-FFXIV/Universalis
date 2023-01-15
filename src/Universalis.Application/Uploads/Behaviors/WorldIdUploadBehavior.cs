@@ -29,6 +29,8 @@ public class WorldIdUploadBehavior : IUploadBehavior
 
     public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("WorldIdUploadBehavior.Execute");
+
         var worldId = parameters.WorldId!.Value;
 
         if (!_gameData.AvailableWorldIds().Contains(worldId))

@@ -25,6 +25,8 @@ public class PlayerContentUploadBehavior : IUploadBehavior
 
     public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("PlayerContentUploadBehavior.Execute");
+
         using var sha256 = SHA256.Create();
         var contentIdHash = Util.Hash(sha256, parameters.ContentId);
         

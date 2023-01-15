@@ -67,6 +67,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters,
         CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("MarketBoardUploadBehavior.Execute");
+
         // ReSharper disable PossibleInvalidOperationException
         var worldId = parameters.WorldId.Value;
         var itemId = parameters.ItemId.Value;
@@ -197,6 +199,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
     private static List<Listing> CleanUploadedListings(IEnumerable<Schema.Listing> uploadedListings, int itemId, int worldId)
     {
+        using var activity = Util.ActivitySource.StartActivity("MarketBoardUploadBehavior.CleanUploadedListings");
+
         return uploadedListings
             .Select(l =>
             {
@@ -248,6 +252,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     private static List<Sale> CleanUploadedSales(IEnumerable<Schema.Sale> uploadedSales, int worldId, int itemId,
         string uploaderIdSha256)
     {
+        using var activity = Util.ActivitySource.StartActivity("MarketBoardUploadBehavior.CleanUploadedSales");
+
         return uploadedSales
             .Where(s => s.TimestampUnixSeconds > 0)
             .Select(s => new Sale

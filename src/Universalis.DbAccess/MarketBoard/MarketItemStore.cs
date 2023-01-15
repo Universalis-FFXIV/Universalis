@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Cassandra;
-using Cassandra.Data.Linq;
-using Cassandra.Mapping;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using StackExchange.Redis;
 using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
