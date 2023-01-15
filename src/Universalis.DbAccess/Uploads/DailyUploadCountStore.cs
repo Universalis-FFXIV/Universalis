@@ -26,13 +26,7 @@ public class DailyUploadCountStore : IDailyUploadCountStore
         var db = _redis.GetDatabase(RedisDatabases.Instance0.Stats);
         
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var lastPush = (long)await db.StringGetAsync(RedisLastPushKey);
-
-        // Create the last push time key
-        if (lastPush == 0)
-        {
-            await db.StringSetAsync(RedisLastPushKey, 0, when: When.NotExists);
-        }
+        var lastPush = (long)await db.StringSetAndGetAsync(RedisLastPushKey, 0, when: When.NotExists);
 
         // Push a new counter if the date has rolled over
         if (now - lastPush > 86400000)
