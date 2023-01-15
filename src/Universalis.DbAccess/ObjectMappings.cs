@@ -29,14 +29,6 @@ public class ObjectMappings : Mappings
             .Column(s => s.Name, col => col.WithName("name"))
             .Column(s => s.WorldId, col => col.WithName("world_id"));
 
-        For<MarketItem>()
-            .TableName("market_item")
-            .PartitionKey(s => s.ItemId)
-            .ClusteringKey(s => s.WorldId)
-            .Column(s => s.ItemId, col => col.WithName("item_id"))
-            .Column(s => s.WorldId, col => col.WithName("world_id"))
-            .Column(s => s.LastUploadTime, col => col.WithName("last_upload_time"));
-
         For<Sale>()
             .TableName("sale")
             .PartitionKey(s => s.ItemId, s => s.WorldId)
