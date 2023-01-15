@@ -38,7 +38,7 @@ public class ListingStoreTests : IClassFixture<DbFixture>
         var results = await store.RetrieveLive(new ListingQuery { ItemId = 3, WorldId = 93 });
 
         Assert.NotNull(results);
-        Assert.All(currentlyShown.Listings.Zip(results), pair =>
+        Assert.All(currentlyShown.Listings.OrderBy(l => l.PricePerUnit).Zip(results), pair =>
         {
             var (expected, actual) = pair;
             Assert.Equal(expected.ListingId, actual.ListingId);
@@ -54,12 +54,13 @@ public class ListingStoreTests : IClassFixture<DbFixture>
             Assert.Equal(expected.DyeId, actual.DyeId);
             Assert.Equal(expected.CreatorId, actual.CreatorId);
             Assert.Equal(expected.CreatorName, actual.CreatorName);
-            Assert.Equal(expected.LastReviewTime, actual.LastReviewTime);
+            Assert.Equal(new DateTimeOffset(expected.LastReviewTime).ToUnixTimeSeconds(),
+                new DateTimeOffset(actual.LastReviewTime).ToUnixTimeSeconds());
             Assert.Equal(DateTimeKind.Utc, actual.LastReviewTime.Kind);
             Assert.Equal(expected.SellerId, actual.SellerId);
         });
     }
-    
+
 #if DEBUG
     [Fact]
 #endif
@@ -73,7 +74,7 @@ public class ListingStoreTests : IClassFixture<DbFixture>
             var results = await store.RetrieveLive(new ListingQuery { ItemId = 5, WorldId = 93 });
 
             Assert.NotNull(results);
-            Assert.All(currentlyShown.Listings.Zip(results), pair =>
+            Assert.All(currentlyShown.Listings.OrderBy(l => l.PricePerUnit).Zip(results), pair =>
             {
                 var (expected, actual) = pair;
                 Assert.Equal(expected.ListingId, actual.ListingId);
@@ -89,9 +90,11 @@ public class ListingStoreTests : IClassFixture<DbFixture>
                 Assert.Equal(expected.DyeId, actual.DyeId);
                 Assert.Equal(expected.CreatorId, actual.CreatorId);
                 Assert.Equal(expected.CreatorName, actual.CreatorName);
-                Assert.Equal(expected.LastReviewTime, actual.LastReviewTime);
+                Assert.Equal(new DateTimeOffset(expected.LastReviewTime).ToUnixTimeSeconds(),
+                    new DateTimeOffset(actual.LastReviewTime).ToUnixTimeSeconds());
                 Assert.Equal(DateTimeKind.Utc, actual.LastReviewTime.Kind);
                 Assert.Equal(expected.SellerId, actual.SellerId);
+                Assert.Equal(expected.Source, actual.Source);
             });
         }
     }
