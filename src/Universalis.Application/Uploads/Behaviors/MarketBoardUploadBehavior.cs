@@ -147,7 +147,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 return new BadRequestResult();
             }
 
-            newListings = CleanUploadedListings(parameters.Listings, itemId, worldId);
+            newListings = CleanUploadedListings(parameters.Listings, itemId, worldId, source.Name);
 
             var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
             var addedListings = newListings.Where(l => !oldListings.Contains(l)).ToList();
@@ -197,7 +197,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         return null;
     }
 
-    private static List<Listing> CleanUploadedListings(IEnumerable<Schema.Listing> uploadedListings, int itemId, int worldId)
+    private static List<Listing> CleanUploadedListings(IEnumerable<Schema.Listing> uploadedListings, int itemId, int worldId, string sourceName)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketBoardUploadBehavior.CleanUploadedListings");
 
@@ -241,6 +241,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     RetainerName = l.RetainerName,
                     RetainerCityId = l.RetainerCityId ?? 0,
                     SellerId = Util.ParseUnusualId(l.SellerId) ?? "",
+                    Source = sourceName,
                 };
             })
             .Where(l => l.PricePerUnit > 0)

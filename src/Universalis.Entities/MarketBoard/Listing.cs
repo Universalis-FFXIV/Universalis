@@ -36,4 +36,6 @@ public class Listing
     public int ItemId { get; set; }
     
     public int WorldId { get; set; }
+    
+    public string Source { get; set; }
 }

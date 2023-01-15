@@ -13,7 +13,7 @@ public class CurrentlyShown : ICopyable
 
     public string UploadSource { get; init; } = "";
 
-    public List<Listing> Listings { get; init; } = new List<Listing>();
+    public List<Listing> Listings { get; init; } = new();
 
     public ICopyable Clone()
     {

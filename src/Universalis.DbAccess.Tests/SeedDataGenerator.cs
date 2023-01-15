@@ -31,6 +31,9 @@ public static class SeedDataGenerator
                 RetainerName = "xpotato",
                 RetainerCityId = 0xA,
                 SellerId = rand.NextInt64().ToString(),
+                ItemId = itemId,
+                WorldId = worldId,
+                Source = "test runner",
             })
             .ToList();
         return new CurrentlyShown
