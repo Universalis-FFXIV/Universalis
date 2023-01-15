@@ -10,17 +10,19 @@ namespace Universalis.DbAccess.Uploads;
 
 public class FlaggedUploaderStore : IFlaggedUploaderStore
 {
-    private readonly IMapper _mapper;
+    private readonly Lazy<IMapper> _mapper;
 
-    public FlaggedUploaderStore(ICluster cluster)
+    public FlaggedUploaderStore(ICluster scylla)
     {
-        var scylla = cluster.Connect();
-        scylla.CreateKeyspaceIfNotExists("flagged_uploader");
-        scylla.ChangeKeyspace("flagged_uploader");
-        var table = scylla.GetTable<FlaggedUploader>();
-        table.CreateIfNotExists();
-
-        _mapper = new Mapper(scylla);
+        _mapper = new Lazy<IMapper>(() =>
+        {
+            var db = scylla.Connect();
+            db.CreateKeyspaceIfNotExists("flagged_uploader");
+            db.ChangeKeyspace("flagged_uploader");
+            var table = db.GetTable<FlaggedUploader>();
+            table.CreateIfNotExists();
+            return new Mapper(db);
+        });
     }
 
     public Task Insert(FlaggedUploader uploader, CancellationToken cancellationToken = default)
@@ -32,7 +34,7 @@ public class FlaggedUploaderStore : IFlaggedUploaderStore
             throw new ArgumentNullException(nameof(uploader));
         }
 
-        return _mapper.InsertAsync(uploader);
+        return _mapper.Value.InsertAsync(uploader);
     }
 
     public Task<FlaggedUploader> Retrieve(string uploaderIdSha256, CancellationToken cancellationToken = default)
@@ -44,6 +46,6 @@ public class FlaggedUploaderStore : IFlaggedUploaderStore
             throw new ArgumentNullException(nameof(uploaderIdSha256));
         }
 
-        return _mapper.FirstOrDefaultAsync<FlaggedUploader>("SELECT * FROM flagged_uploader WHERE id_sha256=?", uploaderIdSha256);
+        return _mapper.Value.FirstOrDefaultAsync<FlaggedUploader>("SELECT * FROM flagged_uploader WHERE id_sha256=?", uploaderIdSha256);
     }
 }
