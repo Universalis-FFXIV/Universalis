@@ -28,5 +28,5 @@ public class WrappedRedisMultiplexer : ICacheRedisMultiplexer, IPersistentRedisM
         return mux.GetDatabase(db, asyncObject);
     }
 
-    public IConnectionMultiplexer[] GeConnectionMultiplexers() => _connectionMultiplexers;
+    public IConnectionMultiplexer[] GetConnectionMultiplexers() => _connectionMultiplexers;
 }

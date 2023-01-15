@@ -203,12 +203,12 @@ public class Startup
                                 var dbConnections =
                                     (WrappedRedisMultiplexer)sp.GetService<IPersistentRedisMultiplexer>();
 
-                                foreach (var connection in cacheConnections.GeConnectionMultiplexers())
+                                foreach (var connection in cacheConnections.GetConnectionMultiplexers())
                                 {
                                     builder.AddRedisInstrumentation(connection);
                                 }
 
-                                foreach (var connection in dbConnections.GeConnectionMultiplexers())
+                                foreach (var connection in dbConnections.GetConnectionMultiplexers())
                                 {
                                     builder.AddRedisInstrumentation(connection);
                                 }
