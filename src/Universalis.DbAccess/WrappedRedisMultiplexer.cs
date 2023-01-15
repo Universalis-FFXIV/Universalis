@@ -4,29 +4,25 @@ namespace Universalis.DbAccess;
 
 public class WrappedRedisMultiplexer : ICacheRedisMultiplexer, IPersistentRedisMultiplexer
 {
-    private readonly IConnectionMultiplexer[] _connectionMultiplexers;
-    private int _next;
+    private readonly IConnectionMultiplexer _connectionMultiplexer;
     
-    public WrappedRedisMultiplexer(params IConnectionMultiplexer[] connectionMultiplexers)
+    public WrappedRedisMultiplexer(IConnectionMultiplexer connectionMultiplexer)
     {
-        _connectionMultiplexers = connectionMultiplexers;
-        _next = 0;
+        _connectionMultiplexer = connectionMultiplexer;
     }
 
     IDatabase ICacheRedisMultiplexer.GetDatabase(int db, object asyncObject)
     {
-        // No, this isn't thread-safe.
-        var mux = _connectionMultiplexers[_next];
-        _next = (_next + 1) % _connectionMultiplexers.Length;
-        return mux.GetDatabase(db, asyncObject);
+        return _connectionMultiplexer.GetDatabase();
     }
 
     IDatabase IPersistentRedisMultiplexer.GetDatabase(int db, object asyncObject)
     {
-        var mux = _connectionMultiplexers[_next];
-        _next = (_next + 1) % _connectionMultiplexers.Length;
-        return mux.GetDatabase(db, asyncObject);
+        return _connectionMultiplexer.GetDatabase();
     }
 
-    public IConnectionMultiplexer[] GetConnectionMultiplexers() => _connectionMultiplexers;
+    public IConnectionMultiplexer GetConnectionMultiplexer()
+    {
+        return _connectionMultiplexer;
+    }
 }
