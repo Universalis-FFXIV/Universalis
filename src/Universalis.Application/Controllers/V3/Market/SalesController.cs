@@ -44,6 +44,9 @@ public class SalesController : ControllerBase
         [FromQuery(Name = "cursor")] string cursor,
         CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("SalesControllerV3.Get");
+        activity?.AddTag("itemId", itemId);
+
         if (!servers.TryResolveWorlds(GameData, out var worlds))
         {
             return NotFound();
@@ -57,6 +60,10 @@ public class SalesController : ControllerBase
         var sales = await worlds.ToAsyncEnumerable()
             .SelectManyAwaitWithCancellation(async (world, ct) =>
             {
+                using var worldDataActivity = Util.ActivitySource.StartActivity("SalesControllerV3.Get.WorldData");
+                worldDataActivity?.AddTag("itemId", itemId);
+                worldDataActivity?.AddTag("worldId", world.Id); 
+
                 var data = await Store.RetrieveBySaleTime(world.Id, itemId, SalesPerPage, salesCursor.From,
                     ct);
                 return data.ToAsyncEnumerable()

@@ -46,6 +46,9 @@ public class OverviewController : ControllerBase
     public async Task<ActionResult<MarketOverview>> Get(Servers servers, int itemId,
         CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("OverviewControllerV3.Get");
+        activity?.AddTag("itemId", itemId);
+
         if (!servers.TryResolveWorlds(GameData, out var worlds))
         {
             return NotFound();
@@ -56,6 +59,10 @@ public class OverviewController : ControllerBase
         var uploadTimes = new Dictionary<int, long?>();
         foreach (var world in worlds)
         {
+            using var worldDataActivity = Util.ActivitySource.StartActivity("OverviewControllerV3.Get.WorldData");
+            worldDataActivity?.AddTag("itemId", itemId);
+            worldDataActivity?.AddTag("worldId", world.Id);
+
             var currentData = await CurrentlyShown.Retrieve(
                 new CurrentlyShownQuery { ItemId = itemId, WorldId = world.Id },
                 cancellationToken);
