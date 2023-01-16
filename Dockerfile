@@ -18,5 +18,5 @@ RUN curl -O https://s3.us-west-1.wasabisys.com/universalis-ffxiv-sqpack/sqpack/f
 
 WORKDIR /app
 COPY --from=build-env /source/artifacts/ ./
-HEALTHCHECK --start-period=15s --interval=10s --retries=1 --timeout=3s CMD curl -sf http://localhost:4002/api/74/5 || exit 1
+HEALTHCHECK --start-period=45s --interval=15s --retries=1 --timeout=5s CMD curl -sf http://localhost:4002/api/74/5 || exit 1
 ENTRYPOINT ["dotnet", "Universalis.Application.dll"]
