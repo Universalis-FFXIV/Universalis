@@ -176,11 +176,10 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         await Task.WhenAll(csTask, hTask);
 
         var cd = await csTask;
-        cd ??= new CurrentlyShown
+        if (cd == null)
         {
-            WorldId = worldId,
-            ItemId = itemId,
-        };
+            return null;
+        }
 
         var h = await hTask;
         h ??= new History
