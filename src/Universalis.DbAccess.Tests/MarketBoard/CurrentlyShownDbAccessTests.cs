@@ -18,7 +18,7 @@ public class CurrentlyShownDbAccessTests
         {
             return Task.FromResult(_currentlyShown.TryGetValue((worldId, itemId), out var data)
                 ? data
-                : new CurrentlyShown());
+                : null);
         }
 
         public Task SetData(CurrentlyShown data, CancellationToken cancellationToken = default)
