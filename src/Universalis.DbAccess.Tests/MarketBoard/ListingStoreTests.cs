@@ -94,6 +94,7 @@ public class ListingStoreTests : IClassFixture<DbFixture>
                     new DateTimeOffset(actual.LastReviewTime).ToUnixTimeSeconds());
                 Assert.Equal(DateTimeKind.Utc, actual.LastReviewTime.Kind);
                 Assert.Equal(expected.SellerId, actual.SellerId);
+                Assert.Equal(DateTimeKind.Utc, actual.UpdatedAt.Kind);
                 Assert.Equal(expected.Source, actual.Source);
             });
         }

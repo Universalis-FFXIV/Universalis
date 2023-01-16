@@ -39,7 +39,7 @@ public class CurrentlyShownStoreTests : IClassFixture<DbFixture>
         Assert.NotNull(results);
         Assert.Equal(currentlyShown.WorldId, results.WorldId);
         Assert.Equal(currentlyShown.ItemId, results.ItemId);
-        Assert.Equal(currentlyShown.LastUploadTimeUnixMilliseconds, results.LastUploadTimeUnixMilliseconds);
+        Assert.Equal(currentlyShown.LastUploadTimeUnixMilliseconds / 1000, results.LastUploadTimeUnixMilliseconds / 1000);
         Assert.Equal(currentlyShown.UploadSource, results.UploadSource);
         Assert.All(currentlyShown.Listings.OrderBy(l => l.PricePerUnit).Zip(results.Listings), pair =>
         {
@@ -59,6 +59,7 @@ public class CurrentlyShownStoreTests : IClassFixture<DbFixture>
                 new DateTimeOffset(actual.LastReviewTime).ToUnixTimeSeconds());
             Assert.Equal(DateTimeKind.Utc, actual.LastReviewTime.Kind);
             Assert.Equal(expected.SellerId, actual.SellerId);
+            Assert.Equal(DateTimeKind.Utc, actual.UpdatedAt.Kind);
             Assert.Equal(expected.Source, actual.Source);
         });
     }

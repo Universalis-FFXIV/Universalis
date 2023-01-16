@@ -37,5 +37,7 @@ public class Listing
     
     public int WorldId { get; set; }
     
+    public DateTime UpdatedAt { get; set; }
+    
     public string Source { get; set; }
 }

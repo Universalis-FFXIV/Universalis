@@ -138,6 +138,7 @@ public class ListingStore : IListingStore
                     RetainerName = reader.GetString(13),
                     RetainerCityId = reader.GetInt32(14),
                     SellerId = reader.GetString(15),
+                    UpdatedAt = reader.GetDateTime(16),
                     Source = reader.GetString(17),
                 });
             }
