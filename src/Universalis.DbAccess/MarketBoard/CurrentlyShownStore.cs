@@ -108,11 +108,12 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         }
 
         var guess = listings.FirstOrDefault();
+        var guessUploadTime = guess == null ? 0 : new DateTimeOffset(guess.UpdatedAt).ToUnixTimeMilliseconds();
         return new CurrentlyShown
         {
             WorldId = worldId,
             ItemId = itemId,
-            LastUploadTimeUnixMilliseconds = (long)lastUpdated,
+            LastUploadTimeUnixMilliseconds = Math.Max(guessUploadTime, (long)lastUpdated),
             UploadSource = guess?.Source ?? "",
             Listings = listings,
         };
