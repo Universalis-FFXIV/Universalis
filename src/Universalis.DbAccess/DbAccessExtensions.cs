@@ -33,13 +33,14 @@ public static class DbAccessExtensions
                                        configuration["PostgresConnectionString"] ??
                                        throw new InvalidOperationException(
                                            "PostgreSQL connection string not provided.");
-        
+
         // An optional separate connection string so that different settings can be used
         // during migrations versus under load. Mostly so that multiplexing can be enabled
         // in Npgsql.
-        var fluentMigratorConnectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_FLUENTMIGRATOR_CONNECTION") ??
-                                       configuration["FluentMigratorConnectionString"] ??
-                                       postgresConnectionString;
+        var fluentMigratorConnectionString =
+            Environment.GetEnvironmentVariable("UNIVERSALIS_FLUENTMIGRATOR_CONNECTION") ??
+            configuration["FluentMigratorConnectionString"] ??
+            postgresConnectionString;
 
         sc.AddFluentMigratorCore()
             .ConfigureRunner(rb => rb
@@ -56,6 +57,7 @@ public static class DbAccessExtensions
 
         var scyllaCluster = Cluster.Builder()
             .AddContactPoints(scyllaConnectionString.Split(','))
+            .WithSpeculativeExecutionPolicy(new ConstantSpeculativeExecutionPolicy(500, 2))
             .Build();
         sc.AddSingleton<ICluster>(scyllaCluster);
 
