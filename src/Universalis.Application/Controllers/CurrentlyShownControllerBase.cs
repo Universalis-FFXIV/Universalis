@@ -18,7 +18,8 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     protected readonly ICurrentlyShownDbAccess CurrentlyShown;
     protected readonly IHistoryDbAccess History;
 
-    public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb, IHistoryDbAccess history) : base(gameData)
+    public CurrentlyShownControllerBase(IGameDataProvider gameData, ICurrentlyShownDbAccess currentlyShownDb,
+        IHistoryDbAccess history) : base(gameData)
     {
         CurrentlyShown = currentlyShownDb;
         History = history;
@@ -52,7 +53,8 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             });
         }
 
-        var cached = await Task.WhenAll(worldIds.Select(worldId => FetchCurrentlyShownData(worldId, itemId, cancellationToken)));
+        var cached =
+            await Task.WhenAll(worldIds.Select(worldId => FetchCurrentlyShownData(worldId, itemId, cancellationToken)));
         var data = cached
             .Where(o => o != null)
             .ToList();
@@ -62,13 +64,14 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
         var listingSerializableProperties = BuildSerializableProperties(fields, "listings");
         var recentHistorySerializableProperties = BuildSerializableProperties(fields, "recentHistory");
-        
+
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var nowSeconds = now / 1000;
         var (worldUploadTimes, currentlyShown) = data
             .Aggregate(
                 (EmptyWorldDictionary<Dictionary<int, long>, long>(worldIds),
-                    new CurrentlyShownView { Listings = new List<ListingView>(), RecentHistory = new List<SaleView>() }),
+                    new CurrentlyShownView
+                        { Listings = new List<ListingView>(), RecentHistory = new List<SaleView>() }),
                 (agg, next) =>
                 {
                     if (next.WorldId == null)
@@ -109,14 +112,15 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                             return s;
                         }));
 
-                    aggData.LastUploadTimeUnixMilliseconds = Math.Max(next.LastUploadTimeUnixMilliseconds, aggData.LastUploadTimeUnixMilliseconds);
+                    aggData.LastUploadTimeUnixMilliseconds = Math.Max(next.LastUploadTimeUnixMilliseconds,
+                        aggData.LastUploadTimeUnixMilliseconds);
 
                     aggWorldUploadTimes[next.WorldId.Value] = next.LastUploadTimeUnixMilliseconds;
 
                     return (aggWorldUploadTimes, aggData);
                 });
 
-        currentlyShown.Listings.Sort((a, b) => (int)a.PricePerUnit - (int)b.PricePerUnit);
+        currentlyShown.Listings.Sort((a, b) => a.PricePerUnit - b.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
         var nqListings = currentlyShown.Listings.Where(l => !l.Hq).ToList();
@@ -127,7 +131,8 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         var view = new CurrentlyShownView
         {
             Listings = currentlyShown.Listings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings).ToList(),
-            RecentHistory = currentlyShown.RecentHistory.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nEntries).ToList(),
+            RecentHistory = currentlyShown.RecentHistory.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nEntries)
+                .ToList(),
             ItemId = itemId,
             WorldId = worldDcRegion.IsWorld ? worldDcRegion.WorldId : null,
             WorldName = worldDcRegion.IsWorld ? worldDcRegion.WorldName : null,
@@ -158,42 +163,47 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
         return (resolved, view);
     }
-    
-    private async Task<CurrentlyShownView> FetchCurrentlyShownData(int worldId, int itemId, CancellationToken cancellationToken = default)
+
+    private async Task<CurrentlyShownView> FetchCurrentlyShownData(int worldId, int itemId,
+        CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.FetchData");
 
-        var csTask = CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId }, cancellationToken);
-        var hTask = History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 }, cancellationToken);
+        var csTask = CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId },
+            cancellationToken);
+        var hTask = History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 },
+            cancellationToken);
         await Task.WhenAll(csTask, hTask);
 
         var cd = await csTask;
-        if (cd == null)
+        cd ??= new CurrentlyShown
         {
-            return null;
-        }
+            WorldId = worldId,
+            ItemId = itemId,
+        };
 
         var h = await hTask;
         h ??= new History
-            {
-                WorldId = worldId,
-                ItemId = itemId,
-                LastUploadTimeUnixMilliseconds = 0,
-                Sales = new List<Sale>(),
-            };
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+            LastUploadTimeUnixMilliseconds = 0,
+            Sales = new List<Sale>(),
+        };
 
-        var lastUploadTime = Math.Max(cd.LastUploadTimeUnixMilliseconds, Convert.ToInt64(h.LastUploadTimeUnixMilliseconds));
+        var lastUploadTime = Math.Max(cd.LastUploadTimeUnixMilliseconds,
+            Convert.ToInt64(h.LastUploadTimeUnixMilliseconds));
         return new CurrentlyShownView
         {
-            WorldId = cd.WorldId,
-            ItemId = cd.ItemId,
+            WorldId = worldId,
+            ItemId = itemId,
             LastUploadTimeUnixMilliseconds = lastUploadTime,
             Listings = (cd.Listings ?? Enumerable.Empty<Listing>())
                 .Select(Util.ListingToView)
                 .Where(s => s.PricePerUnit > 0)
                 .Where(s => s.Quantity > 0)
                 .ToList(),
-            RecentHistory = (h?.Sales ?? Enumerable.Empty<Sale>())
+            RecentHistory = (h.Sales ?? Enumerable.Empty<Sale>())
                 .Select(Util.SaleToView)
                 .Where(s => s.PricePerUnit > 0)
                 .Where(s => s.Quantity > 0)
@@ -202,7 +212,8 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         };
     }
 
-    private static TDictionary EmptyWorldDictionary<TDictionary, T>(IEnumerable<int> worldIds) where TDictionary : IDictionary<int, T>
+    private static TDictionary EmptyWorldDictionary<TDictionary, T>(IEnumerable<int> worldIds)
+        where TDictionary : IDictionary<int, T>
     {
         var dict = (TDictionary)Activator.CreateInstance(typeof(TDictionary));
         foreach (var worldId in worldIds)
@@ -260,25 +271,33 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     /// <returns>
     /// A list of properties to be serialized or null if all properties should be serialized.
     /// </returns>
-    protected static HashSet<string> BuildSerializableProperties(HashSet<string> fields, string forKey = null) {
+    protected static HashSet<string> BuildSerializableProperties(HashSet<string> fields, string forKey = null)
+    {
         if (fields == null || fields.Count == 0)
             return null;
         var properties = new HashSet<string>();
-        foreach (var f in fields) {
+        foreach (var f in fields)
+        {
             var field = f;
-            if (forKey != null) {
+            if (forKey != null)
+            {
                 if (field.StartsWith(forKey + "."))
                     field = field[(forKey.Length + 1)..];
                 else
                     continue;
             }
+
             var index = field.IndexOf(".", StringComparison.Ordinal);
-            if (index >= 1) {
+            if (index >= 1)
+            {
                 properties.Add(field[..index]); // if the field foo.bar was requested we need to serialize foo
             }
+
             properties.Add(field);
         }
-        if (forKey != null && properties.Count == 0 && fields.Contains(forKey)) // all properties of the given key were requested
+
+        if (forKey != null && properties.Count == 0 &&
+            fields.Contains(forKey)) // all properties of the given key were requested
             return null;
         return properties;
     }
