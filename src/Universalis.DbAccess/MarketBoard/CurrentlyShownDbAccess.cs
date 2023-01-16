@@ -14,10 +14,9 @@ public class CurrentlyShownDbAccess : ICurrentlyShownDbAccess
         _store = store;
     }
 
-    public async Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
+    public Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
     {
-        var data = await _store.GetData(query.WorldId, query.ItemId, cancellationToken);
-        return data.LastUploadTimeUnixMilliseconds == 0 ? null : data;
+        return _store.GetData(query.WorldId, query.ItemId, cancellationToken);
     }
 
     public Task Update(CurrentlyShown document, CurrentlyShownQuery query, CancellationToken cancellationToken = default)
