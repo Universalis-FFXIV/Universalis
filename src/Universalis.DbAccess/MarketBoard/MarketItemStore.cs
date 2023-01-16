@@ -51,7 +51,7 @@ public class MarketItemStore : IMarketItemStore
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.Retrieve");
 
         await using var command =
-            _dataSource.CreateCommand("SELECT updated FROM market_item VALUES WHERE item_id = $1 AND world_id = $2");
+            _dataSource.CreateCommand("SELECT updated FROM market_item WHERE item_id = $1 AND world_id = $2");
         command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = itemId });
         command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = worldId });
 
