@@ -20,7 +20,7 @@ public class HistoryController : HistoryControllerBase
 
     /// <summary>
     /// Retrieves the history data for the requested item and world or data center.
-    /// Item IDs can be comma-separated in order to retrieve data for multiple items at once.
+    /// Up to 100 item IDs can be comma-separated in order to retrieve data for multiple items at once.
     /// </summary>
     /// <param name="itemIds">The item ID or comma-separated item IDs to retrieve data for.</param>
     /// <param name="worldDcRegion">The world or data center to retrieve data for. This may be an ID or a name. Regions should be specified as Japan, Europe, North-America, Oceania, China, or 中国.</param>
