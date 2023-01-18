@@ -39,7 +39,33 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         HashSet<string> fields = null,
         CancellationToken cancellationToken = default)
     {
-        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.View");
+        if (worldIds.Length == 0)
+        {
+            throw new InvalidOperationException("Must query at least one world.");
+        }
+
+        if (worldIds.Length == 1)
+        {
+            return await GetView(worldDcRegion, worldIds[0], itemId, nListings, nEntries, noGst, onlyHq, statsWithin, entriesWithin, fields, cancellationToken);
+        }
+
+        return await GetViewBatched(worldDcRegion, worldIds, itemId, nListings, nEntries, noGst, onlyHq, statsWithin, entriesWithin, fields, cancellationToken);
+    }
+
+    protected async Task<(bool, CurrentlyShownView)> GetView(
+        WorldDcRegion worldDcRegion,
+        int worldId,
+        int itemId,
+        int nListings = int.MaxValue,
+        int nEntries = int.MaxValue,
+        bool noGst = false,
+        bool? onlyHq = null,
+        long statsWithin = 604800000,
+        long entriesWithin = -1,
+        HashSet<string> fields = null,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.GetView");
 
         if (!GameData.MarketableItemIds().Contains(itemId))
         {
@@ -54,7 +80,128 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             });
         }
 
-        var data = await FetchData(worldIds, new[] { itemId }, cancellationToken);
+        var currentlyShown = await FetchData(worldId, itemId, cancellationToken);
+
+        var listingSerializableProperties = BuildSerializableProperties(fields, "listings");
+        var recentHistorySerializableProperties = BuildSerializableProperties(fields, "recentHistory");
+
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var nowSeconds = now / 1000;
+        var worlds = GameData.AvailableWorlds();
+
+        if (currentlyShown.LastUploadTimeUnixMilliseconds == 0)
+        {
+            return (false, new CurrentlyShownView
+            {
+                ItemId = itemId,
+                WorldId = worldId,
+                WorldName = worlds[worldId],
+                DcName = null,
+                RegionName = null,
+                SerializableProperties = BuildSerializableProperties(fields),
+            });
+        }
+
+        currentlyShown.Listings = currentlyShown.Listings
+            .Select(l =>
+            {
+                if (!noGst)
+                {
+                    l.PricePerUnit = (int)Math.Ceiling(l.PricePerUnit * 1.05);
+                    l.Total = (int)Math.Ceiling(l.Total * 1.05);
+                }
+
+                l.WorldId = null;
+                l.WorldName = null;
+                l.SerializableProperties = listingSerializableProperties;
+                return l;
+            })
+            .ToList();
+
+        currentlyShown.RecentHistory = currentlyShown.RecentHistory
+            .Where(s => entriesWithin < 0 || nowSeconds - s.TimestampUnixSeconds < entriesWithin)
+            .Select(s =>
+            {
+                s.WorldId = null;
+                s.WorldName = null;
+                s.SerializableProperties = recentHistorySerializableProperties;
+                return s;
+            })
+            .ToList();
+
+        currentlyShown.Listings.Sort((a, b) => a.PricePerUnit - b.PricePerUnit);
+        currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+
+        var nqListings = currentlyShown.Listings.Where(l => !l.Hq).ToList();
+        var hqListings = currentlyShown.Listings.Where(l => l.Hq).ToList();
+        var nqSales = currentlyShown.RecentHistory.Where(s => !s.Hq).ToList();
+        var hqSales = currentlyShown.RecentHistory.Where(s => s.Hq).ToList();
+
+        var view = new CurrentlyShownView
+        {
+            Listings = currentlyShown.Listings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings).ToList(),
+            RecentHistory = currentlyShown.RecentHistory.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nEntries)
+                .ToList(),
+            ItemId = itemId,
+            WorldId = worldId,
+            WorldName = worlds[worldId],
+            DcName = null,
+            RegionName = null,
+            LastUploadTimeUnixMilliseconds = currentlyShown.LastUploadTimeUnixMilliseconds,
+            StackSizeHistogram = new SortedDictionary<int, int>(GetListingsDistribution(currentlyShown.Listings)),
+            StackSizeHistogramNq = new SortedDictionary<int, int>(GetListingsDistribution(nqListings)),
+            StackSizeHistogramHq = new SortedDictionary<int, int>(GetListingsDistribution(hqListings)),
+            SaleVelocity = GetSaleVelocity(currentlyShown.RecentHistory, now, statsWithin),
+            SaleVelocityNq = GetSaleVelocity(nqSales, now, statsWithin),
+            SaleVelocityHq = GetSaleVelocity(hqSales, now, statsWithin),
+            CurrentAveragePrice = GetAveragePricePerUnit(currentlyShown.Listings),
+            CurrentAveragePriceNq = GetAveragePricePerUnit(nqListings),
+            CurrentAveragePriceHq = GetAveragePricePerUnit(hqListings),
+            MinPrice = GetMinPricePerUnit(currentlyShown.Listings),
+            MinPriceNq = GetMinPricePerUnit(nqListings),
+            MinPriceHq = GetMinPricePerUnit(hqListings),
+            MaxPrice = GetMaxPricePerUnit(currentlyShown.Listings),
+            MaxPriceNq = GetMaxPricePerUnit(nqListings),
+            MaxPriceHq = GetMaxPricePerUnit(hqListings),
+            AveragePrice = GetAveragePricePerUnit(currentlyShown.RecentHistory),
+            AveragePriceNq = GetAveragePricePerUnit(nqSales),
+            AveragePriceHq = GetAveragePricePerUnit(hqSales),
+            WorldUploadTimes = null,
+            SerializableProperties = BuildSerializableProperties(fields),
+        };
+
+        return (true, view);
+    }
+
+    protected async Task<(bool, CurrentlyShownView)> GetViewBatched(
+        WorldDcRegion worldDcRegion,
+        int[] worldIds,
+        int itemId,
+        int nListings = int.MaxValue,
+        int nEntries = int.MaxValue,
+        bool noGst = false,
+        bool? onlyHq = null,
+        long statsWithin = 604800000,
+        long entriesWithin = -1,
+        HashSet<string> fields = null,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.GetViewBatched");
+
+        if (!GameData.MarketableItemIds().Contains(itemId))
+        {
+            return (false, new CurrentlyShownView
+            {
+                ItemId = itemId,
+                WorldId = worldDcRegion.IsWorld ? worldDcRegion.WorldId : null,
+                WorldName = worldDcRegion.IsWorld ? worldDcRegion.WorldName : null,
+                DcName = worldDcRegion.IsDc ? worldDcRegion.DcName : null,
+                RegionName = worldDcRegion.IsRegion ? worldDcRegion.RegionName : null,
+                SerializableProperties = BuildSerializableProperties(fields),
+            });
+        }
+
+        var data = await FetchDataBatched(worldIds, new[] { itemId }, cancellationToken);
 
         var worlds = GameData.AvailableWorlds();
 
@@ -68,7 +215,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             .Aggregate(
                 (EmptyWorldDictionary<Dictionary<int, long>, long>(worldIds),
                     new CurrentlyShownView
-                        { Listings = new List<ListingView>(), RecentHistory = new List<SaleView>() }),
+                    { Listings = new List<ListingView>(), RecentHistory = new List<SaleView>() }),
                 (agg, next) =>
                 {
                     if (next.WorldId == null)
@@ -174,10 +321,27 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         return (true, view);
     }
 
-    private async Task<IEnumerable<CurrentlyShownView>> FetchData(IEnumerable<int> worlds, IEnumerable<int> items,
+    private async Task<CurrentlyShownView> FetchData(int worldId, int itemId,
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.FetchData");
+
+        var csTask = CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId },
+            cancellationToken);
+        var hTask = History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 },
+            cancellationToken);
+        await Task.WhenAll(csTask, hTask);
+
+        var cs = await csTask;
+        var history = await hTask;
+
+        return BuildPartialView(cs ?? new CurrentlyShown(), history ?? new History());
+    }
+
+    private async Task<IEnumerable<CurrentlyShownView>> FetchDataBatched(IEnumerable<int> worlds, IEnumerable<int> items,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.FetchDataBatched");
 
         var worldIds = worlds.ToList();
         var itemIds = items.ToList();
