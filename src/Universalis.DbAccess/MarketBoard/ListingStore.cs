@@ -159,14 +159,14 @@ public class ListingStore : IListingStore
 
         var worldIds = query.WorldIds.ToList();
         var itemIds = query.ItemIds.ToList();
-        var worldItemTuples = worldIds.SelectMany(worldId =>
-                itemIds.Select(itemId => (worldId, itemId)))
+        var worldItemPairs = worldIds.SelectMany(worldId =>
+                itemIds.Select(itemId => new WorldItemPair(worldId, itemId)))
             .ToList();
 
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
         await using var batch = new NpgsqlBatch(connection);
 
-        foreach (var (worldId, itemId) in worldItemTuples)
+        foreach (var (worldId, itemId) in worldItemPairs)
         {
             batch.BatchCommands.Add(new NpgsqlBatchCommand(
                 """
@@ -199,7 +199,7 @@ public class ListingStore : IListingStore
             var batchesRead = 0;
             do
             {
-                var (worldId, itemId) = worldItemTuples[batchesRead];
+                var key = worldItemPairs[batchesRead];
                 var batchResult = new List<Listing>();
                 while (await reader.ReadAsync(cancellationToken))
                 {
@@ -226,11 +226,11 @@ public class ListingStore : IListingStore
                     });
                 }
 
-                listings[new WorldItemPair(worldId, itemId)] = batchResult;
+                listings[key] = batchResult;
 
                 batchesRead++;
                 await reader.NextResultAsync(cancellationToken);
-            } while (batchesRead != itemIds.Count);
+            } while (batchesRead != worldItemPairs.Count);
 
             return listings;
         }
