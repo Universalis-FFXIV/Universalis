@@ -129,7 +129,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                 SerializableProperties = BuildSerializableProperties(fields),
             });
         }
-        
+
         currentlyShown.Listings.Sort((a, b) => a.PricePerUnit - b.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
@@ -192,7 +192,8 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         var history = await hTask;
         var historyDict = history.ToDictionary(o => new WorldItemPair(o.WorldId, o.ItemId));
 
-        return cs.Select(c => BuildPartialView(c, historyDict[new WorldItemPair(c.WorldId, c.ItemId)]));
+        return cs.Select(c => BuildPartialView(c,
+            historyDict.TryGetValue(new WorldItemPair(c.WorldId, c.ItemId), out var h) ? h : new History()));
     }
 
     private static CurrentlyShownView BuildPartialView(CurrentlyShown currentlyShown, History history)
