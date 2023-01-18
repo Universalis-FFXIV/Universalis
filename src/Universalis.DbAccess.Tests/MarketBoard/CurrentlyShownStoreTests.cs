@@ -155,4 +155,60 @@ public class CurrentlyShownStoreTests : IClassFixture<DbFixture>
             Assert.Empty(result.Listings);
         });
     }
+    
+#if DEBUG
+    [Fact]
+#endif
+    public async Task RetrieveMany_DoesNotThrow_WhenSomeEmpty()
+    {
+        var store = _fixture.Services.GetRequiredService<ICurrentlyShownStore>();
+        var expectedCurrentlyShown = new Dictionary<int, CurrentlyShown>();
+
+        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+        foreach (var itemId in Enumerable.Range(300, 5))
+        {
+            var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
+            expectedCurrentlyShown[itemId] = currentlyShown;
+            await store.Insert(currentlyShown);
+        }
+
+        // Fill the results for the empty ones
+        expectedCurrentlyShown[5] = new CurrentlyShown();
+        expectedCurrentlyShown[6] = new CurrentlyShown();
+
+        var resultsItemIds = Enumerable.Range(300, 7).ToList();
+        var results = await store.RetrieveMany(new CurrentlyShownManyQuery
+            { WorldIds = new[] { 74 }, ItemIds = resultsItemIds });
+        Assert.NotNull(results);
+
+        foreach (var (itemId, result) in resultsItemIds.Zip(results))
+        {
+            Assert.NotNull(results);
+            Assert.Equal(expectedCurrentlyShown[itemId].WorldId, result.WorldId);
+            Assert.Equal(itemId, result.ItemId);
+            Assert.Equal(expectedCurrentlyShown[itemId].UploadSource, result.UploadSource);
+            Assert.All(expectedCurrentlyShown[itemId].Listings.OrderBy(l => l.PricePerUnit).Zip(result.Listings),
+                pair =>
+                {
+                    var (expected, actual) = pair;
+                    Assert.Equal(expected.ListingId, actual.ListingId);
+                    Assert.Equal(expected.Hq, actual.Hq);
+                    Assert.Equal(expected.OnMannequin, actual.OnMannequin);
+                    Assert.Equal(expected.PricePerUnit, actual.PricePerUnit);
+                    Assert.Equal(expected.Quantity, actual.Quantity);
+                    Assert.Equal(expected.RetainerName, actual.RetainerName);
+                    Assert.Equal(expected.RetainerId, actual.RetainerId);
+                    Assert.Equal(expected.RetainerCityId, actual.RetainerCityId);
+                    Assert.Equal(expected.DyeId, actual.DyeId);
+                    Assert.Equal(expected.CreatorId, actual.CreatorId);
+                    Assert.Equal(expected.CreatorName, actual.CreatorName);
+                    Assert.Equal(new DateTimeOffset(expected.LastReviewTime).ToUnixTimeSeconds(),
+                        new DateTimeOffset(actual.LastReviewTime).ToUnixTimeSeconds());
+                    Assert.Equal(DateTimeKind.Utc, actual.LastReviewTime.Kind);
+                    Assert.Equal(expected.SellerId, actual.SellerId);
+                    Assert.Equal(DateTimeKind.Utc, actual.UpdatedAt.Kind);
+                    Assert.Equal(expected.Source, actual.Source);
+                });
+        }
+    }
 }
