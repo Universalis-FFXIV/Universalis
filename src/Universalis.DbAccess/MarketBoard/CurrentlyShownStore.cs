@@ -93,8 +93,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
         var worldIds = query.WorldIds.ToList();
         var itemIds = query.ItemIds.ToList();
-        var worldItemTuples = worldIds.SelectMany(worldId =>
-                itemIds.Select(itemId => (worldId, itemId)))
+        var worldItemPairs = worldIds.SelectMany(worldId =>
+                itemIds.Select(itemId => new WorldItemPair(worldId, itemId)))
             .ToList();
 
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
@@ -102,10 +102,9 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         // Get all update times from Redis
         var lastUpdatedByItem = new Dictionary<WorldItemPair, long>();
         var lastUpdatedTasks =
-            await Task.WhenAll(worldItemTuples.Select(t => EnsureLastUpdated(db, t.worldId, t.itemId)));
-        foreach (var ((worldId, itemId), lastUpdated) in worldItemTuples.Zip(lastUpdatedTasks))
+            await Task.WhenAll(worldItemPairs.Select(t => EnsureLastUpdated(db, t.WorldId, t.ItemId)));
+        foreach (var (key, lastUpdated) in worldItemPairs.Zip(lastUpdatedTasks))
         {
-            var key = new WorldItemPair(worldId, itemId);
             if (lastUpdated.IsNullOrEmpty)
             {
                 lastUpdatedByItem[key] = 0;
@@ -129,11 +128,9 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             throw;
         }
 
-        return worldItemTuples
-            .Select(t =>
+        return worldItemPairs
+            .Select(key =>
             {
-                var key = new WorldItemPair(t.worldId, t.itemId);
-
                 var lastUpdated = lastUpdatedByItem[key];
                 if (lastUpdated == 0)
                 {
@@ -146,8 +143,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 var guessUploadTime = guess == null ? 0 : new DateTimeOffset(guess.UpdatedAt).ToUnixTimeMilliseconds();
                 return new CurrentlyShown
                 {
-                    WorldId = t.worldId,
-                    ItemId = t.itemId,
+                    WorldId = key.WorldId,
+                    ItemId = key.ItemId,
                     LastUploadTimeUnixMilliseconds = Math.Max(guessUploadTime, lastUpdated),
                     UploadSource = guess?.Source ?? "",
                     // I don't remember why/if this needs to be a concrete type but I
