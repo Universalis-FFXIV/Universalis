@@ -136,7 +136,8 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 return new CurrentlyShown();
             }
 
-            var listings = listingsByItem[new WorldItemPair(t.worldId, t.itemId)];
+            var listingsKey = new WorldItemPair(t.worldId, t.itemId);
+            var listings = listingsByItem.TryGetValue(listingsKey, out var value) ? value : new List<Listing>();
 
             var guess = listings.FirstOrDefault();
             var guessUploadTime = guess == null ? 0 : new DateTimeOffset(guess.UpdatedAt).ToUnixTimeMilliseconds();
