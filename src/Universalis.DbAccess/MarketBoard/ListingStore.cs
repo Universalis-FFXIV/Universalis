@@ -152,6 +152,96 @@ public class ListingStore : IListingStore
         }
     }
 
+    public async Task<IDictionary<WorldItemPair, IList<Listing>>> RetrieveManyLive(ListingManyQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveManyLive");
+
+        var worldIds = query.WorldIds.ToList();
+        var itemIds = query.ItemIds.ToList();
+        var worldItemTuples = worldIds.SelectMany(worldId =>
+                itemIds.Select(itemId => (worldId, itemId)))
+            .ToList();
+
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using var batch = new NpgsqlBatch(connection);
+
+        foreach (var (worldId, itemId) in worldItemTuples)
+        {
+            batch.BatchCommands.Add(new NpgsqlBatchCommand(
+                """
+                WITH cte AS(
+                    SELECT MAX(uploaded_at) as max_uploaded_at FROM listing
+                    WHERE item_id = $1 AND world_id = $2
+                )
+                SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
+                       t.unit_price, t.quantity, t.dye_id, t.creator_id, t.creator_name,
+                       t.last_review_time, t.retainer_id, t.retainer_name, t.retainer_city_id,
+                       t.seller_id, t.uploaded_at, t.source
+                FROM public.listing t
+                WHERE t.item_id = $1 AND t.world_id = $2 AND t.uploaded_at = (SELECT max_uploaded_at FROM cte)
+                ORDER BY unit_price
+                """)
+            {
+                Parameters =
+                {
+                    new NpgsqlParameter<int> { TypedValue = itemId },
+                    new NpgsqlParameter<int> { TypedValue = worldId },
+                },
+            });
+        }
+
+        try
+        {
+            await using var reader = await batch.ExecuteReaderAsync(cancellationToken);
+
+            var listings = new Dictionary<WorldItemPair, IList<Listing>>();
+            var batchesRead = 0;
+            do
+            {
+                var (worldId, itemId) = worldItemTuples[batchesRead];
+                var batchResult = new List<Listing>();
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    batchResult.Add(new Listing
+                    {
+                        ListingId = reader.GetString(0),
+                        ItemId = reader.GetInt32(1),
+                        WorldId = reader.GetInt32(2),
+                        Hq = reader.GetBoolean(3),
+                        OnMannequin = reader.GetBoolean(4),
+                        Materia = ConvertMateriaFromJArray(reader.GetFieldValue<JArray>(5)),
+                        PricePerUnit = reader.GetInt32(6),
+                        Quantity = reader.GetInt32(7),
+                        DyeId = reader.GetInt32(8),
+                        CreatorId = reader.GetString(9),
+                        CreatorName = reader.GetString(10),
+                        LastReviewTime = reader.GetDateTime(11),
+                        RetainerId = reader.GetString(12),
+                        RetainerName = reader.GetString(13),
+                        RetainerCityId = reader.GetInt32(14),
+                        SellerId = reader.GetString(15),
+                        UpdatedAt = reader.GetDateTime(16),
+                        Source = reader.GetString(17),
+                    });
+                }
+
+                listings[new WorldItemPair(worldId, itemId)] = batchResult;
+
+                batchesRead++;
+                await reader.NextResultAsync(cancellationToken);
+            } while (batchesRead != itemIds.Count);
+
+            return listings;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to retrieve listings (worlds={}, items={})", string.Join(',', worldIds),
+                string.Join(',', itemIds));
+            throw;
+        }
+    }
+
     private static JArray ConvertMateriaToJArray(IEnumerable<Materia> materia)
     {
         return materia

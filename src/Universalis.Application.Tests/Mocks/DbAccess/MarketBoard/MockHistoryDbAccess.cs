@@ -15,7 +15,8 @@ public class MockHistoryDbAccess : IHistoryDbAccess
 
     public Task Create(History document, CancellationToken cancellationToken = default)
     {
-        return InsertSales(document.Sales, new HistoryQuery { WorldId = document.WorldId, ItemId = document.ItemId }, cancellationToken);
+        return InsertSales(document.Sales, new HistoryQuery { WorldId = document.WorldId, ItemId = document.ItemId },
+            cancellationToken);
     }
 
     public Task<History> Retrieve(HistoryQuery query, CancellationToken cancellationToken = default)
@@ -30,20 +31,23 @@ public class MockHistoryDbAccess : IHistoryDbAccess
         {
             return Task.FromResult<History>(null);
         }
-        
+
         return Task.FromResult(new History
         {
             WorldId = query.WorldId,
             ItemId = query.ItemId,
-            LastUploadTimeUnixMilliseconds = sales.Count == 0 ? 0 : new DateTimeOffset(sales[0].SaleTime).ToUnixTimeMilliseconds(),
+            LastUploadTimeUnixMilliseconds =
+                sales.Count == 0 ? 0 : new DateTimeOffset(sales[0].SaleTime).ToUnixTimeMilliseconds(),
             Sales = sales,
         });
     }
 
-    public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query,
+        CancellationToken cancellationToken = default)
     {
         return (await Task.WhenAll(query.WorldIds
-            .Select(worldId => Retrieve(new HistoryQuery { WorldId = worldId, ItemId = query.ItemId }, cancellationToken))))
+                .SelectMany(worldId => query.ItemIds.Select(itemId =>
+                    Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId }, cancellationToken)))))
             .Where(o => o != null);
     }
 
@@ -53,7 +57,7 @@ public class MockHistoryDbAccess : IHistoryDbAccess
         {
             _collection[sale.Id] = sale;
         }
-        
+
         return Task.CompletedTask;
     }
 }

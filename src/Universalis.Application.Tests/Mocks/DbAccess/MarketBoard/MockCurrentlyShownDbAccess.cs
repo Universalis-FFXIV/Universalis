@@ -24,7 +24,15 @@ public class MockCurrentlyShownDbAccess : ICurrentlyShownDbAccess
             .FirstOrDefault(d => d.WorldId == query.WorldId && d.ItemId == query.ItemId));
     }
 
-    public async Task Update(CurrentlyShown document, CurrentlyShownQuery query, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(_collection.Where(d =>
+            query.WorldIds.Contains(d.WorldId) && query.ItemIds.Contains(d.ItemId)));
+    }
+
+    public async Task Update(CurrentlyShown document, CurrentlyShownQuery query,
+        CancellationToken cancellationToken = default)
     {
         await Delete(query, cancellationToken);
         await Create(document, cancellationToken);

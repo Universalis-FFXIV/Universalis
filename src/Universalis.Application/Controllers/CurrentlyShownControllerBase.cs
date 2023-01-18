@@ -54,7 +54,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         }
 
         var cached =
-            await Task.WhenAll(worldIds.Select(worldId => FetchCurrentlyShownData(worldId, itemId, cancellationToken)));
+            await Task.WhenAll(worldIds.Select(worldId => FetchData(worldId, itemId, cancellationToken)));
         var data = cached
             .Where(o => o != null)
             .ToList();
@@ -164,7 +164,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         return (resolved, view);
     }
 
-    private async Task<CurrentlyShownView> FetchCurrentlyShownData(int worldId, int itemId,
+    private async Task<CurrentlyShownView> FetchData(int worldId, int itemId,
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.FetchData");

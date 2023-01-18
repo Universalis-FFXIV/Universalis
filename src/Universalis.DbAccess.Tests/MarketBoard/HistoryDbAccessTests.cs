@@ -16,28 +16,27 @@ public class HistoryDbAccessTests
     {
         private readonly Dictionary<(int, int), MarketItem> _data = new();
 
-        public Task SetData(MarketItem marketItem, CancellationToken cancellationToken = default)
+        public Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
         {
             _data[(marketItem.WorldId, marketItem.ItemId)] = marketItem;
             return Task.CompletedTask;
         }
 
-        public Task Update(MarketItem marketItem, CancellationToken cancellationToken = default)
+        public ValueTask<MarketItem> Retrieve(MarketItemQuery query, CancellationToken cancellationToken = default)
         {
-            if (!_data.ContainsKey((marketItem.WorldId, marketItem.ItemId)))
-            {
-                return SetData(marketItem, cancellationToken);
-            }
-
-            _data[(marketItem.WorldId, marketItem.ItemId)].LastUploadTime = marketItem.LastUploadTime;
-            return Task.CompletedTask;
-        }
-
-        public ValueTask<MarketItem> GetData(int worldId, int itemId, CancellationToken cancellationToken = default)
-        {
-            return _data.TryGetValue((worldId, itemId), out var marketItem)
+            return _data.TryGetValue((query.WorldId, query.ItemId), out var marketItem)
                 ? ValueTask.FromResult(marketItem)
                 : ValueTask.FromResult<MarketItem>(null);
+        }
+
+        public ValueTask<IEnumerable<MarketItem>> RetrieveMany(MarketItemManyQuery query,
+            CancellationToken cancellationToken = default)
+        {
+            return ValueTask.FromResult(query.WorldIds.SelectMany(worldId => query.ItemIds.Select(itemId =>
+            {
+                _data.TryGetValue((worldId, itemId), out var data);
+                return data ?? null;
+            })).Where(o => o is not null));
         }
     }
 
@@ -71,12 +70,14 @@ public class HistoryDbAccessTests
                 .ToList());
         }
 
-        public Task<long> RetrieveGilTradeVolume(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+        public Task<long> RetrieveGilTradeVolume(int worldId, int itemId, DateTime from, DateTime to,
+            CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public Task<long> RetrieveUnitTradeVolume(int worldId, int itemId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+        public Task<long> RetrieveUnitTradeVolume(int worldId, int itemId, DateTime from, DateTime to,
+            CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
@@ -102,7 +103,7 @@ public class HistoryDbAccessTests
     public async Task RetrieveMany_DoesNotThrow()
     {
         var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore());
-        var output = await db.RetrieveMany(new HistoryManyQuery { WorldIds = new int[] { 74 }, ItemId = 5333 });
+        var output = await db.RetrieveMany(new HistoryManyQuery { WorldIds = new[] { 74 }, ItemIds = new[] { 5333 } });
         Assert.NotNull(output);
         Assert.Empty(output);
     }
@@ -150,7 +151,7 @@ public class HistoryDbAccessTests
         await db.Create(document);
 
         var output = (await db.RetrieveMany(new HistoryManyQuery
-            { WorldIds = new[] { document.WorldId }, ItemId = document.ItemId }))?.ToList();
+            { WorldIds = new[] { document.WorldId }, ItemIds = new[] { document.ItemId } }))?.ToList();
 
         Assert.NotNull(output);
         Assert.Single(output);
