@@ -28,8 +28,8 @@ public class CurrentlyShownDbAccessTests
             return Task.FromResult(query.WorldIds.SelectMany(worldId => query.ItemIds.Select(itemId =>
             {
                 _currentlyShown.TryGetValue((worldId, itemId), out var data);
-                return data ?? new CurrentlyShown();
-            })));
+                return data ?? null;
+            })).Where(cs => cs is not null));
         }
 
         public Task Insert(CurrentlyShown data, CancellationToken cancellationToken = default)
@@ -47,6 +47,16 @@ public class CurrentlyShownDbAccessTests
 
         var output = await db.Retrieve(new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
         Assert.Null(output);
+    }
+
+    [Fact]
+    public async Task RetrieveMany_Works_WhenEmpty()
+    {
+        var store = new MockCurrentlyShownStore();
+        ICurrentlyShownDbAccess db = new CurrentlyShownDbAccess(store);
+
+        var output = await db.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = new[] { 74 }, ItemIds = new int[] { 5333 } });
+        Assert.Empty(output);
     }
 
     [Fact]
