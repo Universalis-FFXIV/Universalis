@@ -24,27 +24,11 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _logger = logger;
     }
 
-    public async Task<CurrentlyShown> GetData(int worldId, int itemId, CancellationToken cancellationToken = default)
+    public async Task Insert(CurrentlyShown data, CancellationToken cancellationToken = default)
     {
-        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.GetData");
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.Insert");
 
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
-        var result = await FetchData(db, worldId, itemId, cancellationToken);
-        return result ?? new CurrentlyShown();
-    }
-
-    public async Task SetData(CurrentlyShown data, CancellationToken cancellationToken = default)
-    {
-        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.SetData");
-
-        var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
-        await StoreData(db, data, null, cancellationToken);
-    }
-
-    private async Task StoreData(IDatabaseAsync db, CurrentlyShown data, TimeSpan? expiry = null,
-        CancellationToken cancellationToken = default)
-    {
-        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.StoreData");
 
         var worldId = data.WorldId;
         var itemId = data.ItemId;
@@ -59,7 +43,114 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             l.Source = uploadSource;
             return l;
         }), cancellationToken);
-        await SetLastUpdated(db, worldId, itemId, lastUploadTime, expiry);
+        await SetLastUpdated(db, worldId, itemId, lastUploadTime);
+    }
+
+    public async Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.Retrieve");
+
+        var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
+
+        var lastUpdated = await EnsureLastUpdated(db, query.WorldId, query.ItemId);
+        if (lastUpdated.IsNullOrEmpty || (long)lastUpdated == 0)
+        {
+            return new CurrentlyShown();
+        }
+
+        // Attempt to retrieve listings from Postgres
+        List<Listing> listings;
+        try
+        {
+            var listingsEnumerable = await _listingStore.RetrieveLive(
+                new ListingQuery { ItemId = query.ItemId, WorldId = query.WorldId },
+                cancellationToken);
+            listings = listingsEnumerable.ToList();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to retrieve listings from database (world={}, item={})",
+                query.WorldId, query.ItemId);
+            throw;
+        }
+
+        var guess = listings.FirstOrDefault();
+        var guessUploadTime = guess == null ? 0 : new DateTimeOffset(guess.UpdatedAt).ToUnixTimeMilliseconds();
+        return new CurrentlyShown
+        {
+            WorldId = query.WorldId,
+            ItemId = query.ItemId,
+            LastUploadTimeUnixMilliseconds = Math.Max(guessUploadTime, (long)lastUpdated),
+            UploadSource = guess?.Source ?? "",
+            Listings = listings,
+        };
+    }
+
+    public async Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.RetrieveMany");
+
+        var worldIds = query.WorldIds.ToList();
+        var itemIds = query.ItemIds.ToList();
+        var worldItemTuples = worldIds.SelectMany(worldId =>
+                itemIds.Select(itemId => (worldId, itemId)))
+            .ToList();
+
+        var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
+
+        // Get all update times from Redis
+        var lastUpdatedByItem = new Dictionary<(int, int), long>();
+        var lastUpdatedTasks =
+            await Task.WhenAll(worldItemTuples.Select(t => EnsureLastUpdated(db, t.worldId, t.itemId)));
+        foreach (var ((worldId, itemId), lastUpdated) in worldItemTuples.Zip(lastUpdatedTasks))
+        {
+            if (lastUpdated.IsNullOrEmpty)
+            {
+                lastUpdatedByItem[(worldId, itemId)] = 0;
+            }
+
+            lastUpdatedByItem[(worldId, itemId)] = (long)lastUpdated;
+        }
+
+        // Attempt to retrieve listings from Postgres
+        IDictionary<WorldItemPair, IList<Listing>> listingsByItem;
+        try
+        {
+            listingsByItem = await _listingStore.RetrieveManyLive(
+                new ListingManyQuery { ItemIds = query.ItemIds, WorldIds = query.WorldIds },
+                cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to retrieve listings from database (worlds={}, items={})",
+                string.Join(',', worldIds), string.Join(',', itemIds));
+            throw;
+        }
+
+        return worldItemTuples.Select(t =>
+        {
+            var lastUpdated = lastUpdatedByItem[(t.worldId, t.itemId)];
+            if (lastUpdated == 0)
+            {
+                return new CurrentlyShown();
+            }
+
+            var listings = listingsByItem[new WorldItemPair(t.worldId, t.itemId)];
+
+            var guess = listings.FirstOrDefault();
+            var guessUploadTime = guess == null ? 0 : new DateTimeOffset(guess.UpdatedAt).ToUnixTimeMilliseconds();
+            return new CurrentlyShown
+            {
+                WorldId = t.worldId,
+                ItemId = t.itemId,
+                LastUploadTimeUnixMilliseconds = Math.Max(guessUploadTime, lastUpdated),
+                UploadSource = guess?.Source ?? "",
+                // I don't remember why/if this needs to be a concrete type but I
+                // think this has a fast path internally anyways.
+                Listings = listings.ToList(),
+            };
+        });
     }
 
     private static async Task<RedisValue> EnsureLastUpdated(IDatabaseAsync db, int worldId, int itemId)
@@ -78,45 +169,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
         var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
         return db.StringSetAsync(lastUpdatedKey, timestamp, expiry);
-    }
-
-    private async Task<CurrentlyShown> FetchData(IDatabaseAsync db, int worldId, int itemId,
-        CancellationToken cancellationToken = default)
-    {
-        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.FetchData");
-
-        var lastUpdated = await EnsureLastUpdated(db, worldId, itemId);
-        if (lastUpdated.IsNullOrEmpty || (long)lastUpdated == 0)
-        {
-            return null;
-        }
-
-        // Attempt to retrieve listings from Postgres
-        List<Listing> listings;
-        try
-        {
-            var listingsEnumerable = await _listingStore.RetrieveLive(
-                new ListingQuery { ItemId = itemId, WorldId = worldId },
-                cancellationToken);
-            listings = listingsEnumerable.ToList();
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to retrieve listings from primary database (item={ItemId}, world={WorldId})",
-                itemId, worldId);
-            throw;
-        }
-
-        var guess = listings.FirstOrDefault();
-        var guessUploadTime = guess == null ? 0 : new DateTimeOffset(guess.UpdatedAt).ToUnixTimeMilliseconds();
-        return new CurrentlyShown
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-            LastUploadTimeUnixMilliseconds = Math.Max(guessUploadTime, (long)lastUpdated),
-            UploadSource = guess?.Source ?? "",
-            Listings = listings,
-        };
     }
 
     private static string GetLastUpdatedKey(int worldId, int itemId)

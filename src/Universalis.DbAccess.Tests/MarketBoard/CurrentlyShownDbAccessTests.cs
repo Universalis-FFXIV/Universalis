@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.MarketBoard;
@@ -13,15 +14,25 @@ public class CurrentlyShownDbAccessTests
     private class MockCurrentlyShownStore : ICurrentlyShownStore
     {
         private readonly Dictionary<(int, int), CurrentlyShown> _currentlyShown = new();
-        
-        public Task<CurrentlyShown> GetData(int worldId, int itemId, CancellationToken cancellationToken = default)
+
+        public Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(_currentlyShown.TryGetValue((worldId, itemId), out var data)
+            return Task.FromResult(_currentlyShown.TryGetValue((query.WorldId, query.ItemId), out var data)
                 ? data
                 : null);
         }
 
-        public Task SetData(CurrentlyShown data, CancellationToken cancellationToken = default)
+        public Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(query.WorldIds.SelectMany(worldId => query.ItemIds.Select(itemId =>
+            {
+                _currentlyShown.TryGetValue((worldId, itemId), out var data);
+                return data ?? new CurrentlyShown();
+            })));
+        }
+
+        public Task Insert(CurrentlyShown data, CancellationToken cancellationToken = default)
         {
             _currentlyShown[(data.WorldId, data.ItemId)] = data;
             return Task.CompletedTask;
@@ -43,7 +54,7 @@ public class CurrentlyShownDbAccessTests
     {
         var store = new MockCurrentlyShownStore();
         ICurrentlyShownDbAccess db = new CurrentlyShownDbAccess(store);
-        
+
         var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
         var query = new CurrentlyShownQuery { WorldId = document1.WorldId, ItemId = document1.ItemId };
         await db.Update(document1, query);

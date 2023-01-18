@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
@@ -16,11 +17,16 @@ public class CurrentlyShownDbAccess : ICurrentlyShownDbAccess
 
     public Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
     {
-        return _store.GetData(query.WorldId, query.ItemId, cancellationToken);
+        return _store.Retrieve(query, cancellationToken);
+    }
+
+    public Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query, CancellationToken cancellationToken = default)
+    {
+        return _store.RetrieveMany(query, cancellationToken);
     }
 
     public Task Update(CurrentlyShown document, CurrentlyShownQuery query, CancellationToken cancellationToken = default)
     {
-        return _store.SetData(document, cancellationToken);
+        return _store.Insert(document, cancellationToken);
     }
 }

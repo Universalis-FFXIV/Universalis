@@ -16,7 +16,7 @@ namespace Universalis.Application.Controllers;
 public class HistoryControllerBase : WorldDcRegionControllerBase
 {
     protected readonly IHistoryDbAccess History;
-    
+
     public HistoryControllerBase(IGameDataProvider gameData, IHistoryDbAccess historyDb) : base(gameData)
     {
         History = historyDb;
@@ -37,7 +37,7 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
         var data = (await History.RetrieveMany(new HistoryManyQuery
         {
             WorldIds = worldIds,
-            ItemId = itemId,
+            ItemIds = new[] { itemId },
             Count = entries,
         }, cancellationToken)).ToList();
         var resolved = data.Count > 0;
@@ -54,13 +54,15 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
 
                 agg.Sales = await next.Sales
                     .ToAsyncEnumerable()
-                    .Where(s => entriesWithin < 0 || nowSeconds - new DateTimeOffset(s.SaleTime).ToUnixTimeSeconds() < entriesWithin)
+                    .Where(s => entriesWithin < 0 ||
+                                nowSeconds - new DateTimeOffset(s.SaleTime).ToUnixTimeSeconds() < entriesWithin)
                     .Where(s => s.Quantity is > 0)
                     .Select(s => new MinimizedSaleView
                     {
                         Hq = s.Hq,
                         PricePerUnit = s.PricePerUnit,
-                        Quantity = s.Quantity ?? 0, // This should never be 0 since we're filtering out null and zero quantities
+                        Quantity = s.Quantity ??
+                                   0, // This should never be 0 since we're filtering out null and zero quantities
                         BuyerName = s.BuyerName,
                         OnMannequin = s.OnMannequin,
                         TimestampUnixSeconds = new DateTimeOffset(s.SaleTime).ToUnixTimeSeconds(),
@@ -69,7 +71,8 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
                     })
                     .Concat(agg.Sales.ToAsyncEnumerable())
                     .ToListAsync(cancellationToken);
-                agg.LastUploadTimeUnixMilliseconds = (long)Math.Max(next.LastUploadTimeUnixMilliseconds, agg.LastUploadTimeUnixMilliseconds);
+                agg.LastUploadTimeUnixMilliseconds = (long)Math.Max(next.LastUploadTimeUnixMilliseconds,
+                    agg.LastUploadTimeUnixMilliseconds);
 
                 return agg;
             }, cancellationToken);
@@ -89,14 +92,11 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
             RegionName = worldDcRegion.IsRegion ? worldDcRegion.RegionName : null,
             LastUploadTimeUnixMilliseconds = history.LastUploadTimeUnixMilliseconds,
             StackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(history.Sales
-                .Select(s => s.Quantity)
-                .Select(q => (int)q))),
+                .Select(s => s.Quantity))),
             StackSizeHistogramNq = new SortedDictionary<int, int>(Statistics.GetDistribution(nqSales
-                .Select(s => s.Quantity)
-                .Select(q => (int)q))),
+                .Select(s => s.Quantity))),
             StackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqSales
-                .Select(s => s.Quantity)
-                .Select(q => (int)q))),
+                .Select(s => s.Quantity))),
             SaleVelocity = Statistics.VelocityPerDay(history.Sales
                 .Select(s => s.TimestampUnixSeconds * 1000), now, statsWithin),
             SaleVelocityNq = Statistics.VelocityPerDay(nqSales

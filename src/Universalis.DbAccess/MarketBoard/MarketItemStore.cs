@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
@@ -18,7 +21,7 @@ public class MarketItemStore : IMarketItemStore
         _logger = logger;
     }
 
-    public async Task SetData(MarketItem marketItem, CancellationToken cancellationToken = default)
+    public async Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.Insert");
 
@@ -46,14 +49,14 @@ public class MarketItemStore : IMarketItemStore
         }
     }
 
-    public async ValueTask<MarketItem> GetData(int worldId, int itemId, CancellationToken cancellationToken = default)
+    public async ValueTask<MarketItem> Retrieve(MarketItemQuery query, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.Retrieve");
 
         await using var command =
             _dataSource.CreateCommand("SELECT updated FROM market_item WHERE item_id = $1 AND world_id = $2");
-        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = itemId });
-        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = worldId });
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.ItemId });
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.WorldId });
 
         try
         {
@@ -65,14 +68,74 @@ public class MarketItemStore : IMarketItemStore
 
             return new MarketItem
             {
-                ItemId = itemId,
-                WorldId = worldId,
+                ItemId = query.ItemId,
+                WorldId = query.WorldId,
                 LastUploadTime = reader.GetDateTime(0),
             };
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to retrieve market item (world={}, item={})", worldId, itemId);
+            _logger.LogError(e, "Failed to retrieve market item (world={}, item={})", query.WorldId, query.ItemId);
+            throw;
+        }
+    }
+
+    public async ValueTask<IEnumerable<MarketItem>> RetrieveMany(MarketItemManyQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.RetrieveMany");
+
+        var worldIds = query.WorldIds.ToList();
+        var itemIds = query.ItemIds.ToList();
+        var worldItemTuples = worldIds.SelectMany(worldId =>
+                itemIds.Select(itemId => (worldId, itemId)))
+            .ToList();
+
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using var batch = new NpgsqlBatch(connection);
+
+        foreach (var (worldId, itemId) in worldItemTuples)
+        {
+            batch.BatchCommands.Add(
+                new NpgsqlBatchCommand("SELECT updated FROM market_item WHERE item_id = $1 AND world_id = $2")
+                {
+                    Parameters =
+                    {
+                        new NpgsqlParameter<int> { TypedValue = itemId },
+                        new NpgsqlParameter<int> { TypedValue = worldId },
+                    },
+                });
+        }
+
+        try
+        {
+            await using var reader = await batch.ExecuteReaderAsync(cancellationToken);
+
+            var marketItemRecords = new List<MarketItem>();
+            var batchesRead = 0;
+            do
+            {
+                var (worldId, itemId) = worldItemTuples[batchesRead];
+                if (await reader.ReadAsync(cancellationToken))
+                {
+                    marketItemRecords.Add(new MarketItem
+                    {
+                        ItemId = itemId,
+                        WorldId = worldId,
+                        LastUploadTime = reader.GetDateTime(0),
+                    });
+                }
+
+                batchesRead++;
+                await reader.NextResultAsync(cancellationToken);
+            } while (batchesRead != itemIds.Count);
+
+            return marketItemRecords;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to retrieve listings (worlds={}, items={})", string.Join(',', worldIds),
+                string.Join(',', itemIds));
             throw;
         }
     }

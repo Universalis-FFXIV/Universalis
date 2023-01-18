@@ -11,4 +11,6 @@ public interface IListingStore
     Task UpsertLive(IEnumerable<Listing> listings, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<Listing>> RetrieveLive(ListingQuery query, CancellationToken cancellationToken = default);
+    
+    Task<IDictionary<WorldItemPair, IList<Listing>>> RetrieveManyLive(ListingManyQuery query, CancellationToken cancellationToken = default);
 }
