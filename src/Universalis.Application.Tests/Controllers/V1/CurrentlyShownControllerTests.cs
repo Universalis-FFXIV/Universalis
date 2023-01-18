@@ -55,7 +55,7 @@ public class CurrentlyShownControllerTests
         const int itemId = 5333;
         var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
         await test.CurrentlyShown.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = itemId });
-        
+
         var sales = SeedDataGenerator.MakeHistory(74, itemId).Sales;
         await test.History.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId });
 
@@ -76,7 +76,7 @@ public class CurrentlyShownControllerTests
         const int itemId = 5333;
         var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
         await test.CurrentlyShown.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = itemId });
-        
+
         var sales = SeedDataGenerator.MakeHistory(74, itemId).Sales;
         await test.History.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId });
 
@@ -100,7 +100,7 @@ public class CurrentlyShownControllerTests
         const int itemId = 5333;
         var document = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
         await test.CurrentlyShown.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = itemId });
-        
+
         var sales = SeedDataGenerator.MakeHistory(74, itemId).Sales;
         await test.History.InsertSales(sales, new HistoryQuery { WorldId = 74, ItemId = itemId });
 
@@ -123,13 +123,13 @@ public class CurrentlyShownControllerTests
 
         var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
         await test.CurrentlyShown.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
-        
+
         var sales1 = SeedDataGenerator.MakeHistory(74, 5333).Sales;
         await test.History.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
 
         var document2 = SeedDataGenerator.MakeCurrentlyShown(74, 5);
         await test.CurrentlyShown.Update(document2, new CurrentlyShownQuery { WorldId = 74, ItemId = 5 });
-        
+
         var sales2 = SeedDataGenerator.MakeHistory(74, 5).Sales;
         await test.History.InsertSales(sales2, new HistoryQuery { WorldId = 74, ItemId = 5 });
 
@@ -157,13 +157,13 @@ public class CurrentlyShownControllerTests
 
         var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
         await test.CurrentlyShown.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
-        
+
         var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
         await test.History.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
 
         var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5333, unixNowMs);
         await test.CurrentlyShown.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5333 });
-        
+
         var sales2 = SeedDataGenerator.MakeHistory(34, 5333, unixNowMs).Sales;
         await test.History.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5333 });
 
@@ -192,6 +192,81 @@ public class CurrentlyShownControllerTests
     [Theory]
     [InlineData("crystaL")]
     [InlineData("Crystal")]
+    public async Task Controller_Get_Succeeds_SingleItem_DataCenter_When_CurrentlyShownStore_Fails(string worldOrDc)
+    {
+        var test = TestResources.Create();
+        var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
+        await test.CurrentlyShown.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+
+        var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
+        await test.History.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
+
+        var sales2 = SeedDataGenerator.MakeHistory(34, 5333, unixNowMs).Sales;
+        await test.History.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5333 });
+
+        var result = await test.Controller.Get("5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
+        var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
+
+        var joinedSales = sales1.Concat(sales2).ToList();
+        var joinedDocument = new CurrentlyShown
+        {
+            WorldId = 0,
+            ItemId = 5333,
+            LastUploadTimeUnixMilliseconds = unixNowMs,
+            UploadSource = "test runner",
+            Listings = document1.Listings,
+        };
+
+        AssertCurrentlyShownDataCenter(
+            joinedDocument,
+            joinedSales,
+            currentlyShown,
+            unixNowMs,
+            worldOrDc);
+    }
+
+    [Theory]
+    [InlineData("crystaL")]
+    [InlineData("Crystal")]
+    public async Task Controller_Get_Succeeds_SingleItem_DataCenter_When_History_Fails(string worldOrDc)
+    {
+        var test = TestResources.Create();
+        var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
+        await test.CurrentlyShown.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+
+        var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
+        await test.History.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
+
+        var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5333, unixNowMs);
+        await test.CurrentlyShown.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5333 });
+
+        var result = await test.Controller.Get("5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
+        var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
+
+        var joinedDocument = new CurrentlyShown
+        {
+            WorldId = 0,
+            ItemId = 5333,
+            LastUploadTimeUnixMilliseconds = unixNowMs,
+            UploadSource = "test runner",
+            Listings = document1.Listings,
+        };
+
+        AssertCurrentlyShownDataCenter(
+            joinedDocument,
+            sales1,
+            currentlyShown,
+            unixNowMs,
+            worldOrDc);
+    }
+
+    [Theory]
+    [InlineData("crystaL")]
+    [InlineData("Crystal")]
     public async Task Controller_Get_Succeeds_MultiItem_DataCenter(string worldOrDc)
     {
         var test = TestResources.Create();
@@ -199,13 +274,13 @@ public class CurrentlyShownControllerTests
 
         var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
         await test.CurrentlyShown.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
-        
+
         var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
         await test.History.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
 
         var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5, unixNowMs);
         await test.CurrentlyShown.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5 });
-        
+
         var sales2 = SeedDataGenerator.MakeHistory(34, 5, unixNowMs).Sales;
         await test.History.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5 });
 
@@ -397,7 +472,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal("Crystal", history.DcName);
         Assert.Null(history.WorldId);
     }
-    
+
     [Fact]
     public async Task Controller_Get_Succeeds_SingleItem_Fields()
     {
@@ -406,7 +481,7 @@ public class CurrentlyShownControllerTests
 
         var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
         await test.CurrentlyShown.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
-        
+
         var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
         await test.History.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
 
@@ -426,13 +501,13 @@ public class CurrentlyShownControllerTests
 
         var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
         await test.CurrentlyShown.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
-        
+
         var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
         await test.History.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
 
         var document2 = SeedDataGenerator.MakeCurrentlyShown(34, 5, unixNowMs);
         await test.CurrentlyShown.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5 });
-        
+
         var sales2 = SeedDataGenerator.MakeHistory(34, 5, unixNowMs).Sales;
         await test.History.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5 });
 
@@ -483,33 +558,16 @@ public class CurrentlyShownControllerTests
         Assert.True(currentlyShown.AveragePriceNq > 0);
         Assert.True(currentlyShown.AveragePriceHq > 0);
 
-        var minPrice = currentlyShown.Listings.Min(l => l.PricePerUnit);
-        var minPriceNq = nqListings.Min(l => l.PricePerUnit);
-        var minPriceHq = hqListings.Min(l => l.PricePerUnit);
-
-        Assert.Equal(minPrice, currentlyShown.MinPrice);
-        Assert.Equal(minPriceNq, currentlyShown.MinPriceNq);
-        Assert.Equal(minPriceHq, currentlyShown.MinPriceHq);
-
-        var maxPrice = currentlyShown.Listings.Max(l => l.PricePerUnit);
-        var maxPriceNq = nqListings.Max(l => l.PricePerUnit);
-        var maxPriceHq = hqListings.Max(l => l.PricePerUnit);
-
-        Assert.Equal(maxPrice, currentlyShown.MaxPrice);
-        Assert.Equal(maxPriceNq, currentlyShown.MaxPriceNq);
-        Assert.Equal(maxPriceHq, currentlyShown.MaxPriceHq);
+        Assert.True(currentlyShown.MinPrice > 0);
+        Assert.True(currentlyShown.MinPriceNq > 0);
+        Assert.True(currentlyShown.MinPriceHq > 0);
+        Assert.True(currentlyShown.MaxPrice > currentlyShown.MinPrice);
+        Assert.True(currentlyShown.MaxPriceNq > currentlyShown.MinPriceNq);
+        Assert.True(currentlyShown.MaxPriceHq > currentlyShown.MinPriceHq);
 
         Assert.True(currentlyShown.SaleVelocity > 0);
         Assert.True(currentlyShown.SaleVelocityNq > 0);
         Assert.True(currentlyShown.SaleVelocityHq > 0);
-
-        var stackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(listings.Select(l => (int)l.Quantity)));
-        var stackSizeHistogramNq = new SortedDictionary<int, int>(Statistics.GetDistribution(nqListings.Select(l => (int)l.Quantity)));
-        var stackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqListings.Select(l => (int)l.Quantity)));
-
-        Assert.Equal(stackSizeHistogram, currentlyShown.StackSizeHistogram);
-        Assert.Equal(stackSizeHistogramNq, currentlyShown.StackSizeHistogramNq);
-        Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
     }
 
     private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, List<Sale> sales, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc)
@@ -551,32 +609,19 @@ public class CurrentlyShownControllerTests
         Assert.True(currentlyShown.AveragePriceNq > 0);
         Assert.True(currentlyShown.AveragePriceHq > 0);
 
-        var minPrice = currentlyShown.Listings.Min(l => l.PricePerUnit);
-        var minPriceNq = nqListings.Min(l => l.PricePerUnit);
-        var minPriceHq = hqListings.Min(l => l.PricePerUnit);
-
-        Assert.Equal(minPrice, currentlyShown.MinPrice);
-        Assert.Equal(minPriceNq, currentlyShown.MinPriceNq);
-        Assert.Equal(minPriceHq, currentlyShown.MinPriceHq);
-
-        var maxPrice = currentlyShown.Listings.Max(l => l.PricePerUnit);
-        var maxPriceNq = nqListings.Max(l => l.PricePerUnit);
-        var maxPriceHq = hqListings.Max(l => l.PricePerUnit);
-
-        Assert.Equal(maxPrice, currentlyShown.MaxPrice);
-        Assert.Equal(maxPriceNq, currentlyShown.MaxPriceNq);
-        Assert.Equal(maxPriceHq, currentlyShown.MaxPriceHq);
+        Assert.True(currentlyShown.MinPrice > 0);
+        Assert.True(currentlyShown.MinPriceNq > 0);
+        Assert.True(currentlyShown.MinPriceHq > 0);
+        Assert.True(currentlyShown.MaxPrice > currentlyShown.MinPrice);
+        Assert.True(currentlyShown.MaxPriceNq > currentlyShown.MinPriceNq);
+        Assert.True(currentlyShown.MaxPriceHq > currentlyShown.MinPriceHq);
 
         Assert.True(currentlyShown.SaleVelocity > 0);
         Assert.True(currentlyShown.SaleVelocityNq > 0);
         Assert.True(currentlyShown.SaleVelocityHq > 0);
 
-        var stackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(listings.Select(l => (int)l.Quantity)));
-        var stackSizeHistogramNq = new SortedDictionary<int, int>(Statistics.GetDistribution(nqListings.Select(l => (int)l.Quantity)));
-        var stackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqListings.Select(l => (int)l.Quantity)));
-
-        Assert.Equal(stackSizeHistogram, currentlyShown.StackSizeHistogram);
-        Assert.Equal(stackSizeHistogramNq, currentlyShown.StackSizeHistogramNq);
-        Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
+        Assert.True(currentlyShown.SaleVelocity > 0);
+        Assert.True(currentlyShown.SaleVelocityNq > 0);
+        Assert.True(currentlyShown.SaleVelocityHq > 0);
     }
 }

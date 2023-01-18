@@ -345,6 +345,9 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
         var worldIds = worlds.ToList();
         var itemIds = items.ToList();
+        var worldItemPairs = worldIds.SelectMany(worldId =>
+                itemIds.Select(itemId => new WorldItemPair(worldId, itemId)))
+            .ToList();
 
         var csTask = CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = worldIds, ItemIds = itemIds },
             cancellationToken);
@@ -353,21 +356,26 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         await Task.WhenAll(csTask, hTask);
 
         var cs = await csTask;
+        var csDict = cs.ToDictionary(o => new WorldItemPair(o.WorldId, o.ItemId));
         var history = await hTask;
         var historyDict = history.ToDictionary(o => new WorldItemPair(o.WorldId, o.ItemId));
 
-        return cs.Select(c => BuildPartialView(c,
-            historyDict.TryGetValue(new WorldItemPair(c.WorldId, c.ItemId), out var h) ? h : new History()));
+        return worldItemPairs
+            .Select(wi => BuildPartialView(
+                csDict.TryGetValue(new WorldItemPair(wi.WorldId, wi.ItemId), out var c) ? c : new CurrentlyShown(),
+                historyDict.TryGetValue(new WorldItemPair(wi.WorldId, wi.ItemId), out var h) ? h : new History()));
     }
 
     private static CurrentlyShownView BuildPartialView(CurrentlyShown currentlyShown, History history)
     {
+        var worldId = currentlyShown.WorldId == default ? history.WorldId : currentlyShown.WorldId;
+        var itemId = currentlyShown.ItemId == default ? history.ItemId : currentlyShown.ItemId;
         var lastUploadTime = Math.Max(currentlyShown.LastUploadTimeUnixMilliseconds,
             Convert.ToInt64(history.LastUploadTimeUnixMilliseconds));
         return new CurrentlyShownView
         {
-            WorldId = currentlyShown.WorldId,
-            ItemId = currentlyShown.ItemId,
+            WorldId = worldId,
+            ItemId = itemId,
             LastUploadTimeUnixMilliseconds = lastUploadTime,
             Listings = (currentlyShown.Listings ?? Enumerable.Empty<Listing>())
                 .Select(Util.ListingToView)

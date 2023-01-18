@@ -55,7 +55,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         var lastUpdated = await EnsureLastUpdated(db, query.WorldId, query.ItemId);
         if (lastUpdated.IsNullOrEmpty || (long)lastUpdated == 0)
         {
-            return new CurrentlyShown();
+            return null;
         }
 
         // Attempt to retrieve listings from Postgres
@@ -100,17 +100,18 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
 
         // Get all update times from Redis
-        var lastUpdatedByItem = new Dictionary<(int, int), long>();
+        var lastUpdatedByItem = new Dictionary<WorldItemPair, long>();
         var lastUpdatedTasks =
             await Task.WhenAll(worldItemTuples.Select(t => EnsureLastUpdated(db, t.worldId, t.itemId)));
         foreach (var ((worldId, itemId), lastUpdated) in worldItemTuples.Zip(lastUpdatedTasks))
         {
+            var key = new WorldItemPair(worldId, itemId);
             if (lastUpdated.IsNullOrEmpty)
             {
-                lastUpdatedByItem[(worldId, itemId)] = 0;
+                lastUpdatedByItem[key] = 0;
             }
 
-            lastUpdatedByItem[(worldId, itemId)] = (long)lastUpdated;
+            lastUpdatedByItem[key] = (long)lastUpdated;
         }
 
         // Attempt to retrieve listings from Postgres
@@ -128,30 +129,33 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             throw;
         }
 
-        return worldItemTuples.Select(t =>
-        {
-            var lastUpdated = lastUpdatedByItem[(t.worldId, t.itemId)];
-            if (lastUpdated == 0)
+        return worldItemTuples
+            .Select(t =>
             {
-                return new CurrentlyShown();
-            }
+                var key = new WorldItemPair(t.worldId, t.itemId);
 
-            var listingsKey = new WorldItemPair(t.worldId, t.itemId);
-            var listings = listingsByItem.TryGetValue(listingsKey, out var value) ? value : new List<Listing>();
+                var lastUpdated = lastUpdatedByItem[key];
+                if (lastUpdated == 0)
+                {
+                    return null;
+                }
 
-            var guess = listings.FirstOrDefault();
-            var guessUploadTime = guess == null ? 0 : new DateTimeOffset(guess.UpdatedAt).ToUnixTimeMilliseconds();
-            return new CurrentlyShown
-            {
-                WorldId = t.worldId,
-                ItemId = t.itemId,
-                LastUploadTimeUnixMilliseconds = Math.Max(guessUploadTime, lastUpdated),
-                UploadSource = guess?.Source ?? "",
-                // I don't remember why/if this needs to be a concrete type but I
-                // think this has a fast path internally anyways.
-                Listings = listings.ToList(),
-            };
-        });
+                var listings = listingsByItem[key];
+
+                var guess = listings.FirstOrDefault();
+                var guessUploadTime = guess == null ? 0 : new DateTimeOffset(guess.UpdatedAt).ToUnixTimeMilliseconds();
+                return new CurrentlyShown
+                {
+                    WorldId = t.worldId,
+                    ItemId = t.itemId,
+                    LastUploadTimeUnixMilliseconds = Math.Max(guessUploadTime, lastUpdated),
+                    UploadSource = guess?.Source ?? "",
+                    // I don't remember why/if this needs to be a concrete type but I
+                    // think this has a fast path internally anyways.
+                    Listings = listings.ToList(),
+                };
+            })
+            .Where(cs => cs is not null);
     }
 
     private static async Task<RedisValue> EnsureLastUpdated(IDatabaseAsync db, int worldId, int itemId)
