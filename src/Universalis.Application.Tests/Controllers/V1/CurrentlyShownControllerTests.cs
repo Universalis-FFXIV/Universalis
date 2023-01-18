@@ -192,6 +192,44 @@ public class CurrentlyShownControllerTests
     [Theory]
     [InlineData("crystaL")]
     [InlineData("Crystal")]
+    public async Task Controller_Get_Succeeds_SingleItem_DataCenter_When_CurrentlyShownStore_Fails(string worldOrDc)
+    {
+        var test = TestResources.Create();
+        var unixNowMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333, unixNowMs);
+        await test.CurrentlyShown.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+
+        var sales1 = SeedDataGenerator.MakeHistory(74, 5333, unixNowMs).Sales;
+        await test.History.InsertSales(sales1, new HistoryQuery { WorldId = 74, ItemId = 5333 });
+
+        var sales2 = SeedDataGenerator.MakeHistory(34, 5333, unixNowMs).Sales;
+        await test.History.InsertSales(sales2, new HistoryQuery { WorldId = 34, ItemId = 5333 });
+
+        var result = await test.Controller.Get("5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
+        var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
+
+        var joinedSales = sales1.Concat(sales2).ToList();
+        var joinedDocument = new CurrentlyShown
+        {
+            WorldId = 0,
+            ItemId = 5333,
+            LastUploadTimeUnixMilliseconds = unixNowMs,
+            UploadSource = "test runner",
+            Listings = document1.Listings,
+        };
+
+        AssertCurrentlyShownDataCenter(
+            joinedDocument,
+            joinedSales,
+            currentlyShown,
+            unixNowMs,
+            worldOrDc);
+    }
+
+    [Theory]
+    [InlineData("crystaL")]
+    [InlineData("Crystal")]
     public async Task Controller_Get_Succeeds_MultiItem_DataCenter(string worldOrDc)
     {
         var test = TestResources.Create();

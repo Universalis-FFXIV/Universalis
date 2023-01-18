@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.DependencyInjection;
+using System.Linq;
 using System.Threading.Tasks;
 using Universalis.DbAccess.MarketBoard;
-using Xunit;
-using System.Linq;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
+using Xunit;
 
 namespace Universalis.DbAccess.Tests.MarketBoard;
 
@@ -86,7 +86,7 @@ public class CurrentlyShownStoreTests : IClassFixture<DbFixture>
         }
 
         var results = await store.RetrieveMany(new CurrentlyShownManyQuery
-            { WorldIds = new[] { 74 }, ItemIds = itemIds });
+        { WorldIds = new[] { 74 }, ItemIds = itemIds });
         Assert.NotNull(results);
 
         foreach (var (itemId, result) in itemIds.Zip(results))
@@ -142,7 +142,7 @@ public class CurrentlyShownStoreTests : IClassFixture<DbFixture>
     {
         var store = _fixture.Services.GetRequiredService<ICurrentlyShownStore>();
         var results = await store.RetrieveMany(new CurrentlyShownManyQuery
-            { WorldIds = new[] { 74 }, ItemIds = Enumerable.Range(200, 10) });
+        { WorldIds = new[] { 74 }, ItemIds = Enumerable.Range(200, 10) });
         var resultsList = results.ToList();
         Assert.NotNull(resultsList);
         Assert.NotEmpty(resultsList);
@@ -155,7 +155,7 @@ public class CurrentlyShownStoreTests : IClassFixture<DbFixture>
             Assert.Empty(result.Listings);
         });
     }
-    
+
 #if DEBUG
     [Fact]
 #endif
@@ -163,9 +163,10 @@ public class CurrentlyShownStoreTests : IClassFixture<DbFixture>
     {
         var store = _fixture.Services.GetRequiredService<ICurrentlyShownStore>();
         var expectedCurrentlyShown = new Dictionary<int, CurrentlyShown>();
+        var expectedItemIds = Enumerable.Range(300, 5).ToList();
 
         // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var itemId in Enumerable.Range(300, 5))
+        foreach (var itemId in expectedItemIds)
         {
             var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(74, itemId);
             expectedCurrentlyShown[itemId] = currentlyShown;
@@ -173,21 +174,33 @@ public class CurrentlyShownStoreTests : IClassFixture<DbFixture>
         }
 
         // Fill the results for the empty ones
-        expectedCurrentlyShown[5] = new CurrentlyShown();
-        expectedCurrentlyShown[6] = new CurrentlyShown();
+        expectedCurrentlyShown[305] = new CurrentlyShown();
+        expectedCurrentlyShown[306] = new CurrentlyShown();
 
         var resultsItemIds = Enumerable.Range(300, 7).ToList();
-        var results = await store.RetrieveMany(new CurrentlyShownManyQuery
-            { WorldIds = new[] { 74 }, ItemIds = resultsItemIds });
+        var results = (await store.RetrieveMany(new CurrentlyShownManyQuery
+        { WorldIds = new[] { 74 }, ItemIds = resultsItemIds })).ToList();
         Assert.NotNull(results);
 
         foreach (var (itemId, result) in resultsItemIds.Zip(results))
         {
             Assert.NotNull(results);
-            Assert.Equal(expectedCurrentlyShown[itemId].WorldId, result.WorldId);
-            Assert.Equal(itemId, result.ItemId);
-            Assert.Equal(expectedCurrentlyShown[itemId].UploadSource, result.UploadSource);
-            Assert.All(expectedCurrentlyShown[itemId].Listings.OrderBy(l => l.PricePerUnit).Zip(result.Listings),
+
+            if (!expectedItemIds.Contains(itemId))
+            {
+                Assert.Equal(0, result.ItemId);
+                Assert.Equal(0, result.WorldId);
+                Assert.Equal("", result.UploadSource);
+                Assert.Empty(result.Listings);
+            }
+            else
+            {
+                Assert.Equal(itemId, result.ItemId);
+                Assert.Equal(expectedCurrentlyShown[itemId].WorldId, result.WorldId);
+                Assert.Equal(expectedCurrentlyShown[itemId].UploadSource, result.UploadSource);
+
+                Assert.NotEmpty(result.Listings);
+                Assert.All(expectedCurrentlyShown[itemId].Listings.OrderBy(l => l.PricePerUnit).Zip(result.Listings),
                 pair =>
                 {
                     var (expected, actual) = pair;
@@ -209,6 +222,7 @@ public class CurrentlyShownStoreTests : IClassFixture<DbFixture>
                     Assert.Equal(DateTimeKind.Utc, actual.UpdatedAt.Kind);
                     Assert.Equal(expected.Source, actual.Source);
                 });
+            }
         }
     }
 }
