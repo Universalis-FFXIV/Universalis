@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Universalis.Application.Common;
 using Universalis.Application.Views.V1;
 using Universalis.DataTransformations;
+using Universalis.DbAccess;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
@@ -53,12 +54,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             });
         }
 
-        var cached =
-            await Task.WhenAll(worldIds.Select(worldId => FetchData(worldId, itemId, cancellationToken)));
-        var data = cached
-            .Where(o => o != null)
-            .ToList();
-        var resolved = data.Count > 0;
+        var data = await FetchData(worldIds, new[] { itemId }, cancellationToken);
 
         var worlds = GameData.AvailableWorlds();
 
@@ -67,6 +63,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var nowSeconds = now / 1000;
+
         var (worldUploadTimes, currentlyShown) = data
             .Aggregate(
                 (EmptyWorldDictionary<Dictionary<int, long>, long>(worldIds),
@@ -120,6 +117,19 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                     return (aggWorldUploadTimes, aggData);
                 });
 
+        if (currentlyShown.LastUploadTimeUnixMilliseconds == 0)
+        {
+            return (false, new CurrentlyShownView
+            {
+                ItemId = itemId,
+                WorldId = worldDcRegion.IsWorld ? worldDcRegion.WorldId : null,
+                WorldName = worldDcRegion.IsWorld ? worldDcRegion.WorldName : null,
+                DcName = worldDcRegion.IsDc ? worldDcRegion.DcName : null,
+                RegionName = worldDcRegion.IsRegion ? worldDcRegion.RegionName : null,
+                SerializableProperties = BuildSerializableProperties(fields),
+            });
+        }
+        
         currentlyShown.Listings.Sort((a, b) => a.PricePerUnit - b.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
@@ -161,48 +171,45 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             SerializableProperties = BuildSerializableProperties(fields),
         };
 
-        return (resolved, view);
+        return (true, view);
     }
 
-    private async Task<CurrentlyShownView> FetchData(int worldId, int itemId,
+    private async Task<IEnumerable<CurrentlyShownView>> FetchData(IEnumerable<int> worlds, IEnumerable<int> items,
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.FetchData");
 
-        var csTask = CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId },
+        var worldIds = worlds.ToList();
+        var itemIds = items.ToList();
+
+        var csTask = CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = worldIds, ItemIds = itemIds },
             cancellationToken);
-        var hTask = History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 },
+        var hTask = History.RetrieveMany(new HistoryManyQuery { WorldIds = worldIds, ItemIds = itemIds, Count = 20 },
             cancellationToken);
         await Task.WhenAll(csTask, hTask);
 
-        var cd = await csTask;
-        if (cd == null)
-        {
-            return null;
-        }
+        var cs = await csTask;
+        var history = await hTask;
+        var historyDict = history.ToDictionary(o => new WorldItemPair(o.WorldId, o.ItemId));
 
-        var h = await hTask;
-        h ??= new History
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-            LastUploadTimeUnixMilliseconds = 0,
-            Sales = new List<Sale>(),
-        };
+        return cs.Select(c => BuildPartialView(c, historyDict[new WorldItemPair(c.WorldId, c.ItemId)]));
+    }
 
-        var lastUploadTime = Math.Max(cd.LastUploadTimeUnixMilliseconds,
-            Convert.ToInt64(h.LastUploadTimeUnixMilliseconds));
+    private static CurrentlyShownView BuildPartialView(CurrentlyShown currentlyShown, History history)
+    {
+        var lastUploadTime = Math.Max(currentlyShown.LastUploadTimeUnixMilliseconds,
+            Convert.ToInt64(history.LastUploadTimeUnixMilliseconds));
         return new CurrentlyShownView
         {
-            WorldId = worldId,
-            ItemId = itemId,
+            WorldId = currentlyShown.WorldId,
+            ItemId = currentlyShown.ItemId,
             LastUploadTimeUnixMilliseconds = lastUploadTime,
-            Listings = (cd.Listings ?? Enumerable.Empty<Listing>())
+            Listings = (currentlyShown.Listings ?? Enumerable.Empty<Listing>())
                 .Select(Util.ListingToView)
                 .Where(s => s.PricePerUnit > 0)
                 .Where(s => s.Quantity > 0)
                 .ToList(),
-            RecentHistory = (h.Sales ?? Enumerable.Empty<Sale>())
+            RecentHistory = (history.Sales ?? Enumerable.Empty<Sale>())
                 .Select(Util.SaleToView)
                 .Where(s => s.PricePerUnit > 0)
                 .Where(s => s.Quantity > 0)
