@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -115,7 +116,8 @@ public class ListingStore : IListingStore
 
         try
         {
-            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            await using var reader =
+                await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
             var listings = new List<Listing>();
             while (await reader.ReadAsync(cancellationToken))
@@ -193,7 +195,8 @@ public class ListingStore : IListingStore
 
         try
         {
-            await using var reader = await batch.ExecuteReaderAsync(cancellationToken);
+            await using var reader =
+                await batch.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
             var listings = new Dictionary<WorldItemPair, IList<Listing>>();
             var batchesRead = 0;
