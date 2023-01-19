@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,8 +61,8 @@ public class MarketItemStore : IMarketItemStore
 
         try
         {
-            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            if (!await reader.ReadAsync(cancellationToken))
+            var lastUploadTime = (DateTime?)await command.ExecuteScalarAsync(cancellationToken);
+            if (!lastUploadTime.HasValue)
             {
                 return null;
             }
@@ -70,7 +71,7 @@ public class MarketItemStore : IMarketItemStore
             {
                 ItemId = query.ItemId,
                 WorldId = query.WorldId,
-                LastUploadTime = reader.GetDateTime(0),
+                LastUploadTime = lastUploadTime.Value,
             };
         }
         catch (Exception e)
@@ -109,7 +110,8 @@ public class MarketItemStore : IMarketItemStore
 
         try
         {
-            await using var reader = await batch.ExecuteReaderAsync(cancellationToken);
+            await using var reader =
+                await batch.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
             var marketItemRecords = new List<MarketItem>();
             var batchesRead = 0;
