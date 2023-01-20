@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Universalis.GameData\Universalis.GameData.csproj" />
+    <ProjectReference Include="..\Universalis.Tests\Universalis.Tests.csproj" />
   </ItemGroup>
 
 </Project>

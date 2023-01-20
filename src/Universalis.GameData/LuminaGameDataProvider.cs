@@ -22,6 +22,9 @@ internal class LuminaGameDataProvider : IGameDataProvider
 
     public LuminaGameDataProvider(string sqpack)
     {
+        // All data is loaded immediately, and then the Lumina instance is
+        // garbage-collected. Lumina is a bit of a memory hog and we only
+        // need to load the data once.
         var lumina = new Lumina.GameData(sqpack, new LuminaOptions { PanicOnSheetChecksumMismatch = false });
 
         _availableWorlds = LoadAvailableWorlds(lumina);

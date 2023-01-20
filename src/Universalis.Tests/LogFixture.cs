@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace Universalis.Application.Tests;
+namespace Universalis.Tests;
 
-internal class LogFixture<T> : ILogger<T>
+public class LogFixture<T> : ILogger<T>
 {
     private readonly IList<LogEvent> _events = new List<LogEvent>();
 
