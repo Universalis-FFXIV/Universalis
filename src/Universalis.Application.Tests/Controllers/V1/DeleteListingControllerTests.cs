@@ -15,6 +15,7 @@ using Universalis.DbAccess.Uploads;
 using Universalis.Entities.AccessControl;
 using Universalis.Entities.Uploads;
 using Universalis.GameData;
+using Universalis.Tests;
 using Xunit;
 
 namespace Universalis.Application.Tests.Controllers.V1;

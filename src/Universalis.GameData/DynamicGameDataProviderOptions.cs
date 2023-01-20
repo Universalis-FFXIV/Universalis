@@ -2,7 +2,7 @@
 
 namespace Universalis.GameData;
 
-public class RobustGameDataProviderParams
+public class DynamicGameDataProviderOptions
 {
     public HttpClient Http { get; set; }
 

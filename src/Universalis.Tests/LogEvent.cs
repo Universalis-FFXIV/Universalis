@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 
-namespace Universalis.Application.Tests;
+namespace Universalis.Tests;
 
-internal class LogEvent
+public class LogEvent
 {
     public LogLevel Level { get; set; }
 
