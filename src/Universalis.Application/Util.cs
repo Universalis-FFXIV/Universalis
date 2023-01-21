@@ -8,21 +8,24 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Microsoft.IO;
 using Universalis.Application.Views.V1;
 using Universalis.Entities.MarketBoard;
 
 namespace Universalis.Application;
 
-public static class Util
+public static partial class Util
 {
-    private static readonly Regex HtmlTags = new(@"<[\s\S]*?>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex HtmlTags = HtmlTagsRegex();
 
     // TODO: Implement tests to determine if this can be replaced with [^\p{L}\p{M}\p{N}'-]
     private static readonly Regex UnsafeCharacters =
-        new(@"[^a-zA-Z0-9'\- ·⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]", RegexOptions.Compiled);
+        UnsafeCharactersRegex();
 
-    private static readonly RecyclableMemoryStreamManager MemoryStreamPool = new();
+    [GeneratedRegex("<[\\s\\S]*?>", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
+    private static partial Regex HtmlTagsRegex();
+
+    [GeneratedRegex("[^a-zA-Z0-9'\\- ·⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]", RegexOptions.Compiled)]
+    private static partial Regex UnsafeCharactersRegex();
 
     public static SaleView SaleToView(Sale s)
     {
@@ -95,9 +98,9 @@ public static class Util
     /// <returns>A hash representing the input string.</returns>
     public static string Hash(HashAlgorithm hasher, string input)
     {
-        Span<byte> hash = stackalloc byte[hasher.HashSize/8];
+        Span<byte> hash = stackalloc byte[hasher.HashSize / 8];
         ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(input ?? "");
-        if (hasher.TryComputeHash(bytes, hash, out var _written)) // Since we stackalloc the hash buffer, written is not needed
+        if (hasher.TryComputeHash(bytes, hash, out _)) // Since we stackalloc the hash buffer, written is not needed
             return Convert.ToHexString(hash).ToLowerInvariant(); // https://github.com/dotnet/runtime/issues/60393
         throw new InvalidOperationException("Destination buffer was too small, this should never occur");
     }
@@ -185,6 +188,7 @@ public static class Util
 
     internal static readonly AssemblyName Assembly
         = typeof(Util).Assembly.GetName();
+
     internal static readonly ActivitySource ActivitySource
         = new(Assembly.Name ?? "Universalis.Application", Assembly.Version?.ToString() ?? "0.0");
 }
