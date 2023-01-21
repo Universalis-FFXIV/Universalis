@@ -34,7 +34,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         var lastUploadTime = data.LastUploadTimeUnixMilliseconds;
         var listings = data.Listings;
 
-        await _listingStore.UpsertLive(listings.Select(l =>
+        await _listingStore.ReplaceLive(listings.Select(l =>
         {
             l.ItemId = itemId;
             l.WorldId = worldId;

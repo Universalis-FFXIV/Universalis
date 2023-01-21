@@ -23,21 +23,21 @@ public class ListingStoreTests
 #if DEBUG
     [Fact]
 #endif
-    public async Task UpsertLive_Works()
+    public async Task ReplaceLive_Works()
     {
         var store = _fixture.Services.GetRequiredService<IListingStore>();
         var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, 2);
-        await store.UpsertLive(currentlyShown.Listings);
+        await store.ReplaceLive(currentlyShown.Listings);
     }
 
 #if DEBUG
     [Fact]
 #endif
-    public async Task UpsertLiveRetrieveLive_Works()
+    public async Task ReplaceLiveRetrieveLive_Works()
     {
         var store = _fixture.Services.GetRequiredService<IListingStore>();
         var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, 3);
-        await store.UpsertLive(currentlyShown.Listings);
+        await store.ReplaceLive(currentlyShown.Listings);
         var results = await store.RetrieveLive(new ListingQuery { ItemId = 3, WorldId = 93 });
 
         Assert.NotNull(results);
@@ -67,13 +67,13 @@ public class ListingStoreTests
 #if DEBUG
     [Fact]
 #endif
-    public async Task UpsertLiveRetrieveLiveMultiple_Works()
+    public async Task ReplaceLiveRetrieveLiveMultiple_Works()
     {
         var store = _fixture.Services.GetRequiredService<IListingStore>();
         for (var i = 0; i < 10; i++)
         {
             var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, 5);
-            await store.UpsertLive(currentlyShown.Listings);
+            await store.ReplaceLive(currentlyShown.Listings);
             var results = await store.RetrieveLive(new ListingQuery { ItemId = 5, WorldId = 93 });
 
             Assert.NotNull(results);
@@ -106,14 +106,14 @@ public class ListingStoreTests
 #if DEBUG
     [Fact]
 #endif
-    public async Task UpsertLiveRetrieveManyLive_Works()
+    public async Task ReplaceLiveRetrieveManyLive_Works()
     {
         var store = _fixture.Services.GetRequiredService<IListingStore>();
         var expectedListings = new Dictionary<int, IList<Listing>>();
         for (var i = 100; i < 105; i++)
         {
             var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, i);
-            await store.UpsertLive(currentlyShown.Listings);
+            await store.ReplaceLive(currentlyShown.Listings);
             expectedListings[i] = currentlyShown.Listings;
         }
 
