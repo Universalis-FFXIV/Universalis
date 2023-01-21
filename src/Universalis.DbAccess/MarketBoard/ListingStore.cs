@@ -359,7 +359,7 @@ public class ListingStore : IListingStore
                 $"No consumer with ID \"{id}\" was enlisted with the batch (members={_members}, running={_running}, disposed={_disposed}, task_status={_cs.Task.Status})");
         }
 
-        private async Task ExecuteCommand()
+        private async ValueTask ExecuteCommand()
         {
             if (_disposed || 1 == Interlocked.Exchange(ref _lock, 1))
             {
