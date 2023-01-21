@@ -10,7 +10,8 @@ using Xunit;
 
 namespace Universalis.DbAccess.Tests.MarketBoard;
 
-public class ListingStoreTests : IClassFixture<DbFixture>
+[Collection("Database collection")]
+public class ListingStoreTests
 {
     private readonly DbFixture _fixture;
 

@@ -6,7 +6,8 @@ using Universalis.Entities.AccessControl;
 
 namespace Universalis.DbAccess.Tests.AccessControl;
 
-public class ApiKeyStoreTests : IClassFixture<DbFixture>
+[Collection("Database collection")]
+public class ApiKeyStoreTests
 {
     private readonly DbFixture _fixture;
 

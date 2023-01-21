@@ -13,27 +13,38 @@ public static class SeedDataGenerator
     public static CurrentlyShown MakeCurrentlyShown(int worldId, int itemId, long? lastUploadTime = null, int maxStackSize = 999)
     {
         var rand = new Random();
+        var usedPrices = new List<int>();
         var t = lastUploadTime ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var listings = Enumerable.Range(0, 100)
-            .Select(_ => new Listing
+            .Select(_ =>
             {
-                ListingId = rand.NextInt64().ToString(),
-                Hq = rand.NextDouble() > 0.5,
-                OnMannequin = rand.NextDouble() > 0.5,
-                Materia = new List<Materia>(),
-                PricePerUnit = rand.Next(100, 60000),
-                Quantity = rand.Next(1, maxStackSize),
-                DyeId = (byte)rand.Next(0, 255),
-                CreatorId = rand.NextInt64().ToString(),
-                CreatorName = "Bingus Bongus",
-                LastReviewTime = DateTime.UtcNow - TimeSpan.FromSeconds(rand.Next(0, 360000)),
-                RetainerId = rand.NextInt64().ToString(),
-                RetainerName = "xpotato",
-                RetainerCityId = 0xA,
-                SellerId = rand.NextInt64().ToString(),
-                ItemId = itemId,
-                WorldId = worldId,
-                Source = "test runner",
+                var price = rand.Next(100, 60000);
+                while (usedPrices.Contains(price))
+                {
+                    price += 1;
+                }
+                usedPrices.Add(price);
+
+                return new Listing
+                {
+                    ListingId = rand.NextInt64().ToString(),
+                    Hq = rand.NextDouble() > 0.5,
+                    OnMannequin = rand.NextDouble() > 0.5,
+                    Materia = new List<Materia>(),
+                    PricePerUnit = price,
+                    Quantity = rand.Next(1, maxStackSize),
+                    DyeId = (byte)rand.Next(0, 255),
+                    CreatorId = rand.NextInt64().ToString(),
+                    CreatorName = "Bingus Bongus",
+                    LastReviewTime = DateTime.UtcNow - TimeSpan.FromSeconds(rand.Next(0, 360000)),
+                    RetainerId = rand.NextInt64().ToString(),
+                    RetainerName = "xpotato",
+                    RetainerCityId = 0xA,
+                    SellerId = rand.NextInt64().ToString(),
+                    ItemId = itemId,
+                    WorldId = worldId,
+                    Source = "test runner",
+                };
             })
             .ToList();
         return new CurrentlyShown
