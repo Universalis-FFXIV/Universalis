@@ -339,16 +339,18 @@ public class ListingStore : IListingStore
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
+                    // If this task is cancelled and it owns the command execution, too bad
                     await ExecuteCommand();
                 }
-
-                cancellationToken.ThrowIfCancellationRequested();
             }, cancellationToken));
 
             if (_results.TryGetValue(id, out var result))
             {
                 return result;
             }
+
+            // Optimistically throw only if there's no result yet
+            cancellationToken.ThrowIfCancellationRequested();
 
             throw new InvalidOperationException(
                 $"No consumer with ID \"{id}\" was enlisted with the batch (members={_members}, running={_running}, disposed={_disposed}, task_status={_cs.Task.Status})");
