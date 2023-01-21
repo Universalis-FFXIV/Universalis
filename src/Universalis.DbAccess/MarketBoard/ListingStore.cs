@@ -343,6 +343,7 @@ public class ListingStore : IListingStore
                 {
                     // If this task is cancelled and it owns the command execution, too bad
                     await ExecuteCommand();
+                    await Task.Yield();
                 }
             }, cancellationToken));
 
