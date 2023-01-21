@@ -193,7 +193,7 @@ public class SaleStoreTests : IClassFixture<DbFixture>
                 OnMannequin = false,
                 SaleTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
                 UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
-            }
+            },
         };
 
         await store.InsertMany(sales);

@@ -10,7 +10,7 @@ namespace Universalis.Application.Tests.Uploads.Behaviors;
 public class PlayerContentUploadBehaviorTests
 {
     [Fact]
-    public async Task Behavior_DoesNotRun_WithoutContentIdAndName()
+    public void Behavior_DoesNotRun_WithoutContentIdAndName()
     {
         var dbAccess = new MockCharacterDbAccess();
         var behavior = new PlayerContentUploadBehavior(dbAccess);

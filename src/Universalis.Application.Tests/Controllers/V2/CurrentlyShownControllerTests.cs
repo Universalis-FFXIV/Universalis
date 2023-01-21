@@ -410,9 +410,9 @@ public class CurrentlyShownControllerTests
         Assert.NotNull(currentlyShown.Listings);
         Assert.NotNull(currentlyShown.RecentHistory);
 
-        currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
+        currentlyShown.Listings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
-        document.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
+        document.Listings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
         sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
         var listings = document.Listings.Select(l =>
@@ -458,9 +458,9 @@ public class CurrentlyShownControllerTests
         Assert.True(currentlyShown.SaleVelocityNq > 0);
         Assert.True(currentlyShown.SaleVelocityHq > 0);
 
-        var stackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(listings.Select(l => (int)l.Quantity)));
-        var stackSizeHistogramNq = new SortedDictionary<int, int>(Statistics.GetDistribution(nqListings.Select(l => (int)l.Quantity)));
-        var stackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqListings.Select(l => (int)l.Quantity)));
+        var stackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(listings.Select(l => l.Quantity)));
+        var stackSizeHistogramNq = new SortedDictionary<int, int>(Statistics.GetDistribution(nqListings.Select(l => l.Quantity)));
+        var stackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqListings.Select(l => l.Quantity)));
 
         Assert.Equal(stackSizeHistogram, currentlyShown.StackSizeHistogram);
         Assert.Equal(stackSizeHistogramNq, currentlyShown.StackSizeHistogramNq);
@@ -478,9 +478,9 @@ public class CurrentlyShownControllerTests
         Assert.NotNull(currentlyShown.Listings);
         Assert.NotNull(currentlyShown.RecentHistory);
 
-        currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
+        currentlyShown.Listings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
-        anyWorldDocument.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
+        anyWorldDocument.Listings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
         sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
         var listings = anyWorldDocument.Listings.Select(l =>
@@ -526,9 +526,9 @@ public class CurrentlyShownControllerTests
         Assert.True(currentlyShown.SaleVelocityNq > 0);
         Assert.True(currentlyShown.SaleVelocityHq > 0);
 
-        var stackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(listings.Select(l => (int)l.Quantity)));
-        var stackSizeHistogramNq = new SortedDictionary<int, int>(Statistics.GetDistribution(nqListings.Select(l => (int)l.Quantity)));
-        var stackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqListings.Select(l => (int)l.Quantity)));
+        var stackSizeHistogram = new SortedDictionary<int, int>(Statistics.GetDistribution(listings.Select(l => l.Quantity)));
+        var stackSizeHistogramNq = new SortedDictionary<int, int>(Statistics.GetDistribution(nqListings.Select(l => l.Quantity)));
+        var stackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqListings.Select(l => l.Quantity)));
 
         Assert.Equal(stackSizeHistogram, currentlyShown.StackSizeHistogram);
         Assert.Equal(stackSizeHistogramNq, currentlyShown.StackSizeHistogramNq);

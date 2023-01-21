@@ -55,7 +55,7 @@ public class CurrentlyShownDbAccessTests
         var store = new MockCurrentlyShownStore();
         ICurrentlyShownDbAccess db = new CurrentlyShownDbAccess(store);
 
-        var output = await db.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = new[] { 74 }, ItemIds = new int[] { 5333 } });
+        var output = await db.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = new[] { 74 }, ItemIds = new[] { 5333 } });
         Assert.Empty(output);
     }
 

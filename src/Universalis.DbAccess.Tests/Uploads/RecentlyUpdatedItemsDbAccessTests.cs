@@ -89,7 +89,7 @@ public class RecentlyUpdatedItemsDbAccessTests
         IRecentlyUpdatedItemsDbAccess db = new RecentlyUpdatedItemsDbAccess(new ScoreBoardStoreMock());
         for (var i = 0; i < RecentlyUpdatedItemsDbAccess.MaxItems * 2; i++)
         {
-            await db.Push((int)i);
+            await db.Push(i);
         }
 
         var output = await db.Retrieve();

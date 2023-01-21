@@ -168,7 +168,7 @@ public class MostRecentlyUpdatedDbAccessTests
             await db.Push(74, new WorldItemUpload
             {
                 WorldId = 74,
-                ItemId = (int)i,
+                ItemId = i,
                 LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             });
         }
