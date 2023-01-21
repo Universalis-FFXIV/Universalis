@@ -229,7 +229,7 @@ public class ListingStore : IListingStore
     /// </summary>
     public class MultiplexedRetrieveManyLiveBatch : IAsyncDisposable
     {
-        private const int BatchWindowMilliseconds = 20;
+        private const int BatchWindowMilliseconds = 5;
 
         private readonly ConcurrentQueue<MultiplexedRetrieveManyLiveCallState> _callState;
         private readonly DateTimeOffset _deadline;
