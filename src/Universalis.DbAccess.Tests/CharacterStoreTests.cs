@@ -5,7 +5,8 @@ using Xunit;
 
 namespace Universalis.DbAccess.Tests;
 
-public class CharacterStoreTests : IClassFixture<DbFixture>
+[Collection("Database collection")]
+public class CharacterStoreTests
 {
     private readonly DbFixture _fixture;
 
