@@ -229,6 +229,8 @@ public class ListingStore : IListingStore
     /// </summary>
     public class MultiplexedRetrieveManyLiveBatch : IAsyncDisposable
     {
+        private const int BatchWindowMilliseconds = 20;
+
         private readonly ConcurrentQueue<MultiplexedRetrieveManyLiveCallState> _callState;
         private readonly DateTimeOffset _deadline;
         private readonly TaskCompletionSource<object> _cs;
@@ -253,7 +255,7 @@ public class ListingStore : IListingStore
 
             _cs = new TaskCompletionSource<object>();
 
-            _deadline = DateTimeOffset.UtcNow + TimeSpan.FromMilliseconds(50);
+            _deadline = DateTimeOffset.UtcNow + TimeSpan.FromMilliseconds(BatchWindowMilliseconds);
             _callState = new ConcurrentQueue<MultiplexedRetrieveManyLiveCallState>();
             _results = new ConcurrentDictionary<Guid, RetrieveManyLiveResult>();
         }
