@@ -8,7 +8,7 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public interface IListingStore
 {
-    Task UpsertLive(IEnumerable<Listing> listings, CancellationToken cancellationToken = default);
+    Task ReplaceLive(IEnumerable<Listing> listings, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<Listing>> RetrieveLive(ListingQuery query, CancellationToken cancellationToken = default);
     
