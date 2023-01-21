@@ -5,7 +5,8 @@ using Xunit;
 
 namespace Universalis.DbAccess.Tests.Uploads;
 
-public class DailyUploadCountStoreTests : IClassFixture<DbFixture>
+[Collection("Database collection")]
+public class DailyUploadCountStoreTests
 {
     private readonly DbFixture _fixture;
 

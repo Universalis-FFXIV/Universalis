@@ -9,7 +9,8 @@ using System.Collections.Generic;
 
 namespace Universalis.DbAccess.Tests.MarketBoard;
 
-public class SaleStoreTests : IClassFixture<DbFixture>
+[Collection("Database collection")]
+public class SaleStoreTests
 {
     private readonly DbFixture _fixture;
 

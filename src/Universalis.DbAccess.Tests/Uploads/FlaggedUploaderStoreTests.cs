@@ -6,7 +6,8 @@ using Universalis.Entities.Uploads;
 
 namespace Universalis.DbAccess.Tests.Uploads;
 
-public class FlaggedUploaderStoreTests : IClassFixture<DbFixture>
+[Collection("Database collection")]
+public class FlaggedUploaderStoreTests
 {
     private readonly DbFixture _fixture;
 
