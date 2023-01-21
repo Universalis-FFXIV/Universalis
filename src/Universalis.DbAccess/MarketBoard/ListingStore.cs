@@ -34,13 +34,15 @@ public class ListingStore : IListingStore
         // Get the currently timestamp for the batch
         var uploadedAt = DateTimeOffset.Now;
 
-        // Npgsql batches have an implicit transaction around them
-        // https://www.npgsql.org/doc/basic-usage.html#batching
-        await using var batch = new NpgsqlBatch(connection);
-
-        var groupedListings = listings.GroupBy(sale => Tuple.Create(sale.ItemId, sale.WorldId));
+        // Listings are grouped for better exceptions if a batch fails; exceptions can be
+        // filtered by world and item.
+        var groupedListings = listings.GroupBy(l => new WorldItemPair(l.WorldId, l.ItemId));
         foreach (var listingGroup in groupedListings)
         {
+            // Npgsql batches have an implicit transaction around them
+            // https://www.npgsql.org/doc/basic-usage.html#batching
+            await using var batch = new NpgsqlBatch(connection);
+
             foreach (var listing in listingGroup)
             {
                 // If a listing is uploaded multiple times in separate uploads, it
@@ -85,8 +87,8 @@ public class ListingStore : IListingStore
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to insert listings (world={}, item={})", listingGroup.Key.Item2,
-                    listingGroup.Key.Item1);
+                _logger.LogError(e, "Failed to insert listings (world={}, item={})", listingGroup.Key.WorldId,
+                    listingGroup.Key.ItemId);
                 throw;
             }
         }
