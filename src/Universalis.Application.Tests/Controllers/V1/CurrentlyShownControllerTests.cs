@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -9,7 +8,6 @@ using Universalis.Application.Controllers.V1;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Views.V1;
-using Universalis.DataTransformations;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Tests;
@@ -62,7 +60,7 @@ public class CurrentlyShownControllerTests
         var result = await test.Controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
-        AssertCurrentlyShownValidWorld(document, sales, currentlyShown, test.GameData);
+        AssertCurrentlyShownValidWorld(document, currentlyShown, test.GameData);
     }
 
     [Theory]
@@ -136,6 +134,7 @@ public class CurrentlyShownControllerTests
         var result = await test.Controller.Get("5, 5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(currentlyShown);
         Assert.Empty(currentlyShown.UnresolvedItemIds);
         Assert.Equal(2, currentlyShown.ItemIds.Count);
         Assert.Equal(2, currentlyShown.Items.Count);
@@ -143,8 +142,8 @@ public class CurrentlyShownControllerTests
         Assert.Equal(test.GameData.AvailableWorlds()[document1.WorldId], currentlyShown.WorldName);
         Assert.Null(currentlyShown.DcName);
 
-        AssertCurrentlyShownValidWorld(document1, sales1, currentlyShown.Items.First(item => item.ItemId == document1.ItemId), test.GameData);
-        AssertCurrentlyShownValidWorld(document2, sales2, currentlyShown.Items.First(item => item.ItemId == document2.ItemId), test.GameData);
+        AssertCurrentlyShownValidWorld(document1, currentlyShown.Items.First(item => item.ItemId == document1.ItemId), test.GameData);
+        AssertCurrentlyShownValidWorld(document2, currentlyShown.Items.First(item => item.ItemId == document2.ItemId), test.GameData);
     }
 
     [Theory]
@@ -171,7 +170,6 @@ public class CurrentlyShownControllerTests
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
         var joinedListings = document1.Listings.Concat(document2.Listings).ToList();
-        var joinedSales = sales1.Concat(sales2).ToList();
         var joinedDocument = new CurrentlyShown
         {
             WorldId = 0,
@@ -183,7 +181,6 @@ public class CurrentlyShownControllerTests
 
         AssertCurrentlyShownDataCenter(
             joinedDocument,
-            joinedSales,
             currentlyShown,
             unixNowMs,
             worldOrDc);
@@ -209,7 +206,6 @@ public class CurrentlyShownControllerTests
         var result = await test.Controller.Get("5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
-        var joinedSales = sales1.Concat(sales2).ToList();
         var joinedDocument = new CurrentlyShown
         {
             WorldId = 0,
@@ -221,7 +217,6 @@ public class CurrentlyShownControllerTests
 
         AssertCurrentlyShownDataCenter(
             joinedDocument,
-            joinedSales,
             currentlyShown,
             unixNowMs,
             worldOrDc);
@@ -258,7 +253,6 @@ public class CurrentlyShownControllerTests
 
         AssertCurrentlyShownDataCenter(
             joinedDocument,
-            sales1,
             currentlyShown,
             unixNowMs,
             worldOrDc);
@@ -287,6 +281,7 @@ public class CurrentlyShownControllerTests
         var result = await test.Controller.Get("5,5333", worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(currentlyShown);
         Assert.Contains(5, currentlyShown.ItemIds);
         Assert.Contains(5333, currentlyShown.ItemIds);
         Assert.Empty(currentlyShown.UnresolvedItemIds);
@@ -297,13 +292,11 @@ public class CurrentlyShownControllerTests
 
         AssertCurrentlyShownDataCenter(
             document1,
-            sales1,
             currentlyShown.Items.First(item => item.ItemId == document1.ItemId),
             unixNowMs,
             worldOrDc);
         AssertCurrentlyShownDataCenter(
             document2,
-            sales2,
             currentlyShown.Items.First(item => item.ItemId == document2.ItemId),
             unixNowMs,
             worldOrDc);
@@ -322,6 +315,7 @@ public class CurrentlyShownControllerTests
 
         var history = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(history);
         Assert.Equal(itemId, history.ItemId);
         Assert.Equal(74, history.WorldId);
         Assert.Equal("Coeurl", history.WorldName);
@@ -354,6 +348,7 @@ public class CurrentlyShownControllerTests
 
         var history = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(history);
         Assert.Contains(5, history.UnresolvedItemIds);
         Assert.Contains(5333, history.UnresolvedItemIds);
         Assert.Contains(5, history.ItemIds);
@@ -376,6 +371,7 @@ public class CurrentlyShownControllerTests
 
         var history = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(history);
         Assert.Equal(itemId, history.ItemId);
         Assert.Equal("Crystal", history.DcName);
         Assert.NotNull(history.Listings);
@@ -405,6 +401,7 @@ public class CurrentlyShownControllerTests
 
         var data = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(data);
         Assert.Contains(5, data.UnresolvedItemIds);
         Assert.Contains(5333, data.UnresolvedItemIds);
         Assert.Contains(5, data.ItemIds);
@@ -437,6 +434,7 @@ public class CurrentlyShownControllerTests
 
         var history = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(history);
         Assert.Contains(0, history.UnresolvedItemIds);
         Assert.Contains(494967295, history.UnresolvedItemIds);
         Assert.Empty(history.Items);
@@ -464,6 +462,7 @@ public class CurrentlyShownControllerTests
 
         var history = (CurrentlyShownMultiView)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(history);
         Assert.Contains(0, history.UnresolvedItemIds);
         Assert.Contains(494967295, history.UnresolvedItemIds);
         Assert.Contains(0, history.ItemIds);
@@ -519,7 +518,7 @@ public class CurrentlyShownControllerTests
         Assert.Matches(@"{""items"":\[{""listings"":\[({""pricePerUnit"":\d+},?){100}],""minPrice"":\d+},{""listings"":\[({""pricePerUnit"":\d+},?){100}],""minPrice"":\d+}],""dcName"":""Crystal""}", json);
     }
 
-    private static void AssertCurrentlyShownValidWorld(CurrentlyShown document, List<Sale> sales, CurrentlyShownView currentlyShown, IGameDataProvider gameData)
+    private static void AssertCurrentlyShownValidWorld(CurrentlyShown document, CurrentlyShownView currentlyShown, IGameDataProvider gameData)
     {
         Assert.Equal(document.ItemId, currentlyShown.ItemId);
         Assert.Equal(document.WorldId, currentlyShown.WorldId);
@@ -530,25 +529,15 @@ public class CurrentlyShownControllerTests
         Assert.NotNull(currentlyShown.Listings);
         Assert.NotNull(currentlyShown.RecentHistory);
 
-        currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
+        currentlyShown.Listings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
-        document.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
-        sales = sales.OrderByDescending(s => s.SaleTime).Take(currentlyShown.RecentHistory.Count).ToList();
-
-        var listings = document.Listings.Select(l =>
-        {
-            l.PricePerUnit = (int)Math.Ceiling(l.PricePerUnit * 1.05);
-            return l;
-        }).ToList();
+        document.Listings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
 
         Assert.All(currentlyShown.Listings.Select(l => (object)l.WorldId), Assert.Null);
         Assert.All(currentlyShown.Listings.Select(l => l.WorldName), Assert.Null);
 
         Assert.All(currentlyShown.RecentHistory.Select(s => (object)s.WorldId), Assert.Null);
         Assert.All(currentlyShown.RecentHistory.Select(s => s.WorldName), Assert.Null);
-
-        var nqListings = listings.Where(s => !s.Hq).ToList();
-        var hqListings = listings.Where(s => s.Hq).ToList();
 
         Assert.True(currentlyShown.CurrentAveragePrice > 0);
         Assert.True(currentlyShown.CurrentAveragePriceNq > 0);
@@ -570,7 +559,7 @@ public class CurrentlyShownControllerTests
         Assert.True(currentlyShown.SaleVelocityHq > 0);
     }
 
-    private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, List<Sale> sales, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc)
+    private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc)
     {
         Assert.Equal(anyWorldDocument.ItemId, currentlyShown.ItemId);
         Assert.Equal(lastUploadTime / 1000, currentlyShown.LastUploadTimeUnixMilliseconds / 1000);
@@ -581,25 +570,15 @@ public class CurrentlyShownControllerTests
         Assert.NotNull(currentlyShown.Listings);
         Assert.NotNull(currentlyShown.RecentHistory);
 
-        currentlyShown.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
+        currentlyShown.Listings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
-        anyWorldDocument.Listings.Sort((a, b) => (int)b.PricePerUnit - (int)a.PricePerUnit);
-        sales = sales.OrderByDescending(s => s.SaleTime).Take(currentlyShown.RecentHistory.Count).ToList();
-
-        var listings = anyWorldDocument.Listings.Select(l =>
-        {
-            l.PricePerUnit = (int)Math.Ceiling(l.PricePerUnit * 1.05);
-            return l;
-        }).ToList();
+        anyWorldDocument.Listings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
 
         Assert.All(currentlyShown.Listings.Select(l => (object)l.WorldId), Assert.NotNull);
         Assert.All(currentlyShown.Listings.Select(l => l.WorldName), Assert.NotNull);
 
         Assert.All(currentlyShown.RecentHistory.Select(s => (object)s.WorldId), Assert.NotNull);
         Assert.All(currentlyShown.RecentHistory.Select(s => s.WorldName), Assert.NotNull);
-
-        var nqListings = listings.Where(s => !s.Hq).ToList();
-        var hqListings = listings.Where(s => s.Hq).ToList();
 
         Assert.True(currentlyShown.CurrentAveragePrice > 0);
         Assert.True(currentlyShown.CurrentAveragePriceNq > 0);
