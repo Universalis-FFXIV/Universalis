@@ -242,6 +242,7 @@ public class ListingStore : IListingStore
         private bool _running;
         private bool _disposed;
         private int _lock;
+        private int _members;
 
         public MultiplexedRetrieveManyLiveBatch(NpgsqlConnection connection,
             ILogger<MultiplexedRetrieveManyLiveBatch> logger)
@@ -290,6 +291,7 @@ public class ListingStore : IListingStore
                     .ToList();
 
                 _callState.Enqueue(new MultiplexedRetrieveManyLiveCallState(id, worldItemPairs));
+                Interlocked.Increment(ref _members);
                 foreach (var (worldId, itemId) in worldItemPairs)
                 {
                     _batch.BatchCommands.Add(new NpgsqlBatchCommand(
@@ -343,7 +345,13 @@ public class ListingStore : IListingStore
                 cancellationToken.ThrowIfCancellationRequested();
             }, cancellationToken));
 
-            return _results[id];
+            if (_results.TryGetValue(id, out var result))
+            {
+                return result;
+            }
+
+            throw new InvalidOperationException(
+                $"No consumer with ID \"{id}\" was enlisted with the batch (members={_members}, running={_running}, disposed={_disposed}, task_status={_cs.Task.Status})");
         }
 
         private async Task ExecuteCommand()
