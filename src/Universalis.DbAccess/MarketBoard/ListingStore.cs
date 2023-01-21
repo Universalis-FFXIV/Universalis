@@ -253,6 +253,8 @@ public class ListingStore : IListingStore
 
         private bool _running;
 
+        private bool _disposed;
+
         public MultiplexedRetrieveManyLiveBatch(NpgsqlConnection connection,
             ILogger<MultiplexedRetrieveManyLiveBatch> logger)
         {
@@ -278,7 +280,7 @@ public class ListingStore : IListingStore
         /// <returns>The result ID, or null if enlisting failed.</returns>
         public async Task<Guid?> EnlistToBatch(ListingManyQuery query, CancellationToken cancellationToken = default)
         {
-            if (!await _lock.WaitAsync(TimeSpan.FromMilliseconds(50), cancellationToken))
+            if (_disposed || !await _lock.WaitAsync(TimeSpan.FromMilliseconds(50), cancellationToken))
             {
                 // The command is probably executing already
                 return null;
@@ -359,7 +361,7 @@ public class ListingStore : IListingStore
 
         private async Task ExecuteCommand()
         {
-            if (!await _lock.WaitAsync(TimeSpan.FromMilliseconds(50)))
+            if (_disposed || !await _lock.WaitAsync(TimeSpan.FromMilliseconds(50)))
             {
                 // The command is probably executing already
                 return;
@@ -439,11 +441,18 @@ public class ListingStore : IListingStore
 
         public async ValueTask DisposeAsync()
         {
-            GC.SuppressFinalize(this);
+            // This should only ever be called by the function that created this instance,
+            // so synchronization shouldn't be necessary.
+            if (!_disposed)
+            {
+                _disposed = true;
+                
+                GC.SuppressFinalize(this);
 
-            _lock.Dispose();
-            await _batch.DisposeAsync();
-            await _connection.DisposeAsync();
+                _lock.Dispose();
+                await _batch.DisposeAsync();
+                await _connection.DisposeAsync();
+            }
         }
 
         private record struct MultiplexedRetrieveManyLiveCallState(Guid Id, List<WorldItemPair> Queries);
