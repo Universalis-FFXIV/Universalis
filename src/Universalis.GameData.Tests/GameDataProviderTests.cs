@@ -5,7 +5,7 @@ namespace Universalis.GameData.Tests;
 public class GameDataProviderTests
 {
     private const string SqPack = @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack";
-    
+
 #if DEBUG
     [Fact]
 #endif
@@ -13,7 +13,7 @@ public class GameDataProviderTests
     {
         ServiceUtils.CreateGameDataProvider(SqPack);
     }
-        
+
     [InlineData(44, "Anima")]
     [InlineData(74, "Coeurl")]
     [InlineData(82, "Mandragora")]
@@ -26,11 +26,11 @@ public class GameDataProviderTests
         var actualWorldName = gameData.AvailableWorlds()[worldId];
         Assert.Equal(expectedWorldName, actualWorldName);
     }
-        
+
     [InlineData("Anima", 44)]
     [InlineData("Coeurl", 74)]
     [InlineData("Mandragora", 82)]
-    
+
 #if DEBUG
     [Theory]
 #endif
@@ -40,12 +40,12 @@ public class GameDataProviderTests
         var actualWorldId = gameData.AvailableWorldsReversed()[worldName];
         Assert.Equal(expectedWorldId, actualWorldId);
     }
-        
+
     [InlineData(44, true)]
     [InlineData(74, true)]
     [InlineData(0, false)]
     [InlineData(1, false)]
-    
+
 #if DEBUG
     [Theory]
 #endif
@@ -56,12 +56,12 @@ public class GameDataProviderTests
         var actuallyContains = worldIds.Contains(worldId);
         Assert.Equal(expectedToContain, actuallyContains);
     }
-        
+
     [InlineData(26165, true)]
     [InlineData(30759, true)]
     [InlineData(0, false)]
     [InlineData(1, false)]
-    
+
 #if DEBUG
     [Theory]
 #endif
@@ -71,5 +71,22 @@ public class GameDataProviderTests
         var worldIds = gameData.MarketableItemIds();
         var actuallyContains = worldIds.Contains(itemId);
         Assert.Equal(expectedToContain, actuallyContains);
+    }
+
+    [InlineData(26165, 1)]
+    [InlineData(30759, 1)]
+    [InlineData(38953, 1)] // 6.3 items
+    [InlineData(38954, 1)] // 6.3 items
+    [InlineData(4551, 999)] // Stackable Item
+#if DEBUG
+    [Theory]
+#endif
+    public void MarketableItemStackSizes_Should_Only_Contain_Real_Stack_Sizes(int itemId, int expectedStackSize)
+    {
+        var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
+        var worldIds = gameData.MarketableItemStackSizes();
+        var actuallyContains = worldIds.TryGetValue(itemId, out int stackSizeValue);
+        Assert.True(actuallyContains);
+        Assert.Equal(expectedStackSize, stackSizeValue);
     }
 }
