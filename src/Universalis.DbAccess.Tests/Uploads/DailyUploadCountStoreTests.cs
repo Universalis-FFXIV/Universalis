@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Universalis.DbAccess.Uploads;
-using Universalis.Entities.Uploads;
 using Xunit;
 
 namespace Universalis.DbAccess.Tests.Uploads;

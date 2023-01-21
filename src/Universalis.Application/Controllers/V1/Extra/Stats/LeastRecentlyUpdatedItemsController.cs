@@ -69,7 +69,7 @@ public class LeastRecentlyUpdatedItemsController : WorldDcRegionControllerBase
         }
 
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(5000);
+        cts.CancelAfter(TimeSpan.FromSeconds(5));
 
         var documents = await _mostRecentlyUpdatedDb.GetAllLeastRecent(
             new MostRecentlyUpdatedManyQuery { WorldIds = worldIds, Count = Convert.ToInt32(count * 1.5) },

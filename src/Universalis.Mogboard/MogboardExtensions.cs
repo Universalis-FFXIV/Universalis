@@ -11,7 +11,8 @@ public static class MogboardExtensions
     public static void AddMogboard(this IServiceCollection sc, IConfiguration configuration)
     {
         var connectionString = Environment.GetEnvironmentVariable("UNIVERSALIS_MOGBOARD_CONNECTION") ??
-            configuration["MogboardConnectionString"];
+                               configuration["MogboardConnectionString"] ??
+                               throw new InvalidOperationException("Mogboard connection string not provided.");
 
         sc.AddSingleton<IMogboardTable<User, UserId>>(new UsersService(connectionString));
         sc.AddSingleton<IMogboardTable<UserList, UserListId>>(new UserListsService(connectionString));

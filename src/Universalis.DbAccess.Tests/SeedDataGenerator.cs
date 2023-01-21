@@ -22,7 +22,7 @@ public static class SeedDataGenerator
                 OnMannequin = rand.NextDouble() > 0.5,
                 Materia = new List<Materia>(),
                 PricePerUnit = rand.Next(100, 60000),
-                Quantity = rand.Next(1, (int)maxStackSize),
+                Quantity = rand.Next(1, maxStackSize),
                 DyeId = (byte)rand.Next(0, 255),
                 CreatorId = rand.NextInt64().ToString(),
                 CreatorName = "Bingus Bongus",

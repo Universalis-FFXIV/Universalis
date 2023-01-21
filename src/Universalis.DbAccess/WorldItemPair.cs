@@ -1,5 +1,3 @@
 ﻿namespace Universalis.DbAccess;
 
-public record struct WorldItemPair(int WorldId, int ItemId)
-{
-}
+public record struct WorldItemPair(int WorldId, int ItemId);

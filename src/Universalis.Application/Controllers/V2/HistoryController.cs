@@ -88,7 +88,7 @@ public class HistoryController : HistoryControllerBase
         }
 
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(5000);
+        cts.CancelAfter(TimeSpan.FromSeconds(5));
 
         if (itemIdsArray.Length == 1)
         {

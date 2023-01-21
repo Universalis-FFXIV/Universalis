@@ -45,7 +45,7 @@ public class HistoryControllerTests
     public async Task Controller_Get_Succeeds_SingleItem_World(string worldOrDc, string entriesToReturn)
     {
         var test = TestResources.Create();
-        
+
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         var document = SeedDataGenerator.MakeHistory(74, 5333, now);
@@ -54,7 +54,7 @@ public class HistoryControllerTests
         var result = await test.Controller.Get("5333", worldOrDc, entriesToReturn);
         var history = (HistoryView)Assert.IsType<OkObjectResult>(result).Value;
 
-        AssertHistoryValidWorld(document, history, test.GameData, now);
+        AssertHistoryValidWorld(document, history, test.GameData);
     }
 
     [Theory]
@@ -84,8 +84,10 @@ public class HistoryControllerTests
         Assert.Equal(test.GameData.AvailableWorlds()[74], history.WorldName);
         Assert.Null(history.DcName);
 
-        AssertHistoryValidWorld(document1, history.Items.First(item => item.Key == document1.ItemId).Value, test.GameData, lastUploadTime);
-        AssertHistoryValidWorld(document2, history.Items.First(item => item.Key == document2.ItemId).Value, test.GameData, lastUploadTime);
+        AssertHistoryValidWorld(document1, history.Items.First(item => item.Key == document1.ItemId).Value,
+            test.GameData);
+        AssertHistoryValidWorld(document2, history.Items.First(item => item.Key == document2.ItemId).Value,
+            test.GameData);
     }
 
     [Theory]
@@ -105,14 +107,11 @@ public class HistoryControllerTests
         var history = (HistoryView)Assert.IsType<OkObjectResult>(result).Value;
 
         var sales = document1.Sales.Concat(document2.Sales).ToList();
-       
-        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         AssertHistoryValidDataCenter(
             document1,
             history,
             sales,
-            now,
             worldOrDc);
     }
 
@@ -123,7 +122,7 @@ public class HistoryControllerTests
     {
         var test = TestResources.Create();
         var lastUploadTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        
+
         var document1 = SeedDataGenerator.MakeHistory(74, 5333, lastUploadTime);
         await test.History.Create(document1);
 
@@ -133,6 +132,7 @@ public class HistoryControllerTests
         var result = await test.Controller.Get("5,5333", worldOrDc, entriesToReturn);
         var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(history);
         Assert.Contains(5, history.ItemIds);
         Assert.Contains(5333, history.ItemIds);
         Assert.Empty(history.UnresolvedItemIds);
@@ -145,13 +145,11 @@ public class HistoryControllerTests
             document1,
             history.Items.First(item => item.Key == document1.ItemId).Value,
             document1.Sales,
-            lastUploadTime,
             worldOrDc);
         AssertHistoryValidDataCenter(
             document2,
             history.Items.First(item => item.Key == document2.ItemId).Value,
             document2.Sales,
-            lastUploadTime,
             worldOrDc);
     }
 
@@ -168,6 +166,7 @@ public class HistoryControllerTests
 
         var history = (HistoryView)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(history);
         Assert.Equal(itemId, history.ItemId);
         Assert.Equal(74, history.WorldId);
         Assert.Equal("Coeurl", history.WorldName);
@@ -198,6 +197,7 @@ public class HistoryControllerTests
 
         var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(history);
         Assert.Contains(5, history.UnresolvedItemIds);
         Assert.Contains(5333, history.UnresolvedItemIds);
         Assert.Contains(5, history.ItemIds);
@@ -220,6 +220,7 @@ public class HistoryControllerTests
 
         var history = (HistoryView)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(history);
         Assert.Equal(itemId, history.ItemId);
         Assert.Equal("Crystal", history.DcName);
         Assert.NotNull(history.Sales);
@@ -247,6 +248,7 @@ public class HistoryControllerTests
 
         var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(history);
         Assert.Contains(5, history.UnresolvedItemIds);
         Assert.Contains(5333, history.UnresolvedItemIds);
         Assert.Contains(5, history.ItemIds);
@@ -276,6 +278,7 @@ public class HistoryControllerTests
 
         var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(history);
         Assert.Contains(0, history.UnresolvedItemIds);
         Assert.Contains(494967295, history.UnresolvedItemIds);
         Assert.Empty(history.Items);
@@ -303,6 +306,7 @@ public class HistoryControllerTests
 
         var history = (HistoryMultiViewV2)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(history);
         Assert.Contains(0, history.UnresolvedItemIds);
         Assert.Contains(494967295, history.UnresolvedItemIds);
         Assert.Contains(0, history.ItemIds);
@@ -312,12 +316,9 @@ public class HistoryControllerTests
         Assert.Null(history.WorldId);
     }
 
-    private static void AssertHistoryValidWorld(History document, HistoryView history, IGameDataProvider gameData, long unixNowMs)
+    private static void AssertHistoryValidWorld(History document, HistoryView history, IGameDataProvider gameData)
     {
         document.Sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
-
-        var nqSales = document.Sales.Where(s => !s.Hq).ToList();
-        var hqSales = document.Sales.Where(s => s.Hq).ToList();
 
         Assert.Equal(document.ItemId, history.ItemId);
         Assert.Equal(document.WorldId, history.WorldId);
@@ -333,7 +334,8 @@ public class HistoryControllerTests
         Assert.True(history.SaleVelocityHq > 0);
     }
 
-    private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<Sale> sales, long lastUploadTime, string worldOrDc)
+    private static void AssertHistoryValidDataCenter(History anyWorldDocument, HistoryView history, List<Sale> sales,
+        string worldOrDc)
     {
         sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 

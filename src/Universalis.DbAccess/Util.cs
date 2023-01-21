@@ -18,7 +18,7 @@ public static class Util
     {
         Span<byte> hash = stackalloc byte[hasher.HashSize/8];
         ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(input ?? "");
-        if (hasher.TryComputeHash(bytes, hash, out var _written)) // Since we stackalloc the hash buffer, written is not needed
+        if (hasher.TryComputeHash(bytes, hash, out _)) // Since we stackalloc the hash buffer, written is not needed
             return Convert.ToHexString(hash).ToLowerInvariant(); // https://github.com/dotnet/runtime/issues/60393
         throw new InvalidOperationException("Destination buffer was too small, this should never occur");
     }

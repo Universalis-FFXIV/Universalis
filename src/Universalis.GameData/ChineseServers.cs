@@ -108,17 +108,17 @@ public static class ChineseServers
         {
             new DataCenter
             {
-                Name = "陆行鸟", Region = "中国", WorldIds = new int[] { 1167, 1081, 1042, 1044, 1060, 1173, 1174, 1175 }
+                Name = "陆行鸟", Region = "中国", WorldIds = new[] { 1167, 1081, 1042, 1044, 1060, 1173, 1174, 1175 },
             },
             new DataCenter
             {
-                Name = "莫古力", Region = "中国", WorldIds = new int[] { 1172, 1076, 1171, 1170, 1113, 1121, 1166, 1176 }
+                Name = "莫古力", Region = "中国", WorldIds = new[] { 1172, 1076, 1171, 1170, 1113, 1121, 1166, 1176 },
             },
             new DataCenter
-                { Name = "猫小胖", Region = "中国", WorldIds = new int[] { 1043, 1169, 1106, 1045, 1177, 1178, 1179 } },
+                { Name = "猫小胖", Region = "中国", WorldIds = new[] { 1043, 1169, 1106, 1045, 1177, 1178, 1179 } },
             new DataCenter
             {
-                Name = "豆豆柴", Region = "中国", WorldIds = new int[] { 1192, 1183, 1180, 1186, 1201, 1068, 1064, 1187 }
+                Name = "豆豆柴", Region = "中国", WorldIds = new[] { 1192, 1183, 1180, 1186, 1201, 1068, 1064, 1187 },
             },
         };
 

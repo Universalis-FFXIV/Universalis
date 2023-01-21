@@ -28,7 +28,7 @@ public class DbFixture : IAsyncLifetime
             .WithName(Guid.NewGuid().ToString("D"))
             .WithImage("scylladb/scylla:5.1.0")
             .WithExposedPort(9042)
-            .WithPortBinding(9042, false)
+            .WithPortBinding(9042)
             .WithCommand("--smp", "1", "--overprovisioned", "1", "--memory", "512M", "--alternator-port", "8000", "--alternator-write-isolation", "only_rmw_uses_lwt")
             .WithCreateContainerParametersModifier(o =>
             {

@@ -26,7 +26,7 @@ public class MockGameDataProvider : IGameDataProvider
 
     public IReadOnlySet<int> AvailableWorldIds()
     {
-        return new SortedSet<int>(new int[] { 74, 34 });
+        return new SortedSet<int>(new[] { 74, 34 });
     }
 
     public IReadOnlySet<int> MarketableItemIds()
@@ -51,7 +51,7 @@ public class MockGameDataProvider : IGameDataProvider
             {
                 Name = "Crystal",
                 Region = "North-America",
-                WorldIds = new int[] { 74, 34 },
+                WorldIds = new[] { 74, 34 },
             },
         };
     }

@@ -23,7 +23,7 @@ public class TaxRatesQuery : IEquatable<TaxRatesQuery>, ICopyable
 
     public override int GetHashCode()
     {
-        return (int)WorldId;
+        return WorldId;
     }
 
     public ICopyable Clone()

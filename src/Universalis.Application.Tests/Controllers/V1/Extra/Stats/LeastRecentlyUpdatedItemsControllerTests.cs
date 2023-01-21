@@ -25,7 +25,7 @@ public class LeastRecentlyUpdatedItemsControllerTests
             await dbAccess.Push(74, new WorldItemUpload
             {
                 WorldId = 74,
-                ItemId = (int)itemId,
+                ItemId = itemId,
                 LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             });
         }
@@ -33,6 +33,7 @@ public class LeastRecentlyUpdatedItemsControllerTests
         var result = await controller.Get("coeurl", "", "");
         var lru = (LeastRecentlyUpdatedItemsView)Assert.IsType<OkObjectResult>(result).Value;
 
+        Assert.NotNull(lru);
         Assert.All(lru.Items.Select(o => o.WorldName), Assert.NotNull);
 
         var lastTimestamp = lru.Items[0].LastUploadTimeUnixMilliseconds;

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -37,7 +38,7 @@ public class RecentlyUpdatedItemsController : ControllerBase
     public async Task<RecentlyUpdatedItemsView> Get(CancellationToken cancellationToken = default)
     {
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(5000);
+        cts.CancelAfter(TimeSpan.FromSeconds(5));
 
         var marketable = _gameData.MarketableItemIds();
         var data = (await _recentlyUpdatedItemsDb.Retrieve(cts.Token))?.Items

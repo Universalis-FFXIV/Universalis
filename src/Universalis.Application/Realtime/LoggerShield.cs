@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿#nullable enable
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace Universalis.Application.Realtime;
@@ -8,13 +9,14 @@ public class LoggerShield<TCategory> : ILogger<TCategory>
     private readonly ILogger<TCategory> _logger;
     private readonly Guid _id;
 
+    // ReSharper disable once ContextualLoggerProblem
     public LoggerShield(ILogger<TCategory> logger, Guid id)
     {
         _logger = logger;
         _id = id;
     }
 
-    public IDisposable BeginScope<TState>(TState state)
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull
     {
         return _logger.BeginScope(state);
     }

@@ -19,29 +19,36 @@ public class MockMostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
         {
             _store.RemoveAt(existingIndex);
         }
-        
+
         _store.Insert(0, document);
-        
+
         return Task.CompletedTask;
     }
 
-    public Task<IList<WorldItemUpload>> GetMostRecent(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
+    public Task<IList<WorldItemUpload>> GetMostRecent(MostRecentlyUpdatedQuery query,
+        CancellationToken cancellationToken = default)
     {
         return Task.FromResult((IList<WorldItemUpload>)_store.Where(o => o.WorldId == query.WorldId).ToList());
     }
 
-    public async Task<IList<WorldItemUpload>> GetAllMostRecent(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
+    public Task<IList<WorldItemUpload>> GetAllMostRecent(MostRecentlyUpdatedManyQuery query,
+        CancellationToken cancellationToken = default)
     {
-        return _store.Where(o => query.WorldIds.Contains(o.WorldId)).ToList();
-    }
-    
-    public Task<IList<WorldItemUpload>> GetLeastRecent(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult((IList<WorldItemUpload>)_store.Where(o => o.WorldId == query.WorldId).Reverse().ToList());
+        var result = _store.Where(o => query.WorldIds.Contains(o.WorldId)).ToList();
+        return Task.FromResult((IList<WorldItemUpload>)result);
     }
 
-    public async Task<IList<WorldItemUpload>> GetAllLeastRecent(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
+    public Task<IList<WorldItemUpload>> GetLeastRecent(MostRecentlyUpdatedQuery query,
+        CancellationToken cancellationToken = default)
     {
-        return _store.Where(o => query.WorldIds.Contains(o.WorldId)).Reverse().ToList();
+        return Task.FromResult(
+            (IList<WorldItemUpload>)_store.Where(o => o.WorldId == query.WorldId).Reverse().ToList());
+    }
+
+    public Task<IList<WorldItemUpload>> GetAllLeastRecent(MostRecentlyUpdatedManyQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        var result = _store.Where(o => query.WorldIds.Contains(o.WorldId)).Reverse().ToList();
+        return Task.FromResult((IList<WorldItemUpload>)result);
     }
 }

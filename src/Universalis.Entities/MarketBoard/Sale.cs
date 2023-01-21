@@ -4,28 +4,28 @@ namespace Universalis.Entities.MarketBoard;
 
 public class Sale : IEquatable<Sale>
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; init; }
 
-    public int WorldId { get; set; }
+    public int WorldId { get; init; }
 
-    public int ItemId { get; set; }
+    public int ItemId { get; init; }
 
-    public bool Hq { get; set; }
+    public bool Hq { get; init; }
 
-    public int PricePerUnit { get; set; }
+    public int PricePerUnit { get; init; }
 
     // Quantities before December 2019 or so weren't stored here, and therefore will be null
-    public int? Quantity { get; set; }
+    public int? Quantity { get; init; }
 
     // Names before May 22, 2022 weren't stored here, and therefore will be null
-    public string BuyerName { get; set; }
+    public string BuyerName { get; init; }
 
     // Values before June 26, 2022 weren't stored here, and therefore will be null
-    public bool? OnMannequin { get; set; }
+    public bool? OnMannequin { get; init; }
 
     public DateTime SaleTime { get; set; }
 
-    public string UploaderIdHash { get; set; }
+    public string UploaderIdHash { get; init; }
 
     public bool Equals(Sale other)
     {

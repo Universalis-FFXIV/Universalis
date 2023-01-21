@@ -71,7 +71,7 @@ public class UploadController : ControllerBase
         }
 
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(5000);
+        cts.CancelAfter(TimeSpan.FromSeconds(5));
 
         // Check if this uploader is flagged, cancel if they are
         if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdSha256 = parameters.UploaderId }, cts.Token) !=
@@ -102,7 +102,7 @@ public class UploadController : ControllerBase
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Exception caught in upload procedure.");
+            _logger.LogError(e, "Exception caught in upload procedure");
         }
 
         return Ok("Success");

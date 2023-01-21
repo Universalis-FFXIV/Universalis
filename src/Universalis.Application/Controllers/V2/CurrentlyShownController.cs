@@ -122,7 +122,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         bool? hqBool = string.IsNullOrEmpty(hq) || hq.ToLowerInvariant() == "null" ? null : Util.ParseUnusualBool(hq);
 
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(5000);
+        cts.CancelAfter(TimeSpan.FromSeconds(5));
 
         if (itemIdsArray.Length == 1)
         {

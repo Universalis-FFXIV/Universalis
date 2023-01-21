@@ -12,7 +12,7 @@ public class MockCurrentlyShownDbAccess : ICurrentlyShownDbAccess
 {
     private readonly List<CurrentlyShown> _collection = new();
 
-    private Task Create(CurrentlyShown document, CancellationToken cancellationToken = default)
+    private Task Create(CurrentlyShown document)
     {
         _collection.Add(document);
         return Task.CompletedTask;
@@ -35,7 +35,7 @@ public class MockCurrentlyShownDbAccess : ICurrentlyShownDbAccess
         CancellationToken cancellationToken = default)
     {
         await Delete(query, cancellationToken);
-        await Create(document, cancellationToken);
+        await Create(document);
     }
 
     private async Task Delete(CurrentlyShownQuery query, CancellationToken cancellationToken = default)

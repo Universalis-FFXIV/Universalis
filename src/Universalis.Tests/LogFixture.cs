@@ -6,6 +6,7 @@ namespace Universalis.Tests;
 
 public class LogFixture<T> : ILogger<T>
 {
+    // ReSharper disable once CollectionNeverQueried.Local
     private readonly IList<LogEvent> _events = new List<LogEvent>();
 
     public IDisposable BeginScope<TState>(TState state)
@@ -32,6 +33,7 @@ public class LogFixture<T> : ILogger<T>
         }
     }
 
+    // ReSharper disable once UnusedTypeParameter
     internal class LogFixtureScope<TState> : IDisposable
     {
         public void Dispose()
