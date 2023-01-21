@@ -25,9 +25,9 @@ public class ListingStore : IListingStore
         _logger = logger;
     }
 
-    public async Task UpsertLive(IEnumerable<Listing> listings, CancellationToken cancellationToken = default)
+    public async Task ReplaceLive(IEnumerable<Listing> listings, CancellationToken cancellationToken = default)
     {
-        using var activity = Util.ActivitySource.StartActivity("ListingStore.UpsertLive");
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.ReplaceLive");
 
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
 
@@ -39,9 +39,19 @@ public class ListingStore : IListingStore
         var groupedListings = listings.GroupBy(l => new WorldItemPair(l.WorldId, l.ItemId));
         foreach (var listingGroup in groupedListings)
         {
+            var (worldID, itemID) = listingGroup.Key;
+
             // Npgsql batches have an implicit transaction around them
             // https://www.npgsql.org/doc/basic-usage.html#batching
             await using var batch = new NpgsqlBatch(connection);
+            batch.BatchCommands.Add(new NpgsqlBatchCommand("DELETE FROM listing WHERE item_id = $1 AND world_id = $2")
+            {
+                Parameters =
+                {
+                    new NpgsqlParameter<int> { TypedValue = itemID },
+                    new NpgsqlParameter<int> { TypedValue = worldID },
+                }
+            });
 
             foreach (var listing in listingGroup)
             {
@@ -51,10 +61,15 @@ public class ListingStore : IListingStore
                 // again. It's not clear to me what happens on the game servers when
                 // a listing is updated. Until we have more data, I'm assuming that
                 // all updates are the same as new listings.
-                batch.BatchCommands.Add(new NpgsqlBatchCommand("INSERT INTO listing " +
-                                                               "(listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id, creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id, uploaded_at, source) " +
-                                                               "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) " +
-                                                               "ON CONFLICT (listing_id) DO UPDATE SET last_review_time = EXCLUDED.last_review_time, uploaded_at = EXCLUDED.uploaded_at")
+                batch.BatchCommands.Add(new NpgsqlBatchCommand(
+                    """
+                    INSERT INTO listing
+                    (listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id,
+                     creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id, uploaded_at,
+                     source)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+                    ON CONFLICT (listing_id) DO NOTHING;
+                    """)
                 {
                     Parameters =
                     {
@@ -87,8 +102,8 @@ public class ListingStore : IListingStore
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to insert listings (world={}, item={})", listingGroup.Key.WorldId,
-                    listingGroup.Key.ItemId);
+                _logger.LogError(e, "Failed to insert listings (world={}, item={})", worldID,
+                    itemID);
                 throw;
             }
         }
@@ -101,16 +116,12 @@ public class ListingStore : IListingStore
 
         await using var command = _dataSource.CreateCommand(
             """
-            WITH cte AS(
-                SELECT MAX(uploaded_at) as max_uploaded_at FROM listing
-                WHERE item_id = $1 AND world_id = $2
-            )
             SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
                    t.unit_price, t.quantity, t.dye_id, t.creator_id, t.creator_name,
                    t.last_review_time, t.retainer_id, t.retainer_name, t.retainer_city_id,
                    t.seller_id, t.uploaded_at, t.source
-            FROM public.listing t
-            WHERE t.item_id = $1 AND t.world_id = $2 AND t.uploaded_at = (SELECT max_uploaded_at FROM cte)
+            FROM listing t
+            WHERE t.item_id = $1 AND t.world_id = $2
             ORDER BY unit_price
             """);
         command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.ItemId });
@@ -174,16 +185,12 @@ public class ListingStore : IListingStore
         {
             batch.BatchCommands.Add(new NpgsqlBatchCommand(
                 """
-                WITH cte AS(
-                    SELECT MAX(uploaded_at) as max_uploaded_at FROM listing
-                    WHERE item_id = $1 AND world_id = $2
-                )
                 SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
                        t.unit_price, t.quantity, t.dye_id, t.creator_id, t.creator_name,
                        t.last_review_time, t.retainer_id, t.retainer_name, t.retainer_city_id,
                        t.seller_id, t.uploaded_at, t.source
-                FROM public.listing t
-                WHERE t.item_id = $1 AND t.world_id = $2 AND t.uploaded_at = (SELECT max_uploaded_at FROM cte)
+                FROM listing t
+                WHERE t.item_id = $1 AND t.world_id = $2
                 ORDER BY unit_price
                 """)
             {
