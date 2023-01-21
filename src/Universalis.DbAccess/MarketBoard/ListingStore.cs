@@ -172,22 +172,10 @@ public class ListingStore : IListingStore
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveManyLive");
 
-        Guid? id;
         var batch = _currentBatch;
-        var enlist = batch?.EnlistToBatch(query, cancellationToken);
-        try
+        var id = batch?.EnlistToBatch(query, cancellationToken);
+        if (batch == null || id == null)
         {
-            // This is a bit awkward but it works
-            if (batch == null || enlist == null || (id = await enlist) == null)
-            {
-                return await RetrieveManyLiveInternal(query, 5, cancellationToken);
-            }
-        }
-        catch (ObjectDisposedException e)
-        {
-            // The semaphore (or something else?) was disposed while enlisting to
-            // the batch; this sounds rare
-            _logger.LogError(e, "An object was disposed while enlisting to a batch");
             return await RetrieveManyLiveInternal(query, 5, cancellationToken);
         }
 
@@ -203,7 +191,7 @@ public class ListingStore : IListingStore
             await using var batch = new MultiplexedRetrieveManyLiveBatch(connection, _multiplexerLogger);
             _currentBatch = batch;
 
-            var id = await batch.EnlistToBatch(query, cancellationToken);
+            var id = batch.EnlistToBatch(query, cancellationToken);
             if (id == null)
             {
                 maxRetries--;
@@ -241,19 +229,19 @@ public class ListingStore : IListingStore
     /// </summary>
     public class MultiplexedRetrieveManyLiveBatch : IAsyncDisposable
     {
-        private readonly ConcurrentDictionary<Guid, RetrieveManyLiveResult> _results;
         private readonly ConcurrentQueue<MultiplexedRetrieveManyLiveCallState> _callState;
         private readonly DateTimeOffset _deadline;
-        private readonly SemaphoreSlim _lock;
         private readonly TaskCompletionSource<object> _cs;
 
         private readonly ILogger<MultiplexedRetrieveManyLiveBatch> _logger;
         private readonly NpgsqlConnection _connection;
         private readonly NpgsqlBatch _batch;
 
-        private bool _running;
+        private ConcurrentDictionary<Guid, RetrieveManyLiveResult> _results;
 
+        private bool _running;
         private bool _disposed;
+        private int _lock;
 
         public MultiplexedRetrieveManyLiveBatch(NpgsqlConnection connection,
             ILogger<MultiplexedRetrieveManyLiveBatch> logger)
@@ -262,10 +250,9 @@ public class ListingStore : IListingStore
             _connection = connection;
             _batch = new NpgsqlBatch(connection);
 
-            _cs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _cs = new TaskCompletionSource<object>();
 
             _deadline = DateTimeOffset.UtcNow + TimeSpan.FromMilliseconds(50);
-            _lock = new SemaphoreSlim(1, 1);
             _callState = new ConcurrentQueue<MultiplexedRetrieveManyLiveCallState>();
             _results = new ConcurrentDictionary<Guid, RetrieveManyLiveResult>();
         }
@@ -278,9 +265,9 @@ public class ListingStore : IListingStore
         /// <param name="query">The query parameters.</param>
         /// <param name="cancellationToken"></param>
         /// <returns>The result ID, or null if enlisting failed.</returns>
-        public async Task<Guid?> EnlistToBatch(ListingManyQuery query, CancellationToken cancellationToken = default)
+        public Guid? EnlistToBatch(ListingManyQuery query, CancellationToken cancellationToken = default)
         {
-            if (_disposed || !await _lock.WaitAsync(TimeSpan.FromMilliseconds(50), cancellationToken))
+            if (_disposed || 1 == Interlocked.Exchange(ref _lock, 1))
             {
                 // The command is probably executing already
                 return null;
@@ -332,7 +319,7 @@ public class ListingStore : IListingStore
             }
             finally
             {
-                _lock.Release();
+                Interlocked.Exchange(ref _lock, 0);
             }
         }
 
@@ -361,7 +348,7 @@ public class ListingStore : IListingStore
 
         private async Task ExecuteCommand()
         {
-            if (_disposed || !await _lock.WaitAsync(TimeSpan.FromMilliseconds(50)))
+            if (_disposed || 1 == Interlocked.Exchange(ref _lock, 1))
             {
                 // The command is probably executing already
                 return;
@@ -379,10 +366,13 @@ public class ListingStore : IListingStore
                 await using var reader =
                     await _batch.ExecuteReaderAsync(CommandBehavior.SequentialAccess);
 
-                // Read the batch command results, in order
+                // Read the batch command results, in order. The results need to be saved
+                // after the command is done, or else the owning thread can dispose this
+                // object before other consumers have the data they need.
+                var results = new ConcurrentDictionary<Guid, RetrieveManyLiveResult>();
                 while (_callState.TryDequeue(out var context))
                 {
-                    _results[context.Id] = new Dictionary<WorldItemPair, IList<Listing>>();
+                    results[context.Id] = new Dictionary<WorldItemPair, IList<Listing>>();
                     var batchesRead = 0;
                     do
                     {
@@ -415,7 +405,7 @@ public class ListingStore : IListingStore
                                 });
                             }
 
-                            _results[context.Id][key] = batchResult;
+                            results[context.Id][key] = batchResult;
 
                             batchesRead++;
                             await reader.NextResultAsync();
@@ -431,11 +421,12 @@ public class ListingStore : IListingStore
                     } while (batchesRead != context.Queries.Count);
                 }
 
+                _results = results;
                 _cs.SetResult(true);
             }
             finally
             {
-                _lock.Release();
+                Interlocked.Exchange(ref _lock, 0);
             }
         }
 
@@ -446,10 +437,9 @@ public class ListingStore : IListingStore
             if (!_disposed)
             {
                 _disposed = true;
-                
+
                 GC.SuppressFinalize(this);
 
-                _lock.Dispose();
                 await _batch.DisposeAsync();
                 await _connection.DisposeAsync();
             }
