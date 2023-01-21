@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 
 namespace Universalis.GameData;
@@ -8,20 +9,28 @@ namespace Universalis.GameData;
 public class DynamicGameDataProvider : IGameDataProvider
 {
     private readonly ILogger<DynamicGameDataProvider> _logger;
-    private readonly IGameDataProvider _gdp;
+    private IGameDataProvider _gdp;
 
     public DynamicGameDataProvider(DynamicGameDataProviderOptions opts, ILogger<DynamicGameDataProvider> logger)
     {
         _logger = logger;
-        try
+        _gdp = LoadCsv(opts);
+
+        var loadThread = new Thread(() =>
         {
-            _gdp = LoadLumina(opts);
-        }
-        catch (Exception e)
+            try
+            {
+                _gdp = LoadLumina(opts);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to load Lumina");
+            }
+        })
         {
-            _logger.LogError(e, "Failed to load Lumina");
-            _gdp = LoadCsv(opts);
-        }
+            IsBackground = true,
+        };
+        loadThread.Start();
     }
 
     private IGameDataProvider LoadCsv(DynamicGameDataProviderOptions opts)
