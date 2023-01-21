@@ -85,7 +85,7 @@ public class TradeVolumeController : WorldDcRegionControllerBase
         }
 
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(5000);
+        cts.CancelAfter(TimeSpan.FromSeconds(5));
 
         var fromTime = DateTimeOffset.FromUnixTimeMilliseconds(from).UtcDateTime;
         var toTime = DateTimeOffset.FromUnixTimeMilliseconds(to).UtcDateTime;

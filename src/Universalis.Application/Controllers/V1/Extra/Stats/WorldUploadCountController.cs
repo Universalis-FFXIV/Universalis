@@ -34,7 +34,7 @@ public class WorldUploadCountController : ControllerBase
     public async Task<IDictionary<string, WorldUploadCountView>> Get(CancellationToken cancellationToken = default)
     {
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(5000);
+        cts.CancelAfter(TimeSpan.FromSeconds(5));
 
         var data = (await _worldUploadCountDb.GetWorldUploadCounts(cts.Token))
             .Where(d => !string.IsNullOrEmpty(d.WorldName))
