@@ -102,7 +102,7 @@ public class UploadController : ControllerBase
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Exception caught in upload procedure.");
+            _logger.LogError(e, "Exception caught in upload procedure");
         }
 
         return Ok("Success");
