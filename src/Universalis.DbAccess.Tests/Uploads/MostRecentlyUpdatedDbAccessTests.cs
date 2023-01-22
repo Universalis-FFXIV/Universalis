@@ -14,10 +14,10 @@ public class MostRecentlyUpdatedDbAccessTests
     private class MockWorldItemUploadStore : IWorldItemUploadStore
     {
         private readonly Dictionary<int, double> _scores = new();
-        
-        public Task SetItem(int worldId, int id, double val)
+
+        public Task SetItem(int worldId, int itemId, double val)
         {
-            _scores[id] = val;
+            _scores[itemId] = val;
             return Task.CompletedTask;
         }
 
@@ -31,7 +31,7 @@ public class MostRecentlyUpdatedDbAccessTests
 
             return Task.FromResult((IList<KeyValuePair<int, double>>)en);
         }
-        
+
         public Task<IList<KeyValuePair<int, double>>> GetLeastRecent(int worldId, int stop = -1)
         {
             var en = _scores.OrderBy(s => s.Value).ToList();
@@ -41,6 +41,11 @@ public class MostRecentlyUpdatedDbAccessTests
             }
 
             return Task.FromResult((IList<KeyValuePair<int, double>>)en);
+        }
+
+        public Task<double?> GetUploadTime(int worldId, int itemId)
+        {
+            return Task.FromResult<double?>(_scores.TryGetValue(itemId, out var timestamp) ? timestamp : null);
         }
     }
 
@@ -53,7 +58,7 @@ public class MostRecentlyUpdatedDbAccessTests
             WorldId = 74,
             Count = 10,
         });
-        
+
         Assert.NotNull(output);
         Assert.Empty(output);
     }
@@ -80,13 +85,13 @@ public class MostRecentlyUpdatedDbAccessTests
             ItemId = 5333,
             LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
         });
-        
+
         var output = await db.GetMostRecent(new MostRecentlyUpdatedQuery
         {
             WorldId = 74,
             Count = 10,
         });
-        
+
         Assert.NotNull(output);
         Assert.Single(output);
         Assert.Equal(5333, output[0].ItemId);
@@ -102,21 +107,21 @@ public class MostRecentlyUpdatedDbAccessTests
             ItemId = 5333,
             LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
         });
-        
+
         await db.Push(74, new WorldItemUpload
         {
             WorldId = 74,
             ItemId = 5,
             LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
         });
-        
+
         var output = await db.GetMostRecent(new MostRecentlyUpdatedQuery
         {
             WorldId = 74,
             Count = 10,
         });
         Assert.NotNull(output);
-        
+
         var uploads = output.Select(u => u.ItemId).ToList();
         Assert.Contains(5, uploads);
         Assert.Contains(5333, uploads);
@@ -132,33 +137,33 @@ public class MostRecentlyUpdatedDbAccessTests
             ItemId = 5333,
             LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
         });
-        
+
         await db.Push(74, new WorldItemUpload
         {
             WorldId = 74,
             ItemId = 5,
             LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
         });
-        
+
         await db.Push(74, new WorldItemUpload
         {
             WorldId = 74,
             ItemId = 5333,
             LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
         });
-        
+
         var output = await db.GetMostRecent(new MostRecentlyUpdatedQuery
         {
             WorldId = 74,
             Count = 10,
         });
-        
+
         Assert.NotNull(output);
         Assert.Equal(5333, output[0].ItemId);
         Assert.Equal(5, output[1].ItemId);
         Assert.Equal(2, output.Count);
     }
-    
+
     [Fact]
     public async Task PushMany_TakesCount()
     {
@@ -172,7 +177,7 @@ public class MostRecentlyUpdatedDbAccessTests
                 LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             });
         }
-        
+
         var output = await db.GetMostRecent(new MostRecentlyUpdatedQuery
         {
             WorldId = 74,

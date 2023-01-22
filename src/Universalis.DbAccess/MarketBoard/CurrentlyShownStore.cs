@@ -4,22 +4,22 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using StackExchange.Redis;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.DbAccess.Uploads;
 using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
 
 public class CurrentlyShownStore : ICurrentlyShownStore
 {
-    private readonly IPersistentRedisMultiplexer _redis;
+    private readonly IWorldItemUploadStore _worldItemUploadStore;
     private readonly IListingStore _listingStore;
     private readonly ILogger<CurrentlyShownStore> _logger;
 
-    public CurrentlyShownStore(IPersistentRedisMultiplexer redis,
+    public CurrentlyShownStore(IWorldItemUploadStore worldItemUploadStore,
         IListingStore listingStore, ILogger<CurrentlyShownStore> logger)
     {
-        _redis = redis;
+        _worldItemUploadStore = worldItemUploadStore;
         _listingStore = listingStore;
         _logger = logger;
     }
@@ -27,8 +27,6 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     public async Task Insert(CurrentlyShown data, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.Insert");
-
-        var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
 
         var worldId = data.WorldId;
         var itemId = data.ItemId;
@@ -43,17 +41,15 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             l.Source = uploadSource;
             return l;
         }), cancellationToken);
-        await SetLastUpdated(db, worldId, itemId, lastUploadTime);
+        await SetLastUpdated(worldId, itemId, lastUploadTime);
     }
 
     public async Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.Retrieve");
 
-        var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
-
-        var lastUpdated = await EnsureLastUpdated(db, query.WorldId, query.ItemId);
-        if (lastUpdated.IsNullOrEmpty || (long)lastUpdated == 0)
+        var lastUpdated = await GetLastUpdated(query.WorldId, query.ItemId);
+        if (lastUpdated == 0)
         {
             return null;
         }
@@ -80,7 +76,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         {
             WorldId = query.WorldId,
             ItemId = query.ItemId,
-            LastUploadTimeUnixMilliseconds = Math.Max(guessUploadTime, (long)lastUpdated),
+            LastUploadTimeUnixMilliseconds = Math.Max(guessUploadTime, lastUpdated),
             UploadSource = guess?.Source ?? "",
             Listings = listings,
         };
@@ -97,20 +93,13 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 itemIds.Select(itemId => new WorldItemPair(worldId, itemId)))
             .ToList();
 
-        var db = _redis.GetDatabase(RedisDatabases.Instance0.CurrentData);
-
         // Get all update times from Redis
         var lastUpdatedByItem = new Dictionary<WorldItemPair, long>();
         var lastUpdatedTasks =
-            await Task.WhenAll(worldItemPairs.Select(t => EnsureLastUpdated(db, t.WorldId, t.ItemId)));
+            await Task.WhenAll(worldItemPairs.Select(t => GetLastUpdated(t.WorldId, t.ItemId)));
         foreach (var (key, lastUpdated) in worldItemPairs.Zip(lastUpdatedTasks))
         {
-            if (lastUpdated.IsNullOrEmpty)
-            {
-                lastUpdatedByItem[key] = 0;
-            }
-
-            lastUpdatedByItem[key] = (long)lastUpdated;
+            lastUpdatedByItem[key] = lastUpdated;
         }
 
         // Attempt to retrieve listings from Postgres
@@ -155,26 +144,14 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             .Where(cs => cs is not null);
     }
 
-    private static async Task<RedisValue> EnsureLastUpdated(IDatabaseAsync db, int worldId, int itemId)
+    private async Task<long> GetLastUpdated(int worldId, int itemId)
     {
-        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.EnsureLastUpdated");
-
-        var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
-        await db.StringSetAsync(lastUpdatedKey, 0, when: When.NotExists);
-        return await db.StringGetAsync(lastUpdatedKey);
+        var timestamp = await _worldItemUploadStore.GetUploadTime(worldId, itemId);
+        return !timestamp.HasValue ? 0 : Convert.ToInt64(timestamp.Value);
     }
 
-    private static Task SetLastUpdated(IDatabaseAsync db, int worldId, int itemId, long timestamp,
-        TimeSpan? expiry = null)
+    private Task SetLastUpdated(int worldId, int itemId, long timestamp)
     {
-        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.SetLastUpdated");
-
-        var lastUpdatedKey = GetLastUpdatedKey(worldId, itemId);
-        return db.StringSetAsync(lastUpdatedKey, timestamp, expiry);
-    }
-
-    private static string GetLastUpdatedKey(int worldId, int itemId)
-    {
-        return $"{worldId}:{itemId}:LastUpdated";
+        return _worldItemUploadStore.SetItem(worldId, itemId, timestamp);
     }
 }
