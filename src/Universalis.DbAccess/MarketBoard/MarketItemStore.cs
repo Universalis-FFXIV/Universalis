@@ -130,7 +130,7 @@ public class MarketItemStore : IMarketItemStore
 
                 batchesRead++;
                 await reader.NextResultAsync(cancellationToken);
-            } while (batchesRead != itemIds.Count);
+            } while (batchesRead != worldItemTuples.Count);
 
             return marketItemRecords;
         }
