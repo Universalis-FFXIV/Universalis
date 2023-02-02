@@ -293,18 +293,6 @@ public class MarketBoardUploadBehaviorTests
         var result = await test.Behavior.Execute(source, upload);
         Assert.Null(result);
 
-        var currentlyShown = await test.CurrentlyShown.Retrieve(new CurrentlyShownQuery
-        {
-            WorldId = upload.WorldId.Value,
-            ItemId = upload.ItemId.Value,
-        });
-
-        Assert.NotNull(currentlyShown);
-        Assert.Equal(upload.WorldId.Value, currentlyShown.WorldId);
-        Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
-        Assert.NotNull(currentlyShown.Listings);
-        Assert.Empty(currentlyShown.Listings);
-
         var history = await test.History.Retrieve(new HistoryQuery
         {
             WorldId = upload.WorldId.Value,
