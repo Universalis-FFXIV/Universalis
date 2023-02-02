@@ -136,7 +136,6 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             }
         }
 
-        List<Listing> newListings = null;
         if (parameters.Listings != null)
         {
             if (parameters.Listings.Any(l =>
@@ -147,7 +146,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 return new BadRequestResult();
             }
 
-            newListings = CleanUploadedListings(parameters.Listings, itemId, worldId, source.Name);
+            var newListings = CleanUploadedListings(parameters.Listings, itemId, worldId, source.Name);
 
             var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
             var addedListings = newListings.Where(l => !oldListings.Contains(l)).ToList();
@@ -160,8 +159,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     WorldId = worldId,
                     ItemId = itemId,
                     Listings = addedListings
-                            .Select(Util.ListingToView)
-                            .ToList(),
+                        .Select(Util.ListingToView)
+                        .ToList(),
                 }, cancellationToken);
             }
 
@@ -172,32 +171,32 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     WorldId = worldId,
                     ItemId = itemId,
                     Listings = removedListings
-                            .Select(Util.ListingToView)
-                            .ToList(),
+                        .Select(Util.ListingToView)
+                        .ToList(),
                 }, cancellationToken);
             }
-        }
 
-        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var listings = newListings ?? existingCurrentlyShown?.Listings ?? new List<Listing>();
-        var document = new CurrentlyShown
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-            LastUploadTimeUnixMilliseconds = now,
-            UploadSource = source.Name,
-            Listings = listings,
-        };
-        await _currentlyShownDb.Update(document, new CurrentlyShownQuery
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-        }, cancellationToken);
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var document = new CurrentlyShown
+            {
+                WorldId = worldId,
+                ItemId = itemId,
+                LastUploadTimeUnixMilliseconds = now,
+                UploadSource = source.Name,
+                Listings = newListings,
+            };
+            await _currentlyShownDb.Update(document, new CurrentlyShownQuery
+            {
+                WorldId = worldId,
+                ItemId = itemId,
+            }, cancellationToken);
+        }
 
         return null;
     }
 
-    private static List<Listing> CleanUploadedListings(IEnumerable<Schema.Listing> uploadedListings, int itemId, int worldId, string sourceName)
+    private static List<Listing> CleanUploadedListings(IEnumerable<Schema.Listing> uploadedListings, int itemId,
+        int worldId, string sourceName)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketBoardUploadBehavior.CleanUploadedListings");
 
