@@ -25,6 +25,24 @@ public class ListingStore : IListingStore
         _logger = logger;
     }
 
+    public async Task DeleteLive(ListingQuery query, CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.DeleteLive");
+        await using var command = _dataSource.CreateCommand("DELETE FROM listing WHERE item_id = $1 AND world_id = $2");
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.ItemId });
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.WorldId });
+        try
+        {
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to delete listings (world={}, item={})", query.WorldId,
+                query.ItemId);
+            throw;
+        }
+    }
+
     public async Task ReplaceLive(IEnumerable<Listing> listings, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.ReplaceLive");
@@ -50,7 +68,7 @@ public class ListingStore : IListingStore
                 {
                     new NpgsqlParameter<int> { TypedValue = itemID },
                     new NpgsqlParameter<int> { TypedValue = worldID },
-                }
+                },
             });
 
             foreach (var listing in listingGroup)

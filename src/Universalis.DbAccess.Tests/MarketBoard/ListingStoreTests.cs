@@ -67,6 +67,23 @@ public class ListingStoreTests
 #if DEBUG
     [Fact]
 #endif
+    public async Task DeleteLiveRetrieveLive_Works()
+    {
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, 98);
+
+        await store.ReplaceLive(currentlyShown.Listings);
+        var query = new ListingQuery { ItemId = 98, WorldId = 93 };
+        await store.DeleteLive(query);
+        var results = await store.RetrieveLive(query);
+
+        Assert.NotNull(results);
+        Assert.Empty(results);
+    }
+
+#if DEBUG
+    [Fact]
+#endif
     public async Task ReplaceLiveRetrieveLiveMultiple_Works()
     {
         var store = _fixture.Services.GetRequiredService<IListingStore>();

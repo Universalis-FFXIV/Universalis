@@ -29,7 +29,7 @@ public class DbFixture : IAsyncLifetime
             .WithImage("scylladb/scylla:5.1.3")
             .WithExposedPort(9042)
             .WithPortBinding(9042)
-            .WithCommand("--smp", "1", "--overprovisioned", "1", "--memory", "512M", "--alternator-port", "8000", "--alternator-write-isolation", "only_rmw_uses_lwt")
+            .WithCommand("--smp", "1", "--overprovisioned", "1", "--memory", "512M")
             .WithCreateContainerParametersModifier(o =>
             {
                 o.HostConfig.CPUCount = 1;
@@ -39,14 +39,12 @@ public class DbFixture : IAsyncLifetime
             .WithName(Guid.NewGuid().ToString("D"))
             .WithImage("redis:7.0.8")
             .WithPortBinding(6379, true)
-            .WithCommand("redis-server", "--save", "", "--loglevel", "warning")
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(6379))
             .Build();
         _redis = new TestcontainersBuilder<TestcontainersContainer>()
             .WithName(Guid.NewGuid().ToString("D"))
             .WithImage("redis:7.0.8")
             .WithPortBinding(6379, true)
-            .WithCommand("redis-server", "--save", "", "--loglevel", "warning")
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(6379))
             .Build();
         _postgres = new TestcontainersBuilder<TestcontainersContainer>()

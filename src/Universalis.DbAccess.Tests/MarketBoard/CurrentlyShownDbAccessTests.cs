@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -77,5 +78,33 @@ public class CurrentlyShownDbAccessTests
         Assert.Equal(document2.ItemId, retrieved.ItemId);
         Assert.Equal(document2.UploadSource, retrieved.UploadSource);
         Assert.Equal(document2.LastUploadTimeUnixMilliseconds, retrieved.LastUploadTimeUnixMilliseconds);
+    }
+    
+    [Fact]
+    public async Task Update_Retrieve_Works_WhenUpdatingToNone()
+    {
+        var store = new MockCurrentlyShownStore();
+        ICurrentlyShownDbAccess db = new CurrentlyShownDbAccess(store);
+
+        var document1 = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
+        var query = new CurrentlyShownQuery { WorldId = document1.WorldId, ItemId = document1.ItemId };
+        await db.Update(document1, query);
+
+        var document2 = new CurrentlyShown
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            Listings = new List<Listing>(),
+            UploadSource = "",
+        };
+        await db.Update(document2, query);
+
+        var retrieved = await db.Retrieve(query);
+        Assert.Equal(document2.WorldId, retrieved.WorldId);
+        Assert.Equal(document2.ItemId, retrieved.ItemId);
+        Assert.Equal(document2.UploadSource, retrieved.UploadSource);
+        Assert.Equal(document2.LastUploadTimeUnixMilliseconds, retrieved.LastUploadTimeUnixMilliseconds);
+        Assert.Empty(retrieved.Listings);
     }
 }
