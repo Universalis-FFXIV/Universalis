@@ -68,6 +68,33 @@ public class CurrentlyShownStoreTests
             Assert.Equal(expected.Source, actual.Source);
         });
     }
+    
+#if DEBUG
+    [Fact]
+#endif
+    public async Task InsertRetrieve_Works_WhenUpdatingToNone()
+    {
+        var store = _fixture.Services.GetRequiredService<ICurrentlyShownStore>();
+        await store.Insert(SeedDataGenerator.MakeCurrentlyShown(74, 98));
+        var currentlyShown = new CurrentlyShown
+        {
+            WorldId = 74,
+            ItemId = 98,
+            LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            Listings = new List<Listing>(),
+            UploadSource = "",
+        };
+        await store.Insert(currentlyShown);
+        var results = await store.Retrieve(new CurrentlyShownQuery { WorldId = 74, ItemId = 98 });
+
+        Assert.NotNull(results);
+        Assert.Equal(currentlyShown.WorldId, results.WorldId);
+        Assert.Equal(currentlyShown.ItemId, results.ItemId);
+        Assert.Equal(currentlyShown.LastUploadTimeUnixMilliseconds / 1000,
+            results.LastUploadTimeUnixMilliseconds / 1000);
+        Assert.Equal(currentlyShown.UploadSource, results.UploadSource);
+        Assert.Empty(results.Listings);
+    }
 
 #if DEBUG
     [Fact]

@@ -270,6 +270,47 @@ public class MarketBoardUploadBehaviorTests
 
         Assert.Null(history);
     }
+    
+    [Fact]
+    public async Task Behavior_Succeeds_Listings_WhenNone()
+    {
+        var test = TestResources.Create();
+
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Listings = new List<Listing>(),
+            UploaderId = "5627384655756342554",
+        };
+        
+        Assert.True(test.Behavior.ShouldExecute(upload));
+
+        var result = await test.Behavior.Execute(source, upload);
+        Assert.Null(result);
+
+        var currentlyShown = await test.CurrentlyShown.Retrieve(new CurrentlyShownQuery
+        {
+            WorldId = upload.WorldId.Value,
+            ItemId = upload.ItemId.Value,
+        });
+
+        Assert.NotNull(currentlyShown);
+        Assert.Equal(upload.WorldId.Value, currentlyShown.WorldId);
+        Assert.Equal(upload.ItemId.Value, currentlyShown.ItemId);
+        Assert.NotNull(currentlyShown.Listings);
+        Assert.Empty(currentlyShown.Listings);
+
+        var history = await test.History.Retrieve(new HistoryQuery
+        {
+            WorldId = upload.WorldId.Value,
+            ItemId = upload.ItemId.Value,
+        });
+
+        Assert.Null(history);
+    }
 
     [Fact]
     public async Task Behavior_Succeeds_Sales()

@@ -34,13 +34,21 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         var lastUploadTime = data.LastUploadTimeUnixMilliseconds;
         var listings = data.Listings;
 
-        await _listingStore.ReplaceLive(listings.Select(l =>
+        if (listings.Any())
         {
-            l.ItemId = itemId;
-            l.WorldId = worldId;
-            l.Source = uploadSource;
-            return l;
-        }), cancellationToken);
+            await _listingStore.ReplaceLive(listings.Select(l =>
+            {
+                l.ItemId = itemId;
+                l.WorldId = worldId;
+                l.Source = uploadSource;
+                return l;
+            }), cancellationToken);
+        }
+        else
+        {
+            await _listingStore.DeleteLive(new ListingQuery { ItemId = itemId, WorldId = worldId }, cancellationToken);
+        }
+
         await SetLastUpdated(worldId, itemId, lastUploadTime);
     }
 
