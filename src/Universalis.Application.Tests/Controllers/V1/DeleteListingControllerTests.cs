@@ -28,6 +28,7 @@ public class DeleteListingControllerTests
         public IFlaggedUploaderDbAccess FlaggedUploaders { get; private init; }
         public ICurrentlyShownDbAccess CurrentlyShown { get; private init; }
         public ITrustedSourceDbAccess TrustedSources { get; private init; }
+        public IUploadLogDbAccess UploadLog { get; private init; }
         public LogFixture<SocketProcessor> SocketLogFixture { get; private init; }
         public ISocketProcessor Sockets { get; private init; }
         public DeleteListingController Controller { get; private init; }
@@ -38,15 +39,17 @@ public class DeleteListingControllerTests
             var flaggedUploaders = new MockFlaggedUploaderDbAccess();
             var currentlyShown = new MockCurrentlyShownDbAccess();
             var trustedSources = new MockTrustedSourceDbAccess();
+            var uploadLog = new MockUploadLogDbAccess();
             var socketLogFixture = new LogFixture<SocketProcessor>();
             var sockets = new SocketProcessor(socketLogFixture);
-            var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, sockets);
+            var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, uploadLog, sockets);
             return new TestResources
             {
                 GameData = gameData,
                 FlaggedUploaders = flaggedUploaders,
                 CurrentlyShown = currentlyShown,
                 TrustedSources = trustedSources,
+                UploadLog = uploadLog,
                 Controller = controller,
                 SocketLogFixture = socketLogFixture,
                 Sockets = sockets,

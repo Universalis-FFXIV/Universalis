@@ -13,6 +13,7 @@ using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Queries.Uploads;
 using Universalis.DbAccess.Uploads;
+using Universalis.Entities.Uploads;
 using Universalis.GameData;
 
 namespace Universalis.Application.Controllers.V1;
@@ -27,6 +28,7 @@ public class DeleteListingController : WorldDcRegionControllerBase
     private readonly ITrustedSourceDbAccess _trustedSourceDb;
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
+    private readonly IUploadLogDbAccess _uploadLogDb;
     private readonly ISocketProcessor _sockets;
 
     public DeleteListingController(
@@ -34,11 +36,13 @@ public class DeleteListingController : WorldDcRegionControllerBase
         ITrustedSourceDbAccess trustedSourceDb,
         ICurrentlyShownDbAccess currentlyShownDb,
         IFlaggedUploaderDbAccess flaggedUploaderDb,
+        IUploadLogDbAccess uploadLogDb,
         ISocketProcessor sockets) : base(gameData)
     {
         _trustedSourceDb = trustedSourceDb;
         _currentlyShownDb = currentlyShownDb;
         _flaggedUploaderDb = flaggedUploaderDb;
+        _uploadLogDb = uploadLogDb;
         _sockets = sockets;
     }
 
@@ -46,7 +50,8 @@ public class DeleteListingController : WorldDcRegionControllerBase
     [MapToApiVersion("1")]
     [Route("{world}/{itemId}/delete")]
     [ApiExplorerSettings(IgnoreApi = true)]
-    public async Task<IActionResult> Post(int itemId, string world, [FromHeader] string authorization, [FromBody] DeleteListingParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Post(int itemId, string world, [FromHeader] string authorization,
+        [FromBody] DeleteListingParameters parameters, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("DeleteListingControllerV1.Post");
         activity?.AddTag("itemId", itemId);
@@ -79,7 +84,8 @@ public class DeleteListingController : WorldDcRegionControllerBase
         cts.CancelAfter(TimeSpan.FromSeconds(5));
 
         // Check if this uploader is flagged, cancel if they are
-        if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdSha256 = parameters.UploaderId }, cts.Token) != null)
+        if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdSha256 = parameters.UploaderId },
+                cts.Token) != null)
         {
             return Ok("Success");
         }
@@ -118,6 +124,19 @@ public class DeleteListingController : WorldDcRegionControllerBase
         };
 
         await _currentlyShownDb.Update(itemData, query, cts.Token);
+
+        // Log the upload
+        await _uploadLogDb.LogAction(new UploadLogEntry
+        {
+            Id = Guid.NewGuid(),
+            Timestamp = DateTimeOffset.UtcNow,
+            Event = "DeleteListing",
+            Application = source.Name,
+            WorldId = worldDc.WorldId,
+            ItemId = itemId,
+            Listings = 1,
+            Sales = 0,
+        });
 
         _sockets.Publish(new ListingsRemove
         {

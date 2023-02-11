@@ -10,8 +10,10 @@ using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.DbAccess.Uploads;
 using Universalis.Entities.AccessControl;
 using Universalis.Entities.MarketBoard;
+using Universalis.Entities.Uploads;
 using Universalis.GameData;
 using Listing = Universalis.Entities.MarketBoard.Listing;
 using Materia = Universalis.Entities.Materia;
@@ -23,17 +25,20 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 {
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IHistoryDbAccess _historyDb;
+    private readonly IUploadLogDbAccess _uploadLogDb;
     private readonly IGameDataProvider _gdp;
     private readonly IBus _bus;
 
     public MarketBoardUploadBehavior(
         ICurrentlyShownDbAccess currentlyShownDb,
         IHistoryDbAccess historyDb,
+        IUploadLogDbAccess uploadLogDb,
         IGameDataProvider gdp,
         IBus bus)
     {
         _currentlyShownDb = currentlyShownDb;
         _historyDb = historyDb;
+        _uploadLogDb = uploadLogDb;
         _gdp = gdp;
         _bus = bus;
     }
@@ -73,6 +78,19 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var worldId = parameters.WorldId.Value;
         var itemId = parameters.ItemId.Value;
         // ReSharper restore PossibleInvalidOperationException
+
+        // Log the upload
+        await _uploadLogDb.LogAction(new UploadLogEntry
+        {
+            Id = Guid.NewGuid(),
+            Timestamp = DateTimeOffset.UtcNow,
+            Event = "MarketBoardUpload",
+            Application = source.Name,
+            WorldId = worldId,
+            ItemId = itemId,
+            Listings = parameters.Listings?.Count ?? 0,
+            Sales = parameters.Sales?.Count ?? 0,
+        });
 
         // Most uploads have both sales and listings
         var currentlyShownTask = _currentlyShownDb.Retrieve(new CurrentlyShownQuery

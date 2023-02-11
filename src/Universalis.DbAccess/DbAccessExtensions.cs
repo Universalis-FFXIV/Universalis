@@ -66,6 +66,9 @@ public static class DbAccessExtensions
         var db = ConnectionMultiplexer.Connect(dbOptions);
         sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(cache));
         sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(db));
+        
+        sc.AddSingleton<IUploadLogStore, UploadLogStore>();
+        sc.AddSingleton<IUploadLogDbAccess, UploadLogDbAccess>();
 
         sc.AddSingleton<IListingStore, ListingStore>();
 
