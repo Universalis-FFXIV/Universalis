@@ -129,7 +129,7 @@ public class DeleteListingController : WorldDcRegionControllerBase
         await _uploadLogDb.LogAction(new UploadLogEntry
         {
             Id = Guid.NewGuid(),
-            Timestamp = DateTimeOffset.UtcNow,
+            Timestamp = DateTime.UtcNow,
             Event = "DeleteListing",
             Application = source.Name,
             WorldId = worldDc.WorldId,

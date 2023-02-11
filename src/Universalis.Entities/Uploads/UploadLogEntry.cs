@@ -6,7 +6,7 @@ public class UploadLogEntry
 {
     public Guid Id { get; init; }
 
-    public DateTimeOffset Timestamp { get; init; }
+    public DateTime Timestamp { get; init; }
 
     public string Event { get; init; }
 

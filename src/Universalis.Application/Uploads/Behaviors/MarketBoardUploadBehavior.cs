@@ -83,7 +83,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         await _uploadLogDb.LogAction(new UploadLogEntry
         {
             Id = Guid.NewGuid(),
-            Timestamp = DateTimeOffset.UtcNow,
+            Timestamp = DateTime.UtcNow,
             Event = "MarketBoardUpload",
             Application = source.Name,
             WorldId = worldId,
