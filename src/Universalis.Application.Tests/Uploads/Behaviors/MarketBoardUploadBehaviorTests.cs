@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Universalis.Application.Realtime;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
+using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
 using Universalis.Application.Tests.Mocks.Realtime;
 using Universalis.Application.Uploads.Behaviors;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.DbAccess.Uploads;
 using Universalis.Entities.AccessControl;
 using Universalis.GameData;
 using Xunit;
@@ -22,6 +24,7 @@ public class MarketBoardUploadBehaviorTests
     {
         public ICurrentlyShownDbAccess CurrentlyShown { get; private init; }
         public IHistoryDbAccess History { get; private init; }
+        public IUploadLogDbAccess UploadLog { get; private init; }
         public ISocketProcessor Sockets { get; private init; }
         public IGameDataProvider GameData { get; private init; }
         public IUploadBehavior Behavior { get; private init; }
@@ -32,12 +35,14 @@ public class MarketBoardUploadBehaviorTests
             var historyDb = new MockHistoryDbAccess();
             var sockets = new MockSocketProcessor();
             var gameData = new MockGameDataProvider();
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, gameData, null);
+            var uploadLog = new MockUploadLogDbAccess();
+            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, uploadLog, gameData, null);
 
             return new TestResources
             {
                 CurrentlyShown = currentlyShownDb,
                 History = historyDb,
+                UploadLog = uploadLog,
                 Sockets = sockets,
                 GameData = gameData,
                 Behavior = behavior,
