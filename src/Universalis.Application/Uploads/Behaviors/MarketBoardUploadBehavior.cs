@@ -88,8 +88,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             Application = source.Name,
             WorldId = worldId,
             ItemId = itemId,
-            Listings = parameters.Listings?.Count ?? 0,
-            Sales = parameters.Sales?.Count ?? 0,
+            Listings = parameters.Listings?.Count ?? -1,
+            Sales = parameters.Sales?.Count ?? -1,
         });
 
         // Most uploads have both sales and listings
