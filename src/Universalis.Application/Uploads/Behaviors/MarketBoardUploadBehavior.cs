@@ -163,6 +163,18 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     ItemId = itemId,
                     Sales = addedSales.Select(Util.SaleToView).ToList(),
                 }, cancellationToken);
+
+                await _uploadLogDb.LogAction(new UploadLogEntry
+                {
+                    Id = Guid.NewGuid(),
+                    Timestamp = DateTime.UtcNow,
+                    Event = "SalesUploadSuccess",
+                    Application = source.Name,
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    Listings = parameters.Listings?.Count ?? -1,
+                    Sales = parameters.Sales?.Count ?? -1,
+                });
             }
         }
 
@@ -232,6 +244,18 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 WorldId = worldId,
                 ItemId = itemId,
             }, cancellationToken);
+
+            await _uploadLogDb.LogAction(new UploadLogEntry
+            {
+                Id = Guid.NewGuid(),
+                Timestamp = DateTime.UtcNow,
+                Event = "ListingsUploadSuccess",
+                Application = source.Name,
+                WorldId = worldId,
+                ItemId = itemId,
+                Listings = parameters.Listings?.Count ?? -1,
+                Sales = parameters.Sales?.Count ?? -1,
+            });
         }
 
         return null;
