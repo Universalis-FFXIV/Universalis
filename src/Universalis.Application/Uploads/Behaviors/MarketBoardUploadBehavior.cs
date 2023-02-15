@@ -173,7 +173,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     WorldId = worldId,
                     ItemId = itemId,
                     Listings = parameters.Listings?.Count ?? -1,
-                    Sales = parameters.Sales?.Count ?? -1,
+                    Sales = addedSales.Count,
                 });
             }
         }
@@ -253,7 +253,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 Application = source.Name,
                 WorldId = worldId,
                 ItemId = itemId,
-                Listings = parameters.Listings?.Count ?? -1,
+                Listings = newListings.Count,
                 Sales = parameters.Sales?.Count ?? -1,
             });
         }
