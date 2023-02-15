@@ -33,7 +33,8 @@ public class ListingStore : IListingStore
         command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.WorldId });
         try
         {
-            await command.ExecuteNonQueryAsync(cancellationToken);
+            var rowsUpdated = await command.ExecuteNonQueryAsync(cancellationToken);
+            activity?.AddTag("rowsUpdated", rowsUpdated);
         }
         catch (Exception e)
         {
@@ -46,6 +47,7 @@ public class ListingStore : IListingStore
     public async Task ReplaceLive(IEnumerable<Listing> listings, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.ReplaceLive");
+        var rowsUpdated = 0;
 
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
 
@@ -116,15 +118,18 @@ public class ListingStore : IListingStore
 
             try
             {
-                await batch.ExecuteNonQueryAsync(cancellationToken);
+                rowsUpdated += await batch.ExecuteNonQueryAsync(cancellationToken);
             }
             catch (Exception e)
             {
+                activity?.AddTag("rowsUpdated", rowsUpdated);
                 _logger.LogError(e, "Failed to insert listings (world={}, item={})", worldID,
                     itemID);
                 throw;
             }
         }
+
+        activity?.AddTag("rowsUpdated", rowsUpdated);
     }
 
     public async Task<IEnumerable<Listing>> RetrieveLive(ListingQuery query,
