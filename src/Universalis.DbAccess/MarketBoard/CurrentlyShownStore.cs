@@ -27,6 +27,10 @@ public class CurrentlyShownStore : ICurrentlyShownStore
     public async Task Insert(CurrentlyShown data, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.Insert");
+        activity?.AddTag("worldId", data.WorldId);
+        activity?.AddTag("itemId", data.ItemId);
+        activity?.AddTag("source", data.UploadSource);
+        activity?.AddTag("listings", data.Listings.Count);
 
         var worldId = data.WorldId;
         var itemId = data.ItemId;
