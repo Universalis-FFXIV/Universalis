@@ -114,6 +114,18 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             if (parameters.Sales.Any(s =>
                     Util.HasHtmlTags(s.BuyerName) || Util.HasHtmlTags(s.SellerId) || Util.HasHtmlTags(s.BuyerId)))
             {
+                await _uploadLogDb.LogAction(new UploadLogEntry
+                {
+                    Id = Guid.NewGuid(),
+                    Timestamp = DateTime.UtcNow,
+                    Event = "SalesUploadMalformed",
+                    Application = source.Name,
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    Listings = parameters.Listings?.Count ?? -1,
+                    Sales = parameters.Sales?.Count ?? -1,
+                });
+
                 return new BadRequestResult();
             }
 
@@ -161,6 +173,18 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     Util.HasHtmlTags(l.RetainerId) || Util.HasHtmlTags(l.CreatorName) || Util.HasHtmlTags(l.SellerId) ||
                     Util.HasHtmlTags(l.CreatorId)))
             {
+                await _uploadLogDb.LogAction(new UploadLogEntry
+                {
+                    Id = Guid.NewGuid(),
+                    Timestamp = DateTime.UtcNow,
+                    Event = "ListingsUploadMalformed",
+                    Application = source.Name,
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    Listings = parameters.Listings?.Count ?? -1,
+                    Sales = parameters.Sales?.Count ?? -1,
+                });
+
                 return new BadRequestResult();
             }
 
