@@ -167,7 +167,7 @@ public class SaleStore : ISaleStore
         {
             var writeTime = DateTimeOffset.FromUnixTimeMilliseconds(sale.WriteTime / 1000);
             if (writeTime >= new DateTimeOffset(2023, 02, 18, 22, 0, 0, TimeSpan.Zero) &&
-                writeTime <= new DateTimeOffset(2023, 02, 19, 05, 0, 0, TimeSpan.Zero))
+                writeTime <= new DateTimeOffset(2023, 02, 19, 17, 0, 0, TimeSpan.Zero))
             {
                 await _mapper.Value.DeleteAsync(sale);
             }
