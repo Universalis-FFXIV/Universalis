@@ -109,7 +109,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var existingCurrentlyShown = await currentlyShownTask;
         var existingHistory = await existingHistoryTask;
 
-        if (parameters.Sales != null)
+        if (source.Name != "goat" && parameters.Sales != null)
         {
             if (parameters.Sales.Any(s =>
                     Util.HasHtmlTags(s.BuyerName) || Util.HasHtmlTags(s.SellerId) || Util.HasHtmlTags(s.BuyerId)))
