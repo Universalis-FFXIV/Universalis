@@ -72,6 +72,11 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters,
         CancellationToken cancellationToken = default)
     {
+        if (source.Name == "goat")
+        {
+            return null;
+        }
+
         using var activity = Util.ActivitySource.StartActivity("MarketBoardUploadBehavior.Execute");
 
         // ReSharper disable PossibleInvalidOperationException
@@ -109,7 +114,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var existingCurrentlyShown = await currentlyShownTask;
         var existingHistory = await existingHistoryTask;
 
-        if (source.Name != "goat" && parameters.Sales != null)
+        if (parameters.Sales != null)
         {
             if (parameters.Sales.Any(s =>
                     Util.HasHtmlTags(s.BuyerName) || Util.HasHtmlTags(s.SellerId) || Util.HasHtmlTags(s.BuyerId)))
