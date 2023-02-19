@@ -141,7 +141,7 @@ public class SaleStore : ISaleStore
     {
         using var activity = Util.ActivitySource.StartActivity("SaleStore.RetrieveBySaleTime");
 
-        var sales = Enumerable.Empty<Sale>();
+        var sales = new List<Sale>();
         if (count == 0)
         {
             return sales;
@@ -151,14 +151,26 @@ public class SaleStore : ISaleStore
         var timestamp = from == null ? 0 : new DateTimeOffset(from.Value).ToUnixTimeMilliseconds();
         try
         {
-            sales = await _mapper.Value.FetchAsync<Sale>(
-                "SELECT * FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? ORDER BY sale_time DESC LIMIT ?",
+            var nextSales = await _mapper.Value.FetchAsync<Sale>(
+                "SELECT WRITETIME(id) AS write_time, id, sale_time, item_id, world_id, buyer_name, hq, on_mannequin, quantity, unit_price, uploader_id FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? ORDER BY sale_time DESC LIMIT ?",
                 itemId, worldId, timestamp, count);
+            sales = nextSales.ToList();
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to retrieve sales (world={WorldId}, item={ItemId})", worldId, itemId);
             throw;
+        }
+
+        // Clean some junk data
+        foreach (var sale in sales)
+        {
+            var writeTime = DateTimeOffset.FromUnixTimeMilliseconds(sale.WriteTime / 1000);
+            if (writeTime >= new DateTimeOffset(2023, 02, 18, 22, 0, 0, TimeSpan.Zero) &&
+                writeTime <= new DateTimeOffset(2023, 02, 19, 05, 0, 0, TimeSpan.Zero))
+            {
+                await _mapper.Value.DeleteAsync(sale);
+            }
         }
 
         return sales
