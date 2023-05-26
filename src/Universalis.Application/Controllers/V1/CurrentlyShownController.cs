@@ -27,8 +27,8 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
     /// </summary>
     /// <param name="itemIds">The item ID or comma-separated item IDs to retrieve data for.</param>
     /// <param name="worldDcRegion">The world, data center, or region to retrieve data for. This may be an ID or a name. Regions should be specified as Japan, Europe, North-America, Oceania, China, or 中国.</param>
-    /// <param name="listingsToReturn">The number of listings to return. By default, all listings will be returned.</param>
-    /// <param name="entriesToReturn">The number of recent history entries to return. By default, a maximum of 5 entries will be returned.</param>
+    /// <param name="listingsToReturn">The number of listings to return per item. By default, all listings will be returned.</param>
+    /// <param name="entriesToReturn">The number of recent history entries to return per item. By default, a maximum of 5 entries will be returned.</param>
     /// <param name="statsWithin">The amount of time before now to calculate stats over, in milliseconds. By default, this is 7 days.</param>
     /// <param name="entriesWithin">The amount of time before now to take entries within, in seconds. Negative values will be ignored.</param>
     /// <param name="noGst">
