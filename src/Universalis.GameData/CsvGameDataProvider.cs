@@ -105,6 +105,7 @@ public class CsvGameDataProvider : IGameDataProvider
         return Task.FromResult<IReadOnlyDictionary<int, string>>(GetValidWorlds(worlds)
             .Select(w => new World { Name = w.Name, Id = w.RowId })
             .Concat(ChineseServers.Worlds())
+            .Concat(KoreanServers.Worlds())
             .ToDictionary(w => w.Id, w => w.Name));
     }
 
@@ -113,6 +114,7 @@ public class CsvGameDataProvider : IGameDataProvider
         return Task.FromResult<IReadOnlyDictionary<string, int>>(GetValidWorlds(worlds)
             .Select(w => new World { Name = w.Name, Id = w.RowId })
             .Concat(ChineseServers.Worlds())
+            .Concat(KoreanServers.Worlds())
             .ToDictionary(w => w.Name, w => w.Id));
     }
 
@@ -121,6 +123,7 @@ public class CsvGameDataProvider : IGameDataProvider
         return Task.FromResult<IReadOnlySet<int>>(new SortedSet<int>(GetValidWorlds(worlds)
             .Select(w => new World { Name = w.Name, Id = w.RowId })
             .Concat(ChineseServers.Worlds())
+            .Concat(KoreanServers.Worlds())
             .Select(w => w.Id)
             .ToList()));
     }
@@ -155,6 +158,7 @@ public class CsvGameDataProvider : IGameDataProvider
             })
             .Where(dc => dc.WorldIds.Length > 0)
             .Concat(ChineseServers.DataCenters())
+            .Concat(KoreanServers.DataCenters())
             .ToList());
     }
 

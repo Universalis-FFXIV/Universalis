@@ -47,6 +47,8 @@ public class WorldDcRegion
             // Effectively does nothing if the input doesn't refer to a Chinese world, DC, or region
             cleanText = ChineseServers.RomanizedToHanzi(cleanText);
             cleanText = ChineseServers.RegionToHanzi(cleanText);
+            cleanText = KoreanServers.RomanizedToHangul(cleanText);
+            cleanText = KoreanServers.RegionToHangul(cleanText);
 
             worldIdParsed = gameData.AvailableWorldsReversed().TryGetValue(cleanText, out worldId);
 
