@@ -465,6 +465,9 @@ public class CurrentlyShownControllerTests
         Assert.Equal(stackSizeHistogram, currentlyShown.StackSizeHistogram);
         Assert.Equal(stackSizeHistogramNq, currentlyShown.StackSizeHistogramNq);
         Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
+
+        Assert.Equal(document.Listings.Take(currentlyShown.Listings.Count).Sum(listing => listing.Quantity), currentlyShown.UnitsForSale);
+        Assert.Equal(sales.Take(currentlyShown.RecentHistory.Count).Sum(sale => sale.Quantity), currentlyShown.UnitsSold);
     }
 
     private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, List<Sale> sales, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc)

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -60,7 +61,7 @@ public class CurrentlyShownControllerTests
         var result = await test.Controller.Get(itemId.ToString(), worldOrDc, entriesToReturn: int.MaxValue.ToString());
         var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
 
-        AssertCurrentlyShownValidWorld(document, currentlyShown, test.GameData);
+        AssertCurrentlyShownValidWorld(document, sales, currentlyShown, test.GameData);
     }
 
     [Theory]
@@ -142,8 +143,8 @@ public class CurrentlyShownControllerTests
         Assert.Equal(test.GameData.AvailableWorlds()[document1.WorldId], currentlyShown.WorldName);
         Assert.Null(currentlyShown.DcName);
 
-        AssertCurrentlyShownValidWorld(document1, currentlyShown.Items.First(item => item.ItemId == document1.ItemId), test.GameData);
-        AssertCurrentlyShownValidWorld(document2, currentlyShown.Items.First(item => item.ItemId == document2.ItemId), test.GameData);
+        AssertCurrentlyShownValidWorld(document1, sales1, currentlyShown.Items.First(item => item.ItemId == document1.ItemId), test.GameData);
+        AssertCurrentlyShownValidWorld(document2, sales2, currentlyShown.Items.First(item => item.ItemId == document2.ItemId), test.GameData);
     }
 
     [Theory]
@@ -518,7 +519,7 @@ public class CurrentlyShownControllerTests
         Assert.Matches(@"{""items"":\[{""listings"":\[({""pricePerUnit"":\d+},?){100}],""minPrice"":\d+},{""listings"":\[({""pricePerUnit"":\d+},?){100}],""minPrice"":\d+}],""dcName"":""Crystal""}", json);
     }
 
-    private static void AssertCurrentlyShownValidWorld(CurrentlyShown document, CurrentlyShownView currentlyShown, IGameDataProvider gameData)
+    private static void AssertCurrentlyShownValidWorld(CurrentlyShown document, List<Sale> sales, CurrentlyShownView currentlyShown, IGameDataProvider gameData)
     {
         Assert.Equal(document.ItemId, currentlyShown.ItemId);
         Assert.Equal(document.WorldId, currentlyShown.WorldId);
@@ -532,6 +533,7 @@ public class CurrentlyShownControllerTests
         currentlyShown.Listings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
         document.Listings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
+        sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
         Assert.All(currentlyShown.Listings.Select(l => (object)l.WorldId), Assert.Null);
         Assert.All(currentlyShown.Listings.Select(l => l.WorldName), Assert.Null);
@@ -557,6 +559,9 @@ public class CurrentlyShownControllerTests
         Assert.True(currentlyShown.SaleVelocity > 0);
         Assert.True(currentlyShown.SaleVelocityNq > 0);
         Assert.True(currentlyShown.SaleVelocityHq > 0);
+
+        Assert.Equal(document.Listings.Take(currentlyShown.Listings.Count).Sum(listing => listing.Quantity), currentlyShown.UnitsForSale);
+        Assert.Equal(sales.Take(currentlyShown.RecentHistory.Count).Sum(sale => sale.Quantity), currentlyShown.UnitsSold);
     }
 
     private static void AssertCurrentlyShownDataCenter(CurrentlyShown anyWorldDocument, CurrentlyShownView currentlyShown, long lastUploadTime, string worldOrDc)

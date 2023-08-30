@@ -48,7 +48,7 @@ public class CurrentlyShownView : PartiallySerializable
     [JsonPropertyName("dcName")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string DcName { get; init; }
-    
+
     /// <summary>
     /// The region name, if applicable.
     /// </summary>
@@ -183,4 +183,30 @@ public class CurrentlyShownView : PartiallySerializable
     [JsonPropertyName("worldUploadTimes")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Dictionary<int, long> WorldUploadTimes { get; set; }
+
+    /// <summary>
+    /// The number of listings retrieved for the request. When using the "listings" limit parameter, this may be
+    /// different from the number of sale entries returned in an API response.
+    /// </summary>
+    [JsonPropertyName("listingsCount")]
+    public int ListingsCount { get; init; }
+
+    /// <summary>
+    /// The number of sale entries retrieved for the request. When using the "entries" limit parameter, this may be
+    /// different from the number of sale entries returned in an API response.
+    /// </summary>
+    [JsonPropertyName("recentHistoryCount")]
+    public int RecentHistoryCount { get; init; }
+
+    /// <summary>
+    /// The number of items (not listings) up for sale.
+    /// </summary>
+    [JsonPropertyName("unitsForSale")]
+    public int UnitsForSale { get; init; }
+
+    /// <summary>
+    /// The number of items (not sale entries) sold over the retrieved sales.
+    /// </summary>
+    [JsonPropertyName("unitsSold")]
+    public int UnitsSold { get; init; }
 }

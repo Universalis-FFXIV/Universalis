@@ -137,11 +137,15 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         var nqSales = currentlyShown.RecentHistory.Where(s => !s.Hq).ToList();
         var hqSales = currentlyShown.RecentHistory.Where(s => s.Hq).ToList();
 
+        var requestedListings = currentlyShown.Listings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings)
+            .ToList();
+        var requestedHistory = currentlyShown.RecentHistory.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nEntries)
+            .ToList();
+
         var view = new CurrentlyShownView
         {
-            Listings = currentlyShown.Listings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings).ToList(),
-            RecentHistory = currentlyShown.RecentHistory.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nEntries)
-                .ToList(),
+            Listings = requestedListings,
+            RecentHistory = requestedHistory,
             ItemId = itemId,
             WorldId = worldId,
             WorldName = worlds[worldId],
@@ -167,6 +171,10 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             AveragePriceNq = GetAveragePricePerUnit(nqSales),
             AveragePriceHq = GetAveragePricePerUnit(hqSales),
             WorldUploadTimes = null,
+            ListingsCount = requestedListings.Count,
+            RecentHistoryCount = requestedHistory.Count,
+            UnitsForSale = requestedListings.Sum(listing => listing.Quantity),
+            UnitsSold = requestedHistory.Sum(sale => sale.Quantity),
             SerializableProperties = BuildSerializableProperties(fields),
         };
 
@@ -285,11 +293,15 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         var nqSales = currentlyShown.RecentHistory.Where(s => !s.Hq).ToList();
         var hqSales = currentlyShown.RecentHistory.Where(s => s.Hq).ToList();
 
+        var requestedListings = currentlyShown.Listings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings)
+            .ToList();
+        var requestedHistory = currentlyShown.RecentHistory.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nEntries)
+            .ToList();
+
         var view = new CurrentlyShownView
         {
-            Listings = currentlyShown.Listings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings).ToList(),
-            RecentHistory = currentlyShown.RecentHistory.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nEntries)
-                .ToList(),
+            Listings = requestedListings,
+            RecentHistory = requestedHistory,
             ItemId = itemId,
             WorldId = worldDcRegion.IsWorld ? worldDcRegion.WorldId : null,
             WorldName = worldDcRegion.IsWorld ? worldDcRegion.WorldName : null,
@@ -315,6 +327,10 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             AveragePriceNq = GetAveragePricePerUnit(nqSales),
             AveragePriceHq = GetAveragePricePerUnit(hqSales),
             WorldUploadTimes = worldDcRegion.IsWorld ? null : worldUploadTimes,
+            ListingsCount = requestedListings.Count,
+            RecentHistoryCount = requestedHistory.Count,
+            UnitsForSale = requestedListings.Sum(listing => listing.Quantity),
+            UnitsSold = requestedHistory.Sum(sale => sale.Quantity),
             SerializableProperties = BuildSerializableProperties(fields),
         };
 
