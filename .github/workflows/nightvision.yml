@@ -32,8 +32,8 @@ jobs:
           path: openapi-spec.yml
           retention-days: 30
 
-      - name: (4) Start the app
-        run: docker-compose up -d; sleep 10
+      # - name: (4) Start the app
+      #   run: docker-compose up -d; sleep 10
 
       - name: (5) Scan the API
         run: nightvision scan --api ${NIGHTVISION_TARGET} --export-sarif
