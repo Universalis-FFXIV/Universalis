@@ -1,0 +1,52 @@
+name: Test Case - Universalis asp.net web api
+
+on:
+  push:
+  workflow_dispatch:
+
+env:
+  NIGHTVISION_TOKEN: ${{ secrets.NIGHTVISION_TOKEN }}
+  NIGHTVISION_TARGET: https://universalis.app/api/v2/
+  
+jobs:
+  test:
+    permissions:
+      security-events: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: (1) Clone Code
+        uses: actions/checkout@v3
+      
+      - name: (2) Install NightVision
+        run: |
+            wget -c https://downloads.nightvision.net/binaries/latest/nightvision_latest_linux_amd64.tar.gz -O - | tar -xz; sudo mv nightvision /usr/local/bin/
+                    python -m pip install semgrep --user
+
+      - name: (3) Extract API documentation from code
+        run: nightvision swagger-extract ./ -u ${NIGHTVISION_TARGET} --lang dotnet
+      
+      - name: (3.5) Upload openapi-spec documentation artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: openapi-spec.yml
+          path: openapi-spec.yml
+          retention-days: 30
+
+      - name: (4) Start the app
+        run: docker-compose up -d; sleep 10
+
+      - name: (5) Scan the API
+        run: nightvision scan --api ${NIGHTVISION_TARGET} --export-sarif
+
+      - name: (5.5) Upload sarif documentation artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: results.sarif
+          path: results.sarif
+          retention-days: 30
+
+      - name: (6) Upload SARIF file to GitHub Security Alerts if vulnerabilities are found
+        uses: github/codeql-action/upload-sarif@v2
+        if: success()
+        with:
+          sarif_file: results.sarif
