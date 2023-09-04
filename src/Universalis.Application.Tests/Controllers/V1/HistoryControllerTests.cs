@@ -54,6 +54,36 @@ public class HistoryControllerTests
         AssertHistoryValidWorld(document, history, test.GameData);
     }
 
+    [Fact]
+    public async Task Controller_Get_Succeeds_MinSalePrice()
+    {
+        var test = TestResources.Create();
+
+        var document = SeedDataGenerator.MakeHistory(74, 5333);
+        await test.History.Create(document);
+
+        var result = await test.Controller.Get("5333", "74", "50", minSalePrice: 30000);
+        var history = (HistoryView)Assert.IsType<OkObjectResult>(result).Value;
+
+        AssertHistoryValidWorld(document, history, test.GameData);
+        Assert.All(history!.Sales, sale => Assert.True(sale.PricePerUnit >= 30000));
+    }
+
+    [Fact]
+    public async Task Controller_Get_Succeeds_MaxSalePrice()
+    {
+        var test = TestResources.Create();
+
+        var document = SeedDataGenerator.MakeHistory(74, 5333);
+        await test.History.Create(document);
+
+        var result = await test.Controller.Get("5333", "74", "50", maxSalePrice: 30000);
+        var history = (HistoryView)Assert.IsType<OkObjectResult>(result).Value;
+
+        AssertHistoryValidWorld(document, history, test.GameData);
+        Assert.All(history!.Sales, sale => Assert.True(sale.PricePerUnit <= 30000));
+    }
+
     [Theory]
     [InlineData("74", "")]
     [InlineData("Coeurl", " bingus4645")]
