@@ -29,6 +29,8 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
         int entries,
         long statsWithin = 604800000,
         long entriesWithin = -1,
+        int minSalePrice = 0,
+        int maxSalePrice = int.MaxValue,
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("HistoryControllerBase.View");
@@ -57,6 +59,7 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
                     .Where(s => entriesWithin < 0 ||
                                 nowSeconds - new DateTimeOffset(s.SaleTime).ToUnixTimeSeconds() < entriesWithin)
                     .Where(s => s.Quantity is > 0)
+                    .Where(s => s.PricePerUnit >= minSalePrice && s.PricePerUnit <= maxSalePrice)
                     .Select(s => new MinimizedSaleView
                     {
                         Hq = s.Hq,

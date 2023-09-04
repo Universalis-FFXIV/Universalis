@@ -27,6 +27,8 @@ public class HistoryController : HistoryControllerBase
     /// <param name="entriesToReturn">The number of entries to return per item. By default, this is set to 1800, but may be set to a maximum of 999999.</param>
     /// <param name="statsWithin">The amount of time before now to calculate stats over, in milliseconds. By default, this is 7 days.</param>
     /// <param name="entriesWithin">The amount of time before now to take entries within, in seconds. Negative values will be ignored.</param>
+    /// <param name="minSalePrice">The inclusive minimum unit sale price of entries to return.</param>
+    /// <param name="maxSalePrice">The inclusive maximum unit sale price of entries to return.</param>
     /// <param name="cancellationToken"></param>
     /// <response code="200">Data retrieved successfully.</response>
     /// <response code="404">
@@ -44,6 +46,8 @@ public class HistoryController : HistoryControllerBase
         [FromQuery(Name = "entries")] string entriesToReturn,
         [FromQuery] string statsWithin = "",
         [FromQuery] string entriesWithin = "",
+        [FromQuery] int minSalePrice = 0,
+        [FromQuery] int maxSalePrice = int.MaxValue,
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("HistoryControllerV1.Get");
@@ -98,13 +102,13 @@ public class HistoryController : HistoryControllerBase
                 return NotFound();
             }
 
-            var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entries, statsWithinMs, entriesWithinSeconds, cts.Token);
+            var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entries, statsWithinMs, entriesWithinSeconds, minSalePrice, maxSalePrice, cts.Token);
             return Ok(historyView);
         }
 
         // Multi-item handling
         var historyViewTasks = itemIdsArray
-            .Select(itemId => GetHistoryView(worldDc, worldIds, itemId, entries, statsWithinMs, entriesWithinSeconds, cts.Token))
+            .Select(itemId => GetHistoryView(worldDc, worldIds, itemId, entries, statsWithinMs, entriesWithinSeconds, minSalePrice, maxSalePrice, cts.Token))
             .ToList();
         var historyViews = await Task.WhenAll(historyViewTasks);
         var unresolvedItems = historyViews
