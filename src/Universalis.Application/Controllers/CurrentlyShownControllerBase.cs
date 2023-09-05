@@ -443,7 +443,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     private static float GetSaleVelocity(IEnumerable<SaleView> sales, long unixNowMs, long statsWithinMs)
     {
         return Statistics.VelocityPerDay(sales
-            .Select(s => s.TimestampUnixSeconds * 1000), unixNowMs, statsWithinMs);
+            .Select(s => (s.TimestampUnixSeconds * 1000, s.Quantity)), unixNowMs, statsWithinMs);
     }
 
     private static IDictionary<int, int> GetListingsDistribution(IEnumerable<ListingView> listings)

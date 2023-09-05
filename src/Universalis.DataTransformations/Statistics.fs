@@ -22,15 +22,15 @@ type Statistics =
         dict (Seq.countBy (fun n -> n) numbers)
 
     /// <summary>
-    /// Calculates the average number of timestamps per day.
+    /// Calculates the average number of events per day.
     /// </summary>
-    /// <param name="timestampsMs">The sequence of millisecond timestamps to evaluate.</param>
+    /// <param name="timestampsMs">The amount of events and the time of their occurrence.</param>
     /// <param name="unixNow">The current time in milliseconds since the UNIX epoch.</param>
     /// <param name="period">The period to calculate over.</param>
-    static member VelocityPerDay(timestampsMs: seq<int64>, unixNow: int64, period: int64) =
-        let filtered = seq { for t in timestampsMs do if t >= unixNow - period then t }
+    static member VelocityPerDay(timestampsMs: seq<struct(int64*int)>, unixNow: int64, period: int64) =
+        let filtered = seq { for t, q in timestampsMs do if t >= unixNow - period then q }
         if Seq.length filtered = 0 || period = 0L then
             0f
         else
             let nDays = single period / 86400000f
-            single (Seq.length filtered) / nDays
+            single (Seq.sum filtered) / nDays
