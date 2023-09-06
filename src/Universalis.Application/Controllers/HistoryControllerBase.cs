@@ -101,11 +101,11 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
             StackSizeHistogramHq = new SortedDictionary<int, int>(Statistics.GetDistribution(hqSales
                 .Select(s => s.Quantity))),
             SaleVelocity = Statistics.VelocityPerDay(history.Sales
-                .Select(s => s.TimestampUnixSeconds * 1000), now, statsWithin),
+                .Select(s => (s.TimestampUnixSeconds * 1000, s.Quantity)), now, statsWithin),
             SaleVelocityNq = Statistics.VelocityPerDay(nqSales
-                .Select(s => s.TimestampUnixSeconds * 1000), now, statsWithin),
+                .Select(s => (s.TimestampUnixSeconds * 1000, s.Quantity)), now, statsWithin),
             SaleVelocityHq = Statistics.VelocityPerDay(hqSales
-                .Select(s => s.TimestampUnixSeconds * 1000), now, statsWithin),
+                .Select(s => (s.TimestampUnixSeconds * 1000, s.Quantity)), now, statsWithin),
         });
     }
 }

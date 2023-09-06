@@ -72,46 +72,45 @@ public class StatisticsTests
         var timestampsInWeek = GetTimestampsInWeek(now, rand.Next(0, 100)).ToList();
         var timestampsBeforeWeek = GetTimestampsBeforeWeek(rand.Next(0, 100));
         var velocity = Statistics.VelocityPerDay(timestampsInWeek.Concat(timestampsBeforeWeek), now, WeekLength);
-        Assert.Equal(timestampsInWeek.Count / 7.0f, velocity);
+        Assert.Equal(timestampsInWeek.Sum(t => t.Item2) / 7.0f, velocity);
     }
 
-    [Theory]
-    [InlineData(0, new long[] { })]
-    public void WeekVelocityPerDay_IsCorrect2(int expected, long[] timestamps)
+    [Fact]
+    public void WeekVelocityPerDay_IsCorrect2()
     {
         var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-        var velocity = Statistics.VelocityPerDay(timestamps, now, WeekLength);
-        Assert.Equal(expected, velocity);
+        var velocity = Statistics.VelocityPerDay(Array.Empty<(long, int)>(), now, WeekLength);
+        Assert.Equal(0, velocity);
     }
 
-    private static IEnumerable<long> GetTimestampsInWeek(long now, int count)
+    private static IEnumerable<(long, int)> GetTimestampsInWeek(long now, int count)
     {
         var startOfWeek = now - WeekLength;
         var rand = new Random();
 
-        var timestamps = new List<long>();
+        var timestamps = new List<(long, int)>();
         for (var i = 0; i < count - 2; i++)
         {
-            timestamps.Add(startOfWeek + (long)Math.Truncate(rand.NextDouble() * WeekLength));
+            timestamps.Add((startOfWeek + (long)Math.Truncate(rand.NextDouble() * WeekLength), rand.Next(1, 100)));
         }
 
         // Ensure at least one timestamp exists for both the beginning and end of the week.
-        timestamps.Add(startOfWeek);
-        timestamps.Add(now);
+        timestamps.Add((startOfWeek, rand.Next(1, 100)));
+        timestamps.Add((now, rand.Next(1, 100)));
 
         return timestamps;
     }
 
-    private static IEnumerable<long> GetTimestampsBeforeWeek(int count)
+    private static IEnumerable<(long, int)> GetTimestampsBeforeWeek(int count)
     {
         var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         var startOfWeek = now - WeekLength;
         var rand = new Random();
 
-        var timestamps = new List<long>();
+        var timestamps = new List<(long, int)>();
         for (var i = 0; i < count; i++)
         {
-            timestamps.Add((long)Math.Truncate(rand.NextDouble() * startOfWeek));
+            timestamps.Add(((long)Math.Truncate(rand.NextDouble() * startOfWeek), rand.Next(1, 100)));
         }
 
         return timestamps;
