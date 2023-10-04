@@ -106,13 +106,16 @@ public class ListingView : PartiallySerializable, IPriceable, ICopyable
     public bool OnMannequin { get; init; }
 
     /// <summary>
-    /// The city ID of the retainer.
+    /// The city ID of the retainer. This is a game ID; all possible values can be seen at
+    /// https://xivapi.com/Town.
+    ///
     /// Limsa Lominsa = 1
     /// Gridania = 2
     /// Ul'dah = 3
     /// Ishgard = 4
     /// Kugane = 7
     /// Crystarium = 10
+    /// Old Sharlayan = 12
     /// </summary>
     [BsonElement("retainerCity")]
     [JsonPropertyName("retainerCity")]
