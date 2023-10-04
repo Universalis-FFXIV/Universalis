@@ -10,5 +10,6 @@ public static class Regions
         { 2, "North-America" },
         { 3, "Europe" },
         { 4, "Oceania" },
+        { 7, "North-America" }, // NA Cloud DC
     };
 }
