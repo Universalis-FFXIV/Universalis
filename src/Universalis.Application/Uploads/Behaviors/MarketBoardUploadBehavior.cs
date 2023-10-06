@@ -57,14 +57,14 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             // TODO: Reject uploads with bad data instead of just filtering the bad data out after Dalamud fixes sales
             if (parameters.Sales?.Count > 0)
             {
-                parameters.Sales = parameters.Sales.Where(s =>
-                    s.Quantity is > 0 && s.Quantity <= stackSize && s.PricePerUnit is <= 999_999_999).ToList();
+                cond &= parameters.Sales.All(s => s.Quantity <= stackSize && s.PricePerUnit is <= 999_999_999);
+                parameters.Sales = parameters.Sales.Where(s => s.Quantity is > 0).ToList();
             }
 
             if (parameters.Listings?.Count > 0)
             {
-                parameters.Listings = parameters.Listings.Where(l =>
-                    l.Quantity is > 0 && l.Quantity <= stackSize && l.PricePerUnit is <= 999_999_999).ToList();
+                cond &= parameters.Listings.All(s => s.Quantity <= stackSize && s.PricePerUnit is <= 999_999_999);
+                parameters.Listings = parameters.Listings.Where(l => l.Quantity is > 0).ToList();
             }
         }
 
