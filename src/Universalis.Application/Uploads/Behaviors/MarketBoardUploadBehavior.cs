@@ -79,6 +79,10 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var itemId = parameters.ItemId.Value;
         // ReSharper restore PossibleInvalidOperationException
 
+        // Add world/item to traces
+        activity?.AddTag("worldId", worldId);
+        activity?.AddTag("itemId", itemId);
+
         // Log the upload
         await _uploadLogDb.LogAction(new UploadLogEntry
         {
