@@ -20,15 +20,19 @@ public class TaxRatesUploadBehavior : IUploadBehavior
 
     public bool ShouldExecute(UploadParameters parameters)
     {
-        return parameters.WorldId != null && parameters.TaxRates != null && !string.IsNullOrEmpty(parameters.UploaderId);
+        return parameters.WorldId != null && parameters.TaxRates != null &&
+               !string.IsNullOrEmpty(parameters.UploaderId);
     }
 
-    public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Execute(ApiKey source, UploadParameters parameters,
+        CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("TaxRatesUploadBehavior.Execute");
+        activity?.AddTag("worldId", parameters.WorldId);
 
-        var existingTaxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = parameters.WorldId!.Value }, cancellationToken);
-        
+        var existingTaxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = parameters.WorldId!.Value },
+            cancellationToken);
+
         await _taxRatesDb.Update(new TaxRates
         {
             LimsaLominsa = parameters.TaxRates!.LimsaLominsa ?? existingTaxRates?.LimsaLominsa ?? 0,
