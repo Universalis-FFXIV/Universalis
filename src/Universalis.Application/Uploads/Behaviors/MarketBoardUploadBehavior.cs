@@ -53,13 +53,14 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         {
             var stackSize = _gdp.MarketableItemStackSizes()[parameters.ItemId.Value];
 
-            if (parameters.Sales != null)
+            // Validate entries; .All returns false if the list is empty, so check that first
+            if (parameters.Sales?.Count > 0)
             {
                 cond &= parameters.Sales.All(s =>
                     s.Quantity is > 0 && s.Quantity <= stackSize && s.PricePerUnit is <= 999_999_999);
             }
 
-            if (parameters.Listings != null)
+            if (parameters.Listings?.Count > 0)
             {
                 cond &= parameters.Listings.All(l =>
                     l.Quantity is > 0 && l.Quantity <= stackSize && l.PricePerUnit is <= 999_999_999);
