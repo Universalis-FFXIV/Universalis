@@ -43,9 +43,20 @@ public class UploadController : ControllerBase
     [ApiTag("Upload")]
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> Post(string apiKey, [FromBody] UploadParameters parameters, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Post(string apiKey, [FromBody] UploadParameters parameters,
+        CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("UploadControllerV1.Post");
+
+        if (parameters.WorldId != null)
+        {
+            activity?.AddTag("worldId", parameters.WorldId);
+        }
+
+        if (parameters.ItemId != null)
+        {
+            activity?.AddTag("itemId", parameters.ItemId);
+        }
 
         var source = await _trustedSourceDb.Retrieve(new TrustedSourceQuery
         {
@@ -74,24 +85,26 @@ public class UploadController : ControllerBase
         cts.CancelAfter(TimeSpan.FromSeconds(5));
 
         // Check if this uploader is flagged, cancel if they are
-        if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdSha256 = parameters.UploaderId }, cts.Token) !=
+        if (await _flaggedUploaderDb.Retrieve(new FlaggedUploaderQuery { UploaderIdSha256 = parameters.UploaderId },
+                cts.Token) !=
             null)
         {
             return Ok("Success");
         }
 
         // Execute validators
-        foreach (var uploadBehavior in _uploadBehaviors.Where(b => b.GetType().GetCustomAttribute<ValidatorAttribute>() != null))
+        foreach (var uploadBehavior in _uploadBehaviors.Where(b =>
+                     b.GetType().GetCustomAttribute<ValidatorAttribute>() != null))
         {
             if (!uploadBehavior.ShouldExecute(parameters)) continue;
-            
+
             var actionResult = await uploadBehavior.Execute(source, parameters, cts.Token);
             if (actionResult != null)
             {
                 return actionResult;
             }
         }
-        
+
         // Execute other upload behaviors
         try
         {
