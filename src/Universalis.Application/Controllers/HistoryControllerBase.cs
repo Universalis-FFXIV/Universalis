@@ -28,7 +28,7 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
         int itemId,
         int entries,
         long statsWithin = 604800000,
-        long entriesWithin = -1,
+        long entriesWithin = 604800,
         int minSalePrice = 0,
         int maxSalePrice = int.MaxValue,
         CancellationToken cancellationToken = default)
