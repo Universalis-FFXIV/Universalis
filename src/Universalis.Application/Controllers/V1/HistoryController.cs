@@ -26,7 +26,7 @@ public class HistoryController : HistoryControllerBase
     /// <param name="worldDcRegion">The world or data center to retrieve data for. This may be an ID or a name. Regions should be specified as Japan, Europe, North-America, Oceania, China, or 中国.</param>
     /// <param name="entriesToReturn">The number of entries to return per item. By default, this is set to 1800, but may be set to a maximum of 999999.</param>
     /// <param name="statsWithin">The amount of time before now to calculate stats over, in milliseconds. By default, this is 7 days.</param>
-    /// <param name="entriesWithin">The amount of time before now to take entries within, in seconds. Negative values will be ignored.</param>
+    /// <param name="entriesWithin">The amount of time before now to take entries within, in seconds. Negative values will be ignored. By default, this is 7 days.</param>
     /// <param name="minSalePrice">The inclusive minimum unit sale price of entries to return.</param>
     /// <param name="maxSalePrice">The inclusive maximum unit sale price of entries to return.</param>
     /// <param name="cancellationToken"></param>
@@ -84,7 +84,7 @@ public class HistoryController : HistoryControllerBase
             statsWithinMs = Math.Max(0, queryStatsWithinMs);
         }
 
-        var entriesWithinSeconds = -1L;
+        var entriesWithinSeconds = 604800L;
         if (long.TryParse(entriesWithin, out var queryEntriesWithinSeconds))
         {
             entriesWithinSeconds = Math.Max(0, queryEntriesWithinSeconds);
