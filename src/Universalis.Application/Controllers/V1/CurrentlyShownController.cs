@@ -100,7 +100,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         var nEntries = 5;
         if (int.TryParse(entriesToReturn, out var queryEntries))
         {
-            nEntries = Math.Max(0, queryEntries);
+            nEntries = Math.Min(Math.Max(0, queryEntries), 999999);
         }
 
         var statsWithinMs = 604800000L;
@@ -134,7 +134,8 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
             }
 
             var (_, currentlyShownView) = await GetCurrentlyShownView(
-                worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds, serializableProperties,
+                worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds,
+                serializableProperties,
                 cts.Token);
             return Ok(currentlyShownView);
         }
@@ -143,7 +144,8 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         var itemsSerializableProperties = BuildSerializableProperties(serializableProperties, "items");
         var currentlyShownViewTasks = itemIdsArray
             .Select(itemId => GetCurrentlyShownView(
-                worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds, itemsSerializableProperties,
+                worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds,
+                itemsSerializableProperties,
                 cts.Token))
             .ToList();
         var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
