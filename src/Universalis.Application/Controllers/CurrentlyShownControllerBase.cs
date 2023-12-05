@@ -46,10 +46,12 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
         if (worldIds.Length == 1)
         {
-            return await GetView(worldDcRegion, worldIds[0], itemId, nListings, nEntries, noGst, onlyHq, statsWithin, entriesWithin, fields, cancellationToken);
+            return await GetView(worldDcRegion, worldIds[0], itemId, nListings, nEntries, noGst, onlyHq, statsWithin,
+                entriesWithin, fields, cancellationToken);
         }
 
-        return await GetViewBatched(worldDcRegion, worldIds, itemId, nListings, nEntries, noGst, onlyHq, statsWithin, entriesWithin, fields, cancellationToken);
+        return await GetViewBatched(worldDcRegion, worldIds, itemId, nListings, nEntries, noGst, onlyHq, statsWithin,
+            entriesWithin, fields, cancellationToken);
     }
 
     protected async Task<(bool, CurrentlyShownView)> GetView(
@@ -80,7 +82,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             });
         }
 
-        var currentlyShown = await FetchData(worldId, itemId, cancellationToken);
+        var currentlyShown = await FetchData(worldId, itemId, nEntries, cancellationToken);
 
         var listingSerializableProperties = BuildSerializableProperties(fields, "listings");
         var recentHistorySerializableProperties = BuildSerializableProperties(fields, "recentHistory");
@@ -209,7 +211,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             });
         }
 
-        var data = await FetchDataBatched(worldIds, new[] { itemId }, cancellationToken);
+        var data = await FetchDataBatched(worldIds, new[] { itemId }, nEntries, cancellationToken);
 
         var worlds = GameData.AvailableWorlds();
 
@@ -223,7 +225,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             .Aggregate(
                 (EmptyWorldDictionary<Dictionary<int, long>, long>(worldIds),
                     new CurrentlyShownView
-                    { Listings = new List<ListingView>(), RecentHistory = new List<SaleView>() }),
+                        { Listings = new List<ListingView>(), RecentHistory = new List<SaleView>() }),
                 (agg, next) =>
                 {
                     if (next.WorldId == null)
@@ -337,14 +339,14 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         return (true, view);
     }
 
-    private async Task<CurrentlyShownView> FetchData(int worldId, int itemId,
+    private async Task<CurrentlyShownView> FetchData(int worldId, int itemId, int nEntries,
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.FetchData");
 
         var csTask = CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId },
             cancellationToken);
-        var hTask = History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = 20 },
+        var hTask = History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = nEntries },
             cancellationToken);
         await Task.WhenAll(csTask, hTask);
 
@@ -354,8 +356,8 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         return BuildPartialView(cs ?? new CurrentlyShown(), history ?? new History());
     }
 
-    private async Task<IEnumerable<CurrentlyShownView>> FetchDataBatched(IEnumerable<int> worlds, IEnumerable<int> items,
-        CancellationToken cancellationToken = default)
+    private async Task<IEnumerable<CurrentlyShownView>> FetchDataBatched(IEnumerable<int> worlds,
+        IEnumerable<int> items, int nEntries, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.FetchDataBatched");
 
@@ -367,8 +369,8 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
         var csTask = CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = worldIds, ItemIds = itemIds },
             cancellationToken);
-        var hTask = History.RetrieveMany(new HistoryManyQuery { WorldIds = worldIds, ItemIds = itemIds, Count = 20 },
-            cancellationToken);
+        var hTask = History.RetrieveMany(
+            new HistoryManyQuery { WorldIds = worldIds, ItemIds = itemIds, Count = nEntries }, cancellationToken);
         await Task.WhenAll(csTask, hTask);
 
         var cs = await csTask;
