@@ -149,6 +149,13 @@ public class ListingView : PartiallySerializable, IPriceable, ICopyable
     [JsonPropertyName("total")]
     public int Total { get; set; }
 
+    /// <summary>
+    /// The Gil sales tax (GST) to be added to the total price during purchase.
+    /// </summary>
+    [BsonElement("tax")]
+    [JsonPropertyName("tax")]
+    public int Tax { get; set; }
+
     public ICopyable Clone()
     {
         return (ListingView)MemberwiseClone();

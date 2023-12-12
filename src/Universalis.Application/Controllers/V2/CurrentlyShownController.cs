@@ -32,11 +32,6 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
     /// <param name="entriesToReturn">The number of recent history entries to return per item. By default, a maximum of 5 entries will be returned.</param>
     /// <param name="statsWithin">The amount of time before now to calculate stats over, in milliseconds. By default, this is 7 days.</param>
     /// <param name="entriesWithin">The amount of time before now to take entries within, in seconds. Negative values will be ignored.</param>
-    /// <param name="noGst">
-    /// If the result should not have Gil sales tax (GST) factored in. GST is applied to all
-    /// consumer purchases in-game, and is separate from the retainer city tax that impacts what sellers receive.
-    /// By default, GST is factored in. Set this parameter to true or 1 to prevent this.
-    /// </param>
     /// <param name="hq">Filter for HQ listings and entries. By default, both HQ and NQ listings and entries will be returned.</param>
     /// <param name="fields">
     /// A comma separated list of fields that should be included in the response, if omitted will return all fields.
@@ -59,7 +54,6 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         string worldDcRegion,
         [FromQuery(Name = "listings")] string listingsToReturn = "",
         [FromQuery(Name = "entries")] string entriesToReturn = "",
-        [FromQuery] string noGst = "",
         [FromQuery] string hq = "",
         [FromQuery] string statsWithin = "",
         [FromQuery] string entriesWithin = "",
@@ -118,7 +112,6 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
 
         var serializableProperties = BuildSerializableProperties(InputProcessing.ParseFields(fields));
 
-        var noGstBool = Util.ParseUnusualBool(noGst);
         bool? hqBool = string.IsNullOrEmpty(hq) || hq.ToLowerInvariant() == "null" ? null : Util.ParseUnusualBool(hq);
 
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -134,7 +127,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
             }
 
             var (_, currentlyShownView) = await GetCurrentlyShownView(
-                worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds,
+                worldDc, worldIds, itemId, nListings, nEntries, hqBool, statsWithinMs, entriesWithinSeconds,
                 serializableProperties,
                 cts.Token);
             return Ok(currentlyShownView);
@@ -144,7 +137,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         var itemsSerializableProperties = BuildSerializableProperties(serializableProperties, "items");
         var currentlyShownViewTasks = itemIdsArray
             .Select(itemId => GetCurrentlyShownView(
-                worldDc, worldIds, itemId, nListings, nEntries, noGstBool, hqBool, statsWithinMs, entriesWithinSeconds,
+                worldDc, worldIds, itemId, nListings, nEntries, hqBool, statsWithinMs, entriesWithinSeconds,
                 itemsSerializableProperties,
                 cts.Token))
             .ToList();

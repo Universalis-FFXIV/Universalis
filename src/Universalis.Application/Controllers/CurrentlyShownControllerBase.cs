@@ -32,7 +32,6 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         int itemId,
         int nListings = int.MaxValue,
         int nEntries = int.MaxValue,
-        bool noGst = false,
         bool? onlyHq = null,
         long statsWithin = 604800000,
         long entriesWithin = -1,
@@ -46,11 +45,11 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
         if (worldIds.Length == 1)
         {
-            return await GetView(worldDcRegion, worldIds[0], itemId, nListings, nEntries, noGst, onlyHq, statsWithin,
+            return await GetView(worldDcRegion, worldIds[0], itemId, nListings, nEntries, onlyHq, statsWithin,
                 entriesWithin, fields, cancellationToken);
         }
 
-        return await GetViewBatched(worldDcRegion, worldIds, itemId, nListings, nEntries, noGst, onlyHq, statsWithin,
+        return await GetViewBatched(worldDcRegion, worldIds, itemId, nListings, nEntries, onlyHq, statsWithin,
             entriesWithin, fields, cancellationToken);
     }
 
@@ -60,7 +59,6 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         int itemId,
         int nListings = int.MaxValue,
         int nEntries = int.MaxValue,
-        bool noGst = false,
         bool? onlyHq = null,
         long statsWithin = 604800000,
         long entriesWithin = -1,
@@ -107,12 +105,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         currentlyShown.Listings = currentlyShown.Listings
             .Select(l =>
             {
-                if (!noGst)
-                {
-                    l.PricePerUnit = (int)Math.Ceiling(l.PricePerUnit * 1.05);
-                    l.Total = (int)Math.Ceiling(l.Total * 1.05);
-                }
-
+                l.Tax = Util.CalculateTax(l.PricePerUnit, l.Quantity);
                 l.WorldId = null;
                 l.WorldName = null;
                 l.SerializableProperties = listingSerializableProperties;
@@ -189,7 +182,6 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         int itemId,
         int nListings = int.MaxValue,
         int nEntries = int.MaxValue,
-        bool noGst = false,
         bool? onlyHq = null,
         long statsWithin = 604800000,
         long entriesWithin = -1,
@@ -244,12 +236,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                     aggData.Listings.AddRange(next.Listings
                         .Select(l =>
                         {
-                            if (!noGst)
-                            {
-                                l.PricePerUnit = (int)Math.Ceiling(l.PricePerUnit * 1.05);
-                                l.Total = (int)Math.Ceiling(l.Total * 1.05);
-                            }
-
+                            l.Tax = Util.CalculateTax(l.PricePerUnit, l.Quantity);
                             l.WorldId = !worldDcRegion.IsWorld ? next.WorldId : null;
                             l.WorldName = !worldDcRegion.IsWorld ? worlds[next.WorldId.Value] : null;
                             l.SerializableProperties = listingSerializableProperties;

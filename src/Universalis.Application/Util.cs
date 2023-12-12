@@ -27,6 +27,12 @@ public static partial class Util
     [GeneratedRegex("[^a-zA-Z0-9'\\- ·⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]", RegexOptions.Compiled)]
     private static partial Regex UnsafeCharactersRegex();
 
+    public static int CalculateTax(int unitPrice, int quantity)
+    {
+        const double taxRate = 0.05;
+        return (int)Math.Floor(quantity * unitPrice * taxRate);
+    }
+
     public static SaleView SaleToView(Sale s)
     {
         var quantity = s.Quantity ?? 0;
