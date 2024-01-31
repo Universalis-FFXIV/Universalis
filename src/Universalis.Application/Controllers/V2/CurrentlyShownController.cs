@@ -35,7 +35,10 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
     /// <param name="hq">Filter for HQ listings and entries. By default, both HQ and NQ listings and entries will be returned.</param>
     /// <param name="fields">
     /// A comma separated list of fields that should be included in the response, if omitted will return all fields.
-    /// For example if you're only interested in the listings price per unit you can set this to listings.pricePerUnit
+    /// For example, if you're only interested in the listings price per unit you can set this to listings.pricePerUnit.
+    /// Note that querying multiple items changes the response schema, which should be reflected in the value provided
+    /// for this field. In this case, querying the price per unit requires setting this field to
+    /// items.listings.pricePerUnit.
     /// </param>
     /// <param name="cancellationToken"></param>
     /// <response code="200">Data retrieved successfully.</response>
