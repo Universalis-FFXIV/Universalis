@@ -21,6 +21,8 @@ public class HistoryDbAccess : IHistoryDbAccess
 
     public async Task Create(History document, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("HistoryDbAccess.Create");
+
         await _marketItemStore.Insert(new MarketItem
         {
             WorldId = document.WorldId,
@@ -34,6 +36,8 @@ public class HistoryDbAccess : IHistoryDbAccess
 
     public async Task<History> Retrieve(HistoryQuery query, CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("HistoryDbAccess.Retrieve");
+
         var marketItem =
             await _marketItemStore.Retrieve(new MarketItemQuery { ItemId = query.ItemId, WorldId = query.WorldId },
                 cancellationToken);
@@ -56,6 +60,8 @@ public class HistoryDbAccess : IHistoryDbAccess
     public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query,
         CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("HistoryDbAccess.RetrieveMany");
+
         var worldItemTuples = query.WorldIds.SelectMany(worldId =>
                 query.ItemIds.Select(itemId => (worldId, itemId)))
             .ToList();
@@ -100,6 +106,8 @@ public class HistoryDbAccess : IHistoryDbAccess
     public async Task InsertSales(IEnumerable<Sale> sales, HistoryQuery query,
         CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("HistoryDbAccess.InsertSales");
+
         await _marketItemStore.Insert(new MarketItem
         {
             WorldId = query.WorldId,
