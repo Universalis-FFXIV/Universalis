@@ -94,12 +94,18 @@ public class HistoryDbAccess : IHistoryDbAccess
 
         // Reformat the results as a History instance
         return marketItemsList
-            .Select(mi => new History
+            .Select(mi => (mi, sales[(mi.WorldId, mi.ItemId)])) // Select sales before PLINQ to avoid capturing locals
+            .AsParallel() // Iterating over the sales retrieved by the DataStax driver is synchronous, so we parallelize it
+            .Select(tup =>
             {
-                WorldId = mi.WorldId,
-                ItemId = mi.ItemId,
-                LastUploadTimeUnixMilliseconds = new DateTimeOffset(mi.LastUploadTime).ToUnixTimeMilliseconds(),
-                Sales = sales[(mi.WorldId, mi.ItemId)].ToList(),
+                var (mi, marketSales) = tup;
+                return new History
+                {
+                    WorldId = mi.WorldId,
+                    ItemId = mi.ItemId,
+                    LastUploadTimeUnixMilliseconds = new DateTimeOffset(mi.LastUploadTime).ToUnixTimeMilliseconds(),
+                    Sales = marketSales.ToList(),
+                };
             });
     }
 
