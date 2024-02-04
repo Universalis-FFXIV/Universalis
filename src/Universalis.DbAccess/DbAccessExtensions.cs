@@ -57,9 +57,10 @@ public static class DbAccessExtensions
         // Notes on query idempotence and speculative execution: https://docs.datastax.com/en/developer/csharp-driver/3.20/features/speculative-retries/#query-idempotence
         var scyllaCluster = Cluster.Builder()
             .AddContactPoints(scyllaConnectionString.Split(','))
-            .WithSpeculativeExecutionPolicy(new ConstantSpeculativeExecutionPolicy(500, 3))
+            .WithSpeculativeExecutionPolicy(new ConstantSpeculativeExecutionPolicy(200, 3))
             .WithQueryOptions(new QueryOptions()
-                .SetDefaultIdempotence(true))
+                .SetDefaultIdempotence(true)
+                .SetPageSize(1000))
             .Build();
         sc.AddSingleton<ICluster>(scyllaCluster);
 
