@@ -13,7 +13,7 @@ using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
 
-public class SaleStore : ISaleStore
+public class SaleStore : ISaleStore, IDisposable
 {
     private readonly ICacheRedisMultiplexer _cache;
     private readonly ILogger<SaleStore> _logger;
@@ -22,10 +22,14 @@ public class SaleStore : ISaleStore
     private readonly Lazy<IMapper> _mapper;
     private readonly Lazy<PreparedStatement> _insertStatement;
 
+    private readonly SemaphoreSlim _lock;
+
     public SaleStore(ICluster scylla, ICacheRedisMultiplexer cache, ILogger<SaleStore> logger)
     {
         _cache = cache;
         _logger = logger;
+
+        _lock = new SemaphoreSlim(70, 70);
 
         // Doing database initialization in a constructor is a Bad Idea and
         // can lead to timeouts killing the application, so this just gets
@@ -140,6 +144,22 @@ public class SaleStore : ISaleStore
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("SaleStore.RetrieveBySaleTime");
+
+        // Reads from the sale table are prone to timeouts for some reason, so we throttle them here
+        await _lock.WaitAsync(cancellationToken);
+        try
+        {
+            return await RetrieveBySaleTimeCore(worldId, itemId, count, from);
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    private async Task<IEnumerable<Sale>> RetrieveBySaleTimeCore(int worldId, int itemId, int count, DateTime? from)
+    {
+        using var activity = Util.ActivitySource.StartActivity("SaleStore.RetrieveBySaleTimeCore");
         if (count == 0)
         {
             return Enumerable.Empty<Sale>();
@@ -250,12 +270,14 @@ public class SaleStore : ISaleStore
         return result.Select(e => e.Value).Sum();
     }
 
-    private static async Task CacheTradeVolume(IDatabaseAsync cache, string cacheKey, IDictionary<DateTime, int> hashData,
+    private static async Task CacheTradeVolume(IDatabaseAsync cache, string cacheKey,
+        IDictionary<DateTime, int> hashData,
         DateTime from, DateTime to)
     {
         using var activity = Util.ActivitySource.StartActivity("SaleStore.CacheTradeVolume");
 
-        var hash = hashData.Select(kvp => new HashEntry(kvp.Key.ToString(CultureInfo.InvariantCulture), kvp.Value)).ToList();
+        var hash = hashData.Select(kvp => new HashEntry(kvp.Key.ToString(CultureInfo.InvariantCulture), kvp.Value))
+            .ToList();
         hash.Add(new HashEntry("cached-from", from.ToString(CultureInfo.InvariantCulture)));
         hash.Add(new HashEntry("cached-to", to.ToString(CultureInfo.InvariantCulture)));
         await cache.HashSetAsync(cacheKey, hash.ToArray(), CommandFlags.FireAndForget);
@@ -300,5 +322,11 @@ public class SaleStore : ISaleStore
     private static string GetIndexCacheKey(int worldId, int itemId)
     {
         return $"sale-index:{worldId}:{itemId}";
+    }
+
+    public void Dispose()
+    {
+        _lock.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
