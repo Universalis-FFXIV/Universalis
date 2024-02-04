@@ -25,8 +25,6 @@ public class Sale : IEquatable<Sale>
 
     public DateTime SaleTime { get; set; }
 
-    public long WriteTime { get; set; }
-
     public string UploaderIdHash { get; init; }
 
     public bool Equals(Sale other)

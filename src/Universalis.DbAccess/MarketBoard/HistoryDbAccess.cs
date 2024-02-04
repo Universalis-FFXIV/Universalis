@@ -75,7 +75,6 @@ public class HistoryDbAccess : IHistoryDbAccess
         var marketItemsDict = marketItemsList.ToDictionary(mi => (mi.WorldId, mi.ItemId), mi => mi);
 
         // Get sales where an upload time is known
-        var sales = new Dictionary<(int, int), List<Sale>>();
         var salesByTuple = await Task.WhenAll(worldItemTuples
             .Where(marketItemsDict.ContainsKey)
             .Select(async tup =>
@@ -83,10 +82,11 @@ public class HistoryDbAccess : IHistoryDbAccess
                 var (worldId, itemId) = tup;
                 var results = await _saleStore.RetrieveBySaleTime(worldId, itemId, query.Count ?? 1000,
                     cancellationToken: cancellationToken);
-                return (worldId, itemId, results.ToList());
+                return (worldId, itemId, results);
             }));
 
         // Collect the results
+        var sales = new Dictionary<(int, int), IEnumerable<Sale>>();
         foreach (var (worldId, itemId, results) in salesByTuple)
         {
             sales[(worldId, itemId)] = results;

@@ -140,45 +140,30 @@ public class SaleStore : ISaleStore
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("SaleStore.RetrieveBySaleTime");
-
-        var sales = new List<Sale>();
         if (count == 0)
         {
-            return sales;
+            return Enumerable.Empty<Sale>();
         }
 
         // Fetch data from the database
         var timestamp = from == null ? 0 : new DateTimeOffset(from.Value).ToUnixTimeMilliseconds();
         try
         {
-            var nextSales = await _mapper.Value.FetchAsync<Sale>(
-                "SELECT WRITETIME(id) AS write_time, id, sale_time, item_id, world_id, buyer_name, hq, on_mannequin, quantity, unit_price, uploader_id FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? ORDER BY sale_time DESC LIMIT ?",
+            var sales = await _mapper.Value.FetchAsync<Sale>(
+                "SELECT id, sale_time, item_id, world_id, buyer_name, hq, on_mannequin, quantity, unit_price, uploader_id FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? ORDER BY sale_time DESC LIMIT ?",
                 itemId, worldId, timestamp, count);
-            sales = nextSales.ToList();
+            return sales
+                .Select(sale =>
+                {
+                    sale.SaleTime = DateTime.SpecifyKind(sale.SaleTime, DateTimeKind.Utc);
+                    return sale;
+                });
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to retrieve sales (world={WorldId}, item={ItemId})", worldId, itemId);
             throw;
         }
-
-        // Clean some junk data
-        foreach (var sale in sales)
-        {
-            var writeTime = DateTimeOffset.FromUnixTimeMilliseconds(sale.WriteTime / 1000);
-            if (writeTime >= new DateTimeOffset(2023, 02, 18, 22, 0, 0, TimeSpan.Zero) &&
-                writeTime <= new DateTimeOffset(2023, 02, 19, 18, 0, 0, TimeSpan.Zero))
-            {
-                await _mapper.Value.DeleteAsync(sale);
-            }
-        }
-
-        return sales
-            .Select(sale =>
-            {
-                sale.SaleTime = DateTime.SpecifyKind(sale.SaleTime, DateTimeKind.Utc);
-                return sale;
-            });
     }
 
     public async Task<long> RetrieveUnitTradeVolume(int worldId, int itemId, DateTime from, DateTime to,

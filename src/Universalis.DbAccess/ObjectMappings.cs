@@ -33,7 +33,6 @@ public class ObjectMappings : Mappings
             .TableName("sale")
             .PartitionKey(s => s.ItemId, s => s.WorldId)
             .ClusteringKey(s => s.SaleTime, SortOrder.Descending)
-            .Column(s => s.WriteTime, col => col.WithName("write_time"))
             .Column(s => s.Id, col => col.WithName("id"))
             .Column(s => s.SaleTime, col => col.WithName("sale_time"))
             .Column(s => s.ItemId, col => col.WithName("item_id"))
