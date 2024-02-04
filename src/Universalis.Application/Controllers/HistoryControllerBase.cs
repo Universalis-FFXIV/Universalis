@@ -47,15 +47,14 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var nowSeconds = now / 1000;
-        var history = await data.ToAsyncEnumerable()
+        var history = data
             .Where(o => worlds.ContainsKey(o.WorldId))
-            .AggregateAwaitAsync(new HistoryView(), async (agg, next) =>
+            .Aggregate(new HistoryView(), (agg, next) =>
             {
                 // Handle undefined arrays
                 next.Sales ??= new List<Sale>();
 
-                agg.Sales = await next.Sales
-                    .ToAsyncEnumerable()
+                agg.Sales = next.Sales
                     .Where(s => entriesWithin < 0 ||
                                 nowSeconds - new DateTimeOffset(s.SaleTime).ToUnixTimeSeconds() < entriesWithin)
                     .Where(s => s.Quantity is > 0)
@@ -72,13 +71,13 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
                         WorldId = !worldDcRegion.IsWorld ? next.WorldId : null,
                         WorldName = !worldDcRegion.IsWorld ? worlds[next.WorldId] : null,
                     })
-                    .Concat(agg.Sales.ToAsyncEnumerable())
-                    .ToListAsync(cancellationToken);
+                    .Concat(agg.Sales)
+                    .ToList();
                 agg.LastUploadTimeUnixMilliseconds = (long)Math.Max(next.LastUploadTimeUnixMilliseconds,
                     agg.LastUploadTimeUnixMilliseconds);
 
                 return agg;
-            }, cancellationToken);
+            });
 
         history.Sales = history.Sales.OrderByDescending(s => s.TimestampUnixSeconds).Take(entries).ToList();
 
