@@ -106,17 +106,11 @@ public class UploadController : ControllerBase
         }
 
         // Execute other upload behaviors
-        try
-        {
-            await Task.WhenAll(_uploadBehaviors
+        Task.WhenAll(_uploadBehaviors
                 .Where(b => b.GetType().GetCustomAttribute<ValidatorAttribute>() == null)
                 .Where(b => b.ShouldExecute(parameters))
-                .Select(b => b.Execute(source, parameters, cts.Token)));
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Exception caught in upload procedure");
-        }
+                .Select(b => b.Execute(source, parameters, cts.Token)))
+            .FireAndForget(_logger);
 
         return Ok("Success");
     }
