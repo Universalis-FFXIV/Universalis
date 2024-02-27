@@ -7,18 +7,18 @@
 
   <ItemGroup>
     <PackageReference Include="CassandraCSharpDriver" Version="3.20.0" />
-    <PackageReference Include="FluentMigrator" Version="3.3.2" />
-    <PackageReference Include="FluentMigrator.Runner" Version="3.3.2" />
-    <PackageReference Include="FluentMigrator.Runner.Postgres" Version="3.3.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
-    <PackageReference Include="Npgsql" Version="7.0.1" />
-    <PackageReference Include="Npgsql.Json.NET" Version="7.0.1" />
-    <PackageReference Include="Npgsql.OpenTelemetry" Version="7.0.1" />
+    <PackageReference Include="FluentMigrator" Version="5.1.0" />
+    <PackageReference Include="FluentMigrator.Runner" Version="5.1.0" />
+    <PackageReference Include="FluentMigrator.Runner.Postgres" Version="5.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Npgsql" Version="8.0.2" />
+    <PackageReference Include="Npgsql.Json.NET" Version="8.0.2" />
+    <PackageReference Include="Npgsql.OpenTelemetry" Version="8.0.2" />
     <PackageReference Include="OpenTelemetry.Instrumentation.StackExchangeRedis" Version="1.0.0-rc9.7" />
     <PackageReference Include="OptimizedPriorityQueue" Version="5.1.0" />
-    <PackageReference Include="StackExchange.Redis" Version="2.6.90" />
+    <PackageReference Include="StackExchange.Redis" Version="2.7.23" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>
 
