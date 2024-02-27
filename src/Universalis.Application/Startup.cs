@@ -16,7 +16,6 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.XPath;
 using Npgsql;
-using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -211,8 +210,7 @@ public class Startup
                             }
                         });
                     }
-                })
-                .StartWithHost();
+                });
         }
 
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
