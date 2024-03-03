@@ -4,10 +4,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
 using System;
+using Cassandra.Metrics;
 using FluentMigrator.Runner;
 using Npgsql;
 using Universalis.DbAccess.AccessControl;
 using Universalis.DbAccess.MarketBoard;
+using Universalis.DbAccess.Metrics;
 using Universalis.DbAccess.Uploads;
 
 namespace Universalis.DbAccess;
@@ -63,6 +65,9 @@ public static class DbAccessExtensions
             .WithQueryOptions(new QueryOptions()
                 .SetDefaultIdempotence(true)
                 .SetPageSize(1000))
+            .WithMetrics(new PrometheusDataStaxMetricsProvider(), new DriverMetricsOptions()
+                .SetEnabledNodeMetrics(NodeMetric.AllNodeMetrics)
+                .SetEnabledSessionMetrics(SessionMetric.AllSessionMetrics))
             .Build();
         sc.AddSingleton<ICluster>(scyllaCluster);
 
@@ -72,7 +77,7 @@ public static class DbAccessExtensions
         var db = ConnectionMultiplexer.Connect(dbOptions);
         sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(cache));
         sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(db));
-        
+
         sc.AddSingleton<IUploadLogStore, UploadLogStore>();
         sc.AddSingleton<IUploadLogDbAccess, UploadLogDbAccess>();
 
