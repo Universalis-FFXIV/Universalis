@@ -32,6 +32,7 @@ public class PrometheusDataStaxMetricsProvider : IDriverMetricsProvider
 
     private static string SanitizeName(string name)
     {
-        return name.Replace('-', '_').Replace('.', '_');
+        var cleanName = name.Replace('-', '_').Replace('.', '_');
+        return !cleanName.StartsWith("cassandra") ? $"cassandra_{cleanName}" : cleanName;
     }
 }
