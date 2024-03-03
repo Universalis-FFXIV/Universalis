@@ -361,14 +361,26 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         await Task.WhenAll(csTask, hTask);
 
         var cs = await csTask;
-        var csDict = cs.ToDictionary(o => new WorldItemPair(o.WorldId, o.ItemId));
+        var csDict = CollectListings(cs);
         var history = await hTask;
-        var historyDict = history.ToDictionary(o => new WorldItemPair(o.WorldId, o.ItemId));
+        var historyDict = CollectSales(history);
 
         return worldItemPairs
             .Select(wi => BuildPartialView(
                 csDict.TryGetValue(new WorldItemPair(wi.WorldId, wi.ItemId), out var c) ? c : new CurrentlyShown(),
                 historyDict.TryGetValue(new WorldItemPair(wi.WorldId, wi.ItemId), out var h) ? h : new History()));
+    }
+
+    private static Dictionary<WorldItemPair, CurrentlyShown> CollectListings(IEnumerable<CurrentlyShown> listings)
+    {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.CollectListings");
+        return listings.ToDictionary(o => new WorldItemPair(o.WorldId, o.ItemId));
+    }
+
+    private static Dictionary<WorldItemPair, History> CollectSales(IEnumerable<History> sales)
+    {
+        using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.CollectSales");
+        return sales.ToDictionary(o => new WorldItemPair(o.WorldId, o.ItemId));
     }
 
     private static CurrentlyShownView BuildPartialView(CurrentlyShown currentlyShown, History history)
