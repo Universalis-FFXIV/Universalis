@@ -62,8 +62,8 @@ public class HistoryDbAccess : IHistoryDbAccess
     {
         using var activity = Util.ActivitySource.StartActivity("HistoryDbAccess.RetrieveMany");
 
-        var worldItemTuples = query.WorldIds.SelectMany(worldId =>
-                query.ItemIds.Select(itemId => (worldId, itemId)))
+        var worldItemTuples = query.WorldIds
+            .SelectMany(worldId => query.ItemIds.Select(itemId => (worldId, itemId)))
             .ToList();
 
         // Get upload times

@@ -160,6 +160,11 @@ public class SaleStore : ISaleStore, IDisposable
     private async Task<IEnumerable<Sale>> RetrieveBySaleTimeCore(int worldId, int itemId, int count, DateTime? from)
     {
         using var activity = Util.ActivitySource.StartActivity("SaleStore.RetrieveBySaleTimeCore");
+        activity?.AddTag("query.worldId", worldId);
+        activity?.AddTag("query.itemId", itemId);
+        activity?.AddTag("query.count", count);
+        activity?.AddTag("query.from", from?.ToString("s", CultureInfo.InvariantCulture));
+
         if (count == 0)
         {
             return Enumerable.Empty<Sale>();

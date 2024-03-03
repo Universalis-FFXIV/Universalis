@@ -374,13 +374,17 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     private static Dictionary<WorldItemPair, CurrentlyShown> CollectListings(IEnumerable<CurrentlyShown> listings)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.CollectListings");
-        return listings.ToDictionary(o => new WorldItemPair(o.WorldId, o.ItemId));
+        var result = listings.ToDictionary(o => new WorldItemPair(o.WorldId, o.ItemId));
+        activity?.AddTag("db.resultCount", result.Count);
+        return result;
     }
 
     private static Dictionary<WorldItemPair, History> CollectSales(IEnumerable<History> sales)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.CollectSales");
-        return sales.ToDictionary(o => new WorldItemPair(o.WorldId, o.ItemId));
+        var result = sales.ToDictionary(o => new WorldItemPair(o.WorldId, o.ItemId));
+        activity?.AddTag("db.resultCount", result.Count);
+        return result;
     }
 
     private static CurrentlyShownView BuildPartialView(CurrentlyShown currentlyShown, History history)
