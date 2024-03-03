@@ -15,7 +15,7 @@ public class PrometheusDataStaxTimer : IDriverTimer
         _histogram = Prometheus.Metrics.CreateHistogram(name, "A timer measuring data in nanoseconds.",
             new HistogramConfiguration
             {
-                LabelNames = new[] { bucket },
+                LabelNames = new[] { "bucket" },
                 Buckets = Histogram.ExponentialBuckets(1, 2, 16),
             });
     }
