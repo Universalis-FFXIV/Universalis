@@ -52,6 +52,8 @@ public static class DbAccessExtensions
         dataSourceBuilder.UseJsonNet();
         sc.AddSingleton(dataSourceBuilder.Build());
 
+        Diagnostics.CassandraPerformanceCountersEnabled = true;
+
         MappingConfiguration.Global.Define<ObjectMappings>();
 
         // Notes on query idempotence and speculative execution: https://docs.datastax.com/en/developer/csharp-driver/3.20/features/speculative-retries/#query-idempotence
