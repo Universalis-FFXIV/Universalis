@@ -62,9 +62,13 @@ public class HistoryDbAccess : IHistoryDbAccess
     {
         using var activity = Util.ActivitySource.StartActivity("HistoryDbAccess.RetrieveMany");
 
-        var worldItemTuples = query.WorldIds
-            .SelectMany(worldId => query.ItemIds.Select(itemId => (worldId, itemId)))
-            .ToList();
+        // Build tuples of world/item pairs - the awkward syntax here avoids allocations besides the ToArray calls
+        var worldIds = query.WorldIds.ToArray();
+        var itemIds = query.ItemIds.ToArray();
+        var worldItemTuples = Enumerable.Repeat(itemIds, worldIds.Length)
+            .Zip(worldIds)
+            .SelectMany(tup => Enumerable.Repeat(tup.Second, tup.First.Length).Zip(tup.First))
+            .ToArray();
 
         // Get upload times
         var marketItems =
