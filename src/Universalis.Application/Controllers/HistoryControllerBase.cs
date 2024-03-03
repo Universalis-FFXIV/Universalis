@@ -36,12 +36,13 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
         using var activity = Util.ActivitySource.StartActivity("HistoryControllerBase.View");
 
         // Fetch the data
-        var data = (await History.RetrieveMany(new HistoryManyQuery
+        var enumerable = await History.RetrieveMany(new HistoryManyQuery
         {
             WorldIds = worldIds,
             ItemIds = new[] { itemId },
             Count = entries,
-        }, cancellationToken)).ToList();
+        }, cancellationToken);
+        var data = CollectSales(enumerable);
         var resolved = data.Count > 0;
         var worlds = GameData.AvailableWorlds();
 
@@ -106,5 +107,13 @@ public class HistoryControllerBase : WorldDcRegionControllerBase
             SaleVelocityHq = Statistics.VelocityPerDay(hqSales
                 .Select(s => (s.TimestampUnixSeconds * 1000, s.Quantity)), now, statsWithin),
         });
+    }
+
+    private static List<History> CollectSales(IEnumerable<History> sales)
+    {
+        using var activity = Util.ActivitySource.StartActivity("HistoryControllerBase.CollectSales");
+        var result = sales.ToList();
+        activity?.AddTag("db.resultCount", result.Count);
+        return result;
     }
 }
