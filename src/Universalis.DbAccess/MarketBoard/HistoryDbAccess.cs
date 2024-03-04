@@ -67,7 +67,11 @@ public class HistoryDbAccess : IHistoryDbAccess
         var itemIds = query.ItemIds.ToArray();
         var worldItemTuples = Enumerable.Repeat(itemIds, worldIds.Length)
             .Zip(worldIds)
-            .SelectMany(tup => Enumerable.Repeat(tup.Second, tup.First.Length).Zip(tup.First))
+            .SelectMany(tup =>
+            {
+                var (iIds, worldId) = tup;
+                return Enumerable.Repeat(worldId, iIds.Length).Zip(iIds);
+            })
             .ToArray();
 
         // Get upload times
@@ -97,18 +101,20 @@ public class HistoryDbAccess : IHistoryDbAccess
         }
 
         // Reformat the results as a History instance
-        return marketItemsList
-            .Select(mi => (mi, sales[(mi.WorldId, mi.ItemId)])) // Select sales before PLINQ to avoid capturing locals
-            .AsParallel() // Iterating over the sales retrieved by the DataStax driver is synchronous, so we parallelize it
+        return Enumerable.Repeat(sales, marketItemsList.Count)
+            .Zip(marketItemsList)
             .Select(tup =>
             {
-                var (mi, marketSales) = tup;
+                var (allSales, mi) = tup;
+                var marketSales = allSales[(mi.WorldId, mi.ItemId)];
                 return new History
                 {
                     WorldId = mi.WorldId,
                     ItemId = mi.ItemId,
                     LastUploadTimeUnixMilliseconds = new DateTimeOffset(mi.LastUploadTime).ToUnixTimeMilliseconds(),
-                    Sales = marketSales.ToList(),
+                    Sales = marketSales
+                        .AsParallel() // Iterating over the sales retrieved by the DataStax driver is synchronous, so we parallelize it
+                        .ToList(),
                 };
             });
     }
