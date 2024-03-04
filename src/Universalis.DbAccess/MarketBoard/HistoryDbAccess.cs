@@ -103,6 +103,7 @@ public class HistoryDbAccess : IHistoryDbAccess
         // Reformat the results as a History instance
         return Enumerable.Repeat(sales, marketItemsList.Count)
             .Zip(marketItemsList)
+            .AsParallel()
             .Select(tup =>
             {
                 var (allSales, mi) = tup;
