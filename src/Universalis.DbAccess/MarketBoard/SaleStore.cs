@@ -29,7 +29,7 @@ public class SaleStore : ISaleStore, IDisposable
         _cache = cache;
         _logger = logger;
 
-        _lock = new SemaphoreSlim(100, 100);
+        _lock = new SemaphoreSlim(500, 500);
 
         // Doing database initialization in a constructor is a Bad Idea and
         // can lead to timeouts killing the application, so this just gets
