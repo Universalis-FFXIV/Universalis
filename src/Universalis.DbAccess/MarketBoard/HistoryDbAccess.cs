@@ -114,6 +114,7 @@ public class HistoryDbAccess : IHistoryDbAccess
                     LastUploadTimeUnixMilliseconds = new DateTimeOffset(mi.LastUploadTime).ToUnixTimeMilliseconds(),
                     Sales = marketSales
                         .AsParallel() // Iterating over the sales retrieved by the DataStax driver is synchronous, so we parallelize it
+                        .WithExecutionMode(ParallelExecutionMode.ForceParallelism)
                         .ToList(),
                 };
             });
