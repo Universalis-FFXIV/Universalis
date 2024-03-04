@@ -64,7 +64,7 @@ public static class DbAccessExtensions
             .WithSpeculativeExecutionPolicy(new ConstantSpeculativeExecutionPolicy(200, 3))
             .WithQueryOptions(new QueryOptions()
                 .SetDefaultIdempotence(true)
-                .SetPageSize(1000))
+                .SetPageSize(10000))
             .WithMetrics(new PrometheusDataStaxMetricsProvider(), new DriverMetricsOptions()
                 .SetEnabledNodeMetrics(NodeMetric.AllNodeMetrics)
                 .SetEnabledSessionMetrics(SessionMetric.AllSessionMetrics))
