@@ -35,6 +35,8 @@ public static class DbAccessExtensions
                                        throw new InvalidOperationException(
                                            "PostgreSQL connection string not provided.");
 
+        var scyllaPageSize = int.Parse(Environment.GetEnvironmentVariable("UNIVERSALIS_SCYLLA_PAGE_SIZE") ?? "100");
+
         // An optional separate connection string so that different settings can be used
         // during migrations versus under load. Mostly so that multiplexing can be enabled
         // in Npgsql.
@@ -64,7 +66,7 @@ public static class DbAccessExtensions
             .WithSpeculativeExecutionPolicy(new ConstantSpeculativeExecutionPolicy(200, 3))
             .WithQueryOptions(new QueryOptions()
                 .SetDefaultIdempotence(true)
-                .SetPageSize(10000))
+                .SetPageSize(scyllaPageSize))
             .WithMetrics(new PrometheusDataStaxMetricsProvider(), new DriverMetricsOptions()
                 .SetEnabledNodeMetrics(NodeMetric.AllNodeMetrics)
                 .SetEnabledSessionMetrics(SessionMetric.AllSessionMetrics))
