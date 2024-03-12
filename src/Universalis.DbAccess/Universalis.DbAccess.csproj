@@ -19,7 +19,7 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.StackExchangeRedis" Version="1.0.0-rc9.7" />
     <PackageReference Include="OptimizedPriorityQueue" Version="5.1.0" />
     <PackageReference Include="prometheus-net" Version="8.2.1" />
-    <PackageReference Include="StackExchange.Redis" Version="2.7.23" />
+    <PackageReference Include="StackExchange.Redis" Version="2.7.33" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>
 
