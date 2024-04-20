@@ -57,19 +57,19 @@ public class CurrentlyShownView : PartiallySerializable
     public string RegionName { get; init; }
 
     /// <summary>
-    /// The average listing price, with outliers removed beyond 3 standard deviations of the mean.
+    /// The average listing price.
     /// </summary>
     [JsonPropertyName("currentAveragePrice")]
     public float CurrentAveragePrice { get; set; }
 
     /// <summary>
-    /// The average NQ listing price, with outliers removed beyond 3 standard deviations of the mean.
+    /// The average NQ listing price.
     /// </summary>
     [JsonPropertyName("currentAveragePriceNQ")]
     public float CurrentAveragePriceNq { get; set; }
 
     /// <summary>
-    /// The average HQ listing price, with outliers removed beyond 3 standard deviations of the mean.
+    /// The average HQ listing price.
     /// </summary>
     [JsonPropertyName("currentAveragePriceHQ")]
     public float CurrentAveragePriceHq { get; set; }
@@ -99,19 +99,19 @@ public class CurrentlyShownView : PartiallySerializable
     public float SaleVelocityHq { get; init; }
 
     /// <summary>
-    /// The average sale price, with outliers removed beyond 3 standard deviations of the mean.
+    /// The average sale price.
     /// </summary>
     [JsonPropertyName("averagePrice")]
     public float AveragePrice { get; set; }
 
     /// <summary>
-    /// The average NQ sale price, with outliers removed beyond 3 standard deviations of the mean.
+    /// The average NQ sale price.
     /// </summary>
     [JsonPropertyName("averagePriceNQ")]
     public float AveragePriceNq { get; set; }
 
     /// <summary>
-    /// The average HQ sale price, with outliers removed beyond 3 standard deviations of the mean.
+    /// The average HQ sale price.
     /// </summary>
     [JsonPropertyName("averagePriceHQ")]
     public float AveragePriceHq { get; set; }

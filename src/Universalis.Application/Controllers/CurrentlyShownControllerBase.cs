@@ -442,7 +442,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             return 0;
         }
 
-        return Filters.RemoveOutliers(items.Select(s => (float)s.PricePerUnit), 3).Average();
+        return items.Select(s => (float)s.PricePerUnit).Average();
     }
 
     private static float GetSaleVelocity(IEnumerable<SaleView> sales, long unixNowMs, long statsWithinMs)
