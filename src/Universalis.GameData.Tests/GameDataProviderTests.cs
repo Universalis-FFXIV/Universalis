@@ -17,6 +17,7 @@ public class GameDataProviderTests
     [InlineData(44, "Anima")]
     [InlineData(74, "Coeurl")]
     [InlineData(82, "Mandragora")]
+    [InlineData(410, "Rafflesia")]
 #if DEBUG
     [Theory]
 #endif
@@ -30,7 +31,7 @@ public class GameDataProviderTests
     [InlineData("Anima", 44)]
     [InlineData("Coeurl", 74)]
     [InlineData("Mandragora", 82)]
-
+    [InlineData("Rafflesia", 410)]
 #if DEBUG
     [Theory]
 #endif

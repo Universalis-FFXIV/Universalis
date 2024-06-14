@@ -164,9 +164,12 @@ public class CsvGameDataProvider : IGameDataProvider
 
     private static IEnumerable<CsvWorld> GetValidWorlds(IEnumerable<CsvWorld> worlds)
     {
+        // The new Dynamis worlds are currently not marked as public, despite being public
+        // https://na.finalfantasyxiv.com/lodestone/topics/detail/93750e4b0d6d5a4faf6a00dee199082392f1a754
+        var nonPublicButActualPublicWorlds = new[] { 408, 409, 410, 411 };
         return worlds
             .Where(w => w.DataCenter > 0)
-            .Where(w => w.IsPublic)
+            .Where(w => w.IsPublic || nonPublicButActualPublicWorlds.Contains(w.RowId))
             .Where(w => w.RowId != 25); // Chaos (world)
     }
 
