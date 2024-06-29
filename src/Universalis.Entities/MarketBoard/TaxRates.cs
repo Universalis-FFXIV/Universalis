@@ -19,6 +19,8 @@ public class TaxRates : IEquatable<TaxRates>, ICopyable
 
     public int OldSharlayan { get; init; }
 
+    public int Tuliyollal { get; init; }
+
     public string UploadApplicationName { get; init; }
 
     public ICopyable Clone()
@@ -32,7 +34,8 @@ public class TaxRates : IEquatable<TaxRates>, ICopyable
         if (ReferenceEquals(this, other)) return true;
         return LimsaLominsa == other.LimsaLominsa && Gridania == other.Gridania && Uldah == other.Uldah &&
                Ishgard == other.Ishgard && Kugane == other.Kugane && Crystarium == other.Crystarium &&
-               OldSharlayan == other.OldSharlayan && UploadApplicationName == other.UploadApplicationName;
+               OldSharlayan == other.OldSharlayan && Tuliyollal == other.Tuliyollal &&
+               UploadApplicationName == other.UploadApplicationName;
     }
 
     public override bool Equals(object obj)
@@ -44,8 +47,9 @@ public class TaxRates : IEquatable<TaxRates>, ICopyable
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(LimsaLominsa, Gridania, Uldah, Ishgard, Kugane, Crystarium, OldSharlayan,
-            UploadApplicationName);
+        var taxHash = HashCode.Combine(LimsaLominsa, Gridania, Uldah, Ishgard, Kugane, Crystarium, OldSharlayan,
+            Tuliyollal);
+        return HashCode.Combine(taxHash, UploadApplicationName);
     }
 
     public static bool operator ==(TaxRates left, TaxRates right)

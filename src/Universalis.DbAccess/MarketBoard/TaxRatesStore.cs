@@ -75,6 +75,7 @@ public class TaxRatesStore : ITaxRatesStore
                 new HashEntry("Kugane", taxRates.Kugane),
                 new HashEntry("Crystarium", taxRates.Crystarium),
                 new HashEntry("Old Sharlayan", taxRates.OldSharlayan),
+                new HashEntry("Tuliyollal", taxRates.Tuliyollal),
                 new HashEntry("source", taxRates.UploadApplicationName),
             }, CommandFlags.FireAndForget);
         }
@@ -108,7 +109,8 @@ public class TaxRatesStore : ITaxRatesStore
         try
         {
             var tasks = new[]
-                { "Limsa Lominsa", "Gridania", "Ul'dah", "Ishgard", "Kugane", "Crystarium", "Old Sharlayan", "source" }
+                { "Limsa Lominsa", "Gridania", "Ul'dah", "Ishgard", "Kugane", "Crystarium", "Old Sharlayan",
+                    "Tuliyollal", "source" }
             .Select(k => db.HashGetAsync(key, k, CommandFlags.PreferReplica));
             var values = await Task.WhenAll(tasks);
             return new TaxRates
@@ -120,7 +122,8 @@ public class TaxRatesStore : ITaxRatesStore
                 Kugane = (int)values[4],
                 Crystarium = (int)values[5],
                 OldSharlayan = (int)values[6],
-                UploadApplicationName = values[7],
+                Tuliyollal = (int)values[7],
+                UploadApplicationName = values[8],
             };
         }
         catch (Exception e)

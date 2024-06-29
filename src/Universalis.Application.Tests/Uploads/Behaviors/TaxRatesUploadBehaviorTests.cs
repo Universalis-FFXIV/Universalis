@@ -42,6 +42,7 @@ public class TaxRatesUploadBehaviorTests
                 Ishgard = 3,
                 Kugane = 0,
                 Crystarium = 0,
+                Tuliyollal = 0,
             },
         };
         Assert.False(behavior.ShouldExecute(upload));
@@ -63,6 +64,7 @@ public class TaxRatesUploadBehaviorTests
                 Ishgard = 3,
                 Kugane = 0,
                 Crystarium = 0,
+                Tuliyollal = 0,
             },
             UploaderId = "5627384655756342554",
         };
@@ -91,6 +93,7 @@ public class TaxRatesUploadBehaviorTests
                 Ishgard = 3,
                 Kugane = 0,
                 Crystarium = 0,
+                Tuliyollal = 0,
             },
             UploaderId = "5627384655756342554",
         };
@@ -111,6 +114,7 @@ public class TaxRatesUploadBehaviorTests
         Assert.Equal(upload.TaxRates.Ishgard, data.Ishgard);
         Assert.Equal(upload.TaxRates.Kugane, data.Kugane);
         Assert.Equal(upload.TaxRates.Crystarium, data.Crystarium);
+        Assert.Equal(upload.TaxRates.Tuliyollal, data.Tuliyollal);
         Assert.Equal(source.Name, data.UploadApplicationName);
     }
 }

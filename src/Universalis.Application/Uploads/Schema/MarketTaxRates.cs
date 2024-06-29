@@ -25,4 +25,8 @@ public class MarketTaxRates
     [JsonPropertyName("sharlayan")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? OldSharlayan { get; set; }
+
+    [JsonPropertyName("tuliyollal")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? Tuliyollal { get; set; }
 }
