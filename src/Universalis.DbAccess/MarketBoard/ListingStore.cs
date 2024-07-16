@@ -197,6 +197,10 @@ public class ListingStore : IListingStore
 
         var worldIds = query.WorldIds.ToList();
         var itemIds = query.ItemIds.ToList();
+        var worldItemPairs = worldIds.SelectMany(worldId =>
+                itemIds.Select(itemId => new WorldItemPair(worldId, itemId)))
+            .ToList();
+
         await using var command = _dataSource.CreateCommand(
             """
             SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
@@ -215,7 +219,8 @@ public class ListingStore : IListingStore
             await using var reader =
                 await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
-            var listings = new Dictionary<WorldItemPair, IList<Listing>>();
+            var listings = new Dictionary<WorldItemPair, IList<Listing>>(worldItemPairs.Select(wip =>
+                new KeyValuePair<WorldItemPair, IList<Listing>>(wip, new List<Listing>())));
             while (await reader.ReadAsync(cancellationToken))
             {
                 var listingId = reader.GetString(0);
@@ -254,7 +259,7 @@ public class ListingStore : IListingStore
 
             return listings.ToDictionary(
                 kvp => kvp.Key,
-                kvp => (IList<Listing>) kvp.Value.OrderBy(listing => listing.PricePerUnit).ToList());
+                kvp => (IList<Listing>)kvp.Value.OrderBy(listing => listing.PricePerUnit).ToList());
         }
         catch (Exception e)
         {
