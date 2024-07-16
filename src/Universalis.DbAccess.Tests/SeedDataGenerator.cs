@@ -30,7 +30,7 @@ public static class SeedDataGenerator
                     ListingId = rand.NextInt64().ToString(),
                     Hq = rand.NextDouble() > 0.5,
                     OnMannequin = rand.NextDouble() > 0.5,
-                    Materia = new List<Materia>(),
+                    Materia = rand.NextDouble() > 0.5 ? new List<Materia> { new() { MateriaId = 1, SlotId = 1} } : new List<Materia>(),
                     PricePerUnit = price,
                     Quantity = rand.Next(1, maxStackSize),
                     DyeId = (byte)rand.Next(0, 255),

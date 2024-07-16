@@ -1,14 +1,17 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using System;
+using System.Text.Json.Serialization;
 
 namespace Universalis.Entities;
 
 public class Materia : IEquatable<Materia>
 {
     [BsonElement("slotID")]
+    [JsonPropertyName("slot_id")]
     public int SlotId { get; init; }
 
     [BsonElement("materiaID")]
+    [JsonPropertyName("materia_id")]
     public int MateriaId { get; init; }
 
     public bool Equals(Materia other)
