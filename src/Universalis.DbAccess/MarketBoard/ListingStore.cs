@@ -197,11 +197,6 @@ public class ListingStore : IListingStore
 
         var worldIds = query.WorldIds.ToList();
         var itemIds = query.ItemIds.ToList();
-        var worldItemPairs = worldIds.SelectMany(worldId =>
-                itemIds.Select(itemId => new WorldItemPair(worldId, itemId)))
-            .ToList();
-
-        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
         await using var command = _dataSource.CreateCommand(
             """
             SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
