@@ -14,8 +14,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
     <PackageReference Include="Npgsql" Version="8.0.3" />
-    <PackageReference Include="Npgsql.Json.NET" Version="8.0.2" />
-    <PackageReference Include="Npgsql.OpenTelemetry" Version="8.0.2" />
+    <PackageReference Include="Npgsql.Json.NET" Version="8.0.3" />
+    <PackageReference Include="Npgsql.OpenTelemetry" Version="8.0.3" />
     <PackageReference Include="OpenTelemetry.Instrumentation.StackExchangeRedis" Version="1.0.0-rc9.7" />
     <PackageReference Include="OptimizedPriorityQueue" Version="5.1.0" />
     <PackageReference Include="prometheus-net" Version="8.2.1" />
