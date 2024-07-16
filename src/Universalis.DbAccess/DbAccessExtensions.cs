@@ -52,9 +52,9 @@ public static class DbAccessExtensions
                 .ScanIn(typeof(DbAccessExtensions).Assembly).For.All())
             .AddLogging(lb => lb.AddFluentMigratorConsole());
 
-        var dataSourceBuilder = new NpgsqlDataSourceBuilder(postgresConnectionString);
-        dataSourceBuilder.UseJsonNet();
-        sc.AddSingleton(dataSourceBuilder.Build());
+        sc.AddSingleton(new NpgsqlDataSourceBuilder(postgresConnectionString)
+            .EnableDynamicJson()
+            .Build());
 
         Diagnostics.CassandraPerformanceCountersEnabled = true;
 
