@@ -202,72 +202,64 @@ public class ListingStore : IListingStore
             .ToList();
 
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
-        await using var batch = new NpgsqlBatch(connection);
-
-        foreach (var (worldId, itemId) in worldItemPairs)
-        {
-            batch.BatchCommands.Add(new NpgsqlBatchCommand(
-                """
-                SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
-                       t.unit_price, t.quantity, t.dye_id, t.creator_id, t.creator_name,
-                       t.last_review_time, t.retainer_id, t.retainer_name, t.retainer_city_id,
-                       t.seller_id, t.uploaded_at, t.source
-                FROM listing t
-                WHERE t.item_id = $1 AND t.world_id = $2
-                ORDER BY unit_price
-                """)
-            {
-                Parameters =
-                {
-                    new NpgsqlParameter<int> { TypedValue = itemId },
-                    new NpgsqlParameter<int> { TypedValue = worldId },
-                },
-            });
-        }
+        await using var command = _dataSource.CreateCommand(
+            """
+            SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
+                   t.unit_price, t.quantity, t.dye_id, t.creator_id, t.creator_name,
+                   t.last_review_time, t.retainer_id, t.retainer_name, t.retainer_city_id,
+                   t.seller_id, t.uploaded_at, t.source
+            FROM listing t
+            WHERE t.item_id = ANY($1) AND t.world_id = ANY($2)
+            ORDER BY unit_price
+            """);
+        command.Parameters.Add(new NpgsqlParameter<int[]> { TypedValue = itemIds.ToArray() });
+        command.Parameters.Add(new NpgsqlParameter<int[]> { TypedValue = worldIds.ToArray() });
 
         try
         {
             await using var reader =
-                await batch.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
+                await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
             var listings = new Dictionary<WorldItemPair, IList<Listing>>();
-            var batchesRead = 0;
-            do
+            while (await reader.ReadAsync(cancellationToken))
             {
-                var key = worldItemPairs[batchesRead];
-                var batchResult = new List<Listing>();
-                while (await reader.ReadAsync(cancellationToken))
+                var listingId = reader.GetString(0);
+                var itemId = reader.GetInt32(1);
+                var worldId = reader.GetInt32(2);
+                var worldItemPair = new WorldItemPair(worldId, itemId);
+
+                if (!listings.TryGetValue(worldItemPair, out var value))
                 {
-                    batchResult.Add(new Listing
-                    {
-                        ListingId = reader.GetString(0),
-                        ItemId = reader.GetInt32(1),
-                        WorldId = reader.GetInt32(2),
-                        Hq = reader.GetBoolean(3),
-                        OnMannequin = reader.GetBoolean(4),
-                        Materia = ConvertMateriaFromJArray(reader.GetFieldValue<JArray>(5)),
-                        PricePerUnit = reader.GetInt32(6),
-                        Quantity = reader.GetInt32(7),
-                        DyeId = reader.GetInt32(8),
-                        CreatorId = reader.GetString(9),
-                        CreatorName = reader.GetString(10),
-                        LastReviewTime = reader.GetDateTime(11),
-                        RetainerId = reader.GetString(12),
-                        RetainerName = reader.GetString(13),
-                        RetainerCityId = reader.GetInt32(14),
-                        SellerId = reader.GetString(15),
-                        UpdatedAt = reader.GetDateTime(16),
-                        Source = reader.GetString(17),
-                    });
+                    value = new List<Listing>();
+                    listings[worldItemPair] = value;
                 }
 
-                listings[key] = batchResult;
+                value.Add(new Listing
+                {
+                    ListingId = listingId,
+                    ItemId = itemId,
+                    WorldId = worldId,
+                    Hq = reader.GetBoolean(3),
+                    OnMannequin = reader.GetBoolean(4),
+                    Materia = ConvertMateriaFromJArray(reader.GetFieldValue<JArray>(5)),
+                    PricePerUnit = reader.GetInt32(6),
+                    Quantity = reader.GetInt32(7),
+                    DyeId = reader.GetInt32(8),
+                    CreatorId = reader.GetString(9),
+                    CreatorName = reader.GetString(10),
+                    LastReviewTime = reader.GetDateTime(11),
+                    RetainerId = reader.GetString(12),
+                    RetainerName = reader.GetString(13),
+                    RetainerCityId = reader.GetInt32(14),
+                    SellerId = reader.GetString(15),
+                    UpdatedAt = reader.GetDateTime(16),
+                    Source = reader.GetString(17),
+                });
+            }
 
-                batchesRead++;
-                await reader.NextResultAsync(cancellationToken);
-            } while (batchesRead != worldItemPairs.Count);
-
-            return listings;
+            return listings.ToDictionary(
+                kvp => kvp.Key,
+                kvp => (IList<Listing>) kvp.Value.OrderBy(listing => listing.PricePerUnit).ToList());
         }
         catch (Exception e)
         {

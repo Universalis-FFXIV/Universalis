@@ -133,6 +133,13 @@ public class ListingStoreTests
             await store.ReplaceLive(currentlyShown.Listings);
             expectedListings[i] = currentlyShown.Listings;
         }
+        
+        // Also store some more data that we don't want to retrieve to make sure we're not being too lenient
+        for (var i = 106; i < 110; i++)
+        {
+            var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, i);
+            await store.ReplaceLive(currentlyShown.Listings);
+        }
 
         var results = await store.RetrieveManyLive(new ListingManyQuery
             { ItemIds = Enumerable.Range(100, 105), WorldIds = new[] { 93 } });
@@ -163,6 +170,11 @@ public class ListingStoreTests
                 Assert.Equal(DateTimeKind.Utc, actual.UpdatedAt.Kind);
                 Assert.Equal(expected.Source, actual.Source);
             });
+        }
+
+        for (var i = 106; i < 110; i++)
+        {
+            Assert.False(expectedListings.ContainsKey(i));
         }
     }
 
