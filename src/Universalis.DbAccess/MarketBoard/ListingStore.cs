@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
@@ -99,7 +98,8 @@ public class ListingStore : IListingStore
                         new NpgsqlParameter<int> { TypedValue = listing.WorldId },
                         new NpgsqlParameter<bool> { TypedValue = listing.Hq },
                         new NpgsqlParameter<bool> { TypedValue = listing.OnMannequin },
-                        new NpgsqlParameter { Value = listing.Materia, NpgsqlDbType = NpgsqlDbType.Jsonb },
+                        new NpgsqlParameter
+                            { Value = ConvertMateriaToJArray(listing.Materia), NpgsqlDbType = NpgsqlDbType.Jsonb },
                         new NpgsqlParameter<int> { TypedValue = listing.PricePerUnit },
                         new NpgsqlParameter<int> { TypedValue = listing.Quantity },
                         new NpgsqlParameter<int> { TypedValue = listing.DyeId },
@@ -165,7 +165,7 @@ public class ListingStore : IListingStore
                     WorldId = reader.GetInt32(2),
                     Hq = reader.GetBoolean(3),
                     OnMannequin = reader.GetBoolean(4),
-                    Materia = reader.GetFieldValue<List<Materia>>(5),
+                    Materia = ConvertMateriaFromJArray(reader.GetFieldValue<JArray>(5)),
                     PricePerUnit = reader.GetInt32(6),
                     Quantity = reader.GetInt32(7),
                     DyeId = reader.GetInt32(8),
@@ -241,7 +241,7 @@ public class ListingStore : IListingStore
                     WorldId = worldId,
                     Hq = reader.GetBoolean(3),
                     OnMannequin = reader.GetBoolean(4),
-                    Materia = reader.GetFieldValue<List<Materia>>(5),
+                    Materia = ConvertMateriaFromJArray(reader.GetFieldValue<JArray>(5)),
                     PricePerUnit = reader.GetInt32(6),
                     Quantity = reader.GetInt32(7),
                     DyeId = reader.GetInt32(8),
@@ -267,5 +267,23 @@ public class ListingStore : IListingStore
                 string.Join(',', itemIds));
             throw;
         }
+    }
+
+    private static JArray ConvertMateriaToJArray(IEnumerable<Materia> materia)
+    {
+        return materia
+            .Select(m => new JObject { ["slot_id"] = m.SlotId, ["materia_id"] = m.MateriaId })
+            .Aggregate(new JArray(), (array, o) =>
+            {
+                array.Add(o);
+                return array;
+            });
+    }
+
+    private static List<Materia> ConvertMateriaFromJArray(IEnumerable<JToken> materia)
+    {
+        return materia
+            .Select(m => new Materia { SlotId = m["slot_id"].Value<int>(), MateriaId = m["materia_id"].Value<int>() })
+            .ToList();
     }
 }
