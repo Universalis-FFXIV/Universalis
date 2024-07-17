@@ -381,7 +381,7 @@ public class ListingStore : IListingStore
         var cacheKey = ListingsKey(worldId, itemId);
 
         // Try to fetch the listings from the cache
-        var cacheValue = await db.StringGetAsync(cacheKey, CommandFlags.PreferReplica);
+        var cacheValue = await db.StringGetAsync(cacheKey);
         if (cacheValue != RedisValue.Null)
         {
             CacheHits.Inc();
