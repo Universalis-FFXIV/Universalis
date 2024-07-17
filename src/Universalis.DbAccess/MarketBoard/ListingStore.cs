@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
+using Prometheus;
 using StackExchange.Redis;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities;
@@ -18,6 +19,11 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public class ListingStore : IListingStore
 {
+    private static readonly Counter CachePurges = Prometheus.Metrics.CreateCounter("universalis_listing_cache_purge", "");
+    private static readonly Counter CacheHits = Prometheus.Metrics.CreateCounter("universalis_listing_cache_hit", "");
+    private static readonly Counter CacheMisses = Prometheus.Metrics.CreateCounter("universalis_listing_cache_miss", "");
+    private static readonly Counter CacheUpdates = Prometheus.Metrics.CreateCounter("universalis_listing_cache_update", "");
+
     private readonly ILogger<ListingStore> _logger;
     private readonly ICacheRedisMultiplexer _cache;
     private readonly NpgsqlDataSource _dataSource;
@@ -54,6 +60,7 @@ public class ListingStore : IListingStore
         var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
         var cacheKey = ListingsKey(query.WorldId, query.ItemId);
         await db.KeyDeleteAsync(cacheKey);
+        CachePurges.Inc();
     }
 
     public async Task ReplaceLive(IEnumerable<Listing> listings, CancellationToken cancellationToken = default)
@@ -136,6 +143,7 @@ public class ListingStore : IListingStore
                 var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
                 var cacheKey = ListingsKey(worldID, itemID);
                 await db.KeyDeleteAsync(cacheKey);
+                CachePurges.Inc();
             }
             catch (Exception e)
             {
@@ -174,10 +182,15 @@ public class ListingStore : IListingStore
         var cacheKey = ListingsKey(query.WorldId, query.ItemId);
 
         // Try to fetch the listings from the cache
-        var cacheValue = db.StringGet(cacheKey, CommandFlags.PreferReplica);
+        var cacheValue = await db.StringGetAsync(cacheKey, CommandFlags.PreferReplica);
         if (cacheValue != RedisValue.Null)
         {
+            CacheHits.Inc();
             return DeserializeListings(cacheValue);
+        }
+        else
+        {
+            CacheMisses.Inc();
         }
 
         // Query the database
@@ -227,6 +240,7 @@ public class ListingStore : IListingStore
 
             // Cache the result temporarily
             await db.StringSetAsync(cacheKey, cacheValue, TimeSpan.FromMinutes(1));
+            CacheUpdates.Inc();
 
             return listings;
         }
@@ -245,10 +259,12 @@ public class ListingStore : IListingStore
         await _lock.WaitAsync(cancellationToken);
         try
         {
+            CacheHits.Inc();
             return await RetrieveManyLiveCore(query, cancellationToken);
         }
         finally
         {
+            CacheMisses.Inc();
             _lock.Release();
         }
     }
@@ -264,6 +280,23 @@ public class ListingStore : IListingStore
                 itemIds.Select(itemId => new WorldItemPair(worldId, itemId)))
             .ToList();
 
+        var listings = new Dictionary<WorldItemPair, IList<Listing>>(worldItemPairs.Select(wip =>
+            new KeyValuePair<WorldItemPair, IList<Listing>>(wip, new List<Listing>())));
+
+        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        foreach (var worldItemPair in worldItemPairs.ToList())
+        {
+            // Try to fetch the listings from the cache
+            var (worldId, itemId) = worldItemPair;
+            var cacheKey = ListingsKey(worldId, itemId);
+            var cacheValue = await db.StringGetAsync(cacheKey, CommandFlags.PreferReplica);
+            if (cacheValue != RedisValue.Null)
+            {
+                listings[worldItemPair] = DeserializeListings(cacheValue);
+                worldItemPairs.Remove(worldItemPair);
+            }
+        }
+
         await using var command = _dataSource.CreateCommand(
             """
             SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
@@ -274,16 +307,16 @@ public class ListingStore : IListingStore
             WHERE t.item_id = ANY($1) AND t.world_id = ANY($2)
             ORDER BY unit_price
             """);
-        command.Parameters.Add(new NpgsqlParameter<int[]> { TypedValue = itemIds.ToArray() });
-        command.Parameters.Add(new NpgsqlParameter<int[]> { TypedValue = worldIds.ToArray() });
+        command.Parameters.Add(new NpgsqlParameter<int[]>
+            { TypedValue = worldItemPairs.Select(wip => wip.ItemId).Distinct().ToArray() });
+        command.Parameters.Add(new NpgsqlParameter<int[]>
+            { TypedValue = worldItemPairs.Select(wip => wip.WorldId).Distinct().ToArray() });
 
         try
         {
             await using var reader =
                 await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
-            var listings = new Dictionary<WorldItemPair, IList<Listing>>(worldItemPairs.Select(wip =>
-                new KeyValuePair<WorldItemPair, IList<Listing>>(wip, new List<Listing>())));
             while (await reader.ReadAsync(cancellationToken))
             {
                 var listingId = reader.GetString(0);
@@ -320,9 +353,20 @@ public class ListingStore : IListingStore
                 });
             }
 
-            return listings.ToDictionary(
+            var result = listings.ToDictionary(
                 kvp => kvp.Key,
                 kvp => (IList<Listing>)kvp.Value.OrderBy(listing => listing.PricePerUnit).ToList());
+
+            // Cache the results
+            foreach (var key in result.Keys)
+            {
+                var cacheKey = ListingsKey(key.WorldId, key.ItemId);
+                var cacheValue = SerializeListings(result[key]);
+                await db.StringSetAsync(cacheKey, cacheValue, TimeSpan.FromMinutes(1));
+                CacheUpdates.Inc();
+            }
+
+            return result;
         }
         catch (Exception e)
         {
