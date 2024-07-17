@@ -19,10 +19,16 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public class ListingStore : IListingStore
 {
-    private static readonly Counter CachePurges = Prometheus.Metrics.CreateCounter("universalis_listing_cache_purge", "");
+    private static readonly Counter CachePurges =
+        Prometheus.Metrics.CreateCounter("universalis_listing_cache_purge", "");
+
     private static readonly Counter CacheHits = Prometheus.Metrics.CreateCounter("universalis_listing_cache_hit", "");
-    private static readonly Counter CacheMisses = Prometheus.Metrics.CreateCounter("universalis_listing_cache_miss", "");
-    private static readonly Counter CacheUpdates = Prometheus.Metrics.CreateCounter("universalis_listing_cache_update", "");
+
+    private static readonly Counter
+        CacheMisses = Prometheus.Metrics.CreateCounter("universalis_listing_cache_miss", "");
+
+    private static readonly Counter CacheUpdates =
+        Prometheus.Metrics.CreateCounter("universalis_listing_cache_update", "");
 
     private readonly ILogger<ListingStore> _logger;
     private readonly ICacheRedisMultiplexer _cache;
@@ -259,12 +265,10 @@ public class ListingStore : IListingStore
         await _lock.WaitAsync(cancellationToken);
         try
         {
-            CacheHits.Inc();
             return await RetrieveManyLiveCore(query, cancellationToken);
         }
         finally
         {
-            CacheMisses.Inc();
             _lock.Release();
         }
     }
@@ -292,8 +296,13 @@ public class ListingStore : IListingStore
             var cacheValue = await db.StringGetAsync(cacheKey, CommandFlags.PreferReplica);
             if (cacheValue != RedisValue.Null)
             {
+                CacheHits.Inc();
                 listings[worldItemPair] = DeserializeListings(cacheValue);
                 worldItemPairs.Remove(worldItemPair);
+            }
+            else
+            {
+                CacheMisses.Inc();
             }
         }
 
