@@ -19,10 +19,13 @@ public class ListingStore : IListingStore
     private readonly ILogger<ListingStore> _logger;
     private readonly NpgsqlDataSource _dataSource;
 
+    private readonly SemaphoreSlim _lock;
+
     public ListingStore(NpgsqlDataSource dataSource, ILogger<ListingStore> logger)
     {
         _dataSource = dataSource;
         _logger = logger;
+        _lock = new SemaphoreSlim(75, 75);
     }
 
     public async Task DeleteLive(ListingQuery query, CancellationToken cancellationToken = default)
@@ -137,6 +140,22 @@ public class ListingStore : IListingStore
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveLive");
 
+        await _lock.WaitAsync(cancellationToken);
+        try
+        {
+            return await RetrieveLiveCore(query, cancellationToken);
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    private async Task<IEnumerable<Listing>> RetrieveLiveCore(ListingQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveLiveCore");
+
         await using var command = _dataSource.CreateCommand(
             """
             SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
@@ -194,6 +213,22 @@ public class ListingStore : IListingStore
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveManyLive");
+
+        await _lock.WaitAsync(cancellationToken);
+        try
+        {
+            return await RetrieveManyLiveCore(query, cancellationToken);
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    private async Task<IDictionary<WorldItemPair, IList<Listing>>> RetrieveManyLiveCore(ListingManyQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveManyLiveCore");
 
         var worldIds = query.WorldIds.ToList();
         var itemIds = query.ItemIds.ToList();
