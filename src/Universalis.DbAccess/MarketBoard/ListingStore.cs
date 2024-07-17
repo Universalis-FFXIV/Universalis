@@ -30,7 +30,7 @@ public class ListingStore : IListingStore
     private static readonly Counter CacheUpdates =
         Prometheus.Metrics.CreateCounter("universalis_listing_cache_update", "");
 
-    private static readonly TimeSpan ListingsCacheTime = TimeSpan.FromMinutes(3);
+    private static readonly TimeSpan ListingsCacheTime = TimeSpan.FromMinutes(5);
 
     private readonly ILogger<ListingStore> _logger;
     private readonly ICacheRedisMultiplexer _cache;
