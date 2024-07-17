@@ -380,8 +380,10 @@ public class ListingStore : IListingStore
         var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
         var cacheKey = ListingsKey(worldId, itemId);
 
-        // Try to fetch the listings from the cache
-        var cacheValue = await db.StringGetAsync(cacheKey);
+        // Try to fetch the listings from the cache. SE.Redis will always skew heavily to one node or the other, but
+        // we want to load-balance more evenly
+        var commandFlags = Random.Shared.NextDouble() > 0.5 ? CommandFlags.PreferReplica : CommandFlags.PreferMaster;
+        var cacheValue = await db.StringGetAsync(cacheKey, commandFlags);
         if (cacheValue != RedisValue.Null)
         {
             CacheHits.Inc();
