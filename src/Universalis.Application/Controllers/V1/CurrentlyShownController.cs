@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UAParser;
 using Universalis.Application.Common;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1;
@@ -70,7 +71,9 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         activity?.AddTag("entriesToReturn", entriesToReturn);
         if (!string.IsNullOrEmpty(userAgent))
         {
-            activity?.AddTag("userAgent", userAgent);
+            var parsedUserAgent = Parser.GetDefault().ParseUserAgent(userAgent);
+            var userAgentFamily = parsedUserAgent.Family;
+            activity?.AddTag("userAgent", userAgentFamily);
         }
 
         if (itemIds == null || worldDcRegion == null)
