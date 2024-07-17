@@ -34,6 +34,9 @@ public class ListingStore : IListingStore
     private static readonly Counter CacheUpdates =
         Prometheus.Metrics.CreateCounter("universalis_listing_cache_update", "");
 
+    private static readonly Counter CacheTimeouts =
+        Prometheus.Metrics.CreateCounter("universalis_listing_cache_timeout", "");
+
     private static readonly TimeSpan ListingsCacheTime = TimeSpan.FromMinutes(10);
 
     private readonly ILogger<ListingStore> _logger;
@@ -374,7 +377,8 @@ public class ListingStore : IListingStore
         }
     }
 
-    private async Task<(bool, IList<Listing>)> TryGetListingsFromCache(int worldId, int itemId)
+    private async Task<(bool, IList<Listing>)> TryGetListingsFromCache(int worldId, int itemId,
+        CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.TryGetListingsFromCache");
 
@@ -387,15 +391,25 @@ public class ListingStore : IListingStore
         var commandFlags = Random.Shared.NextDouble() > replicaRatio
             ? CommandFlags.PreferReplica
             : CommandFlags.PreferMaster;
-        var cacheValue = await db.StringGetAsync(cacheKey, commandFlags);
-        if (cacheValue != RedisValue.Null)
+
+        try
         {
-            CacheHits.Inc();
-            return (true, DeserializeListings(cacheValue));
+            var cacheValue = await db.StringGetAsync(cacheKey, commandFlags)
+                .WaitAsync(TimeSpan.FromSeconds(1), cancellationToken);
+            if (cacheValue != RedisValue.Null)
+            {
+                CacheHits.Inc();
+                return (true, DeserializeListings(cacheValue));
+            }
+            else
+            {
+                CacheMisses.Inc();
+                return (false, null);
+            }
         }
-        else
+        catch (OperationCanceledException)
         {
-            CacheMisses.Inc();
+            CacheTimeouts.Inc();
             return (false, null);
         }
     }
@@ -405,7 +419,8 @@ public class ListingStore : IListingStore
         using var activity = Util.ActivitySource.StartActivity("ListingStore.StoreListingsInCache");
         var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
         var cacheKey = ListingsKey(worldId, itemId);
-        await db.StringSetAsync(cacheKey, SerializeListings(listings), ListingsCacheTime);
+        await db.StringSetAsync(cacheKey, SerializeListings(listings), ListingsCacheTime, When.Always,
+            CommandFlags.FireAndForget);
         CacheUpdates.Inc();
     }
 
