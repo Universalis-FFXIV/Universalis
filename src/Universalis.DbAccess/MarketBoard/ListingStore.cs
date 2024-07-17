@@ -382,7 +382,8 @@ public class ListingStore : IListingStore
 
         // Try to fetch the listings from the cache. SE.Redis will always skew heavily to one node or the other, but
         // we want to load-balance more evenly
-        var commandFlags = Random.Shared.NextDouble() > 0.5 ? CommandFlags.PreferReplica : CommandFlags.PreferMaster;
+        var replicaRatio = 1 / (1 + _cache.ReplicaCount); // 1 / (1 + 1 replica) = 0.5, 1 / (1 + 2 replicas) = 0.33...
+        var commandFlags = Random.Shared.NextDouble() > replicaRatio ? CommandFlags.PreferReplica : CommandFlags.PreferMaster;
         var cacheValue = await db.StringGetAsync(cacheKey, commandFlags);
         if (cacheValue != RedisValue.Null)
         {
