@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +19,7 @@ using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
 
+[SuppressMessage("ReSharper", "ExplicitCallerInfoArgument")]
 public class ListingStore : IListingStore
 {
     private static readonly Counter CachePurges =
@@ -186,19 +189,11 @@ public class ListingStore : IListingStore
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveLiveCore");
 
-        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
-        var cacheKey = ListingsKey(query.WorldId, query.ItemId);
-
         // Try to fetch the listings from the cache
-        var cacheValue = await db.StringGetAsync(cacheKey, CommandFlags.PreferReplica);
-        if (cacheValue != RedisValue.Null)
+        var (success, cacheValue) = await TryGetListingsFromCache(query.WorldId, query.ItemId);
+        if (success)
         {
-            CacheHits.Inc();
-            return DeserializeListings(cacheValue);
-        }
-        else
-        {
-            CacheMisses.Inc();
+            return cacheValue;
         }
 
         // Query the database
@@ -247,8 +242,7 @@ public class ListingStore : IListingStore
             }
 
             // Cache the result temporarily
-            await db.StringSetAsync(cacheKey, cacheValue, ListingsCacheTime);
-            CacheUpdates.Inc();
+            await StoreListingsInCache(query.WorldId, query.ItemId, listings);
 
             return listings;
         }
@@ -289,25 +283,19 @@ public class ListingStore : IListingStore
         var listings = new Dictionary<WorldItemPair, IList<Listing>>(worldItemPairs.Select(wip =>
             new KeyValuePair<WorldItemPair, IList<Listing>>(wip, new List<Listing>())));
 
-        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
         foreach (var worldItemPair in worldItemPairs.ToList())
         {
             // Try to fetch the listings from the cache
             var (worldId, itemId) = worldItemPair;
-            var cacheKey = ListingsKey(worldId, itemId);
-            var cacheValue = await db.StringGetAsync(cacheKey, CommandFlags.PreferReplica);
-            if (cacheValue != RedisValue.Null)
+            var (success, cacheValue) = await TryGetListingsFromCache(worldId, itemId);
+            if (success)
             {
-                CacheHits.Inc();
-                listings[worldItemPair] = DeserializeListings(cacheValue);
+                listings[worldItemPair] = cacheValue;
                 worldItemPairs.Remove(worldItemPair);
-            }
-            else
-            {
-                CacheMisses.Inc();
             }
         }
 
+        activity?.AddEvent(new ActivityEvent("NpgsqlCreateCommand"));
         await using var command = _dataSource.CreateCommand(
             """
             SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
@@ -325,11 +313,13 @@ public class ListingStore : IListingStore
 
         try
         {
+            activity?.AddEvent(new ActivityEvent("NpgsqlCommandExecuteReaderAsync"));
             await using var reader =
                 await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
             while (await reader.ReadAsync(cancellationToken))
             {
+                activity?.AddEvent(new ActivityEvent("NpgsqlReaderRead"));
                 var listingId = reader.GetString(0);
                 var itemId = reader.GetInt32(1);
                 var worldId = reader.GetInt32(2);
@@ -371,10 +361,7 @@ public class ListingStore : IListingStore
             // Cache the results
             foreach (var key in result.Keys)
             {
-                var cacheKey = ListingsKey(key.WorldId, key.ItemId);
-                var cacheValue = SerializeListings(result[key]);
-                await db.StringSetAsync(cacheKey, cacheValue, ListingsCacheTime);
-                CacheUpdates.Inc();
+                await StoreListingsInCache(key.WorldId, key.ItemId, result[key]);
             }
 
             return result;
@@ -385,6 +372,36 @@ public class ListingStore : IListingStore
                 string.Join(',', itemIds));
             throw;
         }
+    }
+
+    private async Task<(bool, IList<Listing>)> TryGetListingsFromCache(int worldId, int itemId)
+    {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.TryGetListingsFromCache");
+
+        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var cacheKey = ListingsKey(worldId, itemId);
+
+        // Try to fetch the listings from the cache
+        var cacheValue = await db.StringGetAsync(cacheKey, CommandFlags.PreferReplica);
+        if (cacheValue != RedisValue.Null)
+        {
+            CacheHits.Inc();
+            return (true, DeserializeListings(cacheValue));
+        }
+        else
+        {
+            CacheMisses.Inc();
+            return (false, null);
+        }
+    }
+
+    private async Task StoreListingsInCache(int worldId, int itemId, IList<Listing> listings)
+    {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.StoreListingsInCache");
+        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var cacheKey = ListingsKey(worldId, itemId);
+        await db.StringSetAsync(cacheKey, SerializeListings(listings), ListingsCacheTime);
+        CacheUpdates.Inc();
     }
 
     private static string ListingsKey(int worldId, int itemId)
