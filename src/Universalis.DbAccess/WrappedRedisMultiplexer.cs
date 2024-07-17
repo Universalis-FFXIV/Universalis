@@ -1,33 +1,36 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using StackExchange.Redis;
 
 namespace Universalis.DbAccess;
 
 public class WrappedRedisMultiplexer : ICacheRedisMultiplexer, IPersistentRedisMultiplexer
 {
-    private readonly IConnectionMultiplexer _connectionMultiplexer;
+    private readonly IConnectionMultiplexer[] _connectionMultiplexers;
 
     public int ReplicaCount { get; }
     
-    public WrappedRedisMultiplexer(IConnectionMultiplexer connectionMultiplexer)
+    public WrappedRedisMultiplexer(params IConnectionMultiplexer[] connectionMultiplexers)
     {
         // Count port numbers, assume single-master configuration
-        ReplicaCount = connectionMultiplexer.Configuration.Select(c => c.Equals(':')).Count() - 1;
-        _connectionMultiplexer = connectionMultiplexer;
+        ReplicaCount = connectionMultiplexers[0].Configuration.Select(c => c.Equals(':')).Count() - 1;
+        _connectionMultiplexers = connectionMultiplexers;
     }
 
     IDatabase ICacheRedisMultiplexer.GetDatabase(int db, object asyncObject)
     {
-        return _connectionMultiplexer.GetDatabase();
+        return GetConnectionMultiplexer().GetDatabase();
     }
 
     IDatabase IPersistentRedisMultiplexer.GetDatabase(int db, object asyncObject)
     {
-        return _connectionMultiplexer.GetDatabase();
+        return GetConnectionMultiplexer().GetDatabase();
     }
 
     public IConnectionMultiplexer GetConnectionMultiplexer()
     {
-        return _connectionMultiplexer;
+        // Uniformly load balance across multiplexers
+        var index = Random.Shared.NextInt64(0, _connectionMultiplexers.Length);
+        return _connectionMultiplexers[index];
     }
 }

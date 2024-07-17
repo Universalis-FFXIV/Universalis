@@ -76,10 +76,11 @@ public static class DbAccessExtensions
         sc.AddSingleton<ICluster>(scyllaCluster);
 
         var cacheOptions = ConfigurationOptions.Parse(redisCacheConnectionString);
-        var cache = ConnectionMultiplexer.Connect(cacheOptions);
+        var cache1 = ConnectionMultiplexer.Connect(cacheOptions);
+        var cache2 = ConnectionMultiplexer.Connect(cacheOptions);
         var dbOptions = ConfigurationOptions.Parse(redisConnectionString);
         var db = ConnectionMultiplexer.Connect(dbOptions);
-        sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(cache));
+        sc.AddSingleton<ICacheRedisMultiplexer>(_ => new WrappedRedisMultiplexer(cache1, cache2));
         sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(db));
 
         sc.AddSingleton<IUploadLogStore, UploadLogStore>();
