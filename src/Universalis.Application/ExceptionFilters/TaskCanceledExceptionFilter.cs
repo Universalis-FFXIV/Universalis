@@ -19,6 +19,5 @@ public class TaskCanceledExceptionFilter : IExceptionFilter
         if (context.Exception is not TaskCanceledException) return;
         _logger.LogWarning("Request was cancelled");
         context.Result = new StatusCodeResult(504);
-        context.ExceptionHandled = true;
     }
 }
