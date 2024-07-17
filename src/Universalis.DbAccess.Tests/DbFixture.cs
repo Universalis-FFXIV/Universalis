@@ -14,7 +14,8 @@ namespace Universalis.DbAccess.Tests;
 public class DbFixture : IAsyncLifetime
 {
     private readonly TestcontainersContainer _scylla;
-    private readonly TestcontainersContainer _cache;
+    private readonly TestcontainersContainer _cache1;
+    private readonly TestcontainersContainer _cache2;
     private readonly TestcontainersContainer _redis;
     private readonly TestcontainersContainer _postgres;
 
@@ -35,7 +36,13 @@ public class DbFixture : IAsyncLifetime
                 o.HostConfig.CPUCount = 1;
             })
             .Build();
-        _cache = new TestcontainersBuilder<TestcontainersContainer>()
+        _cache1 = new TestcontainersBuilder<TestcontainersContainer>()
+            .WithName(Guid.NewGuid().ToString("D"))
+            .WithImage("redis:7.0.8")
+            .WithPortBinding(6379, true)
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(6379))
+            .Build();
+        _cache2 = new TestcontainersBuilder<TestcontainersContainer>()
             .WithName(Guid.NewGuid().ToString("D"))
             .WithImage("redis:7.0.8")
             .WithPortBinding(6379, true)
@@ -75,7 +82,7 @@ public class DbFixture : IAsyncLifetime
                  reloadOnChange: true)
             .AddInMemoryCollection(new Dictionary<string, string>
             {
-                { "RedisCacheConnectionString", $"{_cache.Hostname}:{_cache.GetMappedPublicPort(6379)}" },
+                { "RedisCacheConnectionString", $"{_cache1.Hostname}:{_cache1.GetMappedPublicPort(6379)},{_cache2.Hostname}:{_cache2.GetMappedPublicPort(6379)}" },
                 { "RedisConnectionString", $"{_redis.Hostname}:{_redis.GetMappedPublicPort(6379)}" },
                 { "ScyllaConnectionString", "localhost" },
                 { "PostgresConnectionString", $"Host={_postgres.Hostname};Port={_postgres.GetMappedPublicPort(5432)};Username=universalis;Password=universalis;Database=universalis" },
@@ -97,14 +104,16 @@ public class DbFixture : IAsyncLifetime
     {
         await _postgres.StartAsync().ConfigureAwait(false);
         await _scylla.StartAsync().ConfigureAwait(false);
-        await _cache.StartAsync().ConfigureAwait(false);
+        await _cache1.StartAsync().ConfigureAwait(false);
+        await _cache2.StartAsync().ConfigureAwait(false);
         await _redis.StartAsync().ConfigureAwait(false);
     }
 
     public async Task DisposeAsync()
     {
         await _redis.DisposeAsync().ConfigureAwait(false);
-        await _cache.DisposeAsync().ConfigureAwait(false);
+        await _cache1.DisposeAsync().ConfigureAwait(false);
+        await _cache2.DisposeAsync().ConfigureAwait(false);
         await _scylla.DisposeAsync().ConfigureAwait(false);
         await _postgres.DisposeAsync().ConfigureAwait(false);
     }

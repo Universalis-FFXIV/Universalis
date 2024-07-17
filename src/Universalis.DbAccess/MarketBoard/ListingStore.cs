@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
+using StackExchange.Redis;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
@@ -17,12 +19,14 @@ namespace Universalis.DbAccess.MarketBoard;
 public class ListingStore : IListingStore
 {
     private readonly ILogger<ListingStore> _logger;
+    private readonly ICacheRedisMultiplexer _cache;
     private readonly NpgsqlDataSource _dataSource;
 
     private readonly SemaphoreSlim _lock;
 
-    public ListingStore(NpgsqlDataSource dataSource, ILogger<ListingStore> logger)
+    public ListingStore(NpgsqlDataSource dataSource, ICacheRedisMultiplexer cache, ILogger<ListingStore> logger)
     {
+        _cache = cache;
         _dataSource = dataSource;
         _logger = logger;
         _lock = new SemaphoreSlim(150, 150);
@@ -45,6 +49,11 @@ public class ListingStore : IListingStore
                 query.ItemId);
             throw;
         }
+
+        // Purge the cache
+        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var cacheKey = ListingsKey(query.WorldId, query.ItemId);
+        await db.KeyDeleteAsync(cacheKey);
     }
 
     public async Task ReplaceLive(IEnumerable<Listing> listings, CancellationToken cancellationToken = default)
@@ -122,6 +131,11 @@ public class ListingStore : IListingStore
             try
             {
                 rowsUpdated += await batch.ExecuteNonQueryAsync(cancellationToken);
+
+                // Purge the cache
+                var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+                var cacheKey = ListingsKey(worldID, itemID);
+                await db.KeyDeleteAsync(cacheKey);
             }
             catch (Exception e)
             {
@@ -156,6 +170,17 @@ public class ListingStore : IListingStore
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveLiveCore");
 
+        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var cacheKey = ListingsKey(query.WorldId, query.ItemId);
+
+        // Try to fetch the listings from the cache
+        var cacheValue = db.StringGet(cacheKey, CommandFlags.PreferReplica);
+        if (cacheValue != RedisValue.Null)
+        {
+            return DeserializeListings(cacheValue);
+        }
+
+        // Query the database
         await using var command = _dataSource.CreateCommand(
             """
             SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
@@ -199,6 +224,9 @@ public class ListingStore : IListingStore
                     Source = reader.GetString(17),
                 });
             }
+
+            // Cache the result temporarily
+            await db.StringSetAsync(cacheKey, cacheValue, TimeSpan.FromMinutes(1));
 
             return listings;
         }
@@ -302,6 +330,21 @@ public class ListingStore : IListingStore
                 string.Join(',', itemIds));
             throw;
         }
+    }
+
+    private static string ListingsKey(int worldId, int itemId)
+    {
+        return $"listing:{worldId}:{itemId}";
+    }
+
+    private static IList<Listing> DeserializeListings(string value)
+    {
+        return JsonSerializer.Deserialize<IList<Listing>>(value);
+    }
+
+    private static string SerializeListings(IList<Listing> listings)
+    {
+        return JsonSerializer.Serialize(listings);
     }
 
     private static JArray ConvertMateriaToJArray(IEnumerable<Materia> materia)

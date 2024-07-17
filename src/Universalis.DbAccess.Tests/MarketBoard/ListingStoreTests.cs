@@ -67,6 +67,41 @@ public class ListingStoreTests
 #if DEBUG
     [Fact]
 #endif
+    public async Task ReplaceLiveRetrieveLive_Cached_Works()
+    {
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(92, 3);
+        await store.ReplaceLive(currentlyShown.Listings);
+        await store.RetrieveLive(new ListingQuery { ItemId = 3, WorldId = 92 }); // Populate the cache
+        var results = await store.RetrieveLive(new ListingQuery { ItemId = 3, WorldId = 92 });
+
+        Assert.NotNull(results);
+        Assert.All(currentlyShown.Listings.OrderBy(l => l.PricePerUnit).Zip(results), pair =>
+        {
+            var (expected, actual) = pair;
+            Assert.Equal(expected.ListingId, actual.ListingId);
+            Assert.Equal(3, actual.ItemId);
+            Assert.Equal(92, actual.WorldId);
+            Assert.Equal(expected.Hq, actual.Hq);
+            Assert.Equal(expected.OnMannequin, actual.OnMannequin);
+            Assert.Equal(expected.PricePerUnit, actual.PricePerUnit);
+            Assert.Equal(expected.Quantity, actual.Quantity);
+            Assert.Equal(expected.RetainerName, actual.RetainerName);
+            Assert.Equal(expected.RetainerId, actual.RetainerId);
+            Assert.Equal(expected.RetainerCityId, actual.RetainerCityId);
+            Assert.Equal(expected.DyeId, actual.DyeId);
+            Assert.Equal(expected.CreatorId, actual.CreatorId);
+            Assert.Equal(expected.CreatorName, actual.CreatorName);
+            Assert.Equal(new DateTimeOffset(expected.LastReviewTime).ToUnixTimeSeconds(),
+                new DateTimeOffset(actual.LastReviewTime).ToUnixTimeSeconds());
+            Assert.Equal(DateTimeKind.Utc, actual.LastReviewTime.Kind);
+            Assert.Equal(expected.SellerId, actual.SellerId);
+        });
+    }
+
+#if DEBUG
+    [Fact]
+#endif
     public async Task DeleteLiveRetrieveLive_Works()
     {
         var store = _fixture.Services.GetRequiredService<IListingStore>();
