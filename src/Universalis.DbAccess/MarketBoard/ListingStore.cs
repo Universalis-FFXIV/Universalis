@@ -43,7 +43,7 @@ public class ListingStore : IListingStore
         _cache = cache;
         _dataSource = dataSource;
         _logger = logger;
-        _lock = new SemaphoreSlim(3000, 3000);
+        _lock = new SemaphoreSlim(4000, 4000);
     }
 
     public async Task DeleteLive(ListingQuery query, CancellationToken cancellationToken = default)
