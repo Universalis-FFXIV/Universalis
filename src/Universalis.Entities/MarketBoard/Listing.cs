@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using MemoryPack;
 
 namespace Universalis.Entities.MarketBoard;
 
-public class Listing : IEquatable<Listing>
+[MemoryPackable]
+public partial class Listing : IEquatable<Listing>
 {
     public string ListingId { get; init; }
 

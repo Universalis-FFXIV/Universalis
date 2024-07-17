@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using MemoryPack;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Npgsql;
@@ -389,17 +389,17 @@ public class ListingStore : IListingStore
 
     private static string ListingsKey(int worldId, int itemId)
     {
-        return $"listing:{worldId}:{itemId}";
+        return $"listing2:{worldId}:{itemId}";
     }
 
-    private static IList<Listing> DeserializeListings(string value)
+    private static IList<Listing> DeserializeListings(byte[] value)
     {
-        return JsonSerializer.Deserialize<IList<Listing>>(value);
+        return MemoryPackSerializer.Deserialize<IList<Listing>>(value);
     }
 
-    private static string SerializeListings(IList<Listing> listings)
+    private static byte[] SerializeListings(IList<Listing> listings)
     {
-        return JsonSerializer.Serialize(listings);
+        return MemoryPackSerializer.Serialize(listings);
     }
 
     private static JArray ConvertMateriaToJArray(IEnumerable<Materia> materia)
