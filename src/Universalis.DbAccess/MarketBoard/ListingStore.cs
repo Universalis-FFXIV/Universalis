@@ -384,7 +384,9 @@ public class ListingStore : IListingStore
         // Try to fetch the listings from the cache. SE.Redis will always skew heavily to one node or the other, but
         // we want to load-balance more evenly
         var replicaRatio = 1 / (1 + _cache.ReplicaCount); // 1 / (1 + 1 replica) = 0.5, 1 / (1 + 2 replicas) = 0.33...
-        var commandFlags = Random.Shared.NextDouble() > replicaRatio ? CommandFlags.PreferReplica : CommandFlags.PreferMaster;
+        var commandFlags = Random.Shared.NextDouble() > replicaRatio
+            ? CommandFlags.PreferReplica
+            : CommandFlags.PreferMaster;
         var cacheValue = await db.StringGetAsync(cacheKey, commandFlags);
         if (cacheValue != RedisValue.Null)
         {
@@ -414,14 +416,14 @@ public class ListingStore : IListingStore
 
     private static IList<Listing> DeserializeListings(byte[] value)
     {
-        var decompressed = ZstdSharpCompressor.Shared.Decompress(value);
+        var decompressed = SnappierCompressor.Shared.Decompress(value);
         return MemoryPackSerializer.Deserialize<IList<Listing>>(decompressed);
     }
 
     private static byte[] SerializeListings(IList<Listing> listings)
     {
         var serialized = MemoryPackSerializer.Serialize(listings);
-        return ZstdSharpCompressor.Shared.Compress(serialized);
+        return SnappierCompressor.Shared.Compress(serialized);
     }
 
     private static JArray ConvertMateriaToJArray(IEnumerable<Materia> materia)
