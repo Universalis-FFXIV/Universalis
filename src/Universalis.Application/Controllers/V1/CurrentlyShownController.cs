@@ -60,6 +60,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         [FromQuery] string statsWithin = "",
         [FromQuery] string entriesWithin = "",
         [FromQuery] string fields = "",
+        [FromHeader(Name = "User-Agent")] string userAgent = "",
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownControllerV1.Get");
@@ -67,6 +68,10 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         activity?.AddTag("worldDcRegion", worldDcRegion);
         activity?.AddTag("listingsToReturn", listingsToReturn);
         activity?.AddTag("entriesToReturn", entriesToReturn);
+        if (!string.IsNullOrEmpty(userAgent))
+        {
+            activity?.AddTag("userAgent", userAgent);
+        }
 
         if (itemIds == null || worldDcRegion == null)
         {
