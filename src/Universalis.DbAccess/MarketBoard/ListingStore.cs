@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using EasyCompressor;
 using MemoryPack;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -408,17 +409,19 @@ public class ListingStore : IListingStore
 
     private static string ListingsKey(int worldId, int itemId)
     {
-        return $"listing2:{worldId}:{itemId}";
+        return $"listing3:{worldId}:{itemId}";
     }
 
     private static IList<Listing> DeserializeListings(byte[] value)
     {
-        return MemoryPackSerializer.Deserialize<IList<Listing>>(value);
+        var decompressed = ZstdSharpCompressor.Shared.Decompress(value);
+        return MemoryPackSerializer.Deserialize<IList<Listing>>(decompressed);
     }
 
     private static byte[] SerializeListings(IList<Listing> listings)
     {
-        return MemoryPackSerializer.Serialize(listings);
+        var serialized = MemoryPackSerializer.Serialize(listings);
+        return ZstdSharpCompressor.Shared.Compress(serialized);
     }
 
     private static JArray ConvertMateriaToJArray(IEnumerable<Materia> materia)
