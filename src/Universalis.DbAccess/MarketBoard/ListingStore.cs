@@ -30,6 +30,8 @@ public class ListingStore : IListingStore
     private static readonly Counter CacheUpdates =
         Prometheus.Metrics.CreateCounter("universalis_listing_cache_update", "");
 
+    private static readonly TimeSpan ListingsCacheTime = TimeSpan.FromMinutes(2);
+
     private readonly ILogger<ListingStore> _logger;
     private readonly ICacheRedisMultiplexer _cache;
     private readonly NpgsqlDataSource _dataSource;
@@ -245,7 +247,7 @@ public class ListingStore : IListingStore
             }
 
             // Cache the result temporarily
-            await db.StringSetAsync(cacheKey, cacheValue, TimeSpan.FromMinutes(1));
+            await db.StringSetAsync(cacheKey, cacheValue, ListingsCacheTime);
             CacheUpdates.Inc();
 
             return listings;
@@ -371,7 +373,7 @@ public class ListingStore : IListingStore
             {
                 var cacheKey = ListingsKey(key.WorldId, key.ItemId);
                 var cacheValue = SerializeListings(result[key]);
-                await db.StringSetAsync(cacheKey, cacheValue, TimeSpan.FromMinutes(1));
+                await db.StringSetAsync(cacheKey, cacheValue, ListingsCacheTime);
                 CacheUpdates.Inc();
             }
 
