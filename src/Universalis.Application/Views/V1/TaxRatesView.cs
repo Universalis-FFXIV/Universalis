@@ -45,4 +45,10 @@ public class TaxRatesView
     /// </summary>
     [JsonPropertyName("Old Sharlayan")]
     public int OldSharlayan { get; init; }
+
+    /// <summary>
+    /// The percent retainer tax in Tuliyollal.
+    /// </summary>
+    [JsonPropertyName("Tuliyollal")]
+    public int Tuliyollal { get; init; }
 }

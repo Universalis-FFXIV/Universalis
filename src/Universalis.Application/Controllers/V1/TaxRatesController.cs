@@ -67,6 +67,7 @@ public class TaxRatesController : WorldDcRegionControllerBase
             Kugane = taxRates.Kugane,
             Crystarium = taxRates.Crystarium,
             OldSharlayan = taxRates.OldSharlayan,
+            Tuliyollal = taxRates.Tuliyollal,
         });
     }
 
