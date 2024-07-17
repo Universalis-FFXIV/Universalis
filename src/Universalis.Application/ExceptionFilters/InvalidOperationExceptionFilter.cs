@@ -19,5 +19,6 @@ public class InvalidOperationExceptionFilter : IExceptionFilter
         if (context.Exception is not InvalidOperationException) return;
         _logger.LogWarning("Request failed");
         context.Result = new StatusCodeResult(500);
+        context.ExceptionHandled = true;
     }
 }

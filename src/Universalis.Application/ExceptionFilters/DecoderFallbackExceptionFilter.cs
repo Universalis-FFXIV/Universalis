@@ -22,5 +22,6 @@ public class DecoderFallbackExceptionFilter : IExceptionFilter
         // just assume it's always something like this... hopefully.
         context.Result = new BadRequestObjectResult(
             "Unable to translate bytes from specified code page to Unicode.");
+        context.ExceptionHandled = true;
     }
 }
