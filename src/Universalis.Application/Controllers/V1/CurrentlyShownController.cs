@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using UAParser;
 using Universalis.Application.Common;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1;
@@ -70,19 +69,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         activity?.AddTag("worldDcRegion", worldDcRegion);
         activity?.AddTag("listingsToReturn", listingsToReturn);
         activity?.AddTag("entriesToReturn", entriesToReturn);
-        if (!string.IsNullOrEmpty(userAgent))
-        {
-            var parsedUserAgent = Parser.GetDefault().ParseUserAgent(userAgent);
-            var userAgentFamily = parsedUserAgent.Family;
-            activity?.AddTag("userAgent", userAgentFamily);
-            
-            // TODO: pull controller name extraction out to a util
-            UserAgentRequestCount.Labels("CurrentlyShown", userAgentFamily).Inc();
-        }
-        else
-        {
-            UserAgentRequestCount.Labels("CurrentlyShown", "(no user agent)").Inc();
-        }
+        UserAgentMetrics.RecordUserAgentRequest(userAgent, nameof(CurrentlyShownController), activity);
 
         if (itemIds == null || worldDcRegion == null)
         {
