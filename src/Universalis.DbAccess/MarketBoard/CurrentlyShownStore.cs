@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -106,6 +107,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
             .ToList();
 
         // Get all update times from Redis
+        activity?.AddEvent(new ActivityEvent("GetLastUpdated"));
         var lastUpdatedByItem = new Dictionary<WorldItemPair, long>();
         var lastUpdatedTasks =
             await Task.WhenAll(worldItemPairs.Select(t => GetLastUpdated(t.WorldId, t.ItemId)));
@@ -115,6 +117,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         }
 
         // Attempt to retrieve listings from Postgres
+        activity?.AddEvent(new ActivityEvent("GetListings"));
         IDictionary<WorldItemPair, IList<Listing>> listingsByItem;
         try
         {

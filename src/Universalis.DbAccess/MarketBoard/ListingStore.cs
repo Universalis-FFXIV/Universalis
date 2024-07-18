@@ -194,7 +194,7 @@ public class ListingStore : IListingStore
         using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveLiveCore");
 
         // Try to fetch the listings from the cache
-        var (success, cacheValue) = await TryGetListingsFromCache(query.WorldId, query.ItemId);
+        var (success, cacheValue) = await TryGetListingsFromCache(query.WorldId, query.ItemId, cancellationToken);
         if (success)
         {
             return cacheValue;
@@ -292,7 +292,7 @@ public class ListingStore : IListingStore
         await Task.WhenAll(worldItemPairs.ToList().Select(async wip =>
         {
             var (worldId, itemId) = wip;
-            var (success, cacheValue) = await TryGetListingsFromCache(worldId, itemId);
+            var (success, cacheValue) = await TryGetListingsFromCache(worldId, itemId, cancellationToken);
             if (success)
             {
                 listings[wip] = cacheValue;
@@ -395,7 +395,7 @@ public class ListingStore : IListingStore
         try
         {
             var cacheValue = await db.StringGetAsync(cacheKey, commandFlags)
-                .WaitAsync(TimeSpan.FromSeconds(1), cancellationToken);
+                .WaitAsync(TimeSpan.FromMilliseconds(500), cancellationToken);
             if (cacheValue != RedisValue.Null)
             {
                 CacheHits.Inc();
