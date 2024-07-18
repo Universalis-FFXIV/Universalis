@@ -43,14 +43,11 @@ public class ListingStore : IListingStore
     private readonly ICacheRedisMultiplexer _cache;
     private readonly NpgsqlDataSource _dataSource;
 
-    private readonly SemaphoreSlim _lock;
-
     public ListingStore(NpgsqlDataSource dataSource, ICacheRedisMultiplexer cache, ILogger<ListingStore> logger)
     {
         _cache = cache;
         _dataSource = dataSource;
         _logger = logger;
-        _lock = new SemaphoreSlim(4000, 4000);
     }
 
     public async Task DeleteLive(ListingQuery query, CancellationToken cancellationToken = default)
@@ -85,7 +82,7 @@ public class ListingStore : IListingStore
 
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
 
-        // Get the currently timestamp for the batch
+        // Get the current timestamp for the batch
         var uploadedAt = DateTimeOffset.Now;
 
         // Listings are grouped for better exceptions if a batch fails; exceptions can be
@@ -177,22 +174,6 @@ public class ListingStore : IListingStore
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveLive");
 
-        await _lock.WaitAsync(cancellationToken);
-        try
-        {
-            return await RetrieveLiveCore(query, cancellationToken);
-        }
-        finally
-        {
-            _lock.Release();
-        }
-    }
-
-    private async Task<IEnumerable<Listing>> RetrieveLiveCore(ListingQuery query,
-        CancellationToken cancellationToken = default)
-    {
-        using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveLiveCore");
-
         // Try to fetch the listings from the cache
         var (success, cacheValue) = await TryGetListingsFromCache(query.WorldId, query.ItemId, cancellationToken);
         if (success)
@@ -261,22 +242,6 @@ public class ListingStore : IListingStore
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveManyLive");
-
-        await _lock.WaitAsync(cancellationToken);
-        try
-        {
-            return await RetrieveManyLiveCore(query, cancellationToken);
-        }
-        finally
-        {
-            _lock.Release();
-        }
-    }
-
-    private async Task<IDictionary<WorldItemPair, IList<Listing>>> RetrieveManyLiveCore(ListingManyQuery query,
-        CancellationToken cancellationToken = default)
-    {
-        using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveManyLiveCore");
 
         var worldIds = query.WorldIds.ToList();
         var itemIds = query.ItemIds.ToList();
