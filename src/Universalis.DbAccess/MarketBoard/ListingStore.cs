@@ -395,7 +395,7 @@ public class ListingStore : IListingStore
         try
         {
             var cacheValue = await db.StringGetAsync(cacheKey, commandFlags)
-                .WaitAsync(TimeSpan.FromSeconds(2), cancellationToken);
+                .WaitAsync(TimeSpan.FromSeconds(1), cancellationToken);
             if (cacheValue != RedisValue.Null)
             {
                 CacheHits.Inc();
@@ -408,6 +408,11 @@ public class ListingStore : IListingStore
             }
         }
         catch (TimeoutException)
+        {
+            CacheTimeouts.Inc();
+            return (false, null);
+        }
+        catch (OperationCanceledException)
         {
             CacheTimeouts.Inc();
             return (false, null);
