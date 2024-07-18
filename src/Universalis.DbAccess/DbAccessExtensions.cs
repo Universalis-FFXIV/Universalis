@@ -50,8 +50,7 @@ public static class DbAccessExtensions
             .ConfigureRunner(rb => rb
                 .AddPostgres()
                 .WithGlobalConnectionString(fluentMigratorConnectionString)
-                .ScanIn(typeof(DbAccessExtensions).Assembly).For.All())
-            .AddLogging(lb => lb.AddFluentMigratorConsole());
+                .ScanIn(typeof(DbAccessExtensions).Assembly).For.All());
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(postgresConnectionString);
         dataSourceBuilder.UseJsonNet();
