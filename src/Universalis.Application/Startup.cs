@@ -96,6 +96,7 @@ public class Startup
             .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
             .AddNegotiate();
 
+        services.AddProblemDetails();
         services.AddControllers(options =>
         {
             options.Filters.Add<DecoderFallbackExceptionFilter>();
