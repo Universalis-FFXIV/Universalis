@@ -48,6 +48,7 @@ public class ListingStore : IListingStore
         Prometheus.Metrics.CreateCounter("universalis_listing_local_cache_update", "");
 
     private static readonly TimeSpan ListingsCacheTime = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan LocalListingsCacheTime = TimeSpan.FromSeconds(30);
 
     private readonly ILogger<ListingStore> _logger;
     private readonly ICacheRedisMultiplexer _cache;
@@ -85,6 +86,7 @@ public class ListingStore : IListingStore
         var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
         var cacheKey = ListingsKey(query.WorldId, query.ItemId);
         await db.KeyDeleteAsync(cacheKey);
+        await _easyCachingProvider.RemoveAsync(cacheKey, cancellationToken);
         CachePurges.Inc();
     }
 
@@ -168,6 +170,7 @@ public class ListingStore : IListingStore
                 var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
                 var cacheKey = ListingsKey(worldID, itemID);
                 await db.KeyDeleteAsync(cacheKey);
+                await _easyCachingProvider.RemoveAsync(cacheKey, cancellationToken);
                 CachePurges.Inc();
             }
             catch (Exception e)
@@ -425,7 +428,7 @@ public class ListingStore : IListingStore
         if (cacheValue.HasValue)
         {
             LocalCacheHits.Inc();
-            return (true, cacheValue.Value);
+            return (true, cacheValue.Value.OrderBy(listing => listing.PricePerUnit).ToList());
         }
         else
         {
@@ -439,7 +442,7 @@ public class ListingStore : IListingStore
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.StoreListingsInLocalCache");
         var cacheKey = ListingsKey(worldId, itemId);
-        await _easyCachingProvider.SetAsync(cacheKey, listings, ListingsCacheTime, cancellationToken);
+        await _easyCachingProvider.SetAsync(cacheKey, listings, LocalListingsCacheTime, cancellationToken);
         LocalCacheUpdates.Inc();
     }
 
