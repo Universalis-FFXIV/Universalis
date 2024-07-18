@@ -63,6 +63,11 @@ public class MarketItemStore : IMarketItemStore
         try
         {
             await command.ExecuteNonQueryAsync(cancellationToken);
+            
+            // Purge the cache
+            var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+            var cacheKey = MarketItemKey(marketItem.WorldId, marketItem.ItemId);
+            await db.KeyDeleteAsync(cacheKey, CommandFlags.FireAndForget);
             CachePurges.Inc();
         }
         catch (Exception e)

@@ -85,7 +85,7 @@ public class ListingStore : IListingStore
         // Purge the cache
         var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
         var cacheKey = ListingsKey(query.WorldId, query.ItemId);
-        await db.KeyDeleteAsync(cacheKey);
+        await db.KeyDeleteAsync(cacheKey, CommandFlags.FireAndForget);
         await _easyCachingProvider.RemoveAsync(cacheKey, cancellationToken);
         CachePurges.Inc();
     }
@@ -169,7 +169,7 @@ public class ListingStore : IListingStore
                 // Purge the cache
                 var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
                 var cacheKey = ListingsKey(worldID, itemID);
-                await db.KeyDeleteAsync(cacheKey);
+                await db.KeyDeleteAsync(cacheKey, CommandFlags.FireAndForget);
                 await _easyCachingProvider.RemoveAsync(cacheKey, cancellationToken);
                 CachePurges.Inc();
             }
