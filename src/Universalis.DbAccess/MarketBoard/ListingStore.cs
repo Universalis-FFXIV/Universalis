@@ -407,7 +407,7 @@ public class ListingStore : IListingStore
                 return (false, null);
             }
         }
-        catch (OperationCanceledException)
+        catch (TimeoutException)
         {
             CacheTimeouts.Inc();
             return (false, null);
