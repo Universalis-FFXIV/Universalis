@@ -78,6 +78,10 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
             // TODO: pull controller name extraction out to a util
             UserAgentRequestCount.Labels("CurrentlyShown", userAgentFamily).Inc();
         }
+        else
+        {
+            UserAgentRequestCount.Labels("CurrentlyShown", "(no user agent)").Inc();
+        }
 
         if (itemIds == null || worldDcRegion == null)
         {

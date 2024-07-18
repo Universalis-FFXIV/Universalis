@@ -77,6 +77,10 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
             activity?.AddTag("userAgent", userAgentFamily);
             UserAgentRequestCount.Labels("CurrentlyShown", userAgentFamily).Inc();
         }
+        else
+        {
+            UserAgentRequestCount.Labels("CurrentlyShown", "(no user agent)").Inc();
+        }
 
         if (itemIds == null || worldDcRegion == null)
         {
