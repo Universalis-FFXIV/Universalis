@@ -96,10 +96,14 @@ public class Startup
             .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
             .AddNegotiate();
 
+        services.Configure<ExceptionHandlerOptions>(options =>
+        {
+            options.AllowStatusCode404Response = true;
+        });
+
         services.AddControllers(options =>
         {
             options.Filters.Add<DecoderFallbackExceptionFilter>();
-            options.Filters.Add<InvalidOperationExceptionFilter>();
             options.Filters.Add<OperationCancelledExceptionFilter>();
             options.Filters.Add<TaskCanceledExceptionFilter>();
         }).AddJsonOptions(options => {

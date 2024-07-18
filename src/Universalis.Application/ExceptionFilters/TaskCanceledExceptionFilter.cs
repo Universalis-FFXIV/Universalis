@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace Universalis.Application.ExceptionFilters;
 
@@ -19,5 +20,6 @@ public class TaskCanceledExceptionFilter : IExceptionFilter
         if (context.Exception is not TaskCanceledException) return;
         _logger.LogWarning("Request was cancelled");
         context.Result = new StatusCodeResult(504);
+        context.HttpContext.Response.StatusCode = StatusCodes.Status504GatewayTimeout;
     }
 }

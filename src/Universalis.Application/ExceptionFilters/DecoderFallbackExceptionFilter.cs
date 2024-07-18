@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
@@ -22,5 +23,6 @@ public class DecoderFallbackExceptionFilter : IExceptionFilter
         // just assume it's always something like this... hopefully.
         context.Result = new BadRequestObjectResult(
             "Unable to translate bytes from specified code page to Unicode.");
+        context.HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
     }
 }
