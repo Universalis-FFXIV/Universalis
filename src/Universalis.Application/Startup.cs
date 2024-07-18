@@ -96,11 +96,6 @@ public class Startup
             .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
             .AddNegotiate();
 
-        services.Configure<ExceptionHandlerOptions>(options =>
-        {
-            options.AllowStatusCode404Response = true;
-        });
-
         services.AddControllers(options =>
         {
             options.Filters.Add<DecoderFallbackExceptionFilter>();
@@ -231,7 +226,7 @@ public class Startup
         }
         else
         {
-            app.UseExceptionHandler("/error");
+            app.UseExceptionHandler();
         }
 
         app.UseSwagger();
