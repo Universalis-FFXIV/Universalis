@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using UAParser;
 using Universalis.Application.Common;
 using Universalis.Application.Swagger;
@@ -98,14 +99,6 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
             return NotFound();
         }
 
-        if (worldDc.IsRegion)
-        {
-            return BadRequest(new
-            {
-                Message = "Region-wide calls are temporarily disabled due to load.",
-            });
-        }
-
         if (!TryGetWorldIds(worldDc, out var worldIds))
         {
             return NotFound();
@@ -167,23 +160,30 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
                 itemsSerializableProperties,
                 cts.Token))
             .ToList();
-        var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
-        var unresolvedItems = currentlyShownViews
-            .Where(cs => !cs.Item1)
-            .Select(cs => cs.Item2.ItemId)
-            .ToArray();
-        return Ok(new CurrentlyShownMultiView
+        try
         {
-            ItemIds = itemIdsArray.ToList(),
-            Items = currentlyShownViews
-                .Where(cs => cs.Item1)
-                .Select(cs => cs.Item2)
-                .ToList(),
-            WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
-            WorldName = worldDc.IsWorld ? worldDc.WorldName : null,
-            DcName = worldDc.IsDc ? worldDc.DcName : null,
-            UnresolvedItemIds = unresolvedItems,
-            SerializableProperties = serializableProperties,
-        });
+            var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
+            var unresolvedItems = currentlyShownViews
+                .Where(cs => !cs.Item1)
+                .Select(cs => cs.Item2.ItemId)
+                .ToArray();
+            return Ok(new CurrentlyShownMultiView
+            {
+                ItemIds = itemIdsArray.ToList(),
+                Items = currentlyShownViews
+                    .Where(cs => cs.Item1)
+                    .Select(cs => cs.Item2)
+                    .ToList(),
+                WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
+                WorldName = worldDc.IsWorld ? worldDc.WorldName : null,
+                DcName = worldDc.IsDc ? worldDc.DcName : null,
+                UnresolvedItemIds = unresolvedItems,
+                SerializableProperties = serializableProperties,
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            return StatusCode(StatusCodes.Status504GatewayTimeout);
+        }
     }
 }
