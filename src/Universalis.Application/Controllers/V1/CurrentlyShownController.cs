@@ -126,7 +126,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
 
         // Database logic
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(TimeSpan.FromSeconds(5));
+        cts.CancelAfter(TimeSpan.FromSeconds(10));
 
         if (itemIdsArray.Length == 1)
         {
