@@ -98,6 +98,14 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
             return NotFound();
         }
 
+        if (worldDc.IsRegion)
+        {
+            return BadRequest(new
+            {
+                Message = "Region-wide calls are temporarily disabled due to load.",
+            });
+        }
+
         if (!TryGetWorldIds(worldDc, out var worldIds))
         {
             return NotFound();
