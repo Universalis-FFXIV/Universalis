@@ -48,7 +48,7 @@ public class ListingStore : IListingStore
         Prometheus.Metrics.CreateCounter("universalis_listing_local_cache_update", "");
 
     private static readonly TimeSpan ListingsCacheTime = TimeSpan.FromMinutes(10);
-    private static readonly TimeSpan LocalListingsCacheTime = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan LocalListingsCacheTime = TimeSpan.FromMinutes(1);
 
     private readonly ILogger<ListingStore> _logger;
     private readonly ICacheRedisMultiplexer _cache;
