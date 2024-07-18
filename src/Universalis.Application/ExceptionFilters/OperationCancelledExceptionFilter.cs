@@ -20,6 +20,7 @@ public class OperationCancelledExceptionFilter : IExceptionFilter
         if (context.Exception is not OperationCanceledException) return;
         _logger.LogWarning("Request was cancelled");
         context.Result = new StatusCodeResult(504);
+        context.ExceptionHandled = true;
         context.HttpContext.Response.StatusCode = StatusCodes.Status504GatewayTimeout;
     }
 }
