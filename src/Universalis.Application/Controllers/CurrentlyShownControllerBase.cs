@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Prometheus;
 using Universalis.Application.Common;
 using Universalis.Application.Views.V1;
 using Universalis.DataTransformations;
@@ -16,6 +17,9 @@ namespace Universalis.Application.Controllers;
 
 public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 {
+    protected static readonly Counter UserAgentRequestCount =
+        Metrics.CreateCounter("universalis_request_count_user_agents", "", "Controller", "Family");
+
     protected readonly ICurrentlyShownDbAccess CurrentlyShown;
     protected readonly IHistoryDbAccess History;
 

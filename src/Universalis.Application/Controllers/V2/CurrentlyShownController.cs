@@ -75,6 +75,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
             var parsedUserAgent = Parser.GetDefault().ParseUserAgent(userAgent);
             var userAgentFamily = parsedUserAgent.Family;
             activity?.AddTag("userAgent", userAgentFamily);
+            UserAgentRequestCount.Labels("CurrentlyShown", userAgentFamily).Inc();
         }
 
         if (itemIds == null || worldDcRegion == null)
