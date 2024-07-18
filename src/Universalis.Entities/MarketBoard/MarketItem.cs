@@ -1,9 +1,11 @@
 ﻿using System;
+using MemoryPack;
 using Universalis.Common.Caching;
 
 namespace Universalis.Entities.MarketBoard;
 
-public class MarketItem : ICopyable
+[MemoryPackable]
+public partial class MarketItem : ICopyable
 {
     public int ItemId { get; init; }
 

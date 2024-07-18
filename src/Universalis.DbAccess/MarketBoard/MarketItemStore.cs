@@ -4,8 +4,11 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MemoryPack;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using Prometheus;
+using StackExchange.Redis;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
 
@@ -13,13 +16,32 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public class MarketItemStore : IMarketItemStore
 {
+    private static readonly Counter CachePurges =
+        Prometheus.Metrics.CreateCounter("universalis_market_item_cache_purge", "");
+
+    private static readonly Counter CacheHits =
+        Prometheus.Metrics.CreateCounter("universalis_market_item_cache_hit", "");
+
+    private static readonly Counter
+        CacheMisses = Prometheus.Metrics.CreateCounter("universalis_market_item_cache_miss", "");
+
+    private static readonly Counter CacheUpdates =
+        Prometheus.Metrics.CreateCounter("universalis_market_item_cache_update", "");
+
+    private static readonly Counter CacheTimeouts =
+        Prometheus.Metrics.CreateCounter("universalis_market_item_cache_timeout", "");
+
+    private static readonly TimeSpan MarketItemCacheTime = TimeSpan.FromMinutes(10);
+
     private readonly ILogger<MarketItemStore> _logger;
     private readonly NpgsqlDataSource _dataSource;
+    private readonly ICacheRedisMultiplexer _cache;
 
-    public MarketItemStore(NpgsqlDataSource dataSource, ILogger<MarketItemStore> logger)
+    public MarketItemStore(NpgsqlDataSource dataSource, ICacheRedisMultiplexer cache, ILogger<MarketItemStore> logger)
     {
         _dataSource = dataSource;
         _logger = logger;
+        _cache = cache;
     }
 
     public async Task Insert(MarketItem marketItem, CancellationToken cancellationToken = default)
@@ -41,6 +63,7 @@ public class MarketItemStore : IMarketItemStore
         try
         {
             await command.ExecuteNonQueryAsync(cancellationToken);
+            CachePurges.Inc();
         }
         catch (Exception e)
         {
@@ -53,6 +76,13 @@ public class MarketItemStore : IMarketItemStore
     public async ValueTask<MarketItem> Retrieve(MarketItemQuery query, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.Retrieve");
+
+        // Try to fetch the market item from the cache
+        var (success, cacheValue) = await TryGetMarketItemFromCache(query.WorldId, query.ItemId, cancellationToken);
+        if (success)
+        {
+            return cacheValue;
+        }
 
         await using var command =
             _dataSource.CreateCommand("SELECT updated FROM market_item WHERE item_id = $1 AND world_id = $2");
@@ -67,12 +97,16 @@ public class MarketItemStore : IMarketItemStore
                 return null;
             }
 
-            return new MarketItem
+            var marketItem = new MarketItem
             {
                 ItemId = query.ItemId,
                 WorldId = query.WorldId,
                 LastUploadTime = lastUploadTime.Value,
             };
+
+            // Cache the result temporarily
+            await StoreMarketItemInCache(query.WorldId, query.ItemId, marketItem);
+            return marketItem;
         }
         catch (Exception e)
         {
@@ -140,5 +174,64 @@ public class MarketItemStore : IMarketItemStore
                 string.Join(',', itemIds));
             throw;
         }
+    }
+
+    private async Task<(bool, MarketItem)> TryGetMarketItemFromCache(int worldId, int itemId,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.TryGetMarketItemFromCache");
+        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var cacheKey = MarketItemKey(worldId, itemId);
+
+        try
+        {
+            var cacheValue = await db.StringGetAsync(cacheKey, CommandFlags.PreferReplica)
+                .WaitAsync(TimeSpan.FromSeconds(1), cancellationToken);
+            if (cacheValue != RedisValue.Null)
+            {
+                CacheHits.Inc();
+                return (true, DeserializeMarketItem(cacheValue));
+            }
+            else
+            {
+                CacheMisses.Inc();
+                return (false, null);
+            }
+        }
+        catch (TimeoutException)
+        {
+            CacheTimeouts.Inc();
+            return (false, null);
+        }
+        catch (OperationCanceledException)
+        {
+            CacheTimeouts.Inc();
+            return (false, null);
+        }
+    }
+
+    private async Task StoreMarketItemInCache(int worldId, int itemId, MarketItem marketItem)
+    {
+        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.StoreMarketItemInCache");
+        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var cacheKey = MarketItemKey(worldId, itemId);
+        await db.StringSetAsync(cacheKey, SerializeMarketItem(marketItem), MarketItemCacheTime, When.Always,
+            CommandFlags.FireAndForget);
+        CacheUpdates.Inc();
+    }
+
+    private static string MarketItemKey(int worldId, int itemId)
+    {
+        return $"market_item:{worldId}:{itemId}";
+    }
+
+    private static MarketItem DeserializeMarketItem(byte[] value)
+    {
+        return MemoryPackSerializer.Deserialize<MarketItem>(value);
+    }
+
+    private static byte[] SerializeMarketItem(MarketItem marketItem)
+    {
+        return MemoryPackSerializer.Serialize(marketItem);
     }
 }
