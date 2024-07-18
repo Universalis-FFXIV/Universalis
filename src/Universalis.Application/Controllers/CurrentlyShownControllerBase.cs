@@ -1,3 +1,4 @@
+using Prometheus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,37 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     {
         CurrentlyShown = currentlyShownDb;
         History = history;
+    }
+
+    protected async Task<(int[], List<CurrentlyShownView>)> GetCurrentlyShownViews(
+        WorldDcRegion worldDcRegion,
+        int[] worldIds,
+        int[] itemIds,
+        int nListings = int.MaxValue,
+        int nEntries = int.MaxValue,
+        bool? onlyHq = null,
+        long statsWithin = 604800000,
+        long entriesWithin = -1,
+        HashSet<string> fields = null,
+        CancellationToken cancellationToken = default)
+    {
+        var itemsSerializableProperties = BuildSerializableProperties(fields, "items");
+        var currentlyShownViewTasks = itemIds
+            .Select(itemId => GetCurrentlyShownView(
+                worldDcRegion, worldIds, itemId, nListings, nEntries, onlyHq, statsWithin, entriesWithin,
+                itemsSerializableProperties,
+                cancellationToken))
+            .ToList();
+        var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
+        var unresolvedItemIds = currentlyShownViews
+            .Where(cs => !cs.Item1)
+            .Select(cs => cs.Item2.ItemId)
+            .ToArray();
+        var resolvedItems = currentlyShownViews
+            .Where(cs => cs.Item1)
+            .Select(cs => cs.Item2)
+            .ToList();
+        return (unresolvedItemIds, resolvedItems);
     }
 
     protected async Task<(bool, CurrentlyShownView)> GetCurrentlyShownView(
@@ -190,17 +222,9 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.GetViewBatched");
 
-        if (!GameData.MarketableItemIds().Contains(itemId))
+        if (!HasAnyValidItemIds(itemId))
         {
-            return (false, new CurrentlyShownView
-            {
-                ItemId = itemId,
-                WorldId = worldDcRegion.IsWorld ? worldDcRegion.WorldId : null,
-                WorldName = worldDcRegion.IsWorld ? worldDcRegion.WorldName : null,
-                DcName = worldDcRegion.IsDc ? worldDcRegion.DcName : null,
-                RegionName = worldDcRegion.IsRegion ? worldDcRegion.RegionName : null,
-                SerializableProperties = BuildSerializableProperties(fields),
-            });
+            return (false, ErrorView(worldDcRegion, itemId, fields));
         }
 
         var data = await FetchDataBatched(worldIds, new[] { itemId }, nEntries, cancellationToken);
@@ -215,9 +239,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
         var (worldUploadTimes, currentlyShown) = data
             .Aggregate(
-                (EmptyWorldDictionary<Dictionary<int, long>, long>(worldIds),
-                    new CurrentlyShownView
-                        { Listings = new List<ListingView>(), RecentHistory = new List<SaleView>() }),
+                (EmptyWorldDictionary<Dictionary<int, long>, long>(worldIds), EmptyView()),
                 (agg, next) =>
                 {
                     if (next.WorldId == null)
@@ -226,54 +248,53 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                     }
 
                     var (aggWorldUploadTimes, aggData) = agg;
-
-                    // Convert database entities into views. Separate classes are used for the entities
-                    // and the views in order to avoid any undesirable data leaking out into the public
-                    // API through inheritance and to allow separate purposes for the properties to be
-                    // described in the property names (e.g. CreatorIdHash in the view and CreatorId in
-                    // the database entity).
-
-                    aggData.Listings.AddRange(next.Listings
-                        .Select(l =>
-                        {
-                            l.Tax = Util.CalculateTax(l.PricePerUnit, l.Quantity);
-                            l.WorldId = !worldDcRegion.IsWorld ? next.WorldId : null;
-                            l.WorldName = !worldDcRegion.IsWorld ? worlds[next.WorldId.Value] : null;
-                            l.SerializableProperties = listingSerializableProperties;
-                            return l;
-                        }));
-
-                    aggData.RecentHistory.AddRange(next.RecentHistory
-                        .Where(s => entriesWithin < 0 || nowSeconds - s.TimestampUnixSeconds < entriesWithin)
-                        .Select(s =>
-                        {
-                            s.WorldId = !worldDcRegion.IsWorld ? next.WorldId : null;
-                            s.WorldName = !worldDcRegion.IsWorld ? worlds[next.WorldId.Value] : null;
-                            s.SerializableProperties = recentHistorySerializableProperties;
-                            return s;
-                        }));
-
-                    aggData.LastUploadTimeUnixMilliseconds = Math.Max(next.LastUploadTimeUnixMilliseconds,
-                        aggData.LastUploadTimeUnixMilliseconds);
-
-                    aggWorldUploadTimes[next.WorldId.Value] = next.LastUploadTimeUnixMilliseconds;
-
-                    return (aggWorldUploadTimes, aggData);
+                    return ReduceViews(worldDcRegion, entriesWithin, nowSeconds, listingSerializableProperties,
+                        recentHistorySerializableProperties, worlds, aggWorldUploadTimes, aggData, next);
                 });
 
         if (currentlyShown.LastUploadTimeUnixMilliseconds == 0)
         {
-            return (false, new CurrentlyShownView
-            {
-                ItemId = itemId,
-                WorldId = worldDcRegion.IsWorld ? worldDcRegion.WorldId : null,
-                WorldName = worldDcRegion.IsWorld ? worldDcRegion.WorldName : null,
-                DcName = worldDcRegion.IsDc ? worldDcRegion.DcName : null,
-                RegionName = worldDcRegion.IsRegion ? worldDcRegion.RegionName : null,
-                SerializableProperties = BuildSerializableProperties(fields),
-            });
+            return (false, ErrorView(worldDcRegion, itemId, fields));
         }
 
+        return (true, HydrateCurrentlyShownView(currentlyShown, worldDcRegion, worldUploadTimes, fields,
+            nListings, nEntries, now, statsWithin, onlyHq));
+    }
+
+    private bool HasAnyValidItemIds(params int[] itemIds)
+    {
+        return itemIds.Any(itemId => GameData.MarketableItemIds().Contains(itemId));
+    }
+
+    private static CurrentlyShownView ErrorView(WorldDcRegion worldDcRegion, int itemId, HashSet<string> fields)
+    {
+        return new CurrentlyShownView
+        {
+            ItemId = itemId,
+            WorldId = worldDcRegion.IsWorld ? worldDcRegion.WorldId : null,
+            WorldName = worldDcRegion.IsWorld ? worldDcRegion.WorldName : null,
+            DcName = worldDcRegion.IsDc ? worldDcRegion.DcName : null,
+            RegionName = worldDcRegion.IsRegion ? worldDcRegion.RegionName : null,
+            SerializableProperties = BuildSerializableProperties(fields),
+        };
+    }
+
+    private static CurrentlyShownView EmptyView()
+    {
+        return new CurrentlyShownView { Listings = new List<ListingView>(), RecentHistory = new List<SaleView>() };
+    }
+
+    private static CurrentlyShownView HydrateCurrentlyShownView(
+        CurrentlyShownView currentlyShown,
+        WorldDcRegion worldDcRegion,
+        Dictionary<int, long> worldUploadTimes,
+        HashSet<string> fields,
+        int nListings,
+        int nSales,
+        long now,
+        long statsWithin,
+        bool? onlyHq)
+    {
         currentlyShown.Listings.Sort((a, b) => a.PricePerUnit - b.PricePerUnit);
         currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
@@ -284,14 +305,14 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
         var requestedListings = currentlyShown.Listings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings)
             .ToList();
-        var requestedHistory = currentlyShown.RecentHistory.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nEntries)
+        var requestedHistory = currentlyShown.RecentHistory.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nSales)
             .ToList();
 
-        var view = new CurrentlyShownView
+        return new CurrentlyShownView
         {
             Listings = requestedListings,
             RecentHistory = requestedHistory,
-            ItemId = itemId,
+            ItemId = currentlyShown.ItemId,
             WorldId = worldDcRegion.IsWorld ? worldDcRegion.WorldId : null,
             WorldName = worldDcRegion.IsWorld ? worldDcRegion.WorldName : null,
             DcName = worldDcRegion.IsDc ? worldDcRegion.DcName : null,
@@ -322,8 +343,49 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             UnitsSold = requestedHistory.Sum(sale => sale.Quantity),
             SerializableProperties = BuildSerializableProperties(fields),
         };
+    }
 
-        return (true, view);
+    private (Dictionary<int, long>, CurrentlyShownView) ReduceViews(
+        WorldDcRegion worldDcRegion,
+        long entriesWithin,
+        long nowSeconds,
+        HashSet<string> listingSerializableProperties,
+        HashSet<string> recentHistorySerializableProperties,
+        IReadOnlyDictionary<int, string> worldNames,
+        Dictionary<int, long> aggWorldUploadTimes, CurrentlyShownView aggData, CurrentlyShownView next)
+    {
+        // Convert database entities into views. Separate classes are used for the entities
+        // and the views in order to avoid any undesirable data leaking out into the public
+        // API through inheritance and to allow separate purposes for the properties to be
+        // described in the property names (e.g. CreatorIdHash in the view and CreatorId in
+        // the database entity).
+
+        aggData.Listings.AddRange(next.Listings
+            .Select(l =>
+            {
+                l.Tax = Util.CalculateTax(l.PricePerUnit, l.Quantity);
+                l.WorldId = !worldDcRegion.IsWorld ? next.WorldId : null;
+                l.WorldName = !worldDcRegion.IsWorld ? worldNames[next.WorldId.Value] : null;
+                l.SerializableProperties = listingSerializableProperties;
+                return l;
+            }));
+
+        aggData.RecentHistory.AddRange(next.RecentHistory
+            .Where(s => entriesWithin < 0 || nowSeconds - s.TimestampUnixSeconds < entriesWithin)
+            .Select(s =>
+            {
+                s.WorldId = !worldDcRegion.IsWorld ? next.WorldId : null;
+                s.WorldName = !worldDcRegion.IsWorld ? worldNames[next.WorldId.Value] : null;
+                s.SerializableProperties = recentHistorySerializableProperties;
+                return s;
+            }));
+
+        aggData.LastUploadTimeUnixMilliseconds = Math.Max(next.LastUploadTimeUnixMilliseconds,
+            aggData.LastUploadTimeUnixMilliseconds);
+
+        aggWorldUploadTimes[next.WorldId.Value] = next.LastUploadTimeUnixMilliseconds;
+
+        return (aggWorldUploadTimes, aggData);
     }
 
     private async Task<CurrentlyShownView> FetchData(int worldId, int itemId, int nEntries,

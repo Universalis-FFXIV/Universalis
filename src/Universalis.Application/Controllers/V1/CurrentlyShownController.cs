@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Universalis.Application.Common;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1;
@@ -40,6 +40,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
     /// for this field. In this case, querying the price per unit requires setting this field to
     /// items.listings.pricePerUnit.
     /// </param>
+    /// <param name="userAgent"></param>
     /// <param name="cancellationToken"></param>
     /// <response code="200">Data retrieved successfully.</response>
     /// <response code="400">The parameters were invalid.</response>
@@ -139,32 +140,20 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
             return Ok(currentlyShownView);
         }
 
-        // Multi-item handling
-        var itemsSerializableProperties = BuildSerializableProperties(serializableProperties, "items");
-        var currentlyShownViewTasks = itemIdsArray
-            .Select(itemId => GetCurrentlyShownView(
-                worldDc, worldIds, itemId, nListings, nEntries, hqBool, statsWithinMs, entriesWithinSeconds,
-                itemsSerializableProperties,
-                cts.Token))
-            .ToList();
         try
         {
-            var currentlyShownViews = await Task.WhenAll(currentlyShownViewTasks);
-            var unresolvedItems = currentlyShownViews
-                .Where(cs => !cs.Item1)
-                .Select(cs => cs.Item2.ItemId)
-                .ToArray();
+            // Multi-item handling
+            var (unresolvedItemIds, resolvedItems) = await GetCurrentlyShownViews(
+                    worldDc, worldIds, itemIdsArray, nListings, nEntries, hqBool, statsWithinMs, entriesWithinSeconds,
+                    serializableProperties, cts.Token);
             return Ok(new CurrentlyShownMultiView
             {
                 ItemIds = itemIdsArray.ToList(),
-                Items = currentlyShownViews
-                    .Where(cs => cs.Item1)
-                    .Select(cs => cs.Item2)
-                    .ToList(),
+                Items = resolvedItems,
                 WorldId = worldDc.IsWorld ? worldDc.WorldId : null,
                 WorldName = worldDc.IsWorld ? worldDc.WorldName : null,
                 DcName = worldDc.IsDc ? worldDc.DcName : null,
-                UnresolvedItemIds = unresolvedItems,
+                UnresolvedItemIds = unresolvedItemIds,
                 SerializableProperties = serializableProperties,
             });
         }
