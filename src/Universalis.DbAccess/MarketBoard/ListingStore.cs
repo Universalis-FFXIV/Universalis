@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using EasyCaching.Core;
 using EasyCompressor;
 using MemoryPack;
 using Microsoft.Extensions.Logging;
@@ -37,14 +38,26 @@ public class ListingStore : IListingStore
     private static readonly Counter CacheTimeouts =
         Prometheus.Metrics.CreateCounter("universalis_listing_cache_timeout", "");
 
+    private static readonly Counter LocalCacheHits =
+        Prometheus.Metrics.CreateCounter("universalis_listing_local_cache_hit", "");
+
+    private static readonly Counter
+        LocalCacheMisses = Prometheus.Metrics.CreateCounter("universalis_listing_local_cache_miss", "");
+
+    private static readonly Counter LocalCacheUpdates =
+        Prometheus.Metrics.CreateCounter("universalis_listing_local_cache_update", "");
+
     private static readonly TimeSpan ListingsCacheTime = TimeSpan.FromMinutes(10);
 
     private readonly ILogger<ListingStore> _logger;
     private readonly ICacheRedisMultiplexer _cache;
+    private readonly IEasyCachingProvider _easyCachingProvider;
     private readonly NpgsqlDataSource _dataSource;
 
-    public ListingStore(NpgsqlDataSource dataSource, ICacheRedisMultiplexer cache, ILogger<ListingStore> logger)
+    public ListingStore(NpgsqlDataSource dataSource, IEasyCachingProvider easyCachingProvider,
+        ICacheRedisMultiplexer cache, ILogger<ListingStore> logger)
     {
+        _easyCachingProvider = easyCachingProvider;
         _cache = cache;
         _dataSource = dataSource;
         _logger = logger;
@@ -227,7 +240,7 @@ public class ListingStore : IListingStore
             }
 
             // Cache the result temporarily
-            await StoreListingsInCache(query.WorldId, query.ItemId, listings);
+            await StoreListingsInCache(query.WorldId, query.ItemId, listings, cancellationToken);
 
             return listings;
         }
@@ -330,7 +343,8 @@ public class ListingStore : IListingStore
 
             // Cache the results
             activity?.AddEvent(new ActivityEvent("StoreListingsInCache"));
-            await Task.WhenAll(result.Keys.Select(key => StoreListingsInCache(key.WorldId, key.ItemId, result[key])));
+            await Task.WhenAll(result.Keys.Select(key =>
+                StoreListingsInCache(key.WorldId, key.ItemId, result[key], cancellationToken)));
 
             return result;
         }
@@ -346,6 +360,11 @@ public class ListingStore : IListingStore
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.TryGetListingsFromCache");
+        var (localCached, localCacheResult) = await TryGetListingsFromLocalCache(worldId, itemId, cancellationToken);
+        if (localCached)
+        {
+            return (true, localCacheResult);
+        }
 
         var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
         var cacheKey = ListingsKey(worldId, itemId);
@@ -384,14 +403,44 @@ public class ListingStore : IListingStore
         }
     }
 
-    private async Task StoreListingsInCache(int worldId, int itemId, IList<Listing> listings)
+    private async Task StoreListingsInCache(int worldId, int itemId, IList<Listing> listings,
+        CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.StoreListingsInCache");
+        await StoreListingsInLocalCache(worldId, itemId, listings, cancellationToken);
         var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
         var cacheKey = ListingsKey(worldId, itemId);
         await db.StringSetAsync(cacheKey, SerializeListings(listings), ListingsCacheTime, When.Always,
             CommandFlags.FireAndForget);
         CacheUpdates.Inc();
+    }
+
+    private async Task<(bool, IList<Listing>)> TryGetListingsFromLocalCache(int worldId, int itemId,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.TryGetListingsFromLocalCache");
+
+        var cacheKey = ListingsKey(worldId, itemId);
+        var cacheValue = await _easyCachingProvider.GetAsync<IList<Listing>>(cacheKey, cancellationToken);
+        if (cacheValue.HasValue)
+        {
+            LocalCacheHits.Inc();
+            return (true, cacheValue.Value);
+        }
+        else
+        {
+            LocalCacheMisses.Inc();
+            return (false, null);
+        }
+    }
+
+    private async Task StoreListingsInLocalCache(int worldId, int itemId, IList<Listing> listings,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.StoreListingsInLocalCache");
+        var cacheKey = ListingsKey(worldId, itemId);
+        await _easyCachingProvider.SetAsync(cacheKey, listings, ListingsCacheTime, cancellationToken);
+        LocalCacheUpdates.Inc();
     }
 
     private static string ListingsKey(int worldId, int itemId)

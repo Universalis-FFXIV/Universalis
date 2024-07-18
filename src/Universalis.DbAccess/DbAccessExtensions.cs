@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
 using System;
 using Cassandra.Metrics;
+using EasyCaching.Serialization.MemoryPack;
 using FluentMigrator.Runner;
 using Npgsql;
 using Universalis.DbAccess.AccessControl;
@@ -74,6 +75,12 @@ public static class DbAccessExtensions
                 .SetEnabledSessionMetrics(SessionMetric.AllSessionMetrics))
             .Build();
         sc.AddSingleton<ICluster>(scyllaCluster);
+
+        sc.AddEasyCaching(options =>
+        {
+            options.WithMemoryPack();
+            options.UseInMemory();
+        });
 
         var cacheOptions = ConfigurationOptions.Parse(redisCacheConnectionString);
         var cache1 = ConnectionMultiplexer.Connect(cacheOptions);
