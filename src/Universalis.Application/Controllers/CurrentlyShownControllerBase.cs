@@ -1,4 +1,3 @@
-using Prometheus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -101,15 +100,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
         if (!GameData.MarketableItemIds().Contains(itemId))
         {
-            return (false, new CurrentlyShownView
-            {
-                ItemId = itemId,
-                WorldId = worldDcRegion.IsWorld ? worldDcRegion.WorldId : null,
-                WorldName = worldDcRegion.IsWorld ? worldDcRegion.WorldName : null,
-                DcName = worldDcRegion.IsDc ? worldDcRegion.DcName : null,
-                RegionName = worldDcRegion.IsRegion ? worldDcRegion.RegionName : null,
-                SerializableProperties = BuildSerializableProperties(fields),
-            });
+            return (false, ErrorView(worldDcRegion, itemId, fields));
         }
 
         var currentlyShown = await FetchData(worldId, itemId, nEntries, cancellationToken);
@@ -156,56 +147,8 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             })
             .ToList();
 
-        currentlyShown.Listings.Sort((a, b) => a.PricePerUnit - b.PricePerUnit);
-        currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
-
-        var nqListings = currentlyShown.Listings.Where(l => !l.Hq).ToList();
-        var hqListings = currentlyShown.Listings.Where(l => l.Hq).ToList();
-        var nqSales = currentlyShown.RecentHistory.Where(s => !s.Hq).ToList();
-        var hqSales = currentlyShown.RecentHistory.Where(s => s.Hq).ToList();
-
-        var requestedListings = currentlyShown.Listings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings)
-            .ToList();
-        var requestedHistory = currentlyShown.RecentHistory.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nEntries)
-            .ToList();
-
-        var view = new CurrentlyShownView
-        {
-            Listings = requestedListings,
-            RecentHistory = requestedHistory,
-            ItemId = itemId,
-            WorldId = worldId,
-            WorldName = worlds[worldId],
-            DcName = null,
-            RegionName = null,
-            LastUploadTimeUnixMilliseconds = currentlyShown.LastUploadTimeUnixMilliseconds,
-            StackSizeHistogram = new SortedDictionary<int, int>(GetListingsDistribution(currentlyShown.Listings)),
-            StackSizeHistogramNq = new SortedDictionary<int, int>(GetListingsDistribution(nqListings)),
-            StackSizeHistogramHq = new SortedDictionary<int, int>(GetListingsDistribution(hqListings)),
-            SaleVelocity = GetSaleVelocity(currentlyShown.RecentHistory, now, statsWithin),
-            SaleVelocityNq = GetSaleVelocity(nqSales, now, statsWithin),
-            SaleVelocityHq = GetSaleVelocity(hqSales, now, statsWithin),
-            CurrentAveragePrice = GetAveragePricePerUnit(currentlyShown.Listings),
-            CurrentAveragePriceNq = GetAveragePricePerUnit(nqListings),
-            CurrentAveragePriceHq = GetAveragePricePerUnit(hqListings),
-            MinPrice = GetMinPricePerUnit(currentlyShown.Listings),
-            MinPriceNq = GetMinPricePerUnit(nqListings),
-            MinPriceHq = GetMinPricePerUnit(hqListings),
-            MaxPrice = GetMaxPricePerUnit(currentlyShown.Listings),
-            MaxPriceNq = GetMaxPricePerUnit(nqListings),
-            MaxPriceHq = GetMaxPricePerUnit(hqListings),
-            AveragePrice = GetAveragePricePerUnit(currentlyShown.RecentHistory),
-            AveragePriceNq = GetAveragePricePerUnit(nqSales),
-            AveragePriceHq = GetAveragePricePerUnit(hqSales),
-            WorldUploadTimes = null,
-            ListingsCount = requestedListings.Count,
-            RecentHistoryCount = requestedHistory.Count,
-            UnitsForSale = requestedListings.Sum(listing => listing.Quantity),
-            UnitsSold = requestedHistory.Sum(sale => sale.Quantity),
-            SerializableProperties = BuildSerializableProperties(fields),
-        };
-
-        return (true, view);
+        return (true, HydrateCurrentlyShownView(currentlyShown, worldDcRegion, null, fields,
+            nListings, nEntries, now, statsWithin, onlyHq));
     }
 
     protected async Task<(bool, CurrentlyShownView)> GetViewBatched(
