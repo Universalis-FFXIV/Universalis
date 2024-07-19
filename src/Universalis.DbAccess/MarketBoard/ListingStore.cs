@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EasyCaching.Core;
-using EasyCompressor;
 using MemoryPack;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -562,14 +561,12 @@ public class ListingStore : IListingStore
 
     private static IList<Listing> DeserializeListings(byte[] value)
     {
-        var decompressed = SnappierCompressor.Shared.Decompress(value);
-        return MemoryPackSerializer.Deserialize<IList<Listing>>(decompressed);
+        return MemoryPackSerializer.Deserialize<IList<Listing>>(value);
     }
 
     private static byte[] SerializeListings(IList<Listing> listings)
     {
-        var serialized = MemoryPackSerializer.Serialize(listings);
-        return SnappierCompressor.Shared.Compress(serialized);
+        return MemoryPackSerializer.Serialize(listings);
     }
 
     private static JArray ConvertMateriaToJArray(IEnumerable<Materia> materia)
