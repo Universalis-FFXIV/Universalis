@@ -11,6 +11,9 @@ public class UserAgentMetrics
 
     public static void RecordUserAgentRequest(string userAgent, string controllerName, Activity activity = null)
     {
+        // For some reason user agents replace spaces with pluses sometimes - convert it back
+        userAgent = userAgent.Replace('+', ' ');
+        
         var controllerMetricName = GetControllerMetricName(controllerName);
         if (!string.IsNullOrEmpty(userAgent))
         {
@@ -18,7 +21,8 @@ public class UserAgentMetrics
             var userAgentFamily = parsedUserAgent.Family;
             if (userAgentFamily == "Other")
             {
-                var inferredUserAgentFriendlyName = userAgent[..(userAgent.IndexOf(' ') + 1)];
+                var firstSpace = userAgent.IndexOf(' ');
+                var inferredUserAgentFriendlyName = firstSpace != -1 ? userAgent[..(firstSpace + 1)] : userAgent;
                 activity?.AddTag("userAgent", inferredUserAgentFriendlyName);
                 UserAgentRequestCount.Labels(controllerMetricName, inferredUserAgentFriendlyName).Inc();
             }
