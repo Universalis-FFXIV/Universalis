@@ -401,15 +401,15 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                 itemIds.Select(itemId => new WorldItemPair(worldId, itemId)))
             .ToList();
 
-        var csTask = CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = worldIds, ItemIds = itemIds },
+        var cs = await CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = worldIds, ItemIds = itemIds },
             cancellationToken);
-        var hTask = History.RetrieveMany(
-            new HistoryManyQuery { WorldIds = worldIds, ItemIds = itemIds, Count = nEntries }, cancellationToken);
-        await Task.WhenAll(csTask, hTask);
+        // var hTask = History.RetrieveMany(
+        //     new HistoryManyQuery { WorldIds = worldIds, ItemIds = itemIds, Count = nEntries }, cancellationToken);
+        // await Task.WhenAll(csTask, hTask);
 
-        var cs = await csTask;
+        // var cs = await csTask;
         var csDict = CollectListings(cs);
-        var history = await hTask;
+        var history = Array.Empty<History>();
         var historyDict = CollectSales(history);
 
         return worldItemPairs
