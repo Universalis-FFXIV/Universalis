@@ -378,16 +378,16 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.FetchData");
 
-        var csTask = CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId },
+        var cs = await CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId },
             cancellationToken);
-        var hTask = History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = nEntries },
-            cancellationToken);
-        await Task.WhenAll(csTask, hTask);
+        // var hTask = History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = nEntries },
+        //     cancellationToken);
+        // await Task.WhenAll(csTask, hTask);
 
-        var cs = await csTask;
-        var history = await hTask;
+        // var cs = await csTask;
+        // var history = await hTask;
 
-        return BuildPartialView(cs ?? new CurrentlyShown(), history ?? new History(), worldId, itemId);
+        return BuildPartialView(cs ?? new CurrentlyShown(), new History(), worldId, itemId);
     }
 
     private async Task<IEnumerable<CurrentlyShownView>> FetchDataBatched(IEnumerable<int> worlds,

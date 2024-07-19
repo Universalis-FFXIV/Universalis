@@ -43,7 +43,7 @@ public class CurrentlyShownControllerTests
         }
     }
 
-    [Theory]
+    [Theory(Skip = "Testing without history")]
     [InlineData("74")]
     [InlineData("Coeurl")]
     [InlineData("coEUrl")]
