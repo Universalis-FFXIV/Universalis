@@ -19,9 +19,6 @@ namespace Universalis.DbAccess.MarketBoard;
 [SuppressMessage("ReSharper", "ExplicitCallerInfoArgument")]
 public class MarketItemStore : IMarketItemStore
 {
-    private static readonly Counter CachePurges =
-        Prometheus.Metrics.CreateCounter("universalis_market_item_cache_purge", "");
-
     private static readonly Counter CacheHits =
         Prometheus.Metrics.CreateCounter("universalis_market_item_cache_hit", "");
 
@@ -67,11 +64,8 @@ public class MarketItemStore : IMarketItemStore
         {
             await command.ExecuteNonQueryAsync(cancellationToken);
 
-            // Purge the cache
-            var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
-            var cacheKey = MarketItemKey(marketItem.WorldId, marketItem.ItemId);
-            await db.KeyDeleteAsync(cacheKey, CommandFlags.FireAndForget);
-            CachePurges.Inc();
+            // Update the cache, since this dataset should fit completely in Redis
+            await StoreMarketItemInCache(marketItem);
         }
         catch (Exception e)
         {
@@ -113,7 +107,7 @@ public class MarketItemStore : IMarketItemStore
             };
 
             // Cache the result temporarily
-            await StoreMarketItemInCache(query.WorldId, query.ItemId, marketItem);
+            await StoreMarketItemInCache(marketItem);
             return marketItem;
         }
         catch (Exception e)
@@ -300,14 +294,19 @@ public class MarketItemStore : IMarketItemStore
         CacheUpdates.Inc(marketItems.Count);
     }
 
-    private async Task StoreMarketItemInCache(int worldId, int itemId, MarketItem marketItem)
+    private async Task StoreMarketItemInCache(MarketItem marketItem)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.StoreMarketItemInCache");
         var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
-        var cacheKey = MarketItemKey(worldId, itemId);
+        var cacheKey = MarketItemKey(marketItem);
         await db.StringSetAsync(cacheKey, SerializeMarketItem(marketItem), MarketItemCacheTime, When.Always,
             CommandFlags.FireAndForget);
         CacheUpdates.Inc();
+    }
+
+    private static string MarketItemKey(MarketItem marketItem)
+    {
+        return MarketItemKey(marketItem.WorldId, marketItem.ItemId);
     }
 
     private static string MarketItemKey(WorldItemPair wip)
