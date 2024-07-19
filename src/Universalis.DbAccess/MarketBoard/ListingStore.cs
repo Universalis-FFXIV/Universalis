@@ -277,7 +277,6 @@ public class ListingStore : IListingStore
                    t.seller_id, t.uploaded_at, t.source
             FROM listing t
             WHERE t.item_id = ANY($1) AND t.world_id = ANY($2)
-            ORDER BY unit_price
             """);
         command.Parameters.Add(new NpgsqlParameter<int[]>
             { TypedValue = worldItemPairs.Select(wip => wip.ItemId).Distinct().ToArray() });
