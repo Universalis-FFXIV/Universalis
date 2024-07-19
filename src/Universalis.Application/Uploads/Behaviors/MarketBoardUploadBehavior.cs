@@ -25,20 +25,17 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 {
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IHistoryDbAccess _historyDb;
-    private readonly IUploadLogDbAccess _uploadLogDb;
     private readonly IGameDataProvider _gdp;
     private readonly IBus _bus;
 
     public MarketBoardUploadBehavior(
         ICurrentlyShownDbAccess currentlyShownDb,
         IHistoryDbAccess historyDb,
-        IUploadLogDbAccess uploadLogDb,
         IGameDataProvider gdp,
         IBus bus)
     {
         _currentlyShownDb = currentlyShownDb;
         _historyDb = historyDb;
-        _uploadLogDb = uploadLogDb;
         _gdp = gdp;
         _bus = bus;
     }
@@ -85,19 +82,6 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         activity?.AddTag("worldId", worldId);
         activity?.AddTag("itemId", itemId);
 
-        // Log the upload
-        await _uploadLogDb.LogAction(new UploadLogEntry
-        {
-            Id = Guid.NewGuid(),
-            Timestamp = DateTime.UtcNow,
-            Event = "MarketBoardUpload",
-            Application = source.Name,
-            WorldId = worldId,
-            ItemId = itemId,
-            Listings = parameters.Listings?.Count ?? -1,
-            Sales = parameters.Sales?.Count ?? -1,
-        });
-
         // Most uploads have both sales and listings
         var currentlyShownTask = _currentlyShownDb.Retrieve(new CurrentlyShownQuery
         {
@@ -120,18 +104,6 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             if (parameters.Sales.Any(s =>
                     Util.HasHtmlTags(s.BuyerName) || Util.HasHtmlTags(s.SellerId) || Util.HasHtmlTags(s.BuyerId)))
             {
-                await _uploadLogDb.LogAction(new UploadLogEntry
-                {
-                    Id = Guid.NewGuid(),
-                    Timestamp = DateTime.UtcNow,
-                    Event = "SalesUploadMalformed",
-                    Application = source.Name,
-                    WorldId = worldId,
-                    ItemId = itemId,
-                    Listings = parameters.Listings?.Count ?? -1,
-                    Sales = parameters.Sales?.Count ?? -1,
-                });
-
                 return new BadRequestResult();
             }
 
@@ -169,18 +141,6 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     ItemId = itemId,
                     Sales = addedSales.Select(Util.SaleToView).ToList(),
                 }, cancellationToken);
-
-                await _uploadLogDb.LogAction(new UploadLogEntry
-                {
-                    Id = Guid.NewGuid(),
-                    Timestamp = DateTime.UtcNow,
-                    Event = "SalesUploadSuccess",
-                    Application = source.Name,
-                    WorldId = worldId,
-                    ItemId = itemId,
-                    Listings = parameters.Listings?.Count ?? -1,
-                    Sales = addedSales.Count,
-                });
             }
         }
 
@@ -191,18 +151,6 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     Util.HasHtmlTags(l.RetainerId) || Util.HasHtmlTags(l.CreatorName) || Util.HasHtmlTags(l.SellerId) ||
                     Util.HasHtmlTags(l.CreatorId)))
             {
-                await _uploadLogDb.LogAction(new UploadLogEntry
-                {
-                    Id = Guid.NewGuid(),
-                    Timestamp = DateTime.UtcNow,
-                    Event = "ListingsUploadMalformed",
-                    Application = source.Name,
-                    WorldId = worldId,
-                    ItemId = itemId,
-                    Listings = parameters.Listings?.Count ?? -1,
-                    Sales = parameters.Sales?.Count ?? -1,
-                });
-
                 return new BadRequestResult();
             }
 
@@ -250,18 +198,6 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 WorldId = worldId,
                 ItemId = itemId,
             }, cancellationToken);
-
-            await _uploadLogDb.LogAction(new UploadLogEntry
-            {
-                Id = Guid.NewGuid(),
-                Timestamp = DateTime.UtcNow,
-                Event = "ListingsUploadSuccess",
-                Application = source.Name,
-                WorldId = worldId,
-                ItemId = itemId,
-                Listings = newListings.Count,
-                Sales = parameters.Sales?.Count ?? -1,
-            });
         }
 
         return null;
