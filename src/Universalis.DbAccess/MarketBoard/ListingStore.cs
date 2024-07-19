@@ -312,50 +312,48 @@ public class ListingStore : IListingStore
         try
         {
             activity?.AddEvent(new ActivityEvent("NpgsqlCommandExecuteReaderAsync"));
-
-            var readStartTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            await using var reader =
-                await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
-
-            while (await reader.ReadAsync(cancellationToken))
+            using (ExecuteReaderDuration.NewTimer())
             {
-                activity?.AddEvent(new ActivityEvent("NpgsqlReaderRead"));
-                var listingId = reader.GetString(0);
-                var itemId = reader.GetInt32(1);
-                var worldId = reader.GetInt32(2);
-                var worldItemPair = new WorldItemPair(worldId, itemId);
+                await using var reader =
+                    await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
-                if (!listings.TryGetValue(worldItemPair, out var value))
+                while (await reader.ReadAsync(cancellationToken))
                 {
-                    value = new List<Listing>();
-                    listings[worldItemPair] = value;
+                    activity?.AddEvent(new ActivityEvent("NpgsqlReaderRead"));
+                    var listingId = reader.GetString(0);
+                    var itemId = reader.GetInt32(1);
+                    var worldId = reader.GetInt32(2);
+                    var worldItemPair = new WorldItemPair(worldId, itemId);
+
+                    if (!listings.TryGetValue(worldItemPair, out var value))
+                    {
+                        value = new List<Listing>();
+                        listings[worldItemPair] = value;
+                    }
+
+                    value.Add(new Listing
+                    {
+                        ListingId = listingId,
+                        ItemId = itemId,
+                        WorldId = worldId,
+                        Hq = reader.GetBoolean(3),
+                        OnMannequin = reader.GetBoolean(4),
+                        Materia = ConvertMateriaFromJArray(reader.GetFieldValue<JArray>(5)),
+                        PricePerUnit = reader.GetInt32(6),
+                        Quantity = reader.GetInt32(7),
+                        DyeId = reader.GetInt32(8),
+                        CreatorId = reader.GetString(9),
+                        CreatorName = reader.GetString(10),
+                        LastReviewTime = reader.GetDateTime(11),
+                        RetainerId = reader.GetString(12),
+                        RetainerName = reader.GetString(13),
+                        RetainerCityId = reader.GetInt32(14),
+                        SellerId = reader.GetString(15),
+                        UpdatedAt = reader.GetDateTime(16),
+                        Source = reader.GetString(17),
+                    });
                 }
-
-                value.Add(new Listing
-                {
-                    ListingId = listingId,
-                    ItemId = itemId,
-                    WorldId = worldId,
-                    Hq = reader.GetBoolean(3),
-                    OnMannequin = reader.GetBoolean(4),
-                    Materia = ConvertMateriaFromJArray(reader.GetFieldValue<JArray>(5)),
-                    PricePerUnit = reader.GetInt32(6),
-                    Quantity = reader.GetInt32(7),
-                    DyeId = reader.GetInt32(8),
-                    CreatorId = reader.GetString(9),
-                    CreatorName = reader.GetString(10),
-                    LastReviewTime = reader.GetDateTime(11),
-                    RetainerId = reader.GetString(12),
-                    RetainerName = reader.GetString(13),
-                    RetainerCityId = reader.GetInt32(14),
-                    SellerId = reader.GetString(15),
-                    UpdatedAt = reader.GetDateTime(16),
-                    Source = reader.GetString(17),
-                });
             }
-
-            var readEndTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            ExecuteReaderDuration.Observe(readEndTime - readStartTime);
 
             var result = listings.ToDictionary(
                 kvp => kvp.Key,
