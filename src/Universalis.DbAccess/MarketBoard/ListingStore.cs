@@ -556,7 +556,7 @@ public class ListingStore : IListingStore
 
     private static string ListingsKey(int worldId, int itemId)
     {
-        return $"listing4:{worldId}:{itemId}";
+        return $"listing5:{worldId}:{itemId}";
     }
 
     private static IList<Listing> DeserializeListings(byte[] value)
