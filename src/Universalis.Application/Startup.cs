@@ -48,47 +48,54 @@ public class Startup
         services.AddGameData(Configuration);
         services.AddUserAlerts();
 
-        services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
 
-        services.AddMassTransit(options =>
+        var disableWsEventQueueStr = Environment.GetEnvironmentVariable("DISABLE_WEBSOCKET_EVENT_QUEUE");
+        var disableWsEventQueue = bool.TryParse(disableWsEventQueueStr, out var disableWsEventQueueParsed) &&
+                                  disableWsEventQueueParsed;
+        if (!disableWsEventQueue)
         {
-            options.AddConsumer<ItemUpdateDispatcher>();
-            options.AddConsumer<ListingsAddDispatcher>();
-            options.AddConsumer<ListingsRemoveDispatcher>();
-            options.AddConsumer<SalesAddDispatcher>();
+            services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
 
-            options.SetKebabCaseEndpointNameFormatter();
-
-            options.UsingRabbitMq((ctx, config) =>
+            services.AddMassTransit(options =>
             {
-                var receiveMessagesStr = Environment.GetEnvironmentVariable("RECEIVE_STREAMING_EVENTS") ??
-                    Configuration["ReceiveStreamingEvents"];
-                var receiveMessages = bool.TryParse(receiveMessagesStr, out var recv) && recv;
+                options.AddConsumer<ItemUpdateDispatcher>();
+                options.AddConsumer<ListingsAddDispatcher>();
+                options.AddConsumer<ListingsRemoveDispatcher>();
+                options.AddConsumer<SalesAddDispatcher>();
 
-                if (receiveMessages)
+                options.SetKebabCaseEndpointNameFormatter();
+
+                options.UsingRabbitMq((ctx, config) =>
                 {
-                    // The machine name is used as the queue name to ensure that each
-                    // instance gets its own queue.
-                    config.ReceiveEndpoint(Environment.MachineName, conf =>
+                    var receiveMessagesStr = Environment.GetEnvironmentVariable("RECEIVE_STREAMING_EVENTS") ??
+                                             Configuration["ReceiveStreamingEvents"];
+                    var receiveMessages = bool.TryParse(receiveMessagesStr, out var recv) && recv;
+
+                    if (receiveMessages)
                     {
-                        conf.AutoDelete = true;
-                        conf.ConfigureConsumer<ItemUpdateDispatcher>(ctx);
-                        conf.ConfigureConsumer<ListingsAddDispatcher>(ctx);
-                        conf.ConfigureConsumer<ListingsRemoveDispatcher>(ctx);
-                        conf.ConfigureConsumer<SalesAddDispatcher>(ctx);
+                        // The machine name is used as the queue name to ensure that each
+                        // instance gets its own queue.
+                        config.ReceiveEndpoint(Environment.MachineName, conf =>
+                        {
+                            conf.AutoDelete = true;
+                            conf.ConfigureConsumer<ItemUpdateDispatcher>(ctx);
+                            conf.ConfigureConsumer<ListingsAddDispatcher>(ctx);
+                            conf.ConfigureConsumer<ListingsRemoveDispatcher>(ctx);
+                            conf.ConfigureConsumer<SalesAddDispatcher>(ctx);
+                        });
+                    }
+
+                    config.Host(Environment.GetEnvironmentVariable("UNIVERSALIS_RABBITMQ_HOSTNAME") ??
+                                Configuration["RabbitMqHostname"], "/", host =>
+                    {
+                        host.Username("guest");
+                        host.Password("guest");
                     });
-                }
 
-                config.Host(Environment.GetEnvironmentVariable("UNIVERSALIS_RABBITMQ_HOSTNAME") ??
-                    Configuration["RabbitMqHostname"], "/", host =>
-                {
-                    host.Username("guest");
-                    host.Password("guest");
+                    config.ConfigureEndpoints(ctx);
                 });
-
-                config.ConfigureEndpoints(ctx);
             });
-        });
+        }
 
         services.AddSingleton<ISocketProcessor, SocketProcessor>();
 
@@ -102,7 +109,8 @@ public class Startup
             options.Filters.Add<DecoderFallbackExceptionFilter>();
             options.Filters.Add<OperationCancelledExceptionFilter>();
             options.Filters.Add<TaskCanceledExceptionFilter>();
-        }).AddJsonOptions(options => {
+        }).AddJsonOptions(options =>
+        {
             options.JsonSerializerOptions.Converters.Add(new PartiallySerializableJsonConverterFactory());
         });
 
@@ -115,7 +123,8 @@ public class Startup
 
         services.AddSwaggerGen(options =>
         {
-            var license = new OpenApiLicense { Name = "MIT", Url = new Uri("https://github.com/Universalis-FFXIV/Universalis/blob/master/LICENSE") };
+            var license = new OpenApiLicense
+                { Name = "MIT", Url = new Uri("https://github.com/Universalis-FFXIV/Universalis/blob/master/LICENSE") };
 
             options.SwaggerDoc("v1", new UniversalisApiInfo()
                 .WithLicense(license)
@@ -124,7 +133,7 @@ public class Startup
             options.SwaggerDoc("v2", new UniversalisApiInfo()
                 .WithLicense(license)
                 .WithVersion(new Version(2, 0)));
-            
+
             options.SwaggerDoc("v3", new UniversalisApiInfo()
                 .WithLicense(license)
                 .WithVersion(new Version(3, 0)));
@@ -172,7 +181,8 @@ public class Startup
             options.IncludeXmlComments(() => new XPathDocument(apiDocs));
         });
 
-        var otlpExporter = Environment.GetEnvironmentVariable("UNIVERSALIS_OLTP_ENDPOINT") ?? Configuration["OtlpEndpoint"];
+        var otlpExporter = Environment.GetEnvironmentVariable("UNIVERSALIS_OLTP_ENDPOINT") ??
+                           Configuration["OtlpEndpoint"];
         if (Uri.TryCreate(otlpExporter, UriKind.Absolute, out var oltpUri))
         {
             services.AddOpenTelemetry()
