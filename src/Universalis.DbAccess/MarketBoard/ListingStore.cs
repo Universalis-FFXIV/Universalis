@@ -277,18 +277,19 @@ public class ListingStore : IListingStore
         var listings = new Dictionary<WorldItemPair, IList<Listing>>(worldItemPairs.Select(wip =>
             new KeyValuePair<WorldItemPair, IList<Listing>>(wip, new List<Listing>())));
 
-        // Attempt to retrieve listings from the cache. Even though this is parallelizable, we'll run into
-        // issues with task thrashing if we create task fan-out this deep in the request.
-        activity?.AddEvent(new ActivityEvent("TryGetListingsFromLocalCache"));
-        foreach (var wip in worldItemPairs.ToList())
+        // Attempt to retrieve listings from the cache
+        activity?.AddEvent(new ActivityEvent("TryGetListingsFromCacheMulti"));
+        var cacheValues = await TryGetListingsFromCacheMulti(worldItemPairs, cancellationToken);
+        if (cacheValues.Count == worldItemPairs.Count)
         {
-            var (worldId, itemId) = wip;
-            var (success, cacheValue) = await TryGetListingsFromLocalCache(worldId, itemId, cancellationToken);
-            if (success)
-            {
-                listings[wip] = cacheValue;
-                worldItemPairs.Remove(wip);
-            }
+            // Retrieved everything from the cache
+            return cacheValues;
+        }
+
+        foreach (var (wip, cacheValue) in cacheValues)
+        {
+            listings[wip] = cacheValue;
+            worldItemPairs.Remove(wip);
         }
 
         activity?.AddEvent(new ActivityEvent("NpgsqlCreateCommand"));
@@ -359,12 +360,13 @@ public class ListingStore : IListingStore
                 kvp => kvp.Key,
                 kvp => (IList<Listing>)kvp.Value.OrderBy(listing => listing.PricePerUnit).ToList());
 
-            // Cache the results (see notes on task thrashing in cache fetch above)
-            activity?.AddEvent(new ActivityEvent("StoreListingsInLocalCache"));
-            foreach (var wip in result.Keys)
-            {
-                await StoreListingsInLocalCache(wip.WorldId, wip.ItemId, result[wip], cancellationToken);
-            }
+            // Cache the results, except for things we already got from the cache
+            activity?.AddEvent(new ActivityEvent("StoreListingsInCacheMulti"));
+            var toCache = result.Where(r => !cacheValues.ContainsKey(r.Key))
+                .ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value);
+            await StoreListingsInCacheMulti(toCache, cancellationToken);
 
             return result;
         }
@@ -423,6 +425,65 @@ public class ListingStore : IListingStore
         }
     }
 
+    private async Task<IDictionary<WorldItemPair, IList<Listing>>> TryGetListingsFromCacheMulti(
+        IList<WorldItemPair> keys,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.TryGetListingsFromCacheMulti");
+
+        // Attempt to retrieve listings from the local cache. Even though this is parallelizable, we'll run into
+        // issues with task thrashing if we create task fan-out this deep in the request.
+        var results = new Dictionary<WorldItemPair, IList<Listing>>();
+        foreach (var wip in keys)
+        {
+            var (worldId, itemId) = wip;
+            var (localCached, localCacheResult) =
+                await TryGetListingsFromLocalCache(worldId, itemId, cancellationToken);
+            if (localCached)
+            {
+                results[wip] = localCacheResult;
+            }
+        }
+
+        // Try to fetch the listings from the cache. SE.Redis will always skew heavily to one node or the other, but
+        // we want to load-balance more evenly
+        var replicaRatio = 1 / (1 + _cache.ReplicaCount); // 1 / (1 + 1 replica) = 0.5, 1 / (1 + 2 replicas) = 0.33...
+        var commandFlags = Random.Shared.NextDouble() > replicaRatio
+            ? CommandFlags.PreferReplica
+            : CommandFlags.PreferMaster;
+
+        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var cacheKeys = keys.Select(ListingsKey).Select(k => new RedisKey(k)).ToArray();
+        try
+        {
+            var cacheValues = await db.StringGetAsync(cacheKeys, commandFlags);
+            for (var i = 0; i < cacheValues.Length; i++)
+            {
+                var wip = keys[i];
+                var cacheValue = cacheValues[i];
+                if (cacheValue != RedisValue.Null)
+                {
+                    results[wip] = DeserializeListings(cacheValue);
+                    CacheHits.Inc();
+                }
+                else
+                {
+                    CacheMisses.Inc();
+                }
+            }
+        }
+        catch (TimeoutException)
+        {
+            CacheTimeouts.Inc();
+        }
+        catch (OperationCanceledException)
+        {
+            CacheTimeouts.Inc();
+        }
+
+        return results;
+    }
+
     private async Task StoreListingsInCache(int worldId, int itemId, IList<Listing> listings,
         CancellationToken cancellationToken = default)
     {
@@ -433,6 +494,32 @@ public class ListingStore : IListingStore
         await db.StringSetAsync(cacheKey, SerializeListings(listings), ListingsCacheTime, When.Always,
             CommandFlags.FireAndForget);
         CacheUpdates.Inc();
+    }
+
+    private async Task StoreListingsInCacheMulti(IDictionary<WorldItemPair, IList<Listing>> listings,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.StoreListingsInCacheMulti");
+        foreach (var wip in listings.Keys)
+        {
+            await StoreListingsInLocalCache(wip.WorldId, wip.ItemId, listings[wip], cancellationToken);
+        }
+
+        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var cacheRecords = listings.Select(kvp =>
+                new KeyValuePair<RedisKey, RedisValue>(ListingsKey(kvp.Key), SerializeListings(kvp.Value)))
+            .ToArray();
+
+        var tx = db.CreateTransaction();
+        _ = tx.StringSetAsync(cacheRecords, When.Always, CommandFlags.FireAndForget);
+        foreach (var key in listings.Keys)
+        {
+            _ = tx.KeyExpireAsync(ListingsKey(key), ListingsCacheTime, CommandFlags.FireAndForget);
+        }
+
+        await tx.ExecuteAsync(CommandFlags.FireAndForget);
+
+        CacheUpdates.Inc(cacheRecords.Length);
     }
 
     private async Task<(bool, IList<Listing>)> TryGetListingsFromLocalCache(int worldId, int itemId,
@@ -461,6 +548,11 @@ public class ListingStore : IListingStore
         var cacheKey = ListingsKey(worldId, itemId);
         await _easyCachingProvider.SetAsync(cacheKey, listings, LocalListingsCacheTime, cancellationToken);
         LocalCacheUpdates.Inc();
+    }
+
+    private static string ListingsKey(WorldItemPair wip)
+    {
+        return ListingsKey(wip.WorldId, wip.ItemId);
     }
 
     private static string ListingsKey(int worldId, int itemId)
