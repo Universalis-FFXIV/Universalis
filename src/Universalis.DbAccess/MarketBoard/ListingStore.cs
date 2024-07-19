@@ -268,19 +268,6 @@ public class ListingStore : IListingStore
         var listings = new Dictionary<WorldItemPair, IList<Listing>>(worldItemPairs.Select(wip =>
             new KeyValuePair<WorldItemPair, IList<Listing>>(wip, new List<Listing>())));
 
-        // Attempt to retrieve listings from the cache
-        activity?.AddEvent(new ActivityEvent("TryGetListingsFromCache"));
-        await Task.WhenAll(worldItemPairs.ToList().Select(async wip =>
-        {
-            var (worldId, itemId) = wip;
-            var (success, cacheValue) = await TryGetListingsFromCache(worldId, itemId, cancellationToken);
-            if (success)
-            {
-                listings[wip] = cacheValue;
-                worldItemPairs.Remove(wip);
-            }
-        }));
-
         activity?.AddEvent(new ActivityEvent("NpgsqlCreateCommand"));
         await using var command = _dataSource.CreateCommand(
             """
@@ -343,11 +330,6 @@ public class ListingStore : IListingStore
             var result = listings.ToDictionary(
                 kvp => kvp.Key,
                 kvp => (IList<Listing>)kvp.Value.OrderBy(listing => listing.PricePerUnit).ToList());
-
-            // Cache the results
-            activity?.AddEvent(new ActivityEvent("StoreListingsInCache"));
-            await Task.WhenAll(result.Keys.Select(key =>
-                StoreListingsInCache(key.WorldId, key.ItemId, result[key], cancellationToken)));
 
             return result;
         }
