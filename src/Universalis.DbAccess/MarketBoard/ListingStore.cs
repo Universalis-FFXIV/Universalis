@@ -57,7 +57,7 @@ public class ListingStore : IListingStore
         });
 
     private static readonly TimeSpan ListingsCacheTime = TimeSpan.FromMinutes(10);
-    private static readonly TimeSpan LocalListingsCacheTime = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan LocalListingsCacheTime = TimeSpan.FromMinutes(5);
 
     private readonly ILogger<ListingStore> _logger;
     private readonly ICacheRedisMultiplexer _cache;
