@@ -480,9 +480,9 @@ public class ListingStore : IListingStore
             }
 
             // Store any new values from the remote cache in our local cache
-            if (resultsFromRemoteCache.Any())
+            foreach (var (wip, cachedListings) in resultsFromRemoteCache)
             {
-                await StoreListingsInCacheMulti(resultsFromRemoteCache, cancellationToken);
+                await StoreListingsInLocalCache(wip.WorldId, wip.ItemId, cachedListings, cancellationToken);
             }
         }
         catch (TimeoutException)
