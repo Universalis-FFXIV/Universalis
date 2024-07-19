@@ -36,7 +36,7 @@ public class MarketBoardUploadBehaviorTests
             var sockets = new MockSocketProcessor();
             var gameData = new MockGameDataProvider();
             var uploadLog = new MockUploadLogDbAccess();
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, uploadLog, gameData, null);
+            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, gameData, null);
 
             return new TestResources
             {
