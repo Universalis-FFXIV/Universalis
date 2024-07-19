@@ -444,6 +444,12 @@ public class ListingStore : IListingStore
             }
         }
 
+        if (results.Count == keys.Count)
+        {
+            // All values retrieved from local cache
+            return results;
+        }
+
         // Try to fetch the listings from the cache. SE.Redis will always skew heavily to one node or the other, but
         // we want to load-balance more evenly
         var replicaRatio = 1 / (1 + _cache.ReplicaCount); // 1 / (1 + 1 replica) = 0.5, 1 / (1 + 2 replicas) = 0.33...
@@ -455,6 +461,7 @@ public class ListingStore : IListingStore
         var cacheKeys = keys.Select(ListingsKey).Select(k => new RedisKey(k)).ToArray();
         try
         {
+            var resultsFromRemoteCache = new Dictionary<WorldItemPair, IList<Listing>>();
             var cacheValues = await db.StringGetAsync(cacheKeys, commandFlags);
             for (var i = 0; i < cacheValues.Length; i++)
             {
@@ -463,12 +470,19 @@ public class ListingStore : IListingStore
                 if (cacheValue != RedisValue.Null)
                 {
                     results[wip] = DeserializeListings(cacheValue);
+                    resultsFromRemoteCache[wip] = results[wip];
                     CacheHits.Inc();
                 }
                 else
                 {
                     CacheMisses.Inc();
                 }
+            }
+
+            // Store any new values from the remote cache in our local cache
+            if (resultsFromRemoteCache.Any())
+            {
+                await StoreListingsInCacheMulti(resultsFromRemoteCache, cancellationToken);
             }
         }
         catch (TimeoutException)
@@ -509,14 +523,12 @@ public class ListingStore : IListingStore
                 new KeyValuePair<RedisKey, RedisValue>(ListingsKey(kvp.Key), SerializeListings(kvp.Value)))
             .ToArray();
 
-        var tx = db.CreateTransaction();
-        _ = tx.StringSetAsync(cacheRecords, When.Always, CommandFlags.FireAndForget);
+        // Do an MSET and add an expiry to each new key
+        await db.StringSetAsync(cacheRecords, When.Always, CommandFlags.FireAndForget);
         foreach (var key in listings.Keys)
         {
-            _ = tx.KeyExpireAsync(ListingsKey(key), ListingsCacheTime, CommandFlags.FireAndForget);
+            await db.KeyExpireAsync(ListingsKey(key), ListingsCacheTime, CommandFlags.FireAndForget);
         }
-
-        await tx.ExecuteAsync(CommandFlags.FireAndForget);
 
         CacheUpdates.Inc(cacheRecords.Length);
     }
