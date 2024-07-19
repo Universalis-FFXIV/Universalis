@@ -47,6 +47,12 @@ public class ListingStore : IListingStore
     private static readonly Counter LocalCacheUpdates =
         Prometheus.Metrics.CreateCounter("universalis_listing_local_cache_update", "");
 
+    private static readonly Histogram CreateCommandDuration =
+        Prometheus.Metrics.CreateHistogram("universalis_listing_create_command", "");
+
+    private static readonly Histogram ExecuteReaderDuration =
+        Prometheus.Metrics.CreateHistogram("universalis_listing_execute_reader", "");
+
     private static readonly TimeSpan ListingsCacheTime = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan LocalListingsCacheTime = TimeSpan.FromMinutes(1);
 
@@ -269,6 +275,7 @@ public class ListingStore : IListingStore
             new KeyValuePair<WorldItemPair, IList<Listing>>(wip, new List<Listing>())));
 
         activity?.AddEvent(new ActivityEvent("NpgsqlCreateCommand"));
+        var createCommandStartTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         await using var command = _dataSource.CreateCommand(
             """
             SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
@@ -278,6 +285,8 @@ public class ListingStore : IListingStore
             FROM listing t
             WHERE t.item_id = ANY($1) AND t.world_id = ANY($2)
             """);
+        var createCommandEndTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        CreateCommandDuration.Observe(createCommandEndTime - createCommandStartTime);
         command.Parameters.Add(new NpgsqlParameter<int[]>
             { TypedValue = worldItemPairs.Select(wip => wip.ItemId).Distinct().ToArray() });
         command.Parameters.Add(new NpgsqlParameter<int[]>
@@ -286,6 +295,8 @@ public class ListingStore : IListingStore
         try
         {
             activity?.AddEvent(new ActivityEvent("NpgsqlCommandExecuteReaderAsync"));
+
+            var readStartTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             await using var reader =
                 await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
@@ -325,6 +336,9 @@ public class ListingStore : IListingStore
                     Source = reader.GetString(17),
                 });
             }
+
+            var readEndTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            ExecuteReaderDuration.Observe(readEndTime - readStartTime);
 
             var result = listings.ToDictionary(
                 kvp => kvp.Key,
