@@ -51,7 +51,10 @@ public class ListingStore : IListingStore
         Prometheus.Metrics.CreateHistogram("universalis_listing_create_command", "");
 
     private static readonly Histogram ExecuteReaderDuration =
-        Prometheus.Metrics.CreateHistogram("universalis_listing_execute_reader", "");
+        Prometheus.Metrics.CreateHistogram("universalis_listing_execute_reader", "", new HistogramConfiguration
+        {
+            Buckets = Histogram.ExponentialBuckets(1, 2, 16),
+        });
 
     private static readonly TimeSpan ListingsCacheTime = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan LocalListingsCacheTime = TimeSpan.FromMinutes(1);
@@ -274,6 +277,20 @@ public class ListingStore : IListingStore
         var listings = new Dictionary<WorldItemPair, IList<Listing>>(worldItemPairs.Select(wip =>
             new KeyValuePair<WorldItemPair, IList<Listing>>(wip, new List<Listing>())));
 
+        // Attempt to retrieve listings from the cache. Even though this is parallelizable, we'll run into
+        // issues with task thrashing if we create task fan-out this deep in the request.
+        activity?.AddEvent(new ActivityEvent("TryGetListingsFromLocalCache"));
+        foreach (var wip in worldItemPairs.ToList())
+        {
+            var (worldId, itemId) = wip;
+            var (success, cacheValue) = await TryGetListingsFromLocalCache(worldId, itemId, cancellationToken);
+            if (success)
+            {
+                listings[wip] = cacheValue;
+                worldItemPairs.Remove(wip);
+            }
+        }
+
         activity?.AddEvent(new ActivityEvent("NpgsqlCreateCommand"));
         var createCommandStartTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         await using var command = _dataSource.CreateCommand(
@@ -343,6 +360,13 @@ public class ListingStore : IListingStore
             var result = listings.ToDictionary(
                 kvp => kvp.Key,
                 kvp => (IList<Listing>)kvp.Value.OrderBy(listing => listing.PricePerUnit).ToList());
+
+            // Cache the results (see notes on task thrashing in cache fetch above)
+            activity?.AddEvent(new ActivityEvent("StoreListingsInLocalCache"));
+            foreach (var wip in result.Keys)
+            {
+                await StoreListingsInLocalCache(wip.WorldId, wip.ItemId, result[wip], cancellationToken);
+            }
 
             return result;
         }

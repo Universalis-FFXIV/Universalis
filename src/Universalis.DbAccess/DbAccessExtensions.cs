@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
 using System;
 using Cassandra.Metrics;
+using EasyCaching.InMemory;
 using EasyCaching.Serialization.MemoryPack;
 using FluentMigrator.Runner;
 using Npgsql;
@@ -78,7 +79,19 @@ public static class DbAccessExtensions
         sc.AddEasyCaching(options =>
         {
             options.WithMemoryPack();
-            options.UseInMemory();
+            options.UseInMemory(config =>
+            {
+                config.DBConfig = new InMemoryCachingOptions
+                {
+                    ExpirationScanFrequency = 60, 
+                    SizeLimit = 100000,
+                };
+
+                config.MaxRdSecond = 120;
+                config.EnableLogging = false;
+                config.LockMs = 5000;
+                config.SleepMs = 300;
+            });
         });
 
         var cacheOptions = ConfigurationOptions.Parse(redisCacheConnectionString);
