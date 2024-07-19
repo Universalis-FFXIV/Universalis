@@ -34,7 +34,7 @@ public class MarketItemStore : IMarketItemStore
     private static readonly Counter CacheTimeouts =
         Prometheus.Metrics.CreateCounter("universalis_market_item_cache_timeout", "");
 
-    private static readonly TimeSpan MarketItemCacheTime = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan MarketItemCacheTime = TimeSpan.FromMinutes(30);
 
     private readonly ILogger<MarketItemStore> _logger;
     private readonly NpgsqlDataSource _dataSource;
