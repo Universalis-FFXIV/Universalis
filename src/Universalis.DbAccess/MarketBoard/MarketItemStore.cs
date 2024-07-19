@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +16,7 @@ using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
 
+[SuppressMessage("ReSharper", "ExplicitCallerInfoArgument")]
 public class MarketItemStore : IMarketItemStore
 {
     private static readonly Counter CachePurges =
@@ -63,7 +66,7 @@ public class MarketItemStore : IMarketItemStore
         try
         {
             await command.ExecuteNonQueryAsync(cancellationToken);
-            
+
             // Purge the cache
             var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
             var cacheKey = MarketItemKey(marketItem.WorldId, marketItem.ItemId);
@@ -127,14 +130,23 @@ public class MarketItemStore : IMarketItemStore
 
         var worldIds = query.WorldIds.ToList();
         var itemIds = query.ItemIds.ToList();
-        var worldItemTuples = worldIds.SelectMany(worldId =>
-                itemIds.Select(itemId => (worldId, itemId)))
+        var worldItemPairs = worldIds.SelectMany(worldId =>
+                itemIds.Select(itemId => new WorldItemPair(worldId, itemId)))
             .ToList();
+
+        // Attempt to retrieve market items from the cache
+        activity?.AddEvent(new ActivityEvent("TryGetMarketItemFromCacheMulti"));
+        var cacheValues = await TryGetMarketItemFromCacheMulti(worldItemPairs);
+        if (cacheValues.Count == worldItemPairs.Count)
+        {
+            // Retrieved everything from the cache
+            return cacheValues.Values;
+        }
 
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
         await using var batch = new NpgsqlBatch(connection);
 
-        foreach (var (worldId, itemId) in worldItemTuples)
+        foreach (var (worldId, itemId) in worldItemPairs)
         {
             batch.BatchCommands.Add(
                 new NpgsqlBatchCommand("SELECT updated FROM market_item WHERE item_id = $1 AND world_id = $2")
@@ -152,26 +164,35 @@ public class MarketItemStore : IMarketItemStore
             await using var reader =
                 await batch.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
-            var marketItemRecords = new List<MarketItem>();
+            var marketItemRecords = new Dictionary<WorldItemPair, MarketItem>();
             var batchesRead = 0;
             do
             {
-                var (worldId, itemId) = worldItemTuples[batchesRead];
+                var wip = worldItemPairs[batchesRead];
+                var (worldId, itemId) = wip;
                 if (await reader.ReadAsync(cancellationToken))
                 {
-                    marketItemRecords.Add(new MarketItem
+                    marketItemRecords[wip] = new MarketItem
                     {
                         ItemId = itemId,
                         WorldId = worldId,
                         LastUploadTime = reader.GetDateTime(0),
-                    });
+                    };
                 }
 
                 batchesRead++;
                 await reader.NextResultAsync(cancellationToken);
-            } while (batchesRead != worldItemTuples.Count);
+            } while (batchesRead != worldItemPairs.Count);
 
-            return marketItemRecords;
+            // Cache the results, except for things we already got from the cache
+            activity?.AddEvent(new ActivityEvent("StoreMarketItemInCacheMulti"));
+            var toCache = marketItemRecords.Where(r => !cacheValues.ContainsKey(r.Key))
+                .ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value);
+            await StoreMarketItemInCacheMulti(toCache);
+
+            return marketItemRecords.Values.ToList();
         }
         catch (Exception e)
         {
@@ -179,6 +200,51 @@ public class MarketItemStore : IMarketItemStore
                 string.Join(',', itemIds));
             throw;
         }
+    }
+
+    private async Task<IDictionary<WorldItemPair, MarketItem>> TryGetMarketItemFromCacheMulti(IList<WorldItemPair> keys)
+    {
+        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.TryGetMarketItemFromCacheMulti");
+
+        var results = new Dictionary<WorldItemPair, MarketItem>();
+
+        // Try to fetch the listings from the cache. SE.Redis will always skew heavily to one node or the other, but
+        // we want to load-balance more evenly
+        var replicaRatio = 1 / (1 + _cache.ReplicaCount); // 1 / (1 + 1 replica) = 0.5, 1 / (1 + 2 replicas) = 0.33...
+        var commandFlags = Random.Shared.NextDouble() > replicaRatio
+            ? CommandFlags.PreferReplica
+            : CommandFlags.PreferMaster;
+
+        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var cacheKeys = keys.Select(MarketItemKey).Select(k => new RedisKey(k)).ToArray();
+        try
+        {
+            var cacheValues = await db.StringGetAsync(cacheKeys, commandFlags);
+            for (var i = 0; i < cacheValues.Length; i++)
+            {
+                var wip = keys[i];
+                var cacheValue = cacheValues[i];
+                if (cacheValue != RedisValue.Null)
+                {
+                    results[wip] = DeserializeMarketItem(cacheValue);
+                    CacheHits.Inc();
+                }
+                else
+                {
+                    CacheMisses.Inc();
+                }
+            }
+        }
+        catch (TimeoutException)
+        {
+            CacheTimeouts.Inc();
+        }
+        catch (OperationCanceledException)
+        {
+            CacheTimeouts.Inc();
+        }
+
+        return results;
     }
 
     private async Task<(bool, MarketItem)> TryGetMarketItemFromCache(int worldId, int itemId,
@@ -215,6 +281,25 @@ public class MarketItemStore : IMarketItemStore
         }
     }
 
+    private async Task StoreMarketItemInCacheMulti(IDictionary<WorldItemPair, MarketItem> marketItems)
+    {
+        using var activity = Util.ActivitySource.StartActivity("MarketItemStore.StoreMarketItemInCacheMulti");
+
+        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var cacheRecords = marketItems.Select(kvp =>
+                new KeyValuePair<RedisKey, RedisValue>(MarketItemKey(kvp.Key), SerializeMarketItem(kvp.Value)))
+            .ToArray();
+
+        // Do an MSET and add an expiry to each new key
+        await db.StringSetAsync(cacheRecords, When.Always, CommandFlags.FireAndForget);
+        foreach (var wip in marketItems.Keys)
+        {
+            await db.KeyExpireAsync(MarketItemKey(wip), MarketItemCacheTime, CommandFlags.FireAndForget);
+        }
+
+        CacheUpdates.Inc(marketItems.Count);
+    }
+
     private async Task StoreMarketItemInCache(int worldId, int itemId, MarketItem marketItem)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.StoreMarketItemInCache");
@@ -223,6 +308,11 @@ public class MarketItemStore : IMarketItemStore
         await db.StringSetAsync(cacheKey, SerializeMarketItem(marketItem), MarketItemCacheTime, When.Always,
             CommandFlags.FireAndForget);
         CacheUpdates.Inc();
+    }
+
+    private static string MarketItemKey(WorldItemPair wip)
+    {
+        return MarketItemKey(wip.WorldId, wip.ItemId);
     }
 
     private static string MarketItemKey(int worldId, int itemId)
