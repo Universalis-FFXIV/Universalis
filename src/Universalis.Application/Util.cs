@@ -15,14 +15,9 @@ namespace Universalis.Application;
 
 public static partial class Util
 {
-    private static readonly Regex HtmlTags = HtmlTagsRegex();
-
     // TODO: Implement tests to determine if this can be replaced with [^\p{L}\p{M}\p{N}'-]
     private static readonly Regex UnsafeCharacters =
         UnsafeCharactersRegex();
-
-    [GeneratedRegex("<[\\s\\S]*?>", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
-    private static partial Regex HtmlTagsRegex();
 
     [GeneratedRegex("[^a-zA-Z0-9'\\- ·⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]", RegexOptions.Compiled)]
     private static partial Regex UnsafeCharactersRegex();
@@ -111,6 +106,8 @@ public static partial class Util
         throw new InvalidOperationException("Destination buffer was too small, this should never occur");
     }
 
+    private static readonly char[] HtmlTagMarkers = { '<', '>' };
+
     /// <summary>
     /// Returns <see langword="true" /> if the provided input contains HTML tags.
     /// </summary>
@@ -118,7 +115,7 @@ public static partial class Util
     /// <returns><see langword="true" /> if the input contains HTML tags, otherwise <see langword="false" />.</returns>
     public static bool HasHtmlTags(string input)
     {
-        return !string.IsNullOrEmpty(input) && HtmlTags.IsMatch(input);
+        return !string.IsNullOrEmpty(input) && input.IndexOfAny(HtmlTagMarkers) != -1;
     }
 
     /// <summary>
