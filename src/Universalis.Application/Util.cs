@@ -125,7 +125,9 @@ public static partial class Util
     /// <returns>The input text with any unsafe characters removed.</returns>
     public static string RemoveUnsafeCharacters(string input)
     {
-        return UnsafeCharacters.Replace(input, "");
+        return UnsafeCharacters.IsMatch(input)
+            ? UnsafeCharacters.Replace(input, "")
+            : input;
     }
 
     /// <summary>
