@@ -78,13 +78,14 @@ public static class DbAccessExtensions
 
         sc.AddEasyCaching(options =>
         {
-            options.WithMemoryPack();
             options.UseInMemory(config =>
             {
                 config.DBConfig = new InMemoryCachingOptions
                 {
-                    ExpirationScanFrequency = 60, 
+                    ExpirationScanFrequency = 60,
                     SizeLimit = 100000,
+                    EnableReadDeepClone = false,
+                    EnableWriteDeepClone = false,
                 };
 
                 config.MaxRdSecond = 120;
