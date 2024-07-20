@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using FluentMigrator.Runner;
 using Microsoft.AspNetCore.Hosting;
@@ -12,7 +13,11 @@ public static class Program
     public static void Main(string[] args)
     {
         // Increase the initial size of the thread pool
-        ThreadPool.SetMinThreads(100, 100);
+        var minThreadPoolSizeStr = Environment.GetEnvironmentVariable("UNIVERSALIS_MIN_THREADPOOL_SIZE");
+        var minThreadPoolSize = int.TryParse(minThreadPoolSizeStr, out var minThreadPoolSizeParsed)
+            ? minThreadPoolSizeParsed
+            : 100;
+        ThreadPool.SetMinThreads(minThreadPoolSize, minThreadPoolSize);
 
         var host = CreateHostBuilder(args).Build();
 
