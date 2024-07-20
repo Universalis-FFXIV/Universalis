@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -504,8 +505,13 @@ public class ListingStore : IListingStore
         await StoreListingsInLocalCache(worldId, itemId, listings, cancellationToken);
         var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
         var cacheKey = ListingsKey(worldId, itemId);
-        await db.StringSetAsync(cacheKey, SerializeListings(listings), ListingsCacheTime, When.Always,
+
+        var writer = new ArrayBufferWriter<byte>();
+        SerializeListings(writer, listings);
+
+        await db.StringSetAsync(cacheKey, writer.WrittenMemory, ListingsCacheTime, When.Always,
             CommandFlags.FireAndForget);
+
         CacheUpdates.Inc();
     }
 
@@ -519,18 +525,20 @@ public class ListingStore : IListingStore
         }
 
         var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
-        var cacheRecords = listings.Select(kvp =>
-                new KeyValuePair<RedisKey, RedisValue>(ListingsKey(kvp.Key), SerializeListings(kvp.Value)))
-            .ToArray();
 
-        // Do an MSET and add an expiry to each new key
-        await db.StringSetAsync(cacheRecords, When.Always, CommandFlags.FireAndForget);
+        // Store everything in the cache, reusing the same writer to reduce GC pressure, at the cost
+        // of not being able to benefit from MSET - as that would require simultaneous buffers for
+        // each value.
+        var writer = new ArrayBufferWriter<byte>();
         foreach (var key in listings.Keys)
         {
-            await db.KeyExpireAsync(ListingsKey(key), ListingsCacheTime, CommandFlags.FireAndForget);
+            SerializeListings(writer, listings[key]);
+            await db.StringSetAsync(ListingsKey(key), writer.WrittenMemory, ListingsCacheTime, When.Always,
+                CommandFlags.FireAndForget);
+            writer.Clear();
         }
 
-        CacheUpdates.Inc(cacheRecords.Length);
+        CacheUpdates.Inc(listings.Count);
     }
 
     private async Task<(bool, IList<Listing>)> TryGetListingsFromLocalCache(int worldId, int itemId,
@@ -576,9 +584,9 @@ public class ListingStore : IListingStore
         return MemoryPackSerializer.Deserialize<IList<Listing>>(value);
     }
 
-    private static byte[] SerializeListings(IList<Listing> listings)
+    private static void SerializeListings(IBufferWriter<byte> writer, IList<Listing> listings)
     {
-        return MemoryPackSerializer.Serialize(listings);
+        MemoryPackSerializer.Serialize(writer, listings);
     }
 
     private static JArray ConvertMateriaToJArray(IEnumerable<Materia> materia)
