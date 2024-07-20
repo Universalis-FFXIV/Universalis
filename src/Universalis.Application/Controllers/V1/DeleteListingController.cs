@@ -125,19 +125,6 @@ public class DeleteListingController : WorldDcRegionControllerBase
 
         await _currentlyShownDb.Update(itemData, query, cts.Token);
 
-        // Log the upload
-        await _uploadLogDb.LogAction(new UploadLogEntry
-        {
-            Id = Guid.NewGuid(),
-            Timestamp = DateTime.UtcNow,
-            Event = "DeleteListing",
-            Application = source.Name,
-            WorldId = worldDc.WorldId,
-            ItemId = itemId,
-            Listings = 1,
-            Sales = 0,
-        });
-
         _sockets.Publish(new ListingsRemove
         {
             WorldId = query.WorldId,
