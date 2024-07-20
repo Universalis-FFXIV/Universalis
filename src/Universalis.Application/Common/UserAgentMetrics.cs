@@ -1,6 +1,5 @@
 ﻿using Prometheus;
 using System.Diagnostics;
-using UAParser;
 
 namespace Universalis.Application.Common;
 
@@ -9,28 +8,18 @@ public class UserAgentMetrics
     protected static readonly Counter UserAgentRequestCount =
         Metrics.CreateCounter("universalis_request_count_user_agents", "", "Controller", "Family");
 
+    // For some reason user agents replace spaces with pluses sometimes
+    private static readonly char[] UASegmentSeparators = { ' ', '+' };
+
     public static void RecordUserAgentRequest(string userAgent, string controllerName, Activity activity = null)
     {
-        // For some reason user agents replace spaces with pluses sometimes - convert it back
-        userAgent = userAgent.Replace('+', ' ');
-        
         var controllerMetricName = GetControllerMetricName(controllerName);
         if (!string.IsNullOrEmpty(userAgent))
         {
-            var parsedUserAgent = Parser.GetDefault().ParseUserAgent(userAgent);
-            var userAgentFamily = parsedUserAgent.Family;
-            if (userAgentFamily == "Other")
-            {
-                var firstSpace = userAgent.IndexOf(' ');
-                var inferredUserAgentFriendlyName = firstSpace != -1 ? userAgent[..(firstSpace + 1)] : userAgent;
-                activity?.AddTag("userAgent", inferredUserAgentFriendlyName);
-                UserAgentRequestCount.Labels(controllerMetricName, inferredUserAgentFriendlyName).Inc();
-            }
-            else
-            {
-                activity?.AddTag("userAgent", userAgentFamily);
-                UserAgentRequestCount.Labels(controllerMetricName, userAgentFamily).Inc();
-            }
+            var firstSep = userAgent.IndexOfAny(UASegmentSeparators);
+            var inferredUserAgentFriendlyName = firstSep != -1 ? userAgent[..(firstSep + 1)] : userAgent;
+            activity?.AddTag("userAgent", inferredUserAgentFriendlyName);
+            UserAgentRequestCount.Labels(controllerMetricName, inferredUserAgentFriendlyName).Inc();
         }
         else
         {
