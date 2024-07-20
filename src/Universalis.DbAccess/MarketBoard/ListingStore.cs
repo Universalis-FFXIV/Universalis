@@ -551,7 +551,7 @@ public class ListingStore : IListingStore
         if (cacheValue.HasValue)
         {
             LocalCacheHits.Inc();
-            return (true, cacheValue.Value.OrderBy(listing => listing.PricePerUnit).ToList());
+            return (true, cacheValue.Value);
         }
         else
         {
