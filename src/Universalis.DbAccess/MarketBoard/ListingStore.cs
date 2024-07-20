@@ -229,7 +229,7 @@ public class ListingStore : IListingStore
             {
                 listings.Add(new Listing
                 {
-                    ListingId = reader.GetString(0),
+                    ListingId = string.Intern(reader.GetString(0)),
                     ItemId = reader.GetInt32(1),
                     WorldId = reader.GetInt32(2),
                     Hq = reader.GetBoolean(3),
@@ -238,15 +238,15 @@ public class ListingStore : IListingStore
                     PricePerUnit = reader.GetInt32(6),
                     Quantity = reader.GetInt32(7),
                     DyeId = reader.GetInt32(8),
-                    CreatorId = reader.GetString(9),
+                    CreatorId = string.Intern(reader.GetString(9)),
                     CreatorName = reader.GetString(10),
                     LastReviewTime = reader.GetDateTime(11),
-                    RetainerId = reader.GetString(12),
+                    RetainerId = string.Intern(reader.GetString(12)),
                     RetainerName = reader.GetString(13),
                     RetainerCityId = reader.GetInt32(14),
-                    SellerId = reader.GetString(15),
+                    SellerId = string.Intern(reader.GetString(15)),
                     UpdatedAt = reader.GetDateTime(16),
-                    Source = reader.GetString(17),
+                    Source = string.Intern(reader.GetString(17)),
                 });
             }
 
@@ -320,7 +320,7 @@ public class ListingStore : IListingStore
                 while (await reader.ReadAsync(cancellationToken))
                 {
                     activity?.AddEvent(new ActivityEvent("NpgsqlReaderRead"));
-                    var listingId = reader.GetString(0);
+                    var listingId = string.Intern(reader.GetString(0));
                     var itemId = reader.GetInt32(1);
                     var worldId = reader.GetInt32(2);
                     var worldItemPair = new WorldItemPair(worldId, itemId);
@@ -342,15 +342,18 @@ public class ListingStore : IListingStore
                         PricePerUnit = reader.GetInt32(6),
                         Quantity = reader.GetInt32(7),
                         DyeId = reader.GetInt32(8),
-                        CreatorId = reader.GetString(9),
+                        // Large hashed IDs are interned as they will likely be reused when
+                        // the same item is requested again
+                        CreatorId = string.Intern(reader.GetString(9)),
                         CreatorName = reader.GetString(10),
                         LastReviewTime = reader.GetDateTime(11),
-                        RetainerId = reader.GetString(12),
+                        RetainerId = string.Intern(reader.GetString(12)),
                         RetainerName = reader.GetString(13),
                         RetainerCityId = reader.GetInt32(14),
-                        SellerId = reader.GetString(15),
+                        SellerId = string.Intern(reader.GetString(15)),
                         UpdatedAt = reader.GetDateTime(16),
-                        Source = reader.GetString(17),
+                        // Small strings, but with only a few possible values
+                        Source = string.Intern(reader.GetString(17)),
                     });
                 }
             }
