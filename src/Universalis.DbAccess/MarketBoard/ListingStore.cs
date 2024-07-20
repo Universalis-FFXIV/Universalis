@@ -458,7 +458,13 @@ public class ListingStore : IListingStore
             : CommandFlags.PreferMaster;
 
         var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
-        var cacheKeys = keys.Select(ListingsKey).Select(k => new RedisKey(k)).ToArray();
+
+        // Request from Redis all keys we haven't already gotten from the local cache
+        var cacheKeys = keys
+            .Where(k => !results.ContainsKey(k))
+            .Select(ListingsKey)
+            .Select(k => new RedisKey(k))
+            .ToArray();
         try
         {
             var resultsFromRemoteCache = new Dictionary<WorldItemPair, IList<Listing>>();
