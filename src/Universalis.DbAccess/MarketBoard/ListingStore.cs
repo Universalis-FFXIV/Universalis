@@ -7,13 +7,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EasyCaching.Core;
-using MemoryPack;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
 using Prometheus;
-using StackExchange.Redis;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
@@ -23,20 +22,6 @@ namespace Universalis.DbAccess.MarketBoard;
 [SuppressMessage("ReSharper", "ExplicitCallerInfoArgument")]
 public class ListingStore : IListingStore
 {
-    private static readonly Counter CachePurges =
-        Prometheus.Metrics.CreateCounter("universalis_listing_cache_purge", "");
-
-    private static readonly Counter CacheHits = Prometheus.Metrics.CreateCounter("universalis_listing_cache_hit", "");
-
-    private static readonly Counter
-        CacheMisses = Prometheus.Metrics.CreateCounter("universalis_listing_cache_miss", "");
-
-    private static readonly Counter CacheUpdates =
-        Prometheus.Metrics.CreateCounter("universalis_listing_cache_update", "");
-
-    private static readonly Counter CacheTimeouts =
-        Prometheus.Metrics.CreateCounter("universalis_listing_cache_timeout", "");
-
     private static readonly Counter LocalCacheHits =
         Prometheus.Metrics.CreateCounter("universalis_listing_local_cache_hit", "");
 
@@ -142,8 +127,7 @@ public class ListingStore : IListingStore
                         new NpgsqlParameter<int> { TypedValue = listing.WorldId },
                         new NpgsqlParameter<bool> { TypedValue = listing.Hq },
                         new NpgsqlParameter<bool> { TypedValue = listing.OnMannequin },
-                        new NpgsqlParameter
-                            { Value = ConvertMateriaToJArray(listing.Materia), NpgsqlDbType = NpgsqlDbType.Jsonb },
+                        ConvertMateriaToParameter(listing.Materia),
                         new NpgsqlParameter<int> { TypedValue = listing.PricePerUnit },
                         new NpgsqlParameter<int> { TypedValue = listing.Quantity },
                         new NpgsqlParameter<int> { TypedValue = listing.DyeId },
@@ -217,7 +201,7 @@ public class ListingStore : IListingStore
                     WorldId = reader.GetInt32(2),
                     Hq = reader.GetBoolean(3),
                     OnMannequin = reader.GetBoolean(4),
-                    Materia = ConvertMateriaFromJArray(reader.GetFieldValue<JArray>(5)),
+                    Materia = ReadMateriaFromReader(reader),
                     PricePerUnit = reader.GetInt32(6),
                     Quantity = reader.GetInt32(7),
                     DyeId = reader.GetInt32(8),
@@ -321,7 +305,7 @@ public class ListingStore : IListingStore
                         WorldId = worldId,
                         Hq = reader.GetBoolean(3),
                         OnMannequin = reader.GetBoolean(4),
-                        Materia = ConvertMateriaFromJArray(reader.GetFieldValue<JArray>(5)),
+                        Materia = ReadMateriaFromReader(reader),
                         PricePerUnit = reader.GetInt32(6),
                         Quantity = reader.GetInt32(7),
                         DyeId = reader.GetInt32(8),
@@ -439,28 +423,23 @@ public class ListingStore : IListingStore
         LocalCacheUpdates.Inc();
     }
 
-    private static string ListingsKey(WorldItemPair wip)
-    {
-        return ListingsKey(wip.WorldId, wip.ItemId);
-    }
-
     private static string ListingsKey(int worldId, int itemId)
     {
         return $"listing5:{worldId}:{itemId}";
     }
 
-    private static IList<Listing> DeserializeListings(byte[] value)
+    private static NpgsqlParameter ConvertMateriaToParameter(IList<Materia> materia)
     {
-        return MemoryPackSerializer.Deserialize<IList<Listing>>(value);
+        var jArray = ConvertMateriaToJArray(materia);
+        return jArray != null
+            ? new NpgsqlParameter { Value = jArray, NpgsqlDbType = NpgsqlDbType.Jsonb }
+            : new NpgsqlParameter { Value = DBNull.Value };
     }
 
-    private static byte[] SerializeListings(IList<Listing> listings)
+    [CanBeNull]
+    private static JArray ConvertMateriaToJArray(IList<Materia> materia)
     {
-        return MemoryPackSerializer.Serialize(listings);
-    }
-
-    private static JArray ConvertMateriaToJArray(IEnumerable<Materia> materia)
-    {
+        if (materia is null || materia.Count == 0) return null;
         return materia
             .Select(m => new JObject { ["slot_id"] = m.SlotId, ["materia_id"] = m.MateriaId })
             .Aggregate(new JArray(), (array, o) =>
@@ -468,6 +447,13 @@ public class ListingStore : IListingStore
                 array.Add(o);
                 return array;
             });
+    }
+
+    private static List<Materia> ReadMateriaFromReader(NpgsqlDataReader reader)
+    {
+        return reader.IsDBNull(5)
+            ? new List<Materia>()
+            : ConvertMateriaFromJArray(reader.GetFieldValue<JArray>(5));
     }
 
     private static List<Materia> ConvertMateriaFromJArray(IEnumerable<JToken> materia)
