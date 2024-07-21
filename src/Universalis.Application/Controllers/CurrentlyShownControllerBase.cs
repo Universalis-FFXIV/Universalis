@@ -378,16 +378,16 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.FetchData");
 
-        var cs = await CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId },
+        var csTask = CurrentlyShown.Retrieve(new CurrentlyShownQuery { WorldId = worldId, ItemId = itemId },
             cancellationToken);
-        // var hTask = History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = nEntries },
-        //     cancellationToken);
-        // await Task.WhenAll(csTask, hTask);
+        var hTask = History.Retrieve(new HistoryQuery { WorldId = worldId, ItemId = itemId, Count = nEntries },
+            cancellationToken);
+        await Task.WhenAll(csTask, hTask);
 
-        // var cs = await csTask;
-        // var history = await hTask;
+        var cs = await csTask;
+        var history = await hTask;
 
-        return BuildPartialView(cs ?? new CurrentlyShown(), new History(), worldId, itemId);
+        return BuildPartialView(cs ?? new CurrentlyShown(), history ?? new History(), worldId, itemId);
     }
 
     private async Task<IEnumerable<CurrentlyShownView>> FetchDataBatched(IEnumerable<int> worlds,
@@ -401,13 +401,13 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
                 itemIds.Select(itemId => new WorldItemPair(worldId, itemId)))
             .ToList();
 
-        var cs = await CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = worldIds, ItemIds = itemIds },
+        var csTask = CurrentlyShown.RetrieveMany(new CurrentlyShownManyQuery { WorldIds = worldIds, ItemIds = itemIds },
             cancellationToken);
-        // var hTask = History.RetrieveMany(
-        //     new HistoryManyQuery { WorldIds = worldIds, ItemIds = itemIds, Count = nEntries }, cancellationToken);
-        // await Task.WhenAll(csTask, hTask);
+        var hTask = History.RetrieveMany(
+            new HistoryManyQuery { WorldIds = worldIds, ItemIds = itemIds, Count = nEntries }, cancellationToken);
+        await Task.WhenAll(csTask, hTask);
 
-        // var cs = await csTask;
+        var cs = await csTask;
         var csDict = CollectListings(cs);
         var history = Array.Empty<History>();
         var historyDict = CollectSales(history);
