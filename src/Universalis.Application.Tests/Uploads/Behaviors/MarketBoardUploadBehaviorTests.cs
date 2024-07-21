@@ -13,6 +13,7 @@ using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.DbAccess.Uploads;
 using Universalis.Entities.AccessControl;
 using Universalis.GameData;
+using Universalis.Tests;
 using Xunit;
 using Listing = Universalis.Application.Uploads.Schema.Listing;
 
@@ -36,7 +37,8 @@ public class MarketBoardUploadBehaviorTests
             var sockets = new MockSocketProcessor();
             var gameData = new MockGameDataProvider();
             var uploadLog = new MockUploadLogDbAccess();
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, gameData, null);
+            var logger = new LogFixture<MarketBoardUploadBehavior>();
+            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, gameData, null, logger);
 
             return new TestResources
             {
@@ -49,7 +51,7 @@ public class MarketBoardUploadBehaviorTests
             };
         }
     }
-    
+
     [Fact]
     public void Behavior_DoesNotRun_WithoutWorldId()
     {
@@ -61,7 +63,7 @@ public class MarketBoardUploadBehaviorTests
             Sales = new List<Sale>(),
             UploaderId = "5627384655756342554",
         };
-        
+
         Assert.False(test.Behavior.ShouldExecute(upload));
     }
 
@@ -76,7 +78,7 @@ public class MarketBoardUploadBehaviorTests
             Sales = new List<Sale>(),
             UploaderId = "5627384655756342554",
         };
-        
+
         Assert.False(test.Behavior.ShouldExecute(upload));
     }
 
@@ -90,15 +92,15 @@ public class MarketBoardUploadBehaviorTests
             ItemId = 5333,
             UploaderId = "5627384655756342554",
         };
-        
+
         Assert.False(test.Behavior.ShouldExecute(upload));
     }
-    
+
     [Fact]
     public void Behavior_DoesNotRun_WithZeroQuantitySales()
     {
         var test = TestResources.Create();
-        
+
         var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
         sales[0].Quantity = 0;
 
@@ -109,15 +111,15 @@ public class MarketBoardUploadBehaviorTests
             UploaderId = "5627384655756342554",
             Sales = sales,
         };
-        
+
         Assert.False(test.Behavior.ShouldExecute(upload));
     }
-    
+
     [Fact]
     public void Behavior_DoesNotRun_WithZeroQuantityListings()
     {
         var test = TestResources.Create();
-        
+
         var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
         listings[0].Quantity = 0;
 
@@ -130,12 +132,12 @@ public class MarketBoardUploadBehaviorTests
         };
         Assert.False(test.Behavior.ShouldExecute(upload));
     }
-    
+
     [Fact]
     public void Behavior_DoesNotRun_WithInvalidStackSizeSales()
     {
         var test = TestResources.Create();
-        
+
         var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
         sales[0].Quantity = 9999;
 
@@ -146,15 +148,15 @@ public class MarketBoardUploadBehaviorTests
             UploaderId = "5627384655756342554",
             Sales = sales,
         };
-        
+
         Assert.False(test.Behavior.ShouldExecute(upload));
     }
-    
+
     [Fact]
     public void Behavior_DoesNotRun_WithInvalidStackSizeListings()
     {
         var test = TestResources.Create();
-        
+
         var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
         listings[0].Quantity = 9999;
 
@@ -179,7 +181,7 @@ public class MarketBoardUploadBehaviorTests
             Listings = new List<Listing>(),
             Sales = new List<Sale>(),
         };
-        
+
         Assert.True(test.Behavior.ShouldExecute(upload));
     }
 
@@ -201,7 +203,7 @@ public class MarketBoardUploadBehaviorTests
             Sales = sales,
             UploaderId = "5627384655756342554",
         };
-        
+
         Assert.True(test.Behavior.ShouldExecute(upload));
 
         var result = await test.Behavior.Execute(source, upload);
@@ -249,7 +251,7 @@ public class MarketBoardUploadBehaviorTests
             Listings = listings,
             UploaderId = "5627384655756342554",
         };
-        
+
         Assert.True(test.Behavior.ShouldExecute(upload));
 
         var result = await test.Behavior.Execute(source, upload);
@@ -275,7 +277,7 @@ public class MarketBoardUploadBehaviorTests
 
         Assert.Null(history);
     }
-    
+
     [Fact]
     public async Task Behavior_Succeeds_Listings_WhenNone()
     {
@@ -290,7 +292,7 @@ public class MarketBoardUploadBehaviorTests
             Listings = new List<Listing>(),
             UploaderId = "5627384655756342554",
         };
-        
+
         Assert.True(test.Behavior.ShouldExecute(upload));
 
         var result = await test.Behavior.Execute(source, upload);
@@ -370,7 +372,7 @@ public class MarketBoardUploadBehaviorTests
             Sales = sales,
             UploaderId = "5627384655756342554",
         };
-        
+
         Assert.True(test.Behavior.ShouldExecute(upload));
 
         var result = await test.Behavior.Execute(source, upload);
@@ -384,7 +386,7 @@ public class MarketBoardUploadBehaviorTests
 
         Assert.All(history.Sales, listing => Assert.False(listing.Id == Guid.Empty));
     }
-    
+
     [Fact]
     public async Task Behavior_Adds_Sale_WorldIds()
     {
@@ -403,7 +405,7 @@ public class MarketBoardUploadBehaviorTests
             Sales = sales,
             UploaderId = "5627384655756342554",
         };
-        
+
         Assert.True(test.Behavior.ShouldExecute(upload));
 
         var result = await test.Behavior.Execute(source, upload);
@@ -417,7 +419,7 @@ public class MarketBoardUploadBehaviorTests
 
         Assert.All(history.Sales, listing => Assert.False(listing.WorldId == 0));
     }
-    
+
     [Fact]
     public async Task Behavior_Adds_Sale_ItemIds()
     {
@@ -436,7 +438,7 @@ public class MarketBoardUploadBehaviorTests
             Sales = sales,
             UploaderId = "5627384655756342554",
         };
-        
+
         Assert.True(test.Behavior.ShouldExecute(upload));
 
         var result = await test.Behavior.Execute(source, upload);

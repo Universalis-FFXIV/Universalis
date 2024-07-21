@@ -6,14 +6,13 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
-using Universalis.DbAccess.Uploads;
 using Universalis.Entities.AccessControl;
 using Universalis.Entities.MarketBoard;
-using Universalis.Entities.Uploads;
 using Universalis.GameData;
 using Listing = Universalis.Entities.MarketBoard.Listing;
 using Materia = Universalis.Entities.Materia;
@@ -27,17 +26,20 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     private readonly IHistoryDbAccess _historyDb;
     private readonly IGameDataProvider _gdp;
     private readonly IBus _bus;
+    private readonly ILogger<MarketBoardUploadBehavior> _logger;
 
     public MarketBoardUploadBehavior(
         ICurrentlyShownDbAccess currentlyShownDb,
         IHistoryDbAccess historyDb,
         IGameDataProvider gdp,
-        IBus bus)
+        IBus bus,
+        ILogger<MarketBoardUploadBehavior> logger)
     {
         _currentlyShownDb = currentlyShownDb;
         _historyDb = historyDb;
         _gdp = gdp;
         _bus = bus;
+        _logger = logger;
     }
 
     public bool ShouldExecute(UploadParameters parameters)
@@ -82,23 +84,6 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         activity?.AddTag("worldId", worldId);
         activity?.AddTag("itemId", itemId);
 
-        // Most uploads have both sales and listings
-        var currentlyShownTask = _currentlyShownDb.Retrieve(new CurrentlyShownQuery
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-        }, cancellationToken);
-        var existingHistoryTask = _historyDb.Retrieve(new HistoryQuery
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-            Count = parameters.Sales?.Count ?? 0,
-        }, cancellationToken);
-
-        await Task.WhenAll(currentlyShownTask, existingHistoryTask);
-        var existingCurrentlyShown = await currentlyShownTask;
-        var existingHistory = await existingHistoryTask;
-
         if (parameters.Sales != null)
         {
             if (parameters.Sales.Any(s =>
@@ -107,41 +92,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 return new BadRequestResult();
             }
 
-            var cleanSales = CleanUploadedSales(parameters.Sales, worldId, itemId, parameters.UploaderId);
-
-            var addedSales = new List<Sale>();
-
-            if (existingHistory == null)
-            {
-                addedSales.AddRange(cleanSales);
-                await _historyDb.Create(new History
-                {
-                    WorldId = worldId,
-                    ItemId = itemId,
-                    LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    Sales = cleanSales,
-                }, cancellationToken);
-            }
-            else
-            {
-                // Remove duplicates
-                addedSales.AddRange(cleanSales.Where(t => !existingHistory.Sales.Contains(t)));
-                await _historyDb.InsertSales(addedSales, new HistoryQuery
-                {
-                    WorldId = worldId,
-                    ItemId = itemId,
-                }, cancellationToken);
-            }
-
-            if (addedSales.Count > 0)
-            {
-                _ = _bus?.Publish(new SalesAdd
-                {
-                    WorldId = worldId,
-                    ItemId = itemId,
-                    Sales = addedSales.Select(Util.SaleToView).ToList(),
-                }, cancellationToken);
-            }
+            await HandleSales(parameters.Sales, itemId, worldId, parameters.UploaderId, cancellationToken);
         }
 
         if (parameters.Listings != null)
@@ -154,15 +105,54 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 return new BadRequestResult();
             }
 
-            var newListings = CleanUploadedListings(parameters.Listings, itemId, worldId, source.Name);
+            await HandleListings(parameters.Listings, itemId, worldId, source, cancellationToken);
+        }
 
-            var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
-            var addedListings = newListings.Where(l => !oldListings.Contains(l)).ToList();
-            var removedListings = oldListings.Where(l => !newListings.Contains(l)).ToList();
+        return null;
+    }
 
-            if (addedListings.Count > 0)
+    private async Task HandleListings(IList<Schema.Listing> uploadedListings, int itemId, int worldId,
+        ApiKey source, CancellationToken cancellationToken = default)
+    {
+        var newListings = CleanUploadedListings(uploadedListings, itemId, worldId, source.Name);
+
+        _ = PublishListingsToMessageBus(newListings, worldId, itemId, cancellationToken);
+
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var document = new CurrentlyShown
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+            LastUploadTimeUnixMilliseconds = now,
+            UploadSource = source.Name,
+            Listings = newListings,
+        };
+        await _currentlyShownDb.Update(document, new CurrentlyShownQuery
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+        }, cancellationToken);
+    }
+
+    private async Task PublishListingsToMessageBus(IList<Listing> listings, int worldId, int itemId,
+        CancellationToken cancellationToken = default)
+    {
+        if (_bus == null) return;
+
+        var existingCurrentlyShown = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+        }, cancellationToken);
+        var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
+        var addedListings = listings.Where(l => !oldListings.Contains(l)).ToList();
+        var removedListings = oldListings.Where(l => !listings.Contains(l)).ToList();
+
+        if (addedListings.Count > 0)
+        {
+            try
             {
-                _ = _bus?.Publish(new ListingsAdd
+                await _bus.Publish(new ListingsAdd
                 {
                     WorldId = worldId,
                     ItemId = itemId,
@@ -171,10 +161,17 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                         .ToList(),
                 }, cancellationToken);
             }
-
-            if (removedListings.Count > 0)
+            catch (Exception e)
             {
-                _ = _bus?.Publish(new ListingsRemove
+                _logger.LogError(e, "Failed to publish ListingsAdd event");
+            }
+        }
+
+        if (removedListings.Count > 0)
+        {
+            try
+            {
+                await _bus.Publish(new ListingsRemove
                 {
                     WorldId = worldId,
                     ItemId = itemId,
@@ -183,24 +180,71 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                         .ToList(),
                 }, cancellationToken);
             }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to publish ListingsRemove event");
+            }
+        }
+    }
 
-            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            var document = new CurrentlyShown
+    private async Task HandleSales(IList<Schema.Sale> uploadedSales, int itemId, int worldId, string uploaderId,
+        CancellationToken cancellationToken = default)
+    {
+        var cleanSales = CleanUploadedSales(uploadedSales, worldId, itemId, uploaderId);
+
+        var addedSales = new List<Sale>();
+
+        var existingHistory = await _historyDb.Retrieve(new HistoryQuery
+        {
+            WorldId = worldId,
+            ItemId = itemId,
+            Count = uploadedSales?.Count ?? 0,
+        }, cancellationToken);
+
+        if (existingHistory == null)
+        {
+            addedSales.AddRange(cleanSales);
+            await _historyDb.Create(new History
             {
                 WorldId = worldId,
                 ItemId = itemId,
-                LastUploadTimeUnixMilliseconds = now,
-                UploadSource = source.Name,
-                Listings = newListings,
-            };
-            await _currentlyShownDb.Update(document, new CurrentlyShownQuery
+                LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                Sales = cleanSales,
+            }, cancellationToken);
+        }
+        else
+        {
+            // Remove duplicates
+            addedSales.AddRange(cleanSales.Where(t => !existingHistory.Sales.Contains(t)));
+            await _historyDb.InsertSales(addedSales, new HistoryQuery
             {
                 WorldId = worldId,
                 ItemId = itemId,
             }, cancellationToken);
         }
 
-        return null;
+        _ = PublishSalesToMessageBus(addedSales, itemId, worldId, cancellationToken);
+    }
+
+    private async Task PublishSalesToMessageBus(IList<Sale> sales, int itemId, int worldId,
+        CancellationToken cancellationToken = default)
+    {
+        if (_bus != null && sales.Count > 0)
+        {
+            try
+            {
+                await _bus.Publish(new SalesAdd
+                {
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    Sales = sales.Select(Util.SaleToView).ToList(),
+                }, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to publish SalesAdd event");
+            }
+        }
     }
 
     private static List<Listing> CleanUploadedListings(IEnumerable<Schema.Listing> uploadedListings, int itemId,
