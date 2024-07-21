@@ -390,41 +390,45 @@ public class ListingStore : IListingStore
             return (true, localCacheResult);
         }
 
-        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
-        var cacheKey = ListingsKey(worldId, itemId);
+        // Disabled while checking for bugs
 
-        // Try to fetch the listings from the cache. SE.Redis will always skew heavily to one node or the other, but
-        // we want to load-balance more evenly
-        var replicaRatio = 1 / (1 + _cache.ReplicaCount); // 1 / (1 + 1 replica) = 0.5, 1 / (1 + 2 replicas) = 0.33...
-        var commandFlags = Random.Shared.NextDouble() > replicaRatio
-            ? CommandFlags.PreferReplica
-            : CommandFlags.PreferMaster;
+        // var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        // var cacheKey = ListingsKey(worldId, itemId);
+        //
+        // // Try to fetch the listings from the cache. SE.Redis will always skew heavily to one node or the other, but
+        // // we want to load-balance more evenly
+        // var replicaRatio = 1 / (1 + _cache.ReplicaCount); // 1 / (1 + 1 replica) = 0.5, 1 / (1 + 2 replicas) = 0.33...
+        // var commandFlags = Random.Shared.NextDouble() > replicaRatio
+        //     ? CommandFlags.PreferReplica
+        //     : CommandFlags.PreferMaster;
+        //
+        // try
+        // {
+        //     var cacheValue = await db.StringGetAsync(cacheKey, commandFlags)
+        //         .WaitAsync(TimeSpan.FromSeconds(1), cancellationToken);
+        //     if (cacheValue != RedisValue.Null)
+        //     {
+        //         CacheHits.Inc();
+        //         return (true, DeserializeListings(cacheValue));
+        //     }
+        //     else
+        //     {
+        //         CacheMisses.Inc();
+        //         return (false, null);
+        //     }
+        // }
+        // catch (TimeoutException)
+        // {
+        //     CacheTimeouts.Inc();
+        //     return (false, null);
+        // }
+        // catch (OperationCanceledException)
+        // {
+        //     CacheTimeouts.Inc();
+        //     return (false, null);
+        // }
 
-        try
-        {
-            var cacheValue = await db.StringGetAsync(cacheKey, commandFlags)
-                .WaitAsync(TimeSpan.FromSeconds(1), cancellationToken);
-            if (cacheValue != RedisValue.Null)
-            {
-                CacheHits.Inc();
-                return (true, DeserializeListings(cacheValue));
-            }
-            else
-            {
-                CacheMisses.Inc();
-                return (false, null);
-            }
-        }
-        catch (TimeoutException)
-        {
-            CacheTimeouts.Inc();
-            return (false, null);
-        }
-        catch (OperationCanceledException)
-        {
-            CacheTimeouts.Inc();
-            return (false, null);
-        }
+        return (false, null);
     }
 
     private async Task<IDictionary<WorldItemPair, IList<Listing>>> TryGetListingsFromCacheMulti(
@@ -447,61 +451,63 @@ public class ListingStore : IListingStore
             }
         }
 
-        if (results.Count == keys.Count)
-        {
-            // All values retrieved from local cache
-            return results;
-        }
+        // Disabled while checking for bugs
 
-        // Try to fetch the listings from the cache. SE.Redis will always skew heavily to one node or the other, but
-        // we want to load-balance more evenly
-        var replicaRatio = 1 / (1 + _cache.ReplicaCount); // 1 / (1 + 1 replica) = 0.5, 1 / (1 + 2 replicas) = 0.33...
-        var commandFlags = Random.Shared.NextDouble() > replicaRatio
-            ? CommandFlags.PreferReplica
-            : CommandFlags.PreferMaster;
-
-        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
-
-        // Request from Redis all keys we haven't already gotten from the local cache
-        var cacheKeys = keys
-            .Where(k => !results.ContainsKey(k))
-            .Select(ListingsKey)
-            .Select(k => new RedisKey(k))
-            .ToArray();
-        try
-        {
-            var resultsFromRemoteCache = new Dictionary<WorldItemPair, IList<Listing>>();
-            var cacheValues = await db.StringGetAsync(cacheKeys, commandFlags);
-            for (var i = 0; i < cacheValues.Length; i++)
-            {
-                var wip = keys[i];
-                var cacheValue = cacheValues[i];
-                if (cacheValue != RedisValue.Null)
-                {
-                    results[wip] = DeserializeListings(cacheValue);
-                    resultsFromRemoteCache[wip] = results[wip];
-                    CacheHits.Inc();
-                }
-                else
-                {
-                    CacheMisses.Inc();
-                }
-            }
-
-            // Store any new values from the remote cache in our local cache
-            foreach (var (wip, cachedListings) in resultsFromRemoteCache)
-            {
-                await StoreListingsInLocalCache(wip.WorldId, wip.ItemId, cachedListings, cancellationToken);
-            }
-        }
-        catch (TimeoutException)
-        {
-            CacheTimeouts.Inc();
-        }
-        catch (OperationCanceledException)
-        {
-            CacheTimeouts.Inc();
-        }
+        // if (results.Count == keys.Count)
+        // {
+        //     // All values retrieved from local cache
+        //     return results;
+        // }
+        //
+        // // Try to fetch the listings from the cache. SE.Redis will always skew heavily to one node or the other, but
+        // // we want to load-balance more evenly
+        // var replicaRatio = 1 / (1 + _cache.ReplicaCount); // 1 / (1 + 1 replica) = 0.5, 1 / (1 + 2 replicas) = 0.33...
+        // var commandFlags = Random.Shared.NextDouble() > replicaRatio
+        //     ? CommandFlags.PreferReplica
+        //     : CommandFlags.PreferMaster;
+        //
+        // var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        //
+        // // Request from Redis all keys we haven't already gotten from the local cache
+        // var cacheKeys = keys
+        //     .Where(k => !results.ContainsKey(k))
+        //     .Select(ListingsKey)
+        //     .Select(k => new RedisKey(k))
+        //     .ToArray();
+        // try
+        // {
+        //     var resultsFromRemoteCache = new Dictionary<WorldItemPair, IList<Listing>>();
+        //     var cacheValues = await db.StringGetAsync(cacheKeys, commandFlags);
+        //     for (var i = 0; i < cacheValues.Length; i++)
+        //     {
+        //         var wip = keys[i];
+        //         var cacheValue = cacheValues[i];
+        //         if (cacheValue != RedisValue.Null)
+        //         {
+        //             results[wip] = DeserializeListings(cacheValue);
+        //             resultsFromRemoteCache[wip] = results[wip];
+        //             CacheHits.Inc();
+        //         }
+        //         else
+        //         {
+        //             CacheMisses.Inc();
+        //         }
+        //     }
+        //
+        //     // Store any new values from the remote cache in our local cache
+        //     foreach (var (wip, cachedListings) in resultsFromRemoteCache)
+        //     {
+        //         await StoreListingsInLocalCache(wip.WorldId, wip.ItemId, cachedListings, cancellationToken);
+        //     }
+        // }
+        // catch (TimeoutException)
+        // {
+        //     CacheTimeouts.Inc();
+        // }
+        // catch (OperationCanceledException)
+        // {
+        //     CacheTimeouts.Inc();
+        // }
 
         return results;
     }
