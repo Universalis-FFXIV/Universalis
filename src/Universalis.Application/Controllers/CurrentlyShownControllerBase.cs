@@ -43,11 +43,11 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             worldDcRegion, worldIds, itemIds, nListings, nEntries, onlyHq, statsWithin, entriesWithin,
             itemsSerializableProperties, cancellationToken);
         var unresolvedItemIds = currentlyShownViews
-            .Where(cs => !cs.Item1)
+            .Where(cs => !GameData.MarketableItemIds().Contains(cs.Item2.ItemId))
             .Select(cs => cs.Item2.ItemId)
             .ToArray();
         var resolvedItems = currentlyShownViews
-            .Where(cs => cs.Item1)
+            .Where(cs => GameData.MarketableItemIds().Contains(cs.Item2.ItemId))
             .Select(cs => cs.Item2)
             .ToList();
         return (unresolvedItemIds, resolvedItems);

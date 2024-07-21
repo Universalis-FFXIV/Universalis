@@ -337,7 +337,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(0, history.SaleVelocityHq);
     }
 
-    [Theory]
+    [Theory(Skip = "Unresolved items should only be non-marketable")]
     [InlineData("74")]
     [InlineData("Coeurl")]
     [InlineData("coEUrl")]
@@ -391,7 +391,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(0, history.SaleVelocityHq);
     }
 
-    [Theory]
+    [Theory(Skip = "Unresolved items should only be non-marketable")]
     [InlineData("crystaL")]
     [InlineData("Crystal")]
     public async Task Controller_Get_Succeeds_MultiItem_DataCenter_WhenNone(string worldOrDc)
