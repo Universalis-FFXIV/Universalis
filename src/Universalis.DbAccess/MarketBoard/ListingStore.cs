@@ -459,7 +459,21 @@ public class ListingStore : IListingStore
     private static List<Materia> ConvertMateriaFromJArray(IEnumerable<JToken> materia)
     {
         return materia
-            .Select(m => new Materia { SlotId = m["slot_id"].Value<int>(), MateriaId = m["materia_id"].Value<int>() })
+            .Select((m, i) =>
+            {
+                try
+                {
+                    return new Materia { SlotId = m["slot_id"].Value<int>(), MateriaId = m["materia_id"].Value<int>() };
+                }
+                catch (ArgumentException)
+                {
+                    return new Materia
+                    {
+                        SlotId = m[i]["slot_id"].Value<int>(),
+                        MateriaId = m[i]["materia_id"].Value<int>(),
+                    };
+                }
+            })
             .ToList();
     }
 }
