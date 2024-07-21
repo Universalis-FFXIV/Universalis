@@ -201,7 +201,7 @@ public class ListingStore : IListingStore
                     WorldId = reader.GetInt32(2),
                     Hq = reader.GetBoolean(3),
                     OnMannequin = reader.GetBoolean(4),
-                    Materia = ReadMateriaFromReader(reader),
+                    Materia = ReadMateriaFromReader(reader, query.WorldId, query.ItemId),
                     PricePerUnit = reader.GetInt32(6),
                     Quantity = reader.GetInt32(7),
                     DyeId = reader.GetInt32(8),
@@ -305,7 +305,7 @@ public class ListingStore : IListingStore
                         WorldId = worldId,
                         Hq = reader.GetBoolean(3),
                         OnMannequin = reader.GetBoolean(4),
-                        Materia = ReadMateriaFromReader(reader),
+                        Materia = ReadMateriaFromReader(reader, worldId, itemId),
                         PricePerUnit = reader.GetInt32(6),
                         Quantity = reader.GetInt32(7),
                         DyeId = reader.GetInt32(8),
@@ -449,14 +449,14 @@ public class ListingStore : IListingStore
             });
     }
 
-    private static List<Materia> ReadMateriaFromReader(NpgsqlDataReader reader)
+    private List<Materia> ReadMateriaFromReader(NpgsqlDataReader reader, int worldId, int itemId)
     {
         return reader.IsDBNull(5)
             ? new List<Materia>()
-            : ConvertMateriaFromJArray(reader.GetFieldValue<JArray>(5));
+            : ConvertMateriaFromJArray(reader.GetFieldValue<JArray>(5), worldId, itemId);
     }
 
-    private static List<Materia> ConvertMateriaFromJArray(IEnumerable<JToken> materia)
+    private List<Materia> ConvertMateriaFromJArray(IEnumerable<JToken> materia, int worldId, int itemId)
     {
         return materia
             .Select((m, i) =>
@@ -465,15 +465,14 @@ public class ListingStore : IListingStore
                 {
                     return new Materia { SlotId = m["slot_id"].Value<int>(), MateriaId = m["materia_id"].Value<int>() };
                 }
-                catch (ArgumentException)
+                catch (ArgumentException e)
                 {
-                    return new Materia
-                    {
-                        SlotId = m[i]["slot_id"].Value<int>(),
-                        MateriaId = m[i]["materia_id"].Value<int>(),
-                    };
+                    // Unsure why this happens, possibly inserted bad data at some point while debugging
+                    _logger.LogError(e, "Failed to parse materia for world={}, item={}", worldId, itemId);
+                    return null;
                 }
             })
+            .Where(m => m is not null)
             .ToList();
     }
 }
