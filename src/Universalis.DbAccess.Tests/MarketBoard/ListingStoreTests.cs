@@ -212,6 +212,66 @@ public class ListingStoreTests
             Assert.False(expectedListings.ContainsKey(i));
         }
     }
+    
+#if DEBUG
+    [Fact]
+#endif
+    public async Task ReplaceLiveRetrieveManyLive_Cached_Works()
+    {
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        var expectedListings = new Dictionary<int, IList<Listing>>();
+        for (var i = 100; i < 105; i++)
+        {
+            var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, i);
+            await store.ReplaceLive(currentlyShown.Listings);
+            expectedListings[i] = currentlyShown.Listings;
+        }
+        
+        // Also store some more data that we don't want to retrieve to make sure we're not being too lenient
+        for (var i = 106; i < 110; i++)
+        {
+            var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, i);
+            await store.ReplaceLive(currentlyShown.Listings);
+        }
+
+        await store.RetrieveManyLive(new ListingManyQuery
+            { ItemIds = Enumerable.Range(100, 105), WorldIds = new[] { 93 } }); // Populate the cache
+        var results = await store.RetrieveManyLive(new ListingManyQuery
+            { ItemIds = Enumerable.Range(100, 105), WorldIds = new[] { 93 } });
+
+        Assert.NotNull(results);
+        for (var i = 100; i < 105; i++)
+        {
+            Assert.All(expectedListings[i].OrderBy(l => l.PricePerUnit).Zip(results[new WorldItemPair(93, i)]), pair =>
+            {
+                var (expected, actual) = pair;
+                Assert.Equal(expected.ListingId, actual.ListingId);
+                Assert.Equal(expected.ItemId, actual.ItemId);
+                Assert.Equal(expected.WorldId, actual.WorldId);
+                Assert.Equal(expected.Hq, actual.Hq);
+                Assert.Equal(expected.OnMannequin, actual.OnMannequin);
+                Assert.Equal(expected.PricePerUnit, actual.PricePerUnit);
+                Assert.Equal(expected.Quantity, actual.Quantity);
+                Assert.Equal(expected.RetainerName, actual.RetainerName);
+                Assert.Equal(expected.RetainerId, actual.RetainerId);
+                Assert.Equal(expected.RetainerCityId, actual.RetainerCityId);
+                Assert.Equal(expected.DyeId, actual.DyeId);
+                Assert.Equal(expected.CreatorId, actual.CreatorId);
+                Assert.Equal(expected.CreatorName, actual.CreatorName);
+                Assert.Equal(new DateTimeOffset(expected.LastReviewTime).ToUnixTimeSeconds(),
+                    new DateTimeOffset(actual.LastReviewTime).ToUnixTimeSeconds());
+                Assert.Equal(DateTimeKind.Utc, actual.LastReviewTime.Kind);
+                Assert.Equal(expected.SellerId, actual.SellerId);
+                Assert.Equal(DateTimeKind.Utc, actual.UpdatedAt.Kind);
+                Assert.Equal(expected.Source, actual.Source);
+            });
+        }
+
+        for (var i = 106; i < 110; i++)
+        {
+            Assert.False(expectedListings.ContainsKey(i));
+        }
+    }
 
 #if DEBUG
     [Fact]
