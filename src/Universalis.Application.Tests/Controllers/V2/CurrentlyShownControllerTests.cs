@@ -45,7 +45,7 @@ public class CurrentlyShownControllerTests
         }
     }
 
-    [Theory(Skip = "Testing without history")]
+    [Theory]
     [InlineData("74")]
     [InlineData("Coeurl")]
     [InlineData("coEUrl")]
@@ -66,7 +66,7 @@ public class CurrentlyShownControllerTests
         AssertCurrentlyShownValidWorld(document, sales, currentlyShown, test.GameData);
     }
 
-    [Theory(Skip = "Testing without history")]
+    [Theory]
     [InlineData("74")]
     [InlineData("Coeurl")]
     [InlineData("coEUrl")]
@@ -103,7 +103,7 @@ public class CurrentlyShownControllerTests
             currentlyShown.Items.First(item => item.Key == document2.ItemId).Value, test.GameData);
     }
 
-    [Theory(Skip = "Testing without history")]
+    [Theory]
     [InlineData("crystaL")]
     [InlineData("Crystal")]
     public async Task Controller_Get_Succeeds_SingleItem_DataCenter(string worldOrDc)
@@ -145,7 +145,7 @@ public class CurrentlyShownControllerTests
             worldOrDc);
     }
 
-    [Theory(Skip = "Testing without history")]
+    [Theory]
     [InlineData("crystaL")]
     [InlineData("Crystal")]
     public async Task Controller_Get_Succeeds_MultiItem_DataCenter(string worldOrDc)
@@ -355,7 +355,7 @@ public class CurrentlyShownControllerTests
         Assert.Null(history.WorldId);
     }
 
-    [Fact(Skip = "Testing without history")]
+    [Fact]
     public async Task Controller_Get_Succeeds_SingleItem_Fields()
     {
         var test = TestResources.Create();

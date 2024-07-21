@@ -43,7 +43,7 @@ public class CurrentlyShownControllerTests
         }
     }
 
-    [Theory(Skip = "Testing without history")]
+    [Theory]
     [InlineData("74")]
     [InlineData("Coeurl")]
     [InlineData("coEUrl")]
@@ -112,7 +112,7 @@ public class CurrentlyShownControllerTests
         Assert.True(currentlyShown.Listings.Count > 1);
     }
 
-    [Theory(Skip = "Testing without history")]
+    [Theory]
     [InlineData("74")]
     [InlineData("Coeurl")]
     [InlineData("coEUrl")]
@@ -147,7 +147,7 @@ public class CurrentlyShownControllerTests
         AssertCurrentlyShownValidWorld(document2, sales2, currentlyShown.Items.First(item => item.ItemId == document2.ItemId), test.GameData);
     }
 
-    [Theory(Skip = "Testing without history")]
+    [Theory]
     [InlineData("crystaL")]
     [InlineData("Crystal")]
     public async Task Controller_Get_Succeeds_SingleItem_DataCenter(string worldOrDc)
@@ -187,7 +187,7 @@ public class CurrentlyShownControllerTests
             worldOrDc);
     }
 
-    [Theory(Skip = "Testing without history")]
+    [Theory]
     [InlineData("crystaL")]
     [InlineData("Crystal")]
     public async Task Controller_Get_Succeeds_SingleItem_DataCenter_When_CurrentlyShownStore_Fails(string worldOrDc)
@@ -223,7 +223,7 @@ public class CurrentlyShownControllerTests
             worldOrDc);
     }
 
-    [Theory(Skip = "Testing without history")]
+    [Theory]
     [InlineData("crystaL")]
     [InlineData("Crystal")]
     public async Task Controller_Get_Succeeds_SingleItem_DataCenter_When_History_Fails(string worldOrDc)
@@ -259,7 +259,7 @@ public class CurrentlyShownControllerTests
             worldOrDc);
     }
     
-    [Theory(Skip = "Testing without history")]
+    [Theory]
     [InlineData("crystaL")]
     [InlineData("Crystal")]
     public async Task Controller_Get_Succeeds_MultiItem_DataCenter(string worldOrDc)
@@ -473,7 +473,7 @@ public class CurrentlyShownControllerTests
         Assert.Null(history.WorldId);
     }
 
-    [Fact(Skip = "Testing without history")]
+    [Fact]
     public async Task Controller_Get_Succeeds_SingleItem_Fields()
     {
         var test = TestResources.Create();

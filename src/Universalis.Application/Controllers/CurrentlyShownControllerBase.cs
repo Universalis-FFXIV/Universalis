@@ -171,9 +171,10 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         var dataByItemId = data
             .GroupBy(view => view.ItemId)
             .Select(itemIdViews => CollateWorldViews(itemIdViews, worldDcRegion, worldIds, itemIdViews.Key, nListings,
-                nEntries, onlyHq, statsWithin, entriesWithin, fields));
+                nEntries, onlyHq, statsWithin, entriesWithin, fields))
+            .ToArray();
 
-        return dataByItemId.ToArray();
+        return dataByItemId;
     }
 
     /// <summary>
@@ -409,7 +410,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
         var cs = await csTask;
         var csDict = CollectListings(cs);
-        var history = Array.Empty<History>();
+        var history = await hTask;
         var historyDict = CollectSales(history);
 
         return worldItemPairs
