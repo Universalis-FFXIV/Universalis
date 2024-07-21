@@ -55,7 +55,7 @@ public class ListingStore : IListingStore
             Buckets = Histogram.ExponentialBuckets(1, 2, 16),
         });
 
-    private static readonly TimeSpan ListingsCacheTime = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan ListingsCacheTime = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan LocalListingsCacheTime = TimeSpan.FromMinutes(5);
 
     private readonly ILogger<ListingStore> _logger;
