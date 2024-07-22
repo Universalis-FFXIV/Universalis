@@ -113,10 +113,10 @@ public class ListingStore : IListingStore
                 batch.BatchCommands.Add(new NpgsqlBatchCommand(
                     """
                     INSERT INTO listing
-                    (listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, creator_id,
-                     creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, seller_id, uploaded_at,
+                    (listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id,
+                     creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, uploaded_at,
                      source)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
                     ON CONFLICT (listing_id) DO NOTHING;
                     """)
                 {
@@ -131,13 +131,11 @@ public class ListingStore : IListingStore
                         new NpgsqlParameter<int> { TypedValue = listing.PricePerUnit },
                         new NpgsqlParameter<int> { TypedValue = listing.Quantity },
                         new NpgsqlParameter<int> { TypedValue = listing.DyeId },
-                        new NpgsqlParameter<string> { TypedValue = listing.CreatorId },
                         new NpgsqlParameter<string> { TypedValue = listing.CreatorName },
                         new NpgsqlParameter<DateTime> { TypedValue = listing.LastReviewTime },
                         new NpgsqlParameter<string> { TypedValue = listing.RetainerId },
                         new NpgsqlParameter<string> { TypedValue = listing.RetainerName },
                         new NpgsqlParameter<int> { TypedValue = listing.RetainerCityId },
-                        new NpgsqlParameter<string> { TypedValue = listing.SellerId },
                         new NpgsqlParameter<DateTime> { TypedValue = uploadedAt.UtcDateTime },
                         new NpgsqlParameter<string> { TypedValue = listing.Source },
                     },
@@ -147,6 +145,7 @@ public class ListingStore : IListingStore
             try
             {
                 rowsUpdated += await batch.ExecuteNonQueryAsync(cancellationToken);
+                await _easyCachingProvider.RemoveAsync(ListingsKey(worldID, itemID), cancellationToken);
             }
             catch (Exception e)
             {
@@ -176,9 +175,9 @@ public class ListingStore : IListingStore
         await using var command = _dataSource.CreateCommand(
             """
             SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
-                   t.unit_price, t.quantity, t.dye_id, t.creator_id, t.creator_name,
+                   t.unit_price, t.quantity, t.dye_id, t.creator_name,
                    t.last_review_time, t.retainer_id, t.retainer_name, t.retainer_city_id,
-                   t.seller_id, t.uploaded_at, t.source
+                   t.uploaded_at, t.source
             FROM listing t
             WHERE t.item_id = $1 AND t.world_id = $2
             ORDER BY unit_price
@@ -205,15 +204,15 @@ public class ListingStore : IListingStore
                     PricePerUnit = reader.GetInt32(6),
                     Quantity = reader.GetInt32(7),
                     DyeId = reader.GetInt32(8),
-                    CreatorId = string.Intern(reader.GetString(9)),
-                    CreatorName = reader.GetString(10),
-                    LastReviewTime = reader.GetDateTime(11),
-                    RetainerId = string.Intern(reader.GetString(12)),
-                    RetainerName = reader.GetString(13),
-                    RetainerCityId = reader.GetInt32(14),
-                    SellerId = string.Intern(reader.GetString(15)),
-                    UpdatedAt = reader.GetDateTime(16),
-                    Source = string.Intern(reader.GetString(17)),
+                    CreatorId = null,
+                    CreatorName = reader.GetString(9),
+                    LastReviewTime = reader.GetDateTime(10),
+                    RetainerId = string.Intern(reader.GetString(11)),
+                    RetainerName = reader.GetString(12),
+                    RetainerCityId = reader.GetInt32(13),
+                    SellerId = null,
+                    UpdatedAt = reader.GetDateTime(14),
+                    Source = string.Intern(reader.GetString(15)),
                 });
             }
 
@@ -263,9 +262,9 @@ public class ListingStore : IListingStore
         await using var command = _dataSource.CreateCommand(
             """
             SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
-                   t.unit_price, t.quantity, t.dye_id, t.creator_id, t.creator_name,
+                   t.unit_price, t.quantity, t.dye_id, t.creator_name,
                    t.last_review_time, t.retainer_id, t.retainer_name, t.retainer_city_id,
-                   t.seller_id, t.uploaded_at, t.source
+                   t.uploaded_at, t.source
             FROM listing t
             WHERE t.item_id = ANY($1) AND t.world_id = ANY($2)
             """);
@@ -311,16 +310,16 @@ public class ListingStore : IListingStore
                         DyeId = reader.GetInt32(8),
                         // Large hashed IDs are interned as they will likely be reused when
                         // the same item is requested again
-                        CreatorId = string.Intern(reader.GetString(9)),
-                        CreatorName = reader.GetString(10),
-                        LastReviewTime = reader.GetDateTime(11),
-                        RetainerId = string.Intern(reader.GetString(12)),
-                        RetainerName = reader.GetString(13),
-                        RetainerCityId = reader.GetInt32(14),
-                        SellerId = string.Intern(reader.GetString(15)),
-                        UpdatedAt = reader.GetDateTime(16),
+                        CreatorId = null,
+                        CreatorName = reader.GetString(9),
+                        LastReviewTime = reader.GetDateTime(10),
+                        RetainerId = string.Intern(reader.GetString(11)),
+                        RetainerName = reader.GetString(12),
+                        RetainerCityId = reader.GetInt32(13),
+                        SellerId = null,
+                        UpdatedAt = reader.GetDateTime(14),
                         // Small strings, but with only a few possible values
-                        Source = string.Intern(reader.GetString(17)),
+                        Source = string.Intern(reader.GetString(15)),
                     });
                 }
             }
