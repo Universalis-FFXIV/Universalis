@@ -148,25 +148,6 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var addedListings = listings.Where(l => !oldListings.Contains(l)).ToList();
         var removedListings = oldListings.Where(l => !listings.Contains(l)).ToList();
 
-        if (addedListings.Count > 0)
-        {
-            try
-            {
-                await _bus.Publish(new ListingsAdd
-                {
-                    WorldId = worldId,
-                    ItemId = itemId,
-                    Listings = addedListings
-                        .Select(Util.ListingToView)
-                        .ToList(),
-                }, cancellationToken);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failed to publish ListingsAdd event");
-            }
-        }
-
         if (removedListings.Count > 0)
         {
             try
@@ -183,6 +164,25 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             catch (Exception e)
             {
                 _logger.LogError(e, "Failed to publish ListingsRemove event");
+            }
+        }
+
+        if (addedListings.Count > 0)
+        {
+            try
+            {
+                await _bus.Publish(new ListingsAdd
+                {
+                    WorldId = worldId,
+                    ItemId = itemId,
+                    Listings = addedListings
+                        .Select(Util.ListingToView)
+                        .ToList(),
+                }, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to publish ListingsAdd event");
             }
         }
     }
