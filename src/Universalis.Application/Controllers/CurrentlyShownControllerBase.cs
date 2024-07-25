@@ -44,11 +44,11 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             itemsSerializableProperties, cancellationToken);
         var unresolvedItemIds = currentlyShownViews
             .Where(cs => !GameData.MarketableItemIds().Contains(cs.Item2.ItemId))
-            .Select(cs => cs.Item2.ItemId)
+            .Select(static cs => cs.Item2.ItemId)
             .ToArray();
         var resolvedItems = currentlyShownViews
             .Where(cs => GameData.MarketableItemIds().Contains(cs.Item2.ItemId))
-            .Select(cs => cs.Item2)
+            .Select(static cs => cs.Item2)
             .ToList();
         return (unresolvedItemIds, resolvedItems);
     }
@@ -169,7 +169,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
         var data = await FetchDataBatched(worldIds, itemIds, nEntries, cancellationToken);
         var dataByItemId = data
-            .GroupBy(view => view.ItemId)
+            .GroupBy(static view => view.ItemId)
             .Select(itemIdViews => CollateWorldViews(itemIdViews, worldDcRegion, worldIds, itemIdViews.Key, nListings,
                 nEntries, onlyHq, statsWithin, entriesWithin, fields))
             .ToArray();
@@ -274,18 +274,18 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
         long statsWithin,
         bool? onlyHq)
     {
-        currentlyShown.Listings.Sort((a, b) => a.PricePerUnit - b.PricePerUnit);
-        currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+        var sortedListings = new List<ListingView>(currentlyShown.Listings);
+        sortedListings.Sort((a, b) => a.PricePerUnit - b.PricePerUnit);
+        var sortedSales = new List<SaleView>(currentlyShown.RecentHistory);
+        sortedSales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
 
-        var nqListings = currentlyShown.Listings.Where(l => !l.Hq).ToList();
-        var hqListings = currentlyShown.Listings.Where(l => l.Hq).ToList();
-        var nqSales = currentlyShown.RecentHistory.Where(s => !s.Hq).ToList();
-        var hqSales = currentlyShown.RecentHistory.Where(s => s.Hq).ToList();
+        var nqListings = sortedListings.Where(static l => !l.Hq).ToList();
+        var hqListings = sortedListings.Where(static l => l.Hq).ToList();
+        var nqSales = sortedSales.Where(static s => !s.Hq).ToList();
+        var hqSales = sortedSales.Where(static s => s.Hq).ToList();
 
-        var requestedListings = currentlyShown.Listings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings)
-            .ToList();
-        var requestedHistory = currentlyShown.RecentHistory.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nSales)
-            .ToList();
+        var requestedListings = sortedListings.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nListings).ToList();
+        var requestedHistory = sortedSales.Where(l => onlyHq == null || onlyHq == l.Hq).Take(nSales).ToList();
 
         return new CurrentlyShownView
         {
@@ -318,8 +318,8 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             WorldUploadTimes = worldDcRegion.IsWorld ? null : worldUploadTimes,
             ListingsCount = requestedListings.Count,
             RecentHistoryCount = requestedHistory.Count,
-            UnitsForSale = requestedListings.Sum(listing => listing.Quantity),
-            UnitsSold = requestedHistory.Sum(sale => sale.Quantity),
+            UnitsForSale = requestedListings.Sum(static listing => listing.Quantity),
+            UnitsSold = requestedHistory.Sum(static sale => sale.Quantity),
             SerializableProperties = BuildSerializableProperties(fields),
         };
     }
@@ -424,7 +424,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     private static Dictionary<WorldItemPair, CurrentlyShown> CollectListings(IEnumerable<CurrentlyShown> listings)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.CollectListings");
-        var result = listings.ToDictionary(o => new WorldItemPair(o.WorldId, o.ItemId));
+        var result = listings.ToDictionary(static o => new WorldItemPair(o.WorldId, o.ItemId));
         activity?.AddTag("db.resultCount", result.Count);
         return result;
     }
@@ -432,7 +432,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     private static Dictionary<WorldItemPair, History> CollectSales(IEnumerable<History> sales)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.CollectSales");
-        var result = sales.ToDictionary(o => new WorldItemPair(o.WorldId, o.ItemId));
+        var result = sales.ToDictionary(static o => new WorldItemPair(o.WorldId, o.ItemId));
         activity?.AddTag("db.resultCount", result.Count);
         return result;
     }
@@ -452,14 +452,14 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             LastUploadTimeUnixMilliseconds = lastUploadTime,
             Listings = (currentlyShown.Listings ?? Enumerable.Empty<Listing>())
                 .Select(Util.ListingToView)
-                .Where(s => s.PricePerUnit > 0)
-                .Where(s => s.Quantity > 0)
+                .Where(static s => s.PricePerUnit > 0)
+                .Where(static s => s.Quantity > 0)
                 .ToList(),
             RecentHistory = (history.Sales ?? Enumerable.Empty<Sale>())
                 .Select(Util.SaleToView)
-                .Where(s => s.PricePerUnit > 0)
-                .Where(s => s.Quantity > 0)
-                .Where(s => s.TimestampUnixSeconds > 0)
+                .Where(static s => s.PricePerUnit > 0)
+                .Where(static s => s.Quantity > 0)
+                .Where(static s => s.TimestampUnixSeconds > 0)
                 .ToList(),
         };
     }
@@ -479,12 +479,12 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
     private static int GetMinPricePerUnit<TPriceable>(IList<TPriceable> items) where TPriceable : IPriceable
     {
-        return !items.Any() ? 0 : items.Select(s => s.PricePerUnit).Min();
+        return !items.Any() ? 0 : items.Select(static s => s.PricePerUnit).Min();
     }
 
     private static int GetMaxPricePerUnit<TPriceable>(IList<TPriceable> items) where TPriceable : IPriceable
     {
-        return !items.Any() ? 0 : items.Select(s => s.PricePerUnit).Max();
+        return !items.Any() ? 0 : items.Select(static s => s.PricePerUnit).Max();
     }
 
     private static float GetAveragePricePerUnit<TPriceable>(IList<TPriceable> items) where TPriceable : IPriceable
@@ -494,19 +494,19 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             return 0;
         }
 
-        return items.Select(s => (float)s.PricePerUnit).Average();
+        return items.Select(static s => (float)s.PricePerUnit).Average();
     }
 
     private static float GetSaleVelocity(IEnumerable<SaleView> sales, long unixNowMs, long statsWithinMs)
     {
         return Statistics.VelocityPerDay(sales
-            .Select(s => (s.TimestampUnixSeconds * 1000, s.Quantity)), unixNowMs, statsWithinMs);
+            .Select(static s => (s.TimestampUnixSeconds * 1000, s.Quantity)), unixNowMs, statsWithinMs);
     }
 
     private static IDictionary<int, int> GetListingsDistribution(IEnumerable<ListingView> listings)
     {
         return Statistics.GetDistribution(listings
-            .Select(s => s.Quantity));
+            .Select(static s => s.Quantity));
     }
 
     /// <summary>

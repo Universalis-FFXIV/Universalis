@@ -422,19 +422,21 @@ public class CurrentlyShownControllerTests
         Assert.NotNull(currentlyShown.Listings);
         Assert.NotNull(currentlyShown.RecentHistory);
 
-        currentlyShown.Listings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
-        currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+        var sortedListings = new List<ListingView>(currentlyShown.Listings);
+        sortedListings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
+        var sortedSales = new List<SaleView>(currentlyShown.RecentHistory);
+        sortedSales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
         document.Listings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
         sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
-        Assert.All(currentlyShown.Listings.Select(l => (object)l.WorldId), Assert.Null);
-        Assert.All(currentlyShown.Listings.Select(l => l.WorldName), Assert.Null);
+        Assert.All(sortedListings.Select(l => (object)l.WorldId), Assert.Null);
+        Assert.All(sortedListings.Select(l => l.WorldName), Assert.Null);
 
-        Assert.All(currentlyShown.RecentHistory.Select(s => (object)s.WorldId), Assert.Null);
-        Assert.All(currentlyShown.RecentHistory.Select(s => s.WorldName), Assert.Null);
+        Assert.All(sortedSales.Select(s => (object)s.WorldId), Assert.Null);
+        Assert.All(sortedSales.Select(s => s.WorldName), Assert.Null);
 
-        var nqListings = currentlyShown.Listings.Where(s => !s.Hq).ToList();
-        var hqListings = currentlyShown.Listings.Where(s => s.Hq).ToList();
+        var nqListings = sortedListings.Where(s => !s.Hq).ToList();
+        var hqListings = sortedListings.Where(s => s.Hq).ToList();
 
         Assert.True(currentlyShown.CurrentAveragePrice > 0);
         Assert.True(currentlyShown.CurrentAveragePriceNq > 0);
@@ -444,7 +446,7 @@ public class CurrentlyShownControllerTests
         Assert.True(currentlyShown.AveragePriceNq > 0);
         Assert.True(currentlyShown.AveragePriceHq > 0);
 
-        var minPrice = currentlyShown.Listings.Min(l => l.PricePerUnit);
+        var minPrice = sortedListings.Min(l => l.PricePerUnit);
         var minPriceNq = nqListings.Min(l => l.PricePerUnit);
         var minPriceHq = hqListings.Min(l => l.PricePerUnit);
 
@@ -452,7 +454,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(minPriceNq, currentlyShown.MinPriceNq);
         Assert.Equal(minPriceHq, currentlyShown.MinPriceHq);
 
-        var maxPrice = currentlyShown.Listings.Max(l => l.PricePerUnit);
+        var maxPrice = sortedListings.Max(l => l.PricePerUnit);
         var maxPriceNq = nqListings.Max(l => l.PricePerUnit);
         var maxPriceHq = hqListings.Max(l => l.PricePerUnit);
 
@@ -465,7 +467,7 @@ public class CurrentlyShownControllerTests
         Assert.True(currentlyShown.SaleVelocityHq > 0);
 
         var stackSizeHistogram =
-            new SortedDictionary<int, int>(Statistics.GetDistribution(currentlyShown.Listings.Select(l => l.Quantity)));
+            new SortedDictionary<int, int>(Statistics.GetDistribution(sortedListings.Select(l => l.Quantity)));
         var stackSizeHistogramNq =
             new SortedDictionary<int, int>(Statistics.GetDistribution(nqListings.Select(l => l.Quantity)));
         var stackSizeHistogramHq =
@@ -475,9 +477,9 @@ public class CurrentlyShownControllerTests
         Assert.Equal(stackSizeHistogramNq, currentlyShown.StackSizeHistogramNq);
         Assert.Equal(stackSizeHistogramHq, currentlyShown.StackSizeHistogramHq);
 
-        Assert.Equal(document.Listings.Take(currentlyShown.Listings.Count).Sum(listing => listing.Quantity),
+        Assert.Equal(document.Listings.Take(sortedListings.Count).Sum(listing => listing.Quantity),
             currentlyShown.UnitsForSale);
-        Assert.Equal(sales.Take(currentlyShown.RecentHistory.Count).Sum(sale => sale.Quantity),
+        Assert.Equal(sales.Take(sortedSales.Count).Sum(sale => sale.Quantity),
             currentlyShown.UnitsSold);
     }
 
@@ -493,16 +495,18 @@ public class CurrentlyShownControllerTests
         Assert.NotNull(currentlyShown.Listings);
         Assert.NotNull(currentlyShown.RecentHistory);
 
-        currentlyShown.Listings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
-        currentlyShown.RecentHistory.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
+        var sortedListings = new List<ListingView>(currentlyShown.Listings);
+        sortedListings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
+        var sortedSales = new List<SaleView>(currentlyShown.RecentHistory);
+        sortedSales.Sort((a, b) => (int)b.TimestampUnixSeconds - (int)a.TimestampUnixSeconds);
         anyWorldDocument.Listings.Sort((a, b) => b.PricePerUnit - a.PricePerUnit);
         sales.Sort((a, b) => (int)(b.SaleTime - a.SaleTime).TotalMilliseconds);
 
-        Assert.All(currentlyShown.Listings.Select(l => (object)l.WorldId), Assert.NotNull);
-        Assert.All(currentlyShown.Listings.Select(l => l.WorldName), Assert.NotNull);
+        Assert.All(sortedListings.Select(l => (object)l.WorldId), Assert.NotNull);
+        Assert.All(sortedListings.Select(l => l.WorldName), Assert.NotNull);
 
-        Assert.All(currentlyShown.RecentHistory.Select(s => (object)s.WorldId), Assert.NotNull);
-        Assert.All(currentlyShown.RecentHistory.Select(s => s.WorldName), Assert.NotNull);
+        Assert.All(sortedSales.Select(s => (object)s.WorldId), Assert.NotNull);
+        Assert.All(sortedSales.Select(s => s.WorldName), Assert.NotNull);
 
         var nqListings = anyWorldDocument.Listings.Where(s => !s.Hq).ToList();
         var hqListings = anyWorldDocument.Listings.Where(s => s.Hq).ToList();
