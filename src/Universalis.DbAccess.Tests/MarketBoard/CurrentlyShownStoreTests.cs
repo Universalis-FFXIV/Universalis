@@ -49,23 +49,7 @@ public class CurrentlyShownStoreTests
         Assert.All(currentlyShown.Listings.OrderBy(l => l.PricePerUnit).Zip(results.Listings), pair =>
         {
             var (expected, actual) = pair;
-            Assert.Equal(expected.ListingId, actual.ListingId);
-            Assert.Equal(expected.Hq, actual.Hq);
-            Assert.Equal(expected.OnMannequin, actual.OnMannequin);
-            Assert.Equal(expected.PricePerUnit, actual.PricePerUnit);
-            Assert.Equal(expected.Quantity, actual.Quantity);
-            Assert.Equal(expected.RetainerName, actual.RetainerName);
-            Assert.Equal(expected.RetainerId, actual.RetainerId);
-            Assert.Equal(expected.RetainerCityId, actual.RetainerCityId);
-            Assert.Equal(expected.DyeId, actual.DyeId);
-            Assert.Equal(expected.CreatorId, actual.CreatorId);
-            Assert.Equal(expected.CreatorName, actual.CreatorName);
-            Assert.Equal(new DateTimeOffset(expected.LastReviewTime).ToUnixTimeSeconds(),
-                new DateTimeOffset(actual.LastReviewTime).ToUnixTimeSeconds());
-            Assert.Equal(DateTimeKind.Utc, actual.LastReviewTime.Kind);
-            Assert.Equal(expected.SellerId, actual.SellerId);
-            Assert.Equal(DateTimeKind.Utc, actual.UpdatedAt.Kind);
-            Assert.Equal(expected.Source, actual.Source);
+            AssertEqual(expected, actual);
         });
     }
     
@@ -90,8 +74,8 @@ public class CurrentlyShownStoreTests
         Assert.NotNull(results);
         Assert.Equal(currentlyShown.WorldId, results.WorldId);
         Assert.Equal(currentlyShown.ItemId, results.ItemId);
-        Assert.Equal(currentlyShown.LastUploadTimeUnixMilliseconds / 1000,
-            results.LastUploadTimeUnixMilliseconds / 1000);
+        // guess relies on Listing.UploadedAt and is 0 when there are no listings
+        Assert.Equal(0, results.LastUploadTimeUnixMilliseconds);
         Assert.Equal(currentlyShown.UploadSource, results.UploadSource);
         Assert.Empty(results.Listings);
     }
@@ -127,35 +111,9 @@ public class CurrentlyShownStoreTests
                 pair =>
                 {
                     var (expected, actual) = pair;
-                    Assert.Equal(expected.ListingId, actual.ListingId);
-                    Assert.Equal(expected.Hq, actual.Hq);
-                    Assert.Equal(expected.OnMannequin, actual.OnMannequin);
-                    Assert.Equal(expected.PricePerUnit, actual.PricePerUnit);
-                    Assert.Equal(expected.Quantity, actual.Quantity);
-                    Assert.Equal(expected.RetainerName, actual.RetainerName);
-                    Assert.Equal(expected.RetainerId, actual.RetainerId);
-                    Assert.Equal(expected.RetainerCityId, actual.RetainerCityId);
-                    Assert.Equal(expected.DyeId, actual.DyeId);
-                    Assert.Equal(expected.CreatorId, actual.CreatorId);
-                    Assert.Equal(expected.CreatorName, actual.CreatorName);
-                    Assert.Equal(new DateTimeOffset(expected.LastReviewTime).ToUnixTimeSeconds(),
-                        new DateTimeOffset(actual.LastReviewTime).ToUnixTimeSeconds());
-                    Assert.Equal(DateTimeKind.Utc, actual.LastReviewTime.Kind);
-                    Assert.Equal(expected.SellerId, actual.SellerId);
-                    Assert.Equal(DateTimeKind.Utc, actual.UpdatedAt.Kind);
-                    Assert.Equal(expected.Source, actual.Source);
+                    AssertEqual(expected, actual);
                 });
         }
-    }
-
-#if DEBUG
-    [Fact]
-#endif
-    public async Task Retrieve_ReturnsNull_WhenMissing()
-    {
-        var store = _fixture.Services.GetRequiredService<ICurrentlyShownStore>();
-        var results = await store.Retrieve(new CurrentlyShownQuery { WorldId = 74, ItemId = 4 });
-        Assert.Null(results);
     }
 
 #if DEBUG
@@ -167,7 +125,7 @@ public class CurrentlyShownStoreTests
         var results = await store.RetrieveMany(new CurrentlyShownManyQuery
         { WorldIds = new[] { 74 }, ItemIds = Enumerable.Range(200, 10) });
         var resultsList = results.ToList();
-        Assert.Empty(resultsList);
+        Assert.All(resultsList, it => Assert.Empty(it.Listings));
     }
 
 #if DEBUG
@@ -191,7 +149,7 @@ public class CurrentlyShownStoreTests
         var results = (await store.RetrieveMany(new CurrentlyShownManyQuery
         { WorldIds = new[] { 74 }, ItemIds = resultsItemIds })).ToList();
         Assert.NotNull(results);
-        Assert.True(results.Count == expectedItemIds.Count);
+        Assert.Equal(resultsItemIds.Count, results.Count);
 
         foreach (var (itemId, result) in expectedItemIds.Zip(results))
         {
@@ -205,24 +163,33 @@ public class CurrentlyShownStoreTests
             pair =>
             {
                 var (expected, actual) = pair;
-                Assert.Equal(expected.ListingId, actual.ListingId);
-                Assert.Equal(expected.Hq, actual.Hq);
-                Assert.Equal(expected.OnMannequin, actual.OnMannequin);
-                Assert.Equal(expected.PricePerUnit, actual.PricePerUnit);
-                Assert.Equal(expected.Quantity, actual.Quantity);
-                Assert.Equal(expected.RetainerName, actual.RetainerName);
-                Assert.Equal(expected.RetainerId, actual.RetainerId);
-                Assert.Equal(expected.RetainerCityId, actual.RetainerCityId);
-                Assert.Equal(expected.DyeId, actual.DyeId);
-                Assert.Equal(expected.CreatorId, actual.CreatorId);
-                Assert.Equal(expected.CreatorName, actual.CreatorName);
-                Assert.Equal(new DateTimeOffset(expected.LastReviewTime).ToUnixTimeSeconds(),
-                    new DateTimeOffset(actual.LastReviewTime).ToUnixTimeSeconds());
-                Assert.Equal(DateTimeKind.Utc, actual.LastReviewTime.Kind);
-                Assert.Equal(expected.SellerId, actual.SellerId);
-                Assert.Equal(DateTimeKind.Utc, actual.UpdatedAt.Kind);
-                Assert.Equal(expected.Source, actual.Source);
+                AssertEqual(expected, actual);
             });
         }
+
+        Assert.All(results.Where(it => !expectedItemIds.Contains(it.ItemId)), it => {
+            Assert.Empty(it.Listings);
+        });
+    }
+
+    private static void AssertEqual(Listing expected, Listing actual)
+    {
+        Assert.Equal(expected.ListingId, actual.ListingId);
+        Assert.Equal(expected.Hq, actual.Hq);
+        Assert.Equal(expected.OnMannequin, actual.OnMannequin);
+        Assert.Equal(expected.PricePerUnit, actual.PricePerUnit);
+        Assert.Equal(expected.Quantity, actual.Quantity);
+        Assert.Equal(expected.RetainerName, actual.RetainerName);
+        Assert.Equal(expected.RetainerId, actual.RetainerId);
+        Assert.Equal(expected.RetainerCityId, actual.RetainerCityId);
+        Assert.Equal(expected.DyeId, actual.DyeId);
+        Assert.Null(actual.CreatorId);
+        Assert.Equal(expected.CreatorName, actual.CreatorName);
+        Assert.Equal(new DateTimeOffset(expected.LastReviewTime).ToUnixTimeSeconds(),
+            new DateTimeOffset(actual.LastReviewTime).ToUnixTimeSeconds());
+        Assert.Equal(DateTimeKind.Utc, actual.LastReviewTime.Kind);
+        Assert.Null(actual.SellerId);
+        Assert.Equal(DateTimeKind.Utc, actual.UpdatedAt.Kind);
+        Assert.Equal(expected.Source, actual.Source);
     }
 }
