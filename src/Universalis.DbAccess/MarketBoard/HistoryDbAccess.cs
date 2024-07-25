@@ -36,6 +36,11 @@ public class HistoryDbAccess : IHistoryDbAccess
 
     public async Task<History> Retrieve(HistoryQuery query, CancellationToken cancellationToken = default)
     {
+        if (query.Count == 0)
+        {
+            return null;
+        }
+
         using var activity = Util.ActivitySource.StartActivity("HistoryDbAccess.Retrieve");
 
         var marketItem =
@@ -60,6 +65,11 @@ public class HistoryDbAccess : IHistoryDbAccess
     public async Task<IEnumerable<History>> RetrieveMany(HistoryManyQuery query,
         CancellationToken cancellationToken = default)
     {
+        if (query.Count == 0)
+        {
+            return Enumerable.Empty<History>();
+        }
+
         using var activity = Util.ActivitySource.StartActivity("HistoryDbAccess.RetrieveMany");
 
         // Build tuples of world/item pairs - the awkward syntax here avoids allocations besides the ToArray calls

@@ -163,4 +163,32 @@ public class HistoryDbAccessTests
 
         Assert.Equal(sortedExpected, sortedActual[0]);
     }
+
+    [Fact]
+    public async Task Retrieve_ReturnsNull_ForZeroEntriesQuery()
+    {
+        var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore());
+
+        var document = SeedDataGenerator.MakeHistory(74, 5333);
+        await db.Create(document);
+
+        var output = (await db.Retrieve(new HistoryQuery
+            { WorldId = document.WorldId, ItemId = document.ItemId, Count = 0 }));
+
+        Assert.Null(output);
+    }
+
+    [Fact]
+    public async Task RetrieveMany_ReturnsEmpty_ForZeroEntriesQuery()
+    {
+        var db = new HistoryDbAccess(new MockMarketItemStore(), new MockSaleStore());
+
+        var document = SeedDataGenerator.MakeHistory(74, 5333);
+        await db.Create(document);
+
+        var output = (await db.RetrieveMany(new HistoryManyQuery
+            { WorldIds = new[] { document.WorldId }, ItemIds = new[] { document.ItemId }, Count = 0 }))?.ToList();
+
+        Assert.Empty(output);
+    }
 }
