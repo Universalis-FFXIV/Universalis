@@ -85,7 +85,7 @@ public class ListingView : PartiallySerializable, IPriceable, ICopyable
     public bool IsCrafted { get; init; }
 
     /// <summary>
-    /// A SHA256 hash of the ID of this listing. Due to some current client-side bugs, this will almost always be null.
+    /// The ID of this listing.
     /// </summary>
     [BsonElement("listingID")]
     [JsonPropertyName("listingID")]
@@ -122,7 +122,7 @@ public class ListingView : PartiallySerializable, IPriceable, ICopyable
     public int RetainerCityId { get; init; }
 
     /// <summary>
-    /// A SHA256 hash of the retainer's ID.
+    /// The retainer's ID.
     /// </summary>
     [BsonElement("retainerID")]
     [JsonPropertyName("retainerID")]
