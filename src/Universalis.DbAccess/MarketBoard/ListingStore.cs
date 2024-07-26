@@ -229,7 +229,12 @@ public class ListingStore : IListingStore
             // Cache the result temporarily
             await StoreListingsInCache(query.WorldId, query.ItemId, listings, cancellationToken);
 
-            RowsReadCount.Observe(listings.Count);
+            if (Random.Shared.NextDouble() < 0.2)
+            {
+                // Record metric 20% of the time because this is a hot path
+                RowsReadCount.Observe(listings.Count);
+            }
+
             return listings;
         }
         catch (Exception e)
@@ -347,7 +352,12 @@ public class ListingStore : IListingStore
                     kvp => kvp.Value);
             await StoreListingsInCacheMulti(toCache, cancellationToken);
 
-            RowsReadCount.Observe(result.Count - cacheValues.Count);
+            if (Random.Shared.NextDouble() < 0.2)
+            {
+                // Record metric 20% of the time because this is a hot path
+                RowsReadCount.Observe(result.Count - cacheValues.Count);
+            }
+
             return result;
         }
         catch (Exception e)
