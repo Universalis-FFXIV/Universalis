@@ -99,8 +99,10 @@ public static partial class Util
     /// <returns>A hash representing the input string.</returns>
     public static string Hash(HashAlgorithm hasher, string input)
     {
+        if (input is null)
+            return null;
         Span<byte> hash = stackalloc byte[hasher.HashSize / 8];
-        ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(input ?? "");
+        ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(input);
         if (hasher.TryComputeHash(bytes, hash, out _)) // Since we stackalloc the hash buffer, written is not needed
             return Convert.ToHexString(hash).ToLowerInvariant(); // https://github.com/dotnet/runtime/issues/60393
         throw new InvalidOperationException("Destination buffer was too small, this should never occur");
