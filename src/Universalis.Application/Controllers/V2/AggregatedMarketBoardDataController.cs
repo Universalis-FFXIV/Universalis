@@ -27,7 +27,8 @@ public class AggregatedMarketBoardDataController : WorldDcRegionControllerBase
     private readonly IMarketItemStore _marketItemStore;
     private readonly IWorldToDcRegion _worldToDcRegion;
 
-    public AggregatedMarketBoardDataController(IGameDataProvider gameData, IListingStore listingStore, ISaleStore saleStore, IMarketItemStore marketItemStore, IWorldToDcRegion worldToDcRegion) : base(gameData)
+    public AggregatedMarketBoardDataController(IGameDataProvider gameData, IListingStore listingStore, ISaleStore saleStore,
+        IMarketItemStore marketItemStore, IWorldToDcRegion worldToDcRegion) : base(gameData)
     {
         _listingStore = listingStore;
         _saleStore = saleStore;
@@ -89,7 +90,7 @@ public class AggregatedMarketBoardDataController : WorldDcRegionControllerBase
             {
                 cts.Token.ThrowIfCancellationRequested();
                 var minListing = await _listingStore.GetMinListing(worldId, itemId);
-                var uploadTimes = (await _marketItemStore.RetrieveMany(new MarketItemManyQuery()
+                var uploadTimes = (await _marketItemStore.RetrieveMany(new MarketItemManyQuery
                     {
                         ItemIds = new[] { itemId },
                         WorldIds = new[] { worldId, minListing.Dc?.Nq?.WorldId ?? 0, minListing.Dc?.Hq?.WorldId ?? 0, minListing.Region?.Nq?.WorldId ?? 0, minListing.Region?.Hq?.WorldId ?? 0 },
@@ -149,9 +150,12 @@ public class AggregatedMarketBoardDataController : WorldDcRegionControllerBase
     private static AggregatedMarketBoardData.RecentPurchase RecentPurchase(Sale recentPurchaseWorld, Sale recentPurchaseDc, Sale recentPurchaseRegion)
     {
         return new AggregatedMarketBoardData.RecentPurchase(
-            recentPurchaseWorld != null ? new AggregatedMarketBoardData.RecentPurchase.Entry(recentPurchaseWorld.PricePerUnit, new DateTimeOffset(recentPurchaseWorld.SaleTime).ToUnixTimeMilliseconds(), null) : null,
-            recentPurchaseDc != null ? new AggregatedMarketBoardData.RecentPurchase.Entry(recentPurchaseDc.PricePerUnit, new DateTimeOffset(recentPurchaseDc.SaleTime).ToUnixTimeMilliseconds(), recentPurchaseDc.WorldId) : null,
-            recentPurchaseRegion != null ? new AggregatedMarketBoardData.RecentPurchase.Entry(recentPurchaseRegion.PricePerUnit, new DateTimeOffset(recentPurchaseRegion.SaleTime).ToUnixTimeMilliseconds(), recentPurchaseRegion.WorldId) : null);
+            recentPurchaseWorld != null ? new AggregatedMarketBoardData.RecentPurchase.Entry(
+                recentPurchaseWorld.PricePerUnit, new DateTimeOffset(recentPurchaseWorld.SaleTime).ToUnixTimeMilliseconds(), null) : null,
+            recentPurchaseDc != null ? new AggregatedMarketBoardData.RecentPurchase.Entry(
+                recentPurchaseDc.PricePerUnit, new DateTimeOffset(recentPurchaseDc.SaleTime).ToUnixTimeMilliseconds(), recentPurchaseDc.WorldId) : null,
+            recentPurchaseRegion != null ? new AggregatedMarketBoardData.RecentPurchase.Entry(
+                recentPurchaseRegion.PricePerUnit, new DateTimeOffset(recentPurchaseRegion.SaleTime).ToUnixTimeMilliseconds(), recentPurchaseRegion.WorldId) : null);
     }
 
     private static AggregatedMarketBoardData.DailySaleVelocity GetDailySaleVelocity(TradeVelocity worldVelocity, TradeVelocity dcVelocity, TradeVelocity regionVelocity)
