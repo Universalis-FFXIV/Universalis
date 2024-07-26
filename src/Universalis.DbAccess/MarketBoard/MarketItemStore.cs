@@ -209,7 +209,7 @@ public class MarketItemStore : IMarketItemStore
             ? CommandFlags.PreferReplica
             : CommandFlags.PreferMaster;
 
-        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var db = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
         var cacheKeys = keys.Select(MarketItemKey).Select(k => new RedisKey(k)).ToArray();
         try
         {
@@ -245,7 +245,7 @@ public class MarketItemStore : IMarketItemStore
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.TryGetMarketItemFromCache");
-        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var db = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
         var cacheKey = MarketItemKey(worldId, itemId);
 
         try
@@ -279,7 +279,7 @@ public class MarketItemStore : IMarketItemStore
     {
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.StoreMarketItemInCacheMulti");
 
-        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var db = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
         var cacheRecords = marketItems.Select(kvp =>
                 new KeyValuePair<RedisKey, RedisValue>(MarketItemKey(kvp.Key), SerializeMarketItem(kvp.Value)))
             .ToArray();
@@ -297,7 +297,7 @@ public class MarketItemStore : IMarketItemStore
     private async Task StoreMarketItemInCache(MarketItem marketItem)
     {
         using var activity = Util.ActivitySource.StartActivity("MarketItemStore.StoreMarketItemInCache");
-        var db = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var db = _cache.GetDatabase(RedisDatabases.Cache.MarketItem);
         var cacheKey = MarketItemKey(marketItem);
         await db.StringSetAsync(cacheKey, SerializeMarketItem(marketItem), MarketItemCacheTime, When.Always,
             CommandFlags.FireAndForget);

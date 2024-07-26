@@ -27,7 +27,7 @@ public class ListingStoreTests
     {
         var store = _fixture.Services.GetRequiredService<IListingStore>();
         var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, 2);
-        await store.ReplaceLive(currentlyShown.Listings);
+        await store.ReplaceLive(93, 2, currentlyShown.Listings);
     }
 
 #if DEBUG
@@ -37,7 +37,7 @@ public class ListingStoreTests
     {
         var store = _fixture.Services.GetRequiredService<IListingStore>();
         var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, 3);
-        await store.ReplaceLive(currentlyShown.Listings);
+        await store.ReplaceLive(93, 2, currentlyShown.Listings);
         var results = await store.RetrieveLive(new ListingQuery { ItemId = 3, WorldId = 93 });
 
         Assert.NotNull(results);
@@ -55,7 +55,7 @@ public class ListingStoreTests
     {
         var store = _fixture.Services.GetRequiredService<IListingStore>();
         var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(92, 3);
-        await store.ReplaceLive(currentlyShown.Listings);
+        await store.ReplaceLive(92, 3, currentlyShown.Listings);
         await store.RetrieveLive(new ListingQuery { ItemId = 3, WorldId = 92 }); // Populate the cache
         var results = await store.RetrieveLive(new ListingQuery { ItemId = 3, WorldId = 92 });
 
@@ -75,7 +75,7 @@ public class ListingStoreTests
         var store = _fixture.Services.GetRequiredService<IListingStore>();
         var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, 98);
 
-        await store.ReplaceLive(currentlyShown.Listings);
+        await store.ReplaceLive(93, 98, currentlyShown.Listings);
         var query = new ListingQuery { ItemId = 98, WorldId = 93 };
         await store.DeleteLive(query);
         var results = await store.RetrieveLive(query);
@@ -93,7 +93,7 @@ public class ListingStoreTests
         for (var i = 0; i < 10; i++)
         {
             var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, 5);
-            await store.ReplaceLive(currentlyShown.Listings);
+            await store.ReplaceLive(93, 5, currentlyShown.Listings);
             var results = await store.RetrieveLive(new ListingQuery { ItemId = 5, WorldId = 93 });
 
             Assert.NotNull(results);
@@ -115,15 +115,15 @@ public class ListingStoreTests
         for (var i = 100; i < 105; i++)
         {
             var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, i);
-            await store.ReplaceLive(currentlyShown.Listings);
+            await store.ReplaceLive(93, i, currentlyShown.Listings);
             expectedListings[i] = currentlyShown.Listings;
         }
-        
+
         // Also store some more data that we don't want to retrieve to make sure we're not being too lenient
         for (var i = 106; i < 110; i++)
         {
             var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, i);
-            await store.ReplaceLive(currentlyShown.Listings);
+            await store.ReplaceLive(93, i, currentlyShown.Listings);
         }
 
         var results = await store.RetrieveManyLive(new ListingManyQuery
@@ -144,7 +144,7 @@ public class ListingStoreTests
             Assert.False(expectedListings.ContainsKey(i));
         }
     }
-    
+
 #if DEBUG
     [Fact]
 #endif
@@ -155,15 +155,15 @@ public class ListingStoreTests
         for (var i = 100; i < 105; i++)
         {
             var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, i);
-            await store.ReplaceLive(currentlyShown.Listings);
+            await store.ReplaceLive(93, i, currentlyShown.Listings);
             expectedListings[i] = currentlyShown.Listings;
         }
-        
+
         // Also store some more data that we don't want to retrieve to make sure we're not being too lenient
         for (var i = 106; i < 110; i++)
         {
             var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, i);
-            await store.ReplaceLive(currentlyShown.Listings);
+            await store.ReplaceLive(93, i, currentlyShown.Listings);
         }
 
         await store.RetrieveManyLive(new ListingManyQuery

@@ -8,16 +8,15 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public interface ISaleStore
 {
-    Task Insert(Sale sale, CancellationToken cancellationToken = default);
+    Task InsertMany(ICollection<Sale> sales, CancellationToken cancellationToken = default);
 
-    Task InsertMany(IEnumerable<Sale> sales, CancellationToken cancellationToken = default);
-
-    Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null,
+    Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null, bool? hq = null,
         CancellationToken cancellationToken = default);
 
-    Task<long> RetrieveUnitTradeVolume(int worldId, int itemId, DateTime from, DateTime to,
+    Task<(TradeVelocity Nq, TradeVelocity Hq)> RetrieveUnitTradeVelocity(string worldIdDcRegion, int itemId, DateOnly from, DateOnly to,
         CancellationToken cancellationToken = default);
 
-    Task<long> RetrieveGilTradeVolume(int worldId, int itemId, DateTime from, DateTime to,
-        CancellationToken cancellationToken = default);
+    Task<Sale> GetMostRecentSaleInWorld(int worldId, int itemId, bool hq);
+
+    Task<Sale> GetMostRecentSaleInDatacenterOrRegion(string dcOrRegion, int itemId, bool hq);
 }

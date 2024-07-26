@@ -39,7 +39,7 @@ public class SaleStoreTests
             UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
         };
 
-        await store.Insert(sale);
+        await store.InsertMany(new[] { sale });
     }
 
 #if DEBUG
@@ -62,7 +62,7 @@ public class SaleStoreTests
             UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
         };
 
-        await Assert.ThrowsAsync<ArgumentException>(() => store.Insert(sale));
+        await Assert.ThrowsAsync<ArgumentException>(() => store.InsertMany(new[] { sale }));
     }
 
 #if DEBUG
@@ -71,7 +71,7 @@ public class SaleStoreTests
     public async Task Insert_Null_DoesNotWork()
     {
         var store = _fixture.Services.GetRequiredService<ISaleStore>();
-        await Assert.ThrowsAsync<ArgumentNullException>(() => store.Insert(null));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => store.InsertMany(new Sale[] { null }));
     }
 
 #if DEBUG
@@ -94,7 +94,7 @@ public class SaleStoreTests
             UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
         };
 
-        await Assert.ThrowsAsync<ArgumentException>(() => store.Insert(sale));
+        await Assert.ThrowsAsync<ArgumentException>(() => store.InsertMany(new[] { sale }));
     }
 
 #if DEBUG
@@ -117,7 +117,7 @@ public class SaleStoreTests
             UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
         };
 
-        await Assert.ThrowsAsync<ArgumentException>(() => store.Insert(sale));
+        await Assert.ThrowsAsync<ArgumentException>(() => store.InsertMany(new[] { sale }));
     }
 
 #if DEBUG
@@ -140,7 +140,7 @@ public class SaleStoreTests
             UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
         };
 
-        await store.Insert(sale);
+        await store.InsertMany(new[] { sale });
         await Task.Delay(1000);
         var results = (await store.RetrieveBySaleTime(27, 5333, 1)).ToList();
 

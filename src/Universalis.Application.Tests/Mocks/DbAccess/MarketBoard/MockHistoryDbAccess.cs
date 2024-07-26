@@ -51,7 +51,7 @@ public class MockHistoryDbAccess : IHistoryDbAccess
             .Where(o => o != null);
     }
 
-    public Task InsertSales(IEnumerable<Sale> sales, HistoryQuery query, CancellationToken cancellationToken = default)
+    public Task InsertSales(ICollection<Sale> sales, HistoryQuery query, CancellationToken cancellationToken = default)
     {
         foreach (var sale in sales)
         {

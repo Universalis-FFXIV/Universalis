@@ -13,6 +13,8 @@ using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
 using Prometheus;
+using StackExchange.Redis;
+using Universalis.Common.GameData;
 using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities;
 using Universalis.Entities.MarketBoard;
@@ -51,13 +53,17 @@ public class ListingStore : IListingStore
     private readonly ILogger<ListingStore> _logger;
     private readonly IEasyCachingProvider _easyCachingProvider;
     private readonly NpgsqlDataSource _dataSource;
+    private readonly ICacheRedisMultiplexer _cache;
+    private readonly IWorldToDcRegion _worldToDcRegion;
 
     public ListingStore(NpgsqlDataSource dataSource, IEasyCachingProvider easyCachingProvider,
-        ILogger<ListingStore> logger)
+        ILogger<ListingStore> logger, ICacheRedisMultiplexer cache, IWorldToDcRegion worldToDcRegion)
     {
         _easyCachingProvider = easyCachingProvider;
         _dataSource = dataSource;
         _logger = logger;
+        _cache = cache;
+        _worldToDcRegion = worldToDcRegion;
     }
 
     public async Task DeleteLive(ListingQuery query, CancellationToken cancellationToken = default)
@@ -77,9 +83,10 @@ public class ListingStore : IListingStore
                 query.ItemId);
             throw;
         }
+        await WriteMinListingCache(query.WorldId, query.ItemId, new List<Listing>());
     }
 
-    public async Task ReplaceLive(IEnumerable<Listing> listings, CancellationToken cancellationToken = default)
+    public async Task ReplaceLive(int itemId, int worldId, ICollection<Listing> listings, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.ReplaceLive");
         var rowsUpdated = 0;
@@ -89,80 +96,143 @@ public class ListingStore : IListingStore
         // Get the current timestamp for the batch
         var uploadedAt = DateTimeOffset.Now;
 
-        // Listings are grouped for better exceptions if a batch fails; exceptions can be
-        // filtered by world and item.
-        var groupedListings = listings.GroupBy(l => new WorldItemPair(l.WorldId, l.ItemId));
-        foreach (var listingGroup in groupedListings)
+        // Npgsql batches have an implicit transaction around them
+        // https://www.npgsql.org/doc/basic-usage.html#batching
+        await using var batch = new NpgsqlBatch(connection);
+        batch.BatchCommands.Add(new NpgsqlBatchCommand("DELETE FROM listing WHERE item_id = $1 AND world_id = $2")
         {
-            var (worldID, itemID) = listingGroup.Key;
+            Parameters =
+            {
+                new NpgsqlParameter<int> { TypedValue = itemId },
+                new NpgsqlParameter<int> { TypedValue = worldId },
+            },
+        });
 
-            // Npgsql batches have an implicit transaction around them
-            // https://www.npgsql.org/doc/basic-usage.html#batching
-            await using var batch = new NpgsqlBatch(connection);
-            batch.BatchCommands.Add(new NpgsqlBatchCommand("DELETE FROM listing WHERE item_id = $1 AND world_id = $2")
+        foreach (var listing in listings)
+        {
+            if (listing.ItemId != itemId || listing.WorldId != worldId)
+                throw new ArgumentException("listing itemId or worldId does not match", nameof(listings));
+
+            // If a listing is uploaded multiple times in separate uploads, it
+            // can already be in the database, causing a conflict. To handle that,
+            // we just update the existing record and ensure that it's made live
+            // again. It's not clear to me what happens on the game servers when
+            // a listing is updated. Until we have more data, I'm assuming that
+            // all updates are the same as new listings.
+            batch.BatchCommands.Add(new NpgsqlBatchCommand(
+                """
+                INSERT INTO listing
+                (listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id,
+                 creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, uploaded_at,
+                 source)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+                ON CONFLICT (listing_id) DO NOTHING;
+                """)
             {
                 Parameters =
                 {
-                    new NpgsqlParameter<int> { TypedValue = itemID },
-                    new NpgsqlParameter<int> { TypedValue = worldID },
+                    new NpgsqlParameter<string> { TypedValue = listing.ListingId },
+                    new NpgsqlParameter<int> { TypedValue = listing.ItemId },
+                    new NpgsqlParameter<int> { TypedValue = listing.WorldId },
+                    new NpgsqlParameter<bool> { TypedValue = listing.Hq },
+                    new NpgsqlParameter<bool> { TypedValue = listing.OnMannequin },
+                    ConvertMateriaToParameter(listing.Materia),
+                    new NpgsqlParameter<int> { TypedValue = listing.PricePerUnit },
+                    new NpgsqlParameter<int> { TypedValue = listing.Quantity },
+                    new NpgsqlParameter<int> { TypedValue = listing.DyeId },
+                    new NpgsqlParameter<string> { TypedValue = listing.CreatorName },
+                    new NpgsqlParameter<DateTime> { TypedValue = listing.LastReviewTime },
+                    new NpgsqlParameter<string> { TypedValue = listing.RetainerId },
+                    new NpgsqlParameter<string> { TypedValue = listing.RetainerName },
+                    new NpgsqlParameter<int> { TypedValue = listing.RetainerCityId },
+                    new NpgsqlParameter<DateTime> { TypedValue = uploadedAt.UtcDateTime },
+                    new NpgsqlParameter<string> { TypedValue = listing.Source },
                 },
             });
-
-            foreach (var listing in listingGroup)
-            {
-                // If a listing is uploaded multiple times in separate uploads, it
-                // can already be in the database, causing a conflict. To handle that,
-                // we just update the existing record and ensure that it's made live
-                // again. It's not clear to me what happens on the game servers when
-                // a listing is updated. Until we have more data, I'm assuming that
-                // all updates are the same as new listings.
-                batch.BatchCommands.Add(new NpgsqlBatchCommand(
-                    """
-                    INSERT INTO listing
-                    (listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id,
-                     creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, uploaded_at,
-                     source)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-                    ON CONFLICT (listing_id) DO NOTHING;
-                    """)
-                {
-                    Parameters =
-                    {
-                        new NpgsqlParameter<string> { TypedValue = listing.ListingId },
-                        new NpgsqlParameter<int> { TypedValue = listing.ItemId },
-                        new NpgsqlParameter<int> { TypedValue = listing.WorldId },
-                        new NpgsqlParameter<bool> { TypedValue = listing.Hq },
-                        new NpgsqlParameter<bool> { TypedValue = listing.OnMannequin },
-                        ConvertMateriaToParameter(listing.Materia),
-                        new NpgsqlParameter<int> { TypedValue = listing.PricePerUnit },
-                        new NpgsqlParameter<int> { TypedValue = listing.Quantity },
-                        new NpgsqlParameter<int> { TypedValue = listing.DyeId },
-                        new NpgsqlParameter<string> { TypedValue = listing.CreatorName },
-                        new NpgsqlParameter<DateTime> { TypedValue = listing.LastReviewTime },
-                        new NpgsqlParameter<string> { TypedValue = listing.RetainerId },
-                        new NpgsqlParameter<string> { TypedValue = listing.RetainerName },
-                        new NpgsqlParameter<int> { TypedValue = listing.RetainerCityId },
-                        new NpgsqlParameter<DateTime> { TypedValue = uploadedAt.UtcDateTime },
-                        new NpgsqlParameter<string> { TypedValue = listing.Source },
-                    },
-                });
-            }
-
-            try
-            {
-                rowsUpdated += await batch.ExecuteNonQueryAsync(cancellationToken);
-                await _easyCachingProvider.RemoveAsync(ListingsKey(worldID, itemID), cancellationToken);
-            }
-            catch (Exception e)
-            {
-                activity?.AddTag("rowsUpdated", rowsUpdated);
-                _logger.LogError(e, "Failed to insert listings (world={}, item={})", worldID,
-                    itemID);
-                throw;
-            }
         }
 
+        try
+        {
+            rowsUpdated += await batch.ExecuteNonQueryAsync(cancellationToken);
+            await _easyCachingProvider.RemoveAsync(ListingsKey(worldId, itemId), cancellationToken);
+        }
+        catch (Exception e)
+        {
+            activity?.AddTag("rowsUpdated", rowsUpdated);
+            _logger.LogError(e, "Failed to insert listings (world={}, item={})", worldId, itemId);
+            throw;
+        }
+
+        await WriteMinListingCache(worldId, itemId, listings);
+
         activity?.AddTag("rowsUpdated", rowsUpdated);
+    }
+
+    private async Task WriteMinListingCache(int worldId, int itemId, ICollection<Listing> listings)
+    {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.WriteMinListingCache");
+
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var minListingNq = listings.Where(l => !l.Hq).MinBy(l => l.PricePerUnit);
+        var minListingHq = listings.Where(l => l.Hq).MinBy(l => l.PricePerUnit);
+        var (dc, region) = _worldToDcRegion.Get(worldId);
+        var batch = cache.CreateBatch();
+        var toBatch = new LinkedList<Task>();
+        if (minListingNq != null)
+        {
+            toBatch.AddLast(batch.StringSetAsync(GetMinListingCacheKey(worldId, itemId, false), minListingNq.PricePerUnit, flags: CommandFlags.FireAndForget));
+            toBatch.AddLast(batch.SortedSetAddAsync(GetMinListingCacheKey(dc, itemId, false), worldId, minListingNq.PricePerUnit, flags: CommandFlags.FireAndForget));
+            toBatch.AddLast(batch.SortedSetAddAsync(GetMinListingCacheKey(region, itemId, false), worldId, minListingNq.PricePerUnit, flags: CommandFlags.FireAndForget));
+        }
+        else
+        {
+            toBatch.AddLast(batch.KeyDeleteAsync(GetMinListingCacheKey(worldId, itemId, false), CommandFlags.FireAndForget));
+            toBatch.AddLast(batch.SortedSetRemoveAsync(GetMinListingCacheKey(dc, itemId, false), worldId, CommandFlags.FireAndForget));
+            toBatch.AddLast(batch.SortedSetRemoveAsync(GetMinListingCacheKey(region, itemId, false), worldId, CommandFlags.FireAndForget));
+        }
+        if (minListingHq != null)
+        {
+            toBatch.AddLast(batch.StringSetAsync(GetMinListingCacheKey(worldId, itemId, true), minListingHq.PricePerUnit, flags: CommandFlags.FireAndForget));
+            toBatch.AddLast(batch.SortedSetAddAsync(GetMinListingCacheKey(dc, itemId, true), worldId, minListingHq.PricePerUnit, flags: CommandFlags.FireAndForget));
+            toBatch.AddLast(batch.SortedSetAddAsync(GetMinListingCacheKey(region, itemId, true), worldId, minListingHq.PricePerUnit, flags: CommandFlags.FireAndForget));
+        }
+        else
+        {
+            toBatch.AddLast(batch.KeyDeleteAsync(GetMinListingCacheKey(worldId, itemId, true), CommandFlags.FireAndForget));
+            toBatch.AddLast(batch.SortedSetRemoveAsync(GetMinListingCacheKey(dc, itemId, true), worldId, CommandFlags.FireAndForget));
+            toBatch.AddLast(batch.SortedSetRemoveAsync(GetMinListingCacheKey(region, itemId, true), worldId, CommandFlags.FireAndForget));
+        }
+        batch.Execute();
+        await Task.WhenAll(toBatch);
+    }
+
+    private static RedisKey GetMinListingCacheKey(object worldIdDcRegion, int itemId, bool hq) =>
+        $"min-listing:{worldIdDcRegion}:{itemId}:{(hq ? "hq" : "nq")}";
+
+    public async Task<MinListing> GetMinListing(int worldId, int itemId)
+    {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.GetMinListing");
+
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var (dc, region) = _worldToDcRegion.Get(worldId);
+        var values = await cache.StringGetAsync(new[] { GetMinListingCacheKey(worldId, itemId, false), GetMinListingCacheKey(worldId, itemId, true) }, CommandFlags.PreferReplica);
+        var nqPrice = values[0].TryParse(out int nq) ? new MinListing.Price(worldId, nq) : null;
+        var hqPrice = values[1].TryParse(out int hq) ? new MinListing.Price(worldId, hq) : null;
+        var dcMin = await GetMinListingForDcOrRegion(dc, itemId);
+        var regionMin = await GetMinListingForDcOrRegion(region, itemId);
+        return new MinListing(new MinListing.Entry(nqPrice, hqPrice), dcMin, regionMin);
+    }
+
+    public async Task<MinListing.Entry> GetMinListingForDcOrRegion(string dcOrRegion, int itemId)
+    {
+        using var activity = Util.ActivitySource.StartActivity("ListingStore.GetMinListingForDcOrRegion");
+
+        var cache = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var minEntryNq = await cache.SortedSetRangeByScoreWithScoresAsync(GetMinListingCacheKey(dcOrRegion, itemId, false), take: 1, flags: CommandFlags.PreferReplica);
+        var nqPrice = minEntryNq.Length > 0 && minEntryNq[0].Element.TryParse(out int worldIdNq) ? new MinListing.Price(worldIdNq, (int)minEntryNq[0].Score) : null;
+        var minEntryHq = await cache.SortedSetRangeByScoreWithScoresAsync(GetMinListingCacheKey(dcOrRegion, itemId, true), take: 1, flags: CommandFlags.PreferReplica);
+        var hqPrice = minEntryHq.Length > 0 && minEntryHq[0].Element.TryParse(out int worldIdHq) ? new MinListing.Price(worldIdHq, (int)minEntryHq[0].Score) : null;
+        return new MinListing.Entry(nqPrice, hqPrice);
     }
 
     public async Task<IEnumerable<Listing>> RetrieveLive(ListingQuery query,

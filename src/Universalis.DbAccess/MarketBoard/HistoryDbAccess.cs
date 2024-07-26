@@ -129,7 +129,7 @@ public class HistoryDbAccess : IHistoryDbAccess
             });
     }
 
-    public async Task InsertSales(IEnumerable<Sale> sales, HistoryQuery query,
+    public async Task InsertSales(ICollection<Sale> sales, HistoryQuery query,
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("HistoryDbAccess.InsertSales");

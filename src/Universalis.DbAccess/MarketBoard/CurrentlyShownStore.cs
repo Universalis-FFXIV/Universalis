@@ -41,13 +41,13 @@ public class CurrentlyShownStore : ICurrentlyShownStore
 
         if (listings.Any())
         {
-            await _listingStore.ReplaceLive(listings.Select(l =>
+            foreach (var l in listings)
             {
                 l.ItemId = itemId;
                 l.WorldId = worldId;
                 l.Source = uploadSource;
-                return l;
-            }), cancellationToken);
+            }
+            await _listingStore.ReplaceLive(itemId, worldId, listings, cancellationToken);
         }
         else
         {

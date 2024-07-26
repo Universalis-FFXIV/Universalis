@@ -14,18 +14,21 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using System.Xml.XPath;
 using Npgsql;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Universalis.Alerts;
+using Universalis.Application.Common;
 using Universalis.Application.Controllers;
 using Universalis.Application.ExceptionFilters;
 using Universalis.Application.Realtime;
 using Universalis.Application.Realtime.Dispatchers;
 using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Behaviors;
+using Universalis.Common.GameData;
 using Universalis.DbAccess;
 using Universalis.GameData;
 using Universalis.Mogboard;
@@ -47,7 +50,7 @@ public class Startup
         services.AddDbAccessServices(Configuration);
         services.AddGameData(Configuration);
         services.AddUserAlerts();
-
+        services.AddSingleton<IWorldToDcRegion, WorldToDcRegion>();
 
         var disableWsEventQueueStr = Environment.GetEnvironmentVariable("DISABLE_WEBSOCKET_EVENT_QUEUE");
         var disableWsEventQueue = bool.TryParse(disableWsEventQueueStr, out var disableWsEventQueueParsed) &&
@@ -112,6 +115,7 @@ public class Startup
         }).AddJsonOptions(options =>
         {
             options.JsonSerializerOptions.Converters.Add(new PartiallySerializableJsonConverterFactory());
+            options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         });
 
         services.AddApiVersioning(options =>
@@ -179,6 +183,8 @@ public class Startup
             }
 
             options.IncludeXmlComments(() => new XPathDocument(apiDocs));
+
+            options.CustomSchemaIds(type => type.FullName);
         });
 
         var otlpExporter = Environment.GetEnvironmentVariable("UNIVERSALIS_OLTP_ENDPOINT") ??

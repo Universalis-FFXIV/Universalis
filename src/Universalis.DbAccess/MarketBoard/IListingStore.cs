@@ -10,9 +10,13 @@ public interface IListingStore
 {
     Task DeleteLive(ListingQuery query, CancellationToken cancellationToken = default);
 
-    Task ReplaceLive(IEnumerable<Listing> listings, CancellationToken cancellationToken = default);
+    Task ReplaceLive(int worldId, int itemId, ICollection<Listing> listings, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<Listing>> RetrieveLive(ListingQuery query, CancellationToken cancellationToken = default);
 
     Task<IDictionary<WorldItemPair, IList<Listing>>> RetrieveManyLive(ListingManyQuery query, CancellationToken cancellationToken = default);
+
+    Task<MinListing> GetMinListing(int worldId, int itemId);
+
+    Task<MinListing.Entry> GetMinListingForDcOrRegion(string dcOrRegion, int itemId);
 }

@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
 
@@ -13,14 +14,8 @@ public class SaleStatisticsDbAccess : ISaleStatisticsDbAccess
         _store = store;
     }
 
-    public async ValueTask<long> RetrieveGilTradeVolume(TradeVolumeQuery query, CancellationToken cancellationToken = default)
+    public Task<(TradeVelocity Nq, TradeVelocity Hq)> RetrieveUnitTradeVelocity(TradeVelocityQuery query, CancellationToken cancellationToken = default)
     {
-        return await _store.RetrieveGilTradeVolume(query.WorldId, query.ItemId, query.From, query.To, cancellationToken);
-    }
-
-    public async ValueTask<long> RetrieveUnitTradeVolume(TradeVolumeQuery query,
-        CancellationToken cancellationToken = default)
-    {
-        return await _store.RetrieveUnitTradeVolume(query.WorldId, query.ItemId, query.From, query.To, cancellationToken);
+        return _store.RetrieveUnitTradeVelocity(query.WorldIdDcRegion, query.ItemId, query.From, query.To, cancellationToken);
     }
 }
