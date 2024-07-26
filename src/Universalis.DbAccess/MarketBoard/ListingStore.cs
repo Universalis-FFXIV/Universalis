@@ -40,6 +40,12 @@ public class ListingStore : IListingStore
             Buckets = Histogram.ExponentialBuckets(1, 2, 16),
         });
 
+    private static readonly Histogram RowsReadCount =
+        Prometheus.Metrics.CreateHistogram("universalis_listing_rows_read", "", new HistogramConfiguration
+        {
+            Buckets = Histogram.ExponentialBuckets(1, 2, 16),
+        });
+
     private static readonly TimeSpan LocalListingsCacheTime = TimeSpan.FromMinutes(5);
 
     private readonly ILogger<ListingStore> _logger;
@@ -165,6 +171,7 @@ public class ListingStore : IListingStore
         using var activity = Util.ActivitySource.StartActivity("ListingStore.RetrieveLive");
 
         // Try to fetch the listings from the cache
+        activity?.AddEvent(new ActivityEvent("TryGetListingsFromCache"));
         var (success, cacheValue) = await TryGetListingsFromCache(query.WorldId, query.ItemId, cancellationToken);
         if (success)
         {
@@ -172,6 +179,7 @@ public class ListingStore : IListingStore
         }
 
         // Query the database
+        activity?.AddEvent(new ActivityEvent("NpgsqlCreateCommand"));
         await using var command = _dataSource.CreateCommand(
             """
             SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
@@ -187,12 +195,14 @@ public class ListingStore : IListingStore
 
         try
         {
+            activity?.AddEvent(new ActivityEvent("NpgsqlCommandExecuteReaderAsync"));
             await using var reader =
                 await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
             var listings = new List<Listing>();
             while (await reader.ReadAsync(cancellationToken))
             {
+                activity?.AddEvent(new ActivityEvent("NpgsqlReaderRead"));
                 listings.Add(new Listing
                 {
                     ListingId = string.Intern(reader.GetString(0)),
@@ -219,6 +229,7 @@ public class ListingStore : IListingStore
             // Cache the result temporarily
             await StoreListingsInCache(query.WorldId, query.ItemId, listings, cancellationToken);
 
+            RowsReadCount.Observe(listings.Count);
             return listings;
         }
         catch (Exception e)
@@ -336,6 +347,7 @@ public class ListingStore : IListingStore
                     kvp => kvp.Value);
             await StoreListingsInCacheMulti(toCache, cancellationToken);
 
+            RowsReadCount.Observe(result.Count - cacheValues.Count);
             return result;
         }
         catch (Exception e)

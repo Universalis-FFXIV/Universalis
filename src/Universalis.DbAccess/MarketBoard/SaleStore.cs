@@ -5,16 +5,24 @@ using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Prometheus;
 using Universalis.Entities.MarketBoard;
 
 namespace Universalis.DbAccess.MarketBoard;
 
 public class SaleStore : ISaleStore, IDisposable
 {
+    private static readonly Histogram RowsReadCount =
+        Prometheus.Metrics.CreateHistogram("universalis_sale_rows_read", "", new HistogramConfiguration
+        {
+            Buckets = Histogram.ExponentialBuckets(1, 2, 16),
+        });
+
     private readonly ICacheRedisMultiplexer _cache;
     private readonly ILogger<SaleStore> _logger;
 
@@ -174,11 +182,13 @@ public class SaleStore : ISaleStore, IDisposable
         var timestamp = from == null ? 0 : new DateTimeOffset(from.Value).ToUnixTimeMilliseconds();
         try
         {
+            activity?.AddEvent(new ActivityEvent("CassandraFetchAsync"));
+            RowsReadCount.Observe(count);
             var sales = await _mapper.Value.FetchAsync<Sale>(
                 "SELECT id, sale_time, item_id, world_id, buyer_name, hq, on_mannequin, quantity, unit_price, uploader_id FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? ORDER BY sale_time DESC LIMIT ?",
                 itemId, worldId, timestamp, count);
             return sales
-                .Select(sale =>
+                .Select(static sale =>
                 {
                     sale.SaleTime = DateTime.SpecifyKind(sale.SaleTime, DateTimeKind.Utc);
                     return sale;
