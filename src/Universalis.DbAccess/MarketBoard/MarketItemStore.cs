@@ -128,6 +128,8 @@ public class MarketItemStore : IMarketItemStore
                 itemIds.Select(itemId => new WorldItemPair(worldId, itemId)))
             .ToList();
 
+        var marketItemRecords = new Dictionary<WorldItemPair, MarketItem>();
+
         // Attempt to retrieve market items from the cache
         activity?.AddEvent(new ActivityEvent("TryGetMarketItemFromCacheMulti"));
         var cacheValues = await TryGetMarketItemFromCacheMulti(worldItemPairs);
@@ -135,6 +137,12 @@ public class MarketItemStore : IMarketItemStore
         {
             // Retrieved everything from the cache
             return cacheValues.Values;
+        }
+
+        foreach (var (wip, cacheValue) in cacheValues)
+        {
+            marketItemRecords[wip] = cacheValue;
+            worldItemPairs.Remove(wip);
         }
 
         await using var command = _dataSource.CreateCommand(
@@ -153,7 +161,6 @@ public class MarketItemStore : IMarketItemStore
             await using var reader =
                 await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
-            var marketItemRecords = new Dictionary<WorldItemPair, MarketItem>();
             while (await reader.ReadAsync(cancellationToken))
             {
                 var lastUploadTime = reader.GetDateTime(0);
