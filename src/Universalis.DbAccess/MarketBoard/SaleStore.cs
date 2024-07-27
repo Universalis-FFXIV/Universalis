@@ -40,7 +40,7 @@ public class SaleStore : ISaleStore, IDisposable
         _logger = logger;
         _worldToDcRegion = worldToDcRegion;
 
-        _lock = new SemaphoreSlim(500, 500);
+        _lock = new SemaphoreSlim(1000, 1000);
 
         // Doing database initialization in a constructor is a Bad Idea and
         // can lead to timeouts killing the application, so this just gets
