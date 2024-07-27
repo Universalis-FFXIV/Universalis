@@ -10,7 +10,7 @@ public interface IListingStore
 {
     Task DeleteLive(ListingQuery query, CancellationToken cancellationToken = default);
 
-    Task ReplaceLive(int worldId, int itemId, ICollection<Listing> listings, CancellationToken cancellationToken = default);
+    Task ReplaceLive(ICollection<Listing> listings, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<Listing>> RetrieveLive(ListingQuery query, CancellationToken cancellationToken = default);
 

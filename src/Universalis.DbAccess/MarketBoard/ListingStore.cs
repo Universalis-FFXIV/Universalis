@@ -86,7 +86,7 @@ public class ListingStore : IListingStore
         await WriteMinListingCache(query.WorldId, query.ItemId, new List<Listing>());
     }
 
-    public async Task ReplaceLive(int itemId, int worldId, ICollection<Listing> listings, CancellationToken cancellationToken = default)
+    public async Task ReplaceLive(ICollection<Listing> listings, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.ReplaceLive");
         var rowsUpdated = 0;
@@ -96,74 +96,80 @@ public class ListingStore : IListingStore
         // Get the current timestamp for the batch
         var uploadedAt = DateTimeOffset.Now;
 
-        // Npgsql batches have an implicit transaction around them
-        // https://www.npgsql.org/doc/basic-usage.html#batching
-        await using var batch = new NpgsqlBatch(connection);
-        batch.BatchCommands.Add(new NpgsqlBatchCommand("DELETE FROM listing WHERE item_id = $1 AND world_id = $2")
+        // Listings are grouped for better exceptions if a batch fails; exceptions can be
+        // filtered by world and item.
+        var groupedListings = listings.GroupBy(l => new WorldItemPair(l.WorldId, l.ItemId));
+        foreach (var listingGroup in groupedListings)
         {
-            Parameters =
-            {
-                new NpgsqlParameter<int> { TypedValue = itemId },
-                new NpgsqlParameter<int> { TypedValue = worldId },
-            },
-        });
+            var (worldID, itemID) = listingGroup.Key;
 
-        foreach (var listing in listings)
-        {
-            if (listing.ItemId != itemId || listing.WorldId != worldId)
-                throw new ArgumentException("listing itemId or worldId does not match", nameof(listings));
-
-            // If a listing is uploaded multiple times in separate uploads, it
-            // can already be in the database, causing a conflict. To handle that,
-            // we just update the existing record and ensure that it's made live
-            // again. It's not clear to me what happens on the game servers when
-            // a listing is updated. Until we have more data, I'm assuming that
-            // all updates are the same as new listings.
-            batch.BatchCommands.Add(new NpgsqlBatchCommand(
-                """
-                INSERT INTO listing
-                (listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id,
-                 creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, uploaded_at,
-                 source)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-                ON CONFLICT (listing_id) DO NOTHING;
-                """)
+            // Npgsql batches have an implicit transaction around them
+            // https://www.npgsql.org/doc/basic-usage.html#batching
+            await using var batch = new NpgsqlBatch(connection);
+            batch.BatchCommands.Add(new NpgsqlBatchCommand("DELETE FROM listing WHERE item_id = $1 AND world_id = $2")
             {
                 Parameters =
                 {
-                    new NpgsqlParameter<string> { TypedValue = listing.ListingId },
-                    new NpgsqlParameter<int> { TypedValue = listing.ItemId },
-                    new NpgsqlParameter<int> { TypedValue = listing.WorldId },
-                    new NpgsqlParameter<bool> { TypedValue = listing.Hq },
-                    new NpgsqlParameter<bool> { TypedValue = listing.OnMannequin },
-                    ConvertMateriaToParameter(listing.Materia),
-                    new NpgsqlParameter<int> { TypedValue = listing.PricePerUnit },
-                    new NpgsqlParameter<int> { TypedValue = listing.Quantity },
-                    new NpgsqlParameter<int> { TypedValue = listing.DyeId },
-                    new NpgsqlParameter<string> { TypedValue = listing.CreatorName },
-                    new NpgsqlParameter<DateTime> { TypedValue = listing.LastReviewTime },
-                    new NpgsqlParameter<string> { TypedValue = listing.RetainerId },
-                    new NpgsqlParameter<string> { TypedValue = listing.RetainerName },
-                    new NpgsqlParameter<int> { TypedValue = listing.RetainerCityId },
-                    new NpgsqlParameter<DateTime> { TypedValue = uploadedAt.UtcDateTime },
-                    new NpgsqlParameter<string> { TypedValue = listing.Source },
+                    new NpgsqlParameter<int> { TypedValue = itemID },
+                    new NpgsqlParameter<int> { TypedValue = worldID },
                 },
             });
-        }
 
-        try
-        {
-            rowsUpdated += await batch.ExecuteNonQueryAsync(cancellationToken);
-            await _easyCachingProvider.RemoveAsync(ListingsKey(worldId, itemId), cancellationToken);
-        }
-        catch (Exception e)
-        {
-            activity?.AddTag("rowsUpdated", rowsUpdated);
-            _logger.LogError(e, "Failed to insert listings (world={}, item={})", worldId, itemId);
-            throw;
-        }
+            foreach (var listing in listingGroup)
+            {
+                // If a listing is uploaded multiple times in separate uploads, it
+                // can already be in the database, causing a conflict. To handle that,
+                // we just update the existing record and ensure that it's made live
+                // again. It's not clear to me what happens on the game servers when
+                // a listing is updated. Until we have more data, I'm assuming that
+                // all updates are the same as new listings.
+                batch.BatchCommands.Add(new NpgsqlBatchCommand(
+                    """
+                    INSERT INTO listing
+                    (listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id,
+                     creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, uploaded_at,
+                     source)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+                    ON CONFLICT (listing_id) DO NOTHING;
+                    """)
+                {
+                    Parameters =
+                    {
+                        new NpgsqlParameter<string> { TypedValue = listing.ListingId },
+                        new NpgsqlParameter<int> { TypedValue = listing.ItemId },
+                        new NpgsqlParameter<int> { TypedValue = listing.WorldId },
+                        new NpgsqlParameter<bool> { TypedValue = listing.Hq },
+                        new NpgsqlParameter<bool> { TypedValue = listing.OnMannequin },
+                        ConvertMateriaToParameter(listing.Materia),
+                        new NpgsqlParameter<int> { TypedValue = listing.PricePerUnit },
+                        new NpgsqlParameter<int> { TypedValue = listing.Quantity },
+                        new NpgsqlParameter<int> { TypedValue = listing.DyeId },
+                        new NpgsqlParameter<string> { TypedValue = listing.CreatorName },
+                        new NpgsqlParameter<DateTime> { TypedValue = listing.LastReviewTime },
+                        new NpgsqlParameter<string> { TypedValue = listing.RetainerId },
+                        new NpgsqlParameter<string> { TypedValue = listing.RetainerName },
+                        new NpgsqlParameter<int> { TypedValue = listing.RetainerCityId },
+                        new NpgsqlParameter<DateTime> { TypedValue = uploadedAt.UtcDateTime },
+                        new NpgsqlParameter<string> { TypedValue = listing.Source },
+                    },
+                });
+            }
 
-        await WriteMinListingCache(worldId, itemId, listings);
+            try
+            {
+                rowsUpdated += await batch.ExecuteNonQueryAsync(cancellationToken);
+                await _easyCachingProvider.RemoveAsync(ListingsKey(worldID, itemID), cancellationToken);
+            }
+            catch (Exception e)
+            {
+                activity?.AddTag("rowsUpdated", rowsUpdated);
+                _logger.LogError(e, "Failed to insert listings (world={}, item={})", worldID,
+                    itemID);
+                throw;
+            }
+
+            await WriteMinListingCache(worldID, itemID, listings);
+        }
 
         activity?.AddTag("rowsUpdated", rowsUpdated);
     }

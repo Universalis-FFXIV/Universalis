@@ -47,7 +47,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 l.WorldId = worldId;
                 l.Source = uploadSource;
             }
-            await _listingStore.ReplaceLive(itemId, worldId, listings, cancellationToken);
+            await _listingStore.ReplaceLive(listings, cancellationToken);
         }
         else
         {
