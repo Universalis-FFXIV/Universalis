@@ -24,7 +24,7 @@ public class SaleStore : ISaleStore, IDisposable
             Buckets = Histogram.ExponentialBuckets(1, 2, 16),
         });
 
-    private readonly ICacheRedisMultiplexer _cache;
+    private readonly IPersistentRedisMultiplexer _cache;
     private readonly ILogger<SaleStore> _logger;
 
     private readonly Lazy<ISession> _scylla;
@@ -34,7 +34,7 @@ public class SaleStore : ISaleStore, IDisposable
 
     private readonly SemaphoreSlim _lock;
 
-    public SaleStore(ICluster scylla, ICacheRedisMultiplexer cache, ILogger<SaleStore> logger, IWorldToDcRegion worldToDcRegion)
+    public SaleStore(ICluster scylla, IPersistentRedisMultiplexer cache, ILogger<SaleStore> logger, IWorldToDcRegion worldToDcRegion)
     {
         _cache = cache;
         _logger = logger;
@@ -56,9 +56,9 @@ public class SaleStore : ISaleStore, IDisposable
         });
 
         _insertStatement = new Lazy<PreparedStatement>(() => _scylla.Value.Prepare("" +
-            "INSERT INTO sale" +
-            "(id, sale_time, item_id, world_id, buyer_name, hq, on_mannequin, quantity, unit_price, uploader_id)" +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"));
+                                                                                   "INSERT INTO sale" +
+                                                                                   "(id, sale_time, item_id, world_id, buyer_name, hq, on_mannequin, quantity, unit_price, uploader_id)" +
+                                                                                   "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"));
 
         _mapper = new Lazy<IMapper>(() => new Mapper(_scylla.Value));
     }
@@ -105,15 +105,13 @@ public class SaleStore : ISaleStore, IDisposable
                 throw;
             }
         }
-        await WriteSaleCache(_cache.GetDatabase(RedisDatabases.Cache.Sales), sales);
+        await WriteSaleCache(_cache.GetDatabase(RedisDatabases.Instance0.Aggregates), sales, cancellationToken);
     }
 
-    private Task WriteSaleCache(IDatabase cache, IEnumerable<Sale> sales)
+    private async Task WriteSaleCache(IDatabase cache, IEnumerable<Sale> sales, CancellationToken cancellationToken = default)
     {
         try
         {
-            var batch = cache.CreateBatch();
-            var toBatch = new LinkedList<Task>();
             var expireTime = DateTime.Today.AddDays(7);
             foreach (var byWorld in sales.GroupBy(s => s.WorldId))
             {
@@ -129,32 +127,32 @@ public class SaleStore : ISaleStore, IDisposable
                     foreach (var scope in scopes)
                     {
                         var priceAggKey = GetTradeVolumeCacheKey(scope, itemId, hq, true, date);
-                        toBatch.AddLast(batch.StringIncrementAsync(priceAggKey, quantitySum, CommandFlags.FireAndForget));
-                        toBatch.AddLast(batch.KeyExpireAsync(priceAggKey, expireTime, ExpireWhen.HasNoExpiry, CommandFlags.FireAndForget));
+                        await cache.StringIncrementAsync(priceAggKey, quantitySum, CommandFlags.FireAndForget);
+                        await cache.KeyExpireAsync(priceAggKey, expireTime, ExpireWhen.HasNoExpiry, CommandFlags.FireAndForget);
                         var quantAggKey = GetTradeVolumeCacheKey(scope, itemId, hq, false, date);
-                        toBatch.AddLast(batch.StringIncrementAsync(quantAggKey, priceSum, CommandFlags.FireAndForget));
-                        toBatch.AddLast(batch.KeyExpireAsync(quantAggKey, expireTime, ExpireWhen.HasNoExpiry, CommandFlags.FireAndForget));
+                        await cache.StringIncrementAsync(quantAggKey, priceSum, CommandFlags.FireAndForget);
+                        await cache.KeyExpireAsync(quantAggKey, expireTime, ExpireWhen.HasNoExpiry, CommandFlags.FireAndForget);
                     }
                 }
                 // write the timestamps of the most recent sale
-                foreach (var ((itemId, hq), saleTime) in byWorld.GroupBy(s => (s.ItemId, s.Hq)).Select(g => (g.Key, g.Max(s => s.SaleTime))))
+                foreach (var ((itemId, hq), sale) in byWorld.GroupBy(s => (s.ItemId, s.Hq)).Select(g => (g.Key, g.MaxBy(s => s.SaleTime))))
                 {
-                    var time = new DateTimeOffset(saleTime).ToUnixTimeMilliseconds();
-                    toBatch.AddLast(batch.SortedSetAddAsync(GetRecentSaleCacheKey(dc, itemId, hq), worldId, time, SortedSetWhen.GreaterThan, CommandFlags.FireAndForget));
-                    toBatch.AddLast(batch.SortedSetAddAsync(GetRecentSaleCacheKey(region, itemId, hq), worldId, time, SortedSetWhen.GreaterThan, CommandFlags.FireAndForget));
+                    var time = new DateTimeOffset(sale.SaleTime).ToUnixTimeMilliseconds();
+                    var worldKey = GetRecentSaleCacheKey(worldId.ToString(), itemId, hq);
+                    var values = new KeyValuePair<RedisKey, RedisValue>[] { new($"{worldKey}:time", time), new($"{worldKey}:price", sale.PricePerUnit) };
+                    await cache.StringSetAsync(values, flags: CommandFlags.FireAndForget);
+                    await cache.SortedSetAddAsync(GetRecentSaleCacheKey(dc, itemId, hq), worldId, time, SortedSetWhen.GreaterThan, CommandFlags.FireAndForget);
+                    await cache.SortedSetAddAsync(GetRecentSaleCacheKey(region, itemId, hq), worldId, time, SortedSetWhen.GreaterThan, CommandFlags.FireAndForget);
                 }
             }
-            batch.Execute();
-            return Task.WhenAll(toBatch);
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to create sales cache");
-            return Task.CompletedTask;
         }
     }
 
-    public async Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null, bool? hq = null,
+    public async Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null,
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("SaleStore.RetrieveBySaleTime");
@@ -178,7 +176,6 @@ public class SaleStore : ISaleStore, IDisposable
         activity?.AddTag("query.itemId", itemId);
         activity?.AddTag("query.count", count);
         activity?.AddTag("query.from", from?.ToString("s", CultureInfo.InvariantCulture));
-        activity?.AddTag("query.hq", hq?.ToString());
 
         if (count == 0)
         {
@@ -186,24 +183,14 @@ public class SaleStore : ISaleStore, IDisposable
         }
 
         // Fetch data from the database
-        var query = "SELECT id, sale_time, item_id, world_id, buyer_name, hq, on_mannequin, quantity, unit_price, uploader_id FROM sale WHERE item_id=? AND world_id=?";
-        var param = new List<object>() { itemId, worldId };
-        if (from != null)
-        {
-            query += " AND sale_time>=?";
-            param.Add(new DateTimeOffset(from.Value).ToUnixTimeMilliseconds());
-        }
-        if (hq != null)
-        {
-            query += " AND hq=?";
-            param.Add(hq);
-        }
-        param.Add(count);
+        var timestamp = from == null ? 0 : new DateTimeOffset(from.Value).ToUnixTimeMilliseconds();
         try
         {
             activity?.AddEvent(new ActivityEvent("CassandraFetchAsync"));
             RowsReadCount.Observe(count);
-            var sales = await _mapper.Value.FetchAsync<Sale>($"{query} ORDER BY sale_time DESC LIMIT ? ALLOW FILTERING", param.ToArray());
+            var sales = await _mapper.Value.FetchAsync<Sale>(
+                "SELECT id, sale_time, item_id, world_id, buyer_name, hq, on_mannequin, quantity, unit_price, uploader_id FROM sale WHERE item_id=? AND world_id=? AND sale_time>=? ORDER BY sale_time DESC LIMIT ?",
+                itemId, worldId, timestamp, count);
             return sales
                 .Select(static sale =>
                 {
@@ -223,7 +210,7 @@ public class SaleStore : ISaleStore, IDisposable
         using var activity = Util.ActivitySource.StartActivity("SaleStore.RetrieveUnitTradeVelocity");
 
         // Check if the data needed is cached
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
+        var cache = _cache.GetDatabase(RedisDatabases.Instance0.Aggregates);
         var quantityNq = 0L;
         var quantityHq = 0L;
         var sumSalesNq = 0L;
@@ -255,7 +242,20 @@ public class SaleStore : ISaleStore, IDisposable
         var endTime = to == today ? DateTime.UtcNow : to.ToDateTime(TimeOnly.MaxValue);
         var totalDays = (endTime - startTime).TotalDays;
 
-        return (new TradeVelocity(quantityNq, sumSalesNq, quantityNq / totalDays), new TradeVelocity(quantityHq, sumSalesHq, quantityHq / totalDays));
+        return (
+            new TradeVelocity
+            {
+                Quantity = quantityNq,
+                SumSales = sumSalesNq,
+                AvgSalesPerDay = quantityNq / totalDays
+            },
+            new TradeVelocity
+            {
+                Quantity = quantityHq,
+                SumSales = sumSalesHq,
+                AvgSalesPerDay = quantityHq / totalDays
+            }
+        );
     }
 
     private static IEnumerable<TradeVolumeCacheKey> GetUnitTradeVolumeCacheKeys(string worldIdDcRegion, int itemId, DateOnly from, DateOnly to)
@@ -266,22 +266,31 @@ public class SaleStore : ISaleStore, IDisposable
                 yield return new TradeVolumeCacheKey(isHq, isQuantity, GetTradeVolumeCacheKey(worldIdDcRegion, itemId, isHq, isQuantity, date));
     }
 
-    public async Task<Sale> GetMostRecentSaleInWorld(int worldId, int itemId, bool hq)
+    public async Task<RecentSale> GetMostRecentSaleInWorld(int worldId, int itemId, bool hq, CancellationToken cancellationToken = default)
     {
-        var sales = await RetrieveBySaleTime(worldId, itemId, 1, hq: hq);
-        return sales.FirstOrDefault();
+        var cache = _cache.GetDatabase(RedisDatabases.Instance0.Aggregates);
+        var key = GetRecentSaleCacheKey(worldId.ToString(), itemId, hq);
+        var sale = await cache.StringGetAsync(new RedisKey[] { $"{key}:time", $"{key}:price" });
+        if (sale[0].TryParse(out long time) && sale[1].TryParse(out int price))
+            return new RecentSale
+            {
+                UnitPrice = price,
+                SaleTime = DateTimeOffset.FromUnixTimeMilliseconds(time).DateTime,
+                WorldId = worldId,
+            };
+        return null;
     }
 
-    public async Task<Sale> GetMostRecentSaleInDatacenterOrRegion(string dcOrRegion, int itemId, bool hq)
+    public async Task<RecentSale> GetMostRecentSaleInDatacenterOrRegion(string dcOrRegion, int itemId, bool hq, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("SaleStore.GetMostRecentSaleInDatacenterOrRegion");
 
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.Sales);
+        var cache = _cache.GetDatabase(RedisDatabases.Instance0.Aggregates);
         var key = GetRecentSaleCacheKey(dcOrRegion, itemId, hq);
         var results = await cache.SortedSetRangeByScoreAsync(key, order: Order.Descending, take: 1, flags: CommandFlags.PreferReplica);
         if (results.Length == 0 || !results[0].TryParse(out int worldId))
             return null;
-        return await GetMostRecentSaleInWorld(worldId, itemId, hq);
+        return await GetMostRecentSaleInWorld(worldId, itemId, hq, cancellationToken);
     }
 
     private static RedisKey GetRecentSaleCacheKey(string dcOrRegion, int itemId, bool hq) =>

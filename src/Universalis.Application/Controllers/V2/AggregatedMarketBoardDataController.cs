@@ -10,7 +10,6 @@ using Universalis.Application.Swagger;
 using Universalis.Application.Views.V2;
 using Universalis.Common.GameData;
 using Universalis.DbAccess.MarketBoard;
-using Universalis.DbAccess.Queries.MarketBoard;
 using Universalis.Entities.MarketBoard;
 using Universalis.GameData;
 
@@ -112,22 +111,28 @@ public class AggregatedMarketBoardDataController : WorldDcRegionControllerBase
             try
             {
                 cts.Token.ThrowIfCancellationRequested();
-                var minListing = await FetchMinListing(itemId, worldId, dcName, regionName);
-                var uploadTimes = await FetchUploadTimes(itemId, worldId, minListing, cts);
+                var minListing = await FetchMinListing(itemId, worldId, dcName, regionName, cts.Token);
+                var uploadTimes = await FetchUploadTimes(itemId, worldId, minListing, cts.Token);
                 var worldVelocity = await _dbAccess.RetrieveUnitTradeVelocity(worldId.ToString(), itemId, tradeVelocityCalculationRange, today, cts.Token);
                 var dcVelocity = await _dbAccess.RetrieveUnitTradeVelocity(dcName, itemId, tradeVelocityCalculationRange, today, cts.Token);
                 var regionVelocity = await _dbAccess.RetrieveUnitTradeVelocity(regionName, itemId, tradeVelocityCalculationRange, today, cts.Token);
 
-                var nq = await GetAggregatedResult(worldId, itemId, dcName, regionName, worldVelocity.Nq, dcVelocity.Nq, regionVelocity.Nq, minListing, false);
-                var hq = await GetAggregatedResult(worldId, itemId, dcName, regionName, worldVelocity.Hq, dcVelocity.Hq, regionVelocity.Hq, minListing, true);
+                var nq = await GetAggregatedResult(worldId, itemId, dcName, regionName, worldVelocity.Nq, dcVelocity.Nq, regionVelocity.Nq, minListing, false, cts.Token);
+                var hq = await GetAggregatedResult(worldId, itemId, dcName, regionName, worldVelocity.Hq, dcVelocity.Hq, regionVelocity.Hq, minListing, true, cts.Token);
 
-                results.Add(new AggregatedMarketBoardData.Result(itemId, nq, hq, uploadTimes));
+                results.Add(new AggregatedMarketBoardData.Result
+                {
+                    ItemId = itemId,
+                    Nq = nq,
+                    Hq = hq,
+                    WorldUploadTimes = uploadTimes,
+                });
             }
-            catch (OperationCanceledException e)
+            catch (OperationCanceledException)
             {
                 return StatusCode(StatusCodes.Status504GatewayTimeout);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 failedItems.Add(itemId);
             }
@@ -139,71 +144,97 @@ public class AggregatedMarketBoardDataController : WorldDcRegionControllerBase
         return Ok(new AggregatedMarketBoardData(results, failedItems));
     }
 
-    private async Task<List<AggregatedMarketBoardData.WorldUploadTime>> FetchUploadTimes(int itemId, int? worldId, MinListing minListing, CancellationTokenSource cts)
+    private async Task<List<AggregatedMarketBoardData.WorldUploadTime>> FetchUploadTimes(int itemId, int? worldId, MinListing minListing, CancellationToken cancellationToken)
     {
-        var worldUploadTimes = await _dbAccess.RetrieveWorldUploadTimes(itemId, cts.Token,
+        var worldUploadTimes = await _dbAccess.RetrieveWorldUploadTimes(itemId, cancellationToken,
             worldId ?? 0, minListing.Dc?.Nq?.WorldId ?? 0, minListing.Dc?.Hq?.WorldId ?? 0, minListing.Region?.Nq?.WorldId ?? 0, minListing.Region?.Hq?.WorldId ?? 0);
         return worldUploadTimes
             .Select(w => new AggregatedMarketBoardData.WorldUploadTime(w.WorldId, new DateTimeOffset(w.LastUploadTime).ToUnixTimeMilliseconds()))
             .ToList();
     }
 
-    private async Task<MinListing> FetchMinListing(int itemId, int? worldId, string dcName, string regionName)
+    private async Task<MinListing> FetchMinListing(int itemId, int? worldId, string dcName, string regionName, CancellationToken ctsToken)
     {
         if (worldId != null)
-            return await _dbAccess.GetMinListing(worldId.Value, itemId);
-        var dc = dcName != null ? await _dbAccess.GetMinListing(dcName, itemId) : null;
-        var region = await _dbAccess.GetMinListing(regionName, itemId);
-        return new MinListing(null, dc, region);
+            return await _dbAccess.GetMinListing(worldId.Value, itemId, ctsToken);
+        var dc = dcName != null ? await _dbAccess.GetMinListing(dcName, itemId, ctsToken) : null;
+        var region = await _dbAccess.GetMinListing(regionName, itemId, ctsToken);
+        return new MinListing { Dc = dc, Region = region };
     }
 
     private async Task<AggregatedMarketBoardData.AggregatedResult> GetAggregatedResult(int? worldId, int itemId, string dcName, string regionName, TradeVelocity worldVelocity, TradeVelocity dcVelocity,
-        TradeVelocity regionVelocity, MinListing minListing, bool hq)
+        TradeVelocity regionVelocity, MinListing minListing, bool hq, CancellationToken cancellationToken = default)
     {
-        var recentPurchaseWorld = worldId != null ? await _dbAccess.GetMostRecentSaleInWorld(worldId.Value, itemId, hq) : null;
-        var recentPurchaseDc = dcName != null ? await _dbAccess.GetMostRecentSaleInDatacenterOrRegion(dcName, itemId, hq) : null;
-        var recentPurchaseRegion = await _dbAccess.GetMostRecentSaleInDatacenterOrRegion(regionName, itemId, hq);
+        var recentPurchaseWorld = worldId != null ? await _dbAccess.GetMostRecentSaleInWorld(worldId.Value, itemId, hq, cancellationToken) : null;
+        var recentPurchaseDc = dcName != null ? await _dbAccess.GetMostRecentSaleInDatacenterOrRegion(dcName, itemId, hq, cancellationToken) : null;
+        var recentPurchaseRegion = await _dbAccess.GetMostRecentSaleInDatacenterOrRegion(regionName, itemId, hq, cancellationToken);
 
-        return new AggregatedMarketBoardData.AggregatedResult(
-            GetMinListing(minListing, hq ? e => e?.Hq : e => e?.Nq),
-            null,
-            RecentPurchase(recentPurchaseWorld, recentPurchaseDc, recentPurchaseRegion),
-            GetAverageSalePrice(worldVelocity, dcVelocity, regionVelocity),
-            GetDailySaleVelocity(worldVelocity, dcVelocity, regionVelocity));
+        return new AggregatedMarketBoardData.AggregatedResult
+        {
+            MinListing = GetMinListing(minListing, hq ? e => e?.Hq : e => e?.Nq),
+            RecentPurchase = RecentPurchase(recentPurchaseWorld, recentPurchaseDc, recentPurchaseRegion),
+            AverageSalePrice = GetAverageSalePrice(worldVelocity, dcVelocity, regionVelocity),
+            DailySaleVelocity = GetDailySaleVelocity(worldVelocity, dcVelocity, regionVelocity)
+        };
     }
 
     private static AggregatedMarketBoardData.MinListing GetMinListing(MinListing minListing, Func<MinListing.Entry, MinListing.Price> selector)
     {
-        return new AggregatedMarketBoardData.MinListing(
-            selector(minListing?.World) is var (_, wPrice) ? new AggregatedMarketBoardData.MinListing.Entry(wPrice, null) : null,
-            selector(minListing?.Dc) is var (dWorld, dPrice) ? new AggregatedMarketBoardData.MinListing.Entry(dPrice, dWorld) : null,
-            selector(minListing?.Region) is var (rWorld, rPrice) ? new AggregatedMarketBoardData.MinListing.Entry(rPrice, rWorld) : null);
+        return new AggregatedMarketBoardData.MinListing
+        {
+            World = selector(minListing?.World) is var (_, wPrice) ? new AggregatedMarketBoardData.MinListing.Entry(wPrice, null) : null,
+            Dc = selector(minListing?.Dc) is var (dWorld, dPrice) ? new AggregatedMarketBoardData.MinListing.Entry(dPrice, dWorld) : null,
+            Region = selector(minListing?.Region) is var (rWorld, rPrice) ? new AggregatedMarketBoardData.MinListing.Entry(rPrice, rWorld) : null,
+        };
     }
 
-    private static AggregatedMarketBoardData.RecentPurchase RecentPurchase(Sale recentPurchaseWorld, Sale recentPurchaseDc, Sale recentPurchaseRegion)
+    private static AggregatedMarketBoardData.RecentPurchase RecentPurchase(RecentSale recentPurchaseWorld, RecentSale recentPurchaseDc, RecentSale recentPurchaseRegion)
     {
-        return new AggregatedMarketBoardData.RecentPurchase(
-            recentPurchaseWorld != null ? new AggregatedMarketBoardData.RecentPurchase.Entry(
-                recentPurchaseWorld.PricePerUnit, new DateTimeOffset(recentPurchaseWorld.SaleTime).ToUnixTimeMilliseconds(), null) : null,
-            recentPurchaseDc != null ? new AggregatedMarketBoardData.RecentPurchase.Entry(
-                recentPurchaseDc.PricePerUnit, new DateTimeOffset(recentPurchaseDc.SaleTime).ToUnixTimeMilliseconds(), recentPurchaseDc.WorldId) : null,
-            recentPurchaseRegion != null ? new AggregatedMarketBoardData.RecentPurchase.Entry(
-                recentPurchaseRegion.PricePerUnit, new DateTimeOffset(recentPurchaseRegion.SaleTime).ToUnixTimeMilliseconds(), recentPurchaseRegion.WorldId) : null);
+        return new AggregatedMarketBoardData.RecentPurchase
+        {
+            World = recentPurchaseWorld != null
+                ? new AggregatedMarketBoardData.RecentPurchase.Entry
+                {
+                    Price = recentPurchaseWorld.UnitPrice,
+                    Timestamp = new DateTimeOffset(recentPurchaseWorld.SaleTime).ToUnixTimeMilliseconds(),
+                }
+                : null,
+            Dc = recentPurchaseDc != null
+                ? new AggregatedMarketBoardData.RecentPurchase.Entry
+                {
+                    Price = recentPurchaseDc.UnitPrice,
+                    Timestamp = new DateTimeOffset(recentPurchaseDc.SaleTime).ToUnixTimeMilliseconds(),
+                    WorldId = recentPurchaseDc.WorldId
+                }
+                : null,
+            Region = recentPurchaseRegion != null
+                ? new AggregatedMarketBoardData.RecentPurchase.Entry
+                {
+                    Price = recentPurchaseRegion.UnitPrice,
+                    Timestamp = new DateTimeOffset(recentPurchaseRegion.SaleTime).ToUnixTimeMilliseconds(),
+                    WorldId = recentPurchaseRegion.WorldId
+                }
+                : null,
+        };
     }
 
     private static AggregatedMarketBoardData.DailySaleVelocity GetDailySaleVelocity(TradeVelocity worldVelocity, TradeVelocity dcVelocity, TradeVelocity regionVelocity)
     {
-        return new AggregatedMarketBoardData.DailySaleVelocity(
-            worldVelocity != null ? new AggregatedMarketBoardData.DailySaleVelocity.Entry(worldVelocity.AvgSalesPerDay) : null,
-            dcVelocity != null ? new AggregatedMarketBoardData.DailySaleVelocity.Entry(dcVelocity.AvgSalesPerDay) : null,
-            regionVelocity != null ? new AggregatedMarketBoardData.DailySaleVelocity.Entry(regionVelocity.AvgSalesPerDay) : null);
+        return new AggregatedMarketBoardData.DailySaleVelocity
+        {
+            World = worldVelocity != null ? new AggregatedMarketBoardData.DailySaleVelocity.Entry(worldVelocity.AvgSalesPerDay) : null,
+            Dc = dcVelocity != null ? new AggregatedMarketBoardData.DailySaleVelocity.Entry(dcVelocity.AvgSalesPerDay) : null,
+            Region = regionVelocity != null ? new AggregatedMarketBoardData.DailySaleVelocity.Entry(regionVelocity.AvgSalesPerDay) : null,
+        };
     }
 
     private static AggregatedMarketBoardData.AverageSalePrice GetAverageSalePrice(TradeVelocity worldVelocity, TradeVelocity dcVelocity, TradeVelocity regionVelocity)
     {
-        return new AggregatedMarketBoardData.AverageSalePrice(
-            worldVelocity is { Quantity: > 0 } ? new AggregatedMarketBoardData.AverageSalePrice.Entry(worldVelocity.SumSales / (double)worldVelocity.Quantity) : null,
-            dcVelocity is { Quantity: > 0 } ? new AggregatedMarketBoardData.AverageSalePrice.Entry(dcVelocity.SumSales / (double)dcVelocity.Quantity) : null,
-            regionVelocity is { Quantity: > 0 } ? new AggregatedMarketBoardData.AverageSalePrice.Entry(regionVelocity.SumSales / (double)regionVelocity.Quantity) : null);
+        return new AggregatedMarketBoardData.AverageSalePrice
+        {
+            World = worldVelocity is { Quantity: > 0 } ? new AggregatedMarketBoardData.AverageSalePrice.Entry(worldVelocity.SumSales / (double)worldVelocity.Quantity) : null,
+            Dc = dcVelocity is { Quantity: > 0 } ? new AggregatedMarketBoardData.AverageSalePrice.Entry(dcVelocity.SumSales / (double)dcVelocity.Quantity) : null,
+            Region = regionVelocity is { Quantity: > 0 } ? new AggregatedMarketBoardData.AverageSalePrice.Entry(regionVelocity.SumSales / (double)regionVelocity.Quantity) : null,
+        };
     }
 }

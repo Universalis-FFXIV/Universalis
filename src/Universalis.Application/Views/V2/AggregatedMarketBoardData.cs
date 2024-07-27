@@ -7,63 +7,70 @@ public record AggregatedMarketBoardData(
     List<int> FailedItems
 )
 {
-    public record Result(
-        int ItemId,
-        AggregatedResult Nq,
-        AggregatedResult Hq,
-        List<WorldUploadTime> WorldUploadTimes
-    );
-
-    public record AggregatedResult(
-        MinListing MinListing,
-        MedianListing MedianListing,
-        RecentPurchase RecentPurchase,
-        AverageSalePrice AverageSalePrice,
-        DailySaleVelocity DailySaleVelocity
-    );
-
-    public record MinListing(
-        MinListing.Entry World,
-        MinListing.Entry Dc,
-        MinListing.Entry Region
-    )
+    public record Result
     {
+        public required int ItemId { get; init; }
+        public required AggregatedResult Nq { get; init; }
+        public required AggregatedResult Hq { get; init; }
+        public required List<WorldUploadTime> WorldUploadTimes { get; init; }
+    }
+
+    public record AggregatedResult
+    {
+        public required MinListing MinListing { get; init; }
+        public MedianListing MedianListing { get; init; }
+        public required RecentPurchase RecentPurchase { get; init; }
+        public required AverageSalePrice AverageSalePrice { get; init; }
+        public required DailySaleVelocity DailySaleVelocity { get; init; }
+    }
+
+    public record MinListing
+    {
+        public required Entry World { get; init; }
+        public required Entry Dc { get; init; }
+        public required Entry Region { get; init; }
+
         public record Entry(int Price, int? WorldId);
     }
 
-    public record MedianListing(
-        MedianListing.Entry World,
-        MedianListing.Entry Dc,
-        MedianListing.Entry Region
-    )
+    public record MedianListing
     {
+        public required Entry World { get; init; }
+        public required Entry Dc { get; init; }
+        public required Entry Region { get; init; }
+
         public record Entry(int Price);
     }
 
-    public record RecentPurchase(
-        RecentPurchase.Entry World,
-        RecentPurchase.Entry Dc,
-        RecentPurchase.Entry Region
-    )
+    public record RecentPurchase
     {
-        public record Entry(int Price, long Timestamp, int? WorldId);
+        public required Entry World { get; init; }
+        public required Entry Dc { get; init; }
+        public required Entry Region { get; init; }
+
+        public record Entry
+        {
+            public required int Price { get; init; }
+            public required long Timestamp { get; init; }
+            public int? WorldId { get; init; }
+        }
     }
 
-    public record AverageSalePrice(
-        AverageSalePrice.Entry World,
-        AverageSalePrice.Entry Dc,
-        AverageSalePrice.Entry Region
-    )
+    public record AverageSalePrice
     {
+        public required Entry World { get; init; }
+        public required Entry Dc { get; init; }
+        public required Entry Region { get; init; }
+
         public record Entry(double Price);
     }
 
-    public record DailySaleVelocity(
-        DailySaleVelocity.Entry World,
-        DailySaleVelocity.Entry Dc,
-        DailySaleVelocity.Entry Region
-    )
+    public record DailySaleVelocity
     {
+        public required Entry World { get; init; }
+        public required Entry Dc { get; init; }
+        public required Entry Region { get; init; }
+
         public record Entry(double Quantity);
     }
 

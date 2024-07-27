@@ -53,11 +53,11 @@ public class ListingStore : IListingStore
     private readonly ILogger<ListingStore> _logger;
     private readonly IEasyCachingProvider _easyCachingProvider;
     private readonly NpgsqlDataSource _dataSource;
-    private readonly ICacheRedisMultiplexer _cache;
+    private readonly IPersistentRedisMultiplexer _cache;
     private readonly IWorldToDcRegion _worldToDcRegion;
 
     public ListingStore(NpgsqlDataSource dataSource, IEasyCachingProvider easyCachingProvider,
-        ILogger<ListingStore> logger, ICacheRedisMultiplexer cache, IWorldToDcRegion worldToDcRegion)
+        ILogger<ListingStore> logger, IPersistentRedisMultiplexer cache, IWorldToDcRegion worldToDcRegion)
     {
         _easyCachingProvider = easyCachingProvider;
         _dataSource = dataSource;
@@ -172,62 +172,63 @@ public class ListingStore : IListingStore
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.WriteMinListingCache");
 
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var cache = _cache.GetDatabase(RedisDatabases.Instance0.Aggregates);
         var minListingNq = listings.Where(l => !l.Hq).MinBy(l => l.PricePerUnit);
         var minListingHq = listings.Where(l => l.Hq).MinBy(l => l.PricePerUnit);
         var (dc, region) = _worldToDcRegion.Get(worldId);
-        var batch = cache.CreateBatch();
-        var toBatch = new LinkedList<Task>();
         if (minListingNq != null)
         {
-            toBatch.AddLast(batch.StringSetAsync(GetMinListingCacheKey(worldId, itemId, false), minListingNq.PricePerUnit, flags: CommandFlags.FireAndForget));
-            toBatch.AddLast(batch.SortedSetAddAsync(GetMinListingCacheKey(dc, itemId, false), worldId, minListingNq.PricePerUnit, flags: CommandFlags.FireAndForget));
-            toBatch.AddLast(batch.SortedSetAddAsync(GetMinListingCacheKey(region, itemId, false), worldId, minListingNq.PricePerUnit, flags: CommandFlags.FireAndForget));
+            await cache.StringSetAsync(GetMinListingCacheKey(worldId, itemId, false), minListingNq.PricePerUnit, flags: CommandFlags.FireAndForget);
+            await cache.SortedSetAddAsync(GetMinListingCacheKey(dc, itemId, false), worldId, minListingNq.PricePerUnit, flags: CommandFlags.FireAndForget);
+            await cache.SortedSetAddAsync(GetMinListingCacheKey(region, itemId, false), worldId, minListingNq.PricePerUnit, flags: CommandFlags.FireAndForget);
         }
         else
         {
-            toBatch.AddLast(batch.KeyDeleteAsync(GetMinListingCacheKey(worldId, itemId, false), CommandFlags.FireAndForget));
-            toBatch.AddLast(batch.SortedSetRemoveAsync(GetMinListingCacheKey(dc, itemId, false), worldId, CommandFlags.FireAndForget));
-            toBatch.AddLast(batch.SortedSetRemoveAsync(GetMinListingCacheKey(region, itemId, false), worldId, CommandFlags.FireAndForget));
+            await cache.KeyDeleteAsync(GetMinListingCacheKey(worldId, itemId, false), CommandFlags.FireAndForget);
+            await cache.SortedSetRemoveAsync(GetMinListingCacheKey(dc, itemId, false), worldId, CommandFlags.FireAndForget);
+            await cache.SortedSetRemoveAsync(GetMinListingCacheKey(region, itemId, false), worldId, CommandFlags.FireAndForget);
         }
         if (minListingHq != null)
         {
-            toBatch.AddLast(batch.StringSetAsync(GetMinListingCacheKey(worldId, itemId, true), minListingHq.PricePerUnit, flags: CommandFlags.FireAndForget));
-            toBatch.AddLast(batch.SortedSetAddAsync(GetMinListingCacheKey(dc, itemId, true), worldId, minListingHq.PricePerUnit, flags: CommandFlags.FireAndForget));
-            toBatch.AddLast(batch.SortedSetAddAsync(GetMinListingCacheKey(region, itemId, true), worldId, minListingHq.PricePerUnit, flags: CommandFlags.FireAndForget));
+            await cache.StringSetAsync(GetMinListingCacheKey(worldId, itemId, true), minListingHq.PricePerUnit, flags: CommandFlags.FireAndForget);
+            await cache.SortedSetAddAsync(GetMinListingCacheKey(dc, itemId, true), worldId, minListingHq.PricePerUnit, flags: CommandFlags.FireAndForget);
+            await cache.SortedSetAddAsync(GetMinListingCacheKey(region, itemId, true), worldId, minListingHq.PricePerUnit, flags: CommandFlags.FireAndForget);
         }
         else
         {
-            toBatch.AddLast(batch.KeyDeleteAsync(GetMinListingCacheKey(worldId, itemId, true), CommandFlags.FireAndForget));
-            toBatch.AddLast(batch.SortedSetRemoveAsync(GetMinListingCacheKey(dc, itemId, true), worldId, CommandFlags.FireAndForget));
-            toBatch.AddLast(batch.SortedSetRemoveAsync(GetMinListingCacheKey(region, itemId, true), worldId, CommandFlags.FireAndForget));
+            await cache.KeyDeleteAsync(GetMinListingCacheKey(worldId, itemId, true), CommandFlags.FireAndForget);
+            await cache.SortedSetRemoveAsync(GetMinListingCacheKey(dc, itemId, true), worldId, CommandFlags.FireAndForget);
+            await cache.SortedSetRemoveAsync(GetMinListingCacheKey(region, itemId, true), worldId, CommandFlags.FireAndForget);
         }
-        batch.Execute();
-        await Task.WhenAll(toBatch);
     }
 
     private static RedisKey GetMinListingCacheKey(object worldIdDcRegion, int itemId, bool hq) =>
         $"min-listing:{worldIdDcRegion}:{itemId}:{(hq ? "hq" : "nq")}";
 
-    public async Task<MinListing> GetMinListing(int worldId, int itemId)
+    public async Task<MinListing> GetMinListing(int worldId, int itemId, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.GetMinListing");
 
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var cache = _cache.GetDatabase(RedisDatabases.Instance0.Aggregates);
         var (dc, region) = _worldToDcRegion.Get(worldId);
         var values = await cache.StringGetAsync(new[] { GetMinListingCacheKey(worldId, itemId, false), GetMinListingCacheKey(worldId, itemId, true) }, CommandFlags.PreferReplica);
         var nqPrice = values[0].TryParse(out int nq) ? new MinListing.Price(worldId, nq) : null;
         var hqPrice = values[1].TryParse(out int hq) ? new MinListing.Price(worldId, hq) : null;
-        var dcMin = await GetMinListingForDcOrRegion(dc, itemId);
-        var regionMin = await GetMinListingForDcOrRegion(region, itemId);
-        return new MinListing(new MinListing.Entry(nqPrice, hqPrice), dcMin, regionMin);
+        var dcMin = await GetMinListingForDcOrRegion(dc, itemId, cancellationToken);
+        var regionMin = await GetMinListingForDcOrRegion(region, itemId, cancellationToken);
+        return new MinListing
+        {
+            World = new MinListing.Entry(nqPrice, hqPrice),
+            Dc = dcMin,
+            Region = regionMin,
+        };
     }
 
-    public async Task<MinListing.Entry> GetMinListingForDcOrRegion(string dcOrRegion, int itemId)
+    public async Task<MinListing.Entry> GetMinListingForDcOrRegion(string dcOrRegion, int itemId, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.GetMinListingForDcOrRegion");
 
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.Listings);
+        var cache = _cache.GetDatabase(RedisDatabases.Instance0.Aggregates);
         var minEntryNq = await cache.SortedSetRangeByScoreWithScoresAsync(GetMinListingCacheKey(dcOrRegion, itemId, false), take: 1, flags: CommandFlags.PreferReplica);
         var nqPrice = minEntryNq.Length > 0 && minEntryNq[0].Element.TryParse(out int worldIdNq) ? new MinListing.Price(worldIdNq, (int)minEntryNq[0].Score) : null;
         var minEntryHq = await cache.SortedSetRangeByScoreWithScoresAsync(GetMinListingCacheKey(dcOrRegion, itemId, true), take: 1, flags: CommandFlags.PreferReplica);

@@ -52,7 +52,7 @@ public class HistoryDbAccessTests
             }
         }
 
-        public Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null, bool? hq = null,
+        public Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null,
             CancellationToken cancellationToken = default)
         {
             return Task.FromResult((IEnumerable<Sale>)_data
@@ -69,12 +69,12 @@ public class HistoryDbAccessTests
             throw new NotImplementedException();
         }
 
-        public Task<Sale> GetMostRecentSaleInWorld(int worldId, int itemId, bool hq)
+        public Task<RecentSale> GetMostRecentSaleInWorld(int worldId, int itemId, bool hq, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public Task<Sale> GetMostRecentSaleInDatacenterOrRegion(string dcOrRegion, int itemId, bool hq)
+        public Task<RecentSale> GetMostRecentSaleInDatacenterOrRegion(string dcOrRegion, int itemId, bool hq, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

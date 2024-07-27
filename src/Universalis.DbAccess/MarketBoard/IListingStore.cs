@@ -16,7 +16,7 @@ public interface IListingStore
 
     Task<IDictionary<WorldItemPair, IList<Listing>>> RetrieveManyLive(ListingManyQuery query, CancellationToken cancellationToken = default);
 
-    Task<MinListing> GetMinListing(int worldId, int itemId);
+    Task<MinListing> GetMinListing(int worldId, int itemId, CancellationToken cancellationToken = default);
 
-    Task<MinListing.Entry> GetMinListingForDcOrRegion(string dcOrRegion, int itemId);
+    Task<MinListing.Entry> GetMinListingForDcOrRegion(string dcOrRegion, int itemId, CancellationToken cancellationToken = default);
 }

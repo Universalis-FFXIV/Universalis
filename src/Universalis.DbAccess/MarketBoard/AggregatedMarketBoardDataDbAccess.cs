@@ -20,14 +20,14 @@ public class AggregatedMarketBoardDataDbAccess : IAggregatedMarketBoardDataDbAcc
         _marketItemStore = marketItemStore;
     }
 
-    public Task<MinListing> GetMinListing(int worldId, int itemId)
+    public Task<MinListing> GetMinListing(int worldId, int itemId, CancellationToken cancellationToken = default)
     {
-        return _listingStore.GetMinListing(worldId, itemId);
+        return _listingStore.GetMinListing(worldId, itemId, cancellationToken);
     }
 
-    public Task<MinListing.Entry> GetMinListing(string dcRegion, int itemId)
+    public Task<MinListing.Entry> GetMinListing(string dcRegion, int itemId, CancellationToken cancellationToken = default)
     {
-        return _listingStore.GetMinListingForDcOrRegion(dcRegion, itemId);
+        return _listingStore.GetMinListingForDcOrRegion(dcRegion, itemId, cancellationToken);
     }
 
     public ValueTask<IEnumerable<MarketItem>> RetrieveWorldUploadTimes(int itemId, CancellationToken cancellationToken, params int[] worldIds)
@@ -35,14 +35,14 @@ public class AggregatedMarketBoardDataDbAccess : IAggregatedMarketBoardDataDbAcc
         return _marketItemStore.RetrieveMany(new MarketItemManyQuery { ItemIds = new[] { itemId }, WorldIds = worldIds }, cancellationToken);
     }
 
-    public Task<Sale> GetMostRecentSaleInWorld(int worldId, int itemId, bool hq)
+    public Task<RecentSale> GetMostRecentSaleInWorld(int worldId, int itemId, bool hq, CancellationToken cancellationToken = default)
     {
-        return _saleStore.GetMostRecentSaleInWorld(worldId, itemId, hq);
+        return _saleStore.GetMostRecentSaleInWorld(worldId, itemId, hq, cancellationToken);
     }
 
-    public Task<Sale> GetMostRecentSaleInDatacenterOrRegion(string dcRegion, int itemId, bool hq)
+    public Task<RecentSale> GetMostRecentSaleInDatacenterOrRegion(string dcRegion, int itemId, bool hq, CancellationToken cancellationToken = default)
     {
-        return _saleStore.GetMostRecentSaleInDatacenterOrRegion(dcRegion, itemId, hq);
+        return _saleStore.GetMostRecentSaleInDatacenterOrRegion(dcRegion, itemId, hq, cancellationToken);
     }
 
     public Task<(TradeVelocity Nq, TradeVelocity Hq)> RetrieveUnitTradeVelocity(string worldIdDcRegion, int itemId, DateOnly from, DateOnly to, CancellationToken cancellationToken)

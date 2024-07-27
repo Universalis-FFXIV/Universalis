@@ -64,7 +64,7 @@ public class SalesController : ControllerBase
                 worldDataActivity?.AddTag("itemId", itemId);
                 worldDataActivity?.AddTag("worldId", world.Id);
 
-                var data = await Store.RetrieveBySaleTime(world.Id, itemId, SalesPerPage, salesCursor.From, null, ct);
+                var data = await Store.RetrieveBySaleTime(world.Id, itemId, SalesPerPage, salesCursor.From, ct);
                 return data.ToAsyncEnumerable()
                     .Select(sale => ToSaleView(world, sale));
             })

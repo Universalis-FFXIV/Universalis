@@ -9,15 +9,15 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public interface IAggregatedMarketBoardDataDbAccess
 {
-    Task<MinListing> GetMinListing(int worldId, int itemId);
+    Task<MinListing> GetMinListing(int worldId, int itemId, CancellationToken cancellationToken = default);
 
-    Task<MinListing.Entry> GetMinListing(string dcRegion, int itemId);
+    Task<MinListing.Entry> GetMinListing(string dcRegion, int itemId, CancellationToken cancellationToken = default);
 
     ValueTask<IEnumerable<MarketItem>> RetrieveWorldUploadTimes(int itemId, CancellationToken cancellationToken, params int[] worldIds);
 
-    Task<Sale> GetMostRecentSaleInWorld(int worldId, int itemId, bool hq);
+    Task<RecentSale> GetMostRecentSaleInWorld(int worldId, int itemId, bool hq, CancellationToken cancellationToken = default);
 
-    Task<Sale> GetMostRecentSaleInDatacenterOrRegion(string dcRegion, int itemId, bool hq);
+    Task<RecentSale> GetMostRecentSaleInDatacenterOrRegion(string dcRegion, int itemId, bool hq, CancellationToken cancellationToken = default);
 
     Task<(TradeVelocity Nq, TradeVelocity Hq)> RetrieveUnitTradeVelocity(string worldIdDcRegion, int itemId, DateOnly from, DateOnly to, CancellationToken cancellationToken);
 }

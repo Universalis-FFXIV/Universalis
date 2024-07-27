@@ -10,13 +10,13 @@ public interface ISaleStore
 {
     Task InsertMany(ICollection<Sale> sales, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null, bool? hq = null,
+    Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTime? from = null,
         CancellationToken cancellationToken = default);
 
     Task<(TradeVelocity Nq, TradeVelocity Hq)> RetrieveUnitTradeVelocity(string worldIdDcRegion, int itemId, DateOnly from, DateOnly to,
         CancellationToken cancellationToken = default);
 
-    Task<Sale> GetMostRecentSaleInWorld(int worldId, int itemId, bool hq);
+    Task<RecentSale> GetMostRecentSaleInWorld(int worldId, int itemId, bool hq, CancellationToken cancellationToken = default);
 
-    Task<Sale> GetMostRecentSaleInDatacenterOrRegion(string dcOrRegion, int itemId, bool hq);
+    Task<RecentSale> GetMostRecentSaleInDatacenterOrRegion(string dcOrRegion, int itemId, bool hq, CancellationToken cancellationToken = default);
 }
