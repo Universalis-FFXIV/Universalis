@@ -32,6 +32,8 @@ public class AggregatedMarketBoardDataController : WorldDcRegionControllerBase
     /// <summary>
     /// Retrieves aggregated market board data for the given items.
     /// Up to 100 item IDs can be comma-separated in order to retrieve data for multiple items at once.
+    /// AverageSalePrice and DailySaleVelocity are calculated based on sales of the last 4 days.
+    /// This API uses only cached values and is therefore strongly preferred over CurrentlyShown if individual sales/listings are not required.
     /// </summary>
     /// <param name="itemIds">The item ID or comma-separated item IDs to retrieve data for.</param>
     /// <param name="worldDcRegion">The world, data center, or region to retrieve data for. This may be an ID or a name. Regions should be specified as Japan, Europe, North-America, Oceania, China, or 中国.</param>

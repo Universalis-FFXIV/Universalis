@@ -63,8 +63,8 @@ public class WorldDcRegion
                 else
                 {
                     if (!gameData.DataCenters().Any(dc => cleanText.Equals(dc.Region, StringComparison.InvariantCultureIgnoreCase)))
-                    {
-                        return false;
+                {
+                    return false;
                     }
 
                     regionName = cleanText;

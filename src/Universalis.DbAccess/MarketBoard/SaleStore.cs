@@ -222,7 +222,7 @@ public class SaleStore : ISaleStore, IDisposable
 
             for (var i = 0; i < cacheKeys.Count; i++)
             {
-                if (cached[i].IsNull || cached[i].TryParse(out long val)) continue;
+                if (cached[i].IsNull || !cached[i].TryParse(out long val)) continue;
                 _ = (cacheKeys[i].Hq, cacheKeys[i].IsQuantity) switch
                 {
                     (true, true) => quantityHq += val,
