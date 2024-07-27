@@ -137,46 +137,37 @@ public class MarketItemStore : IMarketItemStore
             return cacheValues.Values;
         }
 
-        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
-        await using var batch = new NpgsqlBatch(connection);
-
-        foreach (var (worldId, itemId) in worldItemPairs)
-        {
-            batch.BatchCommands.Add(
-                new NpgsqlBatchCommand("SELECT updated FROM market_item WHERE item_id = $1 AND world_id = $2")
-                {
-                    Parameters =
-                    {
-                        new NpgsqlParameter<int> { TypedValue = itemId },
-                        new NpgsqlParameter<int> { TypedValue = worldId },
-                    },
-                });
-        }
+        await using var command = _dataSource.CreateCommand(
+            """
+            SELECT updated, item_id, world_id
+            FROM market_item
+            WHERE item_id = ANY($1) AND world_id = ANY($2)
+            """);
+        command.Parameters.Add(new NpgsqlParameter<int[]>
+            { TypedValue = worldItemPairs.Select(wip => wip.ItemId).Distinct().ToArray() });
+        command.Parameters.Add(new NpgsqlParameter<int[]>
+            { TypedValue = worldItemPairs.Select(wip => wip.WorldId).Distinct().ToArray() });
 
         try
         {
             await using var reader =
-                await batch.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
+                await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
             var marketItemRecords = new Dictionary<WorldItemPair, MarketItem>();
-            var batchesRead = 0;
-            do
+            while (await reader.ReadAsync(cancellationToken))
             {
-                var wip = worldItemPairs[batchesRead];
-                var (worldId, itemId) = wip;
-                if (await reader.ReadAsync(cancellationToken))
-                {
-                    marketItemRecords[wip] = new MarketItem
-                    {
-                        ItemId = itemId,
-                        WorldId = worldId,
-                        LastUploadTime = reader.GetDateTime(0),
-                    };
-                }
+                var lastUploadTime = reader.GetDateTime(0);
+                var itemId = reader.GetInt32(1);
+                var worldId = reader.GetInt32(2);
+                var wip = new WorldItemPair(worldId, itemId);
 
-                batchesRead++;
-                await reader.NextResultAsync(cancellationToken);
-            } while (batchesRead != worldItemPairs.Count);
+                marketItemRecords[wip] = new MarketItem
+                {
+                    ItemId = itemId,
+                    WorldId = worldId,
+                    LastUploadTime = lastUploadTime,
+                };
+            }
 
             // Cache the results, except for things we already got from the cache
             activity?.AddEvent(new ActivityEvent("StoreMarketItemInCacheMulti"));
