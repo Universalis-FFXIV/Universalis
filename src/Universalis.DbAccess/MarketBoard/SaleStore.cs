@@ -222,7 +222,7 @@ public class SaleStore : ISaleStore, IDisposable
 
             for (var i = 0; i < cacheKeys.Count; i++)
             {
-                if (!cached[i].TryParse(out long val)) continue;
+                if (cached[i].IsNull || cached[i].TryParse(out long val)) continue;
                 _ = (cacheKeys[i].Hq, cacheKeys[i].IsQuantity) switch
                 {
                     (true, true) => quantityHq += val,
@@ -243,18 +243,22 @@ public class SaleStore : ISaleStore, IDisposable
         var totalDays = (endTime - startTime).TotalDays;
 
         return (
-            new TradeVelocity
-            {
-                Quantity = quantityNq,
-                SumSales = sumSalesNq,
-                AvgSalesPerDay = quantityNq / totalDays
-            },
-            new TradeVelocity
-            {
-                Quantity = quantityHq,
-                SumSales = sumSalesHq,
-                AvgSalesPerDay = quantityHq / totalDays
-            }
+            quantityNq > 0
+                ? new TradeVelocity
+                {
+                    Quantity = quantityNq,
+                    SumSales = sumSalesNq,
+                    AvgSalesPerDay = quantityNq / totalDays,
+                }
+                : null,
+            quantityHq > 0
+                ? new TradeVelocity
+                {
+                    Quantity = quantityHq,
+                    SumSales = sumSalesHq,
+                    AvgSalesPerDay = quantityHq / totalDays,
+                }
+                : null
         );
     }
 
@@ -271,11 +275,11 @@ public class SaleStore : ISaleStore, IDisposable
         var cache = _cache.GetDatabase(RedisDatabases.Instance0.Aggregates);
         var key = GetRecentSaleCacheKey(worldId.ToString(), itemId, hq);
         var sale = await cache.StringGetAsync(new RedisKey[] { $"{key}:time", $"{key}:price" });
-        if (sale[0].TryParse(out long time) && sale[1].TryParse(out int price))
+        if (sale[0] != RedisValue.Null && sale[1] != RedisValue.Null && sale[0].TryParse(out long time) && sale[1].TryParse(out int price))
             return new RecentSale
             {
                 UnitPrice = price,
-                SaleTime = DateTimeOffset.FromUnixTimeMilliseconds(time).DateTime,
+                SaleTime = DateTimeOffset.FromUnixTimeMilliseconds(time).UtcDateTime,
                 WorldId = worldId,
             };
         return null;

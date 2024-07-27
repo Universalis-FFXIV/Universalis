@@ -212,8 +212,8 @@ public class ListingStore : IListingStore
         var cache = _cache.GetDatabase(RedisDatabases.Instance0.Aggregates);
         var (dc, region) = _worldToDcRegion.Get(worldId);
         var values = await cache.StringGetAsync(new[] { GetMinListingCacheKey(worldId, itemId, false), GetMinListingCacheKey(worldId, itemId, true) }, CommandFlags.PreferReplica);
-        var nqPrice = values[0].TryParse(out int nq) ? new MinListing.Price(worldId, nq) : null;
-        var hqPrice = values[1].TryParse(out int hq) ? new MinListing.Price(worldId, hq) : null;
+        var nqPrice = values[0] != RedisValue.Null && values[0].TryParse(out int nq) ? new MinListing.Price(worldId, nq) : null;
+        var hqPrice = values[1] != RedisValue.Null && values[1].TryParse(out int hq) ? new MinListing.Price(worldId, hq) : null;
         var dcMin = await GetMinListingForDcOrRegion(dc, itemId, cancellationToken);
         var regionMin = await GetMinListingForDcOrRegion(region, itemId, cancellationToken);
         return new MinListing
