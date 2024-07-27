@@ -215,6 +215,98 @@ public class ListingStoreTests
         });
     }
 
+#if DEBUG
+    [Fact]
+#endif
+    public async Task GetMinListing_Works()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, 2);
+        await store.ReplaceLive(currentlyShown.Listings);
+        var result = await store.GetMinListing(93, 2);
+
+        Assert.True(100 <= result?.World?.Nq?.UnitPrice);
+        Assert.True(100 <= result?.World?.Hq?.UnitPrice);
+        Assert.NotEqual(result?.World?.Nq?.UnitPrice, result?.World?.Hq?.UnitPrice);
+        Assert.Equal(result?.World?.Nq?.UnitPrice, result?.Dc?.Nq?.UnitPrice);
+        Assert.Equal(result?.World?.Hq?.UnitPrice, result?.Dc?.Hq?.UnitPrice);
+        Assert.Equal(result?.World?.Nq?.UnitPrice, result?.Region?.Nq?.UnitPrice);
+        Assert.Equal(result?.World?.Hq?.UnitPrice, result?.Region?.Hq?.UnitPrice);
+
+        await store.DeleteLive(new ListingQuery { ItemId = 2, WorldId = 93 });
+        result = await store.GetMinListing(93, 2);
+        Assert.Null(result.World.Nq);
+        Assert.Null(result.World.Hq);
+        Assert.Null(result.Dc.Nq);
+        Assert.Null(result.Dc.Hq);
+        Assert.Null(result.Region.Nq);
+        Assert.Null(result.Region.Hq);
+    }
+
+#if DEBUG
+    [Fact]
+#endif
+    public async Task GetMinListingInDcOrRegion_Works()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, 2);
+        await store.ReplaceLive(currentlyShown.Listings);
+        var dc = await store.GetMinListingForDcOrRegion("Gaia", 2);
+        var region = await store.GetMinListingForDcOrRegion("Japan", 2);
+
+        Assert.Equal(dc?.Nq?.UnitPrice, region?.Nq?.UnitPrice);
+        Assert.Equal(dc?.Hq?.UnitPrice, region?.Hq?.UnitPrice);
+    }
+
+#if DEBUG
+    [Fact]
+#endif
+    public async Task GetMinListing_WorksWithMultipleWorlds()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        // create 2 Listings in Gaia, 1 in Chaos, 1 in Light
+        var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(92, 2);
+        await store.ReplaceLive(currentlyShown.Listings);
+        currentlyShown = SeedDataGenerator.MakeCurrentlyShown(93, 2);
+        // make sure 93 is cheaper than 92
+        currentlyShown.Listings.First(l => !l.Hq).PricePerUnit = 50;
+        currentlyShown.Listings.First(l => l.Hq).PricePerUnit = 60;
+        await store.ReplaceLive(currentlyShown.Listings);
+
+        currentlyShown = SeedDataGenerator.MakeCurrentlyShown(39, 2);
+        await store.ReplaceLive(currentlyShown.Listings);
+        currentlyShown = SeedDataGenerator.MakeCurrentlyShown(36, 2);
+        // make sure 36 is cheaper than 39
+        currentlyShown.Listings.First(l => !l.Hq).PricePerUnit = 30;
+        currentlyShown.Listings.First(l => l.Hq).PricePerUnit = 40;
+        await store.ReplaceLive(currentlyShown.Listings);
+
+        // create unrelated data
+        currentlyShown = SeedDataGenerator.MakeCurrentlyShown(36, 3);
+        currentlyShown.Listings.First(l => !l.Hq).PricePerUnit = 10;
+        currentlyShown.Listings.First(l => l.Hq).PricePerUnit = 20;
+        await store.ReplaceLive(currentlyShown.Listings);
+
+        var result = await store.GetMinListing(92, 2);
+        Assert.True(100 <= result?.World?.Nq?.UnitPrice);
+        Assert.True(100 <= result?.World?.Hq?.UnitPrice);
+        Assert.Equal(50, result?.Dc?.Nq?.UnitPrice);
+        Assert.Equal(60, result?.Dc?.Hq?.UnitPrice);
+        Assert.Equal(50, result?.Region?.Nq?.UnitPrice);
+        Assert.Equal(60, result?.Region?.Hq?.UnitPrice);
+
+        result = await store.GetMinListing(39, 2);
+        Assert.True(100 <= result?.World?.Nq?.UnitPrice);
+        Assert.True(100 <= result?.World?.Hq?.UnitPrice);
+        Assert.Equal(result?.World?.Nq?.UnitPrice, result?.Dc?.Nq?.UnitPrice);
+        Assert.Equal(result?.World?.Hq?.UnitPrice, result?.Dc?.Hq?.UnitPrice);
+        Assert.Equal(30, result?.Region?.Nq?.UnitPrice);
+        Assert.Equal(40, result?.Region?.Hq?.UnitPrice);
+    }
+
     private static void AssertEqual(Listing expected, Listing actual)
     {
         Assert.Equal(expected.ListingId, actual.ListingId);

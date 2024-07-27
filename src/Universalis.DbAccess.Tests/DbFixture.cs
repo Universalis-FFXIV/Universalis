@@ -7,17 +7,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using FluentMigrator.Runner;
+using Universalis.Common.GameData;
 using Xunit;
 
 namespace Universalis.DbAccess.Tests;
 
 public class DbFixture : IAsyncLifetime
 {
-    private readonly TestcontainersContainer _scylla;
-    private readonly TestcontainersContainer _cache1;
-    private readonly TestcontainersContainer _cache2;
-    private readonly TestcontainersContainer _redis;
-    private readonly TestcontainersContainer _postgres;
+    private readonly IContainer _scylla;
+    private readonly IContainer _cache1;
+    private readonly IContainer _cache2;
+    private readonly IContainer _redis;
+    private readonly IContainer _postgres;
 
     private readonly Lazy<IServiceProvider> _services;
 
@@ -25,42 +26,43 @@ public class DbFixture : IAsyncLifetime
 
     public DbFixture()
     {
-        _scylla = new TestcontainersBuilder<TestcontainersContainer>()
+        _scylla = new ContainerBuilder()
             .WithName(Guid.NewGuid().ToString("D"))
             .WithImage("scylladb/scylla:5.1.3")
             .WithExposedPort(9042)
             .WithPortBinding(9042)
             .WithCommand("--smp", "1", "--overprovisioned", "1", "--memory", "512M")
-            .WithCreateContainerParametersModifier(o =>
+            .WithCreateParameterModifier(o =>
             {
                 o.HostConfig.CPUCount = 1;
             })
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Scylla .* initialization completed."))
             .Build();
-        _cache1 = new TestcontainersBuilder<TestcontainersContainer>()
+        _cache1 = new ContainerBuilder()
             .WithName(Guid.NewGuid().ToString("D"))
             .WithImage("redis:7.0.8")
             .WithPortBinding(6379, true)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(6379))
             .Build();
-        _cache2 = new TestcontainersBuilder<TestcontainersContainer>()
+        _cache2 = new ContainerBuilder()
             .WithName(Guid.NewGuid().ToString("D"))
             .WithImage("redis:7.0.8")
             .WithPortBinding(6379, true)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(6379))
             .Build();
-        _redis = new TestcontainersBuilder<TestcontainersContainer>()
+        _redis = new ContainerBuilder()
             .WithName(Guid.NewGuid().ToString("D"))
             .WithImage("redis:7.0.8")
             .WithPortBinding(6379, true)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(6379))
             .Build();
-        _postgres = new TestcontainersBuilder<TestcontainersContainer>()
+        _postgres = new ContainerBuilder()
             .WithName(Guid.NewGuid().ToString("D"))
             .WithImage("postgres:14.6")
             .WithEnvironment("POSTGRES_USER", "universalis")
             .WithEnvironment("POSTGRES_PASSWORD", "universalis")
             .WithPortBinding(5432, true)
-            .WithCreateContainerParametersModifier(o =>
+            .WithCreateParameterModifier(o =>
             {
                 o.HostConfig.ShmSize = 512 * 1024 * 1024;
             })
@@ -72,7 +74,7 @@ public class DbFixture : IAsyncLifetime
 
     private IServiceProvider CreateServiceProvider()
     {
-        Task.Delay(60000).GetAwaiter().GetResult();
+        Task.WhenAll(_scylla.StartAsync(), _cache1.StartAsync(), _cache2.StartAsync(), _redis.StartAsync(), _postgres.StartAsync()).GetAwaiter().GetResult();
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
@@ -83,7 +85,7 @@ public class DbFixture : IAsyncLifetime
             .AddInMemoryCollection(new Dictionary<string, string>
             {
                 { "RedisCacheConnectionString", $"{_cache1.Hostname}:{_cache1.GetMappedPublicPort(6379)},{_cache2.Hostname}:{_cache2.GetMappedPublicPort(6379)}" },
-                { "RedisConnectionString", $"{_redis.Hostname}:{_redis.GetMappedPublicPort(6379)}" },
+                { "RedisConnectionString", $"{_redis.Hostname}:{_redis.GetMappedPublicPort(6379)},allowAdmin=true" },
                 { "ScyllaConnectionString", "localhost" },
                 { "PostgresConnectionString", $"Host={_postgres.Hostname};Port={_postgres.GetMappedPublicPort(5432)};Username=universalis;Password=universalis;Database=universalis" },
             })
@@ -91,8 +93,9 @@ public class DbFixture : IAsyncLifetime
         services.AddLogging();
         services.AddSingleton<IConfiguration>(configuration);
         services.AddDbAccessServices(configuration);
+        services.AddSingleton<IWorldToDcRegion>(new WorldToDcRegionMock());
         var provider = services.BuildServiceProvider();
-        
+
         // Run database migrations
         var runner = provider.GetRequiredService<IMigrationRunner>();
         runner.MigrateUp();
@@ -116,5 +119,28 @@ public class DbFixture : IAsyncLifetime
         await _cache2.DisposeAsync().ConfigureAwait(false);
         await _scylla.DisposeAsync().ConfigureAwait(false);
         await _postgres.DisposeAsync().ConfigureAwait(false);
+    }
+
+    public async Task ClearCache()
+    {
+        foreach (var server in _services.Value.GetRequiredService<IPersistentRedisMultiplexer>().GetDatabase().Multiplexer.GetServers())
+        {
+            await server.FlushAllDatabasesAsync();
+        }
+    }
+
+    private class WorldToDcRegionMock : IWorldToDcRegion
+    {
+        public (string Dc, string Region) Get(int worldId)
+        {
+            return worldId switch
+            {
+                92 or 93 => ("Gaia", "Japan"),
+                39 => ("Chaos", "Europe"),
+                40 => ("Chaos", "Europe"),
+                36 => ("Light", "Europe"),
+                _ => ("Unknown", "Unknown")
+            };
+        }
     }
 }

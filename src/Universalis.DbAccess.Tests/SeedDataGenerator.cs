@@ -74,13 +74,13 @@ public static class SeedDataGenerator
                     Hq = rand.NextDouble() > 0.5,
                     PricePerUnit = rand.Next(100, 60000),
                     Quantity = rand.Next(1, (int)maxStackSize),
-                    SaleTime = DateTime.UtcNow - new TimeSpan(rand.Next(0, 2100000000)),
+                    SaleTime = new DateTime((DateTime.UtcNow.Ticks - rand.Next(0, 2100000000)) / TimeSpan.TicksPerMillisecond * TimeSpan.TicksPerMillisecond, DateTimeKind.Utc),
                     UploaderIdHash = "2A",
                 })
                 .ToList(),
         };
     }
-    
+
     public static TaxRates MakeTaxRates(int worldId)
     {
         return new TaxRates
