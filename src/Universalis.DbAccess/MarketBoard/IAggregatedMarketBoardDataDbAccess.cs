@@ -11,6 +11,8 @@ public interface IAggregatedMarketBoardDataDbAccess
 {
     Task<MinListing> GetMinListing(int worldId, int itemId);
 
+    Task<MinListing.Entry> GetMinListing(string dcRegion, int itemId);
+
     ValueTask<IEnumerable<MarketItem>> RetrieveWorldUploadTimes(int itemId, CancellationToken cancellationToken, params int[] worldIds);
 
     Task<Sale> GetMostRecentSaleInWorld(int worldId, int itemId, bool hq);

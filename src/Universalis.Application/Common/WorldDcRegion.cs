@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Universalis.GameData;
 
 namespace Universalis.Application.Common;
@@ -54,19 +55,19 @@ public class WorldDcRegion
 
             if (!worldIdParsed)
             {
-                if (!gameData.DataCenters().Select(dc => dc.Name).Contains(cleanText))
+                if (gameData.DataCenters().FirstOrDefault(dc => cleanText.Equals(dc.Name, StringComparison.InvariantCultureIgnoreCase)) is { } dataCenter)
                 {
-                    if (!gameData.DataCenters().Select(dc => dc.Region.ToLowerInvariant())
-                            .Contains(cleanText.ToLowerInvariant()))
+                    dcName = cleanText;
+                    regionName = dataCenter.Region;
+                }
+                else
+                {
+                    if (!gameData.DataCenters().Any(dc => cleanText.Equals(dc.Region, StringComparison.InvariantCultureIgnoreCase)))
                     {
                         return false;
                     }
 
                     regionName = cleanText;
-                }
-                else
-                {
-                    dcName = cleanText;
                 }
             }
             else
@@ -86,7 +87,7 @@ public class WorldDcRegion
             WorldName = worldName,
             IsDc = dcName != null,
             DcName = dcName,
-            IsRegion = regionName != null,
+            IsRegion = dcName == null,
             RegionName = regionName,
         };
 

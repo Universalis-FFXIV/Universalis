@@ -25,6 +25,11 @@ public class AggregatedMarketBoardDataDbAccess : IAggregatedMarketBoardDataDbAcc
         return _listingStore.GetMinListing(worldId, itemId);
     }
 
+    public Task<MinListing.Entry> GetMinListing(string dcRegion, int itemId)
+    {
+        return _listingStore.GetMinListingForDcOrRegion(dcRegion, itemId);
+    }
+
     public ValueTask<IEnumerable<MarketItem>> RetrieveWorldUploadTimes(int itemId, CancellationToken cancellationToken, params int[] worldIds)
     {
         return _marketItemStore.RetrieveMany(new MarketItemManyQuery { ItemIds = new[] { itemId }, WorldIds = worldIds }, cancellationToken);
