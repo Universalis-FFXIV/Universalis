@@ -32,11 +32,15 @@ public class SaleStore : ISaleStore, IDisposable
     private readonly Lazy<PreparedStatement> _insertStatement;
     private readonly IWorldToDcRegion _worldToDcRegion;
 
+    private readonly SemaphoreSlim _lock;
+
     public SaleStore(ICluster scylla, ICacheRedisMultiplexer cache, ILogger<SaleStore> logger, IWorldToDcRegion worldToDcRegion)
     {
         _cache = cache;
         _logger = logger;
         _worldToDcRegion = worldToDcRegion;
+
+        _lock = new SemaphoreSlim(500, 500);
 
         // Doing database initialization in a constructor is a Bad Idea and
         // can lead to timeouts killing the application, so this just gets
@@ -154,6 +158,22 @@ public class SaleStore : ISaleStore, IDisposable
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("SaleStore.RetrieveBySaleTime");
+
+        // Reads from the sale table are prone to timeouts for some reason, so we throttle them here
+        await _lock.WaitAsync(cancellationToken);
+        try
+        {
+            return await RetrieveBySaleTimeCore(worldId, itemId, count, from);
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    private async Task<IEnumerable<Sale>> RetrieveBySaleTimeCore(int worldId, int itemId, int count, DateTime? from)
+    {
+        using var activity = Util.ActivitySource.StartActivity("SaleStore.RetrieveBySaleTimeCore");
         activity?.AddTag("query.worldId", worldId);
         activity?.AddTag("query.itemId", itemId);
         activity?.AddTag("query.count", count);
@@ -274,6 +294,7 @@ public class SaleStore : ISaleStore, IDisposable
 
     public void Dispose()
     {
+        _lock.Dispose();
         GC.SuppressFinalize(this);
     }
 }
