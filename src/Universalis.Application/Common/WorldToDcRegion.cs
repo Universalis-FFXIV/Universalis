@@ -6,7 +6,7 @@ namespace Universalis.Application.Common;
 
 public class WorldToDcRegion : IWorldToDcRegion
 {
-    private IGameDataProvider _gdp;
+    private readonly IGameDataProvider _gdp;
 
     public WorldToDcRegion(IGameDataProvider gameDataProvider)
     {
