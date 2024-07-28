@@ -68,7 +68,7 @@ public static class DbAccessExtensions
             .AddContactPoints(scyllaConnectionString.Split(','))
             .WithPoolingOptions(PoolingOptions.Create()
                 .SetMaxRequestsPerConnection(3000))
-            .WithSpeculativeExecutionPolicy(new ConstantSpeculativeExecutionPolicy(200, 3))
+            .WithSpeculativeExecutionPolicy(new ConstantSpeculativeExecutionPolicy(400, 3))
             .WithQueryOptions(new QueryOptions()
                 .SetDefaultIdempotence(true)
                 .SetPageSize(scyllaPageSize))
