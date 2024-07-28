@@ -69,6 +69,7 @@ public static class DbAccessExtensions
             .WithPoolingOptions(PoolingOptions.Create()
                 .SetMaxRequestsPerConnection(3000))
             .WithSpeculativeExecutionPolicy(new ConstantSpeculativeExecutionPolicy(400, 3))
+            .WithQueryTimeout(5000)
             .WithQueryOptions(new QueryOptions()
                 .SetDefaultIdempotence(true)
                 .SetPageSize(scyllaPageSize))
