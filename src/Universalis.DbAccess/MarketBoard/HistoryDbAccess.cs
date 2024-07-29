@@ -77,7 +77,7 @@ public class HistoryDbAccess : IHistoryDbAccess
         var itemIds = query.ItemIds.ToArray();
         var worldItemTuples = Enumerable.Repeat(itemIds, worldIds.Length)
             .Zip(worldIds)
-            .SelectMany(tup =>
+            .SelectMany(static tup =>
             {
                 var (iIds, worldId) = tup;
                 return Enumerable.Repeat(worldId, iIds.Length).Zip(iIds);
@@ -93,21 +93,11 @@ public class HistoryDbAccess : IHistoryDbAccess
         var marketItemsDict = marketItemsList.ToDictionary(mi => (mi.WorldId, mi.ItemId), mi => mi);
 
         // Get sales where an upload time is known
-        var salesByTuple = await Task.WhenAll(worldItemTuples
-            .Where(marketItemsDict.ContainsKey)
-            .Select(async tup =>
-            {
-                var (worldId, itemId) = tup;
-                var results = await _saleStore.RetrieveBySaleTime(worldId, itemId, query.Count ?? 1000,
-                    cancellationToken: cancellationToken);
-                return (worldId, itemId, results);
-            }));
-
-        // Collect the results
         var sales = new Dictionary<(int, int), IEnumerable<Sale>>();
-        foreach (var (worldId, itemId, results) in salesByTuple)
+        foreach (var (worldId, itemId) in worldItemTuples.Where(marketItemsDict.ContainsKey))
         {
-            sales[(worldId, itemId)] = results;
+            sales[(worldId, itemId)] = await _saleStore.RetrieveBySaleTime(worldId, itemId, query.Count ?? 200,
+                    cancellationToken: cancellationToken);
         }
 
         // Reformat the results as a History instance
