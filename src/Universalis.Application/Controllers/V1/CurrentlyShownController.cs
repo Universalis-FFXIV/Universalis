@@ -101,7 +101,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         var nEntries = 5;
         if (int.TryParse(entriesToReturn, out var queryEntries))
         {
-            nEntries = Math.Min(Math.Max(0, queryEntries), 200);
+            nEntries = Math.Min(Math.Max(0, queryEntries), 999999);
         }
 
         var statsWithinMs = 604800000L;
