@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Prometheus;
 using Universalis.Application.Swagger;
 using Universalis.Application.Uploads.Attributes;
 using Universalis.Application.Uploads.Behaviors;
@@ -22,6 +23,9 @@ namespace Universalis.Application.Controllers.V1;
 [Route("upload/{apiKey}")]
 public class UploadController : ControllerBase
 {
+    private static readonly Counter UploadCountSource =
+        Metrics.CreateCounter("universalis_upload_count_source", "", "Source");
+
     private readonly ITrustedSourceDbAccess _trustedSourceDb;
     private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
     private readonly IEnumerable<IUploadBehavior> _uploadBehaviors;
@@ -69,6 +73,7 @@ public class UploadController : ControllerBase
         }
 
         activity?.AddTag("source", source.Name);
+        UploadCountSource.Labels(source.Name).Inc();
 
         if (string.IsNullOrEmpty(parameters.UploaderId))
         {
