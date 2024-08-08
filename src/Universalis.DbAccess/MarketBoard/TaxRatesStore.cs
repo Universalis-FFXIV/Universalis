@@ -10,13 +10,11 @@ namespace Universalis.DbAccess.MarketBoard;
 public class TaxRatesStore : ITaxRatesStore
 {
     private readonly IPersistentRedisMultiplexer _redis;
-    private readonly ICacheRedisMultiplexer _cache;
     private readonly ILogger<TaxRatesStore> _logger;
 
-    public TaxRatesStore(IPersistentRedisMultiplexer redis, ICacheRedisMultiplexer cache, ILogger<TaxRatesStore> logger)
+    public TaxRatesStore(IPersistentRedisMultiplexer redis, ILogger<TaxRatesStore> logger)
     {
         _redis = redis;
-        _cache = cache;
         _logger = logger;
     }
 
@@ -26,36 +24,16 @@ public class TaxRatesStore : ITaxRatesStore
 
         // Store data in the database
         var db = _redis.GetDatabase(RedisDatabases.Instance0.TaxRates);
-        var dbTask = StoreTaxRates(db, taxRates, worldId);
-
-        // Write through to the cache
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.TaxRates);
-        var cacheTask = StoreTaxRates(cache, taxRates, worldId);
-
-        await Task.WhenAll(dbTask, cacheTask);
+        await StoreTaxRates(db, taxRates, worldId);
     }
 
     public async Task<TaxRates> GetTaxRates(int worldId)
     {
         using var activity = Util.ActivitySource.StartActivity("TaxRatesStore.GetTaxRates");
 
-        // Try to retrieve data from the cache
-        var cache = _cache.GetDatabase(RedisDatabases.Cache.TaxRates);
-        if (await HasTaxRates(cache, worldId))
-        {
-            var cachedObject = await FetchTaxRates(cache, worldId);
-            if (cachedObject != null)
-            {
-                return cachedObject;
-            }
-        }
-
         // Fetch the tax rates from the database
         var db = _redis.GetDatabase(RedisDatabases.Instance0.TaxRates);
         var taxRates = await FetchTaxRates(db, worldId);
-
-        // Store the result in the cache
-        await StoreTaxRates(cache, taxRates, worldId);
 
         return taxRates;
     }
