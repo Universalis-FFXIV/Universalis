@@ -42,6 +42,7 @@ public class TaxRatesUploadBehavior : IUploadBehavior
             Kugane = parameters.TaxRates.Kugane ?? existingTaxRates?.Kugane ?? 0,
             Crystarium = parameters.TaxRates.Crystarium ?? existingTaxRates?.Crystarium ?? 0,
             OldSharlayan = parameters.TaxRates.OldSharlayan ?? existingTaxRates?.OldSharlayan ?? 0,
+            Tuliyollal = parameters.TaxRates.Tuliyollal ?? existingTaxRates?.Tuliyollal ?? 0,
             UploadApplicationName = source.Name,
         }, new TaxRatesQuery
         {
