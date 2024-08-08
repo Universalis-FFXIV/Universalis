@@ -30,19 +30,30 @@ public class TaxRatesUploadBehavior : IUploadBehavior
         using var activity = Util.ActivitySource.StartActivity("TaxRatesUploadBehavior.Execute");
         activity?.AddTag("worldId", parameters.WorldId);
 
+        var uploadedTaxRates = parameters.TaxRates!;
+        activity?.AddTag("taxRates.limsaLominsa", uploadedTaxRates.LimsaLominsa);
+        activity?.AddTag("taxRates.gridania", uploadedTaxRates.Gridania);
+        activity?.AddTag("taxRates.uldah", uploadedTaxRates.Uldah);
+        activity?.AddTag("taxRates.ishgard", uploadedTaxRates.Ishgard);
+        activity?.AddTag("taxRates.kugane", uploadedTaxRates.Kugane);
+        activity?.AddTag("taxRates.crystarium", uploadedTaxRates.Crystarium);
+        activity?.AddTag("taxRates.sharlayan", uploadedTaxRates.OldSharlayan);
+        activity?.AddTag("taxRates.tuliyollal", uploadedTaxRates.Tuliyollal);
+        activity?.AddTag("source", source.Name);
+
         var existingTaxRates = await _taxRatesDb.Retrieve(new TaxRatesQuery { WorldId = parameters.WorldId!.Value },
             cancellationToken);
 
         await _taxRatesDb.Update(new TaxRates
         {
-            LimsaLominsa = parameters.TaxRates!.LimsaLominsa ?? existingTaxRates?.LimsaLominsa ?? 0,
-            Gridania = parameters.TaxRates.Gridania ?? existingTaxRates?.Gridania ?? 0,
-            Uldah = parameters.TaxRates.Uldah ?? existingTaxRates?.Uldah ?? 0,
-            Ishgard = parameters.TaxRates.Ishgard ?? existingTaxRates?.Ishgard ?? 0,
-            Kugane = parameters.TaxRates.Kugane ?? existingTaxRates?.Kugane ?? 0,
-            Crystarium = parameters.TaxRates.Crystarium ?? existingTaxRates?.Crystarium ?? 0,
-            OldSharlayan = parameters.TaxRates.OldSharlayan ?? existingTaxRates?.OldSharlayan ?? 0,
-            Tuliyollal = parameters.TaxRates.Tuliyollal ?? existingTaxRates?.Tuliyollal ?? 0,
+            LimsaLominsa = uploadedTaxRates.LimsaLominsa ?? existingTaxRates?.LimsaLominsa ?? 0,
+            Gridania = uploadedTaxRates.Gridania ?? existingTaxRates?.Gridania ?? 0,
+            Uldah = uploadedTaxRates.Uldah ?? existingTaxRates?.Uldah ?? 0,
+            Ishgard = uploadedTaxRates.Ishgard ?? existingTaxRates?.Ishgard ?? 0,
+            Kugane = uploadedTaxRates.Kugane ?? existingTaxRates?.Kugane ?? 0,
+            Crystarium = uploadedTaxRates.Crystarium ?? existingTaxRates?.Crystarium ?? 0,
+            OldSharlayan = uploadedTaxRates.OldSharlayan ?? existingTaxRates?.OldSharlayan ?? 0,
+            Tuliyollal = uploadedTaxRates.Tuliyollal ?? existingTaxRates?.Tuliyollal ?? 0,
             UploadApplicationName = source.Name,
         }, new TaxRatesQuery
         {
