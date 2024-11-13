@@ -46,6 +46,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{787839FD-3CAA-4856-85EF-5C3A83227A72}"
 	ProjectSection(SolutionItems) = preProject
 		..\README.md = ..\README.md
+		..\.github\workflows\codeql-analysis.yml = ..\.github\workflows\codeql-analysis.yml
+		..\.github\workflows\docker-image.yml = ..\.github\workflows\docker-image.yml
+		..\.github\workflows\docker-publish.yml = ..\.github\workflows\docker-publish.yml
+		..\.github\workflows\docker-publish-staging.yml = ..\.github\workflows\docker-publish-staging.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Monitoring", "Monitoring", "{2A82961C-F187-4316-8A4E-19FAECE6EFCE}"
