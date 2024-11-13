@@ -1,10 +1,9 @@
 using Lumina;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using LuminaWorld = Lumina.Excel.GeneratedSheets.World;
+using LuminaWorld = Lumina.Excel.Sheets.World;
 
 namespace Universalis.GameData;
 
@@ -59,7 +58,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
     /// <summary>
     /// Gets a read-only dictionary of all available worlds.
     /// </summary>
-    private static IReadOnlyDictionary<int, string> LoadAvailableWorlds(Lumina.GameData lumina)
+    private static Dictionary<int, string> LoadAvailableWorlds(Lumina.GameData lumina)
     {
         var worlds = lumina.GetExcelSheet<LuminaWorld>();
         if (worlds == null)
@@ -68,7 +67,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
         }
 
         return GetValidWorlds(worlds)
-            .Select(w => new World { Name = w.Name, Id = Convert.ToInt32(w.RowId) })
+            .Select(w => new World { Name = w.Name.ToString(), Id = Convert.ToInt32(w.RowId) })
             .Concat(ChineseServers.Worlds())
             .Concat(KoreanServers.Worlds())
             .ToDictionary(w => w.Id, w => w.Name);
@@ -77,7 +76,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
     /// <summary>
     /// Gets a read-only dictionary of all available worlds.
     /// </summary>
-    private static IReadOnlyDictionary<string, int> LoadAvailableWorldsReversed(Lumina.GameData lumina)
+    private static Dictionary<string, int> LoadAvailableWorldsReversed(Lumina.GameData lumina)
     {
         var worlds = lumina.GetExcelSheet<LuminaWorld>();
         if (worlds == null)
@@ -86,7 +85,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
         }
 
         return GetValidWorlds(worlds)
-            .Select(w => new World { Name = w.Name, Id = Convert.ToInt32(w.RowId) })
+            .Select(w => new World { Name = w.Name.ToString(), Id = Convert.ToInt32(w.RowId) })
             .Concat(ChineseServers.Worlds())
             .Concat(KoreanServers.Worlds())
             .ToDictionary(w => w.Name, w => w.Id);
@@ -95,7 +94,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
     /// <summary>
     /// Gets a read-only sorted set of all available world IDs.
     /// </summary>
-    private static IReadOnlySet<int> LoadAvailableWorldIds(Lumina.GameData lumina)
+    private static SortedSet<int> LoadAvailableWorldIds(Lumina.GameData lumina)
     {
         var worlds = lumina.GetExcelSheet<LuminaWorld>();
         if (worlds == null)
@@ -104,7 +103,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
         }
 
         return new SortedSet<int>(GetValidWorlds(worlds)
-            .Select(w => new World { Name = w.Name, Id = Convert.ToInt32(w.RowId) })
+            .Select(w => new World { Name = w.Name.ToString(), Id = Convert.ToInt32(w.RowId) })
             .Concat(ChineseServers.Worlds())
             .Concat(KoreanServers.Worlds())
             .Select(w => Convert.ToInt32(w.Id))
@@ -114,7 +113,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
     /// <summary>
     /// Gets a read-only sorted set of all marketable item IDs.
     /// </summary>
-    private static IReadOnlySet<int> LoadMarketableItems(Lumina.GameData lumina)
+    private static SortedSet<int> LoadMarketableItems(Lumina.GameData lumina)
     {
         var items = lumina.GetExcelSheet<Item>();
         if (items == null)
@@ -123,7 +122,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
         }
 
         return new SortedSet<int>(items
-            .Where(i => i.ItemSearchCategory.Value?.RowId >= 1)
+            .Where(i => i.ItemSearchCategory.Value.RowId >= 1)
             .Select(i => Convert.ToInt32(i.RowId))
             .ToList());
     }
@@ -131,7 +130,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
     /// <summary>
     /// Gets a read-only dictionary of the stack size limits for all marketable items.
     /// </summary>
-    private static IReadOnlyDictionary<int, int> LoadMarketableItemStackSizes(Lumina.GameData lumina)
+    private static Dictionary<int, int> LoadMarketableItemStackSizes(Lumina.GameData lumina)
     {
         var items = lumina.GetExcelSheet<Item>();
         if (items == null)
@@ -140,14 +139,14 @@ internal class LuminaGameDataProvider : IGameDataProvider
         }
 
         return items
-            .Where(i => i.ItemSearchCategory.Value?.RowId >= 1)
+            .Where(i => i.ItemSearchCategory.Value.RowId >= 1)
             .ToDictionary(i => Convert.ToInt32(i.RowId), i => Convert.ToInt32(i.StackSize));
     }
 
     /// <summary>
     /// Gets a list of all data centers.
     /// </summary>
-    private static IReadOnlyList<DataCenter> LoadDataCenters(Lumina.GameData lumina)
+    private static List<DataCenter> LoadDataCenters(Lumina.GameData lumina)
     {
         var dcs = lumina.GetExcelSheet<WorldDCGroupType>();
         var worlds = lumina.GetExcelSheet<LuminaWorld>();
@@ -160,10 +159,10 @@ internal class LuminaGameDataProvider : IGameDataProvider
             .Where(dc => dc.RowId is > 0 and < 99)
             .Select(dc => new DataCenter
             {
-                Name = dc.Name,
+                Name = dc.Name.ToString(),
                 Region = Regions.Map[dc.Region],
                 WorldIds = GetValidWorlds(worlds)
-                    .Where(w => w.DataCenter.Row == dc.RowId)
+                    .Where(w => w.DataCenter.RowId == dc.RowId)
                     .Select(w => Convert.ToInt32(w.RowId))
                     .ToArray(),
             })
@@ -179,7 +178,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
         // https://na.finalfantasyxiv.com/lodestone/topics/detail/93750e4b0d6d5a4faf6a00dee199082392f1a754
         var nonPublicButActualPublicWorlds = new uint[] { 408, 409, 410, 411 };
         return worlds
-            .Where(w => w.DataCenter.Row > 0)
+            .Where(w => w.DataCenter.RowId > 0)
             .Where(w => w.IsPublic || nonPublicButActualPublicWorlds.Contains(w.RowId))
             .Where(w => w.RowId != 25); // Chaos (world)
     }

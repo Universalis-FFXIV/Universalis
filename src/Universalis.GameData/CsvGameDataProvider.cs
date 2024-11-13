@@ -205,6 +205,6 @@ public class CsvGameDataProvider : IGameDataProvider
 
         [Index(1)] public string Name { get; set; }
 
-        [Index(2)] public byte Region { get; set; }
+        [Index(4)] public byte Region { get; set; }
     }
 }
