@@ -130,7 +130,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
 
             if (!GameData.MarketableItemIds().Contains(itemId))
             {
-                return Ok(new CurrentlyShownView());
+                return NotFound();
             }
 
             var (_, currentlyShownView) = await GetCurrentlyShownView(

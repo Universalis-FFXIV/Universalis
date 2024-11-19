@@ -423,7 +423,7 @@ public class CurrentlyShownControllerTests
         const int itemId = 0;
         var result = await test.Controller.Get(itemId.ToString(), "74");
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.IsType<NotFoundResult>(result);
     }
 
     [Fact]
@@ -451,7 +451,7 @@ public class CurrentlyShownControllerTests
         const int itemId = 0;
         var result = await test.Controller.Get(itemId.ToString(), "Crystal");
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.IsType<NotFoundResult>(result);
     }
 
     [Fact]
