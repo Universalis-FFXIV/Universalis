@@ -111,8 +111,11 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     private static bool IsInvalid(Universalis.Application.Uploads.Schema.Listing l)
     {
         // Listings can be up for at most 7 days - checking against 8 to give some buffer
-        var lastReviewTime = DateTimeOffset.FromUnixTimeSeconds(l.LastReviewTimeUnixSeconds ?? 0).UtcDateTime;
-        if ((DateTime.UtcNow - lastReviewTime).TotalDays >= 8)
+        var lastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds ?? 0;
+        var lastReviewTime = DateTimeOffset.FromUnixTimeSeconds(lastReviewTimeUnixSeconds).UtcDateTime;
+        
+        // For some reason the second check wasn't enough to catch this
+        if (lastReviewTimeUnixSeconds == 0 || (DateTime.UtcNow - lastReviewTime).TotalDays >= 8)
         {
             return false;
         }
