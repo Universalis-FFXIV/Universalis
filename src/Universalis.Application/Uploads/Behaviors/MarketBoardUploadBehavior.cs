@@ -114,8 +114,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var lastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds ?? 0;
         var lastReviewTime = DateTimeOffset.FromUnixTimeSeconds(lastReviewTimeUnixSeconds).UtcDateTime;
         
-        // For some reason the second check wasn't enough to catch this
-        if (lastReviewTimeUnixSeconds == 0 || (DateTime.UtcNow - lastReviewTime).TotalDays >= 8)
+        // For some reason the first check wasn't enough to catch this
+        if ((DateTime.UtcNow - lastReviewTime).TotalDays >= 8 || lastReviewTimeUnixSeconds == 0 || lastReviewTime.Year < 2024)
         {
             return false;
         }
