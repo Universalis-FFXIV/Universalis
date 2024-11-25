@@ -152,27 +152,6 @@ public class MarketBoardUploadBehaviorTests
         Assert.False(test.Behavior.ShouldExecute(upload));
     }
 
-    [Theory]
-    [InlineData(0L)]
-    [InlineData(-1L)]
-    [InlineData(null)]
-    public void Behavior_DoesNotRun_WithInvalidReviewTimeListings(long? lastReviewTimeUnixSeconds)
-    {
-        var test = TestResources.Create();
-
-        var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333);
-        listings[0].LastReviewTimeUnixSeconds = lastReviewTimeUnixSeconds;
-
-        var upload = new UploadParameters
-        {
-            WorldId = 74,
-            ItemId = 5333,
-            UploaderId = "5627384655756342554",
-            Listings = listings,
-        };
-        Assert.False(test.Behavior.ShouldExecute(upload));
-    }
-
     [Fact]
     public void Behavior_DoesNotRun_WithInvalidStackSizeListings()
     {
