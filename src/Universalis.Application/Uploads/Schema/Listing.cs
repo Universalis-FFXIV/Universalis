@@ -70,7 +70,7 @@ public class Listing
     public int? DyeId { get; init; }
 
     [JsonPropertyName("lastReviewTime")]
-    public long? LastReviewTimeUnixSeconds { get; init; }
+    public long? LastReviewTimeUnixSeconds { get; set; }
         
     [JsonPropertyName("materia")]
     public List<Materia> Materia { get; init; }

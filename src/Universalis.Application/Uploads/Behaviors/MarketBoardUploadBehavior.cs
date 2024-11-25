@@ -97,10 +97,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 
         if (parameters.Listings != null)
         {
-            if (parameters.Listings.Any(l =>
-                    Util.HasHtmlTags(l.ListingId) || Util.HasHtmlTags(l.RetainerName) ||
-                    Util.HasHtmlTags(l.RetainerId) || Util.HasHtmlTags(l.CreatorName) || Util.HasHtmlTags(l.SellerId) ||
-                    Util.HasHtmlTags(l.CreatorId)))
+            if (parameters.Listings.Any(IsInvalid))
             {
                 return new BadRequestResult();
             }
@@ -109,6 +106,20 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         }
 
         return null;
+    }
+
+    private static bool IsInvalid(Universalis.Application.Uploads.Schema.Listing l)
+    {
+        // Listings can be up for at most 7 days - checking against 8 to give some buffer
+        var lastReviewTime = DateTimeOffset.FromUnixTimeSeconds(l.LastReviewTimeUnixSeconds ?? 0).UtcDateTime;
+        if ((DateTime.UtcNow - lastReviewTime).TotalDays >= 8)
+        {
+            return false;
+        }
+
+        return Util.HasHtmlTags(l.ListingId) || Util.HasHtmlTags(l.RetainerName) ||
+               Util.HasHtmlTags(l.RetainerId) || Util.HasHtmlTags(l.CreatorName) || Util.HasHtmlTags(l.SellerId) ||
+               Util.HasHtmlTags(l.CreatorId);
     }
 
     private async Task HandleListings(IList<Schema.Listing> uploadedListings, int itemId, int worldId,
