@@ -108,18 +108,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         return null;
     }
 
-    private static bool IsInvalid(Universalis.Application.Uploads.Schema.Listing l)
+    private static bool IsInvalid(Schema.Listing l)
     {
-        // Listings can be up for at most 7 days - checking against 8 to give some buffer
-        var lastReviewTimeUnixSeconds = l.LastReviewTimeUnixSeconds ?? 0;
-        var lastReviewTime = DateTimeOffset.FromUnixTimeSeconds(lastReviewTimeUnixSeconds).UtcDateTime;
-        
-        // For some reason the first check wasn't enough to catch this
-        if ((DateTime.UtcNow - lastReviewTime).TotalDays >= 8 || lastReviewTimeUnixSeconds == 0 || lastReviewTime.Year < 2024)
-        {
-            return false;
-        }
-
         return Util.HasHtmlTags(l.ListingId) || Util.HasHtmlTags(l.RetainerName) ||
                Util.HasHtmlTags(l.RetainerId) || Util.HasHtmlTags(l.CreatorName) || Util.HasHtmlTags(l.SellerId) ||
                Util.HasHtmlTags(l.CreatorId);
@@ -301,7 +291,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     DyeId = l.DyeId ?? 0,
                     CreatorId = Util.ParseUnusualId(l.CreatorId) ?? "",
                     CreatorName = l.CreatorName,
-                    LastReviewTime = DateTimeOffset.FromUnixTimeSeconds(l.LastReviewTimeUnixSeconds ?? 0).UtcDateTime,
+                    LastReviewTime = GetLastReviewTime(l),
                     RetainerId = Util.ParseUnusualId(l.RetainerId) ?? "",
                     RetainerName = l.RetainerName,
                     RetainerCityId = l.RetainerCityId ?? 0,
@@ -313,6 +303,14 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             .Where(l => l.Quantity > 0)
             .OrderBy(l => l.PricePerUnit)
             .ToList();
+    }
+
+    private static DateTime GetLastReviewTime(Schema.Listing l)
+    {
+        var lastReviewTimeSeconds = l.LastReviewTimeUnixSeconds ?? 0;
+        return lastReviewTimeSeconds == 0
+            ? DateTime.UtcNow 
+            : DateTimeOffset.FromUnixTimeSeconds(lastReviewTimeSeconds).UtcDateTime;
     }
 
     private static List<Sale> CleanUploadedSales(IEnumerable<Schema.Sale> uploadedSales, int worldId, int itemId,
