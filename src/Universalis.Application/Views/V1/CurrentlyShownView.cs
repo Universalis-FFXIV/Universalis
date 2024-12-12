@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Universalis.Application.Common;
 
@@ -210,4 +209,10 @@ public class CurrentlyShownView : PartiallySerializable
     /// </summary>
     [JsonPropertyName("unitsSold")]
     public int UnitsSold { get; init; }
+
+    /// <summary>
+    /// Whether this item has ever been updated. Useful for newly-released items.
+    /// </summary>
+    [JsonPropertyName("hasData")]
+    public bool HasData => LastUploadTimeUnixMilliseconds != 0;
 }
