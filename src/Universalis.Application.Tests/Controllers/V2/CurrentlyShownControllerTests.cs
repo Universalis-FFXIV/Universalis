@@ -213,6 +213,7 @@ public class CurrentlyShownControllerTests
         Assert.NotNull(history.RecentHistory);
         Assert.Empty(history.RecentHistory);
         Assert.Equal(0, history.LastUploadTimeUnixMilliseconds);
+        Assert.False(history.HasData);
         Assert.NotNull(history.StackSizeHistogram);
         Assert.Empty(history.StackSizeHistogram);
         Assert.NotNull(history.StackSizeHistogramNq);
@@ -265,6 +266,7 @@ public class CurrentlyShownControllerTests
         Assert.NotNull(history.RecentHistory);
         Assert.Empty(history.RecentHistory);
         Assert.Equal(0, history.LastUploadTimeUnixMilliseconds);
+        Assert.False(history.HasData);
         Assert.NotNull(history.StackSizeHistogram);
         Assert.Empty(history.StackSizeHistogram);
         Assert.NotNull(history.StackSizeHistogramNq);
@@ -417,6 +419,7 @@ public class CurrentlyShownControllerTests
         Assert.Equal(gameData.AvailableWorlds()[document.WorldId], currentlyShown.WorldName);
         Assert.Equal(document.LastUploadTimeUnixMilliseconds / 1000,
             currentlyShown.LastUploadTimeUnixMilliseconds / 1000);
+        Assert.True(currentlyShown.HasData);
         Assert.Null(currentlyShown.DcName);
 
         Assert.NotNull(currentlyShown.Listings);
@@ -488,6 +491,7 @@ public class CurrentlyShownControllerTests
     {
         Assert.Equal(anyWorldDocument.ItemId, currentlyShown.ItemId);
         Assert.Equal(lastUploadTime / 1000, currentlyShown.LastUploadTimeUnixMilliseconds / 1000);
+        Assert.True(currentlyShown.HasData);
         Assert.Equal(char.ToUpperInvariant(worldOrDc[0]) + worldOrDc[1..].ToLowerInvariant(), currentlyShown.DcName);
         Assert.Null(currentlyShown.WorldId);
         Assert.Null(currentlyShown.WorldName);
