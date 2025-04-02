@@ -301,6 +301,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             })
             .Where(l => l.PricePerUnit > 0)
             .Where(l => l.Quantity > 0)
+            .DistinctBy(l => l.ListingId)
             .OrderBy(l => l.PricePerUnit)
             .ToList();
     }

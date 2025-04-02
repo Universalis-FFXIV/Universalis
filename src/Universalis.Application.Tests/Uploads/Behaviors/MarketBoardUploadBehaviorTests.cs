@@ -355,6 +355,45 @@ public class MarketBoardUploadBehaviorTests
     }
 
     [Fact]
+    public async Task Behavior_RemovesDuplicateListings()
+    {
+        var test = TestResources.Create();
+
+        var stackSize = test.GameData.MarketableItemStackSizes()[5333];
+        var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
+
+        foreach (var listing in listings)
+        {
+            // Give all listings the same ID
+            listing.ListingId = "test";
+        }
+
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Listings = listings,
+            Sales = sales,
+            UploaderId = "5627384655756342554",
+        };
+
+        Assert.True(test.Behavior.ShouldExecute(upload));
+
+        var result = await test.Behavior.Execute(source, upload);
+        Assert.Null(result);
+
+        var currentlyShown = await test.CurrentlyShown.Retrieve(new CurrentlyShownQuery
+        {
+            WorldId = upload.WorldId.Value,
+            ItemId = upload.ItemId.Value,
+        });
+
+        Assert.Single(currentlyShown.Listings);
+    }
+
+    [Fact]
     public async Task Behavior_Adds_Sale_Ids()
     {
         var test = TestResources.Create();
