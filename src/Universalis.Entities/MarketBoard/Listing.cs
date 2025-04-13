@@ -48,20 +48,8 @@ public partial class Listing : IEquatable<Listing>
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
         return ListingId == other.ListingId &&
-               Hq == other.Hq &&
-               OnMannequin == other.OnMannequin &&
                PricePerUnit == other.PricePerUnit &&
-               Quantity == other.Quantity &&
-               DyeId == other.DyeId &&
-               CreatorId == other.CreatorId &&
-               CreatorName == other.CreatorName &&
-               LastReviewTime.Equals(other.LastReviewTime) &&
-               RetainerId == other.RetainerId &&
-               RetainerName == other.RetainerName &&
-               RetainerCityId == other.RetainerCityId &&
-               SellerId == other.SellerId &&
-               ItemId == other.ItemId &&
-               WorldId == other.WorldId;
+               Quantity == other.Quantity;
     }
 
     public override bool Equals(object obj)
@@ -75,20 +63,8 @@ public partial class Listing : IEquatable<Listing>
     {
         var hashCode = new HashCode();
         hashCode.Add(ListingId);
-        hashCode.Add(Hq);
-        hashCode.Add(OnMannequin);
         hashCode.Add(PricePerUnit);
         hashCode.Add(Quantity);
-        hashCode.Add(DyeId);
-        hashCode.Add(CreatorId);
-        hashCode.Add(CreatorName);
-        hashCode.Add(LastReviewTime);
-        hashCode.Add(RetainerId);
-        hashCode.Add(RetainerName);
-        hashCode.Add(RetainerCityId);
-        hashCode.Add(SellerId);
-        hashCode.Add(ItemId);
-        hashCode.Add(WorldId);
         return hashCode.ToHashCode();
     }
 
