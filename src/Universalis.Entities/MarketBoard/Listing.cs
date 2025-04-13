@@ -47,7 +47,9 @@ public partial class Listing : IEquatable<Listing>
     {
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
-        return ListingId == other.ListingId;
+        return ListingId == other.ListingId &&
+               PricePerUnit == other.PricePerUnit &&
+               Quantity == other.Quantity;
     }
 
     public override bool Equals(object obj)
@@ -61,20 +63,8 @@ public partial class Listing : IEquatable<Listing>
     {
         var hashCode = new HashCode();
         hashCode.Add(ListingId);
-        hashCode.Add(Hq);
-        hashCode.Add(OnMannequin);
         hashCode.Add(PricePerUnit);
         hashCode.Add(Quantity);
-        hashCode.Add(DyeId);
-        hashCode.Add(CreatorId);
-        hashCode.Add(CreatorName);
-        hashCode.Add(LastReviewTime);
-        hashCode.Add(RetainerId);
-        hashCode.Add(RetainerName);
-        hashCode.Add(RetainerCityId);
-        hashCode.Add(SellerId);
-        hashCode.Add(ItemId);
-        hashCode.Add(WorldId);
         return hashCode.ToHashCode();
     }
 
