@@ -47,7 +47,21 @@ public partial class Listing : IEquatable<Listing>
     {
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
-        return ListingId == other.ListingId;
+        return ListingId == other.ListingId &&
+               Hq == other.Hq &&
+               OnMannequin == other.OnMannequin &&
+               PricePerUnit == other.PricePerUnit &&
+               Quantity == other.Quantity &&
+               DyeId == other.DyeId &&
+               CreatorId == other.CreatorId &&
+               CreatorName == other.CreatorName &&
+               LastReviewTime.Equals(other.LastReviewTime) &&
+               RetainerId == other.RetainerId &&
+               RetainerName == other.RetainerName &&
+               RetainerCityId == other.RetainerCityId &&
+               SellerId == other.SellerId &&
+               ItemId == other.ItemId &&
+               WorldId == other.WorldId;
     }
 
     public override bool Equals(object obj)
