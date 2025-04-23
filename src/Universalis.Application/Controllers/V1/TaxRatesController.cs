@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Threading;
 using System.Threading.Tasks;
+using Universalis.Application.Common;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1;
 using Universalis.DbAccess.MarketBoard;
@@ -27,6 +28,7 @@ public class TaxRatesController : WorldDcRegionControllerBase
     /// Retrieves the current tax rate data for the specified world. This data is provided by the Retainer Vocate in each major city.
     /// </summary>
     /// <param name="world">The world or to retrieve data for. This may be an ID or a name.</param>
+    /// <param name="userAgent"></param>
     /// <param name="cancellationToken"></param>
     /// <response code="200">Data retrieved successfully.</response>
     /// <response code="404">The world requested is invalid.</response>
@@ -36,8 +38,14 @@ public class TaxRatesController : WorldDcRegionControllerBase
     [Route("tax-rates")]
     [ProducesResponseType(typeof(TaxRatesView), 200)]
     [ProducesResponseType(404)]
-    public async Task<IActionResult> Get([FromQuery] string world, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Get(
+        [FromQuery] string world,
+        [FromHeader(Name = "User-Agent")] string userAgent = "",
+        CancellationToken cancellationToken = default)
     {
+        using var activity = Util.ActivitySource.StartActivity("TaxRatesControllerV1.Get");
+        UserAgentMetrics.RecordUserAgentRequest(userAgent, nameof(TaxRatesController), activity);
+        
         if (!TryGetWorldDc(world, out var worldDc))
         {
             return NotFound();
@@ -75,6 +83,7 @@ public class TaxRatesController : WorldDcRegionControllerBase
     /// Retrieves the current tax rate data for the specified world. This data is provided by the Retainer Vocate in each major city.
     /// </summary>
     /// <param name="world">The world or to retrieve data for. This may be an ID or a name.</param>
+    /// <param name="userAgent"></param>
     /// <param name="cancellationToken"></param>
     /// <response code="200">Data retrieved successfully.</response>
     /// <response code="404">The world requested is invalid.</response>
@@ -84,8 +93,11 @@ public class TaxRatesController : WorldDcRegionControllerBase
     [Route("v{version:apiVersion}/tax-rates")]
     [ProducesResponseType(typeof(TaxRatesView), 200)]
     [ProducesResponseType(404)]
-    public Task<IActionResult> GetV2([FromQuery] string world, CancellationToken cancellationToken = default)
+    public Task<IActionResult> GetV2(
+        [FromQuery] string world,
+        [FromHeader(Name = "User-Agent")] string userAgent = "",
+        CancellationToken cancellationToken = default)
     {
-        return Get(world, cancellationToken);
+        return Get(world, userAgent, cancellationToken);
     }
 }
