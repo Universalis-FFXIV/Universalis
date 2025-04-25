@@ -10,20 +10,23 @@ using Universalis.Application.Realtime.Messages;
 
 namespace Universalis.Application.Realtime;
 
-public class SocketProcessor : ISocketProcessor
+public class SocketProcessor(ILogger<SocketProcessor> logger) : ISocketProcessor
 {
-    private readonly ConcurrentDictionary<Guid, SocketClient> _connections;
-    private readonly ILogger<SocketProcessor> _logger;
+    private static readonly Gauge WebSocketConnections = Metrics.CreateGauge(
+        "universalis_ws_connections",
+        "WebSocket Connections");
+    private static readonly Histogram MessageQueueTime = Metrics.CreateHistogram(
+        "universalis_ws_queue_milliseconds",
+        "WebSocket Message Queue Milliseconds",
+        new HistogramConfiguration
+        {
+            Buckets = [.005, .01, .025, .05, .075, .1, .25, .5, .75, 1, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20],
+        });
+    private static readonly Counter MessagesSent = Metrics.CreateCounter(
+        "universalis_ws_sent",
+        "WebSocket Messages Sent");
 
-    private static readonly Gauge WebSocketConnections = Metrics.CreateGauge("universalis_ws_connections", "WebSocket Connections");
-    private static readonly Histogram MessageQueueTime = Metrics.CreateHistogram("universalis_ws_queue_milliseconds", "WebSocket Message Queue Milliseconds");
-    private static readonly Counter MessagesSent = Metrics.CreateCounter("universalis_ws_sent", "WebSocket Messages Sent");
-
-    public SocketProcessor(ILogger<SocketProcessor> logger)
-    {
-        _connections = new ConcurrentDictionary<Guid, SocketClient>();
-        _logger = logger;
-    }
+    private readonly ConcurrentDictionary<Guid, SocketClient> _connections = new();
 
     public void Publish(SocketMessage message)
     {
@@ -44,7 +47,7 @@ public class SocketProcessor : ISocketProcessor
     {
         var id = Guid.NewGuid();
 
-        var conn = new SocketClient(ws, cs, new LoggerShield<SocketProcessor>(_logger, id));
+        var conn = new SocketClient(ws, cs, new LoggerShield<SocketProcessor>(logger, id));
         conn.OnClose += () =>
         {
             _connections.TryRemove(id, out _);
