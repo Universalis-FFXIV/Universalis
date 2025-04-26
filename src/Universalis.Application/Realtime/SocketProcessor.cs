@@ -26,7 +26,7 @@ public class SocketProcessor(ILogger<SocketProcessor> logger) : ISocketProcessor
         "universalis_ws_sent",
         "WebSocket Messages Sent");
 
-    private readonly ConcurrentDictionary<Guid, SocketClient> _connections = new();
+    private readonly ConcurrentDictionary<Guid, ISocketClient> _connections = new();
 
     public void Publish(SocketMessage message)
     {
