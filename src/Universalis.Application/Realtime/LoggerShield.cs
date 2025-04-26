@@ -7,10 +7,17 @@ namespace Universalis.Application.Realtime;
 public class LoggerShield<TCategory> : ILogger<TCategory>
 {
     private readonly ILogger<TCategory> _logger;
-    private readonly Guid _id;
+    private readonly string _id;
 
     // ReSharper disable once ContextualLoggerProblem
     public LoggerShield(ILogger<TCategory> logger, Guid id)
+    {
+        _logger = logger;
+        _id = id.ToString();
+    }
+
+    // ReSharper disable once ContextualLoggerProblem
+    public LoggerShield(ILogger<TCategory> logger, string id)
     {
         _logger = logger;
         _id = id;
@@ -26,7 +33,8 @@ public class LoggerShield<TCategory> : ILogger<TCategory>
         return _logger.IsEnabled(logLevel);
     }
 
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
+        Func<TState, Exception?, string> formatter)
     {
         _logger.Log(logLevel, eventId, state, exception, (s, e) =>
         {
