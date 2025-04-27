@@ -22,7 +22,7 @@ public class SocketProcessorTests
         // Arrange
         var loggerMock = new Mock<ILogger<SocketProcessor>>();
 
-        using var socketProcessor = new SocketProcessor(loggerMock.Object);
+        var socketProcessor = new SocketProcessor(loggerMock.Object);
 
         var clientMocks = FactoryList.OfLength(2, _ => new Mock<ISocketClient>());
         var messages = FactoryList.OfLength(2500, _ => Mock.Of<SocketMessage>());
@@ -47,7 +47,7 @@ public class SocketProcessorTests
     {
         // Arrange
         var loggerMock = new Mock<ILogger<SocketProcessor>>();
-        using var socketProcessor = new SocketProcessor(loggerMock.Object);
+        var socketProcessor = new SocketProcessor(loggerMock.Object);
 
         var client1Mock = new Mock<ISocketClient>();
         var client2Mock = new Mock<ISocketClient>();
@@ -81,7 +81,7 @@ public class SocketProcessorTests
         var taskCompletionSource = new TaskCompletionSource<object>();
         var cancellationToken = new CancellationToken();
 
-        using var socketProcessor = new SocketProcessor(loggerMock.Object);
+        var socketProcessor = new SocketProcessor(loggerMock.Object);
 
         // Act
         socketProcessor.AddSocket(webSocketMock.Object, taskCompletionSource, cancellationToken);
