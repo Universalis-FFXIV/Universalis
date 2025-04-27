@@ -15,37 +15,25 @@ using Universalis.Application.Realtime.Messages;
 
 namespace Universalis.Application.Realtime;
 
-public class SocketClient : IDisposable
+public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger logger)
+    : ISocketClient
 {
     private const int QueueLimit = 30;
 
     private static readonly RecyclableMemoryStreamManager MemoryStreamPool = new();
 
-    private readonly SimplePriorityQueue<SocketMessage, long> _messages;
-    private readonly WebSocket _ws;
-    private readonly TaskCompletionSource<object> _cs;
-    private readonly ILogger _logger;
-    private readonly object _runningLock;
-    
-    private readonly IList<EventCondition> _conditions;
+    private readonly SimplePriorityQueue<SocketMessage, long> _messages = new();
+    private readonly object _runningLock = true;
+
+    private readonly List<EventCondition> _conditions = [];
 
     private SemaphoreSlim _recv;
 
     public Action OnClose { get; set; }
     public bool Running { get; private set; }
 
-    private static readonly Histogram DiscardedMessages = Metrics.CreateHistogram("universalis_ws_discarded_messages", "WebSocket Discarded Messages");
-
-    public SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger logger)
-    {
-        _messages = new SimplePriorityQueue<SocketMessage, long>();
-        _runningLock = true;
-        _conditions = new List<EventCondition>();
-
-        _ws = ws;
-        _cs = cs;
-        _logger = logger;
-    }
+    private static readonly Histogram DiscardedMessages =
+        Metrics.CreateHistogram("universalis_ws_discarded_messages", "WebSocket Discarded Messages");
 
     public void Push(SocketMessage message)
     {
@@ -83,22 +71,22 @@ public class SocketClient : IDisposable
         {
             return;
         }
-        
+
         try
         {
             _recv?.Release();
         }
         catch (ObjectDisposedException)
         {
-            _logger.LogWarning("Semaphore is disposed");
+            logger.LogWarning("Semaphore is disposed");
         }
         catch (SemaphoreFullException)
         {
-            _logger.LogWarning("Semaphore is full");
+            logger.LogWarning("Semaphore is full");
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Semaphore release failed for an unknown reason");
+            logger.LogError(e, "Semaphore release failed for an unknown reason");
         }
     }
 
@@ -124,9 +112,9 @@ public class SocketClient : IDisposable
             // Run the outbound and inbound data loops
             await Task.WhenAny(OutboundLoop(cancellationToken), InboundLoop(cancellationToken));
 
-            if (_ws.State is WebSocketState.Open or WebSocketState.CloseReceived or WebSocketState.CloseSent)
+            if (ws.State is WebSocketState.Open or WebSocketState.CloseReceived or WebSocketState.CloseSent)
             {
-                await _ws.CloseAsync(
+                await ws.CloseAsync(
                     WebSocketCloseStatus.NormalClosure,
                     "closing socket",
                     cancellationToken);
@@ -134,12 +122,12 @@ public class SocketClient : IDisposable
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "WebSocket loop aborted with an exception");
+            logger.LogError(e, "WebSocket loop aborted with an exception");
         }
         finally
         {
             OnClose?.Invoke();
-            _cs.TrySetResult(true);
+            cs.TrySetResult(true);
             _recv.Dispose();
             _recv = null;
         }
@@ -152,7 +140,7 @@ public class SocketClient : IDisposable
 
     private async Task OutboundLoop(CancellationToken cancellationToken = default)
     {
-        while (!cancellationToken.IsCancellationRequested && _ws.State == WebSocketState.Open)
+        while (!cancellationToken.IsCancellationRequested && ws.State == WebSocketState.Open)
         {
             // Wait for data to be made available
             await _recv.WaitAsync(cancellationToken);
@@ -171,13 +159,13 @@ public class SocketClient : IDisposable
         // Limit inbound message size to 1KB
         var buf = new byte[1024];
 
-        while (!cancellationToken.IsCancellationRequested && _ws.State == WebSocketState.Open)
+        while (!cancellationToken.IsCancellationRequested && ws.State == WebSocketState.Open)
         {
             // Ideally we would only allocate the buffer as needed since inbound messages are
             // infrequent, but there doesn't seem to be a way of doing that without refactoring
             // the entire system into a one that loops over the connections, which probably
             // doesn't scale well for many connections.
-            var res = await _ws.ReceiveAsync(buf, cancellationToken);
+            var res = await ws.ReceiveAsync(buf, cancellationToken);
             if (res.CloseStatus != null)
             {
                 break;
@@ -196,7 +184,7 @@ public class SocketClient : IDisposable
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "BSON deserialization failed");
+            logger.LogError(e, "BSON deserialization failed");
             return;
         }
 
@@ -223,7 +211,7 @@ public class SocketClient : IDisposable
                 {
                     return;
                 }
-                
+
                 var subCond = EventCondition.Parse(subChannel);
                 var shouldAdd = true;
                 for (var i = 0; i < _conditions.Count; i++)
@@ -281,12 +269,8 @@ public class SocketClient : IDisposable
 
     private async Task SendEvent(SocketMessage message, CancellationToken cancellationToken = default)
     {
-        await using var stream = MemoryStreamPool.GetStream() as RecyclableMemoryStream;
-        if (stream == null)
-        {
-            return;
-        }
-        
+        await using var stream = MemoryStreamPool.GetStream();
+
         using var writer = new BsonBinaryWriter(stream);
         BsonSerializer.Serialize(writer, message.GetType(), message);
 
@@ -297,12 +281,13 @@ public class SocketClient : IDisposable
             if (cur + memory.Length >= end)
             {
                 var lastIdx = end - cur;
-                await _ws.SendAsync(memory[..lastIdx], WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage, cancellationToken);
+                await ws.SendAsync(memory[..lastIdx], WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage,
+                    cancellationToken);
                 break;
             }
 
             cur += memory.Length;
-            await _ws.SendAsync(memory, WebSocketMessageType.Binary, WebSocketMessageFlags.None, cancellationToken);
+            await ws.SendAsync(memory, WebSocketMessageType.Binary, WebSocketMessageFlags.None, cancellationToken);
         }
     }
 
