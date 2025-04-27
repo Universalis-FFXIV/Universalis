@@ -14,7 +14,7 @@ namespace Universalis.Application.Realtime;
 
 public class SocketProcessor : ISocketProcessor, IDisposable
 {
-    private const int NumWorkers = 4;
+    private const int NumWorkers = 8;
 
     private static readonly Gauge WebSocketConnections = Metrics.CreateGauge(
         "universalis_ws_connections",
@@ -31,6 +31,9 @@ public class SocketProcessor : ISocketProcessor, IDisposable
     private static readonly Counter MessagesSent = Metrics.CreateCounter(
         "universalis_ws_sent",
         "WebSocket Messages Sent");
+    private static readonly Counter WorkerExceptions = Metrics.CreateCounter(
+        "universalis_ws_worker_exceptions",
+        "WebSocket Worker Exceptions");
 
     private readonly ConcurrentDictionary<Guid, ISocketClient> _connections = new();
     private readonly BlockingCollection<Action> _taskQueue = new();
@@ -64,12 +67,14 @@ public class SocketProcessor : ISocketProcessor, IDisposable
             .ToList();
 
         // Enqueue tasks for all connected clients
-        var countdownEvent = new CountdownEvent(newTasks.Count);
+        using var countdownEvent = new CountdownEvent(newTasks.Count);
         foreach (var task in newTasks)
         {
             _taskQueue.Add(() =>
             {
                 task();
+
+                // ReSharper disable once AccessToDisposedClosure
                 countdownEvent.Signal();
             });
         }
@@ -112,6 +117,7 @@ public class SocketProcessor : ISocketProcessor, IDisposable
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Error while processing task");
+                    WorkerExceptions.Inc();
                 }
             }
         }
