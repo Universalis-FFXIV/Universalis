@@ -14,8 +14,6 @@ namespace Universalis.Application.Realtime;
 
 public class SocketProcessor(ILogger<SocketProcessor> logger) : ISocketProcessor
 {
-    private const int NumWorkers = 8;
-
     private static readonly Gauge WebSocketConnections = Metrics.CreateGauge(
         "universalis_ws_connections",
         "WebSocket Connections");
@@ -31,6 +29,9 @@ public class SocketProcessor(ILogger<SocketProcessor> logger) : ISocketProcessor
     private static readonly Counter MessagesSent = Metrics.CreateCounter(
         "universalis_ws_sent",
         "WebSocket Messages Sent");
+    private static readonly Counter ExceptionCount = Metrics.CreateCounter(
+        "universalis_ws_exceptions",
+        "WebSocket exceptions across all connections");
 
     private readonly ConcurrentDictionary<Guid, ISocketClient> _connections = new();
 
@@ -39,10 +40,18 @@ public class SocketProcessor(ILogger<SocketProcessor> logger) : ISocketProcessor
         var stopwatch = new Stopwatch();
         stopwatch.Start();
 
-        foreach (var (_, connection) in _connections)
+        foreach (var (id, connection) in _connections)
         {
-            connection.Push(message);
-            MessagesSent.Inc();
+            try
+            {
+                connection.Push(message);
+                MessagesSent.Inc();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to send message to connection {}", id);
+                ExceptionCount.Inc();
+            }
         }
 
         stopwatch.Stop();
