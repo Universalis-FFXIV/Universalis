@@ -26,7 +26,7 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
     private readonly object _runningLock = true;
 
     private readonly List<EventCondition> _conditions = [];
-    private readonly Mutex _conditionsLock = new();
+    private readonly SemaphoreSlim _conditionsLock = new(0, 1);
 
     private SemaphoreSlim _recv;
 
@@ -41,7 +41,7 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
         // Check if this socket is expecting this kind of message. If the
         // client hasn't subscribed to any channels, this will not send
         // any messages.
-        if (!_conditionsLock.WaitOne(TimeSpan.FromMilliseconds(30)))
+        if (!_conditionsLock.Wait(TimeSpan.FromMilliseconds(30)))
         {
             logger.LogWarning("Failed to acquire lock on conditions during push");
             return;
@@ -56,7 +56,7 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
         }
         finally
         {
-            _conditionsLock.ReleaseMutex();
+            _conditionsLock.Release();
         }
 
         _messages.Enqueue(message, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
@@ -229,7 +229,7 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
                 var subCond = EventCondition.Parse(subChannel);
                 var shouldAdd = true;
 
-                if (!_conditionsLock.WaitOne(TimeSpan.FromMilliseconds(30)))
+                if (!await _conditionsLock.WaitAsync(TimeSpan.FromMilliseconds(30), cancellationToken))
                 {
                     logger.LogWarning("Failed to acquire lock on conditions during subscription");
                     return;
@@ -262,7 +262,7 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
                 }
                 finally
                 {
-                    _conditionsLock.ReleaseMutex();
+                    _conditionsLock.Release();
                 }
 
                 break;
@@ -279,9 +279,9 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
 
                 var unsubCond = EventCondition.Parse(unsubChannel);
 
-                if (!_conditionsLock.WaitOne(TimeSpan.FromMilliseconds(30)))
+                if (!await _conditionsLock.WaitAsync(TimeSpan.FromMilliseconds(30), cancellationToken))
                 {
-                    logger.LogWarning("Failed to acquire lock on conditions during subscription");
+                    logger.LogWarning("Failed to acquire lock on conditions during unsubscription");
                     return;
                 }
 
@@ -299,7 +299,7 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
                 }
                 finally
                 {
-                    _conditionsLock.ReleaseMutex();
+                    _conditionsLock.Release();
                 }
 
                 break;
