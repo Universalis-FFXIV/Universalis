@@ -26,6 +26,7 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
     private readonly object _runningLock = true;
 
     private readonly List<EventCondition> _conditions = [];
+    private readonly SemaphoreSlim _conditionsLock = new(0, 1);
 
     private SemaphoreSlim _recv;
 
@@ -40,9 +41,22 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
         // Check if this socket is expecting this kind of message. If the
         // client hasn't subscribed to any channels, this will not send
         // any messages.
-        if (!_conditions.Any(cond => cond.ShouldSend(message)))
+        if (!_conditionsLock.Wait(TimeSpan.FromMilliseconds(30)))
         {
+            logger.LogWarning("Failed to acquire lock on conditions during push");
             return;
+        }
+
+        try
+        {
+            if (!_conditions.Any(cond => cond.ShouldSend(message)))
+            {
+                return;
+            }
+        }
+        finally
+        {
+            _conditionsLock.Release();
         }
 
         _messages.Enqueue(message, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
@@ -214,27 +228,41 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
 
                 var subCond = EventCondition.Parse(subChannel);
                 var shouldAdd = true;
-                for (var i = 0; i < _conditions.Count; i++)
-                {
-                    if (_conditions[i].Equals(subCond))
-                    {
-                        shouldAdd = false;
-                        break;
-                    }
 
-                    // Replace the existing condition if the new condition is either more-specific or less-specific
-                    // than the existing one. If the existing and new conditions are not related, do nothing here. 
-                    if (_conditions[i].IsReplaceableWith(subCond) || subCond.IsReplaceableWith(_conditions[i]))
-                    {
-                        shouldAdd = false;
-                        _conditions[i] = subCond;
-                        break;
-                    }
+                if (!await _conditionsLock.WaitAsync(TimeSpan.FromMilliseconds(30), cancellationToken))
+                {
+                    logger.LogWarning("Failed to acquire lock on conditions during subscription");
+                    return;
                 }
 
-                if (shouldAdd)
+                try
                 {
-                    _conditions.Add(subCond);
+                    for (var i = 0; i < _conditions.Count; i++)
+                    {
+                        if (_conditions[i].Equals(subCond))
+                        {
+                            shouldAdd = false;
+                            break;
+                        }
+
+                        // Replace the existing condition if the new condition is either more-specific or less-specific
+                        // than the existing one. If the existing and new conditions are not related, do nothing here. 
+                        if (_conditions[i].IsReplaceableWith(subCond) || subCond.IsReplaceableWith(_conditions[i]))
+                        {
+                            shouldAdd = false;
+                            _conditions[i] = subCond;
+                            break;
+                        }
+                    }
+
+                    if (shouldAdd)
+                    {
+                        _conditions.Add(subCond);
+                    }
+                }
+                finally
+                {
+                    _conditionsLock.Release();
                 }
 
                 break;
@@ -250,14 +278,28 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
                 }
 
                 var unsubCond = EventCondition.Parse(unsubChannel);
-                var conditionsCount = _conditions.Count;
-                for (var i = 0; i < conditionsCount; i++)
+
+                if (!await _conditionsLock.WaitAsync(TimeSpan.FromMilliseconds(30), cancellationToken))
                 {
-                    if (_conditions[i].IsReplaceableWith(unsubCond))
+                    logger.LogWarning("Failed to acquire lock on conditions during unsubscription");
+                    return;
+                }
+
+                try
+                {
+                    var conditionsCount = _conditions.Count;
+                    for (var i = 0; i < conditionsCount; i++)
                     {
-                        _conditions.RemoveAt(i);
-                        conditionsCount--;
+                        if (_conditions[i].IsReplaceableWith(unsubCond))
+                        {
+                            _conditions.RemoveAt(i);
+                            conditionsCount--;
+                        }
                     }
+                }
+                finally
+                {
+                    _conditionsLock.Release();
                 }
 
                 break;
@@ -294,6 +336,7 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
     public void Dispose()
     {
         _recv?.Dispose();
+        _conditionsLock.Dispose();
         GC.SuppressFinalize(this);
     }
 }
