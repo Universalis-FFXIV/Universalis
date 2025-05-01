@@ -33,6 +33,7 @@ public class HistoryController : HistoryControllerBase
     /// <param name="minSalePrice">The inclusive minimum unit sale price of entries to return.</param>
     /// <param name="maxSalePrice">The inclusive maximum unit sale price of entries to return.</param>
     /// <param name="userAgent"></param>
+    /// <param name="cfConnectingIp"></param>
     /// <param name="cancellationToken"></param>
     /// <response code="200">Data retrieved successfully.</response>
     /// <response code="404">
@@ -54,6 +55,7 @@ public class HistoryController : HistoryControllerBase
         [FromQuery] int minSalePrice = 0,
         [FromQuery] int maxSalePrice = int.MaxValue,
         [FromHeader(Name = "User-Agent")] string userAgent = "",
+        [FromHeader(Name = "CF-Connecting-IP")] string cfConnectingIp = "",
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("HistoryControllerV2.Get");
@@ -63,6 +65,7 @@ public class HistoryController : HistoryControllerBase
         activity?.AddTag("statsWithin", statsWithin);
         activity?.AddTag("entriesWithin", entriesWithin);
         UserAgentMetrics.RecordUserAgentRequest(userAgent, nameof(HistoryController), activity);
+        IPTrace.RecordConnectingIP(cfConnectingIp);
 
         // Parameter parsing
         var itemIdsArray = InputProcessing.ParseIdList(itemIds)

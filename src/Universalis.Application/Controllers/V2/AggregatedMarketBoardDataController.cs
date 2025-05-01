@@ -40,6 +40,7 @@ public class AggregatedMarketBoardDataController : WorldDcRegionControllerBase
     /// <param name="itemIds">The item ID or comma-separated item IDs to retrieve data for.</param>
     /// <param name="worldDcRegion">The world, data center, or region to retrieve data for. This may be an ID or a name. Regions should be specified as Japan, Europe, North-America, Oceania, China, or 中国.</param>
     /// <param name="userAgent"></param>
+    /// <param name="cfConnectingIp"></param>
     /// <param name="cancellationToken"></param>
     /// <response code="200">Data retrieved successfully.</response>
     /// <response code="400">The parameters were invalid.</response>
@@ -56,12 +57,14 @@ public class AggregatedMarketBoardDataController : WorldDcRegionControllerBase
         string itemIds,
         string worldDcRegion,
         [FromHeader(Name = "User-Agent")] string userAgent = "",
+        [FromHeader(Name = "CF-Connecting-IP")] string cfConnectingIp = "",
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("AggregatedMarketBoardDataController.Get");
         activity?.AddTag("itemIds", itemIds);
         activity?.AddTag("worldDcRegion", worldDcRegion);
         UserAgentMetrics.RecordUserAgentRequest(userAgent, nameof(AggregatedMarketBoardDataController), activity);
+        IPTrace.RecordConnectingIP(cfConnectingIp);
 
         if (itemIds == null || worldDcRegion == null)
         {
