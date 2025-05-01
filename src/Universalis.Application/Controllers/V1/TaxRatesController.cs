@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Common;
+using Universalis.Application.Common.Metrics;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1;
 using Universalis.DbAccess.MarketBoard;

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Universalis.Application.Common;
+using Universalis.Application.Common.Metrics;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V2;
 using Universalis.Common.GameData;
