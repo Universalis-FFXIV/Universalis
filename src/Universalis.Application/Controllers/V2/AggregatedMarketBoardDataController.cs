@@ -64,7 +64,7 @@ public class AggregatedMarketBoardDataController : WorldDcRegionControllerBase
         activity?.AddTag("itemIds", itemIds);
         activity?.AddTag("worldDcRegion", worldDcRegion);
         UserAgentMetrics.RecordUserAgentRequest(userAgent, nameof(AggregatedMarketBoardDataController), activity);
-        IPTrace.RecordConnectingIP(cfConnectingIp);
+        IPTrace.RecordConnectingIP(cfConnectingIp, activity);
 
         if (itemIds == null || worldDcRegion == null)
         {

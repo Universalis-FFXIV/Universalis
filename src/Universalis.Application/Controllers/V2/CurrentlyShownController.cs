@@ -75,7 +75,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         activity?.AddTag("listingsToReturn", listingsToReturn);
         activity?.AddTag("entriesToReturn", entriesToReturn);
         UserAgentMetrics.RecordUserAgentRequest(userAgent, nameof(CurrentlyShownController), activity);
-        IPTrace.RecordConnectingIP(cfConnectingIp);
+        IPTrace.RecordConnectingIP(cfConnectingIp, activity);
 
         if (itemIds == null || worldDcRegion == null)
         {

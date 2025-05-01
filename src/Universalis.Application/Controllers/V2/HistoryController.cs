@@ -65,7 +65,7 @@ public class HistoryController : HistoryControllerBase
         activity?.AddTag("statsWithin", statsWithin);
         activity?.AddTag("entriesWithin", entriesWithin);
         UserAgentMetrics.RecordUserAgentRequest(userAgent, nameof(HistoryController), activity);
-        IPTrace.RecordConnectingIP(cfConnectingIp);
+        IPTrace.RecordConnectingIP(cfConnectingIp, activity);
 
         // Parameter parsing
         var itemIdsArray = InputProcessing.ParseIdList(itemIds)
