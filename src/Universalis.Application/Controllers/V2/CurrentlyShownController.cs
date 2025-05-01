@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Common;
+using Universalis.Application.Common.Metrics;
 using Universalis.Application.Swagger;
 using Universalis.Application.Views.V1;
 using Universalis.Application.Views.V2;
@@ -42,6 +43,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
     /// items.listings.pricePerUnit.
     /// </param>
     /// <param name="userAgent"></param>
+    /// <param name="cfConnectingIp"></param>
     /// <param name="cancellationToken"></param>
     /// <response code="200">Data retrieved successfully.</response>
     /// <response code="400">The parameters were invalid.</response>
@@ -64,6 +66,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         [FromQuery] string entriesWithin = "",
         [FromQuery] string fields = "",
         [FromHeader(Name = "User-Agent")] string userAgent = "",
+        [FromHeader(Name = "CF-Connecting-IP")] string cfConnectingIp = "",
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownControllerV2.Get");
@@ -72,6 +75,7 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         activity?.AddTag("listingsToReturn", listingsToReturn);
         activity?.AddTag("entriesToReturn", entriesToReturn);
         UserAgentMetrics.RecordUserAgentRequest(userAgent, nameof(CurrentlyShownController), activity);
+        IPTrace.RecordConnectingIP(cfConnectingIp);
 
         if (itemIds == null || worldDcRegion == null)
         {

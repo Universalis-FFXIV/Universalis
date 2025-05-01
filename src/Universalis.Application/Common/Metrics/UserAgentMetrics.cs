@@ -1,12 +1,12 @@
-﻿using Prometheus;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using Prometheus;
 
-namespace Universalis.Application.Common;
+namespace Universalis.Application.Common.Metrics;
 
 public class UserAgentMetrics
 {
     protected static readonly Counter UserAgentRequestCount =
-        Metrics.CreateCounter("universalis_request_count_user_agents", "", "Controller", "Family");
+        Prometheus.Metrics.CreateCounter("universalis_request_count_user_agents", "", "Controller", "Family");
 
     // For some reason user agents replace spaces with pluses sometimes
     private static readonly char[] UASegmentSeparators = { ' ', '+' };
