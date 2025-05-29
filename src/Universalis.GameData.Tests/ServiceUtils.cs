@@ -13,4 +13,9 @@ public static class ServiceUtils
             SqPack = sqpack,
         }, new LogFixture<DynamicGameDataProvider>());
     }
+
+    public static IGameDataProvider CreateBoilmasterGameDataProvider()
+    {
+        return new BoilmasterGameDataProvider(new HttpClient(), new LogFixture<BoilmasterGameDataProvider>());
+    }
 }

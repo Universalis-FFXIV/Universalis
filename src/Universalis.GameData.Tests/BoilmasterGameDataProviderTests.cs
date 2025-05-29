@@ -1,30 +1,19 @@
-using Xunit;
+﻿using Xunit;
 
 namespace Universalis.GameData.Tests;
 
-public class GameDataProviderTests
+public class BoilmasterGameDataProviderTests
 {
-    private const string SqPack = @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack";
-
-#if DEBUG
-    [Fact]
-#endif
-    public void Provider_Must_Load()
-    {
-        ServiceUtils.CreateGameDataProvider(SqPack);
-    }
+    private static readonly IGameDataProvider GameData = ServiceUtils.CreateBoilmasterGameDataProvider();
 
     [InlineData(44, "Anima")]
     [InlineData(74, "Coeurl")]
     [InlineData(82, "Mandragora")]
     [InlineData(410, "Rafflesia")]
-#if DEBUG
     [Theory]
-#endif
     public void AvailableWorlds_Should_Return_Correct_Ids(int worldId, string expectedWorldName)
     {
-        var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
-        var actualWorldName = gameData.AvailableWorlds()[worldId];
+        var actualWorldName = GameData.AvailableWorlds()[worldId];
         Assert.Equal(expectedWorldName, actualWorldName);
     }
 
@@ -32,13 +21,10 @@ public class GameDataProviderTests
     [InlineData("Coeurl", 74)]
     [InlineData("Mandragora", 82)]
     [InlineData("Rafflesia", 410)]
-#if DEBUG
     [Theory]
-#endif
     public void AvailableWorldsReversed_Should_Return_Correct_Names(string worldName, int expectedWorldId)
     {
-        var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
-        var actualWorldId = gameData.AvailableWorldsReversed()[worldName];
+        var actualWorldId = GameData.AvailableWorldsReversed()[worldName];
         Assert.Equal(expectedWorldId, actualWorldId);
     }
 
@@ -46,14 +32,10 @@ public class GameDataProviderTests
     [InlineData(74, true)]
     [InlineData(0, false)]
     [InlineData(1, false)]
-
-#if DEBUG
     [Theory]
-#endif
     public void AvailableWorldIds_Should_Only_Contain_Real_World_Ids(int worldId, bool expectedToContain)
     {
-        var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
-        var worldIds = gameData.AvailableWorldIds();
+        var worldIds = GameData.AvailableWorldIds();
         var actuallyContains = worldIds.Contains(worldId);
         Assert.Equal(expectedToContain, actuallyContains);
     }
@@ -63,14 +45,10 @@ public class GameDataProviderTests
     [InlineData(47979, true)]
     [InlineData(0, false)]
     [InlineData(1, false)]
-
-#if DEBUG
     [Theory]
-#endif
     public void MarketableItemIds_Should_Only_Contain_Real_Item_Ids(int itemId, bool expectedToContain)
     {
-        var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
-        var worldIds = gameData.MarketableItemIds();
+        var worldIds = GameData.MarketableItemIds();
         var actuallyContains = worldIds.Contains(itemId);
         Assert.Equal(expectedToContain, actuallyContains);
     }
@@ -80,13 +58,10 @@ public class GameDataProviderTests
     [InlineData(38953, 1)] // 6.3 items
     [InlineData(38954, 1)] // 6.3 items
     [InlineData(4551, 999)] // Stackable Item
-#if DEBUG
     [Theory]
-#endif
     public void MarketableItemStackSizes_Should_Only_Contain_Real_Stack_Sizes(int itemId, int expectedStackSize)
     {
-        var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
-        var worldIds = gameData.MarketableItemStackSizes();
+        var worldIds = GameData.MarketableItemStackSizes();
         var actuallyContains = worldIds.TryGetValue(itemId, out int stackSizeValue);
         Assert.True(actuallyContains);
         Assert.Equal(expectedStackSize, stackSizeValue);

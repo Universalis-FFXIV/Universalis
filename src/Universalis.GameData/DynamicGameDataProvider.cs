@@ -17,14 +17,22 @@ public class DynamicGameDataProvider : IGameDataProvider
         {
             _gdp = LoadLumina(opts);
         }
-        catch (Exception e)
+        catch (Exception e1)
         {
-            _logger.LogError(e, "Failed to load Lumina");
-            _gdp = LoadCsv(opts);
+            _logger.LogError(e1, "Failed to load Lumina");
+            try
+            {
+                _gdp = LoadBoilmaster(opts);
+            }
+            catch (Exception e2)
+            {
+                _logger.LogError(e2, "Failed to load Boilmaster game data");
+                _gdp = LoadCsv(opts);
+            }
         }
     }
 
-    private IGameDataProvider LoadCsv(DynamicGameDataProviderOptions opts)
+    private CsvGameDataProvider LoadCsv(DynamicGameDataProviderOptions opts)
     {
         _logger.LogInformation("Starting CSV game data provider");
         var stopwatch = new Stopwatch();
@@ -35,7 +43,18 @@ public class DynamicGameDataProvider : IGameDataProvider
         return gdp;
     }
 
-    private IGameDataProvider LoadLumina(DynamicGameDataProviderOptions opts)
+    private BoilmasterGameDataProvider LoadBoilmaster(DynamicGameDataProviderOptions opts)
+    {
+        _logger.LogInformation("Starting Boilmaster game data provider");
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+        var gdp = new BoilmasterGameDataProvider(opts.Http, _logger);
+        stopwatch.Stop();
+        _logger.LogInformation("Boilmaster game data provider successfully loaded in {}", stopwatch.Elapsed);
+        return gdp;
+    }
+
+    private LuminaGameDataProvider LoadLumina(DynamicGameDataProviderOptions opts)
     {
         _logger.LogInformation("Starting Lumina on path {}", opts.SqPack);
         var stopwatch = new Stopwatch();
