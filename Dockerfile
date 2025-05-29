@@ -4,7 +4,7 @@ WORKDIR /source
 COPY ./ ./
 
 # Run the tests and build the application
-RUN ./build.sh --target Compile --configuration Release
+RUN ./build.sh --target Test Compile --configuration Release
 
 # Run stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
