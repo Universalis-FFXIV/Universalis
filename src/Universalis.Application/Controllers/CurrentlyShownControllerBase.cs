@@ -43,11 +43,11 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             worldDcRegion, worldIds, itemIds, nListings, nEntries, onlyHq, statsWithin, entriesWithin,
             itemsSerializableProperties, cancellationToken);
         var unresolvedItemIds = currentlyShownViews
-            // .Where(cs => !GameData.MarketableItemIds().Contains(cs.Item2.ItemId))
+            .Where(cs => !GameData.MarketableItemIds().Contains(cs.Item2.ItemId))
             .Select(static cs => cs.Item2.ItemId)
             .ToArray();
         var resolvedItems = currentlyShownViews
-            // .Where(cs => GameData.MarketableItemIds().Contains(cs.Item2.ItemId))
+            .Where(cs => GameData.MarketableItemIds().Contains(cs.Item2.ItemId))
             .Select(static cs => cs.Item2)
             .ToList();
         return (unresolvedItemIds, resolvedItems);
@@ -95,10 +95,10 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownBase.GetView");
 
-        // if (!GameData.MarketableItemIds().Contains(itemId))
-        // {
-        //     return (false, ErrorView(worldDcRegion, itemId, fields));
-        // }
+        if (!GameData.MarketableItemIds().Contains(itemId))
+        {
+            return (false, ErrorView(worldDcRegion, itemId, fields));
+        }
 
         var currentlyShown = await FetchData(worldId, itemId, nEntries, cancellationToken);
 
@@ -237,8 +237,7 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
     private bool HasAnyValidItemIds(params int[] itemIds)
     {
-        // return itemIds.Any(itemId => GameData.MarketableItemIds().Contains(itemId));
-        return true;
+        return itemIds.Any(itemId => GameData.MarketableItemIds().Contains(itemId));
     }
 
     private static CurrentlyShownView ErrorView(WorldDcRegion worldDcRegion, int itemId, HashSet<string> fields)
