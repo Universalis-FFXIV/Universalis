@@ -30,10 +30,10 @@ public class ItemIdUploadBehavior : IUploadBehavior
     {
         using var activity = Util.ActivitySource.StartActivity("ItemIdUploadBehavior.Execute");
 
-        // if (!_gameData.MarketableItemIds().Contains(parameters.ItemId!.Value))
-        // {
-        //     return new NotFoundObjectResult(parameters.ItemId);
-        // }
+        if (!_gameData.MarketableItemIds().Contains(parameters.ItemId!.Value))
+        {
+            return new NotFoundObjectResult(parameters.ItemId);
+        }
 
         await _recentlyUpdatedItemsDb.Push(parameters.ItemId.Value, cancellationToken);
         return null;

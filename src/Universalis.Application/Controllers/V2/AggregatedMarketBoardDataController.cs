@@ -110,11 +110,11 @@ public class AggregatedMarketBoardDataController : WorldDcRegionControllerBase
 
         foreach (var itemId in itemIdsArray)
         {
-            // if (!GameData.MarketableItemIds().Contains(itemId))
-            // {
-            //     failedItems.Add(itemId);
-            //     continue;
-            // }
+            if (!GameData.MarketableItemIds().Contains(itemId))
+            {
+                failedItems.Add(itemId);
+                continue;
+            }
 
             try
             {

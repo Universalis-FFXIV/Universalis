@@ -132,10 +132,10 @@ public class CurrentlyShownController : CurrentlyShownControllerBase
         {
             var itemId = itemIdsArray[0];
 
-            // if (!GameData.MarketableItemIds().Contains(itemId))
-            // {
-            //     return NotFound();
-            // }
+            if (!GameData.MarketableItemIds().Contains(itemId))
+            {
+                return NotFound();
+            }
 
             var (_, currentlyShownView) = await GetCurrentlyShownView(
                 worldDc, worldIds, itemId, nListings, nEntries, hqBool, statsWithinMs, entriesWithinSeconds,

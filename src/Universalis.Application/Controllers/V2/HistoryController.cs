@@ -113,10 +113,10 @@ public class HistoryController : HistoryControllerBase
         {
             var itemId = itemIdsArray[0];
 
-            // if (!GameData.MarketableItemIds().Contains(itemId))
-            // {
-            //     return NotFound();
-            // }
+            if (!GameData.MarketableItemIds().Contains(itemId))
+            {
+                return NotFound();
+            }
 
             var (_, historyView) = await GetHistoryView(worldDc, worldIds, itemId, entries, statsWithinMs, entriesWithinSeconds, entriesUntilUtc, minSalePrice, maxSalePrice, cts.Token);
             return Ok(historyView);
