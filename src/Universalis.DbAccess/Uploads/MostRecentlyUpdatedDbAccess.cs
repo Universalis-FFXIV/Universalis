@@ -23,7 +23,8 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
             document.LastUploadTimeUnixMilliseconds);
     }
 
-    public async Task<IList<WorldItemUpload>> GetMostRecent(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
+    public async Task<IList<WorldItemUpload>> GetMostRecent(MostRecentlyUpdatedQuery query,
+        CancellationToken cancellationToken = default)
     {
         var data = await _store.GetMostRecent(query.WorldId, query.Count - 1);
         return data.Select(kvp => new WorldItemUpload
@@ -34,7 +35,8 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
         }).ToList();
     }
 
-    public async Task<IList<WorldItemUpload>> GetAllMostRecent(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
+    public async Task<IList<WorldItemUpload>> GetAllMostRecent(MostRecentlyUpdatedManyQuery query,
+        CancellationToken cancellationToken = default)
     {
         var data = await query.WorldIds.ToAsyncEnumerable()
             .SelectManyAwait(async world =>
@@ -49,8 +51,8 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
                     });
             })
             .ToListAsync(cancellationToken);
-        
-        var heap = new SimplePriorityQueue<WorldItemUpload, double>(Comparer<double>.Create((a, b) => (int)(b - a)));
+
+        var heap = new SimplePriorityQueue<WorldItemUpload, double>(Comparer<double>.Create((a, b) => b.CompareTo(a)));
         foreach (var d in data)
         {
             // Build a heap
@@ -69,8 +71,9 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
 
         return outData;
     }
-    
-    public async Task<IList<WorldItemUpload>> GetLeastRecent(MostRecentlyUpdatedQuery query, CancellationToken cancellationToken = default)
+
+    public async Task<IList<WorldItemUpload>> GetLeastRecent(MostRecentlyUpdatedQuery query,
+        CancellationToken cancellationToken = default)
     {
         var data = await _store.GetLeastRecent(query.WorldId, query.Count - 1);
         return data.Select(kvp => new WorldItemUpload
@@ -81,7 +84,8 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
         }).ToList();
     }
 
-    public async Task<IList<WorldItemUpload>> GetAllLeastRecent(MostRecentlyUpdatedManyQuery query, CancellationToken cancellationToken = default)
+    public async Task<IList<WorldItemUpload>> GetAllLeastRecent(MostRecentlyUpdatedManyQuery query,
+        CancellationToken cancellationToken = default)
     {
         var data = await query.WorldIds.ToAsyncEnumerable()
             .SelectManyAwait(async world =>
@@ -96,12 +100,12 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
                     });
             })
             .ToListAsync(cancellationToken);
-        
-        var heap = new SimplePriorityQueue<WorldItemUpload, double>(Comparer<double>.Create((a, b) => (int)(b - a)));
+
+        var heap = new SimplePriorityQueue<WorldItemUpload, double>(Comparer<double>.Create((a, b) => a.CompareTo(b)));
         foreach (var d in data)
         {
-            // Build a heap but make the timestamp negative to reverse it
-            heap.Enqueue(d, -d.LastUploadTimeUnixMilliseconds);
+            // Build a min heap
+            heap.Enqueue(d, d.LastUploadTimeUnixMilliseconds);
         }
 
         var outData = new List<WorldItemUpload>();
