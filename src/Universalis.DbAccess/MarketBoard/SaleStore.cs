@@ -21,7 +21,7 @@ public class SaleStore : ISaleStore, IDisposable
     private static readonly Histogram RowsReadCount =
         Prometheus.Metrics.CreateHistogram("universalis_sale_rows_read", "", new HistogramConfiguration
         {
-            Buckets = Histogram.ExponentialBuckets(1, 2, 16),
+            Buckets = Histogram.ExponentialBuckets(1, 2, 32),
         });
 
     private readonly IPersistentRedisMultiplexer _cache;
