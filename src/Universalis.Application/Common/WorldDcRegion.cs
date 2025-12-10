@@ -45,11 +45,13 @@ public class WorldDcRegion
             var cleanText = string.Join('-',
                 worldOrDc.Split('-').Select(term => char.ToUpperInvariant(term[0]) + term[1..].ToLowerInvariant()));
 
-            // Effectively does nothing if the input doesn't refer to a Chinese world, DC, or region
+            // Effectively does nothing if the input doesn't refer to a Chinese, Korean, or Traditional Chinese world, DC, or region
             cleanText = ChineseServers.RomanizedToHanzi(cleanText);
             cleanText = ChineseServers.RegionToHanzi(cleanText);
             cleanText = KoreanServers.RomanizedToHangul(cleanText);
             cleanText = KoreanServers.RegionToHangul(cleanText);
+            cleanText = TraditionalChineseServers.RomanizedToTraditionalChinese(cleanText);
+            cleanText = TraditionalChineseServers.RegionToTraditionalChinese(cleanText);
 
             worldIdParsed = gameData.AvailableWorldsReversed().TryGetValue(cleanText, out worldId);
 

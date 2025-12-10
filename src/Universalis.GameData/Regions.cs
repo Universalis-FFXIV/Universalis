@@ -13,5 +13,6 @@ public static class Regions
         { 5, "China" },
         { 6, "Eorzea" }, // ?
         { 7, "NA-Cloud-DC" }, // NA Cloud DC (Beta)
+        { 8, "TraditionalChinese" },
     };
 }

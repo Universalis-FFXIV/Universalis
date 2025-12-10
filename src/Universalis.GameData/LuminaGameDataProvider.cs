@@ -70,6 +70,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
             .Select(w => new World { Name = w.Name.ToString(), Id = Convert.ToInt32(w.RowId) })
             .Concat(ChineseServers.Worlds())
             .Concat(KoreanServers.Worlds())
+            .Concat(TraditionalChineseServers.Worlds())
             .ToDictionary(w => w.Id, w => w.Name);
     }
 
@@ -88,6 +89,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
             .Select(w => new World { Name = w.Name.ToString(), Id = Convert.ToInt32(w.RowId) })
             .Concat(ChineseServers.Worlds())
             .Concat(KoreanServers.Worlds())
+            .Concat(TraditionalChineseServers.Worlds())
             .ToDictionary(w => w.Name, w => w.Id);
     }
 
@@ -106,6 +108,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
             .Select(w => new World { Name = w.Name.ToString(), Id = Convert.ToInt32(w.RowId) })
             .Concat(ChineseServers.Worlds())
             .Concat(KoreanServers.Worlds())
+            .Concat(TraditionalChineseServers.Worlds())
             .Select(w => Convert.ToInt32(w.Id))
             .ToList());
     }
@@ -169,6 +172,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
             .Where(dc => dc.WorldIds.Length > 0)
             .Concat(ChineseServers.DataCenters())
             .Concat(KoreanServers.DataCenters())
+            .Concat(TraditionalChineseServers.DataCenters())
             .ToList();
     }
 

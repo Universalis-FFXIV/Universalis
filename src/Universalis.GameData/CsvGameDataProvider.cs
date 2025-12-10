@@ -106,6 +106,7 @@ public class CsvGameDataProvider : IGameDataProvider
             .Select(w => new World { Name = w.Name, Id = w.RowId })
             .Concat(ChineseServers.Worlds())
             .Concat(KoreanServers.Worlds())
+            .Concat(TraditionalChineseServers.Worlds())
             .ToDictionary(w => w.Id, w => w.Name));
     }
 
@@ -115,6 +116,7 @@ public class CsvGameDataProvider : IGameDataProvider
             .Select(w => new World { Name = w.Name, Id = w.RowId })
             .Concat(ChineseServers.Worlds())
             .Concat(KoreanServers.Worlds())
+            .Concat(TraditionalChineseServers.Worlds())
             .ToDictionary(w => w.Name, w => w.Id));
     }
 
@@ -124,6 +126,7 @@ public class CsvGameDataProvider : IGameDataProvider
             .Select(w => new World { Name = w.Name, Id = w.RowId })
             .Concat(ChineseServers.Worlds())
             .Concat(KoreanServers.Worlds())
+            .Concat(TraditionalChineseServers.Worlds())
             .Select(w => w.Id)
             .ToList()));
     }
@@ -159,6 +162,7 @@ public class CsvGameDataProvider : IGameDataProvider
             .Where(dc => dc.WorldIds.Length > 0)
             .Concat(ChineseServers.DataCenters())
             .Concat(KoreanServers.DataCenters())
+            .Concat(TraditionalChineseServers.DataCenters())
             .ToList());
     }
 
