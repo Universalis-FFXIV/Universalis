@@ -20,7 +20,7 @@ public static class TraditionalChineseServers
             "tcbahamut" => "巴哈姆特",
             "tcramuh" => "拉姆",
             "tctitan" => "泰坦",
-            "luxingniao" => "陸行鳥",
+            "tcluxingniao" => "陸行鳥",
             _ => worldOrDc,
         };
 
@@ -40,7 +40,7 @@ public static class TraditionalChineseServers
             "巴哈姆特" => "TcBahamut",
             "拉姆" => "TcRamuh",
             "泰坦" => "TcTitan",
-            "陸行鳥" => "LuXingNiao",
+            "陸行鳥" => "TcLuXingNiao",
             _ => worldOrDc,
         };
 
