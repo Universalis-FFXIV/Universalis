@@ -203,6 +203,7 @@ public class BoilmasterGameDataProvider : IGameDataProvider
             .Select(w => new World { Name = w.Fields.Name, Id = w.RowId })
             .Concat(ChineseServers.Worlds())
             .Concat(KoreanServers.Worlds())
+            .Concat(TraditionalChineseServers.Worlds())
             .ToDictionary(w => w.Id, w => w.Name));
     }
 
@@ -212,6 +213,7 @@ public class BoilmasterGameDataProvider : IGameDataProvider
             .Select(w => new World { Name = w.Fields.Name, Id = w.RowId })
             .Concat(ChineseServers.Worlds())
             .Concat(KoreanServers.Worlds())
+            .Concat(TraditionalChineseServers.Worlds())
             .ToDictionary(w => w.Name, w => w.Id));
     }
 
@@ -221,6 +223,7 @@ public class BoilmasterGameDataProvider : IGameDataProvider
             .Select(w => new World { Name = w.Fields.Name, Id = w.RowId })
             .Concat(ChineseServers.Worlds())
             .Concat(KoreanServers.Worlds())
+            .Concat(TraditionalChineseServers.Worlds())
             .Select(w => w.Id)
             .ToList()));
     }
@@ -257,6 +260,7 @@ public class BoilmasterGameDataProvider : IGameDataProvider
             .Where(dc => dc.WorldIds.Length > 0)
             .Concat(ChineseServers.DataCenters())
             .Concat(KoreanServers.DataCenters())
+            .Concat(TraditionalChineseServers.DataCenters())
             .ToList());
     }
 
