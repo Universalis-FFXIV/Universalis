@@ -1,3 +1,4 @@
+using System.Linq;
 using Xunit;
 
 namespace Universalis.GameData.Tests;
@@ -12,6 +13,21 @@ public class GameDataProviderTests
     public void Provider_Must_Load()
     {
         ServiceUtils.CreateGameDataProvider(SqPack);
+    }
+
+    [InlineData("Anima", "Mana")]
+    [InlineData("Coeurl", "Crystal")]
+    [InlineData("Mandragora", "Meteor")]
+    [InlineData("Rafflesia", "Dynamis")]
+#if DEBUG
+    [Theory]
+#endif
+    public void DataCenters_Should_Return_Correct_WorldMappings(string worldName, string expectedDcName)
+    {
+        var gameData = ServiceUtils.CreateGameDataProvider(SqPack);
+        var worldId = gameData.AvailableWorldsReversed()[worldName];
+        var actualDcName = gameData.DataCenters().First(dc => dc.WorldIds.Contains(worldId)).Name;
+        Assert.Equal(expectedDcName, actualDcName);
     }
 
     [InlineData(44, "Anima")]

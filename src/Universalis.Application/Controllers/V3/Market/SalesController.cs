@@ -57,19 +57,18 @@ public class SalesController : ControllerBase
             salesCursor = SalesCursor.Create();
         }
 
-        var sales = await worlds.ToAsyncEnumerable()
-            .SelectManyAwaitWithCancellation(async (world, ct) =>
-            {
-                using var worldDataActivity = Util.ActivitySource.StartActivity("SalesControllerV3.Get.WorldData");
-                worldDataActivity?.AddTag("itemId", itemId);
-                worldDataActivity?.AddTag("worldId", world.Id);
+        var tasks = worlds.Select(async world =>
+        {
+            using var worldDataActivity = Util.ActivitySource.StartActivity("SalesControllerV3.Get.WorldData");
+            worldDataActivity?.AddTag("itemId", itemId);
+            worldDataActivity?.AddTag("worldId", world.Id);
 
-                var data = await Store.RetrieveBySaleTime(world.Id, itemId, SalesPerPage, salesCursor.From, null, ct);
-                return data.ToAsyncEnumerable()
-                    .Select(sale => ToSaleView(world, sale));
-            })
-            .OrderByDescending(sale => sale.TimestampUnixMilliseconds)
-            .ToListAsync(cancellationToken);
+            var data = await Store.RetrieveBySaleTime(world.Id, itemId, SalesPerPage, salesCursor.From, null, cancellationToken);
+            return data.Select(sale => ToSaleView(world, sale));
+        });
+
+        var results = await Task.WhenAll(tasks);
+        var sales = results.SelectMany(x => x).OrderByDescending(sale => sale.TimestampUnixMilliseconds).ToList();
 
         return new ActionResult<SalesPage>(new SalesPage
         {

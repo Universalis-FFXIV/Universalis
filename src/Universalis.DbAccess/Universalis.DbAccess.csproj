@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <LangVersion>12.0</LangVersion>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,9 +13,9 @@
     <PackageReference Include="FluentMigrator.Runner" Version="5.1.0" />
     <PackageReference Include="FluentMigrator.Runner.Postgres" Version="5.1.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
     <PackageReference Include="Npgsql" Version="8.0.5" />
     <PackageReference Include="Npgsql.Json.NET" Version="8.0.5" />
     <PackageReference Include="Npgsql.OpenTelemetry" Version="8.0.5" />
@@ -23,8 +23,7 @@
     <PackageReference Include="OptimizedPriorityQueue" Version="5.1.0" />
     <PackageReference Include="prometheus-net" Version="8.2.1" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.16" />
-    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-  </ItemGroup>
+      </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Universalis.Common\Universalis.Common.csproj" />
