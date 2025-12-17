@@ -148,15 +148,21 @@ public class CsvGameDataProvider : IGameDataProvider
 
     private static Task<IReadOnlyList<DataCenter>> LoadDataCenters(IEnumerable<CsvWorld> worlds, IEnumerable<CsvDc> dcs)
     {
+        // Build a mapping from world name to world ID
+        var worldNameToId = GetValidWorlds(worlds)
+            .ToDictionary(w => w.Name, w => w.RowId);
+
         return Task.FromResult<IReadOnlyList<DataCenter>>(dcs
             .Where(dc => dc.RowId is > 0 and < 99)
             .Select(dc => new DataCenter
             {
                 Name = dc.Name,
                 Region = Regions.Map[dc.Region],
-                WorldIds = GetValidWorlds(worlds)
-                    .Where(w => w.DataCenter == dc.RowId)
-                    .Select(w => w.RowId)
+                // Use hardcoded mapping instead of w.DataCenter, which is broken upstream
+                WorldIds = GlobalServers.WorldToDataCenter
+                    .Where(kvp => kvp.Value == dc.Name)
+                    .Where(kvp => worldNameToId.ContainsKey(kvp.Key))
+                    .Select(kvp => worldNameToId[kvp.Key])
                     .ToArray(),
             })
             .Where(dc => dc.WorldIds.Length > 0)
