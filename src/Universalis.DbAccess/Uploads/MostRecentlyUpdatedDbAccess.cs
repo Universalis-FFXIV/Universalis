@@ -38,19 +38,19 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
     public async Task<IList<WorldItemUpload>> GetAllMostRecent(MostRecentlyUpdatedManyQuery query,
         CancellationToken cancellationToken = default)
     {
-        var data = await query.WorldIds.ToAsyncEnumerable()
-            .SelectManyAwait(async world =>
+        var tasks = query.WorldIds.Select(async world =>
+        {
+            var worldData = await _store.GetMostRecent(world, query.Count - 1);
+            return worldData.Select(kvp => new WorldItemUpload
             {
-                return (await _store.GetMostRecent(world, query.Count - 1))
-                    .ToAsyncEnumerable()
-                    .Select(kvp => new WorldItemUpload
-                    {
-                        WorldId = world,
-                        ItemId = kvp.Key,
-                        LastUploadTimeUnixMilliseconds = kvp.Value,
-                    });
-            })
-            .ToListAsync(cancellationToken);
+                WorldId = world,
+                ItemId = kvp.Key,
+                LastUploadTimeUnixMilliseconds = kvp.Value,
+            });
+        });
+
+        var results = await Task.WhenAll(tasks);
+        var data = results.SelectMany(x => x).ToList();
 
         var heap = new SimplePriorityQueue<WorldItemUpload, double>(Comparer<double>.Create((a, b) => b.CompareTo(a)));
         foreach (var d in data)
@@ -87,19 +87,19 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
     public async Task<IList<WorldItemUpload>> GetAllLeastRecent(MostRecentlyUpdatedManyQuery query,
         CancellationToken cancellationToken = default)
     {
-        var data = await query.WorldIds.ToAsyncEnumerable()
-            .SelectManyAwait(async world =>
+        var tasks = query.WorldIds.Select(async world =>
+        {
+            var worldData = await _store.GetLeastRecent(world, query.Count - 1);
+            return worldData.Select(kvp => new WorldItemUpload
             {
-                return (await _store.GetLeastRecent(world, query.Count - 1))
-                    .ToAsyncEnumerable()
-                    .Select(kvp => new WorldItemUpload
-                    {
-                        WorldId = world,
-                        ItemId = kvp.Key,
-                        LastUploadTimeUnixMilliseconds = kvp.Value,
-                    });
-            })
-            .ToListAsync(cancellationToken);
+                WorldId = world,
+                ItemId = kvp.Key,
+                LastUploadTimeUnixMilliseconds = kvp.Value,
+            });
+        });
+
+        var results = await Task.WhenAll(tasks);
+        var data = results.SelectMany(x => x).ToList();
 
         var heap = new SimplePriorityQueue<WorldItemUpload, double>(Comparer<double>.Create((a, b) => a.CompareTo(b)));
         foreach (var d in data)
