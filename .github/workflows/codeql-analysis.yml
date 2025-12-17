@@ -54,7 +54,7 @@ jobs:
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v1.8.1
       with:
-        dotnet-version: "8.0.404"
+        dotnet-version: "10.0.101"
 
     - name: Build application
       run: ./build.sh --target Compile --configuration Release
