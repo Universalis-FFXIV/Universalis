@@ -246,15 +246,21 @@ public class BoilmasterGameDataProvider : IGameDataProvider
     private static Task<IReadOnlyList<DataCenter>> LoadDataCenters(IEnumerable<ApiWorld> worlds,
         IEnumerable<ApiDataCenter> dcs)
     {
+        // Build a mapping from world name to world ID
+        var worldNameToId = GetValidWorlds(worlds)
+            .ToDictionary(w => w.Fields.Name, w => w.RowId);
+
         return Task.FromResult<IReadOnlyList<DataCenter>>(dcs
             .Where(dc => dc.RowId is > 0 and < 99)
             .Select(dc => new DataCenter
             {
                 Name = dc.Fields.Name,
                 Region = Regions.Map[dc.Fields.Region],
-                WorldIds = GetValidWorlds(worlds)
-                    .Where(w => w.Fields.DataCenter.RowId == dc.RowId)
-                    .Select(w => w.RowId)
+                // Use hardcoded mapping instead of w.Fields.DataCenter.RowId, which is broken upstream
+                WorldIds = GlobalServers.WorldToDataCenter
+                    .Where(kvp => kvp.Value == dc.Fields.Name)
+                    .Where(kvp => worldNameToId.ContainsKey(kvp.Key))
+                    .Select(kvp => worldNameToId[kvp.Key])
                     .ToArray(),
             })
             .Where(dc => dc.WorldIds.Length > 0)
