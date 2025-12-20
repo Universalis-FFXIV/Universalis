@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace Universalis.GameData;
 
@@ -46,9 +46,6 @@ public static class ChineseServers
             "taiyanghaian" or "taiyanghaian2" => "太阳海岸",
             "yixiujiade" or "yixiujiade2" => "伊修加德",
             "hongchachuan" or "hongchachuan2" => "红茶川",
-            "huangjingu" => "黄金谷",
-            "yueyawan" => "月牙湾",
-            "xuesongyuan" or "xuesongyuan2" => "雪松原",
             _ => worldOrDc,
         };
 
@@ -92,9 +89,6 @@ public static class ChineseServers
             "太阳海岸" => "TaiYangHaiAn",
             "伊修加德" => "YiXiuJiaDe",
             "红茶川" => "HongChaChuan",
-            "黄金谷" => "HuangJinGu",
-            "月牙湾" => "YueYaWan",
-            "雪松原" => "XueSongYuan",
             _ => worldOrDc,
         };
 
@@ -118,7 +112,7 @@ public static class ChineseServers
                 { Name = "猫小胖", Region = "中国", WorldIds = new[] { 1043, 1169, 1106, 1045, 1177, 1178, 1179 } },
             new DataCenter
             {
-                Name = "豆豆柴", Region = "中国", WorldIds = new[] { 1192, 1183, 1180, 1186, 1201, 1068, 1064, 1187 },
+                Name = "豆豆柴", Region = "中国", WorldIds = new[] { 1192, 1183, 1180, 1186, 1201 },
             },
         };
 
@@ -153,8 +147,5 @@ public static class ChineseServers
             new World { Name = "太阳海岸", Id = 1180 },
             new World { Name = "伊修加德", Id = 1186 },
             new World { Name = "红茶川", Id = 1201 },
-            new World { Name = "黄金谷", Id = 1068 },
-            new World { Name = "月牙湾", Id = 1064 },
-            new World { Name = "雪松原", Id = 1187 },
         };
 }
