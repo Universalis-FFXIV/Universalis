@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Cassandra;
 using Cassandra.Data.Linq;
 using Cassandra.Mapping;
-using EasyCaching.Core;
 using Microsoft.Extensions.Logging;
 using Prometheus;
 using StackExchange.Redis;
@@ -25,20 +24,8 @@ public class SaleStore : ISaleStore, IDisposable
             Buckets = Histogram.ExponentialBuckets(1, 2, 32),
         });
 
-    private static readonly Counter LocalCacheHits =
-        Prometheus.Metrics.CreateCounter("universalis_sale_local_cache_hit", "");
-
-    private static readonly Counter LocalCacheMisses =
-        Prometheus.Metrics.CreateCounter("universalis_sale_local_cache_miss", "");
-
-    private static readonly Counter LocalCacheUpdates =
-        Prometheus.Metrics.CreateCounter("universalis_sale_local_cache_update", "");
-
-    private static readonly TimeSpan LocalSalesCacheTime = TimeSpan.FromMinutes(5);
-
     private readonly IPersistentRedisMultiplexer _cache;
     private readonly ILogger<SaleStore> _logger;
-    private readonly IEasyCachingProvider _easyCachingProvider;
 
     private readonly Lazy<ISession> _scylla;
     private readonly Lazy<IMapper> _mapper;
@@ -47,12 +34,11 @@ public class SaleStore : ISaleStore, IDisposable
 
     private readonly SemaphoreSlim _lock;
 
-    public SaleStore(ICluster scylla, IPersistentRedisMultiplexer cache, ILogger<SaleStore> logger, IWorldToDcRegion worldToDcRegion, IEasyCachingProvider easyCachingProvider)
+    public SaleStore(ICluster scylla, IPersistentRedisMultiplexer cache, ILogger<SaleStore> logger, IWorldToDcRegion worldToDcRegion)
     {
         _cache = cache;
         _logger = logger;
         _worldToDcRegion = worldToDcRegion;
-        _easyCachingProvider = easyCachingProvider;
 
         _lock = new SemaphoreSlim(2200, 2200);
 
@@ -166,63 +152,16 @@ public class SaleStore : ISaleStore, IDisposable
         }
     }
 
-    private async Task<(bool, IList<Sale>)> TryGetSalesFromLocalCache(int worldId, int itemId, int count, DateTimeOffset? from, DateTimeOffset? to,
-        CancellationToken cancellationToken = default)
-    {
-        using var activity = Util.ActivitySource.StartActivity("SaleStore.TryGetSalesFromLocalCache");
-
-        var cacheKey = SalesKey(worldId, itemId, count, from, to);
-        var cacheValue = await _easyCachingProvider.GetAsync<IList<Sale>>(cacheKey, cancellationToken);
-        if (cacheValue.HasValue)
-        {
-            LocalCacheHits.Inc();
-            return (true, cacheValue.Value);
-        }
-        else
-        {
-            LocalCacheMisses.Inc();
-            return (false, null);
-        }
-    }
-
-    private async Task StoreSalesInLocalCache(int worldId, int itemId, int count, DateTimeOffset? from, DateTimeOffset? to, IList<Sale> sales,
-        CancellationToken cancellationToken = default)
-    {
-        using var activity = Util.ActivitySource.StartActivity("SaleStore.StoreSalesInLocalCache");
-        var cacheKey = SalesKey(worldId, itemId, count, from, to);
-        await _easyCachingProvider.SetAsync(cacheKey, sales, LocalSalesCacheTime, cancellationToken);
-        LocalCacheUpdates.Inc();
-    }
-
-    private static string SalesKey(int worldId, int itemId, int count, DateTimeOffset? from, DateTimeOffset? to)
-    {
-        var fromStr = from?.ToUnixTimeMilliseconds().ToString() ?? "null";
-        var toStr = to?.ToUnixTimeMilliseconds().ToString() ?? "null";
-        return $"sales5:{worldId}:{itemId}:{count}:{fromStr}:{toStr}";
-    }
-
     public async Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTimeOffset? from = null, DateTimeOffset? to = null,
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("SaleStore.RetrieveBySaleTime");
 
-        // Try to fetch the sales from the cache
-        activity?.AddEvent(new ActivityEvent("TryGetSalesFromCache"));
-        var (success, cacheValue) = await TryGetSalesFromLocalCache(worldId, itemId, count, from, to, cancellationToken);
-        if (success)
-        {
-            return cacheValue;
-        }
-
         // Reads from the sale table are prone to timeouts for some reason, so we throttle them here
         await _lock.WaitAsync(cancellationToken);
         try
         {
-            var sales = await RetrieveBySaleTimeCore(worldId, itemId, count, from, to);
-            // Cache the result temporarily
-            var salesList = sales.ToList();
-            await StoreSalesInLocalCache(worldId, itemId, count, from, to, salesList, cancellationToken);
-            return salesList;
+            return await RetrieveBySaleTimeCore(worldId, itemId, count, from, to);
         }
         finally
         {
