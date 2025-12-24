@@ -1,6 +1,5 @@
 ﻿using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
-using EasyCaching.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -124,17 +123,9 @@ public class DbFixture : IAsyncLifetime
 
     public async Task ClearCache()
     {
-        // Clear Redis cache
         foreach (var server in _services.Value.GetRequiredService<IPersistentRedisMultiplexer>().GetDatabase().Multiplexer.GetServers())
         {
             await server.FlushAllDatabasesAsync();
-        }
-
-        // Clear in-memory cache
-        var easyCachingProvider = _services.Value.GetService<IEasyCachingProvider>();
-        if (easyCachingProvider != null)
-        {
-            await easyCachingProvider.FlushAsync();
         }
     }
 

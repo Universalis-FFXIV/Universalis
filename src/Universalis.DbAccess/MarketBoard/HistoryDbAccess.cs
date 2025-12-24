@@ -12,11 +12,23 @@ public class HistoryDbAccess : IHistoryDbAccess
 {
     private readonly IMarketItemStore _marketItemStore;
     private readonly ISaleStore _saleStore;
+    private readonly int _batchSize;
 
     public HistoryDbAccess(IMarketItemStore marketItemStore, ISaleStore saleStore)
     {
         _marketItemStore = marketItemStore;
         _saleStore = saleStore;
+
+        // Configure batch size from environment variable (default: 50)
+        var batchSizeStr = Environment.GetEnvironmentVariable("UNIVERSALIS_SALES_BATCH_SIZE") ?? "50";
+        if (int.TryParse(batchSizeStr, out var batchSize) && batchSize > 0)
+        {
+            _batchSize = batchSize;
+        }
+        else
+        {
+            _batchSize = 50; // Default fallback
+        }
     }
 
     public async Task Create(History document, CancellationToken cancellationToken = default)
@@ -93,11 +105,27 @@ public class HistoryDbAccess : IHistoryDbAccess
         var marketItemsDict = marketItemsList.ToDictionary(mi => (mi.WorldId, mi.ItemId), mi => mi);
 
         // Get sales where an upload time is known
+        // Process in batches to avoid overwhelming the Scylla coordinator while still being faster than sequential
         var sales = new Dictionary<(int, int), IEnumerable<Sale>>();
-        foreach (var (worldId, itemId) in worldItemTuples.Where(marketItemsDict.ContainsKey))
+        var filteredTuples = worldItemTuples.Where(marketItemsDict.ContainsKey).ToArray();
+
+        for (var i = 0; i < filteredTuples.Length; i += _batchSize)
         {
-            sales[(worldId, itemId)] = await _saleStore.RetrieveBySaleTime(worldId, itemId, query.Count ?? 200, query.From, query.To,
+            var batch = filteredTuples.Skip(i).Take(_batchSize);
+
+            var tasks = batch.Select(async tuple =>
+            {
+                var (worldId, itemId) = tuple;
+                var salesData = await _saleStore.RetrieveBySaleTime(worldId, itemId, query.Count ?? 200, query.From, query.To,
                     cancellationToken: cancellationToken);
+                return (Key: (worldId, itemId), Value: salesData);
+            });
+
+            var results = await Task.WhenAll(tasks);
+            foreach (var (key, value) in results)
+            {
+                sales[key] = value;
+            }
         }
 
         // Reformat the results as a History instance
