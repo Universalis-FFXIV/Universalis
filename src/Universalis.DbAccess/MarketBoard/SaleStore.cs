@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -23,6 +24,10 @@ public class SaleStore : ISaleStore, IDisposable
         {
             Buckets = Histogram.ExponentialBuckets(1, 2, 32),
         });
+
+    private readonly record struct SaleRequestKey(int WorldId, int ItemId, int Count, long? From, long? To);
+
+    private static readonly ConcurrentDictionary<SaleRequestKey, Task<IEnumerable<Sale>>> _pendingRequests = new();
 
     private readonly IPersistentRedisMultiplexer _cache;
     private readonly ILogger<SaleStore> _logger;
@@ -157,11 +162,39 @@ public class SaleStore : ISaleStore, IDisposable
     {
         using var activity = Util.ActivitySource.StartActivity("SaleStore.RetrieveBySaleTime");
 
+        // Build a key for request deduplication
+        var requestKey = new SaleRequestKey(worldId, itemId, count, from?.ToUnixTimeMilliseconds(), to?.ToUnixTimeMilliseconds());
+
+        // Check if there's an in-flight request for the same parameters
+        if (_pendingRequests.TryGetValue(requestKey, out var existingTask))
+        {
+            activity?.AddEvent(new ActivityEvent("DeduplicatedRequest"));
+            return await existingTask;
+        }
+
+        // Create a new task for this request
+        var salesTask = RetrieveBySaleTimeInternal(requestKey, cancellationToken);
+        _pendingRequests[requestKey] = salesTask;
+
+        try
+        {
+            return await salesTask;
+        }
+        finally
+        {
+            _pendingRequests.TryRemove(requestKey, out _);
+        }
+    }
+
+    private async Task<IEnumerable<Sale>> RetrieveBySaleTimeInternal(SaleRequestKey requestKey, CancellationToken cancellationToken)
+    {
         // Reads from the sale table are prone to timeouts for some reason, so we throttle them here
         await _lock.WaitAsync(cancellationToken);
         try
         {
-            return await RetrieveBySaleTimeCore(worldId, itemId, count, from, to);
+            return await RetrieveBySaleTimeCore(requestKey.WorldId, requestKey.ItemId, requestKey.Count,
+                requestKey.From.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(requestKey.From.Value) : null,
+                requestKey.To.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(requestKey.To.Value) : null);
         }
         finally
         {
