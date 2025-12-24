@@ -24,6 +24,7 @@ public class SaleStoreTests
 #endif
     public async Task Insert_Works()
     {
+        await _fixture.ClearCache();
         var store = _fixture.Services.GetRequiredService<ISaleStore>();
         var sale = new Sale
         {
@@ -56,6 +57,7 @@ public class SaleStoreTests
 #endif
     public async Task InsertRetrieveBySaleTime_Works()
     {
+        await _fixture.ClearCache();
         var store = _fixture.Services.GetRequiredService<ISaleStore>();
         var sale = new Sale
         {
@@ -97,6 +99,7 @@ public class SaleStoreTests
 #endif
     public async Task InsertManyRetrieveBySaleTime_Works()
     {
+        await _fixture.ClearCache();
         var store = _fixture.Services.GetRequiredService<ISaleStore>();
         var sales = new List<Sale>
         {
@@ -155,6 +158,7 @@ public class SaleStoreTests
 #endif
     public async Task InsertManyRetrieveBySaleTime_Works_2()
     {
+        await _fixture.ClearCache();
         var store = _fixture.Services.GetRequiredService<ISaleStore>();
         var sales = SeedDataGenerator.MakeHistory(74, 33922).Sales.OrderByDescending(s => s.SaleTime).ToList();
 
@@ -185,6 +189,7 @@ public class SaleStoreTests
 #endif
     public async Task InsertManyRetrieveBySaleTimeWithBounds_Works()
     {
+        await _fixture.ClearCache();
         var store = _fixture.Services.GetRequiredService<ISaleStore>();
         var sales = new List<Sale>
         {
@@ -370,5 +375,158 @@ public class SaleStoreTests
         Assert.Equal(hqQuantity, result.Hq.Quantity);
         Assert.Equal(hqSumSales, result.Hq.SumSales);
         Assert.True(hqQuantity <= result.Hq.AvgSalesPerDay);
+    }
+
+#if DEBUG
+    [Fact]
+#endif
+    public async Task RetrieveBySaleTime_CacheHit_Works()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<ISaleStore>();
+        var sale = new Sale
+        {
+            Id = Guid.NewGuid(),
+            WorldId = 28,
+            ItemId = 5334,
+            Hq = true,
+            PricePerUnit = 300,
+            Quantity = 20,
+            BuyerName = "Hello World",
+            OnMannequin = false,
+            SaleTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
+            UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
+        };
+
+        await store.InsertMany(new[] { sale });
+        await Task.Delay(1000);
+
+        // First call - cache miss, queries database
+        var results1 = (await store.RetrieveBySaleTime(28, 5334, 1)).ToList();
+        Assert.Single(results1);
+
+        // Second call - cache hit, should return cached data
+        var results2 = (await store.RetrieveBySaleTime(28, 5334, 1)).ToList();
+        Assert.Single(results2);
+        Assert.Equal(results1[0].Id, results2[0].Id);
+    }
+
+#if DEBUG
+    [Fact]
+#endif
+    public async Task RetrieveBySaleTime_CacheInvalidatedOnNewInsert_Works()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<ISaleStore>();
+        var sale1 = new Sale
+        {
+            Id = Guid.NewGuid(),
+            WorldId = 29,
+            ItemId = 5335,
+            Hq = true,
+            PricePerUnit = 300,
+            Quantity = 20,
+            BuyerName = "Hello World",
+            OnMannequin = false,
+            SaleTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
+            UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
+        };
+
+        await store.InsertMany(new[] { sale1 });
+        await Task.Delay(1000);
+
+        // First call - gets 1 sale
+        var results1 = (await store.RetrieveBySaleTime(29, 5335, 10)).ToList();
+        Assert.Single(results1);
+
+        // Insert another sale
+        var sale2 = new Sale
+        {
+            Id = Guid.NewGuid(),
+            WorldId = 29,
+            ItemId = 5335,
+            Hq = false,
+            PricePerUnit = 250,
+            Quantity = 15,
+            BuyerName = "Test Buyer",
+            OnMannequin = false,
+            SaleTime = new DateTime(2022, 10, 2, 0, 0, 0, DateTimeKind.Utc),
+            UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
+        };
+        await store.InsertMany(new[] { sale2 });
+        await Task.Delay(1000);
+
+        // Clear cache to simulate cache expiration
+        await _fixture.ClearCache();
+
+        // Second call after new insert - should get 2 sales (cache was cleared)
+        var results2 = (await store.RetrieveBySaleTime(29, 5335, 10)).ToList();
+        Assert.Equal(2, results2.Count);
+    }
+
+#if DEBUG
+    [Fact]
+#endif
+    public async Task RetrieveBySaleTime_DifferentCountParameters_ReturnsCorrectResults()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<ISaleStore>();
+        var sales = new List<Sale>
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                WorldId = 30,
+                ItemId = 5336,
+                Hq = true,
+                PricePerUnit = 300,
+                Quantity = 20,
+                BuyerName = "Hello World",
+                OnMannequin = false,
+                SaleTime = new DateTime(2022, 10, 3, 0, 0, 0, DateTimeKind.Utc),
+                UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                WorldId = 30,
+                ItemId = 5336,
+                Hq = false,
+                PricePerUnit = 250,
+                Quantity = 15,
+                BuyerName = "Test Buyer",
+                OnMannequin = false,
+                SaleTime = new DateTime(2022, 10, 2, 0, 0, 0, DateTimeKind.Utc),
+                UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                WorldId = 30,
+                ItemId = 5336,
+                Hq = false,
+                PricePerUnit = 200,
+                Quantity = 10,
+                BuyerName = "Another Buyer",
+                OnMannequin = false,
+                SaleTime = new DateTime(2022, 10, 1, 0, 0, 0, DateTimeKind.Utc),
+                UploaderIdHash = "efuwhafejgj3weg0wrkporeh",
+            },
+        };
+
+        await store.InsertMany(sales);
+        await Task.Delay(1000);
+
+        // First call with count=1 - should return 1 sale
+        var results1 = (await store.RetrieveBySaleTime(30, 5336, 1)).ToList();
+        Assert.Single(results1);
+
+        // Second call with count=3 - should return 3 sales (not cached from first call)
+        var results2 = (await store.RetrieveBySaleTime(30, 5336, 3)).ToList();
+        Assert.Equal(3, results2.Count);
+
+        // Third call with count=2 - should return 2 sales
+        var results3 = (await store.RetrieveBySaleTime(30, 5336, 2)).ToList();
+        Assert.Equal(2, results3.Count);
     }
 }
