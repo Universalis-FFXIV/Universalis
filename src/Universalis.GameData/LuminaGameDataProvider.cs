@@ -158,21 +158,15 @@ internal class LuminaGameDataProvider : IGameDataProvider
             throw new InvalidOperationException(ExcelLoadError);
         }
 
-        // Build a mapping from world name to world ID
-        var worldNameToId = GetValidWorlds(worlds)
-            .ToDictionary(w => w.Name.ToString(), w => Convert.ToInt32(w.RowId));
-
         return dcs
             .Where(dc => dc.RowId is > 0 and < 99)
             .Select(dc => new DataCenter
             {
                 Name = dc.Name.ToString(),
                 Region = Regions.Map[dc.Region],
-                // Use hardcoded mapping instead of w.DataCenter.RowId, which is broken upstream
-                WorldIds = GlobalServers.WorldToDataCenter
-                    .Where(kvp => kvp.Value == dc.Name.ToString())
-                    .Where(kvp => worldNameToId.ContainsKey(kvp.Key))
-                    .Select(kvp => worldNameToId[kvp.Key])
+                WorldIds = GetValidWorlds(worlds)
+                    .Where(w => w.DataCenter.RowId == dc.RowId)
+                    .Select(w => Convert.ToInt32(w.RowId))
                     .ToArray(),
             })
             .Where(dc => dc.WorldIds.Length > 0)
