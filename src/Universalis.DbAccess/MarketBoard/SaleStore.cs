@@ -36,6 +36,8 @@ public class SaleStore : ISaleStore, IDisposable
 
     private static readonly TimeSpan LocalSalesCacheTime = TimeSpan.FromMinutes(5);
 
+    private const int MaxCacheCount = 1800;
+
     private readonly IPersistentRedisMultiplexer _cache;
     private readonly ILogger<SaleStore> _logger;
     private readonly IEasyCachingProvider _easyCachingProvider;
@@ -166,12 +168,12 @@ public class SaleStore : ISaleStore, IDisposable
         }
     }
 
-    private async Task<(bool, IList<Sale>)> TryGetSalesFromLocalCache(int worldId, int itemId, int count, DateTimeOffset? from, DateTimeOffset? to,
+    private async Task<(bool, IList<Sale>)> TryGetSalesFromLocalCache(int worldId, int itemId,
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("SaleStore.TryGetSalesFromLocalCache");
 
-        var cacheKey = SalesKey(worldId, itemId, count, from, to);
+        var cacheKey = SalesKey(worldId, itemId);
         var cacheValue = await _easyCachingProvider.GetAsync<IList<Sale>>(cacheKey, cancellationToken);
         if (cacheValue.HasValue)
         {
@@ -185,20 +187,18 @@ public class SaleStore : ISaleStore, IDisposable
         }
     }
 
-    private async Task StoreSalesInLocalCache(int worldId, int itemId, int count, DateTimeOffset? from, DateTimeOffset? to, IList<Sale> sales,
+    private async Task StoreSalesInLocalCache(int worldId, int itemId, IList<Sale> sales,
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("SaleStore.StoreSalesInLocalCache");
-        var cacheKey = SalesKey(worldId, itemId, count, from, to);
+        var cacheKey = SalesKey(worldId, itemId);
         await _easyCachingProvider.SetAsync(cacheKey, sales, LocalSalesCacheTime, cancellationToken);
         LocalCacheUpdates.Inc();
     }
 
-    private static string SalesKey(int worldId, int itemId, int count, DateTimeOffset? from, DateTimeOffset? to)
+    private static string SalesKey(int worldId, int itemId)
     {
-        var fromStr = from?.ToUnixTimeMilliseconds().ToString() ?? "null";
-        var toStr = to?.ToUnixTimeMilliseconds().ToString() ?? "null";
-        return $"sales5:{worldId}:{itemId}:{count}:{fromStr}:{toStr}";
+        return $"sales5:{worldId}:{itemId}";
     }
 
     public async Task<IEnumerable<Sale>> RetrieveBySaleTime(int worldId, int itemId, int count, DateTimeOffset? from = null, DateTimeOffset? to = null,
@@ -206,23 +206,42 @@ public class SaleStore : ISaleStore, IDisposable
     {
         using var activity = Util.ActivitySource.StartActivity("SaleStore.RetrieveBySaleTime");
 
-        // Try to fetch the sales from the cache
-        activity?.AddEvent(new ActivityEvent("TryGetSalesFromCache"));
-        var (success, cacheValue) = await TryGetSalesFromLocalCache(worldId, itemId, count, from, to, cancellationToken);
-        if (success)
+        // For large queries (> MaxCacheCount) or queries with specific time ranges, bypass cache and query directly
+        if (count > MaxCacheCount || from != null || to != null)
         {
-            return cacheValue;
+            LocalCacheMisses.Inc();
+            await _lock.WaitAsync(cancellationToken);
+            try
+            {
+                return await RetrieveBySaleTimeCore(worldId, itemId, count, from, to);
+            }
+            finally
+            {
+                _lock.Release();
+            }
         }
 
-        // Reads from the sale table are prone to timeouts for some reason, so we throttle them here
+        // For standard queries without time ranges (<= MaxCacheCount), try cache first
+        activity?.AddEvent(new ActivityEvent("TryGetSalesFromCache"));
+        var (success, cacheValue) = await TryGetSalesFromLocalCache(worldId, itemId, cancellationToken);
+        if (success)
+        {
+            // Slice cached results to the requested count
+            return cacheValue.Take(count).ToList();
+        }
+
+        // Cache miss - query MaxCacheCount and cache the result
         await _lock.WaitAsync(cancellationToken);
         try
         {
-            var sales = await RetrieveBySaleTimeCore(worldId, itemId, count, from, to);
-            // Cache the result temporarily
+            var sales = await RetrieveBySaleTimeCore(worldId, itemId, MaxCacheCount, from, to);
             var salesList = sales.ToList();
-            await StoreSalesInLocalCache(worldId, itemId, count, from, to, salesList, cancellationToken);
-            return salesList;
+
+            // Cache the full MaxCacheCount results
+            await StoreSalesInLocalCache(worldId, itemId, salesList, cancellationToken);
+
+            // Return only the requested count
+            return salesList.Take(count).ToList();
         }
         finally
         {
