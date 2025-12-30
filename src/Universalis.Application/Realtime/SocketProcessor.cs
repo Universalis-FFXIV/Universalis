@@ -8,6 +8,9 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.IO;
+using MongoDB.Bson.IO;
+using MongoDB.Bson.Serialization;
 using Universalis.Application.Realtime.Messages;
 
 namespace Universalis.Application.Realtime;
@@ -33,26 +36,41 @@ public class SocketProcessor(ILogger<SocketProcessor> logger) : ISocketProcessor
         "universalis_ws_exceptions",
         "WebSocket exceptions across all connections");
 
+    private static readonly RecyclableMemoryStreamManager MemoryStreamPool = new();
+
     private readonly ConcurrentDictionary<Guid, ISocketClient> _connections = new();
+
+    private static byte[] SerializeMessage(SocketMessage message)
+    {
+        using var stream = MemoryStreamPool.GetStream();
+        using var writer = new BsonBinaryWriter(stream);
+        BsonSerializer.Serialize(writer, message.GetType(), message);
+        return stream.ToArray();
+    }
 
     public void Publish(SocketMessage message)
     {
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
+        var stopwatch = Stopwatch.StartNew();
 
-        foreach (var (id, connection) in _connections)
-        {
-            try
+        // Serialize once and cache on the message
+        message.CachedSerializedBytes = SerializeMessage(message);
+
+        Parallel.ForEach(
+            _connections,
+            new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 2 },
+            kvp =>
             {
-                connection.Push(message);
-                MessagesSent.Inc();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to send message to connection {}", id);
-                ExceptionCount.Inc();
-            }
-        }
+                try
+                {
+                    kvp.Value.Push(message);
+                    MessagesSent.Inc();
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Failed to send message to connection {}", kvp.Key);
+                    ExceptionCount.Inc();
+                }
+            });
 
         stopwatch.Stop();
         MessageQueueTime.Observe(stopwatch.ElapsedMilliseconds);

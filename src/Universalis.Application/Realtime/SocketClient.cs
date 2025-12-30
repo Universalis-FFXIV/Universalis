@@ -9,7 +9,6 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Bson;
-using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using Universalis.Application.Realtime.Messages;
 
@@ -269,26 +268,8 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
 
     private async Task SendEvent(SocketMessage message, CancellationToken cancellationToken = default)
     {
-        await using var stream = MemoryStreamPool.GetStream();
-
-        using var writer = new BsonBinaryWriter(stream);
-        BsonSerializer.Serialize(writer, message.GetType(), message);
-
-        var cur = 0;
-        var end = (int)stream.Position;
-        foreach (var memory in stream.GetReadOnlySequence())
-        {
-            if (cur + memory.Length >= end)
-            {
-                var lastIdx = end - cur;
-                await ws.SendAsync(memory[..lastIdx], WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage,
-                    cancellationToken);
-                break;
-            }
-
-            cur += memory.Length;
-            await ws.SendAsync(memory, WebSocketMessageType.Binary, WebSocketMessageFlags.None, cancellationToken);
-        }
+        var bytes = message.GetSerializedBytes(MemoryStreamPool);
+        await ws.SendAsync(bytes, WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage, cancellationToken);
     }
 
     public void Dispose()
