@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Universalis.Application.Realtime;
 using Universalis.Application.Realtime.Messages;
+using Universalis.Application.Tests.Mocks.Realtime.Messages;
 using Universalis.Common.Collections;
 using Xunit;
 
@@ -16,6 +17,60 @@ namespace Universalis.Application.Tests.Realtime;
 
 public class SocketProcessorTests
 {
+    [Fact]
+    public void Publish_SetsCachedSerializedBytesOnMessage()
+    {
+        // Arrange
+        var loggerMock = new Mock<ILogger<SocketProcessor>>();
+        var socketProcessor = new SocketProcessor(loggerMock.Object);
+        var message = new MockMessage("test", "channel") { Value = 42 };
+
+        // Act
+        Assert.Null(message.CachedSerializedBytes); // Verify it starts null
+        socketProcessor.Publish(message);
+
+        // Assert - CachedSerializedBytes should now be set
+        Assert.NotNull(message.CachedSerializedBytes);
+        Assert.True(message.CachedSerializedBytes.Length > 0);
+    }
+
+    [Fact]
+    public void Publish_ContinuesWhenOneClientThrows()
+    {
+        // Arrange
+        var loggerMock = new Mock<ILogger<SocketProcessor>>();
+        var socketProcessor = new SocketProcessor(loggerMock.Object);
+
+        var goodClient1 = new Mock<ISocketClient>();
+        var badClient = new Mock<ISocketClient>();
+        var goodClient2 = new Mock<ISocketClient>();
+
+        // Configure badClient to throw exception on Push
+        badClient.Setup(c => c.Push(It.IsAny<SocketMessage>()))
+            .Throws(new InvalidOperationException("Simulated client error"));
+
+        var message = new MockMessage("test") { Value = 42 };
+
+        // Add clients to the processor
+        var connectionsField = typeof(SocketProcessor).GetField("_connections",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var connections = new ConcurrentDictionary<Guid, ISocketClient>
+        {
+            [Guid.NewGuid()] = goodClient1.Object,
+            [Guid.NewGuid()] = badClient.Object,
+            [Guid.NewGuid()] = goodClient2.Object,
+        };
+        connectionsField.SetValue(socketProcessor, connections);
+
+        // Act - should not throw despite badClient throwing
+        socketProcessor.Publish(message);
+
+        // Assert - good clients should still have received the message
+        goodClient1.Verify(c => c.Push(message), Times.Once);
+        goodClient2.Verify(c => c.Push(message), Times.Once);
+        badClient.Verify(c => c.Push(message), Times.Once); // Was called but threw
+    }
+
     [Fact]
     public void Publish_FuzzTest()
     {

@@ -5,6 +5,10 @@
     <LangVersion>14.0</LangVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Universalis.Application.Tests" />
+  </ItemGroup>
+
   <PropertyGroup>
     <DocumentationFile>Universalis.Application.xml</DocumentationFile>
   </PropertyGroup>
