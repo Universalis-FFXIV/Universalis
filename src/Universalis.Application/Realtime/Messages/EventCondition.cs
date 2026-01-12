@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using MongoDB.Bson.Serialization.Attributes;
 
 namespace Universalis.Application.Realtime.Messages;
 
@@ -41,14 +39,9 @@ public class EventCondition : IEquatable<EventCondition>
         {
             return true;
         }
-        
-        var properties = message.GetType()
-            .GetProperties()
-            .Where(prop => prop.GetGetMethod() != null)
-            .Where(prop => prop.GetCustomAttribute<BsonIgnoreAttribute>() == null)
-            .ToDictionary(
-                prop => prop.GetCustomAttribute<BsonElementAttribute>()?.ElementName ?? prop.Name,
-                prop => prop.GetGetMethod()?.Invoke(message, Array.Empty<object>())?.ToString());
+
+        // Use interface-based filter values instead of reflection for performance
+        var properties = message.GetFilterValues();
         foreach (var (key, val) in _filters)
         {
             if (!properties.TryGetValue(key, out var test) || test != val)
@@ -83,7 +76,7 @@ public class EventCondition : IEquatable<EventCondition>
 
         foreach (var (k, v) in other._filters)
         {
-            if (!_filters.ContainsKey(k) || !string.Equals(_filters[k], v, StringComparison.InvariantCultureIgnoreCase))
+            if (!_filters.TryGetValue(k, out var value) || !string.Equals(value, v, StringComparison.InvariantCultureIgnoreCase))
             {
                 return false;
             }
