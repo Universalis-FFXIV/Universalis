@@ -13,9 +13,21 @@ public class ListingsRemove : SocketMessage
     public int WorldId { get; init; }
 
     [BsonElement("listings")]
-    public IList<ListingView>Listings { get; init; }
+    public IList<ListingView> Listings { get; init; }
+
+    [BsonIgnore]
+    private Dictionary<string, string>? _filterValues;
 
     public ListingsRemove() : base("listings", "remove")
     {
+    }
+
+    public override IReadOnlyDictionary<string, string> GetFilterValues()
+    {
+        return _filterValues ??= new Dictionary<string, string>
+        {
+            ["item"] = ItemId.ToString(),
+            ["world"] = WorldId.ToString(),
+        };
     }
 }

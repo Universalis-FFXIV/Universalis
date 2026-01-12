@@ -15,7 +15,19 @@ public class ListingsAdd : SocketMessage
     [BsonElement("listings")]
     public IList<ListingView> Listings { get; init; }
 
+    [BsonIgnore]
+    private Dictionary<string, string>? _filterValues;
+
     public ListingsAdd() : base("listings", "add")
     {
+    }
+
+    public override IReadOnlyDictionary<string, string> GetFilterValues()
+    {
+        return _filterValues ??= new Dictionary<string, string>
+        {
+            ["item"] = ItemId.ToString(),
+            ["world"] = WorldId.ToString(),
+        };
     }
 }
