@@ -1,3 +1,5 @@
+# Universalis.Client
+
 Auto-generated C# client for the [Universalis](https://universalis.app) FFXIV
 market board API.
 
