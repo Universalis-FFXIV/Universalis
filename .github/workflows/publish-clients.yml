@@ -1,0 +1,109 @@
+name: Publish Client Libraries
+
+# Triggered on release creation. Also supports manual dispatch for testing.
+# Secrets required:
+#   NUGET_API_KEY  - NuGet.org API key for dotnet nuget push
+#   NPM_TOKEN      - npm access token for npm publish
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Package version to publish (e.g. 1.2.3). Required for workflow_dispatch."
+        required: true
+
+env:
+  DOTNET_VERSION: "10.x"
+  NODE_VERSION: "20"
+  NSWAG_VERSION: "14.6.3"
+
+jobs:
+  publish:
+    name: Generate and Publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── .NET setup ────────────────────────────────────────────────────────
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install NSwag CLI
+        run: dotnet tool install --global NSwag.ConsoleCore --version ${{ env.NSWAG_VERSION }}
+
+      # ── C# client generation ──────────────────────────────────────────────
+      - name: Generate C# clients (V1, V2, V3)
+        working-directory: clients/csharp
+        run: |
+          mkdir -p generated
+          nswag run nswag.v1.json
+          nswag run nswag.v2.json
+          nswag run nswag.v3.json
+
+      # Resolve version: from release tag (strip leading 'v') or manual input
+      - name: Resolve package version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#v}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Pack NuGet package
+        run: >
+          dotnet pack clients/csharp/Universalis.Client.csproj
+          --configuration Release
+          /p:Version=${{ steps.version.outputs.version }}
+          --output clients/csharp/bin/Release
+
+      - name: Push to NuGet.org
+        run: >
+          dotnet nuget push clients/csharp/bin/Release/*.nupkg
+          --api-key ${{ secrets.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
+
+      # ── TypeScript client generation ──────────────────────────────────────
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Generate TypeScript clients (V1, V2, V3)
+        working-directory: clients/typescript
+        run: |
+          nswag run nswag.v1.json
+          nswag run nswag.v2.json
+          nswag run nswag.v3.json
+          # NSwag emits the apostrophe from "Ul'dah" as a property identifier (ul'dah),
+          # which is invalid TypeScript. The string literals "Ul'dah" are uppercase and
+          # unaffected by this replacement.
+          sed -i "s/ul'dah/uldah/g" src/v1.ts src/v2.ts
+
+      - name: Install TypeScript dependencies
+        working-directory: clients/typescript
+        run: npm ci
+
+      - name: Set npm package version
+        working-directory: clients/typescript
+        run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+
+      - name: Build TypeScript
+        working-directory: clients/typescript
+        run: npm run build
+
+      - name: Publish to npm
+        working-directory: clients/typescript
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

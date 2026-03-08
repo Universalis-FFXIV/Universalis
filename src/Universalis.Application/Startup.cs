@@ -47,7 +47,19 @@ public class Startup
     // This method gets called by the runtime. Use this method to add services to the container.
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddDbAccessServices(Configuration);
+        // When UNIVERSALIS_SWAGGER_GEN=true, skip all infrastructure services that require live
+        // connections (Redis, ScyllaDB, PostgreSQL, RabbitMQ). This allows dotnet-swagger to
+        // generate OpenAPI specs in CI without needing a running infrastructure.
+        var swaggerGenMode = string.Equals(
+            Environment.GetEnvironmentVariable("UNIVERSALIS_SWAGGER_GEN"),
+            "true",
+            StringComparison.OrdinalIgnoreCase);
+
+        if (!swaggerGenMode)
+        {
+            services.AddDbAccessServices(Configuration);
+        }
+
         services.AddGameData(Configuration);
         services.AddUserAlerts();
         services.AddSingleton<IWorldToDcRegion, WorldToDcRegion>();
@@ -55,7 +67,7 @@ public class Startup
         var disableWsEventQueueStr = Environment.GetEnvironmentVariable("DISABLE_WEBSOCKET_EVENT_QUEUE");
         var disableWsEventQueue = bool.TryParse(disableWsEventQueueStr, out var disableWsEventQueueParsed) &&
                                   disableWsEventQueueParsed;
-        if (!disableWsEventQueue)
+        if (!swaggerGenMode && !disableWsEventQueue)
         {
             services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
 
@@ -230,7 +242,11 @@ public class Startup
         }
 
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-        services.AddMogboard(Configuration);
+        if (!swaggerGenMode)
+        {
+            services.AddMogboard(Configuration);
+        }
+
         services.AddRazorPages();
     }
 

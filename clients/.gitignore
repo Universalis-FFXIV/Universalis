@@ -1,0 +1,13 @@
+# Generated C# client code (produced by NSwag at CI time)
+csharp/generated/
+
+# Generated TypeScript client code (produced by NSwag at CI time)
+typescript/src/v1.ts
+typescript/src/v2.ts
+typescript/src/v3.ts
+
+# TypeScript build output and dependencies
+typescript/dist/
+typescript/node_modules/
+
+# specs/ is intentionally committed — do NOT ignore it

@@ -1,0 +1,32 @@
+{
+  "runtime": "Net100",
+  "documentGenerator": {
+    "fromDocument": {
+      "json": null,
+      "url": "../specs/v1.json",
+      "output": null
+    }
+  },
+  "codeGenerators": {
+    "openApiToCSharpClient": {
+      "generateClientClasses": true,
+      "generateClientInterfaces": true,
+      "clientClassAccessModifier": "public",
+      "typeAccessModifier": "public",
+      "generateExceptionClasses": true,
+      "exceptionClass": "UniversalisApiException",
+      "wrapDtoExceptions": true,
+      "injectHttpClient": true,
+      "disposeHttpClient": false,
+      "useBaseUrl": true,
+      "generateBaseUrlProperty": true,
+      "generateSyncMethods": false,
+      "generateNullableReferenceTypes": true,
+      "generateDefaultValues": true,
+      "generateDataAnnotations": false,
+      "namespace": "Universalis.Client.V1",
+      "output": "generated/V1Client.cs",
+      "newLineBehavior": "Auto"
+    }
+  }
+}
