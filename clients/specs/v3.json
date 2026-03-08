@@ -447,7 +447,13 @@
             "format": "int32"
           },
           "creator": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V3.Market.Creator"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Universalis.Application.Views.V3.Market.Creator"
+              }
+            ],
+            "description": "The item's creator/crafter, if applicable. May be null for items with no creator.",
+            "nullable": true
           },
           "materia": {
             "type": "array",
@@ -483,7 +489,8 @@
             "type": "object",
             "additionalProperties": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             },
             "description": "The time that this item was last updated on each world requested, in milliseconds since the UNIX epoch.\r\nIf an item has never been checked, the timestamp will be null.",
             "nullable": true
