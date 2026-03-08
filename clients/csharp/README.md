@@ -1,16 +1,19 @@
 # Universalis.Client
 
-Auto-generated C# client for the [Universalis](https://universalis.app) FFXIV market board API.
+Auto-generated C# client for the [Universalis](https://universalis.app) FFXIV
+market board API.
 
 ## Installation
 
-```
+```shell
 dotnet add package Universalis.Client
 ```
 
 ## Usage
 
-The package provides clients for all three API versions under separate namespaces. Use the latest version (V3) unless you have a specific reason to target an older one.
+The package provides clients for all three API versions under separate
+namespaces. Use the latest version (V3) unless you have a specific reason to
+target an older one.
 
 ```csharp
 using Universalis.Client.V3;
@@ -34,4 +37,5 @@ var client = new UniversalisClient(httpClient);
 
 ## Versioning
 
-This package version tracks the Universalis server releases. The generated code is produced from the live OpenAPI spec — no manual maintenance required.
+This package version tracks the Universalis server releases. The generated code
+is produced from the live OpenAPI spec — no manual maintenance required.
