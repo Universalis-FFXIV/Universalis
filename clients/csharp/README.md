@@ -38,5 +38,7 @@ var client = new Client(httpClient);
 
 ## Versioning
 
-This package version tracks the Universalis server releases. The generated code
-is produced from the live OpenAPI spec — no manual maintenance required.
+This package version tracks Universalis server releases. The generated code is
+published from the versioned OpenAPI specs committed in this repository; when
+the API contract changes, regenerate and commit the updated specs before the
+next release.
