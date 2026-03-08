@@ -1,5 +1,3 @@
-# Universalis.Client
-
 Auto-generated C# client for the [Universalis](https://universalis.app) FFXIV
 market board API.
 
@@ -18,7 +16,8 @@ target an older one.
 ```csharp
 using Universalis.Client.V3;
 
-var httpClient = new HttpClient { BaseAddress = new Uri("https://universalis.app") };
+var httpClient = new HttpClient
+    { BaseAddress = new Uri("https://universalis.app") };
 var client = new UniversalisClient(httpClient);
 
 // Get current market board listings for item 5 on Gilgamesh (world ID 63)
