@@ -23,6 +23,9 @@ jobs:
   publish:
     name: Generate and Publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # required for npm provenance attestation
 
     steps:
       - name: Checkout
@@ -87,8 +90,8 @@ jobs:
           nswag run nswag.v3.json
           # NSwag emits the apostrophe from "Ul'dah" as a property identifier (ul'dah),
           # which is invalid TypeScript. The string literals "Ul'dah" are uppercase and
-          # unaffected by this replacement.
-          sed -i "s/ul'dah/uldah/g" src/v1.ts src/v2.ts
+          # unaffected by this replacement. Apply to all generated files defensively.
+          sed -i "s/ul'dah/uldah/g" src/v1.ts src/v2.ts src/v3.ts
 
       - name: Install TypeScript dependencies
         working-directory: clients/typescript
@@ -104,6 +107,6 @@ jobs:
 
       - name: Publish to npm
         working-directory: clients/typescript
-        run: npm publish --access public
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

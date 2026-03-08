@@ -196,6 +196,15 @@ public class Startup
 
             options.IncludeXmlComments(() => new XPathDocument(apiDocs));
 
+            // Servers is a model-binder type whose properties are all private; Swashbuckle
+            // would otherwise emit it as an empty object schema.  Map it to a plain string
+            // so generated clients receive a usable type.
+            options.MapType<Servers>(() => new OpenApiSchema
+            {
+                Type = "string",
+                Description = "A comma-separated list of world, data center, or region names."
+            });
+
             options.CustomSchemaIds(type => type.FullName);
         });
 

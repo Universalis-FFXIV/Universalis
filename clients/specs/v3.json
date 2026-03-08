@@ -349,8 +349,8 @@
         "additionalProperties": { }
       },
       "Universalis.Application.Controllers.Servers": {
-        "type": "object",
-        "additionalProperties": false
+        "type": "string",
+        "description": "A comma-separated list of world, data center, or region names."
       },
       "Universalis.Application.Views.V3.Game.DataCenter": {
         "type": "object",

@@ -87,6 +87,10 @@ class Build : NukeBuild
             // that require live connections (Redis, ScyllaDB, PostgreSQL, Mogboard).
             // DOTNET_ROLL_FORWARD=Major lets the swashbuckle.aspnetcore.cli tool (which
             // targets net7.0) run under .NET 8+ without needing .NET 7 installed.
+            // Capture existing values so the finally block restores the original state
+            // rather than unconditionally clearing variables that may have been set.
+            var prevSwaggerGen = Environment.GetEnvironmentVariable("UNIVERSALIS_SWAGGER_GEN");
+            var prevRollForward = Environment.GetEnvironmentVariable("DOTNET_ROLL_FORWARD");
             Environment.SetEnvironmentVariable("UNIVERSALIS_SWAGGER_GEN", "true");
             Environment.SetEnvironmentVariable("DOTNET_ROLL_FORWARD", "Major");
             try
@@ -94,14 +98,15 @@ class Build : NukeBuild
                 foreach (var version in new[] { "v1", "v2", "v3" })
                 {
                     var outputPath = SpecsDirectory / $"{version}.json";
-                    DotNet($"swagger tofile --output {outputPath} {appDll} {version}");
+                    // Quote paths so directories containing spaces are handled correctly.
+                    DotNet($"swagger tofile --output \"{outputPath}\" \"{appDll}\" {version}");
                     Serilog.Log.Information("Exported spec: {Path}", outputPath);
                 }
             }
             finally
             {
-                Environment.SetEnvironmentVariable("UNIVERSALIS_SWAGGER_GEN", null);
-                Environment.SetEnvironmentVariable("DOTNET_ROLL_FORWARD", null);
+                Environment.SetEnvironmentVariable("UNIVERSALIS_SWAGGER_GEN", prevSwaggerGen);
+                Environment.SetEnvironmentVariable("DOTNET_ROLL_FORWARD", prevRollForward);
             }
         });
 }

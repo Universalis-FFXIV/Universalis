@@ -18,10 +18,10 @@ using Universalis.Client.V3;
 
 var httpClient = new HttpClient
     { BaseAddress = new Uri("https://universalis.app") };
-var client = new UniversalisClient(httpClient);
+var client = new Client(httpClient);
 
-// Get current market board listings for item 5 on Gilgamesh (world ID 63)
-var listings = await client.GetCurrentlyShownAsync("Gilgamesh", 5);
+// Get current market board listings + recent sales for item 5 on Gilgamesh
+var overview = await client.OverviewAsync("Gilgamesh", 5);
 ```
 
 ### V1 / V2
@@ -31,7 +31,7 @@ using Universalis.Client.V1;
 // or
 using Universalis.Client.V2;
 
-var client = new UniversalisClient(httpClient);
+var client = new Client(httpClient);
 ```
 
 ## Versioning
