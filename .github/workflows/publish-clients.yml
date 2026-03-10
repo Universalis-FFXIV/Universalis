@@ -3,7 +3,9 @@ name: Publish Client Libraries
 # Triggered on release creation. Also supports manual dispatch for testing.
 # Secrets required:
 #   NUGET_API_KEY  - NuGet.org API key for dotnet nuget push
-#   NPM_TOKEN      - npm access token for npm publish
+#
+# npm publishing uses OIDC Trusted Publishing — no NPM_TOKEN required.
+# Configure the trusted publisher at: npmjs.com → Package → Settings → Trusted Publisher
 
 on:
   release:
@@ -16,7 +18,7 @@ on:
 
 env:
   DOTNET_VERSION: "10.x"
-  NODE_VERSION: "20"
+  NODE_VERSION: "22.x"
   NSWAG_VERSION: "14.6.3"
 
 jobs:
@@ -80,7 +82,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          registry-url: "https://registry.npmjs.org"
 
       - name: Generate TypeScript clients (V1, V2, V3)
         working-directory: clients/typescript
@@ -107,6 +108,4 @@ jobs:
 
       - name: Publish to npm
         working-directory: clients/typescript
-        run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
