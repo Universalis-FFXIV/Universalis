@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,9 +39,14 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
     public async Task<IList<WorldItemUpload>> GetAllMostRecent(MostRecentlyUpdatedManyQuery query,
         CancellationToken cancellationToken = default)
     {
+        // Overfetch from each world to compensate for non-valid items (e.g., non-marketable)
+        // that cluster at the extremes. Scale by world count since each world may contribute
+        // a block of invalid items at its extreme end.
+        var perWorldCount = Math.Max(query.Count * 3, query.Count + query.WorldIds.Length * 50);
+
         var tasks = query.WorldIds.Select(async world =>
         {
-            var worldData = await _store.GetMostRecent(world, query.Count - 1);
+            var worldData = await _store.GetMostRecent(world, perWorldCount - 1);
             return worldData.Select(kvp => new WorldItemUpload
             {
                 WorldId = world,
@@ -50,7 +56,8 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
         });
 
         var results = await Task.WhenAll(tasks);
-        var data = results.SelectMany(x => x).ToList();
+        var data = results.SelectMany(x => x)
+            .Where(d => query.ValidItemIds.Contains(d.ItemId));
 
         var heap = new SimplePriorityQueue<WorldItemUpload, double>(Comparer<double>.Create((a, b) => b.CompareTo(a)));
         foreach (var d in data)
@@ -87,9 +94,14 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
     public async Task<IList<WorldItemUpload>> GetAllLeastRecent(MostRecentlyUpdatedManyQuery query,
         CancellationToken cancellationToken = default)
     {
+        // Overfetch from each world to compensate for non-valid items (e.g., non-marketable)
+        // that cluster at the extremes. Scale by world count since each world may contribute
+        // a block of invalid items at its extreme end.
+        var perWorldCount = Math.Max(query.Count * 3, query.Count + query.WorldIds.Length * 50);
+
         var tasks = query.WorldIds.Select(async world =>
         {
-            var worldData = await _store.GetLeastRecent(world, query.Count - 1);
+            var worldData = await _store.GetLeastRecent(world, perWorldCount - 1);
             return worldData.Select(kvp => new WorldItemUpload
             {
                 WorldId = world,
@@ -99,7 +111,8 @@ public class MostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
         });
 
         var results = await Task.WhenAll(tasks);
-        var data = results.SelectMany(x => x).ToList();
+        var data = results.SelectMany(x => x)
+            .Where(d => query.ValidItemIds.Contains(d.ItemId));
 
         var heap = new SimplePriorityQueue<WorldItemUpload, double>(Comparer<double>.Create((a, b) => a.CompareTo(b)));
         foreach (var d in data)
