@@ -11,6 +11,12 @@ namespace Universalis.DbAccess.Tests.Uploads;
 
 public class MostRecentlyUpdatedDbAccessTests
 {
+    /// <summary>
+    /// Shared set of "all valid" item IDs for tests that don't care about filtering.
+    /// Covers item IDs 0-99999 so any item ID used in test data passes through.
+    /// </summary>
+    private static readonly IReadOnlySet<int> AllItems = new SortedSet<int>(Enumerable.Range(0, 100000));
+
     private class MockWorldItemUploadStore : IWorldItemUploadStore
     {
         private readonly Dictionary<(int worldId, int itemId), double> _scores = new();
@@ -204,6 +210,7 @@ public class MostRecentlyUpdatedDbAccessTests
         {
             WorldIds = new[] { 74, 75 },
             Count = 10,
+            ValidItemIds = AllItems,
         });
 
         Assert.NotNull(output);
@@ -229,6 +236,7 @@ public class MostRecentlyUpdatedDbAccessTests
         {
             WorldIds = new[] { 74, 75 },
             Count = 3,
+            ValidItemIds = AllItems,
         });
 
         Assert.NotNull(output);
@@ -256,6 +264,7 @@ public class MostRecentlyUpdatedDbAccessTests
         {
             WorldIds = new[] { 74, 75 },
             Count = 10,
+            ValidItemIds = AllItems,
         });
 
         Assert.NotNull(output);
@@ -336,6 +345,7 @@ public class MostRecentlyUpdatedDbAccessTests
         {
             WorldIds = new[] { 74, 75 },
             Count = 10,
+            ValidItemIds = AllItems,
         });
 
         Assert.NotNull(output);
@@ -361,6 +371,7 @@ public class MostRecentlyUpdatedDbAccessTests
         {
             WorldIds = new[] { 74, 75 },
             Count = 3,
+            ValidItemIds = AllItems,
         });
 
         Assert.NotNull(output);
@@ -388,6 +399,7 @@ public class MostRecentlyUpdatedDbAccessTests
         {
             WorldIds = new[] { 74, 75 },
             Count = 10,
+            ValidItemIds = AllItems,
         });
 
         Assert.NotNull(output);
@@ -395,13 +407,13 @@ public class MostRecentlyUpdatedDbAccessTests
     }
 
     [Fact]
-    public async Task GetAllLeastRecent_WithRealisticTimestamps_ReturnsCorrectOrder()
+    public async Task GetAllLeastRecent_WithLargeEpochTimestamps_ReturnsCorrectOrder()
     {
         var store = new MockWorldItemUploadStore();
         IMostRecentlyUpdatedDbAccess db = new MostRecentlyUpdatedDbAccess(store);
 
-        // Use realistic Unix timestamps (milliseconds since epoch)
-        // These large values would cause integer overflow with (int)(b - a)
+        // Unix timestamps in milliseconds are large enough to cause integer overflow
+        // with naive (int)(b - a) comparisons
         var baseTime = 1727827200000L; // Oct 2, 2024
         await db.Push(74, new WorldItemUpload { WorldId = 74, ItemId = 1, LastUploadTimeUnixMilliseconds = baseTime });
         await db.Push(74,
@@ -415,6 +427,7 @@ public class MostRecentlyUpdatedDbAccessTests
         {
             WorldIds = new[] { 74, 75 },
             Count = 4,
+            ValidItemIds = AllItems,
         });
 
         Assert.NotNull(output);
@@ -427,12 +440,13 @@ public class MostRecentlyUpdatedDbAccessTests
     }
 
     [Fact]
-    public async Task GetAllMostRecent_WithRealisticTimestamps_ReturnsCorrectOrder()
+    public async Task GetAllMostRecent_WithLargeEpochTimestamps_ReturnsCorrectOrder()
     {
         var store = new MockWorldItemUploadStore();
         IMostRecentlyUpdatedDbAccess db = new MostRecentlyUpdatedDbAccess(store);
 
-        // Use realistic Unix timestamps (milliseconds since epoch)
+        // Unix timestamps in milliseconds are large enough to cause integer overflow
+        // with naive (int)(b - a) comparisons
         var baseTime = 1727827200000L; // Oct 2, 2024
         await db.Push(74, new WorldItemUpload { WorldId = 74, ItemId = 1, LastUploadTimeUnixMilliseconds = baseTime });
         await db.Push(74,
@@ -446,6 +460,7 @@ public class MostRecentlyUpdatedDbAccessTests
         {
             WorldIds = new[] { 74, 75 },
             Count = 4,
+            ValidItemIds = AllItems,
         });
 
         Assert.NotNull(output);
@@ -476,6 +491,7 @@ public class MostRecentlyUpdatedDbAccessTests
         {
             WorldIds = new[] { 74, 75 },
             Count = 2,
+            ValidItemIds = AllItems,
         });
 
         Assert.NotNull(output);
@@ -502,6 +518,7 @@ public class MostRecentlyUpdatedDbAccessTests
         {
             WorldIds = new[] { 74, 75 },
             Count = 2,
+            ValidItemIds = AllItems,
         });
 
         Assert.NotNull(output);
@@ -509,5 +526,266 @@ public class MostRecentlyUpdatedDbAccessTests
         // Item 1 should be first (least recent)
         Assert.Equal(1, output[0].ItemId);
         Assert.Equal(2, output[1].ItemId);
+    }
+
+    /// <summary>
+    /// DC-scale query: many items per world with interleaved timestamps.
+    /// The heap merge must correctly interleave across worlds and respect Count.
+    /// </summary>
+    [Fact]
+    public async Task GetAllLeastRecent_ManyItemsPerWorld_CountLimitsMergeCorrectly()
+    {
+        var store = new MockWorldItemUploadStore();
+        IMostRecentlyUpdatedDbAccess db = new MostRecentlyUpdatedDbAccess(store);
+
+        // 8 worlds with 100 items each, interleaved timestamps
+        var worldIds = new[] { 74, 75, 76, 77, 78, 79, 80, 81 };
+        var baseTime = 1000000.0;
+
+        foreach (var worldId in worldIds)
+        {
+            for (var i = 1; i <= 100; i++)
+            {
+                await db.Push(worldId, new WorldItemUpload
+                {
+                    WorldId = worldId,
+                    ItemId = i,
+                    LastUploadTimeUnixMilliseconds = baseTime + i * 1000.0 + worldId,
+                });
+            }
+        }
+
+        var output = await db.GetAllLeastRecent(new MostRecentlyUpdatedManyQuery
+        {
+            WorldIds = worldIds,
+            Count = 15,
+            ValidItemIds = AllItems,
+        });
+
+        Assert.NotNull(output);
+        Assert.Equal(15, output.Count);
+
+        // Verify ascending order
+        for (var i = 1; i < output.Count; i++)
+        {
+            Assert.True(output[i - 1].LastUploadTimeUnixMilliseconds <= output[i].LastUploadTimeUnixMilliseconds,
+                $"Item at index {i} has timestamp {output[i].LastUploadTimeUnixMilliseconds} " +
+                $"which is less than previous {output[i - 1].LastUploadTimeUnixMilliseconds}");
+        }
+
+        // Items should come from multiple worlds since timestamps are interleaved
+        var distinctWorlds = output.Select(o => o.WorldId).Distinct().Count();
+        Assert.True(distinctWorlds > 1, $"Expected items from multiple worlds, got {distinctWorlds}");
+    }
+
+    /// <summary>
+    /// Same item ID exists across multiple worlds (all worlds share the same item catalog).
+    /// The merge should return entries from different worlds.
+    /// </summary>
+    [Fact]
+    public async Task GetAllLeastRecent_SameItemIdAcrossWorlds_ReturnsFromAllWorlds()
+    {
+        var store = new MockWorldItemUploadStore();
+        IMostRecentlyUpdatedDbAccess db = new MostRecentlyUpdatedDbAccess(store);
+
+        var worldIds = new[] { 74, 75, 76 };
+
+        // Same item IDs across all worlds, different timestamps
+        foreach (var worldId in worldIds)
+        {
+            for (var i = 1; i <= 20; i++)
+            {
+                await db.Push(worldId, new WorldItemUpload
+                {
+                    WorldId = worldId,
+                    ItemId = i,
+                    LastUploadTimeUnixMilliseconds = i * 1000.0 + worldId * 100.0,
+                });
+            }
+        }
+
+        var output = await db.GetAllLeastRecent(new MostRecentlyUpdatedManyQuery
+        {
+            WorldIds = worldIds,
+            Count = 10,
+            ValidItemIds = AllItems,
+        });
+
+        Assert.NotNull(output);
+        Assert.Equal(10, output.Count);
+
+        // Should have items from multiple worlds
+        var distinctWorlds = output.Select(o => o.WorldId).Distinct().Count();
+        Assert.True(distinctWorlds > 1, $"Expected items from multiple worlds, got {distinctWorlds}");
+    }
+
+    /// <summary>
+    /// DC-scale query: 8 worlds with many items each.
+    /// The heap merge should still return the full requested count.
+    /// </summary>
+    [Fact]
+    public async Task GetAllLeastRecent_MultiWorldDcQuery_ReturnsFullCount()
+    {
+        var store = new MockWorldItemUploadStore();
+        IMostRecentlyUpdatedDbAccess db = new MostRecentlyUpdatedDbAccess(store);
+
+        var worldIds = new[] { 74, 75, 76, 77, 78, 79, 80, 81 };
+
+        // Populate 200 items per world
+        foreach (var worldId in worldIds)
+        {
+            for (var i = 1; i <= 200; i++)
+            {
+                await db.Push(worldId, new WorldItemUpload
+                {
+                    WorldId = worldId,
+                    ItemId = i,
+                    LastUploadTimeUnixMilliseconds = i * 60000.0 + worldId,
+                });
+            }
+        }
+
+        var output = await db.GetAllLeastRecent(new MostRecentlyUpdatedManyQuery
+        {
+            WorldIds = worldIds,
+            Count = 15,
+            ValidItemIds = AllItems,
+        });
+
+        Assert.NotNull(output);
+        Assert.Equal(15, output.Count);
+    }
+
+    /// <summary>
+    /// Tests with empty world IDs array - should return empty, not throw.
+    /// This is the scenario when TryGetWorldIds returns an empty array for a region with no matching DCs.
+    /// </summary>
+    [Fact]
+    public async Task GetAllLeastRecent_EmptyWorldIdsArray_ReturnsEmpty()
+    {
+        var store = new MockWorldItemUploadStore();
+        IMostRecentlyUpdatedDbAccess db = new MostRecentlyUpdatedDbAccess(store);
+
+        await db.Push(74, new WorldItemUpload
+        {
+            WorldId = 74,
+            ItemId = 1,
+            LastUploadTimeUnixMilliseconds = 1000,
+        });
+
+        var output = await db.GetAllLeastRecent(new MostRecentlyUpdatedManyQuery
+        {
+            WorldIds = Array.Empty<int>(),
+            Count = 10,
+            ValidItemIds = AllItems,
+        });
+
+        Assert.NotNull(output);
+        Assert.Empty(output);
+    }
+
+    /// <summary>
+    /// Non-marketable items (stale data from items removed from the market board) sit at the
+    /// bottom of every world's sorted set with ancient timestamps. The heap merge must exclude
+    /// them via ValidItemIds so they don't crowd out valid items in the results.
+    /// </summary>
+    [Fact]
+    public async Task GetAllLeastRecent_ExcludesNonMarketableItems()
+    {
+        var store = new MockWorldItemUploadStore();
+        IMostRecentlyUpdatedDbAccess db = new MostRecentlyUpdatedDbAccess(store);
+
+        var worldIds = new[] { 74, 75, 76, 77, 78, 79, 80, 81 };
+        var marketableIds = new SortedSet<int>(Enumerable.Range(1, 35000));
+
+        foreach (var worldId in worldIds)
+        {
+            // Non-marketable items with very old timestamps (would dominate least-recent heap)
+            for (var i = 0; i < 20; i++)
+            {
+                await db.Push(worldId, new WorldItemUpload
+                {
+                    WorldId = worldId,
+                    ItemId = 40000 + i,
+                    LastUploadTimeUnixMilliseconds = i * 1000.0 + worldId,
+                });
+            }
+
+            // Marketable items with newer timestamps
+            for (var i = 0; i < 100; i++)
+            {
+                await db.Push(worldId, new WorldItemUpload
+                {
+                    WorldId = worldId,
+                    ItemId = i + 1,
+                    LastUploadTimeUnixMilliseconds = 100000 + i * 1000.0 + worldId,
+                });
+            }
+        }
+
+        var output = await db.GetAllLeastRecent(new MostRecentlyUpdatedManyQuery
+        {
+            WorldIds = worldIds,
+            Count = 10,
+            ValidItemIds = marketableIds,
+        });
+
+        Assert.Equal(10, output.Count);
+        Assert.All(output, o => Assert.Contains(o.ItemId, marketableIds));
+
+        // Verify items are still sorted ascending (least recent first)
+        for (var i = 1; i < output.Count; i++)
+        {
+            Assert.True(output[i - 1].LastUploadTimeUnixMilliseconds <= output[i].LastUploadTimeUnixMilliseconds);
+        }
+    }
+
+    /// <summary>
+    /// Same as above but for the most-recent direction: non-marketable items with very new
+    /// timestamps must be excluded so they don't crowd out valid items.
+    /// </summary>
+    [Fact]
+    public async Task GetAllMostRecent_ExcludesNonMarketableItems()
+    {
+        var store = new MockWorldItemUploadStore();
+        IMostRecentlyUpdatedDbAccess db = new MostRecentlyUpdatedDbAccess(store);
+
+        var worldIds = new[] { 74, 75 };
+        var marketableIds = new SortedSet<int>(Enumerable.Range(1, 35000));
+
+        foreach (var worldId in worldIds)
+        {
+            // Non-marketable items with very new timestamps (would dominate most-recent heap)
+            for (var i = 0; i < 20; i++)
+            {
+                await db.Push(worldId, new WorldItemUpload
+                {
+                    WorldId = worldId,
+                    ItemId = 40000 + i,
+                    LastUploadTimeUnixMilliseconds = 999000000 + i * 1000.0 + worldId,
+                });
+            }
+
+            // Marketable items with older timestamps
+            for (var i = 0; i < 100; i++)
+            {
+                await db.Push(worldId, new WorldItemUpload
+                {
+                    WorldId = worldId,
+                    ItemId = i + 1,
+                    LastUploadTimeUnixMilliseconds = 100000 + i * 1000.0 + worldId,
+                });
+            }
+        }
+
+        var output = await db.GetAllMostRecent(new MostRecentlyUpdatedManyQuery
+        {
+            WorldIds = worldIds,
+            Count = 10,
+            ValidItemIds = marketableIds,
+        });
+
+        Assert.Equal(10, output.Count);
+        Assert.All(output, o => Assert.Contains(o.ItemId, marketableIds));
     }
 }

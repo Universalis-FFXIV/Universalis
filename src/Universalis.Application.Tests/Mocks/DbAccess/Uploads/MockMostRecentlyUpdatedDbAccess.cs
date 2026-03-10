@@ -28,27 +28,38 @@ public class MockMostRecentlyUpdatedDbAccess : IMostRecentlyUpdatedDbAccess
     public Task<IList<WorldItemUpload>> GetMostRecent(MostRecentlyUpdatedQuery query,
         CancellationToken cancellationToken = default)
     {
-        return Task.FromResult((IList<WorldItemUpload>)_store.Where(o => o.WorldId == query.WorldId).ToList());
+        var result = _store
+            .Where(o => o.WorldId == query.WorldId)
+            .OrderByDescending(o => o.LastUploadTimeUnixMilliseconds)
+            .ToList();
+        return Task.FromResult((IList<WorldItemUpload>)result);
     }
 
     public Task<IList<WorldItemUpload>> GetAllMostRecent(MostRecentlyUpdatedManyQuery query,
         CancellationToken cancellationToken = default)
     {
-        var result = _store.Where(o => query.WorldIds.Contains(o.WorldId)).ToList();
+        var data = _store.Where(o => query.WorldIds.Contains(o.WorldId))
+            .Where(o => query.ValidItemIds.Contains(o.ItemId));
+        var result = data.OrderByDescending(o => o.LastUploadTimeUnixMilliseconds).ToList();
         return Task.FromResult((IList<WorldItemUpload>)result);
     }
 
     public Task<IList<WorldItemUpload>> GetLeastRecent(MostRecentlyUpdatedQuery query,
         CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(
-            (IList<WorldItemUpload>)_store.Where(o => o.WorldId == query.WorldId).Reverse().ToList());
+        var result = _store
+            .Where(o => o.WorldId == query.WorldId)
+            .OrderBy(o => o.LastUploadTimeUnixMilliseconds)
+            .ToList();
+        return Task.FromResult((IList<WorldItemUpload>)result);
     }
 
     public Task<IList<WorldItemUpload>> GetAllLeastRecent(MostRecentlyUpdatedManyQuery query,
         CancellationToken cancellationToken = default)
     {
-        var result = _store.Where(o => query.WorldIds.Contains(o.WorldId)).Reverse().ToList();
+        var data = _store.Where(o => query.WorldIds.Contains(o.WorldId))
+            .Where(o => query.ValidItemIds.Contains(o.ItemId));
+        var result = data.OrderBy(o => o.LastUploadTimeUnixMilliseconds).ToList();
         return Task.FromResult((IList<WorldItemUpload>)result);
     }
 }
