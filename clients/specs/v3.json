@@ -376,6 +376,9 @@
       },
       "Universalis.Application.Views.V3.Game.World": {
         "type": "object",
+        "required": [
+          "id"
+        ],
         "properties": {
           "id": {
             "type": "integer",
@@ -406,6 +409,18 @@
       },
       "Universalis.Application.Views.V3.Market.Listing": {
         "type": "object",
+        "required": [
+          "world",
+          "reviewedAt",
+          "price",
+          "quantity",
+          "total",
+          "hq",
+          "dye",
+          "onMannequin",
+          "retainer",
+          "seller"
+        ],
         "properties": {
           "listingId": {
             "type": "string",
@@ -479,6 +494,9 @@
       },
       "Universalis.Application.Views.V3.Market.MarketOverview": {
         "type": "object",
+        "required": [
+          "item"
+        ],
         "properties": {
           "item": {
             "type": "integer",
@@ -516,6 +534,9 @@
       },
       "Universalis.Application.Views.V3.Market.Retainer": {
         "type": "object",
+        "required": [
+          "city"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -537,6 +558,12 @@
       },
       "Universalis.Application.Views.V3.Market.Sale": {
         "type": "object",
+        "required": [
+          "world",
+          "hq",
+          "price",
+          "saleTime"
+        ],
         "properties": {
           "world": {
             "type": "integer",
@@ -608,6 +635,9 @@
       },
       "Universalis.Application.Views.V3.Miscellaneous.TimeZone": {
         "type": "object",
+        "required": [
+          "offset"
+        ],
         "properties": {
           "id": {
             "type": "string",

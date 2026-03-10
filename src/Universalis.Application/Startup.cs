@@ -206,6 +206,8 @@ public class Startup
             });
 
             options.CustomSchemaIds(type => type.FullName);
+
+            options.SchemaFilter<NonNullableRequiredSchemaFilter>();
         });
 
         var otlpExporter = Environment.GetEnvironmentVariable("UNIVERSALIS_OLTP_ENDPOINT") ??
