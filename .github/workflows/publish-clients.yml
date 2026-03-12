@@ -1,8 +1,8 @@
 name: Publish Client Libraries
 
 # Triggered on release creation. Also supports manual dispatch for testing.
-# Secrets required:
-#   NUGET_API_KEY  - NuGet.org API key for dotnet nuget push
+#
+# nuget uses OIDC Trusted Publishing: https://www.nuget.org/account/trustedpublishing
 #
 # npm publishing uses OIDC Trusted Publishing — no NPM_TOKEN required.
 # Configure the trusted publisher at: npmjs.com → Package → Settings → Trusted Publisher
@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write   # required for npm provenance attestation
+      id-token: write   # required for nuget/npm provenance attestation
 
     steps:
       - name: Checkout
@@ -70,10 +70,17 @@ jobs:
           /p:Version=${{ steps.version.outputs.version }}
           --output clients/csharp/bin/Release
 
+      # Get a short-lived NuGet API key
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: Universalis
+
       - name: Push to NuGet.org
         run: >
           dotnet nuget push clients/csharp/bin/Release/*.nupkg
-          --api-key ${{ secrets.NUGET_API_KEY }}
+          --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
 
