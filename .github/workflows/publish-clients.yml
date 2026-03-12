@@ -90,6 +90,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Update NPM to latest version
+        run: npm install -g npm
+
       - name: Generate TypeScript clients (V1, V2, V3)
         working-directory: clients/typescript
         run: |
