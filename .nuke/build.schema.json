@@ -26,6 +26,7 @@
       "enum": [
         "Clean",
         "Compile",
+        "ExportSpecs",
         "Restore",
         "Test"
       ]

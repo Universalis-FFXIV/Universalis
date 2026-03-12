@@ -939,6 +939,32 @@
           }
         }
       }
+    },
+    "/api/ws": {
+      "get": {
+        "tags": [
+          "WebSocket"
+        ],
+        "summary": "Connect to the WebSocket endpoint of the API. Requires a valid WebSocket client.",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ws-dev": {
+      "get": {
+        "tags": [
+          "WebSocket (Development)"
+        ],
+        "summary": "Connect to the WebSocket dev endpoint of the API. Requires a valid WebSocket client.",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1134,6 +1160,9 @@
         "additionalProperties": false
       },
       "Universalis.Application.Uploads.Schema.UploadParameters": {
+        "required": [
+          "marketTaxRates"
+        ],
         "type": "object",
         "properties": {
           "uploaderID": {
@@ -1230,6 +1259,30 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.CurrentlyShownView": {
+        "required": [
+          "averagePrice",
+          "averagePriceHQ",
+          "averagePriceNQ",
+          "currentAveragePrice",
+          "currentAveragePriceHQ",
+          "currentAveragePriceNQ",
+          "hasData",
+          "hqSaleVelocity",
+          "itemID",
+          "lastUploadTime",
+          "listingsCount",
+          "maxPrice",
+          "maxPriceHQ",
+          "maxPriceNQ",
+          "minPrice",
+          "minPriceHQ",
+          "minPriceNQ",
+          "nqSaleVelocity",
+          "recentHistoryCount",
+          "regularSaleVelocity",
+          "unitsForSale",
+          "unitsSold"
+        ],
         "type": "object",
         "properties": {
           "itemID": {
@@ -1470,6 +1523,9 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.Extra.Stats.SourceUploadCountView": {
+        "required": [
+          "uploadCount"
+        ],
         "type": "object",
         "properties": {
           "sourceName": {
@@ -1501,6 +1557,11 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.Extra.Stats.WorldItemRecencyView": {
+        "required": [
+          "itemID",
+          "lastUploadTime",
+          "worldID"
+        ],
         "type": "object",
         "properties": {
           "itemID": {
@@ -1527,6 +1588,10 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.Extra.Stats.WorldUploadCountView": {
+        "required": [
+          "count",
+          "proportion"
+        ],
         "type": "object",
         "properties": {
           "count": {
@@ -1596,6 +1661,13 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.HistoryView": {
+        "required": [
+          "hqSaleVelocity",
+          "itemID",
+          "lastUploadTime",
+          "nqSaleVelocity",
+          "regularSaleVelocity"
+        ],
         "type": "object",
         "properties": {
           "itemID": {
@@ -1683,6 +1755,18 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.ListingView": {
+        "required": [
+          "hq",
+          "isCrafted",
+          "lastReviewTime",
+          "onMannequin",
+          "pricePerUnit",
+          "quantity",
+          "retainerCity",
+          "stainID",
+          "tax",
+          "total"
+        ],
         "type": "object",
         "properties": {
           "lastReviewTime": {
@@ -1785,6 +1869,10 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.MateriaView": {
+        "required": [
+          "materiaID",
+          "slotID"
+        ],
         "type": "object",
         "properties": {
           "slotID": {
@@ -1801,6 +1889,12 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.MinimizedSaleView": {
+        "required": [
+          "hq",
+          "pricePerUnit",
+          "quantity",
+          "timestamp"
+        ],
         "type": "object",
         "properties": {
           "hq": {
@@ -1847,6 +1941,13 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.SaleView": {
+        "required": [
+          "hq",
+          "pricePerUnit",
+          "quantity",
+          "timestamp",
+          "total"
+        ],
         "type": "object",
         "properties": {
           "hq": {
@@ -1898,6 +1999,16 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.TaxRatesView": {
+        "required": [
+          "Crystarium",
+          "Gridania",
+          "Ishgard",
+          "Kugane",
+          "Limsa Lominsa",
+          "Old Sharlayan",
+          "Tuliyollal",
+          "Ul'dah"
+        ],
         "type": "object",
         "properties": {
           "Limsa Lominsa": {
@@ -2001,6 +2112,9 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V3.Game.World": {
+        "required": [
+          "id"
+        ],
         "type": "object",
         "properties": {
           "id": {

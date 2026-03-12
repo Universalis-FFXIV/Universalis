@@ -139,7 +139,8 @@
             "description": "A comma-separated list of servers to search.",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/Universalis.Application.Controllers.Servers"
+              "type": "string",
+              "description": "A comma-separated list of world, data center, or region names."
             }
           },
           {
@@ -210,7 +211,8 @@
             "description": "A comma-separated list of servers to search.",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/Universalis.Application.Controllers.Servers"
+              "type": "string",
+              "description": "A comma-separated list of world, data center, or region names."
             }
           },
           {
@@ -348,10 +350,6 @@
         },
         "additionalProperties": { }
       },
-      "Universalis.Application.Controllers.Servers": {
-        "type": "string",
-        "description": "A comma-separated list of world, data center, or region names."
-      },
       "Universalis.Application.Views.V3.Game.DataCenter": {
         "type": "object",
         "properties": {
@@ -375,10 +373,10 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V3.Game.World": {
-        "type": "object",
         "required": [
           "id"
         ],
+        "type": "object",
         "properties": {
           "id": {
             "type": "integer",
@@ -408,19 +406,20 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V3.Market.Listing": {
-        "type": "object",
         "required": [
-          "world",
-          "reviewedAt",
+          "creator",
+          "dye",
+          "hq",
+          "onMannequin",
           "price",
           "quantity",
-          "total",
-          "hq",
-          "dye",
-          "onMannequin",
           "retainer",
-          "seller"
+          "reviewedAt",
+          "seller",
+          "total",
+          "world"
         ],
+        "type": "object",
         "properties": {
           "listingId": {
             "type": "string",
@@ -462,13 +461,7 @@
             "format": "int32"
           },
           "creator": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Universalis.Application.Views.V3.Market.Creator"
-              }
-            ],
-            "description": "The item's creator/crafter, if applicable. May be null for items with no creator.",
-            "nullable": true
+            "$ref": "#/components/schemas/Universalis.Application.Views.V3.Market.Creator"
           },
           "materia": {
             "type": "array",
@@ -493,10 +486,10 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V3.Market.MarketOverview": {
-        "type": "object",
         "required": [
           "item"
         ],
+        "type": "object",
         "properties": {
           "item": {
             "type": "integer",
@@ -507,8 +500,7 @@
             "type": "object",
             "additionalProperties": {
               "type": "integer",
-              "format": "int64",
-              "nullable": true
+              "format": "int64"
             },
             "description": "The time that this item was last updated on each world requested, in milliseconds since the UNIX epoch.\r\nIf an item has never been checked, the timestamp will be null.",
             "nullable": true
@@ -533,10 +525,10 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V3.Market.Retainer": {
-        "type": "object",
         "required": [
           "city"
         ],
+        "type": "object",
         "properties": {
           "id": {
             "type": "string",
@@ -557,13 +549,13 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V3.Market.Sale": {
-        "type": "object",
         "required": [
-          "world",
           "hq",
           "price",
-          "saleTime"
+          "saleTime",
+          "world"
         ],
+        "type": "object",
         "properties": {
           "world": {
             "type": "integer",
@@ -634,10 +626,10 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V3.Miscellaneous.TimeZone": {
-        "type": "object",
         "required": [
           "offset"
         ],
+        "type": "object",
         "properties": {
           "id": {
             "type": "string",

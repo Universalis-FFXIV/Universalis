@@ -205,7 +205,7 @@ public class Startup
                 Description = "A comma-separated list of world, data center, or region names."
             });
 
-            options.CustomSchemaIds(type => type.FullName);
+            options.CustomSchemaIds(type => type.FullName?.Replace('+', '.'));
 
             options.SchemaFilter<NonNullableRequiredSchemaFilter>();
         });

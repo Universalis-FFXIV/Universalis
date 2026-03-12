@@ -986,6 +986,32 @@
           }
         }
       }
+    },
+    "/api/v2/ws": {
+      "get": {
+        "tags": [
+          "WebSocket"
+        ],
+        "summary": "Connect to the WebSocket endpoint of the API. Requires a valid WebSocket client.",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/v2/ws-dev": {
+      "get": {
+        "tags": [
+          "WebSocket (Development)"
+        ],
+        "summary": "Connect to the WebSocket dev endpoint of the API. Requires a valid WebSocket client.",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1018,6 +1044,30 @@
         "additionalProperties": { }
       },
       "Universalis.Application.Views.V1.CurrentlyShownView": {
+        "required": [
+          "averagePrice",
+          "averagePriceHQ",
+          "averagePriceNQ",
+          "currentAveragePrice",
+          "currentAveragePriceHQ",
+          "currentAveragePriceNQ",
+          "hasData",
+          "hqSaleVelocity",
+          "itemID",
+          "lastUploadTime",
+          "listingsCount",
+          "maxPrice",
+          "maxPriceHQ",
+          "maxPriceNQ",
+          "minPrice",
+          "minPriceHQ",
+          "minPriceNQ",
+          "nqSaleVelocity",
+          "recentHistoryCount",
+          "regularSaleVelocity",
+          "unitsForSale",
+          "unitsSold"
+        ],
         "type": "object",
         "properties": {
           "itemID": {
@@ -1258,6 +1308,9 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.Extra.Stats.SourceUploadCountView": {
+        "required": [
+          "uploadCount"
+        ],
         "type": "object",
         "properties": {
           "sourceName": {
@@ -1289,6 +1342,11 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.Extra.Stats.WorldItemRecencyView": {
+        "required": [
+          "itemID",
+          "lastUploadTime",
+          "worldID"
+        ],
         "type": "object",
         "properties": {
           "itemID": {
@@ -1315,6 +1373,10 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.Extra.Stats.WorldUploadCountView": {
+        "required": [
+          "count",
+          "proportion"
+        ],
         "type": "object",
         "properties": {
           "count": {
@@ -1331,6 +1393,13 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.HistoryView": {
+        "required": [
+          "hqSaleVelocity",
+          "itemID",
+          "lastUploadTime",
+          "nqSaleVelocity",
+          "regularSaleVelocity"
+        ],
         "type": "object",
         "properties": {
           "itemID": {
@@ -1418,6 +1487,18 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.ListingView": {
+        "required": [
+          "hq",
+          "isCrafted",
+          "lastReviewTime",
+          "onMannequin",
+          "pricePerUnit",
+          "quantity",
+          "retainerCity",
+          "stainID",
+          "tax",
+          "total"
+        ],
         "type": "object",
         "properties": {
           "lastReviewTime": {
@@ -1520,6 +1601,10 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.MateriaView": {
+        "required": [
+          "materiaID",
+          "slotID"
+        ],
         "type": "object",
         "properties": {
           "slotID": {
@@ -1536,6 +1621,12 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.MinimizedSaleView": {
+        "required": [
+          "hq",
+          "pricePerUnit",
+          "quantity",
+          "timestamp"
+        ],
         "type": "object",
         "properties": {
           "hq": {
@@ -1582,6 +1673,13 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.SaleView": {
+        "required": [
+          "hq",
+          "pricePerUnit",
+          "quantity",
+          "timestamp",
+          "total"
+        ],
         "type": "object",
         "properties": {
           "hq": {
@@ -1633,6 +1731,16 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V1.TaxRatesView": {
+        "required": [
+          "Crystarium",
+          "Gridania",
+          "Ishgard",
+          "Kugane",
+          "Limsa Lominsa",
+          "Old Sharlayan",
+          "Tuliyollal",
+          "Ul'dah"
+        ],
         "type": "object",
         "properties": {
           "Limsa Lominsa": {
@@ -1684,7 +1792,7 @@
           "results": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+Result"
+              "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.Result"
             },
             "nullable": true
           },
@@ -1699,43 +1807,58 @@
         },
         "additionalProperties": false
       },
-      "Universalis.Application.Views.V2.AggregatedMarketBoardData+AggregatedResult": {
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData.AggregatedResult": {
+        "required": [
+          "averageSalePrice",
+          "dailySaleVelocity",
+          "medianListing",
+          "minListing",
+          "recentPurchase"
+        ],
         "type": "object",
         "properties": {
           "minListing": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MinListing"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.MinListing"
           },
           "medianListing": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MedianListing"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.MedianListing"
           },
           "recentPurchase": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+RecentPurchase"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.RecentPurchase"
           },
           "averageSalePrice": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+AverageSalePrice"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.AverageSalePrice"
           },
           "dailySaleVelocity": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+DailySaleVelocity"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.DailySaleVelocity"
           }
         },
         "additionalProperties": false
       },
-      "Universalis.Application.Views.V2.AggregatedMarketBoardData+AverageSalePrice": {
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData.AverageSalePrice": {
+        "required": [
+          "dc",
+          "region",
+          "world"
+        ],
         "type": "object",
         "properties": {
           "world": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+AverageSalePrice+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.AverageSalePrice.Entry"
           },
           "dc": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+AverageSalePrice+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.AverageSalePrice.Entry"
           },
           "region": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+AverageSalePrice+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.AverageSalePrice.Entry"
           }
         },
         "additionalProperties": false
       },
-      "Universalis.Application.Views.V2.AggregatedMarketBoardData+AverageSalePrice+Entry": {
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData.AverageSalePrice.Entry": {
+        "required": [
+          "price"
+        ],
         "type": "object",
         "properties": {
           "price": {
@@ -1745,22 +1868,30 @@
         },
         "additionalProperties": false
       },
-      "Universalis.Application.Views.V2.AggregatedMarketBoardData+DailySaleVelocity": {
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData.DailySaleVelocity": {
+        "required": [
+          "dc",
+          "region",
+          "world"
+        ],
         "type": "object",
         "properties": {
           "world": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+DailySaleVelocity+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.DailySaleVelocity.Entry"
           },
           "dc": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+DailySaleVelocity+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.DailySaleVelocity.Entry"
           },
           "region": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+DailySaleVelocity+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.DailySaleVelocity.Entry"
           }
         },
         "additionalProperties": false
       },
-      "Universalis.Application.Views.V2.AggregatedMarketBoardData+DailySaleVelocity+Entry": {
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData.DailySaleVelocity.Entry": {
+        "required": [
+          "quantity"
+        ],
         "type": "object",
         "properties": {
           "quantity": {
@@ -1770,22 +1901,30 @@
         },
         "additionalProperties": false
       },
-      "Universalis.Application.Views.V2.AggregatedMarketBoardData+MedianListing": {
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData.MedianListing": {
+        "required": [
+          "dc",
+          "region",
+          "world"
+        ],
         "type": "object",
         "properties": {
           "world": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MedianListing+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.MedianListing.Entry"
           },
           "dc": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MedianListing+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.MedianListing.Entry"
           },
           "region": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MedianListing+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.MedianListing.Entry"
           }
         },
         "additionalProperties": false
       },
-      "Universalis.Application.Views.V2.AggregatedMarketBoardData+MedianListing+Entry": {
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData.MedianListing.Entry": {
+        "required": [
+          "price"
+        ],
         "type": "object",
         "properties": {
           "price": {
@@ -1795,22 +1934,30 @@
         },
         "additionalProperties": false
       },
-      "Universalis.Application.Views.V2.AggregatedMarketBoardData+MinListing": {
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData.MinListing": {
+        "required": [
+          "dc",
+          "region",
+          "world"
+        ],
         "type": "object",
         "properties": {
           "world": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MinListing+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.MinListing.Entry"
           },
           "dc": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MinListing+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.MinListing.Entry"
           },
           "region": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MinListing+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.MinListing.Entry"
           }
         },
         "additionalProperties": false
       },
-      "Universalis.Application.Views.V2.AggregatedMarketBoardData+MinListing+Entry": {
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData.MinListing.Entry": {
+        "required": [
+          "price"
+        ],
         "type": "object",
         "properties": {
           "price": {
@@ -1825,22 +1972,31 @@
         },
         "additionalProperties": false
       },
-      "Universalis.Application.Views.V2.AggregatedMarketBoardData+RecentPurchase": {
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData.RecentPurchase": {
+        "required": [
+          "dc",
+          "region",
+          "world"
+        ],
         "type": "object",
         "properties": {
           "world": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+RecentPurchase+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.RecentPurchase.Entry"
           },
           "dc": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+RecentPurchase+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.RecentPurchase.Entry"
           },
           "region": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+RecentPurchase+Entry"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.RecentPurchase.Entry"
           }
         },
         "additionalProperties": false
       },
-      "Universalis.Application.Views.V2.AggregatedMarketBoardData+RecentPurchase+Entry": {
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData.RecentPurchase.Entry": {
+        "required": [
+          "price",
+          "timestamp"
+        ],
         "type": "object",
         "properties": {
           "price": {
@@ -1859,7 +2015,12 @@
         },
         "additionalProperties": false
       },
-      "Universalis.Application.Views.V2.AggregatedMarketBoardData+Result": {
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData.Result": {
+        "required": [
+          "hq",
+          "itemId",
+          "nq"
+        ],
         "type": "object",
         "properties": {
           "itemId": {
@@ -1867,22 +2028,26 @@
             "format": "int32"
           },
           "nq": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+AggregatedResult"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.AggregatedResult"
           },
           "hq": {
-            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+AggregatedResult"
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.AggregatedResult"
           },
           "worldUploadTimes": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+WorldUploadTime"
+              "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData.WorldUploadTime"
             },
             "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "Universalis.Application.Views.V2.AggregatedMarketBoardData+WorldUploadTime": {
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData.WorldUploadTime": {
+        "required": [
+          "timestamp",
+          "worldId"
+        ],
         "type": "object",
         "properties": {
           "worldId": {
@@ -2060,6 +2225,9 @@
         "additionalProperties": false
       },
       "Universalis.Application.Views.V3.Game.World": {
+        "required": [
+          "id"
+        ],
         "type": "object",
         "properties": {
           "id": {
