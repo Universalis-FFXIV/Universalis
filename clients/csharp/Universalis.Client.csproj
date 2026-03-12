@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+
+    <!-- NuGet package metadata -->
+    <PackageId>Universalis.Client</PackageId>
+    <Title>Universalis Client</Title>
+    <Description>Auto-generated C# client for the Universalis FFXIV market board API. Includes clients for all supported API versions (V1, V2, V3).</Description>
+    <Authors>Universalis-FFXIV</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Universalis-FFXIV/Universalis</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Universalis-FFXIV/Universalis</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>ffxiv;universalis;market-board;api-client</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <!-- Generated client files (generated/) are picked up automatically by the SDK.
+       They are produced by NSwag (see nswag.v*.json configs) and gitignored;
+       the CI pipeline runs NSwag before dotnet pack. -->
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- NSwag generates code using Newtonsoft.Json by default -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+</Project>

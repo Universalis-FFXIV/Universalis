@@ -1,0 +1,2078 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Universalis",
+    "license": {
+      "name": "MIT",
+      "url": "https://github.com/Universalis-FFXIV/Universalis/blob/master/LICENSE"
+    },
+    "version": "v2"
+  },
+  "paths": {
+    "/api/v2/data-centers": {
+      "get": {
+        "tags": [
+          "Available data centers"
+        ],
+        "summary": "Returns all data centers supported by the API.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Universalis.Application.Views.V3.Game.DataCenter"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Universalis.Application.Views.V3.Game.DataCenter"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Universalis.Application.Views.V3.Game.DataCenter"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/worlds": {
+      "get": {
+        "tags": [
+          "Available worlds"
+        ],
+        "summary": "Returns the IDs and names of all worlds supported by the API.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Universalis.Application.Views.V3.Game.World"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Universalis.Application.Views.V3.Game.World"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Universalis.Application.Views.V3.Game.World"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/aggregated/{worldDcRegion}/{itemIds}": {
+      "get": {
+        "tags": [
+          "Current item price"
+        ],
+        "summary": "Retrieves aggregated market board data for the given items.\r\nUp to 100 item IDs can be comma-separated in order to retrieve data for multiple items at once.\r\nAverageSalePrice and DailySaleVelocity are calculated based on sales of the last 4 days.\r\nThis API uses only cached values and is therefore strongly preferred over CurrentlyShown if individual sales/listings are not required.",
+        "parameters": [
+          {
+            "name": "itemIds",
+            "in": "path",
+            "description": "The item ID or comma-separated item IDs to retrieve data for.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "worldDcRegion",
+            "in": "path",
+            "description": "The world, data center, or region to retrieve data for. This may be an ID or a name. Regions should be specified as Japan, Europe, North-America, Oceania, China, or 中国.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "User-Agent",
+            "in": "header",
+            "description": "",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "CF-Connecting-IP",
+            "in": "header",
+            "description": "",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters were invalid.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The world/DC or item requested is invalid. When requesting multiple items at once, an invalid item ID\r\nwill not trigger this. Instead, the returned list of unresolved item IDs will contain the invalid item ID or IDs.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/extra/content/{contentId}": {
+      "get": {
+        "tags": [
+          "Game entities"
+        ],
+        "summary": "Returns the content object associated with the provided content ID. Please note that this endpoint is largely untested,\r\nand may return inconsistent data at times.",
+        "parameters": [
+          {
+            "name": "contentId",
+            "in": "path",
+            "description": "The ID of the content object to retrieve.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.ContentView"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.ContentView"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.ContentView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/extra/stats/least-recently-updated": {
+      "get": {
+        "tags": [
+          "Least-recently updated items"
+        ],
+        "summary": "Get the least-recently updated items on the specified world or data center, along with the upload times for each item.",
+        "parameters": [
+          {
+            "name": "world",
+            "in": "query",
+            "description": "The world to request data for.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dcName",
+            "in": "query",
+            "description": "The data center to request data for.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entries",
+            "in": "query",
+            "description": "The number of entries to return (default 50, max 200).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.MostRecentlyUpdatedItemsView"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.MostRecentlyUpdatedItemsView"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.MostRecentlyUpdatedItemsView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The world/DC requested is invalid.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/{worldDcRegion}/{itemIds}": {
+      "get": {
+        "tags": [
+          "Market board current data"
+        ],
+        "summary": "Retrieves the data currently shown on the market board for the requested item and world or data center.\r\nUp to 100 item IDs can be comma-separated in order to retrieve data for multiple items at once.",
+        "parameters": [
+          {
+            "name": "itemIds",
+            "in": "path",
+            "description": "The item ID or comma-separated item IDs to retrieve data for.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "worldDcRegion",
+            "in": "path",
+            "description": "The world, data center, or region to retrieve data for. This may be an ID or a name. Regions should be specified as Japan, Europe, North-America, Oceania, China, or 中国.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "listings",
+            "in": "query",
+            "description": "The number of listings to return per item. By default, all listings will be returned.",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "entries",
+            "in": "query",
+            "description": "The number of recent history entries to return per item. By default, a maximum of 5 entries will be returned.",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "hq",
+            "in": "query",
+            "description": "Filter for HQ listings and entries. By default, both HQ and NQ listings and entries will be returned.",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "statsWithin",
+            "in": "query",
+            "description": "The amount of time before now to calculate stats over, in milliseconds. By default, this is 7 days.",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "entriesWithin",
+            "in": "query",
+            "description": "The amount of time before now to take entries within, in seconds. Negative values will be ignored.",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "A comma separated list of fields that should be included in the response, if omitted will return all fields.\r\nFor example, if you're only interested in the listings price per unit you can set this to listings.pricePerUnit.\r\nNote that querying multiple items changes the response schema, which should be reflected in the value provided\r\nfor this field. In this case, querying the price per unit requires setting this field to\r\nitems.listings.pricePerUnit.",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "User-Agent",
+            "in": "header",
+            "description": "",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "CF-Connecting-IP",
+            "in": "header",
+            "description": "",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V2.CurrentlyShownMultiViewV2"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V2.CurrentlyShownMultiViewV2"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V2.CurrentlyShownMultiViewV2"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The world/DC or item requested is invalid. When requesting multiple items at once, an invalid item ID\r\nwill not trigger this. Instead, the returned list of unresolved item IDs will contain the invalid item ID or IDs.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters were invalid."
+          }
+        }
+      }
+    },
+    "/api/v2/history/{worldDcRegion}/{itemIds}": {
+      "get": {
+        "tags": [
+          "Market board sale history"
+        ],
+        "summary": "Retrieves the history data for the requested item and world or data center.\r\nUp to 100 item IDs can be comma-separated in order to retrieve data for multiple items at once.",
+        "parameters": [
+          {
+            "name": "itemIds",
+            "in": "path",
+            "description": "The item ID or comma-separated item IDs to retrieve data for.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "worldDcRegion",
+            "in": "path",
+            "description": "The world or data center to retrieve data for. This may be an ID or a name. Regions should be specified as Japan, Europe, North-America, Oceania, China, or 中国.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entriesToReturn",
+            "in": "query",
+            "description": "The number of entries to return per item. By default, this is set to 1800, but may be set to a maximum of 99999.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "statsWithin",
+            "in": "query",
+            "description": "The amount of time before now to calculate stats over, in milliseconds. By default, this is 7 days.",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "entriesWithin",
+            "in": "query",
+            "description": "The amount of time before entriesUntil or now to take entries within, in seconds. Negative values will be ignored. By default, this is 7 days.",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "entriesUntil",
+            "in": "query",
+            "description": "The UNIX timestamp in seconds to take entries until. Negative values will be ignored. By default, this is current time.",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "minSalePrice",
+            "in": "query",
+            "description": "The inclusive minimum unit sale price of entries to return.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "maxSalePrice",
+            "in": "query",
+            "description": "The inclusive maximum unit sale price of entries to return.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 2147483647
+            }
+          },
+          {
+            "name": "User-Agent",
+            "in": "header",
+            "description": "",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "CF-Connecting-IP",
+            "in": "header",
+            "description": "",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V2.HistoryMultiViewV2"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V2.HistoryMultiViewV2"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V2.HistoryMultiViewV2"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The world/DC or item requested is invalid. When requesting multiple items at once, an invalid item ID\r\nwill not trigger this. Instead, the returned list of unresolved item IDs will contain the invalid item ID or IDs.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/tax-rates": {
+      "get": {
+        "tags": [
+          "Market tax rates"
+        ],
+        "summary": "Retrieves the current tax rate data for the specified world. This data is provided by the Retainer Vocate in each major city.",
+        "parameters": [
+          {
+            "name": "world",
+            "in": "query",
+            "description": "The world or to retrieve data for. This may be an ID or a name.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "User-Agent",
+            "in": "header",
+            "description": "",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.TaxRatesView"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.TaxRatesView"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.TaxRatesView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The world requested is invalid.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/marketable": {
+      "get": {
+        "tags": [
+          "Marketable items"
+        ],
+        "summary": "Returns the set of marketable item IDs.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/extra/stats/most-recently-updated": {
+      "get": {
+        "tags": [
+          "Most-recently updated items"
+        ],
+        "summary": "Get the most-recently updated items on the specified world or data center, along with the upload times for each item.",
+        "parameters": [
+          {
+            "name": "world",
+            "in": "query",
+            "description": "The world to request data for.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dcName",
+            "in": "query",
+            "description": "The data center to request data for.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entries",
+            "in": "query",
+            "description": "The number of entries to return (default 50, max 200).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.MostRecentlyUpdatedItemsView"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.MostRecentlyUpdatedItemsView"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.MostRecentlyUpdatedItemsView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The world/DC requested is invalid.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/extra/stats/recently-updated": {
+      "get": {
+        "tags": [
+          "Recently updated items"
+        ],
+        "summary": "Returns a list of some of the most recently updated items on the website. This endpoint\r\nis a legacy endpoint and does not include any data on which worlds or data centers the updates happened on.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.RecentlyUpdatedItemsView"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.RecentlyUpdatedItemsView"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.RecentlyUpdatedItemsView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/extra/stats/uploader-upload-counts": {
+      "get": {
+        "tags": [
+          "Upload counts by upload application"
+        ],
+        "summary": "Returns the total upload counts for each client application that uploads data to Universalis.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.SourceUploadCountView"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.SourceUploadCountView"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.SourceUploadCountView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/extra/stats/world-upload-counts": {
+      "get": {
+        "tags": [
+          "Upload counts by world"
+        ],
+        "summary": "Returns the world upload counts and proportions of the total uploads for each world.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.WorldUploadCountView"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.WorldUploadCountView"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.WorldUploadCountView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/extra/stats/upload-history": {
+      "get": {
+        "tags": [
+          "Uploads per day"
+        ],
+        "summary": "Returns the number of uploads per day over the past 30 days.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.UploadCountHistoryView"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.UploadCountHistoryView"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.UploadCountHistoryView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/lists/{listId}": {
+      "get": {
+        "tags": [
+          "User lists"
+        ],
+        "summary": "Retrieves a user list.",
+        "parameters": [
+          {
+            "name": "listId",
+            "in": "path",
+            "description": "The ID of the list to retrieve.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V2.UserListView"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V2.UserListView"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Universalis.Application.Views.V2.UserListView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The list requested does not exist.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Microsoft.AspNetCore.Mvc.ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "Universalis.Application.Views.V1.CurrentlyShownView": {
+        "type": "object",
+        "properties": {
+          "itemID": {
+            "type": "integer",
+            "description": "The item ID.",
+            "format": "int32"
+          },
+          "worldID": {
+            "type": "integer",
+            "description": "The world ID, if applicable.",
+            "format": "int32",
+            "nullable": true
+          },
+          "lastUploadTime": {
+            "type": "integer",
+            "description": "The last upload time for this endpoint, in milliseconds since the UNIX epoch.",
+            "format": "int64"
+          },
+          "listings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Universalis.Application.Views.V1.ListingView"
+            },
+            "description": "The currently-shown listings.",
+            "nullable": true
+          },
+          "recentHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Universalis.Application.Views.V1.SaleView"
+            },
+            "description": "The currently-shown sales.",
+            "nullable": true
+          },
+          "dcName": {
+            "type": "string",
+            "description": "The DC name, if applicable.",
+            "nullable": true
+          },
+          "regionName": {
+            "type": "string",
+            "description": "The region name, if applicable.",
+            "nullable": true
+          },
+          "currentAveragePrice": {
+            "type": "number",
+            "description": "The average listing price.",
+            "format": "float"
+          },
+          "currentAveragePriceNQ": {
+            "type": "number",
+            "description": "The average NQ listing price.",
+            "format": "float"
+          },
+          "currentAveragePriceHQ": {
+            "type": "number",
+            "description": "The average HQ listing price.",
+            "format": "float"
+          },
+          "regularSaleVelocity": {
+            "type": "number",
+            "description": "The average number of sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).\r\nThis number will tend to be the same for every item, because the number of shown sales is the same and over the same period.\r\nThis statistic is more useful in historical queries.",
+            "format": "float"
+          },
+          "nqSaleVelocity": {
+            "type": "number",
+            "description": "The average number of NQ sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).\r\nThis number will tend to be the same for every item, because the number of shown sales is the same and over the same period.\r\nThis statistic is more useful in historical queries.",
+            "format": "float"
+          },
+          "hqSaleVelocity": {
+            "type": "number",
+            "description": "The average number of HQ sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).\r\nThis number will tend to be the same for every item, because the number of shown sales is the same and over the same period.\r\nThis statistic is more useful in historical queries.",
+            "format": "float"
+          },
+          "averagePrice": {
+            "type": "number",
+            "description": "The average sale price.",
+            "format": "float"
+          },
+          "averagePriceNQ": {
+            "type": "number",
+            "description": "The average NQ sale price.",
+            "format": "float"
+          },
+          "averagePriceHQ": {
+            "type": "number",
+            "description": "The average HQ sale price.",
+            "format": "float"
+          },
+          "minPrice": {
+            "type": "integer",
+            "description": "The minimum listing price.",
+            "format": "int32"
+          },
+          "minPriceNQ": {
+            "type": "integer",
+            "description": "The minimum NQ listing price.",
+            "format": "int32"
+          },
+          "minPriceHQ": {
+            "type": "integer",
+            "description": "The minimum HQ listing price.",
+            "format": "int32"
+          },
+          "maxPrice": {
+            "type": "integer",
+            "description": "The maximum listing price.",
+            "format": "int32"
+          },
+          "maxPriceNQ": {
+            "type": "integer",
+            "description": "The maximum NQ listing price.",
+            "format": "int32"
+          },
+          "maxPriceHQ": {
+            "type": "integer",
+            "description": "The maximum HQ listing price.",
+            "format": "int32"
+          },
+          "stackSizeHistogram": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "A map of quantities to listing counts, representing the number of listings of each quantity.",
+            "nullable": true
+          },
+          "stackSizeHistogramNQ": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "A map of quantities to NQ listing counts, representing the number of listings of each quantity.",
+            "nullable": true
+          },
+          "stackSizeHistogramHQ": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "A map of quantities to HQ listing counts, representing the number of listings of each quantity.",
+            "nullable": true
+          },
+          "worldName": {
+            "type": "string",
+            "description": "The world name, if applicable.",
+            "nullable": true
+          },
+          "worldUploadTimes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            },
+            "description": "The last upload times in milliseconds since epoch for each world in the response, if this is a DC request.",
+            "nullable": true
+          },
+          "listingsCount": {
+            "type": "integer",
+            "description": "The number of listings retrieved for the request. When using the \"listings\" limit parameter, this may be\r\ndifferent from the number of sale entries returned in an API response.",
+            "format": "int32"
+          },
+          "recentHistoryCount": {
+            "type": "integer",
+            "description": "The number of sale entries retrieved for the request. When using the \"entries\" limit parameter, this may be\r\ndifferent from the number of sale entries returned in an API response.",
+            "format": "int32"
+          },
+          "unitsForSale": {
+            "type": "integer",
+            "description": "The number of items (not listings) up for sale.",
+            "format": "int32"
+          },
+          "unitsSold": {
+            "type": "integer",
+            "description": "The number of items (not sale entries) sold over the retrieved sales.",
+            "format": "int32"
+          },
+          "hasData": {
+            "type": "boolean",
+            "description": "Whether this item has ever been updated. Useful for newly-released items.",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V1.Extra.ContentView": {
+        "type": "object",
+        "properties": {
+          "contentID": {
+            "type": "string",
+            "description": "The content ID of the object.",
+            "nullable": true
+          },
+          "contentType": {
+            "type": "string",
+            "description": "The content type of this object.",
+            "nullable": true
+          },
+          "characterName": {
+            "type": "string",
+            "description": "The character name associated with this character object, if this is one.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V1.Extra.Stats.MostRecentlyUpdatedItemsView": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Universalis.Application.Views.V1.Extra.Stats.WorldItemRecencyView"
+            },
+            "description": "A list of item upload information in timestamp-descending order.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V1.Extra.Stats.RecentlyUpdatedItemsView": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "A list of item IDs, with the most recent first.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V1.Extra.Stats.SourceUploadCountView": {
+        "type": "object",
+        "properties": {
+          "sourceName": {
+            "type": "string",
+            "description": "The name of the client application.",
+            "nullable": true
+          },
+          "uploadCount": {
+            "type": "number",
+            "description": "The number of uploads originating from the client application.",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V1.Extra.Stats.UploadCountHistoryView": {
+        "type": "object",
+        "properties": {
+          "uploadCountByDay": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "The list of upload counts per day, over the past 30 days.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V1.Extra.Stats.WorldItemRecencyView": {
+        "type": "object",
+        "properties": {
+          "itemID": {
+            "type": "integer",
+            "description": "The item ID.",
+            "format": "int32"
+          },
+          "lastUploadTime": {
+            "type": "number",
+            "description": "The last upload time for the item on the listed world.",
+            "format": "double"
+          },
+          "worldID": {
+            "type": "integer",
+            "description": "The world ID.",
+            "format": "int32"
+          },
+          "worldName": {
+            "type": "string",
+            "description": "The world name.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V1.Extra.Stats.WorldUploadCountView": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number",
+            "description": "The number of times an upload has occurred on this world.",
+            "format": "double"
+          },
+          "proportion": {
+            "type": "number",
+            "description": "The proportion of uploads on this world to the total number of uploads.",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V1.HistoryView": {
+        "type": "object",
+        "properties": {
+          "itemID": {
+            "type": "integer",
+            "description": "The item ID.",
+            "format": "int32"
+          },
+          "worldID": {
+            "type": "integer",
+            "description": "The world ID, if applicable.",
+            "format": "int32",
+            "nullable": true
+          },
+          "lastUploadTime": {
+            "type": "integer",
+            "description": "The last upload time for this endpoint, in milliseconds since the UNIX epoch.",
+            "format": "int64"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Universalis.Application.Views.V1.MinimizedSaleView"
+            },
+            "description": "The historical sales.",
+            "nullable": true
+          },
+          "dcName": {
+            "type": "string",
+            "description": "The DC name, if applicable.",
+            "nullable": true
+          },
+          "regionName": {
+            "type": "string",
+            "description": "The region name, if applicable.",
+            "nullable": true
+          },
+          "stackSizeHistogram": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "A map of quantities to sale counts, representing the number of sales of each quantity.",
+            "nullable": true
+          },
+          "stackSizeHistogramNQ": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "A map of quantities to NQ sale counts, representing the number of sales of each quantity.",
+            "nullable": true
+          },
+          "stackSizeHistogramHQ": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "A map of quantities to HQ sale counts, representing the number of sales of each quantity.",
+            "nullable": true
+          },
+          "regularSaleVelocity": {
+            "type": "number",
+            "description": "The average number of sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).",
+            "format": "float"
+          },
+          "nqSaleVelocity": {
+            "type": "number",
+            "description": "The average number of NQ sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).",
+            "format": "float"
+          },
+          "hqSaleVelocity": {
+            "type": "number",
+            "description": "The average number of HQ sales per day, over the past seven days (or the entirety of the shown sales, whichever comes first).",
+            "format": "float"
+          },
+          "worldName": {
+            "type": "string",
+            "description": "The world name, if applicable.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V1.ListingView": {
+        "type": "object",
+        "properties": {
+          "lastReviewTime": {
+            "type": "integer",
+            "description": "The time that this listing was posted, in seconds since the UNIX epoch.",
+            "format": "int64"
+          },
+          "pricePerUnit": {
+            "type": "integer",
+            "description": "The price per unit sold.",
+            "format": "int32"
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "The stack size sold.",
+            "format": "int32"
+          },
+          "stainID": {
+            "type": "integer",
+            "description": "The ID of the dye on this item.",
+            "format": "int32"
+          },
+          "worldName": {
+            "type": "string",
+            "description": "The world name, if applicable.",
+            "nullable": true
+          },
+          "worldID": {
+            "type": "integer",
+            "description": "The world ID, if applicable.",
+            "format": "int32",
+            "nullable": true
+          },
+          "creatorName": {
+            "type": "string",
+            "description": "The creator's character name.",
+            "nullable": true
+          },
+          "creatorID": {
+            "type": "string",
+            "description": "A SHA256 hash of the creator's ID.",
+            "nullable": true
+          },
+          "hq": {
+            "type": "boolean",
+            "description": "Whether or not the item is high-quality."
+          },
+          "isCrafted": {
+            "type": "boolean",
+            "description": "Whether or not the item is crafted."
+          },
+          "listingID": {
+            "type": "string",
+            "description": "The ID of this listing.",
+            "nullable": true
+          },
+          "materia": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Universalis.Application.Views.V1.MateriaView"
+            },
+            "description": "The materia on this item.",
+            "nullable": true
+          },
+          "onMannequin": {
+            "type": "boolean",
+            "description": "Whether or not the item is being sold on a mannequin."
+          },
+          "retainerCity": {
+            "type": "integer",
+            "description": "The city ID of the retainer. This is a game ID; all possible values can be seen at\r\nhttps://xivapi.com/Town.\r\n            \r\nLimsa Lominsa = 1\r\nGridania = 2\r\nUl'dah = 3\r\nIshgard = 4\r\nKugane = 7\r\nCrystarium = 10\r\nOld Sharlayan = 12",
+            "format": "int32"
+          },
+          "retainerID": {
+            "type": "string",
+            "description": "The retainer's ID.",
+            "nullable": true
+          },
+          "retainerName": {
+            "type": "string",
+            "description": "The retainer's name.",
+            "nullable": true
+          },
+          "sellerID": {
+            "type": "string",
+            "description": "A SHA256 hash of the seller's ID.",
+            "nullable": true
+          },
+          "total": {
+            "type": "integer",
+            "description": "The total price.",
+            "format": "int32"
+          },
+          "tax": {
+            "type": "integer",
+            "description": "The Gil sales tax (GST) to be added to the total price during purchase.",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V1.MateriaView": {
+        "type": "object",
+        "properties": {
+          "slotID": {
+            "type": "integer",
+            "description": "The materia slot.",
+            "format": "int32"
+          },
+          "materiaID": {
+            "type": "integer",
+            "description": "The materia item ID.",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V1.MinimizedSaleView": {
+        "type": "object",
+        "properties": {
+          "hq": {
+            "type": "boolean",
+            "description": "Whether or not the item was high-quality."
+          },
+          "pricePerUnit": {
+            "type": "integer",
+            "description": "The price per unit sold.",
+            "format": "int32"
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "The stack size sold.",
+            "format": "int32"
+          },
+          "buyerName": {
+            "type": "string",
+            "description": "The buyer's character name. This may be null.",
+            "nullable": true
+          },
+          "onMannequin": {
+            "type": "boolean",
+            "description": "Whether or not this was purchased from a mannequin. This may be null.",
+            "nullable": true
+          },
+          "timestamp": {
+            "type": "integer",
+            "description": "The sale time, in seconds since the UNIX epoch.",
+            "format": "int64"
+          },
+          "worldName": {
+            "type": "string",
+            "description": "The world name, if applicable.",
+            "nullable": true
+          },
+          "worldID": {
+            "type": "integer",
+            "description": "The world ID, if applicable.",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V1.SaleView": {
+        "type": "object",
+        "properties": {
+          "hq": {
+            "type": "boolean",
+            "description": "Whether or not the item was high-quality."
+          },
+          "pricePerUnit": {
+            "type": "integer",
+            "description": "The price per unit sold.",
+            "format": "int32"
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "The stack size sold.",
+            "format": "int32"
+          },
+          "timestamp": {
+            "type": "integer",
+            "description": "The sale time, in seconds since the UNIX epoch.",
+            "format": "int64"
+          },
+          "onMannequin": {
+            "type": "boolean",
+            "description": "Whether or not this was purchased from a mannequin. This may be null.",
+            "nullable": true
+          },
+          "worldName": {
+            "type": "string",
+            "description": "The world name, if applicable.",
+            "nullable": true
+          },
+          "worldID": {
+            "type": "integer",
+            "description": "The world ID, if applicable.",
+            "format": "int32",
+            "nullable": true
+          },
+          "buyerName": {
+            "type": "string",
+            "description": "The buyer name.",
+            "nullable": true
+          },
+          "total": {
+            "type": "integer",
+            "description": "The total price.",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V1.TaxRatesView": {
+        "type": "object",
+        "properties": {
+          "Limsa Lominsa": {
+            "type": "integer",
+            "description": "The percent retainer tax in Limsa Lominsa.",
+            "format": "int32"
+          },
+          "Gridania": {
+            "type": "integer",
+            "description": "The percent retainer tax in Gridania.",
+            "format": "int32"
+          },
+          "Ul'dah": {
+            "type": "integer",
+            "description": "The percent retainer tax in Ul'dah.",
+            "format": "int32"
+          },
+          "Ishgard": {
+            "type": "integer",
+            "description": "The percent retainer tax in Ishgard.",
+            "format": "int32"
+          },
+          "Kugane": {
+            "type": "integer",
+            "description": "The percent retainer tax in Kugane.",
+            "format": "int32"
+          },
+          "Crystarium": {
+            "type": "integer",
+            "description": "The percent retainer tax in the Crystarium.",
+            "format": "int32"
+          },
+          "Old Sharlayan": {
+            "type": "integer",
+            "description": "The percent retainer tax in Old Sharlayan.",
+            "format": "int32"
+          },
+          "Tuliyollal": {
+            "type": "integer",
+            "description": "The percent retainer tax in Tuliyollal.",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+Result"
+            },
+            "nullable": true
+          },
+          "failedItems": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData+AggregatedResult": {
+        "type": "object",
+        "properties": {
+          "minListing": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MinListing"
+          },
+          "medianListing": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MedianListing"
+          },
+          "recentPurchase": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+RecentPurchase"
+          },
+          "averageSalePrice": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+AverageSalePrice"
+          },
+          "dailySaleVelocity": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+DailySaleVelocity"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData+AverageSalePrice": {
+        "type": "object",
+        "properties": {
+          "world": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+AverageSalePrice+Entry"
+          },
+          "dc": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+AverageSalePrice+Entry"
+          },
+          "region": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+AverageSalePrice+Entry"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData+AverageSalePrice+Entry": {
+        "type": "object",
+        "properties": {
+          "price": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData+DailySaleVelocity": {
+        "type": "object",
+        "properties": {
+          "world": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+DailySaleVelocity+Entry"
+          },
+          "dc": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+DailySaleVelocity+Entry"
+          },
+          "region": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+DailySaleVelocity+Entry"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData+DailySaleVelocity+Entry": {
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData+MedianListing": {
+        "type": "object",
+        "properties": {
+          "world": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MedianListing+Entry"
+          },
+          "dc": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MedianListing+Entry"
+          },
+          "region": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MedianListing+Entry"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData+MedianListing+Entry": {
+        "type": "object",
+        "properties": {
+          "price": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData+MinListing": {
+        "type": "object",
+        "properties": {
+          "world": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MinListing+Entry"
+          },
+          "dc": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MinListing+Entry"
+          },
+          "region": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+MinListing+Entry"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData+MinListing+Entry": {
+        "type": "object",
+        "properties": {
+          "price": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "worldId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData+RecentPurchase": {
+        "type": "object",
+        "properties": {
+          "world": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+RecentPurchase+Entry"
+          },
+          "dc": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+RecentPurchase+Entry"
+          },
+          "region": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+RecentPurchase+Entry"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData+RecentPurchase+Entry": {
+        "type": "object",
+        "properties": {
+          "price": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "worldId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData+Result": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nq": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+AggregatedResult"
+          },
+          "hq": {
+            "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+AggregatedResult"
+          },
+          "worldUploadTimes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Universalis.Application.Views.V2.AggregatedMarketBoardData+WorldUploadTime"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.AggregatedMarketBoardData+WorldUploadTime": {
+        "type": "object",
+        "properties": {
+          "worldId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.CurrentlyShownMultiViewV2": {
+        "type": "object",
+        "properties": {
+          "itemIDs": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "The item IDs that were requested.",
+            "nullable": true
+          },
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Universalis.Application.Views.V1.CurrentlyShownView"
+            },
+            "description": "The item data that was requested, keyed on the item ID.",
+            "nullable": true
+          },
+          "worldID": {
+            "type": "integer",
+            "description": "The ID of the world requested, if applicable.",
+            "format": "int32",
+            "nullable": true
+          },
+          "dcName": {
+            "type": "string",
+            "description": "The name of the DC requested, if applicable.",
+            "nullable": true
+          },
+          "regionName": {
+            "type": "string",
+            "description": "The name of the region requested, if applicable.",
+            "nullable": true
+          },
+          "unresolvedItems": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "A list of IDs that could not be resolved to any item data.",
+            "nullable": true
+          },
+          "worldName": {
+            "type": "string",
+            "description": "The name of the world requested, if applicable.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.HistoryMultiViewV2": {
+        "type": "object",
+        "properties": {
+          "itemIDs": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "The item IDs that were requested.",
+            "nullable": true
+          },
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Universalis.Application.Views.V1.HistoryView"
+            },
+            "description": "The item data that was requested, keyed on the item ID.",
+            "nullable": true
+          },
+          "worldID": {
+            "type": "integer",
+            "description": "The ID of the world requested, if applicable.",
+            "format": "int32",
+            "nullable": true
+          },
+          "dcName": {
+            "type": "string",
+            "description": "The name of the DC requested, if applicable.",
+            "nullable": true
+          },
+          "regionName": {
+            "type": "string",
+            "description": "The name of the region requested, if applicable.",
+            "nullable": true
+          },
+          "unresolvedItems": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "A list of IDs that could not be resolved to any item data.",
+            "nullable": true
+          },
+          "worldName": {
+            "type": "string",
+            "description": "The name of the world requested, if applicable.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V2.UserListView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The list's ID.",
+            "nullable": true
+          },
+          "created": {
+            "type": "string",
+            "description": "The time that this list was created, in milliseconds since the UNIX epoch.",
+            "nullable": true
+          },
+          "updated": {
+            "type": "string",
+            "description": "The time that this list was updated, in milliseconds since the UNIX epoch.",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of this list.",
+            "nullable": true
+          },
+          "itemIDs": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "The IDs of the list items.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V3.Game.DataCenter": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "region": {
+            "type": "string",
+            "nullable": true
+          },
+          "worlds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Universalis.Application.Views.V3.Game.World": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

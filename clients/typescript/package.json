@@ -1,0 +1,23 @@
+{
+  "name": "@universalis-ffxiv/universalis-client",
+  "description": "Auto-generated TypeScript client for the Universalis FFXIV market board API",
+  "license": "MIT",
+  "homepage": "https://github.com/Universalis-FFXIV/Universalis",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Universalis-FFXIV/Universalis.git",
+    "directory": "clients/typescript"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -37,6 +37,7 @@ public class SalesController : ControllerBase
     /// <param name="cancellationToken"></param>
     /// <response code="200">Data retrieved successfully.</response>
     /// <response code="404">A world/DC or the item requested is invalid.</response>
+    [HttpGet]
     [ApiTag("Market board sales")]
     [ProducesResponseType(typeof(SalesPage), 200)]
     [ProducesResponseType(404)]

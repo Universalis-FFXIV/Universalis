@@ -47,7 +47,19 @@ public class Startup
     // This method gets called by the runtime. Use this method to add services to the container.
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddDbAccessServices(Configuration);
+        // When UNIVERSALIS_SWAGGER_GEN=true, skip all infrastructure services that require live
+        // connections (Redis, ScyllaDB, PostgreSQL, RabbitMQ). This allows dotnet-swagger to
+        // generate OpenAPI specs in CI without needing a running infrastructure.
+        var swaggerGenMode = string.Equals(
+            Environment.GetEnvironmentVariable("UNIVERSALIS_SWAGGER_GEN"),
+            "true",
+            StringComparison.OrdinalIgnoreCase);
+
+        if (!swaggerGenMode)
+        {
+            services.AddDbAccessServices(Configuration);
+        }
+
         services.AddGameData(Configuration);
         services.AddUserAlerts();
         services.AddSingleton<IWorldToDcRegion, WorldToDcRegion>();
@@ -55,7 +67,7 @@ public class Startup
         var disableWsEventQueueStr = Environment.GetEnvironmentVariable("DISABLE_WEBSOCKET_EVENT_QUEUE");
         var disableWsEventQueue = bool.TryParse(disableWsEventQueueStr, out var disableWsEventQueueParsed) &&
                                   disableWsEventQueueParsed;
-        if (!disableWsEventQueue)
+        if (!swaggerGenMode && !disableWsEventQueue)
         {
             services.AddAllOfType<IUploadBehavior>(new[] { typeof(Startup).Assembly }, ServiceLifetime.Singleton);
 
@@ -184,7 +196,18 @@ public class Startup
 
             options.IncludeXmlComments(() => new XPathDocument(apiDocs));
 
+            // Servers is a model-binder type whose properties are all private; Swashbuckle
+            // would otherwise emit it as an empty object schema.  Map it to a plain string
+            // so generated clients receive a usable type.
+            options.MapType<Servers>(() => new OpenApiSchema
+            {
+                Type = "string",
+                Description = "A comma-separated list of world, data center, or region names."
+            });
+
             options.CustomSchemaIds(type => type.FullName);
+
+            options.SchemaFilter<NonNullableRequiredSchemaFilter>();
         });
 
         var otlpExporter = Environment.GetEnvironmentVariable("UNIVERSALIS_OLTP_ENDPOINT") ??
@@ -230,7 +253,11 @@ public class Startup
         }
 
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-        services.AddMogboard(Configuration);
+        if (!swaggerGenMode)
+        {
+            services.AddMogboard(Configuration);
+        }
+
         services.AddRazorPages();
     }
 
