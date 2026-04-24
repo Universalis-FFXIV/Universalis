@@ -19,11 +19,20 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public class SaleStore : ISaleStore, IDisposable
 {
+    // Per-request budget for a sale read (semaphore wait + Scylla fetch).
+    // Kept under Traefik's upstream responseHeaderTimeout so slow reads fail fast
+    // and release the semaphore slot rather than holding it until Traefik times out
+    // and the cascade saturates the connection pool.
+    private static readonly TimeSpan SaleReadBudget = TimeSpan.FromMilliseconds(3500);
+
     private static readonly Histogram RowsReadCount =
         Prometheus.Metrics.CreateHistogram("universalis_sale_rows_read", "", new HistogramConfiguration
         {
             Buckets = Histogram.ExponentialBuckets(1, 2, 32),
         });
+
+    private static readonly Counter BudgetExceeded =
+        Prometheus.Metrics.CreateCounter("universalis_sale_read_budget_exceeded", "Count of sale reads that exceeded the per-request budget.");
 
     private readonly record struct SaleRequestKey(int WorldId, int ItemId, int Count, long? From, long? To);
 
@@ -188,13 +197,34 @@ public class SaleStore : ISaleStore, IDisposable
 
     private async Task<IEnumerable<Sale>> RetrieveBySaleTimeInternal(SaleRequestKey requestKey, CancellationToken cancellationToken)
     {
-        // Reads from the sale table are prone to timeouts for some reason, so we throttle them here
-        await _lock.WaitAsync(cancellationToken);
+        // Bound the combined semaphore wait + Scylla fetch with a per-request budget.
+        // Linked with the incoming cancellation token so client disconnects still propagate.
+        using var budgetCts = new CancellationTokenSource(SaleReadBudget);
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, budgetCts.Token);
+
+        // Reads from the sale table are prone to timeouts for some reason, so we throttle them here.
+        await _lock.WaitAsync(linkedCts.Token);
         try
         {
-            return await RetrieveBySaleTimeCore(requestKey.WorldId, requestKey.ItemId, requestKey.Count,
+            var fetchTask = RetrieveBySaleTimeCore(requestKey.WorldId, requestKey.ItemId, requestKey.Count,
                 requestKey.From.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(requestKey.From.Value) : null,
                 requestKey.To.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(requestKey.To.Value) : null);
+
+            // The Cassandra driver's Mapper.FetchAsync does not accept a CancellationToken, so we
+            // race the fetch against the budget. If the budget fires we stop waiting and release
+            // the semaphore slot; the driver-level query will be aborted by the cluster's own
+            // 5000 ms read timeout (see DbAccessExtensions).
+            var budgetTask = Task.Delay(Timeout.InfiniteTimeSpan, linkedCts.Token);
+            var completed = await Task.WhenAny(fetchTask, budgetTask);
+            if (completed == fetchTask)
+            {
+                return await fetchTask;
+            }
+
+            BudgetExceeded.Inc();
+            _logger.LogWarning("Sale read budget ({Budget} ms) exceeded for item={ItemId} world={WorldId} count={Count}",
+                SaleReadBudget.TotalMilliseconds, requestKey.ItemId, requestKey.WorldId, requestKey.Count);
+            throw new OperationCanceledException($"Sale read exceeded {SaleReadBudget.TotalMilliseconds:F0} ms budget.", linkedCts.Token);
         }
         finally
         {
