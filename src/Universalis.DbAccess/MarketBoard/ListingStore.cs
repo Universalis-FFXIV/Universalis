@@ -103,6 +103,29 @@ public class ListingStore : IListingStore
         {
             var (worldID, itemID) = listingGroup.Key;
 
+            // Find any pre-existing rows that the upsert below will mutate the
+            // item_id of. The batch's DELETE only clears the current (item, world);
+            // any conflict on (listing_id, world_id) implies a row exists with the
+            // same key but a different item_id, and `DO UPDATE SET item_id = ...`
+            // will move it to the current item. Without evicting the OLD item's
+            // cache key, `listing5:{world}:{oldItem}` would keep a stale entry
+            // until its 5-minute TTL expires.
+            var listingIds = listingGroup.Select(l => l.ListingId).ToArray();
+            var staleItemIds = new HashSet<int>();
+            await using (var preCmd = new NpgsqlCommand(
+                "SELECT DISTINCT item_id FROM listing WHERE listing_id = ANY($1) AND world_id = $2 AND item_id <> $3",
+                connection))
+            {
+                preCmd.Parameters.Add(new NpgsqlParameter<string[]> { TypedValue = listingIds });
+                preCmd.Parameters.Add(new NpgsqlParameter<int> { TypedValue = worldID });
+                preCmd.Parameters.Add(new NpgsqlParameter<int> { TypedValue = itemID });
+                await using var reader = await preCmd.ExecuteReaderAsync(cancellationToken);
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    staleItemIds.Add(reader.GetInt32(0));
+                }
+            }
+
             // Npgsql batches have an implicit transaction around them
             // https://www.npgsql.org/doc/basic-usage.html#batching
             await using var batch = new NpgsqlBatch(connection);
@@ -117,12 +140,11 @@ public class ListingStore : IListingStore
 
             foreach (var listing in listingGroup)
             {
-                // If a listing is uploaded multiple times in separate uploads, it
-                // can already be in the database, causing a conflict. To handle that,
-                // we just update the existing record and ensure that it's made live
-                // again. It's not clear to me what happens on the game servers when
-                // a listing is updated. Until we have more data, I'm assuming that
-                // all updates are the same as new listings.
+                // The DELETE above clears rows for the current (item, world) before
+                // these inserts. Any remaining conflict on the (listing_id, world_id)
+                // primary key therefore implies a pre-existing row with the same
+                // (listing_id, world_id) but a different item_id. Treat the new upload
+                // as authoritative and overwrite, rather than silently dropping it.
                 batch.BatchCommands.Add(new NpgsqlBatchCommand(
                     """
                     INSERT INTO listing
@@ -130,7 +152,21 @@ public class ListingStore : IListingStore
                      creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, uploaded_at,
                      source)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-                    ON CONFLICT (listing_id) DO NOTHING;
+                    ON CONFLICT (listing_id, world_id) DO UPDATE SET
+                        item_id = EXCLUDED.item_id,
+                        hq = EXCLUDED.hq,
+                        on_mannequin = EXCLUDED.on_mannequin,
+                        materia = EXCLUDED.materia,
+                        unit_price = EXCLUDED.unit_price,
+                        quantity = EXCLUDED.quantity,
+                        dye_id = EXCLUDED.dye_id,
+                        creator_name = EXCLUDED.creator_name,
+                        last_review_time = EXCLUDED.last_review_time,
+                        retainer_id = EXCLUDED.retainer_id,
+                        retainer_name = EXCLUDED.retainer_name,
+                        retainer_city_id = EXCLUDED.retainer_city_id,
+                        uploaded_at = EXCLUDED.uploaded_at,
+                        source = EXCLUDED.source;
                     """)
                 {
                     Parameters =
@@ -159,6 +195,10 @@ public class ListingStore : IListingStore
             {
                 rowsUpdated += await batch.ExecuteNonQueryAsync(cancellationToken);
                 await _easyCachingProvider.RemoveAsync(ListingsKey(worldID, itemID), cancellationToken);
+                foreach (var staleItemId in staleItemIds)
+                {
+                    await _easyCachingProvider.RemoveAsync(ListingsKey(worldID, staleItemId), cancellationToken);
+                }
             }
             catch (Exception e)
             {
