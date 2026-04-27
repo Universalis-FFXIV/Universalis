@@ -346,6 +346,44 @@ public class ListingStoreTests
         Assert.Equal(200, resultsB[0].PricePerUnit);
     }
 
+#if DEBUG
+    [Fact]
+#endif
+    public async Task ReplaceLive_EvictsOldItemCacheWhenListingItemIdChanges()
+    {
+        // The composite-PK upsert flips a row's item_id when the same
+        // (listing_id, world_id) is uploaded under a new item_id. The local
+        // listings cache for the OLD item_id must be evicted, otherwise reads
+        // for that (world, oldItem) keep returning the migrated listing as if
+        // it still belonged to oldItem.
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+
+        const string sharedListingId = "cross-item-shared-listing-id";
+        const int worldId = 197;
+        const int itemA = 800;
+        const int itemB = 801;
+
+        // Seed the listing under itemA and warm the (world, itemA) cache.
+        await store.ReplaceLive(new List<Listing> { MakeListing(sharedListingId, worldId, itemA, pricePerUnit: 100) });
+        var resultsA1 = (await store.RetrieveLive(new ListingQuery { ItemId = itemA, WorldId = worldId })).ToList();
+        Assert.Single(resultsA1);
+
+        // Upload the same listing_id under itemB. The upsert should flip the
+        // row's item_id from A to B, and ReplaceLive should evict the now-stale
+        // (world, itemA) cache entry as part of the same call.
+        await store.ReplaceLive(new List<Listing> { MakeListing(sharedListingId, worldId, itemB, pricePerUnit: 200) });
+
+        var resultsA2 = (await store.RetrieveLive(new ListingQuery { ItemId = itemA, WorldId = worldId })).ToList();
+        var resultsB = (await store.RetrieveLive(new ListingQuery { ItemId = itemB, WorldId = worldId })).ToList();
+
+        Assert.Empty(resultsA2);
+        Assert.Single(resultsB);
+        Assert.Equal(sharedListingId, resultsB[0].ListingId);
+        Assert.Equal(itemB, resultsB[0].ItemId);
+        Assert.Equal(200, resultsB[0].PricePerUnit);
+    }
+
     private static Listing MakeListing(string listingId, int worldId, int itemId, int pricePerUnit)
     {
         return new Listing

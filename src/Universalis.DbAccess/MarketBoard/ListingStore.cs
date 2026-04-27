@@ -103,6 +103,29 @@ public class ListingStore : IListingStore
         {
             var (worldID, itemID) = listingGroup.Key;
 
+            // Find any pre-existing rows that the upsert below will mutate the
+            // item_id of. The batch's DELETE only clears the current (item, world);
+            // any conflict on (listing_id, world_id) implies a row exists with the
+            // same key but a different item_id, and `DO UPDATE SET item_id = ...`
+            // will move it to the current item. Without evicting the OLD item's
+            // cache key, `listing5:{world}:{oldItem}` would keep a stale entry
+            // until its 5-minute TTL expires.
+            var listingIds = listingGroup.Select(l => l.ListingId).ToArray();
+            var staleItemIds = new HashSet<int>();
+            await using (var preCmd = new NpgsqlCommand(
+                "SELECT DISTINCT item_id FROM listing WHERE listing_id = ANY($1) AND world_id = $2 AND item_id <> $3",
+                connection))
+            {
+                preCmd.Parameters.Add(new NpgsqlParameter<string[]> { TypedValue = listingIds });
+                preCmd.Parameters.Add(new NpgsqlParameter<int> { TypedValue = worldID });
+                preCmd.Parameters.Add(new NpgsqlParameter<int> { TypedValue = itemID });
+                await using var reader = await preCmd.ExecuteReaderAsync(cancellationToken);
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    staleItemIds.Add(reader.GetInt32(0));
+                }
+            }
+
             // Npgsql batches have an implicit transaction around them
             // https://www.npgsql.org/doc/basic-usage.html#batching
             await using var batch = new NpgsqlBatch(connection);
@@ -172,6 +195,10 @@ public class ListingStore : IListingStore
             {
                 rowsUpdated += await batch.ExecuteNonQueryAsync(cancellationToken);
                 await _easyCachingProvider.RemoveAsync(ListingsKey(worldID, itemID), cancellationToken);
+                foreach (var staleItemId in staleItemIds)
+                {
+                    await _easyCachingProvider.RemoveAsync(ListingsKey(worldID, staleItemId), cancellationToken);
+                }
             }
             catch (Exception e)
             {
