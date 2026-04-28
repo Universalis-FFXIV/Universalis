@@ -50,6 +50,12 @@ public static class DbAccessExtensions
             .ConfigureRunner(rb => rb
                 .AddPostgres()
                 .WithGlobalConnectionString(fluentMigratorConnectionString)
+                // Npgsql's default 30s command timeout is too short for DDL that
+                // takes ACCESS EXCLUSIVE on hot tables (e.g. PK rebuilds): the
+                // build itself plus lock-acquisition wait under live traffic can
+                // exceed the default. Allow generous headroom so migrations
+                // queue rather than crash the application on startup.
+                .WithGlobalCommandTimeout(TimeSpan.FromMinutes(30))
                 .ScanIn(typeof(DbAccessExtensions).Assembly).For.All());
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(postgresConnectionString);
