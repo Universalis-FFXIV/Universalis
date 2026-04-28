@@ -33,6 +33,14 @@ public class AlterListingPrimaryKeyToCompositeWithWorld : Migration
 {
     private const string AdvisoryLockKey = "hashtext('listing_pkey_migration_15')";
 
+    // FluentMigrator's WithGlobalCommandTimeout setting only propagates to
+    // commands the runner creates (Execute.Sql, Schema.*, etc.). The commands
+    // we issue inside Execute.WithConnection are raw ADO.NET commands and
+    // default to Npgsql's 30s timeout, which is too short for both the
+    // CONCURRENTLY index build and for waiting on the peer-held advisory lock.
+    // Set this explicitly on every command we create in the migration body.
+    private const int CommandTimeoutSeconds = 30 * 60;
+
     public override void Up()
     {
         Execute.WithConnection((conn, _) => RunMigration(conn, fromColumnCount: 1, () =>
@@ -83,6 +91,7 @@ public class AlterListingPrimaryKeyToCompositeWithWorld : Migration
         using (var lockCmd = conn.CreateCommand())
         {
             lockCmd.CommandText = $"SELECT pg_advisory_lock({AdvisoryLockKey})";
+            lockCmd.CommandTimeout = CommandTimeoutSeconds;
             lockCmd.ExecuteNonQuery();
         }
 
@@ -91,6 +100,7 @@ public class AlterListingPrimaryKeyToCompositeWithWorld : Migration
             checkCmd.CommandText = @"
                 SELECT count(*) FROM information_schema.key_column_usage
                 WHERE table_name = 'listing' AND constraint_name = 'PK_listing'";
+            checkCmd.CommandTimeout = CommandTimeoutSeconds;
             var currentColumns = Convert.ToInt32(checkCmd.ExecuteScalar());
             if (currentColumns != fromColumnCount)
             {
@@ -107,6 +117,7 @@ public class AlterListingPrimaryKeyToCompositeWithWorld : Migration
     {
         using var cmd = conn.CreateCommand();
         cmd.CommandText = sql;
+        cmd.CommandTimeout = CommandTimeoutSeconds;
         cmd.ExecuteNonQuery();
     }
 }
