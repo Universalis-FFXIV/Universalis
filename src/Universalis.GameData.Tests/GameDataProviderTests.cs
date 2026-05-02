@@ -77,6 +77,7 @@ public class GameDataProviderTests
     [InlineData(26165, true)]
     [InlineData(30759, true)]
     [InlineData(47979, true)]
+    [InlineData(52612, true)]
     [InlineData(0, false)]
     [InlineData(1, false)]
 

@@ -66,7 +66,7 @@ public class CsvGameDataProvider : IGameDataProvider
     {
         var csvData =
             await _http.GetStreamAsync(
-                "https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/World.csv");
+                "https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/en/World.csv");
         using var reader = new StreamReader(csvData);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         for (var i = 0; i < 3; i++) await csv.ReadAsync();
@@ -77,7 +77,7 @@ public class CsvGameDataProvider : IGameDataProvider
     private async Task<IList<CsvItem>> GetItems()
     {
         var csvData =
-            await _http.GetStreamAsync("https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/Item.csv");
+            await _http.GetStreamAsync("https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/en/Item.csv");
         using var reader = new StreamReader(csvData);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         await csv.ReadAsync();
@@ -92,7 +92,7 @@ public class CsvGameDataProvider : IGameDataProvider
     {
         var dcData =
             await _http.GetStreamAsync(
-                "https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/WorldDCGroupType.csv");
+                "https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/en/WorldDCGroupType.csv");
         using var dcReader = new StreamReader(dcData);
         using var dcCsv = new CsvReader(dcReader, CultureInfo.InvariantCulture);
         for (var i = 0; i < 3; i++) await dcCsv.ReadAsync();
@@ -200,13 +200,13 @@ public class CsvGameDataProvider : IGameDataProvider
 
         [Index(2)] public string Name { get; set; }
 
-        [Index(3)] public byte Region { get; set; }
+        [Index(3)] public int DataCenter { get; set; }
 
-        [Index(4)] public byte UserType { get; set; }
+        [Index(5)] public byte UserType { get; set; }
 
-        [Index(5)] public int DataCenter { get; set; }
+        [Index(7)] public byte Region { get; set; }
 
-        [Index(6)] public bool IsPublic { get; set; }
+        [Index(9)] public bool IsPublic { get; set; }
     }
 
     private class CsvDc

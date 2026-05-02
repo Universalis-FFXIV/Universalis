@@ -251,7 +251,7 @@ public class BoilmasterGameDataProvider : IGameDataProvider
             .Select(dc => new DataCenter
             {
                 Name = dc.Fields.Name,
-                Region = Regions.Map[dc.Fields.Region],
+                Region = Regions.Map[dc.Fields.Region.RowId],
                 WorldIds = GetValidWorlds(worlds)
                     .Where(w => w.Fields.DataCenter.RowId == dc.RowId)
                     .Select(w => w.RowId)
@@ -325,6 +325,17 @@ public class BoilmasterGameDataProvider : IGameDataProvider
     private class ApiDataCenterFields
     {
         public string Name { get; set; } = string.Empty;
-        public byte Region { get; set; }
+        public ApiRegion Region { get; set; }
+    }
+
+    private class ApiRegion
+    {
+        [JsonPropertyName("row_id")] public byte RowId { get; set; }
+        public ApiRegionFields Fields { get; set; } = new();
+    }
+
+    private class ApiRegionFields
+    {
+        public string Name { get; set; } = string.Empty;
     }
 }
