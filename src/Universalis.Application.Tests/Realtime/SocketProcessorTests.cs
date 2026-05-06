@@ -133,6 +133,17 @@ public class SocketProcessorTests
         // Arrange
         var loggerMock = new Mock<ILogger<SocketProcessor>>();
         var webSocketMock = new Mock<WebSocket>();
+        // Keep the WebSocket "alive" for the duration of the assertion so the
+        // SocketClient's RunSocket loops do not complete and fire OnClose
+        // (which would race-remove the connection from _connections). For
+        // completeness, we simulate the reported state and blocking behavior
+        // of a real WebSocket connection in our mock.
+        webSocketMock.SetupGet(w => w.State).Returns(WebSocketState.Open);
+        var receiveBlocker = new TaskCompletionSource<WebSocketReceiveResult>();
+        webSocketMock
+            .Setup(w => w.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<CancellationToken>()))
+            .Returns(receiveBlocker.Task);
+
         var taskCompletionSource = new TaskCompletionSource<object>();
         var cancellationToken = new CancellationToken();
 
@@ -152,6 +163,6 @@ public class SocketProcessorTests
 
         // Verify callbacks and methods
         Assert.NotNull(client);
-        Assert.False(client.Running);
+        Assert.True(client.Running);
     }
 }

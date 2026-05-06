@@ -1,12 +1,13 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.IO;
-using Priority_Queue;
 using Prometheus;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -14,19 +15,37 @@ using Universalis.Application.Realtime.Messages;
 
 namespace Universalis.Application.Realtime;
 
-public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger logger)
+public class SocketClient(
+    WebSocket ws,
+    TaskCompletionSource<object> cs,
+    ILogger logger,
+    int capacity = SocketClient.DefaultCapacity)
     : ISocketClient
 {
-    private const int QueueLimit = 30;
+    /// <summary>
+    /// Default outbound buffer capacity per client. Chosen to absorb roughly
+    /// ~18 seconds of burst traffic at the steady-state per-client send rate
+    /// currently (5/5/2026) observed in production of ~28msg/s. This hopefully
+    /// avoids transient slow-client TCP backpressure silently dropping messages.
+    /// </summary>
+    public const int DefaultCapacity = 512;
 
     private static readonly RecyclableMemoryStreamManager MemoryStreamPool = new();
 
-    private readonly SimplePriorityQueue<SocketMessage, long> _messages = new();
+    private readonly Channel<SocketMessage> _channel = Channel.CreateBounded<SocketMessage>(
+        new BoundedChannelOptions(capacity)
+        {
+            FullMode = BoundedChannelFullMode.DropOldest,
+            SingleReader = true,
+            SingleWriter = false,
+        });
+
     private readonly object _runningLock = true;
 
     private readonly List<EventCondition> _conditions = [];
 
-    private SemaphoreSlim _recv;
+    /// <summary>0 = healthy; 1 = had a drop and not yet recovered.</summary>
+    private long _slowClientFlag;
 
     public Action OnClose { get; set; }
     public bool Running { get; private set; }
@@ -34,58 +53,77 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
     private static readonly Histogram DiscardedMessages =
         Metrics.CreateHistogram("universalis_ws_discarded_messages", "WebSocket Discarded Messages");
 
+    /// <summary>
+    /// Per-client outbound buffer depth observed on each enqueue. Lets us see
+    /// how full client queues are running across the fleet without high-cardinality
+    /// per-client labels.
+    /// </summary>
+    private static readonly Histogram QueueDepthMetric =
+        Metrics.CreateHistogram(
+            "universalis_ws_client_queue_depth",
+            "Per-client outbound queue depth observed at enqueue time",
+            new HistogramConfiguration
+            {
+                Buckets = [0, 1, 2, 4, 8, 16, 32, 64, 128, 192, 256, 320, 384, 448, 480, 504, 512],
+            });
+
+    /// <summary>
+    /// Wall time of each ws.SendAsync call. If this gets slow then we have backpressure.
+    /// </summary>
+    private static readonly Histogram SendLatencyMetric =
+        Metrics.CreateHistogram(
+            "universalis_ws_send_latency_milliseconds",
+            "Per-message WebSocket.SendAsync latency in milliseconds",
+            new HistogramConfiguration
+            {
+                Buckets = [.1, .25, .5, 1, 2.5, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000],
+            });
+
+    /// <summary>Current outbound buffer depth. Exposed for tests and metrics inspection.</summary>
+    internal int QueueDepth => _channel.Reader.Count;
+
+    /// <summary>Configured outbound buffer capacity.</summary>
+    internal int Capacity => capacity;
+
+    /// <summary>
+    /// Test-only hook: drain a single message without running the WebSocket loop.
+    /// Behaves like <see cref="ChannelReader{T}.TryRead"/>.
+    /// </summary>
+    internal bool TryDequeueForTesting(out SocketMessage message) =>
+        _channel.Reader.TryRead(out message);
+
     public void Push(SocketMessage message)
     {
         // Check if this socket is expecting this kind of message. If the
-        // client hasn't subscribed to any channels, this will not send
+        // client hasn't subscribed to any channels, this will not enqueue
         // any messages.
         if (!_conditions.Any(cond => cond.ShouldSend(message)))
         {
             return;
         }
 
-        _messages.Enqueue(message, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+        // BoundedChannelFullMode.DropOldest evicts the oldest item when the
+        // buffer is already at capacity. We detect this with a snapshot read
+        // immediately before the write - racy with other concurrent producers
+        // under heavy contention, but the worst case is small over/under-count
+        // in the discard metric, which is acceptable for a monitoring signal.
+        var willDrop = _channel.Reader.Count >= capacity;
 
-        // We keep an incrementing count of discarded messages because
-        // the consumer can still pull messages off while we're removing
-        // them.
-        var discarded = 0;
-        while (_messages.Count > QueueLimit)
+        _channel.Writer.TryWrite(message);
+        QueueDepthMetric.Observe(_channel.Reader.Count);
+
+        if (willDrop)
         {
-            // We don't want backlog to create memory issues, but this shouldn't happen
-            // on most connections anyways.
-            if (_messages.TryDequeue(out _))
+            DiscardedMessages.Observe(1);
+
+            // Log only the first drop after a recovery so a sustained slow client
+            // doesn't spam logs once per dropped message.
+            if (Interlocked.Exchange(ref _slowClientFlag, 1) == 0)
             {
-                discarded++;
+                logger.LogWarning(
+                    "WebSocket client queue overflowed (capacity={Capacity}); dropping oldest messages",
+                    capacity);
             }
-        }
-
-        if (discarded > 0)
-        {
-            DiscardedMessages.Observe(discarded);
-        }
-
-        // Release the semaphore, if applicable
-        if (_recv?.CurrentCount != 0)
-        {
-            return;
-        }
-
-        try
-        {
-            _recv?.Release();
-        }
-        catch (ObjectDisposedException)
-        {
-            logger.LogWarning("Semaphore is disposed");
-        }
-        catch (SemaphoreFullException)
-        {
-            logger.LogWarning("Semaphore is full");
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Semaphore release failed for an unknown reason");
         }
     }
 
@@ -104,12 +142,30 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
             Running = true;
         }
 
-        // Create a blocked semaphore with one consumer
-        _recv = new SemaphoreSlim(0, 1);
+        using var inboundCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         try
         {
-            // Run the outbound and inbound data loops
-            await Task.WhenAny(OutboundLoop(cancellationToken), InboundLoop(cancellationToken));
+            var outbound = OutboundLoop(cancellationToken);
+            var inbound = InboundLoop(inboundCts.Token);
+
+            // Wait for either loop to finish, then gracefully unwind the other:
+            //  - if inbound finished first, complete the writer so outbound drains
+            //    remaining buffered messages and exits cleanly;
+            //  - if outbound finished first (typically an exception), cancel inbound.
+            await Task.WhenAny(outbound, inbound);
+
+            _channel.Writer.TryComplete();
+            await inboundCts.CancelAsync();
+
+            try
+            {
+                await Task.WhenAll(outbound, inbound);
+            }
+            catch
+            {
+                // Both loops swallow expected cancellations internally; anything that
+                // bubbles here we ignore so it doesn't shadow the close path below.
+            }
 
             if (ws.State is WebSocketState.Open or WebSocketState.CloseReceived or WebSocketState.CloseSent)
             {
@@ -125,10 +181,10 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
         }
         finally
         {
+            // ensure the writer completed even if we threw before the explicit completion above
+            _channel.Writer.TryComplete();
             OnClose?.Invoke();
             cs.TrySetResult(true);
-            _recv.Dispose();
-            _recv = null;
         }
 
         lock (_runningLock)
@@ -137,23 +193,43 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
         }
     }
 
-    private async Task OutboundLoop(CancellationToken cancellationToken = default)
+    private async Task OutboundLoop(CancellationToken cancellationToken)
     {
-        while (!cancellationToken.IsCancellationRequested && ws.State == WebSocketState.Open)
+        var reader = _channel.Reader;
+        try
         {
-            // Wait for data to be made available
-            await _recv.WaitAsync(cancellationToken);
-
-            while (_messages.TryDequeue(out var message))
+            await foreach (var message in reader.ReadAllAsync(cancellationToken))
             {
-                // So long as there's at least one await in this while loop,
-                // it shouldn't block other threads.
-                await SendEvent(message, cancellationToken);
+                if (ws.State != WebSocketState.Open)
+                {
+                    break;
+                }
+
+                var sw = Stopwatch.StartNew();
+                try
+                {
+                    await SendEvent(message, cancellationToken);
+                }
+                finally
+                {
+                    sw.Stop();
+                    SendLatencyMetric.Observe(sw.Elapsed.TotalMilliseconds);
+                }
+
+                // queue fully drained; client caught up.
+                if (reader.Count == 0 && Interlocked.Exchange(ref _slowClientFlag, 0) == 1)
+                {
+                    logger.LogInformation("WebSocket client queue recovered");
+                }
             }
+        }
+        catch (OperationCanceledException)
+        {
+            // expected on shutdown
         }
     }
 
-    private async Task InboundLoop(CancellationToken cancellationToken = default)
+    private async Task InboundLoop(CancellationToken cancellationToken)
     {
         // Limit inbound message size to 1KB
         var buf = new byte[1024];
@@ -274,7 +350,7 @@ public class SocketClient(WebSocket ws, TaskCompletionSource<object> cs, ILogger
 
     public void Dispose()
     {
-        _recv?.Dispose();
+        _channel.Writer.TryComplete();
         GC.SuppressFinalize(this);
     }
 }
