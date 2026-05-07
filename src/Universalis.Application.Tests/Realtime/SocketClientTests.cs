@@ -169,18 +169,78 @@ public class SocketClientTests
             Times.Once);
     }
 
+    [Fact]
+    public async Task Watchdog_QueueStuckBeyondTimeout_AbortsConnection()
+    {
+        // When SendAsync is parked on TCP backpressure, the per-client
+        // outbound queue saturates and the slow-client flag stays set.
+        // The watchdog flag holds for >= stuckTimeout and we call ws.Abort()
+        // so the pending send unwinds and the connection slot is freed.
+        var fakeWs = new FakeWebSocket { BlockSends = true };
+        var cs = new TaskCompletionSource<object>();
+        var stuckTimeout = TimeSpan.FromMilliseconds(200);
+        var client = new SocketClient(
+            fakeWs,
+            cs,
+            NullLogger.Instance,
+            capacity: 4,
+            stuckTimeout: stuckTimeout);
+        SubscribeToAll(client);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var runTask = client.RunSocket(cts.Token);
+
+        // Overflow capacity so _slowClientFlag flips to 1. With BlockSends
+        // the OutboundLoop is parked on the first send and cannot drain.
+        for (var i = 0; i < 10; i++)
+        {
+            client.Push(new MockMessage("test") { Value = i });
+        }
+
+        // Watchdog should fire within stuckTimeout + scheduling grace.
+        await fakeWs.WaitForAbortAsync(TimeSpan.FromSeconds(3));
+
+        Assert.Equal(WebSocketState.Aborted, fakeWs.State);
+
+        await cts.CancelAsync();
+        try { await runTask; } catch { /* expected */ }
+    }
+
     private sealed class FakeWebSocket : WebSocket
     {
         private readonly List<byte[]> _sent = new();
         private readonly object _sentLock = new();
         private WebSocketState _state = WebSocketState.Open;
 
+        // Fires when SendAsync is called with BlockSends = true. Faulted by
+        // Abort() to simulate the underlying socket teardown causing the
+        // pending send to throw WebSocketException.
+        private readonly TaskCompletionSource _blockedSendTcs =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        // Fires the first time Abort() is called.
+        private readonly TaskCompletionSource _abortTcs =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        /// <summary>
+        /// When true, SendAsync parks until Abort() is called or the
+        /// supplied cancellationToken fires. Simulates a peer that has stopped
+        /// acking and stalls the kernel send buffer indefinitely.
+        /// </summary>
+        public bool BlockSends { get; init; }
+
         public override WebSocketCloseStatus? CloseStatus => null;
         public override string CloseStatusDescription => null;
         public override WebSocketState State => _state;
         public override string SubProtocol => null;
 
-        public override void Abort() { _state = WebSocketState.Aborted; }
+        public override void Abort()
+        {
+            _state = WebSocketState.Aborted;
+            _blockedSendTcs.TrySetException(
+                new WebSocketException(WebSocketError.ConnectionClosedPrematurely));
+            _abortTcs.TrySetResult();
+        }
 
         public override Task CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken cancellationToken)
         {
@@ -199,15 +259,22 @@ public class SocketClientTests
             throw new InvalidOperationException("unreachable");
         }
 
-        public override Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken)
+        public override async Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken)
         {
+            if (BlockSends)
+            {
+                await using var registration = cancellationToken.Register(
+                    () => _blockedSendTcs.TrySetCanceled(cancellationToken));
+                await _blockedSendTcs.Task;
+                return;
+            }
+
             var copy = new byte[buffer.Count];
             Buffer.BlockCopy(buffer.Array!, buffer.Offset, copy, 0, buffer.Count);
             lock (_sentLock)
             {
                 _sent.Add(copy);
             }
-            return Task.CompletedTask;
         }
 
         public async Task WaitForSendsAsync(int n, TimeSpan timeout)
@@ -222,6 +289,15 @@ public class SocketClientTests
                 await Task.Delay(10);
             }
             throw new TimeoutException($"expected {n} sends within {timeout}; only saw {_sent.Count}");
+        }
+
+        public async Task WaitForAbortAsync(TimeSpan timeout)
+        {
+            var completed = await Task.WhenAny(_abortTcs.Task, Task.Delay(timeout));
+            if (completed != _abortTcs.Task)
+            {
+                throw new TimeoutException($"Abort() not called within {timeout}");
+            }
         }
     }
 }
