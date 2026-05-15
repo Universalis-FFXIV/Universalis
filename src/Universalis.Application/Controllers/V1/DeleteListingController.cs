@@ -51,7 +51,9 @@ public class DeleteListingController : WorldDcRegionControllerBase
     [Route("{world}/{itemId}/delete")]
     [ApiExplorerSettings(IgnoreApi = true)]
     public async Task<IActionResult> Post(int itemId, string world, [FromHeader] string authorization,
-        [FromBody] DeleteListingParameters parameters, CancellationToken cancellationToken = default)
+        [FromBody] DeleteListingParameters parameters,
+        [FromHeader(Name = "User-Agent")] string userAgent = "",
+        CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("DeleteListingControllerV1.Post");
         activity?.AddTag("itemId", itemId);
@@ -125,6 +127,19 @@ public class DeleteListingController : WorldDcRegionControllerBase
 
         await _currentlyShownDb.Update(itemData, query, cts.Token);
 
+        await _uploadLogDb.LogAction(new UploadLogEntry
+        {
+            Id = Guid.CreateVersion7(),
+            Timestamp = DateTime.UtcNow,
+            Event = "DeleteListing",
+            Application = source.Name,
+            WorldId = worldDc.WorldId,
+            ItemId = itemId,
+            Listings = 1,
+            Sales = 0,
+            UserAgent = string.IsNullOrWhiteSpace(userAgent) ? null : userAgent,
+        });
+
         _sockets.Publish(new ListingsRemove
         {
             WorldId = query.WorldId,
@@ -140,8 +155,10 @@ public class DeleteListingController : WorldDcRegionControllerBase
     [Route("v{version:apiVersion}/{world}/{itemId}/delete")]
     [ApiExplorerSettings(IgnoreApi = true)]
     public Task<IActionResult> PostV2(int itemId, string world, [FromHeader] string authorization,
-        [FromBody] DeleteListingParameters parameters, CancellationToken cancellationToken = default)
+        [FromBody] DeleteListingParameters parameters,
+        [FromHeader(Name = "User-Agent")] string userAgent = "",
+        CancellationToken cancellationToken = default)
     {
-        return Post(itemId, world, authorization, parameters, cancellationToken);
+        return Post(itemId, world, authorization, parameters, userAgent, cancellationToken);
     }
 }

@@ -48,9 +48,12 @@ public class UploadController : ControllerBase
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Post(string apiKey, [FromBody] UploadParameters parameters,
+        [FromHeader(Name = "User-Agent")] string userAgent = "",
         CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("UploadControllerV1.Post");
+
+        parameters.UserAgent = userAgent;
 
         if (parameters.WorldId != null)
         {

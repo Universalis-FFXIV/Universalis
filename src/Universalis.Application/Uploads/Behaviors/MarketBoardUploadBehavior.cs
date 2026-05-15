@@ -11,8 +11,10 @@ using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
 using Universalis.DbAccess.MarketBoard;
 using Universalis.DbAccess.Queries.MarketBoard;
+using Universalis.DbAccess.Uploads;
 using Universalis.Entities.AccessControl;
 using Universalis.Entities.MarketBoard;
+using Universalis.Entities.Uploads;
 using Universalis.GameData;
 using Listing = Universalis.Entities.MarketBoard.Listing;
 using Materia = Universalis.Entities.Materia;
@@ -24,6 +26,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
 {
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IHistoryDbAccess _historyDb;
+    private readonly IUploadLogDbAccess _uploadLogDb;
     private readonly IGameDataProvider _gdp;
     private readonly IBus _bus;
     private readonly ILogger<MarketBoardUploadBehavior> _logger;
@@ -31,12 +34,14 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     public MarketBoardUploadBehavior(
         ICurrentlyShownDbAccess currentlyShownDb,
         IHistoryDbAccess historyDb,
+        IUploadLogDbAccess uploadLogDb,
         IGameDataProvider gdp,
         IBus bus,
         ILogger<MarketBoardUploadBehavior> logger)
     {
         _currentlyShownDb = currentlyShownDb;
         _historyDb = historyDb;
+        _uploadLogDb = uploadLogDb;
         _gdp = gdp;
         _bus = bus;
         _logger = logger;
@@ -84,28 +89,63 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         activity?.AddTag("worldId", worldId);
         activity?.AddTag("itemId", itemId);
 
+        var uploadedListingsCount = parameters.Listings?.Count ?? 0;
+        var uploadedSalesCount = parameters.Sales?.Count ?? 0;
+        var userAgent = NormalizeUserAgent(parameters.UserAgent);
+
+        await LogUploadEvent("MarketBoardUpload", source, worldId, itemId, uploadedListingsCount, uploadedSalesCount, userAgent);
+
         if (parameters.Sales != null)
         {
             if (parameters.Sales.Any(s =>
                     Util.HasHtmlTags(s.BuyerName) || Util.HasHtmlTags(s.SellerId) || Util.HasHtmlTags(s.BuyerId)))
             {
+                await LogUploadEvent("SalesUploadMalformed", source, worldId, itemId, uploadedListingsCount, uploadedSalesCount, userAgent);
                 return new BadRequestResult();
             }
 
-            await HandleSales(parameters.Sales, itemId, worldId, parameters.UploaderId, cancellationToken);
+            var addedSalesCount = await HandleSales(parameters.Sales, itemId, worldId, parameters.UploaderId, cancellationToken);
+            await LogUploadEvent("SalesUploadSuccess", source, worldId, itemId, uploadedListingsCount, addedSalesCount, userAgent);
         }
 
         if (parameters.Listings != null)
         {
             if (parameters.Listings.Any(IsInvalid))
             {
+                await LogUploadEvent("ListingsUploadMalformed", source, worldId, itemId, uploadedListingsCount, uploadedSalesCount, userAgent);
                 return new BadRequestResult();
             }
 
-            await HandleListings(parameters.Listings, itemId, worldId, source, cancellationToken);
+            var newListingsCount = await HandleListings(parameters.Listings, itemId, worldId, source, cancellationToken);
+            await LogUploadEvent("ListingsUploadSuccess", source, worldId, itemId, newListingsCount, uploadedSalesCount, userAgent);
         }
 
         return null;
+    }
+
+    private static string NormalizeUserAgent(string userAgent)
+    {
+        return string.IsNullOrWhiteSpace(userAgent) ? null : userAgent;
+    }
+
+    private Task LogUploadEvent(string @event, ApiKey source, int worldId, int itemId, int listings, int sales, string userAgent)
+    {
+        // Version-7 Guids embed a millisecond timestamp in the high bits, so
+        // batch inserts hit sequential B-tree leaf pages instead of random
+        // ones - the same write-amplification problem that motivated this
+        // feature's earlier disablement in PR #1302.
+        return _uploadLogDb.LogAction(new UploadLogEntry
+        {
+            Id = Guid.CreateVersion7(),
+            Timestamp = DateTime.UtcNow,
+            Event = @event,
+            Application = source.Name,
+            WorldId = worldId,
+            ItemId = itemId,
+            Listings = listings,
+            Sales = sales,
+            UserAgent = userAgent,
+        });
     }
 
     private static bool IsInvalid(Schema.Listing l)
@@ -115,7 +155,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                Util.HasHtmlTags(l.CreatorId);
     }
 
-    private async Task HandleListings(IList<Schema.Listing> uploadedListings, int itemId, int worldId,
+    private async Task<int> HandleListings(IList<Schema.Listing> uploadedListings, int itemId, int worldId,
         ApiKey source, CancellationToken cancellationToken = default)
     {
         var newListings = CleanUploadedListings(uploadedListings, itemId, worldId, source.Name);
@@ -136,6 +176,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             WorldId = worldId,
             ItemId = itemId,
         }, cancellationToken);
+
+        return newListings.Count;
     }
 
     private async Task PublishListingsToMessageBus(IList<Listing> listings, int worldId, int itemId,
@@ -191,7 +233,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         }
     }
 
-    private async Task HandleSales(IList<Schema.Sale> uploadedSales, int itemId, int worldId, string uploaderId,
+    private async Task<int> HandleSales(IList<Schema.Sale> uploadedSales, int itemId, int worldId, string uploaderId,
         CancellationToken cancellationToken = default)
     {
         var cleanSales = CleanUploadedSales(uploadedSales, worldId, itemId, uploaderId);
@@ -228,6 +270,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         }
 
         _ = PublishSalesToMessageBus(addedSales, itemId, worldId, cancellationToken);
+
+        return addedSales.Count;
     }
 
     private async Task PublishSalesToMessageBus(IList<Sale> sales, int itemId, int worldId,

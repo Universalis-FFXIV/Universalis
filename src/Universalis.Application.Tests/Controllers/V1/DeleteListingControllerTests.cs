@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1;
@@ -96,6 +97,67 @@ public class DeleteListingControllerTests
 
         var toRemoveIndex = updatedDocument.Listings.IndexOf(toRemove);
         Assert.Equal(-1, toRemoveIndex);
+    }
+
+    [Fact]
+    public async Task Controller_Post_Logs_DeleteListing_OnSuccessfulDelete()
+    {
+        var test = TestResources.Create();
+
+        const string key = "blah";
+        using (var sha512 = SHA512.Create())
+        {
+            var hash = Util.Hash(sha512, key);
+            await test.TrustedSources.Create(new ApiKey(hash, "something", true));
+        }
+
+        var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
+        await test.CurrentlyShown.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+
+        var toRemove = document.Listings[0];
+
+        await test.Controller.Post(document.ItemId, document.WorldId.ToString(), key, new DeleteListingParameters
+        {
+            ListingId = toRemove.ListingId,
+            PricePerUnit = toRemove.PricePerUnit,
+            Quantity = toRemove.Quantity,
+            RetainerId = toRemove.RetainerId,
+            UploaderId = "FB",
+        }, userAgent: "Universalis/1.0 Dalamud");
+
+        var logged = ((MockUploadLogDbAccess)test.UploadLog).LoggedActions;
+        var entry = Assert.Single(logged.Where(e => e.Event == "DeleteListing"));
+        Assert.Equal("something", entry.Application);
+        Assert.Equal(74, entry.WorldId);
+        Assert.Equal(5333, entry.ItemId);
+        Assert.Equal(1, entry.Listings);
+        Assert.Equal(0, entry.Sales);
+        Assert.Equal("Universalis/1.0 Dalamud", entry.UserAgent);
+    }
+
+    [Fact]
+    public async Task Controller_Post_DoesNotLog_DeleteListing_WhenNoMatchingListing()
+    {
+        var test = TestResources.Create();
+
+        const string key = "blah";
+        using (var sha512 = SHA512.Create())
+        {
+            var hash = Util.Hash(sha512, key);
+            await test.TrustedSources.Create(new ApiKey(hash, "something", true));
+        }
+
+        await test.Controller.Post(5333, 74.ToString(), key, new DeleteListingParameters
+        {
+            ListingId = "95448465132123465",
+            PricePerUnit = 300,
+            Quantity = 76,
+            RetainerId = "84984654567658768",
+            UploaderId = "ffff",
+        });
+
+        var logged = ((MockUploadLogDbAccess)test.UploadLog).LoggedActions;
+        Assert.DoesNotContain(logged, e => e.Event == "DeleteListing");
     }
 
     [Fact]

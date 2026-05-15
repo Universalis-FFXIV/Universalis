@@ -6,6 +6,7 @@ using EasyCaching.InMemory;
 using FluentMigrator.Runner;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Npgsql;
 using StackExchange.Redis;
 using Universalis.DbAccess.AccessControl;
@@ -113,7 +114,13 @@ public static class DbAccessExtensions
         sc.AddSingleton<IPersistentRedisMultiplexer>(_ => new WrappedRedisMultiplexer(db));
 
         sc.AddSingleton<IUploadLogStore, UploadLogStore>();
-        sc.AddSingleton<IUploadLogDbAccess, UploadLogDbAccess>();
+
+        // UploadLogDbAccess is a batching wrapper that doubles as a hosted service:
+        // the request path calls LogAction (channel write only), and the hosted-service
+        // background loop drains the channel into the store in batches.
+        sc.AddSingleton<UploadLogDbAccess>();
+        sc.AddSingleton<IUploadLogDbAccess>(sp => sp.GetRequiredService<UploadLogDbAccess>());
+        sc.AddSingleton<IHostedService>(sp => sp.GetRequiredService<UploadLogDbAccess>());
 
         sc.AddSingleton<IListingStore, ListingStore>();
 

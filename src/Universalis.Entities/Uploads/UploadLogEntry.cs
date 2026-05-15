@@ -19,4 +19,6 @@ public class UploadLogEntry
     public int Listings { get; init; }
 
     public int Sales { get; init; }
+
+    public string UserAgent { get; init; }
 }

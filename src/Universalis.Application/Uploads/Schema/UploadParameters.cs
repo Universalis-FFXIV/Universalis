@@ -42,4 +42,9 @@ public class UploadParameters
 
     [JsonPropertyName("characterName")]
     public string CharacterName { get; set; }
+
+    // Populated server-side from the HTTP User-Agent header; not part of the
+    // upload body. JsonIgnore so a hostile client cannot spoof it via JSON.
+    [JsonIgnore]
+    public string UserAgent { get; set; }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Universalis.Application.Realtime;
+using System.Linq;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
@@ -38,7 +39,7 @@ public class MarketBoardUploadBehaviorTests
             var gameData = new MockGameDataProvider();
             var uploadLog = new MockUploadLogDbAccess();
             var logger = new LogFixture<MarketBoardUploadBehavior>();
-            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, gameData, null, logger);
+            var behavior = new MarketBoardUploadBehavior(currentlyShownDb, historyDb, uploadLog, gameData, null, logger);
 
             return new TestResources
             {
@@ -457,6 +458,238 @@ public class MarketBoardUploadBehaviorTests
         });
 
         Assert.All(history.Sales, listing => Assert.False(listing.WorldId == 0));
+    }
+
+    [Fact]
+    public async Task Behavior_Logs_ListingsUploadSuccess_OnValidListings()
+    {
+        var test = TestResources.Create();
+        var stackSize = test.GameData.MarketableItemStackSizes()[5333];
+        var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
+
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Listings = listings,
+            UploaderId = "5627384655756342554",
+        };
+
+        await test.Behavior.Execute(source, upload);
+
+        var logged = ((MockUploadLogDbAccess)test.UploadLog).LoggedActions;
+        var entry = Assert.Single(logged.Where(e => e.Event == "ListingsUploadSuccess"));
+        Assert.Equal("something", entry.Application);
+        Assert.Equal(74, entry.WorldId);
+        Assert.Equal(5333, entry.ItemId);
+        Assert.Equal(listings.Count, entry.Listings);
+    }
+
+    [Fact]
+    public async Task Behavior_Logs_SalesUploadSuccess_OnValidSales()
+    {
+        var test = TestResources.Create();
+        var stackSize = test.GameData.MarketableItemStackSizes()[5333];
+        var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
+
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Sales = sales,
+            UploaderId = "5627384655756342554",
+        };
+
+        await test.Behavior.Execute(source, upload);
+
+        var logged = ((MockUploadLogDbAccess)test.UploadLog).LoggedActions;
+        var entry = Assert.Single(logged.Where(e => e.Event == "SalesUploadSuccess"));
+        Assert.Equal("something", entry.Application);
+        Assert.Equal(74, entry.WorldId);
+        Assert.Equal(5333, entry.ItemId);
+        Assert.Equal(sales.Count, entry.Sales);
+    }
+
+    [Fact]
+    public async Task Behavior_Logs_SalesUploadMalformed_OnHtmlInSales()
+    {
+        var test = TestResources.Create();
+        var stackSize = test.GameData.MarketableItemStackSizes()[5333];
+        var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
+        sales[0] = new Sale
+        {
+            BuyerName = "<script>alert('pwned')</script>",
+            Hq = sales[0].Hq,
+            OnMannequin = sales[0].OnMannequin,
+            PricePerUnit = sales[0].PricePerUnit,
+            Quantity = sales[0].Quantity,
+            SellerId = sales[0].SellerId,
+            BuyerId = sales[0].BuyerId,
+            TimestampUnixSeconds = sales[0].TimestampUnixSeconds,
+        };
+
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Sales = sales,
+            UploaderId = "5627384655756342554",
+        };
+
+        await test.Behavior.Execute(source, upload);
+
+        var logged = ((MockUploadLogDbAccess)test.UploadLog).LoggedActions;
+        var entry = Assert.Single(logged.Where(e => e.Event == "SalesUploadMalformed"));
+        Assert.Equal("something", entry.Application);
+        Assert.Equal(74, entry.WorldId);
+        Assert.Equal(5333, entry.ItemId);
+        Assert.DoesNotContain(logged, e => e.Event == "SalesUploadSuccess");
+    }
+
+    [Fact]
+    public async Task Behavior_Logs_ListingsUploadMalformed_OnHtmlInListings()
+    {
+        var test = TestResources.Create();
+        var stackSize = test.GameData.MarketableItemStackSizes()[5333];
+        var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
+        listings[0] = new Listing
+        {
+            ListingId = listings[0].ListingId,
+            Hq = listings[0].Hq,
+            PricePerUnit = listings[0].PricePerUnit,
+            Quantity = listings[0].Quantity,
+            RetainerName = "<b>evil</b>",
+            RetainerId = listings[0].RetainerId,
+            RetainerCityId = listings[0].RetainerCityId,
+            CreatorName = listings[0].CreatorName,
+            OnMannequin = listings[0].OnMannequin,
+            SellerId = listings[0].SellerId,
+            CreatorId = listings[0].CreatorId,
+            DyeId = listings[0].DyeId,
+            LastReviewTimeUnixSeconds = listings[0].LastReviewTimeUnixSeconds,
+            Materia = listings[0].Materia,
+        };
+
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Listings = listings,
+            UploaderId = "5627384655756342554",
+        };
+
+        await test.Behavior.Execute(source, upload);
+
+        var logged = ((MockUploadLogDbAccess)test.UploadLog).LoggedActions;
+        var entry = Assert.Single(logged.Where(e => e.Event == "ListingsUploadMalformed"));
+        Assert.Equal("something", entry.Application);
+        Assert.Equal(74, entry.WorldId);
+        Assert.Equal(5333, entry.ItemId);
+        Assert.DoesNotContain(logged, e => e.Event == "ListingsUploadSuccess");
+    }
+
+    [Fact]
+    public async Task Behavior_LogsZero_ForMissingListingsOrSales()
+    {
+        var test = TestResources.Create();
+        var stackSize = test.GameData.MarketableItemStackSizes()[5333];
+        var (listings, _) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
+
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        var listingsOnlyUpload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Listings = listings,
+            UploaderId = "5627384655756342554",
+        };
+
+        await test.Behavior.Execute(source, listingsOnlyUpload);
+
+        var listingsOnlyLogged = ((MockUploadLogDbAccess)test.UploadLog).LoggedActions;
+        Assert.NotEmpty(listingsOnlyLogged);
+        Assert.All(listingsOnlyLogged, e => Assert.Equal(0, e.Sales));
+
+        var test2 = TestResources.Create();
+        var (_, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
+
+        var salesOnlyUpload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Sales = sales,
+            UploaderId = "5627384655756342554",
+        };
+
+        await test2.Behavior.Execute(source, salesOnlyUpload);
+
+        var salesOnlyLogged = ((MockUploadLogDbAccess)test2.UploadLog).LoggedActions;
+        Assert.NotEmpty(salesOnlyLogged);
+        Assert.All(salesOnlyLogged, e => Assert.Equal(0, e.Listings));
+    }
+
+    [Fact]
+    public async Task Behavior_Logs_UserAgent_FromUploadParameters()
+    {
+        var test = TestResources.Create();
+        var stackSize = test.GameData.MarketableItemStackSizes()[5333];
+        var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
+
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Listings = listings,
+            Sales = sales,
+            UploaderId = "5627384655756342554",
+            UserAgent = "Universalis/1.0 Dalamud",
+        };
+
+        await test.Behavior.Execute(source, upload);
+
+        var logged = ((MockUploadLogDbAccess)test.UploadLog).LoggedActions;
+        Assert.NotEmpty(logged);
+        Assert.All(logged, e => Assert.Equal("Universalis/1.0 Dalamud", e.UserAgent));
+    }
+
+    [Fact]
+    public async Task Behavior_Logs_MarketBoardUpload_OnEveryUpload()
+    {
+        var test = TestResources.Create();
+        var stackSize = test.GameData.MarketableItemStackSizes()[5333];
+        var (listings, sales) = SchemaSeedDataGenerator.GetUploadListingsAndSales(74, 5333, stackSize);
+
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Listings = listings,
+            Sales = sales,
+            UploaderId = "5627384655756342554",
+        };
+
+        await test.Behavior.Execute(source, upload);
+
+        var logged = ((MockUploadLogDbAccess)test.UploadLog).LoggedActions;
+        var entry = Assert.Single(logged.Where(e => e.Event == "MarketBoardUpload"));
+        Assert.Equal("something", entry.Application);
+        Assert.Equal(74, entry.WorldId);
+        Assert.Equal(5333, entry.ItemId);
+        Assert.Equal(listings.Count, entry.Listings);
+        Assert.Equal(sales.Count, entry.Sales);
     }
 
     [Fact]
