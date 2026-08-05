@@ -8,9 +8,9 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public interface IListingStore
 {
-    Task DeleteLive(ListingQuery query, CancellationToken cancellationToken = default);
+    Task DeleteLive(ListingQuery query, string retainedRetainerId = null, CancellationToken cancellationToken = default);
 
-    Task ReplaceLive(ICollection<Listing> listings, CancellationToken cancellationToken = default);
+    Task ReplaceLive(ICollection<Listing> listings, string retainedRetainerId = null, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<Listing>> RetrieveLive(ListingQuery query, CancellationToken cancellationToken = default);
 

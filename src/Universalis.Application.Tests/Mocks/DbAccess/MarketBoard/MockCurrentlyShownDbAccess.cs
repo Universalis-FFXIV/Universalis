@@ -32,8 +32,20 @@ public class MockCurrentlyShownDbAccess : ICurrentlyShownDbAccess
     }
 
     public async Task Update(CurrentlyShown document, CurrentlyShownQuery query,
-        CancellationToken cancellationToken = default)
+        string retainedRetainerId = null, CancellationToken cancellationToken = default)
     {
+        // When a retainer's listings are retained, the existing rows for that retainer survive, so
+        // we merge them into the stored document here to mirror that behavior.
+        if (!string.IsNullOrEmpty(retainedRetainerId))
+        {
+            var existing = await Retrieve(query, cancellationToken);
+            var kept = existing?.Listings
+                .Where(l => l.RetainerId == retainedRetainerId)
+                .Where(l => !document.Listings.Any(nl => nl.ListingId == l.ListingId))
+                .ToList() ?? new List<Listing>();
+            document.Listings.AddRange(kept);
+        }
+
         await Delete(query, cancellationToken);
         await Create(document);
     }

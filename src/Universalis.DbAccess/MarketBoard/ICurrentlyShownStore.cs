@@ -8,7 +8,7 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public interface ICurrentlyShownStore
 {
-    Task Insert(CurrentlyShown data, CancellationToken cancellationToken = default);
+    Task Insert(CurrentlyShown data, string retainedRetainerId = null, CancellationToken cancellationToken = default);
 
     Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default);
 
