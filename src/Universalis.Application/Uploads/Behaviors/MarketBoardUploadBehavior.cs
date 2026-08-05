@@ -116,7 +116,14 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 return new BadRequestResult();
             }
 
-            var newListingsCount = await HandleListings(parameters.Listings, itemId, worldId, source, cancellationToken);
+            if (!string.IsNullOrEmpty(parameters.UploaderRetainerId) &&
+                parameters.Listings.Any(l => l.RetainerId == parameters.UploaderRetainerId))
+            {
+                await LogUploadEvent("ListingsUploadMalformed", source, worldId, itemId, uploadedListingsCount, uploadedSalesCount, userAgent);
+                return new BadRequestResult();
+            }
+
+            var newListingsCount = await HandleListings(parameters.Listings, itemId, worldId, source, parameters.UploaderRetainerId, cancellationToken);
             await LogUploadEvent("ListingsUploadSuccess", source, worldId, itemId, newListingsCount, uploadedSalesCount, userAgent);
         }
 
@@ -156,9 +163,29 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     }
 
     private async Task<int> HandleListings(IList<Schema.Listing> uploadedListings, int itemId, int worldId,
-        ApiKey source, CancellationToken cancellationToken = default)
+        ApiKey source, string uploaderRetainerId = null, CancellationToken cancellationToken = default)
     {
         var newListings = CleanUploadedListings(uploadedListings, itemId, worldId, source.Name);
+        var uploadedCount = newListings.Count;
+
+        // Preserve existing listings owned by the specified retainer so they
+        // aren't removed when checking the market board from a retainer bell.
+        if (!string.IsNullOrEmpty(uploaderRetainerId))
+        {
+            var existing = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
+            {
+                WorldId = worldId,
+                ItemId = itemId,
+            }, cancellationToken);
+
+            var existingListings = existing?.Listings ?? new List<Listing>();
+            var retainedListings = existingListings
+                .Where(l => l.RetainerId == uploaderRetainerId)
+                .Where(l => !newListings.Any(nl => nl.ListingId == l.ListingId))
+                .ToList();
+
+            newListings.AddRange(retainedListings);
+        }
 
         _ = PublishListingsToMessageBus(newListings, worldId, itemId, cancellationToken);
 
@@ -177,7 +204,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             ItemId = itemId,
         }, cancellationToken);
 
-        return newListings.Count;
+        return uploadedCount;
     }
 
     private async Task PublishListingsToMessageBus(IList<Listing> listings, int worldId, int itemId,
@@ -354,7 +381,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     {
         var lastReviewTimeSeconds = l.LastReviewTimeUnixSeconds ?? 0;
         return lastReviewTimeSeconds == 0
-            ? DateTime.UtcNow 
+            ? DateTime.UtcNow
             : DateTimeOffset.FromUnixTimeSeconds(lastReviewTimeSeconds).UtcDateTime;
     }
 
