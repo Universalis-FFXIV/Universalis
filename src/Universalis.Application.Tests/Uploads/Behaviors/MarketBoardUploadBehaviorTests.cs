@@ -1,4 +1,5 @@
-﻿using System;
+using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Universalis.Application.Realtime;
@@ -723,5 +724,176 @@ public class MarketBoardUploadBehaviorTests
         });
 
         Assert.All(history.Sales, sale => Assert.False(sale.ItemId == 0));
+    }
+
+    private static Listing MakeListing(string listingId, string retainerId, int pricePerUnit, int quantity = 1)
+    {
+        return new Listing
+        {
+            ListingId = listingId,
+            RetainerId = retainerId,
+            RetainerName = "Retainer",
+            PricePerUnit = pricePerUnit,
+            Quantity = quantity,
+        };
+    }
+
+    [Fact]
+    public async Task Behavior_PreservesRetainerListings_WithUploaderRetainerId()
+    {
+        var test = TestResources.Create();
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        // Seed listings from three retainers
+        var seedUpload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            UploaderId = "uploader1",
+            Listings = new List<Listing>
+            {
+                MakeListing("l1", "retA", 1000),
+                MakeListing("l2", "retB", 2000),
+                MakeListing("l3", "retC", 3000),
+            },
+        };
+
+        Assert.True(test.Behavior.ShouldExecute(seedUpload));
+        Assert.Null(await test.Behavior.Execute(source, seedUpload));
+
+        // Second upload omits retA, but requests preservation via UploaderRetainerId
+        var secondUpload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            UploaderId = "uploader1",
+            UploaderRetainerId = "retA",
+            Listings = new List<Listing>
+            {
+                MakeListing("l2", "retB", 2000),
+                MakeListing("l3", "retC", 3000),
+            },
+        };
+
+        Assert.True(test.Behavior.ShouldExecute(secondUpload));
+        Assert.Null(await test.Behavior.Execute(source, secondUpload));
+
+        var currentlyShown = await test.CurrentlyShown.Retrieve(new CurrentlyShownQuery
+        {
+            WorldId = 74,
+            ItemId = 5333,
+        });
+
+        Assert.NotNull(currentlyShown);
+        var listingIds = currentlyShown.Listings.Select(l => l.ListingId).ToList();
+        Assert.Contains("l1", listingIds); // preserved from retA
+        Assert.Contains("l2", listingIds);
+        Assert.Contains("l3", listingIds);
+    }
+
+    [Fact]
+    public async Task Behavior_RemovesNonUploadedListings_WithoutUploaderRetainerId()
+    {
+        var test = TestResources.Create();
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        var seedUpload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            UploaderId = "uploader1",
+            Listings = new List<Listing>
+            {
+                MakeListing("l1", "retA", 1000),
+                MakeListing("l2", "retB", 2000),
+                MakeListing("l3", "retC", 3000),
+            },
+        };
+
+        await test.Behavior.Execute(source, seedUpload);
+
+        // Second upload omits retA, no preservation requested
+        var secondUpload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            UploaderId = "uploader1",
+            Listings = new List<Listing>
+            {
+                MakeListing("l2", "retB", 2000),
+                MakeListing("l3", "retC", 3000),
+            },
+        };
+
+        await test.Behavior.Execute(source, secondUpload);
+
+        var currentlyShown = await test.CurrentlyShown.Retrieve(new CurrentlyShownQuery
+        {
+            WorldId = 74,
+            ItemId = 5333,
+        });
+
+        Assert.NotNull(currentlyShown);
+        var listingIds = currentlyShown.Listings.Select(l => l.ListingId).ToList();
+        Assert.DoesNotContain("l1", listingIds); // removed by full-replace
+        Assert.Contains("l2", listingIds);
+        Assert.Contains("l3", listingIds);
+    }
+
+    [Fact]
+    public async Task Behavior_RejectsUpload_WhenRetainerListingAlsoUploaded()
+    {
+        var test = TestResources.Create();
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        var seedUpload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            UploaderId = "uploader1",
+            Listings = new List<Listing>
+            {
+                MakeListing("l1", "retA", 1000),
+            },
+        };
+
+        await test.Behavior.Execute(source, seedUpload);
+
+        var loggedBeforeReject = ((MockUploadLogDbAccess)test.UploadLog).LoggedActions.Count;
+
+        // Upload retA's listing again while requesting preservation — contract violation
+        var secondUpload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            UploaderId = "uploader1",
+            UploaderRetainerId = "retA",
+            Listings = new List<Listing>
+            {
+                MakeListing("l1", "retA", 1000),
+            },
+        };
+
+        var result = await test.Behavior.Execute(source, secondUpload);
+
+        Assert.NotNull(result);
+        Assert.IsType<BadRequestResult>(result);
+
+        // Only check logs from the rejected upload
+        var logged = ((MockUploadLogDbAccess)test.UploadLog).LoggedActions
+            .Skip(loggedBeforeReject)
+            .ToList();
+        Assert.Contains(logged, e => e.Event == "ListingsUploadMalformed");
+        Assert.DoesNotContain(logged, e => e.Event == "ListingsUploadSuccess");
+
+        // Existing data untouched
+        var currentlyShown = await test.CurrentlyShown.Retrieve(new CurrentlyShownQuery
+        {
+            WorldId = 74,
+            ItemId = 5333,
+        });
+
+        Assert.NotNull(currentlyShown);
+        Assert.Single(currentlyShown.Listings);
     }
 }

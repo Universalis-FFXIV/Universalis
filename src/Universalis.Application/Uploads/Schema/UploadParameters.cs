@@ -15,6 +15,17 @@ public class UploadParameters
         set => UploaderIdInternal = value;
     }
 
+    [JsonPropertyName("uploaderRetainerID")]
+    public object UploaderRetainerIdInternal { get; set; }
+
+    [JsonIgnore]
+    public string UploaderRetainerId
+    {
+        get => Util.ParseUnusualId(UploaderRetainerIdInternal);
+        set => UploaderRetainerIdInternal = value;
+    }
+
+
     [JsonPropertyName("worldID")]
     public int? WorldId { get; set; }
 
