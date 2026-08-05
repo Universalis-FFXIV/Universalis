@@ -33,7 +33,7 @@ public class CurrentlyShownDbAccessTests
             })).Where(cs => cs is not null));
         }
 
-        public Task Insert(CurrentlyShown data, CancellationToken cancellationToken = default)
+        public Task Insert(CurrentlyShown data, string retainedRetainerId = null, CancellationToken cancellationToken = default)
         {
             _currentlyShown[(data.WorldId, data.ItemId)] = data;
             return Task.CompletedTask;

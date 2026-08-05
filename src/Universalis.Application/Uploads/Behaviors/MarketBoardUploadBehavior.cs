@@ -168,26 +168,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var newListings = CleanUploadedListings(uploadedListings, itemId, worldId, source.Name);
         var uploadedCount = newListings.Count;
 
-        // Preserve existing listings owned by the specified retainer so they
-        // aren't removed when checking the market board from a retainer bell.
-        if (!string.IsNullOrEmpty(uploaderRetainerId))
-        {
-            var existing = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
-            {
-                WorldId = worldId,
-                ItemId = itemId,
-            }, cancellationToken);
-
-            var existingListings = existing?.Listings ?? new List<Listing>();
-            var retainedListings = existingListings
-                .Where(l => l.RetainerId == uploaderRetainerId)
-                .Where(l => !newListings.Any(nl => nl.ListingId == l.ListingId))
-                .ToList();
-
-            newListings.AddRange(retainedListings);
-        }
-
-        _ = PublishListingsToMessageBus(newListings, worldId, itemId, cancellationToken);
+        _ = PublishListingsToMessageBus(newListings, worldId, itemId, uploaderRetainerId, cancellationToken);
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var document = new CurrentlyShown
@@ -202,13 +183,13 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         {
             WorldId = worldId,
             ItemId = itemId,
-        }, cancellationToken);
+        }, uploaderRetainerId, cancellationToken);
 
         return uploadedCount;
     }
 
     private async Task PublishListingsToMessageBus(IList<Listing> listings, int worldId, int itemId,
-        CancellationToken cancellationToken = default)
+        string retainedRetainerId, CancellationToken cancellationToken = default)
     {
         if (_bus == null) return;
 
@@ -219,7 +200,13 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         }, cancellationToken);
         var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
         var addedListings = listings.Where(l => !oldListings.Contains(l)).ToList();
-        var removedListings = oldListings.Where(l => !listings.Contains(l)).ToList();
+
+        // Retained retainer listings survive the DB update, so they're absent from the
+        // uploaded set; without this filter they'd be incorrectly diffed as removals.
+        var removedListings = oldListings
+            .Where(l => retainedRetainerId == null || l.RetainerId != retainedRetainerId)
+            .Where(l => !listings.Contains(l))
+            .ToList();
 
         if (removedListings.Count > 0)
         {

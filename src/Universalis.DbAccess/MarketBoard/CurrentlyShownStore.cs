@@ -25,7 +25,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _logger = logger;
     }
 
-    public async Task Insert(CurrentlyShown data, CancellationToken cancellationToken = default)
+    public async Task Insert(CurrentlyShown data, string retainedRetainerId = null, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.Insert");
         activity?.AddTag("worldId", data.WorldId);
@@ -47,11 +47,11 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 l.WorldId = worldId;
                 l.Source = uploadSource;
             }
-            await _listingStore.ReplaceLive(listings, cancellationToken);
+            await _listingStore.ReplaceLive(listings, retainedRetainerId, cancellationToken);
         }
         else
         {
-            await _listingStore.DeleteLive(new ListingQuery { ItemId = itemId, WorldId = worldId }, cancellationToken);
+            await _listingStore.DeleteLive(new ListingQuery { ItemId = itemId, WorldId = worldId }, retainedRetainerId, cancellationToken);
         }
 
         await SetLastUpdated(worldId, itemId, lastUploadTime);

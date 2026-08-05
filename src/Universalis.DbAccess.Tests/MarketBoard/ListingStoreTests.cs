@@ -128,7 +128,7 @@ public class ListingStoreTests
         }
 
         var results = await store.RetrieveManyLive(new ListingManyQuery
-            { ItemIds = Enumerable.Range(100, 105), WorldIds = new[] { 93 } });
+        { ItemIds = Enumerable.Range(100, 105), WorldIds = new[] { 93 } });
 
         Assert.NotNull(results);
         for (var i = 100; i < 105; i++)
@@ -168,9 +168,9 @@ public class ListingStoreTests
         }
 
         await store.RetrieveManyLive(new ListingManyQuery
-            { ItemIds = Enumerable.Range(100, 105), WorldIds = new[] { 93 } }); // Populate the cache
+        { ItemIds = Enumerable.Range(100, 105), WorldIds = new[] { 93 } }); // Populate the cache
         var results = await store.RetrieveManyLive(new ListingManyQuery
-            { ItemIds = Enumerable.Range(100, 105), WorldIds = new[] { 93 } });
+        { ItemIds = Enumerable.Range(100, 105), WorldIds = new[] { 93 } });
 
         Assert.NotNull(results);
         for (var i = 100; i < 105; i++)
@@ -206,7 +206,7 @@ public class ListingStoreTests
     {
         var store = _fixture.Services.GetRequiredService<IListingStore>();
         var results = await store.RetrieveManyLive(new ListingManyQuery
-            { ItemIds = Enumerable.Range(200, 210), WorldIds = new[] { 93 } });
+        { ItemIds = Enumerable.Range(200, 210), WorldIds = new[] { 93 } });
         Assert.NotNull(results);
         Assert.All(results, kvp =>
         {
@@ -384,12 +384,258 @@ public class ListingStoreTests
         Assert.Equal(200, resultsB[0].PricePerUnit);
     }
 
-    private static Listing MakeListing(string listingId, int worldId, int itemId, int pricePerUnit)
+#if DEBUG
+    [Fact]
+#endif
+    public async Task ReplaceLive_Retention_MatchesPlainReplace_FinalState()
     {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        const int world = 93;
+        const int itemRetention = 600;
+        const int itemPlain = 601;
+        const string retainerA = "ret-agg-a";
+        const string retainerB = "ret-agg-b";
+        const string retainerC = "ret-agg-c";
+
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("agg-ret-l1", world, itemRetention, 500, retainerA),
+            MakeListing("agg-ret-l2", world, itemRetention, 300, retainerB),
+            MakeListing("agg-ret-l3", world, itemRetention, 700, retainerC),
+        });
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("agg-pln-l1", world, itemPlain, 500, retainerA),
+            MakeListing("agg-pln-l2", world, itemPlain, 300, retainerB),
+            MakeListing("agg-pln-l3", world, itemPlain, 700, retainerC),
+        });
+
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("agg-ret-l2", world, itemRetention, 300, retainerB),
+            MakeListing("agg-ret-l3", world, itemRetention, 700, retainerC),
+        }, retainedRetainerId: retainerA);
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("agg-pln-l1", world, itemPlain, 500, retainerA),
+            MakeListing("agg-pln-l2", world, itemPlain, 300, retainerB),
+            MakeListing("agg-pln-l3", world, itemPlain, 700, retainerC),
+        });
+
+        // Identical listing sets
+        var retentionResults = (await store.RetrieveLive(new ListingQuery { ItemId = itemRetention, WorldId = world }))
+            .OrderBy(l => l.ListingId).ToList();
+        var plainResults = (await store.RetrieveLive(new ListingQuery { ItemId = itemPlain, WorldId = world }))
+            .OrderBy(l => l.ListingId).ToList();
+
+        Assert.Equal(3, retentionResults.Count);
+        Assert.Equal(3, plainResults.Count);
+
+        // Same price distribution (sorted by price ascending)
+        Assert.Equal(plainResults.Select(l => l.PricePerUnit), retentionResults.Select(l => l.PricePerUnit));
+
+        // Same retainers (sorted by price ascending)
+        Assert.Equal(plainResults.Select(l => l.RetainerId), retentionResults.Select(l => l.RetainerId));
+
+        // Identical world min-price aggregates
+        var minRetention = await store.GetMinListing(world, itemRetention);
+        var minPlain = await store.GetMinListing(world, itemPlain);
+        Assert.Equal(minPlain.World.Nq?.UnitPrice, minRetention.World.Nq?.UnitPrice);
+        Assert.Equal(minPlain.Dc.Nq?.UnitPrice, minRetention.Dc.Nq?.UnitPrice);
+    }
+
+#if DEBUG
+    [Fact]
+#endif
+    public async Task ReplaceLive_Retention_MinPriceReflectsRetainedCheapest()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        const int world = 93;
+        const int item = 602;
+        const string retainerA = "ret-min-a";
+        const string retainerB = "ret-min-b";
+
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("min-l1", world, item, 100, retainerA),
+            MakeListing("min-l2", world, item, 500, retainerB),
+        });
+
+        // Replace with only B — A (cheapest) survives via retention
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("min-l2", world, item, 500, retainerB),
+        }, retainedRetainerId: retainerA);
+
+        var minListing = await store.GetMinListing(world, item);
+        Assert.Equal(100, minListing.World.Nq?.UnitPrice);
+    }
+
+#if DEBUG
+    [Fact]
+#endif
+    public async Task ReplaceLive_Retention_HqMinPriceReflectsRetainedCheapest()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        const int world = 93;
+        const int item = 603;
+        const string retainerA = "ret-hq-a";
+        const string retainerB = "ret-hq-b";
+
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("hq-l1", world, item, 200, retainerA, hq: true),
+            MakeListing("hq-l2", world, item, 800, retainerB, hq: true),
+        });
+
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("hq-l2", world, item, 800, retainerB, hq: true),
+        }, retainedRetainerId: retainerA);
+
+        var minListing = await store.GetMinListing(world, item);
+        Assert.Equal(200, minListing.World.Hq?.UnitPrice);
+    }
+
+    // DeleteLive with retention should preserve the retainer's rows and compute
+    // aggregates from the survivors, not wipe the cache keys.
+#if DEBUG
+    [Fact]
+#endif
+    public async Task DeleteLive_Retention_PreservesRetainerAndUpdatesAggregate()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        const int world = 93;
+        const int item = 604;
+        const string retainerA = "ret-dl-a";
+        const string retainerB = "ret-dl-b";
+
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("dl-l1", world, item, 100, retainerA),
+            MakeListing("dl-l2", world, item, 500, retainerB),
+        });
+
+        await store.DeleteLive(new ListingQuery { ItemId = item, WorldId = world }, retainedRetainerId: retainerA);
+
+        var results = (await store.RetrieveLive(new ListingQuery { ItemId = item, WorldId = world })).ToList();
+        Assert.Single(results);
+        Assert.Equal(retainerA, results[0].RetainerId);
+
+        var minListing = await store.GetMinListing(world, item);
+        Assert.Equal(100, minListing.World.Nq?.UnitPrice);
+    }
+
+#if DEBUG
+    [Fact]
+#endif
+    public async Task ReplaceLive_PlainReplace_AfterRetention_RemovesPreviouslyRetained()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        const int world = 93;
+        const int item = 605;
+        const string retainerA = "ret-chain-a";
+        const string retainerB = "ret-chain-b";
+
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("chain-l1", world, item, 100, retainerA),
+            MakeListing("chain-l2", world, item, 500, retainerB),
+        });
+
+        // Retention keeps A
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("chain-l2", world, item, 500, retainerB),
+        }, retainedRetainerId: retainerA);
+
+        var afterRetention = (await store.RetrieveLive(new ListingQuery { ItemId = item, WorldId = world })).ToList();
+        Assert.Equal(2, afterRetention.Count);
+
+        // Plain replace with only B — A is gone
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("chain-l2", world, item, 500, retainerB),
+        });
+
+        var afterPlain = (await store.RetrieveLive(new ListingQuery { ItemId = item, WorldId = world })).ToList();
+        Assert.Single(afterPlain);
+        Assert.Equal(retainerB, afterPlain[0].RetainerId);
+    }
+
+    // DeleteLive must evict the local listings cache. Without the
+    // eviction, a warmed cache entry survives the delete and RetrieveLive
+    // serves phantom rows for up to the 5-minute TTL.
+#if DEBUG
+    [Fact]
+#endif
+    public async Task DeleteLive_EvictsLocalCache_NoRetention()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        const int world = 93;
+        const int item = 606;
+
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("evict-l1", world, item, 100),
+            MakeListing("evict-l2", world, item, 500),
+        });
+
+        // Warm the local cache
+        var warmed = (await store.RetrieveLive(new ListingQuery { ItemId = item, WorldId = world })).ToList();
+        Assert.Equal(2, warmed.Count);
+
+        await store.DeleteLive(new ListingQuery { ItemId = item, WorldId = world });
+
+        // Next read must reflect the delete, not the warmed entry
+        var afterDelete = (await store.RetrieveLive(new ListingQuery { ItemId = item, WorldId = world })).ToList();
+        Assert.Empty(afterDelete);
+    }
+
+#if DEBUG
+    [Fact]
+#endif
+    public async Task DeleteLive_EvictsLocalCache_WithRetention()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        const int world = 93;
+        const int item = 607;
+        const string retainerA = "ret-evict-a";
+        const string retainerB = "ret-evict-b";
+
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("evict-ret-l1", world, item, 100, retainerA),
+            MakeListing("evict-ret-l2", world, item, 500, retainerB),
+        });
+
+        // Warm the local cache
+        var warmed = (await store.RetrieveLive(new ListingQuery { ItemId = item, WorldId = world })).ToList();
+        Assert.Equal(2, warmed.Count);
+
+        await store.DeleteLive(new ListingQuery { ItemId = item, WorldId = world }, retainedRetainerId: retainerA);
+
+        // Only the retained retainer's row survives
+        var afterDelete = (await store.RetrieveLive(new ListingQuery { ItemId = item, WorldId = world })).ToList();
+        Assert.Single(afterDelete);
+        Assert.Equal(retainerA, afterDelete[0].RetainerId);
+    }
+
+    private static Listing MakeListing(string listingId, int worldId, int itemId, int pricePerUnit,
+        string retainerId = null, bool hq = false)
+    {
+        var effectiveRetainerId = retainerId ?? $"retainer-{worldId}";
         return new Listing
         {
             ListingId = listingId,
-            Hq = false,
+            Hq = hq,
             OnMannequin = false,
             Materia = new List<Materia>(),
             PricePerUnit = pricePerUnit,
@@ -398,8 +644,8 @@ public class ListingStoreTests
             CreatorId = "",
             CreatorName = "",
             LastReviewTime = DateTime.UtcNow,
-            RetainerId = $"retainer-{worldId}",
-            RetainerName = $"retainer-{worldId}",
+            RetainerId = effectiveRetainerId,
+            RetainerName = effectiveRetainerId,
             RetainerCityId = 1,
             SellerId = "",
             ItemId = itemId,

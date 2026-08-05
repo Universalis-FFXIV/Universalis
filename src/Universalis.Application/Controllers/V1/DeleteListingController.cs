@@ -125,7 +125,7 @@ public class DeleteListingController : WorldDcRegionControllerBase
             ItemId = itemId,
         };
 
-        await _currentlyShownDb.Update(itemData, query, cts.Token);
+        await _currentlyShownDb.Update(itemData, query, null, cts.Token);
 
         await _uploadLogDb.LogAction(new UploadLogEntry
         {
