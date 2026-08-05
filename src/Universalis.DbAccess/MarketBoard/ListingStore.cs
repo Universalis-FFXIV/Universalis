@@ -92,6 +92,7 @@ public class ListingStore : IListingStore
                     query.ItemId);
                 throw;
             }
+            await _easyCachingProvider.RemoveAsync(ListingsKey(query.WorldId, query.ItemId), cancellationToken);
             await WriteMinListingCache(query.WorldId, query.ItemId, new List<Listing>(), uploadedAt);
             return;
         }
@@ -116,6 +117,7 @@ public class ListingStore : IListingStore
                 throw;
             }
         }
+        await _easyCachingProvider.RemoveAsync(ListingsKey(query.WorldId, query.ItemId), cancellationToken);
         var effectiveListings = await ReadMinListings(connection, query.WorldId, query.ItemId, cancellationToken);
         await WriteMinListingCache(query.WorldId, query.ItemId, effectiveListings, uploadedAt);
     }
