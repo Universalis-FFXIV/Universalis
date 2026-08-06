@@ -168,7 +168,17 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var newListings = CleanUploadedListings(uploadedListings, itemId, worldId, source.Name);
         var uploadedCount = newListings.Count;
 
-        _ = PublishListingsToMessageBus(newListings, worldId, itemId, uploaderRetainerId, cancellationToken);
+        // Read the prior board before the write below replaces it. The diff is only
+        // meaningful against the pre-upload state, so this read cannot run
+        // concurrently with that write - see PublishListingsToMessageBus.
+        var existingCurrentlyShown = _bus == null
+            ? null
+            : await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
+            {
+                WorldId = worldId,
+                ItemId = itemId,
+            }, cancellationToken);
+        var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var document = new CurrentlyShown
@@ -185,20 +195,29 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             ItemId = itemId,
         }, uploaderRetainerId, cancellationToken);
 
+        _ = PublishListingsToMessageBus(oldListings, newListings, worldId, itemId, uploaderRetainerId,
+            cancellationToken);
+
         return uploadedCount;
     }
 
-    private async Task PublishListingsToMessageBus(IList<Listing> listings, int worldId, int itemId,
-        string retainedRetainerId, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Publishes the add/remove diff for an upload.
+    /// </summary>
+    /// <remarks>
+    /// The prior board is passed in rather than read here. Reading it here would
+    /// race the write in <see cref="HandleListings"/>, because this method is
+    /// deliberately not awaited: when the read lost, "old" listings were the ones
+    /// just written, both diffs came out empty, and a real change was published as
+    /// no frame at all. The read also repopulates the listings cache that the write
+    /// evicts, so losing the race could leave that cache holding pre-upload
+    /// listings for its full lifetime.
+    /// </remarks>
+    private async Task PublishListingsToMessageBus(IList<Listing> oldListings, IList<Listing> listings, int worldId,
+        int itemId, string retainedRetainerId, CancellationToken cancellationToken = default)
     {
         if (_bus == null) return;
 
-        var existingCurrentlyShown = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-        }, cancellationToken);
-        var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
         var addedListings = listings.Where(l => !oldListings.Contains(l)).ToList();
 
         // Retained retainer listings survive the DB update, so they're absent from the
