@@ -113,11 +113,16 @@ public class UploadController : ControllerBase
             }
         }
 
-        // Execute other upload behaviors
+        // Execute other upload behaviors (fire-and-forget)
+        // These run after the response is sent; give them their own timeout
+        // to prevent being killed mid-write by the request's 5s deadline.
+        var backgroundCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        backgroundCts.CancelAfter(TimeSpan.FromMinutes(1));
+        
         Task.WhenAll(_uploadBehaviors
                 .Where(b => b.GetType().GetCustomAttribute<ValidatorAttribute>() == null)
                 .Where(b => b.ShouldExecute(parameters))
-                .Select(b => b.Execute(source, parameters, cts.Token)))
+                .Select(b => b.Execute(source, parameters, backgroundCts.Token)))
             .FireAndForget(_logger);
 
         return Ok("Success");
