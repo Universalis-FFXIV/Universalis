@@ -66,24 +66,82 @@ public class MarketBoardUploadPublishTests
         }
     }
 
+    /// <summary>
+    /// Captures the frames the behaviour publishes.
+    ///
+    /// Publishing is fire-and-forget, so a test cannot assume it has happened by
+    /// the time Execute returns. Waiting is therefore expressed as "wait until this
+    /// many frames have arrived since the last <see cref="Reset"/>" - a count
+    /// rather than a one-shot signal, which would be satisfied forever by the first
+    /// frame and silently stop waiting on every later call.
+    ///
+    /// The callbacks run on the publishing task, not the test thread, so the
+    /// captured lists are guarded and handed out as snapshots.
+    /// </summary>
     private sealed class CapturedBus
     {
-        public IBus Bus { get; init; }
-        public List<ListingsAdd> Adds { get; } = [];
-        public List<ListingsRemove> Removes { get; } = [];
+        private readonly object _gate = new();
+        private readonly List<ListingsAdd> _adds = [];
+        private readonly List<ListingsRemove> _removes = [];
+        private int _published;
 
-        private readonly TaskCompletionSource _anyPublish = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public IBus Bus { get; init; }
+
+        public IReadOnlyList<ListingsAdd> Adds
+        {
+            get { lock (_gate) { return _adds.ToList(); } }
+        }
+
+        public IReadOnlyList<ListingsRemove> Removes
+        {
+            get { lock (_gate) { return _removes.ToList(); } }
+        }
+
+        /// <summary>Forgets everything captured so far, including the frame count.</summary>
+        public void Reset()
+        {
+            lock (_gate)
+            {
+                _adds.Clear();
+                _removes.Clear();
+                _published = 0;
+            }
+        }
 
         /// <summary>
-        /// Publishing is fire-and-forget, so tests wait on this rather than
-        /// assuming it completed by the time Execute returned.
+        /// Waits until at least <paramref name="count"/> frames have been published
+        /// since the last <see cref="Reset"/>.
         /// </summary>
-        public async Task WaitForPublishAsync(TimeSpan timeout)
+        public async Task WaitForPublishesAsync(int count, TimeSpan timeout)
         {
-            var completed = await Task.WhenAny(_anyPublish.Task, Task.Delay(timeout));
-            if (completed != _anyPublish.Task)
+            var deadline = DateTimeOffset.UtcNow + timeout;
+            while (DateTimeOffset.UtcNow < deadline)
             {
-                throw new TimeoutException($"no frame was published within {timeout}");
+                lock (_gate)
+                {
+                    if (_published >= count) return;
+                }
+
+                await Task.Delay(5);
+            }
+
+            int seen;
+            lock (_gate) { seen = _published; }
+            throw new TimeoutException($"expected {count} frame(s) within {timeout}; saw {seen}");
+        }
+
+        /// <summary>
+        /// Waits out a grace period and asserts nothing was published. Used where the
+        /// correct behaviour is silence, which no amount of waiting can confirm - so
+        /// this only has to be long enough to catch a frame that should not exist.
+        /// </summary>
+        public async Task AssertNoPublishesAsync(TimeSpan grace)
+        {
+            await Task.Delay(grace);
+            lock (_gate)
+            {
+                Assert.Empty(_adds);
+                Assert.Empty(_removes);
             }
         }
 
@@ -95,16 +153,22 @@ public class MarketBoardUploadPublishTests
             mock.Setup(b => b.Publish(It.IsAny<ListingsAdd>(), It.IsAny<CancellationToken>()))
                 .Callback<ListingsAdd, CancellationToken>((m, _) =>
                 {
-                    captured.Adds.Add(m);
-                    captured._anyPublish.TrySetResult();
+                    lock (captured._gate)
+                    {
+                        captured._adds.Add(m);
+                        captured._published++;
+                    }
                 })
                 .Returns(Task.CompletedTask);
 
             mock.Setup(b => b.Publish(It.IsAny<ListingsRemove>(), It.IsAny<CancellationToken>()))
                 .Callback<ListingsRemove, CancellationToken>((m, _) =>
                 {
-                    captured.Removes.Add(m);
-                    captured._anyPublish.TrySetResult();
+                    lock (captured._gate)
+                    {
+                        captured._removes.Add(m);
+                        captured._published++;
+                    }
                 })
                 .Returns(Task.CompletedTask);
 
@@ -169,11 +233,12 @@ public class MarketBoardUploadPublishTests
         var behavior = CreateBehavior(bus.Bus, TimeSpan.FromMilliseconds(20), out var db);
 
         await behavior.Execute(Source, Upload(MakeListing("l1", 100), MakeListing("l2", 200)));
-        await bus.WaitForPublishAsync(TimeSpan.FromSeconds(5));
+        await bus.WaitForPublishesAsync(1, TimeSpan.FromSeconds(5)); // one listings/add
+
+        bus.Reset();
 
         await behavior.Execute(Source, Upload(MakeListing("l1", 100)));
-        await bus.WaitForPublishAsync(TimeSpan.FromSeconds(5));
-        await Task.Delay(200);
+        await bus.WaitForPublishesAsync(1, TimeSpan.FromSeconds(5)); // one listings/remove
 
         Assert.Equal(0, db.RetrieveCalls);
     }
@@ -190,16 +255,15 @@ public class MarketBoardUploadPublishTests
             MakeListing("l1", 100),
             MakeListing("l2", 200),
             MakeListing("l3", 300)));
-        await bus.WaitForPublishAsync(TimeSpan.FromSeconds(5));
+        await bus.WaitForPublishesAsync(1, TimeSpan.FromSeconds(5));
 
-        bus.Adds.Clear();
-        bus.Removes.Clear();
+        bus.Reset();
 
         // l3 is gone from the board.
         await behavior.Execute(Source, Upload(
             MakeListing("l1", 100),
             MakeListing("l2", 200)));
-        await bus.WaitForPublishAsync(TimeSpan.FromSeconds(5));
+        await bus.WaitForPublishesAsync(1, TimeSpan.FromSeconds(5)); // one listings/remove
 
         // Listing IDs are hashed in the view, so prices identify them here.
         var removed = Assert.Single(bus.Removes);
@@ -214,15 +278,14 @@ public class MarketBoardUploadPublishTests
         var behavior = CreateBehavior(bus.Bus, TimeSpan.FromMilliseconds(50));
 
         await behavior.Execute(Source, Upload(MakeListing("l1", 100)));
-        await bus.WaitForPublishAsync(TimeSpan.FromSeconds(5));
+        await bus.WaitForPublishesAsync(1, TimeSpan.FromSeconds(5));
 
-        bus.Adds.Clear();
-        bus.Removes.Clear();
+        bus.Reset();
 
         await behavior.Execute(Source, Upload(
             MakeListing("l1", 100),
             MakeListing("l2", 200)));
-        await bus.WaitForPublishAsync(TimeSpan.FromSeconds(5));
+        await bus.WaitForPublishesAsync(1, TimeSpan.FromSeconds(5)); // one listings/add
 
         var added = Assert.Single(bus.Adds);
         Assert.Equal([200], added.Listings.Select(l => l.PricePerUnit).ToList());
@@ -240,18 +303,13 @@ public class MarketBoardUploadPublishTests
         var behavior = CreateBehavior(bus.Bus, TimeSpan.FromMilliseconds(20));
 
         await behavior.Execute(Source, Upload(MakeListing("l1", 100), MakeListing("l2", 200)));
-        await bus.WaitForPublishAsync(TimeSpan.FromSeconds(5));
+        await bus.WaitForPublishesAsync(1, TimeSpan.FromSeconds(5));
 
-        bus.Adds.Clear();
-        bus.Removes.Clear();
+        bus.Reset();
 
         await behavior.Execute(Source, Upload(MakeListing("l1", 100), MakeListing("l2", 200)));
 
-        // Give any stray publish a chance to land before asserting absence.
-        await Task.Delay(300);
-
-        Assert.Empty(bus.Adds);
-        Assert.Empty(bus.Removes);
+        await bus.AssertNoPublishesAsync(TimeSpan.FromMilliseconds(300));
     }
 
     [Fact]
@@ -263,14 +321,12 @@ public class MarketBoardUploadPublishTests
         var behavior = CreateBehavior(bus.Bus, TimeSpan.FromMilliseconds(20));
 
         await behavior.Execute(Source, Upload(MakeListing("l1", 100)));
-        await bus.WaitForPublishAsync(TimeSpan.FromSeconds(5));
+        await bus.WaitForPublishesAsync(1, TimeSpan.FromSeconds(5));
 
-        bus.Adds.Clear();
-        bus.Removes.Clear();
+        bus.Reset();
 
         await behavior.Execute(Source, Upload(MakeListing("l1", 150)));
-        await bus.WaitForPublishAsync(TimeSpan.FromSeconds(5));
-        await Task.Delay(200); // let the second of the two frames land
+        await bus.WaitForPublishesAsync(2, TimeSpan.FromSeconds(5)); // a remove and an add
 
         var removed = Assert.Single(bus.Removes);
         var added = Assert.Single(bus.Adds);
@@ -293,19 +349,16 @@ public class MarketBoardUploadPublishTests
         await behavior.Execute(Source, Upload(
             MakeListing("l1", 100, retainerId: "retA"),
             MakeListing("l2", 200, retainerId: "retB")));
-        await bus.WaitForPublishAsync(TimeSpan.FromSeconds(5));
+        await bus.WaitForPublishesAsync(1, TimeSpan.FromSeconds(5));
 
-        bus.Adds.Clear();
-        bus.Removes.Clear();
+        bus.Reset();
 
         var atTheBell = Upload(MakeListing("l2", 200, retainerId: "retB"));
         atTheBell.UploaderRetainerId = "retA";
 
         await behavior.Execute(Source, atTheBell);
-        await Task.Delay(300);
 
-        Assert.Empty(bus.Removes);
-        Assert.Empty(bus.Adds);
+        await bus.AssertNoPublishesAsync(TimeSpan.FromMilliseconds(300));
     }
 
     [Fact]
@@ -321,17 +374,16 @@ public class MarketBoardUploadPublishTests
             MakeListing("l1", 100, retainerId: "retA"),
             MakeListing("l2", 200, retainerId: "retB"),
             MakeListing("l3", 300, retainerId: "retC")));
-        await bus.WaitForPublishAsync(TimeSpan.FromSeconds(5));
+        await bus.WaitForPublishesAsync(1, TimeSpan.FromSeconds(5));
 
-        bus.Adds.Clear();
-        bus.Removes.Clear();
+        bus.Reset();
 
         // At retA's bell, and retC's listing has genuinely sold.
         var atTheBell = Upload(MakeListing("l2", 200, retainerId: "retB"));
         atTheBell.UploaderRetainerId = "retA";
 
         await behavior.Execute(Source, atTheBell);
-        await bus.WaitForPublishAsync(TimeSpan.FromSeconds(5));
+        await bus.WaitForPublishesAsync(1, TimeSpan.FromSeconds(5)); // one listings/remove
 
         var removed = Assert.Single(bus.Removes);
         Assert.Equal([300], removed.Listings.Select(l => l.PricePerUnit).ToList());
