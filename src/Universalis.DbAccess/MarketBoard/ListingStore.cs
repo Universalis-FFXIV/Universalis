@@ -144,105 +144,17 @@ public class ListingStore : IListingStore
         {
             var (worldID, itemID) = listingGroup.Key;
 
-            // Find any pre-existing rows that the upsert below will mutate the
-            // item_id of. The batch's DELETE only clears the current (item, world);
-            // any conflict on (listing_id, world_id) implies a row exists with the
-            // same key but a different item_id, and `DO UPDATE SET item_id = ...`
-            // will move it to the current item. Without evicting the OLD item's
-            // cache key, `listing5:{world}:{oldItem}` would keep a stale entry
-            // until its 5-minute TTL expires.
             var listingIds = listingGroup.Select(l => l.ListingId).ToArray();
-            var staleItemIds = new HashSet<int>();
-            await using (var preCmd = new NpgsqlCommand(
-                "SELECT DISTINCT item_id FROM listing WHERE listing_id = ANY($1) AND world_id = $2 AND item_id <> $3",
-                connection))
-            {
-                preCmd.Parameters.Add(new NpgsqlParameter<string[]> { TypedValue = listingIds });
-                preCmd.Parameters.Add(new NpgsqlParameter<int> { TypedValue = worldID });
-                preCmd.Parameters.Add(new NpgsqlParameter<int> { TypedValue = itemID });
-                await using var reader = await preCmd.ExecuteReaderAsync(cancellationToken);
-                while (await reader.ReadAsync(cancellationToken))
-                {
-                    staleItemIds.Add(reader.GetInt32(0));
-                }
-            }
+            var staleItemIds = await FindItemsLosingListings(connection, listingIds, worldID, itemID, cancellationToken);
 
             // Npgsql batches have an implicit transaction around them
             // https://www.npgsql.org/doc/basic-usage.html#batching
             await using var batch = new NpgsqlBatch(connection);
-            // RETURNING hands back exactly the rows this upload displaced, which is
-            // the pre-upload board for this (item, world). Callers that need to diff
-            // against it therefore need no separate read - and with retention the
-            // scoped DELETE already excludes the retainer's surviving rows, so they
-            // cannot be mistaken for removals.
-            var deleteText = string.IsNullOrEmpty(retainedRetainerId)
-                ? $"DELETE FROM listing WHERE item_id = $1 AND world_id = $2 RETURNING {ListingColumns}"
-                : $"DELETE FROM listing WHERE item_id = $1 AND world_id = $2 AND retainer_id <> $3 RETURNING {ListingColumns}";
-            var deleteCmd = new NpgsqlBatchCommand(deleteText)
-            {
-                Parameters =
-                {
-                    new NpgsqlParameter<int> { TypedValue = itemID },
-                    new NpgsqlParameter<int> { TypedValue = worldID },
-                },
-            };
-            if (!string.IsNullOrEmpty(retainedRetainerId))
-            {
-                deleteCmd.Parameters.Add(new NpgsqlParameter<string> { TypedValue = retainedRetainerId });
-            }
-            batch.BatchCommands.Add(deleteCmd);
+            batch.BatchCommands.Add(CreateDisplacingDelete(itemID, worldID, retainedRetainerId));
 
             foreach (var listing in listingGroup)
             {
-                // The DELETE above clears rows for the current (item, world) before
-                // these inserts. Any remaining conflict on the (listing_id, world_id)
-                // primary key therefore implies a pre-existing row with the same
-                // (listing_id, world_id) but a different item_id. Treat the new upload
-                // as authoritative and overwrite, rather than silently dropping it.
-                batch.BatchCommands.Add(new NpgsqlBatchCommand(
-                    """
-                    INSERT INTO listing
-                    (listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id,
-                     creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, uploaded_at,
-                     source)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-                    ON CONFLICT (listing_id, world_id) DO UPDATE SET
-                        item_id = EXCLUDED.item_id,
-                        hq = EXCLUDED.hq,
-                        on_mannequin = EXCLUDED.on_mannequin,
-                        materia = EXCLUDED.materia,
-                        unit_price = EXCLUDED.unit_price,
-                        quantity = EXCLUDED.quantity,
-                        dye_id = EXCLUDED.dye_id,
-                        creator_name = EXCLUDED.creator_name,
-                        last_review_time = EXCLUDED.last_review_time,
-                        retainer_id = EXCLUDED.retainer_id,
-                        retainer_name = EXCLUDED.retainer_name,
-                        retainer_city_id = EXCLUDED.retainer_city_id,
-                        uploaded_at = EXCLUDED.uploaded_at,
-                        source = EXCLUDED.source;
-                    """)
-                {
-                    Parameters =
-                    {
-                        new NpgsqlParameter<string> { TypedValue = listing.ListingId },
-                        new NpgsqlParameter<int> { TypedValue = listing.ItemId },
-                        new NpgsqlParameter<int> { TypedValue = listing.WorldId },
-                        new NpgsqlParameter<bool> { TypedValue = listing.Hq },
-                        new NpgsqlParameter<bool> { TypedValue = listing.OnMannequin },
-                        ConvertMateriaToParameter(listing.Materia),
-                        new NpgsqlParameter<int> { TypedValue = listing.PricePerUnit },
-                        new NpgsqlParameter<int> { TypedValue = listing.Quantity },
-                        new NpgsqlParameter<int> { TypedValue = listing.DyeId },
-                        new NpgsqlParameter<string> { TypedValue = listing.CreatorName },
-                        new NpgsqlParameter<DateTime> { TypedValue = listing.LastReviewTime },
-                        new NpgsqlParameter<string> { TypedValue = listing.RetainerId },
-                        new NpgsqlParameter<string> { TypedValue = listing.RetainerName },
-                        new NpgsqlParameter<int> { TypedValue = listing.RetainerCityId },
-                        new NpgsqlParameter<DateTime> { TypedValue = uploadedAt.UtcDateTime },
-                        new NpgsqlParameter<string> { TypedValue = listing.Source },
-                    },
-                });
+                batch.BatchCommands.Add(CreateUpsert(listing, uploadedAt));
             }
 
             try
@@ -289,6 +201,127 @@ public class ListingStore : IListingStore
 
         activity?.AddTag("rowsUpdated", rowsUpdated);
         return replaced;
+    }
+
+    /// <summary>
+    /// Finds items other than <paramref name="itemId"/> that currently own one of
+    /// <paramref name="listingIds"/> on this world, and so are about to lose it.
+    /// </summary>
+    /// <remarks>
+    /// The batch's DELETE only clears the current (item, world), so any conflict on
+    /// (listing_id, world_id) implies a row with the same key under a different
+    /// item_id, which <c>DO UPDATE SET item_id = ...</c> moves to the current item.
+    /// Without evicting the old item's cache key, <c>listing5:{world}:{oldItem}</c>
+    /// would keep serving a listing that has moved away until its TTL expires.
+    /// </remarks>
+    private static async Task<HashSet<int>> FindItemsLosingListings(NpgsqlConnection connection,
+        string[] listingIds, int worldId, int itemId, CancellationToken cancellationToken)
+    {
+        var staleItemIds = new HashSet<int>();
+        await using var command = new NpgsqlCommand(
+            "SELECT DISTINCT item_id FROM listing WHERE listing_id = ANY($1) AND world_id = $2 AND item_id <> $3",
+            connection);
+        command.Parameters.Add(new NpgsqlParameter<string[]> { TypedValue = listingIds });
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = worldId });
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = itemId });
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            staleItemIds.Add(reader.GetInt32(0));
+        }
+
+        return staleItemIds;
+    }
+
+    /// <summary>
+    /// The DELETE that clears the board for an upload, returning the rows it removed.
+    /// </summary>
+    /// <remarks>
+    /// RETURNING hands back exactly the rows this upload displaced, which is the
+    /// pre-upload board for this (item, world). Callers that need to diff against it
+    /// therefore need no separate read - and when a retainer is retained, the scoped
+    /// DELETE leaves that retainer's rows in place, so they are absent from the
+    /// displaced set and cannot be mistaken for removals.
+    /// </remarks>
+    private static NpgsqlBatchCommand CreateDisplacingDelete(int itemId, int worldId, string retainedRetainerId)
+    {
+        var retaining = !string.IsNullOrEmpty(retainedRetainerId);
+        var command = new NpgsqlBatchCommand(retaining
+            ? $"DELETE FROM listing WHERE item_id = $1 AND world_id = $2 AND retainer_id <> $3 RETURNING {ListingColumns}"
+            : $"DELETE FROM listing WHERE item_id = $1 AND world_id = $2 RETURNING {ListingColumns}")
+        {
+            Parameters =
+            {
+                new NpgsqlParameter<int> { TypedValue = itemId },
+                new NpgsqlParameter<int> { TypedValue = worldId },
+            },
+        };
+
+        if (retaining)
+        {
+            command.Parameters.Add(new NpgsqlParameter<string> { TypedValue = retainedRetainerId });
+        }
+
+        return command;
+    }
+
+    /// <summary>
+    /// Writes one uploaded listing, overwriting any row that already holds its key.
+    /// </summary>
+    /// <remarks>
+    /// The batch's DELETE clears rows for the current (item, world) before these
+    /// inserts, so a remaining conflict on the (listing_id, world_id) primary key
+    /// implies a pre-existing row with the same key but a different item_id. Treat
+    /// the new upload as authoritative and overwrite, rather than silently dropping
+    /// it - see <see cref="FindItemsLosingListings"/> for the cache consequence.
+    /// </remarks>
+    private static NpgsqlBatchCommand CreateUpsert(Listing listing, DateTimeOffset uploadedAt)
+    {
+        return new NpgsqlBatchCommand(
+            """
+            INSERT INTO listing
+            (listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id,
+             creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, uploaded_at,
+             source)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+            ON CONFLICT (listing_id, world_id) DO UPDATE SET
+                item_id = EXCLUDED.item_id,
+                hq = EXCLUDED.hq,
+                on_mannequin = EXCLUDED.on_mannequin,
+                materia = EXCLUDED.materia,
+                unit_price = EXCLUDED.unit_price,
+                quantity = EXCLUDED.quantity,
+                dye_id = EXCLUDED.dye_id,
+                creator_name = EXCLUDED.creator_name,
+                last_review_time = EXCLUDED.last_review_time,
+                retainer_id = EXCLUDED.retainer_id,
+                retainer_name = EXCLUDED.retainer_name,
+                retainer_city_id = EXCLUDED.retainer_city_id,
+                uploaded_at = EXCLUDED.uploaded_at,
+                source = EXCLUDED.source;
+            """)
+        {
+            Parameters =
+            {
+                new NpgsqlParameter<string> { TypedValue = listing.ListingId },
+                new NpgsqlParameter<int> { TypedValue = listing.ItemId },
+                new NpgsqlParameter<int> { TypedValue = listing.WorldId },
+                new NpgsqlParameter<bool> { TypedValue = listing.Hq },
+                new NpgsqlParameter<bool> { TypedValue = listing.OnMannequin },
+                ConvertMateriaToParameter(listing.Materia),
+                new NpgsqlParameter<int> { TypedValue = listing.PricePerUnit },
+                new NpgsqlParameter<int> { TypedValue = listing.Quantity },
+                new NpgsqlParameter<int> { TypedValue = listing.DyeId },
+                new NpgsqlParameter<string> { TypedValue = listing.CreatorName },
+                new NpgsqlParameter<DateTime> { TypedValue = listing.LastReviewTime },
+                new NpgsqlParameter<string> { TypedValue = listing.RetainerId },
+                new NpgsqlParameter<string> { TypedValue = listing.RetainerName },
+                new NpgsqlParameter<int> { TypedValue = listing.RetainerCityId },
+                new NpgsqlParameter<DateTime> { TypedValue = uploadedAt.UtcDateTime },
+                new NpgsqlParameter<string> { TypedValue = listing.Source },
+            },
+        };
     }
 
     /// <summary>
