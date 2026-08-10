@@ -33,10 +33,17 @@ public class CurrentlyShownDbAccessTests
             })).Where(cs => cs is not null));
         }
 
-        public Task Insert(CurrentlyShown data, string retainedRetainerId = null, CancellationToken cancellationToken = default)
+        public Task<IList<Listing>> Insert(CurrentlyShown data, string retainedRetainerId = null, CancellationToken cancellationToken = default)
         {
+            _currentlyShown.TryGetValue((data.WorldId, data.ItemId), out var previous);
             _currentlyShown[(data.WorldId, data.ItemId)] = data;
-            return Task.CompletedTask;
+
+            // Mirror the scoped delete: rows belonging to the retained retainer are
+            // not displaced, so they are not returned.
+            IList<Listing> replaced = previous?.Listings
+                .Where(l => string.IsNullOrEmpty(retainedRetainerId) || l.RetainerId != retainedRetainerId)
+                .ToList() ?? new List<Listing>();
+            return Task.FromResult(replaced);
         }
     }
 

@@ -25,7 +25,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         _logger = logger;
     }
 
-    public async Task Insert(CurrentlyShown data, string retainedRetainerId = null, CancellationToken cancellationToken = default)
+    public async Task<IList<Listing>> Insert(CurrentlyShown data, string retainedRetainerId = null, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownStore.Insert");
         activity?.AddTag("worldId", data.WorldId);
@@ -39,6 +39,7 @@ public class CurrentlyShownStore : ICurrentlyShownStore
         var lastUploadTime = data.LastUploadTimeUnixMilliseconds;
         var listings = data.Listings;
 
+        IList<Listing> replaced;
         if (listings.Any())
         {
             foreach (var l in listings)
@@ -47,14 +48,15 @@ public class CurrentlyShownStore : ICurrentlyShownStore
                 l.WorldId = worldId;
                 l.Source = uploadSource;
             }
-            await _listingStore.ReplaceLive(listings, retainedRetainerId, cancellationToken);
+            replaced = await _listingStore.ReplaceLive(listings, retainedRetainerId, cancellationToken);
         }
         else
         {
-            await _listingStore.DeleteLive(new ListingQuery { ItemId = itemId, WorldId = worldId }, retainedRetainerId, cancellationToken);
+            replaced = await _listingStore.DeleteLive(new ListingQuery { ItemId = itemId, WorldId = worldId }, retainedRetainerId, cancellationToken);
         }
 
         await SetLastUpdated(worldId, itemId, lastUploadTime);
+        return replaced;
     }
 
     public async Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)

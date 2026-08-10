@@ -18,6 +18,7 @@ using Universalis.Entities.MarketBoard;
 using Universalis.Tests;
 using Xunit;
 using Listing = Universalis.Application.Uploads.Schema.Listing;
+using EntityListing = Universalis.Entities.MarketBoard.Listing;
 
 namespace Universalis.Application.Tests.Uploads.Behaviors;
 
@@ -31,29 +32,38 @@ namespace Universalis.Application.Tests.Uploads.Behaviors;
 public class MarketBoardUploadPublishTests
 {
     /// <summary>
-    /// Wraps the in-memory mock so reads complete asynchronously, the way a real
-    /// Postgres round-trip does.
+    /// Wraps the in-memory mock to count reads made by the behaviour and to make
+    /// the write complete asynchronously, the way a real round-trip does.
     ///
-    /// This is the whole point of the fixture: the mock resolves
-    /// <see cref="Retrieve"/> synchronously, so code reading the prior state
-    /// concurrently with the write still happens to observe the pre-write value
-    /// and looks correct. Against a real database it does not.
+    /// Counting reads is the structural guard. The prior board must come back from
+    /// the write that displaced it; any separate read of it would be unordered
+    /// against that write, and when such a read lost the race the "old" listings
+    /// were the ones just written, so both diffs came out empty and a real change
+    /// published no frame at all.
     /// </summary>
-    private sealed class SlowReadCurrentlyShownDbAccess(ICurrentlyShownDbAccess inner, TimeSpan readDelay)
+    private sealed class RecordingCurrentlyShownDbAccess(ICurrentlyShownDbAccess inner, TimeSpan writeDelay)
         : ICurrentlyShownDbAccess
     {
-        public async Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
+        private int _retrieveCalls;
+
+        /// <summary>Reads issued by the caller, not counting the mock's internals.</summary>
+        public int RetrieveCalls => Volatile.Read(ref _retrieveCalls);
+
+        public Task<CurrentlyShown> Retrieve(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
         {
-            await Task.Delay(readDelay, cancellationToken);
-            return await inner.Retrieve(query, cancellationToken);
+            Interlocked.Increment(ref _retrieveCalls);
+            return inner.Retrieve(query, cancellationToken);
         }
 
         public Task<IEnumerable<CurrentlyShown>> RetrieveMany(CurrentlyShownManyQuery query, CancellationToken cancellationToken = default)
             => inner.RetrieveMany(query, cancellationToken);
 
-        public Task Update(CurrentlyShown document, CurrentlyShownQuery query, string retainedRetainerId = null,
-            CancellationToken cancellationToken = default)
-            => inner.Update(document, query, retainedRetainerId, cancellationToken);
+        public async Task<IList<EntityListing>> Update(CurrentlyShown document, CurrentlyShownQuery query,
+            string retainedRetainerId = null, CancellationToken cancellationToken = default)
+        {
+            await Task.Delay(writeDelay, cancellationToken);
+            return await inner.Update(document, query, retainedRetainerId, cancellationToken);
+        }
     }
 
     private sealed class CapturedBus
@@ -107,16 +117,21 @@ public class MarketBoardUploadPublishTests
 
     private static readonly ApiKey Source = ApiKey.FromToken("blah", "something", true);
 
-    private static MarketBoardUploadBehavior CreateBehavior(IBus bus, TimeSpan readDelay)
+    private static MarketBoardUploadBehavior CreateBehavior(IBus bus, TimeSpan writeDelay,
+        out RecordingCurrentlyShownDbAccess db)
     {
+        db = new RecordingCurrentlyShownDbAccess(new MockCurrentlyShownDbAccess(), writeDelay);
         return new MarketBoardUploadBehavior(
-            new SlowReadCurrentlyShownDbAccess(new MockCurrentlyShownDbAccess(), readDelay),
+            db,
             new MockHistoryDbAccess(),
             new MockUploadLogDbAccess(),
             new MockGameDataProvider(),
             bus,
             new LogFixture<MarketBoardUploadBehavior>());
     }
+
+    private static MarketBoardUploadBehavior CreateBehavior(IBus bus, TimeSpan writeDelay)
+        => CreateBehavior(bus, writeDelay, out _);
 
     private static Listing MakeListing(string listingId, int pricePerUnit, string retainerId = "ret")
     {
@@ -143,13 +158,31 @@ public class MarketBoardUploadPublishTests
     }
 
     [Fact]
-    public async Task Publish_DiffsAgainstPreUploadState_WhenTheReadIsSlow()
+    public async Task Publish_NeverReadsTheBoardBack()
+    {
+        // The prior board must come from the write that displaced it. A separate
+        // read cannot be ordered against that write, and when it lost the race the
+        // "old" listings were the ones just written: both diffs came out empty and
+        // a real change was published as no frame at all. This fails if anyone
+        // reintroduces a read-back, whether awaited or not.
+        var bus = CapturedBus.Create();
+        var behavior = CreateBehavior(bus.Bus, TimeSpan.FromMilliseconds(20), out var db);
+
+        await behavior.Execute(Source, Upload(MakeListing("l1", 100), MakeListing("l2", 200)));
+        await bus.WaitForPublishAsync(TimeSpan.FromSeconds(5));
+
+        await behavior.Execute(Source, Upload(MakeListing("l1", 100)));
+        await bus.WaitForPublishAsync(TimeSpan.FromSeconds(5));
+        await Task.Delay(200);
+
+        Assert.Equal(0, db.RetrieveCalls);
+    }
+
+    [Fact]
+    public async Task Publish_DiffsAgainstTheDisplacedBoard()
     {
         // The diff has to be taken against the board as it was *before* this upload
-        // replaced it. Reading the prior state concurrently with the write is a
-        // race: when the read loses, the "old" listings are the ones just written,
-        // every diff comes out empty, and a real change is published as nothing at
-        // all - silently, with no error anywhere.
+        // replaced it, which is exactly what the write hands back.
         var bus = CapturedBus.Create();
         var behavior = CreateBehavior(bus.Bus, TimeSpan.FromMilliseconds(50));
 

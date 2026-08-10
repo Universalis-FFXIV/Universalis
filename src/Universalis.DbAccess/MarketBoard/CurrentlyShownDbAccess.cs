@@ -27,7 +27,7 @@ public class CurrentlyShownDbAccess : ICurrentlyShownDbAccess
         return _store.RetrieveMany(query, cancellationToken);
     }
 
-    public Task Update(CurrentlyShown document, CurrentlyShownQuery query, string retainedRetainerId = null, CancellationToken cancellationToken = default)
+    public Task<IList<Listing>> Update(CurrentlyShown document, CurrentlyShownQuery query, string retainedRetainerId = null, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("CurrentlyShownDbAccess.Update");
         return _store.Insert(document, retainedRetainerId, cancellationToken);

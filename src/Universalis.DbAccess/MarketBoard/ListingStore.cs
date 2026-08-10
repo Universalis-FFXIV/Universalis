@@ -66,15 +66,16 @@ public class ListingStore : IListingStore
         _worldToDcRegion = worldToDcRegion;
     }
 
-    public async Task DeleteLive(ListingQuery query, string retainedRetainerId = null, CancellationToken cancellationToken = default)
+    public async Task<IList<Listing>> DeleteLive(ListingQuery query, string retainedRetainerId = null, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.DeleteLive");
         var hasRetention = !string.IsNullOrEmpty(retainedRetainerId);
         var commandText = hasRetention
-            ? "DELETE FROM listing WHERE item_id = $1 AND world_id = $2 AND retainer_id <> $3"
-            : "DELETE FROM listing WHERE item_id = $1 AND world_id = $2";
+            ? $"DELETE FROM listing WHERE item_id = $1 AND world_id = $2 AND retainer_id <> $3 RETURNING {ListingColumns}"
+            : $"DELETE FROM listing WHERE item_id = $1 AND world_id = $2 RETURNING {ListingColumns}";
 
         var uploadedAt = DateTimeOffset.Now;
+        List<Listing> removed;
 
         if (!hasRetention)
         {
@@ -83,8 +84,9 @@ public class ListingStore : IListingStore
             command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.WorldId });
             try
             {
-                var rowsUpdated = await command.ExecuteNonQueryAsync(cancellationToken);
-                activity?.AddTag("rowsUpdated", rowsUpdated);
+                await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+                removed = await ReadListings(reader, cancellationToken);
+                activity?.AddTag("rowsUpdated", removed.Count);
             }
             catch (Exception e)
             {
@@ -94,7 +96,7 @@ public class ListingStore : IListingStore
             }
             await _easyCachingProvider.RemoveAsync(ListingsKey(query.WorldId, query.ItemId), cancellationToken);
             await WriteMinListingCache(query.WorldId, query.ItemId, new List<Listing>(), uploadedAt);
-            return;
+            return removed;
         }
 
         // Retention path: the scoped DELETE preserves the retainer's rows, so the
@@ -107,8 +109,9 @@ public class ListingStore : IListingStore
             command.Parameters.Add(new NpgsqlParameter<string> { TypedValue = retainedRetainerId });
             try
             {
-                var rowsUpdated = await command.ExecuteNonQueryAsync(cancellationToken);
-                activity?.AddTag("rowsUpdated", rowsUpdated);
+                await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+                removed = await ReadListings(reader, cancellationToken);
+                activity?.AddTag("rowsUpdated", removed.Count);
             }
             catch (Exception e)
             {
@@ -120,12 +123,14 @@ public class ListingStore : IListingStore
         await _easyCachingProvider.RemoveAsync(ListingsKey(query.WorldId, query.ItemId), cancellationToken);
         var effectiveListings = await ReadMinListings(connection, query.WorldId, query.ItemId, cancellationToken);
         await WriteMinListingCache(query.WorldId, query.ItemId, effectiveListings, uploadedAt);
+        return removed;
     }
 
-    public async Task ReplaceLive(ICollection<Listing> listings, string retainedRetainerId = null, CancellationToken cancellationToken = default)
+    public async Task<IList<Listing>> ReplaceLive(ICollection<Listing> listings, string retainedRetainerId = null, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.ReplaceLive");
         var rowsUpdated = 0;
+        var replaced = new List<Listing>();
 
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
 
@@ -165,9 +170,14 @@ public class ListingStore : IListingStore
             // Npgsql batches have an implicit transaction around them
             // https://www.npgsql.org/doc/basic-usage.html#batching
             await using var batch = new NpgsqlBatch(connection);
+            // RETURNING hands back exactly the rows this upload displaced, which is
+            // the pre-upload board for this (item, world). Callers that need to diff
+            // against it therefore need no separate read - and with retention the
+            // scoped DELETE already excludes the retainer's surviving rows, so they
+            // cannot be mistaken for removals.
             var deleteText = string.IsNullOrEmpty(retainedRetainerId)
-                ? "DELETE FROM listing WHERE item_id = $1 AND world_id = $2"
-                : "DELETE FROM listing WHERE item_id = $1 AND world_id = $2 AND retainer_id <> $3";
+                ? $"DELETE FROM listing WHERE item_id = $1 AND world_id = $2 RETURNING {ListingColumns}"
+                : $"DELETE FROM listing WHERE item_id = $1 AND world_id = $2 AND retainer_id <> $3 RETURNING {ListingColumns}";
             var deleteCmd = new NpgsqlBatchCommand(deleteText)
             {
                 Parameters =
@@ -237,7 +247,25 @@ public class ListingStore : IListingStore
 
             try
             {
-                rowsUpdated += await batch.ExecuteNonQueryAsync(cancellationToken);
+                // The DELETE is the batch's first statement, so its RETURNING rows are
+                // the reader's first result set. The inserts return no rows, so the
+                // loop below reads nothing - but it is not optional: RecordsAffected
+                // only accumulates over statements the reader has advanced past, so
+                // without it rowsUpdated would report the DELETE alone (3 rather than
+                // 5 for a 3-delete, 2-insert batch) instead of the whole batch, which
+                // is what ExecuteNonQueryAsync reported here before.
+                // The reader must also be consumed and closed before the connection
+                // is reused below.
+                await using (var reader = await batch.ExecuteReaderAsync(cancellationToken))
+                {
+                    replaced.AddRange(await ReadListings(reader, cancellationToken));
+                    while (await reader.NextResultAsync(cancellationToken))
+                    {
+                    }
+
+                    rowsUpdated += reader.RecordsAffected;
+                }
+
                 await _easyCachingProvider.RemoveAsync(ListingsKey(worldID, itemID), cancellationToken);
                 foreach (var staleItemId in staleItemIds)
                 {
@@ -259,6 +287,56 @@ public class ListingStore : IListingStore
         }
 
         activity?.AddTag("rowsUpdated", rowsUpdated);
+        return replaced;
+    }
+
+    /// <summary>
+    /// The listing columns, in the order <see cref="ReadListing"/> expects them.
+    /// Shared between SELECT and DELETE ... RETURNING so the two cannot drift.
+    /// </summary>
+    private const string ListingColumns =
+        "listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, " +
+        "creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, uploaded_at, source";
+
+    private static async Task<List<Listing>> ReadListings(NpgsqlDataReader reader,
+        CancellationToken cancellationToken)
+    {
+        var listings = new List<Listing>();
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            listings.Add(ReadListing(reader));
+        }
+
+        return listings;
+    }
+
+    /// <summary>
+    /// Maps one row of <see cref="ListingColumns"/>. Columns are read in ordinal
+    /// order so this stays valid under <see cref="CommandBehavior.SequentialAccess"/>.
+    /// </summary>
+    private static Listing ReadListing(NpgsqlDataReader reader)
+    {
+        return new Listing
+        {
+            ListingId = string.Intern(reader.GetString(0)),
+            ItemId = reader.GetInt32(1),
+            WorldId = reader.GetInt32(2),
+            Hq = reader.GetBoolean(3),
+            OnMannequin = reader.GetBoolean(4),
+            Materia = ReadMateriaFromReader(reader),
+            PricePerUnit = reader.GetInt32(6),
+            Quantity = reader.GetInt32(7),
+            DyeId = reader.GetInt32(8),
+            CreatorId = null,
+            CreatorName = reader.GetString(9),
+            LastReviewTime = reader.GetDateTime(10),
+            RetainerId = string.Intern(reader.GetString(11)),
+            RetainerName = reader.GetString(12),
+            RetainerCityId = reader.GetInt32(13),
+            SellerId = null,
+            UpdatedAt = reader.GetDateTime(14),
+            Source = string.Intern(reader.GetString(15)),
+        };
     }
 
     // Aggregate-only recompute of min prices after a retention write. Retained
@@ -401,15 +479,7 @@ public class ListingStore : IListingStore
         // Query the database
         activity?.AddEvent(new ActivityEvent("NpgsqlCreateCommand"));
         await using var command = _dataSource.CreateCommand(
-            """
-            SELECT t.listing_id, t.item_id, t.world_id, t.hq, t.on_mannequin, t.materia,
-                   t.unit_price, t.quantity, t.dye_id, t.creator_name,
-                   t.last_review_time, t.retainer_id, t.retainer_name, t.retainer_city_id,
-                   t.uploaded_at, t.source
-            FROM listing t
-            WHERE t.item_id = $1 AND t.world_id = $2
-            ORDER BY unit_price
-            """);
+            $"SELECT {ListingColumns} FROM listing WHERE item_id = $1 AND world_id = $2 ORDER BY unit_price");
         command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.ItemId });
         command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.WorldId });
 
@@ -419,32 +489,7 @@ public class ListingStore : IListingStore
             await using var reader =
                 await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
-            var listings = new List<Listing>();
-            while (await reader.ReadAsync(cancellationToken))
-            {
-                activity?.AddEvent(new ActivityEvent("NpgsqlReaderRead"));
-                listings.Add(new Listing
-                {
-                    ListingId = string.Intern(reader.GetString(0)),
-                    ItemId = reader.GetInt32(1),
-                    WorldId = reader.GetInt32(2),
-                    Hq = reader.GetBoolean(3),
-                    OnMannequin = reader.GetBoolean(4),
-                    Materia = ReadMateriaFromReader(reader),
-                    PricePerUnit = reader.GetInt32(6),
-                    Quantity = reader.GetInt32(7),
-                    DyeId = reader.GetInt32(8),
-                    CreatorId = null,
-                    CreatorName = reader.GetString(9),
-                    LastReviewTime = reader.GetDateTime(10),
-                    RetainerId = string.Intern(reader.GetString(11)),
-                    RetainerName = reader.GetString(12),
-                    RetainerCityId = reader.GetInt32(13),
-                    SellerId = null,
-                    UpdatedAt = reader.GetDateTime(14),
-                    Source = string.Intern(reader.GetString(15)),
-                });
-            }
+            var listings = await ReadListings(reader, cancellationToken);
 
             // Cache the result temporarily
             await StoreListingsInCache(query.WorldId, query.ItemId, listings, cancellationToken);

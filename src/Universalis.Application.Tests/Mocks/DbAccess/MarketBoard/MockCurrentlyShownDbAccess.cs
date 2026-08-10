@@ -31,23 +31,29 @@ public class MockCurrentlyShownDbAccess : ICurrentlyShownDbAccess
             query.WorldIds.Contains(d.WorldId) && query.ItemIds.Contains(d.ItemId)));
     }
 
-    public async Task Update(CurrentlyShown document, CurrentlyShownQuery query,
+    public async Task<IList<Listing>> Update(CurrentlyShown document, CurrentlyShownQuery query,
         string retainedRetainerId = null, CancellationToken cancellationToken = default)
     {
-        // When a retainer's listings are retained, the existing rows for that retainer survive, so
-        // we merge them into the stored document here to mirror that behavior.
-        if (!string.IsNullOrEmpty(retainedRetainerId))
-        {
-            var existing = await Retrieve(query, cancellationToken);
-            var kept = existing?.Listings
+        var existing = await Retrieve(query, cancellationToken);
+        var existingListings = existing?.Listings ?? new List<Listing>();
+
+        // Mirrors the scoped delete in ListingStore: rows belonging to the retained
+        // retainer survive the write, so they are neither displaced nor returned.
+        var kept = string.IsNullOrEmpty(retainedRetainerId)
+            ? new List<Listing>()
+            : existingListings
                 .Where(l => l.RetainerId == retainedRetainerId)
                 .Where(l => !document.Listings.Any(nl => nl.ListingId == l.ListingId))
-                .ToList() ?? new List<Listing>();
-            document.Listings.AddRange(kept);
-        }
+                .ToList();
+
+        IList<Listing> replaced = existingListings.Except(kept).ToList();
+
+        document.Listings.AddRange(kept);
 
         await Delete(query, cancellationToken);
         await Create(document);
+
+        return replaced;
     }
 
     private async Task Delete(CurrentlyShownQuery query, CancellationToken cancellationToken = default)

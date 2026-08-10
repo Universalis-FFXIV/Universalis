@@ -168,17 +168,11 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         var newListings = CleanUploadedListings(uploadedListings, itemId, worldId, source.Name);
         var uploadedCount = newListings.Count;
 
-        // Read the prior board before the write below replaces it. The diff is only
-        // meaningful against the pre-upload state, so this read cannot run
-        // concurrently with that write - see PublishListingsToMessageBus.
-        var existingCurrentlyShown = _bus == null
-            ? null
-            : await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
-            {
-                WorldId = worldId,
-                ItemId = itemId,
-            }, cancellationToken);
-        var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
+        // What this upload says the board holds. Kept as our own copy because the
+        // document's list belongs to the storage layer once handed over, and a
+        // retention write merges the surviving rows into it - which would otherwise
+        // read back as listings this upload had just added.
+        var uploaded = newListings.ToList();
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var document = new CurrentlyShown
@@ -189,14 +183,17 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             UploadSource = source.Name,
             Listings = newListings,
         };
-        await _currentlyShownDb.Update(document, new CurrentlyShownQuery
+
+        // The write returns the rows it displaced, so the pre-upload board comes back
+        // from the statement that replaced it. No second read, and nothing to order
+        // against the write.
+        var replacedListings = await _currentlyShownDb.Update(document, new CurrentlyShownQuery
         {
             WorldId = worldId,
             ItemId = itemId,
         }, uploaderRetainerId, cancellationToken);
 
-        _ = PublishListingsToMessageBus(oldListings, newListings, worldId, itemId, uploaderRetainerId,
-            cancellationToken);
+        _ = PublishListingsToMessageBus(replacedListings, uploaded, worldId, itemId, cancellationToken);
 
         return uploadedCount;
     }
@@ -205,27 +202,24 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     /// Publishes the add/remove diff for an upload.
     /// </summary>
     /// <remarks>
-    /// The prior board is passed in rather than read here. Reading it here would
-    /// race the write in <see cref="HandleListings"/>, because this method is
-    /// deliberately not awaited: when the read lost, "old" listings were the ones
-    /// just written, both diffs came out empty, and a real change was published as
-    /// no frame at all. The read also repopulates the listings cache that the write
-    /// evicts, so losing the race could leave that cache holding pre-upload
-    /// listings for its full lifetime.
+    /// <paramref name="replacedListings"/> is what the write actually displaced,
+    /// not the result of a second read. Reading the prior board separately cannot
+    /// be ordered against the write that destroys it: when that read lost the race
+    /// the "old" listings were the ones just written, both diffs came out empty,
+    /// and a real change was published as no frame at all.
+    ///
+    /// It also means retention needs no filtering here. The scoped delete leaves
+    /// the uploader's retainer's rows in place, so they are absent from what was
+    /// displaced and cannot be mistaken for removals - decided by what the database
+    /// did rather than by re-deriving it.
     /// </remarks>
-    private async Task PublishListingsToMessageBus(IList<Listing> oldListings, IList<Listing> listings, int worldId,
-        int itemId, string retainedRetainerId, CancellationToken cancellationToken = default)
+    private async Task PublishListingsToMessageBus(IList<Listing> replacedListings, IList<Listing> listings,
+        int worldId, int itemId, CancellationToken cancellationToken = default)
     {
         if (_bus == null) return;
 
-        var addedListings = listings.Where(l => !oldListings.Contains(l)).ToList();
-
-        // Retained retainer listings survive the DB update, so they're absent from the
-        // uploaded set; without this filter they'd be incorrectly diffed as removals.
-        var removedListings = oldListings
-            .Where(l => retainedRetainerId == null || l.RetainerId != retainedRetainerId)
-            .Where(l => !listings.Contains(l))
-            .ToList();
+        var addedListings = listings.Where(l => !replacedListings.Contains(l)).ToList();
+        var removedListings = replacedListings.Where(l => !listings.Contains(l)).ToList();
 
         if (removedListings.Count > 0)
         {
