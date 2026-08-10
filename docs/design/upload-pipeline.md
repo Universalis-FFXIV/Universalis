@@ -128,4 +128,70 @@ After processing, events are published to the message bus:
 | `SalesAdd`       | New sales recorded         | WebSocket subscribers |
 | `ItemUpdate`     | Any change to item data    | WebSocket subscribers |
 
+### Where the listings diff comes from
+
+The add/remove diff must be taken against the board as it stood *before* the
+upload. That state is exactly what the write destroys, so it cannot be fetched
+by a separate read — any such read is unordered against the write.
+
+It used to be read back while the write was in flight:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant H as HandleListings
+    participant P as PublishListingsToMessageBus<br/>(never awaited)
+    participant DB as Postgres
+    participant C as listings cache
+    participant S as Subscriber
+
+    H-)P: start, without awaiting
+    P->>DB: SELECT the prior board
+    H->>DB: ReplaceLive: DELETE + INSERT
+
+    Note over P,DB: issued first, but on a different pooled<br/>connection - nothing orders the two
+
+    alt SELECT resolves after the write commits
+        DB-->>P: the rows that were just written
+        Note over P: old == new, so<br/>added = [] and removed = []
+        P--xS: no frame at all - the change is lost silently
+    else SELECT resolves before the write commits
+        DB-->>P: the pre-upload rows
+        P->>S: listings/remove + listings/add (correct)
+        DB->>C: evict listing5:{world}:{item}
+        P->>C: store the pre-upload rows, after the evict
+        Note over C: REST serves a stale board<br/>for the 5-minute TTL
+    end
+```
+
+Neither branch is safe: one loses the frame, the other poisons the cache. The
+write now returns the rows it displaced instead, at no extra round-trip:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant H as HandleListings
+    participant P as PublishListingsToMessageBus<br/>(never awaited)
+    participant DB as Postgres
+    participant C as listings cache
+    participant S as Subscriber
+
+    H->>DB: ReplaceLive: DELETE ... RETURNING + INSERT<br/>(one batch, one implicit transaction)
+    DB-->>H: the rows the DELETE displaced =<br/>the board as it was before this upload
+    DB->>C: evict listing5:{world}:{item}
+
+    Note over H: added = uploaded - displaced<br/>removed = displaced - uploaded
+
+    H-)P: publish, after the write has landed
+    P->>S: listings/remove + listings/add
+
+    Note over H,DB: no read, so nothing to race
+    Note over DB,C: retained retainer rows were never deleted,<br/>so they cannot be reported as removals
+```
+
+`RETURNING` on a `DELETE` yields the rows as they last existed, which is the
+one statement where "what `RETURNING` gives" and "the state before the write"
+coincide. On an `INSERT` or `UPDATE` it yields the *new* row instead — so
+rewriting this path as an upsert would silently invert the diff.
+
 # 
