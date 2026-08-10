@@ -261,6 +261,7 @@ public class ListingStore : IListingStore
                     replaced.AddRange(await ReadListings(reader, cancellationToken));
                     while (await reader.NextResultAsync(cancellationToken))
                     {
+                        // Advancing is the point; the inserts return no rows to read.
                     }
 
                     rowsUpdated += reader.RecordsAffected;
