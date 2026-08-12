@@ -71,6 +71,32 @@ public class ListingStoreTests
 #if DEBUG
     [Fact]
 #endif
+    public async Task RetrieveLive_CachedCollectionMutationDoesNotPoisonCache()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        var currentlyShown = SeedDataGenerator.MakeCurrentlyShown(92, 22528);
+        var expectedCount = currentlyShown.Listings.Count;
+        await store.ReplaceLive(currentlyShown.Listings);
+
+        var first = await store.RetrieveLive(new ListingQuery { ItemId = 22528, WorldId = 92 });
+        Assert.IsType<List<Listing>>(first).AddRange(first);
+        var second = await store.RetrieveLive(new ListingQuery { ItemId = 22528, WorldId = 92 });
+
+        Assert.Equal(expectedCount, second.Count());
+
+        var manyQuery = new ListingManyQuery { ItemIds = new[] { 22528 }, WorldIds = new[] { 92 } };
+        var manyFirst = await store.RetrieveManyLive(manyQuery);
+        var manyFirstListings = Assert.IsType<List<Listing>>(manyFirst[new WorldItemPair(92, 22528)]);
+        manyFirstListings.AddRange(manyFirstListings);
+        var manySecond = await store.RetrieveManyLive(manyQuery);
+
+        Assert.Equal(expectedCount, manySecond[new WorldItemPair(92, 22528)].Count);
+    }
+
+#if DEBUG
+    [Fact]
+#endif
     public async Task DeleteLiveRetrieveLive_Works()
     {
         var store = _fixture.Services.GetRequiredService<IListingStore>();
