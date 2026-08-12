@@ -395,7 +395,7 @@ public class ListingStore : IListingStore
         var (success, cacheValue) = await TryGetListingsFromCache(query.WorldId, query.ItemId, cancellationToken);
         if (success)
         {
-            return cacheValue;
+            return cacheValue.ToList();
         }
 
         // Query the database
@@ -455,7 +455,7 @@ public class ListingStore : IListingStore
                 RowsReadCount.Observe(listings.Count);
             }
 
-            return listings;
+            return listings.ToList();
         }
         catch (Exception e)
         {
@@ -484,7 +484,7 @@ public class ListingStore : IListingStore
         if (cacheValues.Count == worldItemPairs.Count)
         {
             // Retrieved everything from the cache
-            return cacheValues;
+            return cacheValues.ToDictionary(kvp => kvp.Key, kvp => (IList<Listing>)kvp.Value.ToList());
         }
 
         foreach (var (wip, cacheValue) in cacheValues)
@@ -578,7 +578,7 @@ public class ListingStore : IListingStore
                 RowsReadCount.Observe(result.Count - cacheValues.Count);
             }
 
-            return result;
+            return result.ToDictionary(kvp => kvp.Key, kvp => (IList<Listing>)kvp.Value.ToList());
         }
         catch (Exception e)
         {
