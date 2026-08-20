@@ -31,14 +31,16 @@ public class MockCurrentlyShownDbAccess : ICurrentlyShownDbAccess
             query.WorldIds.Contains(d.WorldId) && query.ItemIds.Contains(d.ItemId)));
     }
 
-    public async Task Update(CurrentlyShown document, CurrentlyShownQuery query,
+    public async Task<IList<Listing>> Update(CurrentlyShown document, CurrentlyShownQuery query,
         string retainedRetainerId = null, CancellationToken cancellationToken = default)
     {
-        // When a retainer's listings are retained, the existing rows for that retainer survive, so
-        // we merge them into the stored document here to mirror that behavior.
+        var existing = await Retrieve(query, cancellationToken);
+        var displaced = existing?.Listings
+            .Where(l => string.IsNullOrEmpty(retainedRetainerId) || l.RetainerId != retainedRetainerId)
+            .ToList() ?? new List<Listing>();
+
         if (!string.IsNullOrEmpty(retainedRetainerId))
         {
-            var existing = await Retrieve(query, cancellationToken);
             var kept = existing?.Listings
                 .Where(l => l.RetainerId == retainedRetainerId)
                 .Where(l => !document.Listings.Any(nl => nl.ListingId == l.ListingId))
@@ -48,6 +50,7 @@ public class MockCurrentlyShownDbAccess : ICurrentlyShownDbAccess
 
         await Delete(query, cancellationToken);
         await Create(document);
+        return displaced;
     }
 
     private async Task Delete(CurrentlyShownQuery query, CancellationToken cancellationToken = default)
