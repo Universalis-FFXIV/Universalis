@@ -1,3 +1,4 @@
+using Prometheus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,16 @@ namespace Universalis.Application.Controllers;
 
 public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 {
+    private static readonly Counter ListingCollisionResponses = Metrics.CreateCounter(
+        "universalis_currently_shown_listing_collision_responses",
+        "CurrentlyShown item responses containing repeated listing IDs.",
+        "Scope", "RequestShape", "Kind");
+
+    private static readonly Counter ListingCollisionEntries = Metrics.CreateCounter(
+        "universalis_currently_shown_listing_collision_entries",
+        "Excess CurrentlyShown listing entries grouped by identity collision kind.",
+        "Scope", "RequestShape", "Kind");
+
     protected readonly ICurrentlyShownDbAccess CurrentlyShown;
     protected readonly IHistoryDbAccess History;
 
@@ -50,6 +61,10 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
             .Where(cs => GameData.MarketableItemIds().Contains(cs.Item2.ItemId))
             .Select(static cs => cs.Item2)
             .ToList();
+        foreach (var item in resolvedItems)
+        {
+            ObserveListingCollisions(item, worldDcRegion, "multi");
+        }
         return (unresolvedItemIds, resolvedItems);
     }
 
@@ -72,13 +87,47 @@ public class CurrentlyShownControllerBase : WorldDcRegionControllerBase
 
         if (worldIds.Length == 1)
         {
-            return await GetView(worldDcRegion, worldIds[0], itemId, nListings, nEntries, onlyHq, statsWithin,
+            var result = await GetView(worldDcRegion, worldIds[0], itemId, nListings, nEntries, onlyHq, statsWithin,
                 entriesWithin, fields, cancellationToken);
+            if (result.Item1) ObserveListingCollisions(result.Item2, worldDcRegion, "single");
+            return result;
         }
 
         var batches = await GetViewBatched(worldDcRegion, worldIds, new[] { itemId }, nListings, nEntries, onlyHq,
             statsWithin, entriesWithin, fields, cancellationToken);
+        if (batches[0].Item1) ObserveListingCollisions(batches[0].Item2, worldDcRegion, "single");
         return batches[0];
+    }
+
+    internal readonly record struct ListingCollisionCounts(int SameWorldExtra, int CrossWorldExtra);
+
+    internal static ListingCollisionCounts CountListingCollisions(CurrentlyShownView view, int? scopeWorldId)
+    {
+        var listings = view.Listings
+            .Where(listing => !string.IsNullOrEmpty(listing.ListingIdHash))
+            .ToList();
+        var sameWorldExtra = listings
+            .GroupBy(listing => (WorldId: listing.WorldId ?? scopeWorldId, listing.ListingIdHash))
+            .Sum(group => Math.Max(0, group.Count() - 1));
+        var crossWorldExtra = listings
+            .GroupBy(listing => listing.ListingIdHash)
+            .Sum(group => Math.Max(0, group.Select(listing => listing.WorldId ?? scopeWorldId).Distinct().Count() - 1));
+        return new ListingCollisionCounts(sameWorldExtra, crossWorldExtra);
+    }
+
+    private static void ObserveListingCollisions(CurrentlyShownView view, WorldDcRegion scope, string requestShape)
+    {
+        var counts = CountListingCollisions(view, scope.IsWorld ? scope.WorldId : null);
+        var scopeName = scope.IsWorld ? "world" : scope.IsDc ? "dc" : "region";
+        ObserveCollisionKind(counts.SameWorldExtra, scopeName, requestShape, "same_world");
+        ObserveCollisionKind(counts.CrossWorldExtra, scopeName, requestShape, "cross_world");
+    }
+
+    private static void ObserveCollisionKind(int extraEntries, string scope, string requestShape, string kind)
+    {
+        if (extraEntries == 0) return;
+        ListingCollisionResponses.WithLabels(scope, requestShape, kind).Inc();
+        ListingCollisionEntries.WithLabels(scope, requestShape, kind).Inc(extraEntries);
     }
 
     private async Task<(bool, CurrentlyShownView)> GetView(
