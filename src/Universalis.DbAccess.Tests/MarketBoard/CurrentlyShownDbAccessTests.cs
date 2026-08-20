@@ -33,10 +33,11 @@ public class CurrentlyShownDbAccessTests
             })).Where(cs => cs is not null));
         }
 
-        public Task Insert(CurrentlyShown data, string retainedRetainerId = null, CancellationToken cancellationToken = default)
+        public Task<IList<Listing>> Insert(CurrentlyShown data, string retainedRetainerId = null, CancellationToken cancellationToken = default)
         {
+            _currentlyShown.TryGetValue((data.WorldId, data.ItemId), out var previous);
             _currentlyShown[(data.WorldId, data.ItemId)] = data;
-            return Task.CompletedTask;
+            return Task.FromResult<IList<Listing>>(previous?.Listings ?? new List<Listing>());
         }
     }
 
@@ -79,7 +80,7 @@ public class CurrentlyShownDbAccessTests
         Assert.Equal(document2.UploadSource, retrieved.UploadSource);
         Assert.Equal(document2.LastUploadTimeUnixMilliseconds, retrieved.LastUploadTimeUnixMilliseconds);
     }
-    
+
     [Fact]
     public async Task Update_Retrieve_Works_WhenUpdatingToNone()
     {

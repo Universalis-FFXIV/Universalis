@@ -28,7 +28,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     private readonly IHistoryDbAccess _historyDb;
     private readonly IUploadLogDbAccess _uploadLogDb;
     private readonly IGameDataProvider _gdp;
-    private readonly IBus _bus;
+    private readonly IPublishEndpoint _bus;
     private readonly ILogger<MarketBoardUploadBehavior> _logger;
 
     public MarketBoardUploadBehavior(
@@ -36,7 +36,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
         IHistoryDbAccess historyDb,
         IUploadLogDbAccess uploadLogDb,
         IGameDataProvider gdp,
-        IBus bus,
+        IPublishEndpoint bus,
         ILogger<MarketBoardUploadBehavior> logger)
     {
         _currentlyShownDb = currentlyShownDb;
@@ -167,8 +167,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     {
         var newListings = CleanUploadedListings(uploadedListings, itemId, worldId, source.Name);
         var uploadedCount = newListings.Count;
-
-        _ = PublishListingsToMessageBus(newListings, worldId, itemId, uploaderRetainerId, cancellationToken);
+        var uploaded = newListings.ToList();
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var document = new CurrentlyShown
@@ -179,34 +178,24 @@ public class MarketBoardUploadBehavior : IUploadBehavior
             UploadSource = source.Name,
             Listings = newListings,
         };
-        await _currentlyShownDb.Update(document, new CurrentlyShownQuery
+        var replacedListings = await _currentlyShownDb.Update(document, new CurrentlyShownQuery
         {
             WorldId = worldId,
             ItemId = itemId,
         }, uploaderRetainerId, cancellationToken);
 
+        _ = PublishListingsToMessageBus(replacedListings, uploaded, worldId, itemId, cancellationToken);
+
         return uploadedCount;
     }
 
-    private async Task PublishListingsToMessageBus(IList<Listing> listings, int worldId, int itemId,
-        string retainedRetainerId, CancellationToken cancellationToken = default)
+    private async Task PublishListingsToMessageBus(IList<Listing> replacedListings, IList<Listing> listings,
+        int worldId, int itemId, CancellationToken cancellationToken = default)
     {
         if (_bus == null) return;
 
-        var existingCurrentlyShown = await _currentlyShownDb.Retrieve(new CurrentlyShownQuery
-        {
-            WorldId = worldId,
-            ItemId = itemId,
-        }, cancellationToken);
-        var oldListings = existingCurrentlyShown?.Listings ?? new List<Listing>();
-        var addedListings = listings.Where(l => !oldListings.Contains(l)).ToList();
-
-        // Retained retainer listings survive the DB update, so they're absent from the
-        // uploaded set; without this filter they'd be incorrectly diffed as removals.
-        var removedListings = oldListings
-            .Where(l => retainedRetainerId == null || l.RetainerId != retainedRetainerId)
-            .Where(l => !listings.Contains(l))
-            .ToList();
+        var addedListings = listings.Where(l => !replacedListings.Contains(l)).ToList();
+        var removedListings = replacedListings.Where(l => !listings.Contains(l)).ToList();
 
         if (removedListings.Count > 0)
         {

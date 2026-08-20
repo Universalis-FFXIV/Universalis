@@ -66,39 +66,39 @@ public class ListingStore : IListingStore
         _worldToDcRegion = worldToDcRegion;
     }
 
-    public async Task DeleteLive(ListingQuery query, string retainedRetainerId = null, CancellationToken cancellationToken = default)
+    public async Task<IList<Listing>> DeleteLive(ListingQuery query, string retainedRetainerId = null,
+        CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.DeleteLive");
-        var hasRetention = !string.IsNullOrEmpty(retainedRetainerId);
-        var commandText = hasRetention
-            ? "DELETE FROM listing WHERE item_id = $1 AND world_id = $2 AND retainer_id <> $3"
-            : "DELETE FROM listing WHERE item_id = $1 AND world_id = $2";
-
+        var retaining = !string.IsNullOrEmpty(retainedRetainerId);
+        var commandText = retaining
+            ? $"DELETE FROM listing WHERE item_id = $1 AND world_id = $2 AND retainer_id <> $3 RETURNING {ListingColumns}"
+            : $"DELETE FROM listing WHERE item_id = $1 AND world_id = $2 RETURNING {ListingColumns}";
         var uploadedAt = DateTimeOffset.Now;
+        List<Listing> removed;
 
-        if (!hasRetention)
+        if (!retaining)
         {
             await using var command = _dataSource.CreateCommand(commandText);
             command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.ItemId });
             command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = query.WorldId });
             try
             {
-                var rowsUpdated = await command.ExecuteNonQueryAsync(cancellationToken);
-                activity?.AddTag("rowsUpdated", rowsUpdated);
+                await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+                removed = await ReadListings(reader, cancellationToken);
+                activity?.AddTag("rowsUpdated", removed.Count);
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to delete listings (world={}, item={})", query.WorldId,
-                    query.ItemId);
+                _logger.LogError(e, "Failed to delete listings (world={}, item={})", query.WorldId, query.ItemId);
                 throw;
             }
+
             await _easyCachingProvider.RemoveAsync(ListingsKey(query.WorldId, query.ItemId), cancellationToken);
             await WriteMinListingCache(query.WorldId, query.ItemId, new List<Listing>(), uploadedAt);
-            return;
+            return removed;
         }
 
-        // Retention path: the scoped DELETE preserves the retainer's rows, so the
-        // min-listing aggregates must reflect the surviving data, not an empty set.
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
         await using (var command = new NpgsqlCommand(commandText, connection))
         {
@@ -107,158 +107,206 @@ public class ListingStore : IListingStore
             command.Parameters.Add(new NpgsqlParameter<string> { TypedValue = retainedRetainerId });
             try
             {
-                var rowsUpdated = await command.ExecuteNonQueryAsync(cancellationToken);
-                activity?.AddTag("rowsUpdated", rowsUpdated);
+                await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+                removed = await ReadListings(reader, cancellationToken);
+                activity?.AddTag("rowsUpdated", removed.Count);
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to delete listings (world={}, item={})", query.WorldId,
-                    query.ItemId);
+                _logger.LogError(e, "Failed to delete listings (world={}, item={})", query.WorldId, query.ItemId);
                 throw;
             }
         }
+
         await _easyCachingProvider.RemoveAsync(ListingsKey(query.WorldId, query.ItemId), cancellationToken);
         var effectiveListings = await ReadMinListings(connection, query.WorldId, query.ItemId, cancellationToken);
         await WriteMinListingCache(query.WorldId, query.ItemId, effectiveListings, uploadedAt);
+        return removed;
     }
 
-    public async Task ReplaceLive(ICollection<Listing> listings, string retainedRetainerId = null, CancellationToken cancellationToken = default)
+    public async Task<IList<Listing>> ReplaceLive(ICollection<Listing> listings,
+        string retainedRetainerId = null, CancellationToken cancellationToken = default)
     {
         using var activity = Util.ActivitySource.StartActivity("ListingStore.ReplaceLive");
         var rowsUpdated = 0;
-
+        var replaced = new List<Listing>();
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
-
-        // Get the current timestamp for the batch
         var uploadedAt = DateTimeOffset.Now;
 
-        // Listings are grouped for better exceptions if a batch fails; exceptions can be
-        // filtered by world and item.
-        var groupedListings = listings.GroupBy(l => new WorldItemPair(l.WorldId, l.ItemId));
-        foreach (var listingGroup in groupedListings)
+        foreach (var listingGroup in listings.GroupBy(l => new WorldItemPair(l.WorldId, l.ItemId)))
         {
-            var (worldID, itemID) = listingGroup.Key;
-
-            // Find any pre-existing rows that the upsert below will mutate the
-            // item_id of. The batch's DELETE only clears the current (item, world);
-            // any conflict on (listing_id, world_id) implies a row exists with the
-            // same key but a different item_id, and `DO UPDATE SET item_id = ...`
-            // will move it to the current item. Without evicting the OLD item's
-            // cache key, `listing5:{world}:{oldItem}` would keep a stale entry
-            // until its 5-minute TTL expires.
+            var (worldId, itemId) = listingGroup.Key;
             var listingIds = listingGroup.Select(l => l.ListingId).ToArray();
-            var staleItemIds = new HashSet<int>();
-            await using (var preCmd = new NpgsqlCommand(
-                "SELECT DISTINCT item_id FROM listing WHERE listing_id = ANY($1) AND world_id = $2 AND item_id <> $3",
-                connection))
-            {
-                preCmd.Parameters.Add(new NpgsqlParameter<string[]> { TypedValue = listingIds });
-                preCmd.Parameters.Add(new NpgsqlParameter<int> { TypedValue = worldID });
-                preCmd.Parameters.Add(new NpgsqlParameter<int> { TypedValue = itemID });
-                await using var reader = await preCmd.ExecuteReaderAsync(cancellationToken);
-                while (await reader.ReadAsync(cancellationToken))
-                {
-                    staleItemIds.Add(reader.GetInt32(0));
-                }
-            }
+            var staleItemIds = await FindItemsLosingListings(
+                connection, listingIds, worldId, itemId, cancellationToken);
 
-            // Npgsql batches have an implicit transaction around them
-            // https://www.npgsql.org/doc/basic-usage.html#batching
             await using var batch = new NpgsqlBatch(connection);
-            var deleteText = string.IsNullOrEmpty(retainedRetainerId)
-                ? "DELETE FROM listing WHERE item_id = $1 AND world_id = $2"
-                : "DELETE FROM listing WHERE item_id = $1 AND world_id = $2 AND retainer_id <> $3";
-            var deleteCmd = new NpgsqlBatchCommand(deleteText)
-            {
-                Parameters =
-                {
-                    new NpgsqlParameter<int> { TypedValue = itemID },
-                    new NpgsqlParameter<int> { TypedValue = worldID },
-                },
-            };
-            if (!string.IsNullOrEmpty(retainedRetainerId))
-            {
-                deleteCmd.Parameters.Add(new NpgsqlParameter<string> { TypedValue = retainedRetainerId });
-            }
-            batch.BatchCommands.Add(deleteCmd);
-
+            batch.BatchCommands.Add(CreateDisplacingDelete(itemId, worldId, retainedRetainerId));
             foreach (var listing in listingGroup)
             {
-                // The DELETE above clears rows for the current (item, world) before
-                // these inserts. Any remaining conflict on the (listing_id, world_id)
-                // primary key therefore implies a pre-existing row with the same
-                // (listing_id, world_id) but a different item_id. Treat the new upload
-                // as authoritative and overwrite, rather than silently dropping it.
-                batch.BatchCommands.Add(new NpgsqlBatchCommand(
-                    """
-                    INSERT INTO listing
-                    (listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id,
-                     creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, uploaded_at,
-                     source)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-                    ON CONFLICT (listing_id, world_id) DO UPDATE SET
-                        item_id = EXCLUDED.item_id,
-                        hq = EXCLUDED.hq,
-                        on_mannequin = EXCLUDED.on_mannequin,
-                        materia = EXCLUDED.materia,
-                        unit_price = EXCLUDED.unit_price,
-                        quantity = EXCLUDED.quantity,
-                        dye_id = EXCLUDED.dye_id,
-                        creator_name = EXCLUDED.creator_name,
-                        last_review_time = EXCLUDED.last_review_time,
-                        retainer_id = EXCLUDED.retainer_id,
-                        retainer_name = EXCLUDED.retainer_name,
-                        retainer_city_id = EXCLUDED.retainer_city_id,
-                        uploaded_at = EXCLUDED.uploaded_at,
-                        source = EXCLUDED.source;
-                    """)
-                {
-                    Parameters =
-                    {
-                        new NpgsqlParameter<string> { TypedValue = listing.ListingId },
-                        new NpgsqlParameter<int> { TypedValue = listing.ItemId },
-                        new NpgsqlParameter<int> { TypedValue = listing.WorldId },
-                        new NpgsqlParameter<bool> { TypedValue = listing.Hq },
-                        new NpgsqlParameter<bool> { TypedValue = listing.OnMannequin },
-                        ConvertMateriaToParameter(listing.Materia),
-                        new NpgsqlParameter<int> { TypedValue = listing.PricePerUnit },
-                        new NpgsqlParameter<int> { TypedValue = listing.Quantity },
-                        new NpgsqlParameter<int> { TypedValue = listing.DyeId },
-                        new NpgsqlParameter<string> { TypedValue = listing.CreatorName },
-                        new NpgsqlParameter<DateTime> { TypedValue = listing.LastReviewTime },
-                        new NpgsqlParameter<string> { TypedValue = listing.RetainerId },
-                        new NpgsqlParameter<string> { TypedValue = listing.RetainerName },
-                        new NpgsqlParameter<int> { TypedValue = listing.RetainerCityId },
-                        new NpgsqlParameter<DateTime> { TypedValue = uploadedAt.UtcDateTime },
-                        new NpgsqlParameter<string> { TypedValue = listing.Source },
-                    },
-                });
+                batch.BatchCommands.Add(CreateUpsert(listing, uploadedAt));
             }
 
             try
             {
-                rowsUpdated += await batch.ExecuteNonQueryAsync(cancellationToken);
-                await _easyCachingProvider.RemoveAsync(ListingsKey(worldID, itemID), cancellationToken);
+                await using (var reader = await batch.ExecuteReaderAsync(cancellationToken))
+                {
+                    replaced.AddRange(await ReadListings(reader, cancellationToken));
+                    while (await reader.NextResultAsync(cancellationToken))
+                    {
+                    }
+                    rowsUpdated += reader.RecordsAffected;
+                }
+
+                await _easyCachingProvider.RemoveAsync(ListingsKey(worldId, itemId), cancellationToken);
                 foreach (var staleItemId in staleItemIds)
                 {
-                    await _easyCachingProvider.RemoveAsync(ListingsKey(worldID, staleItemId), cancellationToken);
+                    await _easyCachingProvider.RemoveAsync(ListingsKey(worldId, staleItemId), cancellationToken);
                 }
             }
             catch (Exception e)
             {
                 activity?.AddTag("rowsUpdated", rowsUpdated);
-                _logger.LogError(e, "Failed to insert listings (world={}, item={})", worldID,
-                    itemID);
+                _logger.LogError(e, "Failed to insert listings (world={}, item={})", worldId, itemId);
                 throw;
             }
 
             var effectiveListings = string.IsNullOrEmpty(retainedRetainerId)
                 ? listings
-                : await ReadMinListings(connection, worldID, itemID, cancellationToken);
-            await WriteMinListingCache(worldID, itemID, effectiveListings, uploadedAt);
+                : await ReadMinListings(connection, worldId, itemId, cancellationToken);
+            await WriteMinListingCache(worldId, itemId, effectiveListings, uploadedAt);
         }
 
         activity?.AddTag("rowsUpdated", rowsUpdated);
+        return replaced;
+    }
+
+    private static async Task<HashSet<int>> FindItemsLosingListings(NpgsqlConnection connection,
+        string[] listingIds, int worldId, int itemId, CancellationToken cancellationToken)
+    {
+        var staleItemIds = new HashSet<int>();
+        await using var command = new NpgsqlCommand(
+            "SELECT DISTINCT item_id FROM listing WHERE listing_id = ANY($1) AND world_id = $2 AND item_id <> $3",
+            connection);
+        command.Parameters.Add(new NpgsqlParameter<string[]> { TypedValue = listingIds });
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = worldId });
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = itemId });
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            staleItemIds.Add(reader.GetInt32(0));
+        }
+        return staleItemIds;
+    }
+
+    private static NpgsqlBatchCommand CreateDisplacingDelete(int itemId, int worldId,
+        string retainedRetainerId)
+    {
+        var retaining = !string.IsNullOrEmpty(retainedRetainerId);
+        var command = new NpgsqlBatchCommand(retaining
+            ? $"DELETE FROM listing WHERE item_id = $1 AND world_id = $2 AND retainer_id <> $3 RETURNING {ListingColumns}"
+            : $"DELETE FROM listing WHERE item_id = $1 AND world_id = $2 RETURNING {ListingColumns}")
+        {
+            Parameters =
+            {
+                new NpgsqlParameter<int> { TypedValue = itemId },
+                new NpgsqlParameter<int> { TypedValue = worldId },
+            },
+        };
+        if (retaining)
+        {
+            command.Parameters.Add(new NpgsqlParameter<string> { TypedValue = retainedRetainerId });
+        }
+        return command;
+    }
+
+    private static NpgsqlBatchCommand CreateUpsert(Listing listing, DateTimeOffset uploadedAt)
+    {
+        return new NpgsqlBatchCommand(
+            """
+            INSERT INTO listing
+            (listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id,
+             creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, uploaded_at,
+             source)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+            ON CONFLICT (listing_id, world_id) DO UPDATE SET
+                item_id = EXCLUDED.item_id,
+                hq = EXCLUDED.hq,
+                on_mannequin = EXCLUDED.on_mannequin,
+                materia = EXCLUDED.materia,
+                unit_price = EXCLUDED.unit_price,
+                quantity = EXCLUDED.quantity,
+                dye_id = EXCLUDED.dye_id,
+                creator_name = EXCLUDED.creator_name,
+                last_review_time = EXCLUDED.last_review_time,
+                retainer_id = EXCLUDED.retainer_id,
+                retainer_name = EXCLUDED.retainer_name,
+                retainer_city_id = EXCLUDED.retainer_city_id,
+                uploaded_at = EXCLUDED.uploaded_at,
+                source = EXCLUDED.source;
+            """)
+        {
+            Parameters =
+            {
+                new NpgsqlParameter<string> { TypedValue = listing.ListingId },
+                new NpgsqlParameter<int> { TypedValue = listing.ItemId },
+                new NpgsqlParameter<int> { TypedValue = listing.WorldId },
+                new NpgsqlParameter<bool> { TypedValue = listing.Hq },
+                new NpgsqlParameter<bool> { TypedValue = listing.OnMannequin },
+                ConvertMateriaToParameter(listing.Materia),
+                new NpgsqlParameter<int> { TypedValue = listing.PricePerUnit },
+                new NpgsqlParameter<int> { TypedValue = listing.Quantity },
+                new NpgsqlParameter<int> { TypedValue = listing.DyeId },
+                new NpgsqlParameter<string> { TypedValue = listing.CreatorName },
+                new NpgsqlParameter<DateTime> { TypedValue = listing.LastReviewTime },
+                new NpgsqlParameter<string> { TypedValue = listing.RetainerId },
+                new NpgsqlParameter<string> { TypedValue = listing.RetainerName },
+                new NpgsqlParameter<int> { TypedValue = listing.RetainerCityId },
+                new NpgsqlParameter<DateTime> { TypedValue = uploadedAt.UtcDateTime },
+                new NpgsqlParameter<string> { TypedValue = listing.Source },
+            },
+        };
+    }
+
+    private const string ListingColumns =
+        "listing_id, item_id, world_id, hq, on_mannequin, materia, unit_price, quantity, dye_id, " +
+        "creator_name, last_review_time, retainer_id, retainer_name, retainer_city_id, uploaded_at, source";
+
+    private static async Task<List<Listing>> ReadListings(NpgsqlDataReader reader,
+        CancellationToken cancellationToken)
+    {
+        var listings = new List<Listing>();
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            listings.Add(ReadListing(reader));
+        }
+        return listings;
+    }
+
+    private static Listing ReadListing(NpgsqlDataReader reader)
+    {
+        return new Listing
+        {
+            ListingId = string.Intern(reader.GetString(0)),
+            ItemId = reader.GetInt32(1),
+            WorldId = reader.GetInt32(2),
+            Hq = reader.GetBoolean(3),
+            OnMannequin = reader.GetBoolean(4),
+            Materia = ReadMateriaFromReader(reader),
+            PricePerUnit = reader.GetInt32(6),
+            Quantity = reader.GetInt32(7),
+            DyeId = reader.GetInt32(8),
+            CreatorId = null,
+            CreatorName = reader.GetString(9),
+            LastReviewTime = reader.GetDateTime(10),
+            RetainerId = string.Intern(reader.GetString(11)),
+            RetainerName = reader.GetString(12),
+            RetainerCityId = reader.GetInt32(13),
+            SellerId = null,
+            UpdatedAt = reader.GetDateTime(14),
+            Source = string.Intern(reader.GetString(15)),
+        };
     }
 
     // Aggregate-only recompute of min prices after a retention write. Retained
