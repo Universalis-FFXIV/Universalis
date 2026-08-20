@@ -48,6 +48,16 @@ public class ListingStore : IListingStore
             Buckets = Histogram.ExponentialBuckets(1, 2, 16),
         });
 
+    private static readonly Counter DuplicateResults = Prometheus.Metrics.CreateCounter(
+        "universalis_listing_duplicate_results",
+        "Listing store results containing repeated listing IDs.",
+        "Source", "Method");
+
+    private static readonly Counter DuplicateEntries = Prometheus.Metrics.CreateCounter(
+        "universalis_listing_duplicate_entries",
+        "Excess listing store entries grouped by source and retrieval method.",
+        "Source", "Method");
+
     private static readonly TimeSpan LocalListingsCacheTime = TimeSpan.FromMinutes(5);
 
     private readonly ILogger<ListingStore> _logger;
@@ -443,6 +453,7 @@ public class ListingStore : IListingStore
         var (success, cacheValue) = await TryGetListingsFromCache(query.WorldId, query.ItemId, cancellationToken);
         if (success)
         {
+            ObserveDuplicateListings(cacheValue, "local_cache", "single");
             return cacheValue.ToList();
         }
 
@@ -499,10 +510,10 @@ public class ListingStore : IListingStore
 
             if (Random.Shared.NextDouble() < 0.2)
             {
-                // Record metric 20% of the time because this is a hot path
                 RowsReadCount.Observe(listings.Count);
             }
 
+            ObserveDuplicateListings(listings, "postgres", "single");
             return listings.ToList();
         }
         catch (Exception e)
@@ -531,12 +542,16 @@ public class ListingStore : IListingStore
         var cacheValues = await TryGetListingsFromCacheMulti(worldItemPairs, cancellationToken);
         if (cacheValues.Count == worldItemPairs.Count)
         {
-            // Retrieved everything from the cache
+            foreach (var value in cacheValues.Values)
+            {
+                ObserveDuplicateListings(value, "local_cache", "many");
+            }
             return cacheValues.ToDictionary(kvp => kvp.Key, kvp => (IList<Listing>)kvp.Value.ToList());
         }
 
         foreach (var (wip, cacheValue) in cacheValues)
         {
+            ObserveDuplicateListings(cacheValue, "local_cache", "many");
             listings[wip] = cacheValue;
             worldItemPairs.Remove(wip);
         }
@@ -622,10 +637,13 @@ public class ListingStore : IListingStore
 
             if (Random.Shared.NextDouble() < 0.2)
             {
-                // Record metric 20% of the time because this is a hot path
                 RowsReadCount.Observe(result.Count - cacheValues.Count);
             }
 
+            foreach (var (key, value) in result)
+            {
+                if (!cacheValues.ContainsKey(key)) ObserveDuplicateListings(value, "postgres", "many");
+            }
             return result.ToDictionary(kvp => kvp.Key, kvp => (IList<Listing>)kvp.Value.ToList());
         }
         catch (Exception e)
@@ -634,6 +652,18 @@ public class ListingStore : IListingStore
                 string.Join(',', itemIds));
             throw;
         }
+    }
+
+    private static void ObserveDuplicateListings(IEnumerable<Listing> listings, string source, string method)
+    {
+        var extraEntries = listings
+            .Where(listing => !string.IsNullOrEmpty(listing.ListingId))
+            .GroupBy(listing => listing.ListingId)
+            .Sum(group => Math.Max(0, group.Count() - 1));
+        if (extraEntries == 0) return;
+
+        DuplicateResults.WithLabels(source, method).Inc();
+        DuplicateEntries.WithLabels(source, method).Inc(extraEntries);
     }
 
     private async Task<(bool, IList<Listing>)> TryGetListingsFromCache(int worldId, int itemId,

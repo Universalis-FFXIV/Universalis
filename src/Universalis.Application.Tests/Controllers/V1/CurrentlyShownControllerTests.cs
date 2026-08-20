@@ -187,6 +187,59 @@ public class CurrentlyShownControllerTests
             worldOrDc);
     }
 
+    [Fact(Skip = "Documents cross-world listing ID collisions while duplicate-response metrics collect production evidence.")]
+    public async Task Controller_Get_DataCenter_TreatsListingIdentityAsWorldAndListingId()
+    {
+        var test = TestResources.Create();
+        var unixNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        const string sharedListingId = "same-listing-id-on-two-worlds";
+
+        var document1 = new CurrentlyShown
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            LastUploadTimeUnixMilliseconds = unixNowMs,
+            Listings = new List<Listing> { MakeListing(sharedListingId, 74, 5333, 100) },
+        };
+        await test.CurrentlyShown.Update(document1, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+
+        var document2 = new CurrentlyShown
+        {
+            WorldId = 34,
+            ItemId = 5333,
+            LastUploadTimeUnixMilliseconds = unixNowMs,
+            Listings = new List<Listing> { MakeListing(sharedListingId, 34, 5333, 200) },
+        };
+        await test.CurrentlyShown.Update(document2, new CurrentlyShownQuery { WorldId = 34, ItemId = 5333 });
+
+        var result = await test.Controller.Get("5333", "Crystal", entriesToReturn: "0");
+        var currentlyShown = Assert.IsType<CurrentlyShownView>(Assert.IsType<OkObjectResult>(result).Value);
+
+        var matching = currentlyShown.Listings
+            .Where(listing => listing.ListingIdHash == sharedListingId)
+            .ToList();
+        Assert.Equal(2, matching.Count);
+        Assert.Equal(new[] { 34, 74 }, matching.Select(listing => listing.WorldId!.Value).OrderBy(id => id));
+        Assert.Equal(2, matching.Select(listing => (listing.WorldId, listing.ListingIdHash)).Distinct().Count());
+    }
+
+    private static Listing MakeListing(string listingId, int worldId, int itemId, int pricePerUnit)
+    {
+        return new Listing
+        {
+            ListingId = listingId,
+            WorldId = worldId,
+            ItemId = itemId,
+            Materia = new List<Universalis.Entities.Materia>(),
+            PricePerUnit = pricePerUnit,
+            Quantity = 1,
+            LastReviewTime = DateTime.UtcNow,
+            RetainerId = "retainer",
+            RetainerName = "Retainer",
+            Source = "test runner",
+        };
+    }
+
     [Theory]
     [InlineData("crystaL")]
     [InlineData("Crystal")]
@@ -258,7 +311,7 @@ public class CurrentlyShownControllerTests
             unixNowMs,
             worldOrDc);
     }
-    
+
     [Theory]
     [InlineData("crystaL")]
     [InlineData("Crystal")]
