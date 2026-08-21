@@ -194,8 +194,8 @@ public class MarketBoardUploadBehavior : IUploadBehavior
     {
         if (_bus == null) return;
 
-        var addedListings = listings.Where(l => !replacedListings.Contains(l)).ToList();
-        var removedListings = replacedListings.Where(l => !listings.Contains(l)).ToList();
+        var addedListings = listings.Where(l => !replacedListings.Any(r => ListingsEqual(r, l))).ToList();
+        var removedListings = replacedListings.Where(l => !listings.Any(r => ListingsEqual(r, l))).ToList();
 
         if (removedListings.Count > 0)
         {
@@ -234,6 +234,16 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                 _logger.LogError(e, "Failed to publish ListingsAdd event");
             }
         }
+    }
+
+    private static bool ListingsEqual(Listing x, Listing y)
+    {
+        if (ReferenceEquals(x, y)) return true;
+        if (x == null || y == null) return false;
+        if (x.ListingId != y.ListingId || x.PricePerUnit != y.PricePerUnit || x.Quantity != y.Quantity)
+            return false;
+        if (x.Materia?.Count != y.Materia?.Count) return false;
+        return x.Materia == null || y.Materia == null || x.Materia.SequenceEqual(y.Materia);
     }
 
     private async Task<int> HandleSales(IList<Schema.Sale> uploadedSales, int itemId, int worldId, string uploaderId,
@@ -326,7 +336,7 @@ public class MarketBoardUploadBehavior : IUploadBehavior
                     Hq = Util.ParseUnusualBool(l.Hq),
                     OnMannequin = Util.ParseUnusualBool(l.OnMannequin),
                     Materia = l.Materia?
-                        .Where(s => s.SlotId != null && s.MateriaId != null)
+                        .Where(s => s.SlotId != null && s.MateriaId.GetValueOrDefault() > 0)
                         .Select(s => new Materia
                         {
                             SlotId = (int)s.SlotId!,
