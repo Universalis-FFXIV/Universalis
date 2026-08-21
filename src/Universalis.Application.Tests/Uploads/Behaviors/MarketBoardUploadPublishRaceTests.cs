@@ -72,7 +72,79 @@ public class MarketBoardUploadPublishRaceTests
         }
     }
 
-    private static UploadParameters Upload() => new()
+    [Fact]
+    public async Task MateriaOnlyReupload_PublishesRemovalAndAddition()
+    {
+        var db = new MockCurrentlyShownDbAccess();
+        var additions = new List<ListingsAdd>();
+        var removals = new List<ListingsRemove>();
+        var publishedOnce = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var publishedTwice = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var publishCount = 0;
+        var gate = new object();
+
+        var publisher = new Mock<IPublishEndpoint>();
+        publisher
+            .Setup(endpoint => endpoint.Publish(It.IsAny<ListingsAdd>(), It.IsAny<CancellationToken>()))
+            .Callback<ListingsAdd, CancellationToken>((message, _) =>
+            {
+                lock (gate)
+                {
+                    additions.Add(message);
+                    publishCount++;
+                    if (publishCount == 1) publishedOnce.TrySetResult();
+                    if (publishCount == 2) publishedTwice.TrySetResult();
+                }
+            })
+            .Returns(Task.CompletedTask);
+        publisher
+            .Setup(endpoint => endpoint.Publish(It.IsAny<ListingsRemove>(), It.IsAny<CancellationToken>()))
+            .Callback<ListingsRemove, CancellationToken>((message, _) =>
+            {
+                lock (gate)
+                {
+                    removals.Add(message);
+                    publishCount++;
+                    if (publishCount == 1) publishedOnce.TrySetResult();
+                    if (publishCount == 2) publishedTwice.TrySetResult();
+                }
+            })
+            .Returns(Task.CompletedTask);
+
+        var behavior = new MarketBoardUploadBehavior(
+            db,
+            new MockHistoryDbAccess(),
+            new MockUploadLogDbAccess(),
+            new MockGameDataProvider(),
+            publisher.Object,
+            new LogFixture<MarketBoardUploadBehavior>());
+        var source = ApiKey.FromToken("blah", "something", true);
+
+        Assert.Null(await behavior.Execute(source, Upload(materiaId: 1)));
+        await publishedOnce.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        lock (gate)
+        {
+            additions.Clear();
+            removals.Clear();
+        }
+
+        Assert.Null(await behavior.Execute(source, Upload(materiaId: 2)));
+        await publishedTwice.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        lock (gate)
+        {
+            var removed = Assert.Single(removals);
+            var oldMateria = Assert.Single(removed.Listings.Single().Materia);
+            Assert.Equal(1, oldMateria.MateriaId);
+
+            var added = Assert.Single(additions);
+            var newMateria = Assert.Single(added.Listings.Single().Materia);
+            Assert.Equal(2, newMateria.MateriaId);
+        }
+    }
+
+    private static UploadParameters Upload(int materiaId = 0) => new()
     {
         WorldId = WorldId,
         ItemId = ItemId,
@@ -87,6 +159,9 @@ public class MarketBoardUploadPublishRaceTests
                 CreatorName = "",
                 PricePerUnit = 100,
                 Quantity = 1,
+                Materia = materiaId > 0
+                    ? new List<Materia> { new() { SlotId = 0, MateriaId = materiaId } }
+                    : new List<Materia>(),
             },
         },
     };

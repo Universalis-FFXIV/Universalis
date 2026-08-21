@@ -396,6 +396,46 @@ public class MarketBoardUploadBehaviorTests
     }
 
     [Fact]
+    public async Task Behavior_RemovesZeroValueMateria()
+    {
+        var test = TestResources.Create();
+        var source = ApiKey.FromToken("blah", "something", true);
+        var listing = new Listing
+        {
+            ListingId = "materia-zero",
+            RetainerId = "retainer",
+            RetainerName = "Retainer",
+            PricePerUnit = 1000,
+            Quantity = 1,
+            Materia = new List<Materia>
+            {
+                new() { SlotId = 0, MateriaId = 0 },
+                new() { SlotId = 1, MateriaId = 2 },
+            },
+        };
+        var upload = new UploadParameters
+        {
+            WorldId = 74,
+            ItemId = 5333,
+            Listings = new List<Listing> { listing },
+            UploaderId = "5627384655756342554",
+        };
+
+        Assert.True(test.Behavior.ShouldExecute(upload));
+        Assert.Null(await test.Behavior.Execute(source, upload));
+
+        var currentlyShown = await test.CurrentlyShown.Retrieve(new CurrentlyShownQuery
+        {
+            WorldId = upload.WorldId.Value,
+            ItemId = upload.ItemId.Value,
+        });
+        var storedListing = Assert.Single(currentlyShown.Listings);
+        var materia = Assert.Single(storedListing.Materia);
+        Assert.Equal(1, materia.SlotId);
+        Assert.Equal(2, materia.MateriaId);
+    }
+
+    [Fact]
     public async Task Behavior_Adds_Sale_Ids()
     {
         var test = TestResources.Create();
