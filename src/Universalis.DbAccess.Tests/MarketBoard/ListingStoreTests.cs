@@ -654,6 +654,119 @@ public class ListingStoreTests
         Assert.Equal(retainerA, afterDelete[0].RetainerId);
     }
 
+#if DEBUG
+    [Fact]
+#endif
+    public async Task ReplaceLive_ReturnsDisplacedListings()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        const int world = 92;
+        const int item = 30100;
+
+        var seeded = new List<Listing>
+        {
+            MakeListing("displaced-l1", world, item, 100),
+            MakeListing("displaced-l2", world, item, 200, hq: true),
+        };
+        var initial = await store.ReplaceLive(seeded);
+        Assert.Empty(initial);
+
+        var displaced = await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("displaced-l3", world, item, 300),
+        });
+
+        Assert.Equal(2, displaced.Count);
+        Assert.All(seeded.OrderBy(l => l.PricePerUnit).Zip(displaced.OrderBy(l => l.PricePerUnit)), pair =>
+        {
+            var (expected, actual) = pair;
+            AssertEqual(expected, actual);
+        });
+    }
+
+#if DEBUG
+    [Fact]
+#endif
+    public async Task ReplaceLive_Retention_ExcludesRetainedListingsFromDisplaced()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        const int world = 92;
+        const int item = 30101;
+        const string retainerA = "displaced-ret-a";
+        const string retainerB = "displaced-ret-b";
+
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("ret-l1", world, item, 100, retainerA),
+            MakeListing("ret-l2", world, item, 200, retainerB),
+        });
+
+        var displaced = await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("ret-l3", world, item, 300, retainerB),
+        }, retainedRetainerId: retainerA);
+
+        var entry = Assert.Single(displaced);
+        Assert.Equal("ret-l2", entry.ListingId);
+        Assert.Equal(retainerB, entry.RetainerId);
+    }
+
+#if DEBUG
+    [Fact]
+#endif
+    public async Task DeleteLive_ReturnsRemovedListings()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        const int world = 92;
+        const int item = 30102;
+        var query = new ListingQuery { ItemId = item, WorldId = world };
+
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("removed-l1", world, item, 100),
+            MakeListing("removed-l2", world, item, 200),
+        });
+
+        var removed = await store.DeleteLive(query);
+
+        Assert.Equal(new[] { "removed-l1", "removed-l2" },
+            removed.Select(l => l.ListingId).OrderBy(id => id).ToArray());
+        Assert.Empty(await store.RetrieveLive(query));
+    }
+
+#if DEBUG
+    [Fact]
+#endif
+    public async Task DeleteLive_Retention_ReturnsOnlyUnretainedListings()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        const int world = 92;
+        const int item = 30103;
+        const string retainerA = "removed-ret-a";
+        const string retainerB = "removed-ret-b";
+        var query = new ListingQuery { ItemId = item, WorldId = world };
+
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("del-l1", world, item, 100, retainerA),
+            MakeListing("del-l2", world, item, 200, retainerB),
+        });
+
+        var removed = await store.DeleteLive(query, retainedRetainerId: retainerA);
+
+        var entry = Assert.Single(removed);
+        Assert.Equal("del-l2", entry.ListingId);
+        Assert.Equal(retainerB, entry.RetainerId);
+
+        var survivors = (await store.RetrieveLive(query)).ToList();
+        Assert.Single(survivors);
+        Assert.Equal(retainerA, survivors[0].RetainerId);
+    }
+
     private static Listing MakeListing(string listingId, int worldId, int itemId, int pricePerUnit,
         string retainerId = null, bool hq = false)
     {
