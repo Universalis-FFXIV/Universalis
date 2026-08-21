@@ -552,7 +552,7 @@ public class ListingStore : IListingStore
         foreach (var (wip, cacheValue) in cacheValues)
         {
             ObserveDuplicateListings(cacheValue, "local_cache", "many");
-            listings[wip] = cacheValue;
+            listings[wip] = cacheValue.ToList();
             worldItemPairs.Remove(wip);
         }
 
@@ -589,6 +589,11 @@ public class ListingStore : IListingStore
                     var itemId = reader.GetInt32(1);
                     var worldId = reader.GetInt32(2);
                     var worldItemPair = new WorldItemPair(worldId, itemId);
+
+                    if (cacheValues.ContainsKey(worldItemPair))
+                    {
+                        continue;
+                    }
 
                     if (!listings.TryGetValue(worldItemPair, out var value))
                     {

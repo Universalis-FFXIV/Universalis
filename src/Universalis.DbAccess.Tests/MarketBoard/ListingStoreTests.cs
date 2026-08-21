@@ -217,6 +217,40 @@ public class ListingStoreTests
 #if DEBUG
     [Fact]
 #endif
+    public async Task RetrieveManyLive_PartialCacheHit_DoesNotMutateCachedListings()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        const int worldA = 92;
+        const int worldB = 93;
+        const int itemA = 30210;
+        const int itemB = 30211;
+
+        await store.ReplaceLive(new List<Listing> { MakeListing("partial-cache-a", worldA, itemA, 100) });
+        await store.ReplaceLive(new List<Listing> { MakeListing("partial-cache-b", worldA, itemB, 200) });
+        await store.ReplaceLive(new List<Listing> { MakeListing("partial-cache-c", worldB, itemA, 300) });
+        await store.ReplaceLive(new List<Listing> { MakeListing("partial-cache-d", worldB, itemB, 400) });
+
+        var cachedBefore = (await store.RetrieveLive(new ListingQuery { WorldId = worldA, ItemId = itemA })).ToList();
+        Assert.Single(cachedBefore);
+
+        var results = await store.RetrieveManyLive(new ListingManyQuery
+        {
+            WorldIds = new[] { worldA, worldB },
+            ItemIds = new[] { itemA, itemB },
+        });
+
+        Assert.Equal(4, results.Count);
+        Assert.All(results, kvp => Assert.Single(kvp.Value));
+
+        var cachedAfter = (await store.RetrieveLive(new ListingQuery { WorldId = worldA, ItemId = itemA })).ToList();
+        Assert.Single(cachedAfter);
+        Assert.Equal(cachedBefore[0].ListingId, cachedAfter[0].ListingId);
+    }
+
+#if DEBUG
+    [Fact]
+#endif
     public async Task RetrieveLive_ReturnsEmpty_WhenMissing()
     {
         var store = _fixture.Services.GetRequiredService<IListingStore>();
