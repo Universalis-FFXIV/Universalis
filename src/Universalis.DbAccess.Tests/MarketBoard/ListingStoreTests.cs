@@ -767,6 +767,30 @@ public class ListingStoreTests
         Assert.Equal(retainerA, survivors[0].RetainerId);
     }
 
+#if DEBUG
+    [Fact]
+#endif
+    public async Task ReplaceLive_MultipleGroups_UpdateEachMinCacheFromItsOwnListings()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        const int world = 92;
+        const int expensiveItem = 30104;
+        const int cheapItem = 30105;
+
+        await store.ReplaceLive(new List<Listing>
+        {
+            MakeListing("group-expensive", world, expensiveItem, 1000),
+            MakeListing("group-cheap", world, cheapItem, 100),
+        });
+
+        var expensiveMin = await store.GetMinListing(world, expensiveItem);
+        var cheapMin = await store.GetMinListing(world, cheapItem);
+
+        Assert.Equal(1000, expensiveMin.World.Nq.UnitPrice);
+        Assert.Equal(100, cheapMin.World.Nq.UnitPrice);
+    }
+
     private static Listing MakeListing(string listingId, int worldId, int itemId, int pricePerUnit,
         string retainerId = null, bool hq = false)
     {
