@@ -182,7 +182,7 @@ public class ListingStore : IListingStore
             }
 
             var effectiveListings = string.IsNullOrEmpty(retainedRetainerId)
-                ? listings
+                ? listingGroup.ToList()
                 : await ReadMinListings(connection, worldId, itemId, cancellationToken);
             await WriteMinListingCache(worldId, itemId, effectiveListings, uploadedAt);
         }
