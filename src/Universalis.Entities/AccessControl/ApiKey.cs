@@ -22,7 +22,7 @@ public class ApiKey
         {
             throw new ArgumentNullException(nameof(tokenSha512));
         }
-        
+
         TokenSha512 = tokenSha512;
         Name = name;
         CanUpload = canUpload;

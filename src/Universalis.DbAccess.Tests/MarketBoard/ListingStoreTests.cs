@@ -52,6 +52,31 @@ public class ListingStoreTests
 #if DEBUG
     [Fact]
 #endif
+    public async Task ReplaceLiveRetrieveLive_PreservesMateria()
+    {
+        await _fixture.ClearCache();
+        var store = _fixture.Services.GetRequiredService<IListingStore>();
+        const int worldId = 92;
+        const int itemId = 30300;
+        var listing = MakeListing(
+            "materia-mapping",
+            worldId,
+            itemId,
+            100,
+            materia: new List<Materia> { new() { SlotId = 2, MateriaId = 42 } });
+
+        await store.ReplaceLive(new List<Listing> { listing });
+
+        var results = (await store.RetrieveLive(new ListingQuery { ItemId = itemId, WorldId = worldId })).ToList();
+        var actual = Assert.Single(results);
+        var materia = Assert.Single(actual.Materia);
+        Assert.Equal(2, materia.SlotId);
+        Assert.Equal(42, materia.MateriaId);
+    }
+
+#if DEBUG
+    [Fact]
+#endif
     public async Task ReplaceLiveRetrieveLive_Cached_Works()
     {
         var store = _fixture.Services.GetRequiredService<IListingStore>();
@@ -826,7 +851,7 @@ public class ListingStoreTests
     }
 
     private static Listing MakeListing(string listingId, int worldId, int itemId, int pricePerUnit,
-        string retainerId = null, bool hq = false)
+        string retainerId = null, bool hq = false, List<Materia> materia = null)
     {
         var effectiveRetainerId = retainerId ?? $"retainer-{worldId}";
         return new Listing
@@ -834,7 +859,7 @@ public class ListingStoreTests
             ListingId = listingId,
             Hq = hq,
             OnMannequin = false,
-            Materia = new List<Materia>(),
+            Materia = materia ?? new List<Materia>(),
             PricePerUnit = pricePerUnit,
             Quantity = 1,
             DyeId = 0,
