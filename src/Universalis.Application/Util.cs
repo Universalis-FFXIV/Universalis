@@ -58,6 +58,7 @@ public static partial class Util
             Hq = l.Hq,
             OnMannequin = l.OnMannequin,
             Materia = l.Materia?
+                .Where(m => m.MateriaId > 0)
                 .Select(m => new MateriaView
                 {
                     SlotId = m.SlotId,
