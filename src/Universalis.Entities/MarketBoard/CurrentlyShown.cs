@@ -6,7 +6,7 @@ namespace Universalis.Entities.MarketBoard;
 public class CurrentlyShown : ICopyable
 {
     public int WorldId { get; init; }
-    
+
     public int ItemId { get; init; }
 
     public long LastUploadTimeUnixMilliseconds { get; init; }

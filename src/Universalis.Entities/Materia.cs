@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using System;
+using Newtonsoft.Json;
 using System.Text.Json.Serialization;
 using MemoryPack;
 
@@ -9,10 +10,12 @@ namespace Universalis.Entities;
 public partial class Materia : IEquatable<Materia>
 {
     [BsonElement("slotID")]
+    [JsonProperty("slot_id")]
     [JsonPropertyName("slot_id")]
     public int SlotId { get; init; }
 
     [BsonElement("materiaID")]
+    [JsonProperty("materia_id")]
     [JsonPropertyName("materia_id")]
     public int MateriaId { get; init; }
 
