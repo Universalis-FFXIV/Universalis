@@ -88,6 +88,40 @@ public class CurrentlyShownControllerTests
         //Assert.True(currentlyShown.RecentHistory.Count > 1);
     }
 
+    [Fact]
+    public async Task Controller_Get_RemovesZeroValueMateria()
+    {
+        var test = TestResources.Create();
+        const int itemId = 5333;
+        var document = new CurrentlyShown
+        {
+            WorldId = 74,
+            ItemId = itemId,
+            LastUploadTimeUnixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            Listings = new List<Listing>
+            {
+                MakeListing(
+                    "materia-zero",
+                    74,
+                    itemId,
+                    100,
+                    new List<Universalis.Entities.Materia>
+                    {
+                        new() { SlotId = 0, MateriaId = 0 },
+                        new() { SlotId = 1, MateriaId = 2 },
+                    }),
+            },
+        };
+        await test.CurrentlyShown.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = itemId });
+
+        var result = await test.Controller.Get(itemId.ToString(), "74", entriesToReturn: int.MaxValue.ToString());
+        var currentlyShown = (CurrentlyShownView)Assert.IsType<OkObjectResult>(result).Value;
+
+        var listing = Assert.Single(currentlyShown.Listings);
+        var materia = Assert.Single(listing.Materia);
+        Assert.Equal(1, materia.SlotId);
+        Assert.Equal(2, materia.MateriaId);
+    }
     [Theory]
     [InlineData("74")]
     [InlineData("Coeurl")]
@@ -223,14 +257,15 @@ public class CurrentlyShownControllerTests
         Assert.Equal(2, matching.Select(listing => (listing.WorldId, listing.ListingIdHash)).Distinct().Count());
     }
 
-    private static Listing MakeListing(string listingId, int worldId, int itemId, int pricePerUnit)
+    private static Listing MakeListing(string listingId, int worldId, int itemId, int pricePerUnit,
+        List<Universalis.Entities.Materia> materia = null)
     {
         return new Listing
         {
             ListingId = listingId,
             WorldId = worldId,
             ItemId = itemId,
-            Materia = new List<Universalis.Entities.Materia>(),
+            Materia = materia ?? new List<Universalis.Entities.Materia>(),
             PricePerUnit = pricePerUnit,
             Quantity = 1,
             LastReviewTime = DateTime.UtcNow,
