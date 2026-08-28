@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
@@ -344,17 +345,72 @@ public class DeleteListingControllerTests
             await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
-        await test.Controller.Post(TestItemId, TestWorldId.ToString(), key, new DeleteListingParameters
-        {
-            ListingId = "95448465132123465",
-            PricePerUnit = 300,
-            Quantity = 76,
-            RetainerId = "84984654567658768",
-            UploaderId = "ffff",
-        });
+        var document = SeedDataGenerator.MakeCurrentlyShown(TestWorldId, TestItemId);
+        await test.CurrentlyShown.Update(document, new CurrentlyShownQuery { WorldId = TestWorldId, ItemId = TestItemId });
+
+        await test.Controller.Post(TestItemId, TestWorldId.ToString(CultureInfo.InvariantCulture), key,
+            new DeleteListingParameters
+            {
+                ListingId = "95448465132123465",
+                PricePerUnit = 300,
+                Quantity = 76,
+                RetainerId = "84984654567658768",
+                UploaderId = "ffff",
+            });
 
         publisher.Verify(
             endpoint => endpoint.Publish(It.IsAny<ListingsRemove>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task Controller_Post_RetriesPublishUntilSuccess()
+    {
+        var published = new List<ListingsRemove>();
+        var attempts = 0;
+        var publisher = new Mock<IPublishEndpoint>();
+        publisher
+            .Setup(endpoint => endpoint.Publish(It.IsAny<ListingsRemove>(), It.IsAny<CancellationToken>()))
+            .Returns<ListingsRemove, CancellationToken>((message, _) =>
+            {
+                if (Interlocked.Increment(ref attempts) < 3)
+                {
+                    throw new MassTransitException("transient publish failure");
+                }
+
+                published.Add(message);
+                return Task.CompletedTask;
+            });
+        var test = TestResources.Create(publisher.Object);
+
+        const string key = "blah";
+        using (var sha512 = SHA512.Create())
+        {
+            var hash = Util.Hash(sha512, key);
+            await test.TrustedSources.Create(new ApiKey(hash, "something", true));
+        }
+
+        var document = SeedDataGenerator.MakeCurrentlyShown(TestWorldId, TestItemId);
+        await test.CurrentlyShown.Update(document, new CurrentlyShownQuery { WorldId = TestWorldId, ItemId = TestItemId });
+
+        var toRemove = document.Listings[0];
+
+        var result = await test.Controller.Post(document.ItemId, document.WorldId.ToString(CultureInfo.InvariantCulture), key,
+            new DeleteListingParameters
+            {
+                ListingId = toRemove.ListingId,
+                PricePerUnit = toRemove.PricePerUnit,
+                Quantity = toRemove.Quantity,
+                RetainerId = toRemove.RetainerId,
+                UploaderId = "FB",
+            });
+
+        Assert.IsType<OkObjectResult>(result);
+        publisher.Verify(
+            endpoint => endpoint.Publish(It.IsAny<ListingsRemove>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(3));
+        var message = Assert.Single(published);
+        Assert.Equal(TestWorldId, message.WorldId);
+        Assert.Equal(TestItemId, message.ItemId);
     }
 }
