@@ -1,9 +1,13 @@
 ﻿using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using Moq;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1;
+using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
@@ -34,14 +38,20 @@ public class DeleteListingControllerTests
 
         public static TestResources Create()
         {
+            return Create(null);
+        }
+
+        public static TestResources Create(IPublishEndpoint publisher)
+        {
             var gameData = new MockGameDataProvider();
             var flaggedUploaders = new MockFlaggedUploaderDbAccess();
             var currentlyShown = new MockCurrentlyShownDbAccess();
             var trustedSources = new MockTrustedSourceDbAccess();
             var uploadLog = new MockUploadLogDbAccess();
             var logger = new LogFixture<DeleteListingController>();
+            var bus = publisher == null ? Enumerable.Empty<IPublishEndpoint>() : new[] { publisher };
             var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, uploadLog, logger,
-                Enumerable.Empty<IPublishEndpoint>());
+                bus);
             return new TestResources
             {
                 GameData = gameData,
@@ -275,5 +285,73 @@ public class DeleteListingControllerTests
         });
 
         Assert.IsType<OkObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task Controller_Post_PublishesRemoveEvent()
+    {
+        var published = new List<ListingsRemove>();
+        var publisher = new Mock<IPublishEndpoint>();
+        publisher
+            .Setup(endpoint => endpoint.Publish(It.IsAny<ListingsRemove>(), It.IsAny<CancellationToken>()))
+            .Callback<ListingsRemove, CancellationToken>((message, _) => published.Add(message))
+            .Returns(Task.CompletedTask);
+        var test = TestResources.Create(publisher.Object);
+
+        const string key = "blah";
+        using (var sha512 = SHA512.Create())
+        {
+            var hash = Util.Hash(sha512, key);
+            await test.TrustedSources.Create(new ApiKey(hash, "something", true));
+        }
+
+        var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
+        await test.CurrentlyShown.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+
+        var toRemove = document.Listings[0];
+
+        var result = await test.Controller.Post(document.ItemId, document.WorldId.ToString(), key, new DeleteListingParameters
+        {
+            ListingId = toRemove.ListingId,
+            PricePerUnit = toRemove.PricePerUnit,
+            Quantity = toRemove.Quantity,
+            RetainerId = toRemove.RetainerId,
+            UploaderId = "FB",
+        });
+
+        Assert.IsType<OkObjectResult>(result);
+        var message = Assert.Single(published);
+        Assert.Equal(74, message.WorldId);
+        Assert.Equal(5333, message.ItemId);
+        var listing = Assert.Single(message.Listings);
+        Assert.Equal(toRemove.PricePerUnit, listing.PricePerUnit);
+        Assert.Equal(toRemove.Quantity, listing.Quantity);
+    }
+
+    [Fact]
+    public async Task Controller_Post_DoesNotPublish_WhenNoMatchingListing()
+    {
+        var publisher = new Mock<IPublishEndpoint>();
+        var test = TestResources.Create(publisher.Object);
+
+        const string key = "blah";
+        using (var sha512 = SHA512.Create())
+        {
+            var hash = Util.Hash(sha512, key);
+            await test.TrustedSources.Create(new ApiKey(hash, "something", true));
+        }
+
+        await test.Controller.Post(5333, 74.ToString(), key, new DeleteListingParameters
+        {
+            ListingId = "95448465132123465",
+            PricePerUnit = 300,
+            Quantity = 76,
+            RetainerId = "84984654567658768",
+            UploaderId = "ffff",
+        });
+
+        publisher.Verify(
+            endpoint => endpoint.Publish(It.IsAny<ListingsRemove>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }
