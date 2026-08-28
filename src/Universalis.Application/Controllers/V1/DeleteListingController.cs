@@ -168,7 +168,7 @@ public class DeleteListingController : WorldDcRegionControllerBase
     {
         using var eventCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         eventCts.CancelAfter(TimeSpan.FromMinutes(1));
-        for (var attempt = 1; ; attempt++)
+        for (var attempt = 1; attempt <= MaxPublishAttempts; attempt++)
         {
             try
             {
@@ -177,7 +177,7 @@ public class DeleteListingController : WorldDcRegionControllerBase
             }
             catch (Exception e) when (e is MassTransitException or OperationCanceledException)
             {
-                if (attempt >= MaxPublishAttempts || eventCts.Token.IsCancellationRequested)
+                if (attempt == MaxPublishAttempts || eventCts.Token.IsCancellationRequested)
                 {
                     _logger.LogError(e, "Failed to publish ListingsRemove event after {Attempts} attempts", attempt);
                     return;
