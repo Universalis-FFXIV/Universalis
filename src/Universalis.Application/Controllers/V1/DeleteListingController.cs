@@ -148,24 +148,53 @@ public class DeleteListingController : WorldDcRegionControllerBase
 
         if (_bus != null)
         {
-            using var eventCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            eventCts.CancelAfter(TimeSpan.FromMinutes(1));
-            try
+            await PublishRemoveEvent(new ListingsRemove
             {
-                await _bus.Publish(new ListingsRemove
-                {
-                    WorldId = query.WorldId,
-                    ItemId = query.ItemId,
-                    Listings = new List<ListingView> { Util.ListingToView(listing) },
-                }, eventCts.Token);
-            }
-            catch (Exception e) when (e is MassTransitException or OperationCanceledException)
-            {
-                _logger.LogError(e, "Failed to publish ListingsRemove event");
-            }
+                WorldId = query.WorldId,
+                ItemId = query.ItemId,
+                Listings = new List<ListingView> { Util.ListingToView(listing) },
+            }, cancellationToken);
         }
 
         return Ok("Success");
+    }
+
+    private const int MaxPublishAttempts = 3;
+
+    // Publishing is retried with backoff because the deletion is already
+    // committed at this point; a client retry of the request would find no
+    // matching listing and never re-emit the event.
+    private async Task PublishRemoveEvent(ListingsRemove removeEvent, CancellationToken cancellationToken)
+    {
+        using var eventCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        eventCts.CancelAfter(TimeSpan.FromMinutes(1));
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await _bus.Publish(removeEvent, eventCts.Token);
+                return;
+            }
+            catch (Exception e) when (e is MassTransitException or OperationCanceledException)
+            {
+                if (attempt >= MaxPublishAttempts || eventCts.Token.IsCancellationRequested)
+                {
+                    _logger.LogError(e, "Failed to publish ListingsRemove event after {Attempts} attempts", attempt);
+                    return;
+                }
+
+                _logger.LogWarning(e, "Retrying ListingsRemove publish (attempt {Attempt})", attempt);
+            }
+
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(attempt), eventCts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Deadline elapsed mid-backoff; the final attempt fails fast and logs
+            }
+        }
     }
 
     [HttpPost]
