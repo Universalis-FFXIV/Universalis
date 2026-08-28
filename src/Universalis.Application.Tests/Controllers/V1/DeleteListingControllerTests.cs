@@ -27,6 +27,9 @@ namespace Universalis.Application.Tests.Controllers.V1;
 
 public class DeleteListingControllerTests
 {
+    private const int TestWorldId = 74;
+    private const int TestItemId = 5333;
+
     private class TestResources
     {
         public IGameDataProvider GameData { get; private init; }
@@ -305,8 +308,8 @@ public class DeleteListingControllerTests
             await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
-        var document = SeedDataGenerator.MakeCurrentlyShown(74, 5333);
-        await test.CurrentlyShown.Update(document, new CurrentlyShownQuery { WorldId = 74, ItemId = 5333 });
+        var document = SeedDataGenerator.MakeCurrentlyShown(TestWorldId, TestItemId);
+        await test.CurrentlyShown.Update(document, new CurrentlyShownQuery { WorldId = TestWorldId, ItemId = TestItemId });
 
         var toRemove = document.Listings[0];
 
@@ -321,8 +324,8 @@ public class DeleteListingControllerTests
 
         Assert.IsType<OkObjectResult>(result);
         var message = Assert.Single(published);
-        Assert.Equal(74, message.WorldId);
-        Assert.Equal(5333, message.ItemId);
+        Assert.Equal(TestWorldId, message.WorldId);
+        Assert.Equal(TestItemId, message.ItemId);
         var listing = Assert.Single(message.Listings);
         Assert.Equal(toRemove.PricePerUnit, listing.PricePerUnit);
         Assert.Equal(toRemove.Quantity, listing.Quantity);
@@ -341,7 +344,7 @@ public class DeleteListingControllerTests
             await test.TrustedSources.Create(new ApiKey(hash, "something", true));
         }
 
-        await test.Controller.Post(5333, 74.ToString(), key, new DeleteListingParameters
+        await test.Controller.Post(TestItemId, TestWorldId.ToString(), key, new DeleteListingParameters
         {
             ListingId = "95448465132123465",
             PricePerUnit = 300,
