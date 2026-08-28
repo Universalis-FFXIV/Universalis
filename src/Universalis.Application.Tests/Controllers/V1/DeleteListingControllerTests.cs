@@ -3,7 +3,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Universalis.Application.Controllers.V1;
-using Universalis.Application.Realtime;
 using Universalis.Application.Tests.Mocks.DbAccess.MarketBoard;
 using Universalis.Application.Tests.Mocks.DbAccess.Uploads;
 using Universalis.Application.Tests.Mocks.GameData;
@@ -30,8 +29,6 @@ public class DeleteListingControllerTests
         public ICurrentlyShownDbAccess CurrentlyShown { get; private init; }
         public ITrustedSourceDbAccess TrustedSources { get; private init; }
         public IUploadLogDbAccess UploadLog { get; private init; }
-        public LogFixture<SocketProcessor> SocketLogFixture { get; private init; }
-        public ISocketProcessor Sockets { get; private init; }
         public DeleteListingController Controller { get; private init; }
 
         public static TestResources Create()
@@ -41,9 +38,8 @@ public class DeleteListingControllerTests
             var currentlyShown = new MockCurrentlyShownDbAccess();
             var trustedSources = new MockTrustedSourceDbAccess();
             var uploadLog = new MockUploadLogDbAccess();
-            var socketLogFixture = new LogFixture<SocketProcessor>();
-            var sockets = new SocketProcessor(socketLogFixture);
-            var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, uploadLog, sockets);
+            var logger = new LogFixture<DeleteListingController>();
+            var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, uploadLog, logger);
             return new TestResources
             {
                 GameData = gameData,
@@ -52,8 +48,6 @@ public class DeleteListingControllerTests
                 TrustedSources = trustedSources,
                 UploadLog = uploadLog,
                 Controller = controller,
-                SocketLogFixture = socketLogFixture,
-                Sockets = sockets,
             };
         }
     }

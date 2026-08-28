@@ -1,10 +1,11 @@
 ﻿using System;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using Universalis.Application.Realtime;
 using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
 using Universalis.Application.Views.V1;
@@ -29,7 +30,8 @@ public class DeleteListingController : WorldDcRegionControllerBase
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
     private readonly IUploadLogDbAccess _uploadLogDb;
-    private readonly ISocketProcessor _sockets;
+    private readonly IPublishEndpoint _bus;
+    private readonly ILogger<DeleteListingController> _logger;
 
     public DeleteListingController(
         IGameDataProvider gameData,
@@ -37,13 +39,16 @@ public class DeleteListingController : WorldDcRegionControllerBase
         ICurrentlyShownDbAccess currentlyShownDb,
         IFlaggedUploaderDbAccess flaggedUploaderDb,
         IUploadLogDbAccess uploadLogDb,
-        ISocketProcessor sockets) : base(gameData)
+        ILogger<DeleteListingController> logger,
+        // Null when DISABLE_WEBSOCKET_EVENT_QUEUE is set (MassTransit unregistered)
+        IPublishEndpoint bus = null) : base(gameData)
     {
         _trustedSourceDb = trustedSourceDb;
         _currentlyShownDb = currentlyShownDb;
         _flaggedUploaderDb = flaggedUploaderDb;
         _uploadLogDb = uploadLogDb;
-        _sockets = sockets;
+        _bus = bus;
+        _logger = logger;
     }
 
     [HttpPost]
@@ -140,12 +145,24 @@ public class DeleteListingController : WorldDcRegionControllerBase
             UserAgent = string.IsNullOrWhiteSpace(userAgent) ? null : userAgent,
         });
 
-        _sockets.Publish(new ListingsRemove
+        if (_bus != null)
         {
-            WorldId = query.WorldId,
-            ItemId = query.ItemId,
-            Listings = new List<ListingView> { Util.ListingToView(listing) },
-        });
+            using var eventCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            eventCts.CancelAfter(TimeSpan.FromMinutes(1));
+            try
+            {
+                await _bus.Publish(new ListingsRemove
+                {
+                    WorldId = query.WorldId,
+                    ItemId = query.ItemId,
+                    Listings = new List<ListingView> { Util.ListingToView(listing) },
+                }, eventCts.Token);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to publish ListingsRemove event");
+            }
+        }
 
         return Ok("Success");
     }
