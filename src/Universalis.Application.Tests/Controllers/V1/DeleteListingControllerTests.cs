@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MassTransit;
+using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -39,7 +40,8 @@ public class DeleteListingControllerTests
             var trustedSources = new MockTrustedSourceDbAccess();
             var uploadLog = new MockUploadLogDbAccess();
             var logger = new LogFixture<DeleteListingController>();
-            var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, uploadLog, logger);
+            var controller = new DeleteListingController(gameData, trustedSources, currentlyShown, flaggedUploaders, uploadLog, logger,
+                Enumerable.Empty<IPublishEndpoint>());
             return new TestResources
             {
                 GameData = gameData,

@@ -3,6 +3,7 @@ using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,14 +41,14 @@ public class DeleteListingController : WorldDcRegionControllerBase
         IFlaggedUploaderDbAccess flaggedUploaderDb,
         IUploadLogDbAccess uploadLogDb,
         ILogger<DeleteListingController> logger,
-        // Null when DISABLE_WEBSOCKET_EVENT_QUEUE is set (MassTransit unregistered)
-        IPublishEndpoint bus = null) : base(gameData)
+        // Empty when DISABLE_WEBSOCKET_EVENT_QUEUE is set (MassTransit unregistered)
+        IEnumerable<IPublishEndpoint> bus) : base(gameData)
     {
         _trustedSourceDb = trustedSourceDb;
         _currentlyShownDb = currentlyShownDb;
         _flaggedUploaderDb = flaggedUploaderDb;
         _uploadLogDb = uploadLogDb;
-        _bus = bus;
+        _bus = bus.FirstOrDefault();
         _logger = logger;
     }
 
@@ -158,7 +159,7 @@ public class DeleteListingController : WorldDcRegionControllerBase
                     Listings = new List<ListingView> { Util.ListingToView(listing) },
                 }, eventCts.Token);
             }
-            catch (Exception e)
+            catch (Exception e) when (e is MassTransitException or OperationCanceledException)
             {
                 _logger.LogError(e, "Failed to publish ListingsRemove event");
             }
