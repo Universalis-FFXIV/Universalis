@@ -30,6 +30,8 @@ public class DeleteListingControllerTests
 {
     private const int TestWorldId = 74;
     private const int TestItemId = 5333;
+    // Mirrors DeleteListingController.MaxPublishAttempts
+    private const int MaxPublishAttempts = 3;
 
     private class TestResources
     {
@@ -373,7 +375,7 @@ public class DeleteListingControllerTests
             .Setup(endpoint => endpoint.Publish(It.IsAny<ListingsRemove>(), It.IsAny<CancellationToken>()))
             .Returns<ListingsRemove, CancellationToken>((message, _) =>
             {
-                if (Interlocked.Increment(ref attempts) < 3)
+                if (Interlocked.Increment(ref attempts) < MaxPublishAttempts)
                 {
                     throw new MassTransitException("transient publish failure");
                 }
@@ -408,7 +410,7 @@ public class DeleteListingControllerTests
         Assert.IsType<OkObjectResult>(result);
         publisher.Verify(
             endpoint => endpoint.Publish(It.IsAny<ListingsRemove>(), It.IsAny<CancellationToken>()),
-            Times.Exactly(3));
+            Times.Exactly(MaxPublishAttempts));
         var message = Assert.Single(published);
         Assert.Equal(TestWorldId, message.WorldId);
         Assert.Equal(TestItemId, message.ItemId);
