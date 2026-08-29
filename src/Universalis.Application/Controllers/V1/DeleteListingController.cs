@@ -1,10 +1,12 @@
 ﻿using System;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using Universalis.Application.Realtime;
 using Universalis.Application.Realtime.Messages;
 using Universalis.Application.Uploads.Schema;
 using Universalis.Application.Views.V1;
@@ -29,7 +31,8 @@ public class DeleteListingController : WorldDcRegionControllerBase
     private readonly ICurrentlyShownDbAccess _currentlyShownDb;
     private readonly IFlaggedUploaderDbAccess _flaggedUploaderDb;
     private readonly IUploadLogDbAccess _uploadLogDb;
-    private readonly ISocketProcessor _sockets;
+    private readonly IPublishEndpoint _bus;
+    private readonly ILogger<DeleteListingController> _logger;
 
     public DeleteListingController(
         IGameDataProvider gameData,
@@ -37,13 +40,16 @@ public class DeleteListingController : WorldDcRegionControllerBase
         ICurrentlyShownDbAccess currentlyShownDb,
         IFlaggedUploaderDbAccess flaggedUploaderDb,
         IUploadLogDbAccess uploadLogDb,
-        ISocketProcessor sockets) : base(gameData)
+        ILogger<DeleteListingController> logger,
+        // Empty when DISABLE_WEBSOCKET_EVENT_QUEUE is set (MassTransit unregistered)
+        IEnumerable<IPublishEndpoint> bus) : base(gameData)
     {
         _trustedSourceDb = trustedSourceDb;
         _currentlyShownDb = currentlyShownDb;
         _flaggedUploaderDb = flaggedUploaderDb;
         _uploadLogDb = uploadLogDb;
-        _sockets = sockets;
+        _bus = bus.FirstOrDefault();
+        _logger = logger;
     }
 
     [HttpPost]
@@ -140,14 +146,55 @@ public class DeleteListingController : WorldDcRegionControllerBase
             UserAgent = string.IsNullOrWhiteSpace(userAgent) ? null : userAgent,
         });
 
-        _sockets.Publish(new ListingsRemove
+        if (_bus != null)
         {
-            WorldId = query.WorldId,
-            ItemId = query.ItemId,
-            Listings = new List<ListingView> { Util.ListingToView(listing) },
-        });
+            await PublishRemoveEvent(new ListingsRemove
+            {
+                WorldId = query.WorldId,
+                ItemId = query.ItemId,
+                Listings = new List<ListingView> { Util.ListingToView(listing) },
+            }, cancellationToken);
+        }
 
         return Ok("Success");
+    }
+
+    private const int MaxPublishAttempts = 3;
+
+    // Publishing is retried with backoff because the deletion is already
+    // committed at this point; a client retry of the request would find no
+    // matching listing and never re-emit the event.
+    private async Task PublishRemoveEvent(ListingsRemove removeEvent, CancellationToken cancellationToken)
+    {
+        using var eventCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        eventCts.CancelAfter(TimeSpan.FromMinutes(1));
+        for (var attempt = 1; attempt <= MaxPublishAttempts; attempt++)
+        {
+            try
+            {
+                await _bus.Publish(removeEvent, eventCts.Token);
+                return;
+            }
+            catch (Exception e) when (e is MassTransitException or OperationCanceledException)
+            {
+                if (attempt == MaxPublishAttempts || eventCts.Token.IsCancellationRequested)
+                {
+                    _logger.LogError(e, "Failed to publish ListingsRemove event after {Attempts} attempts", attempt);
+                    return;
+                }
+
+                _logger.LogWarning(e, "Retrying ListingsRemove publish (attempt {Attempt})", attempt);
+            }
+
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(attempt), eventCts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Deadline elapsed mid-backoff; the final attempt fails fast and logs
+            }
+        }
     }
 
     [HttpPost]
