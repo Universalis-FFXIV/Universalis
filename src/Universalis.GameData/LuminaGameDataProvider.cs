@@ -163,7 +163,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
             .Select(dc => new DataCenter
             {
                 Name = dc.Name.ToString(),
-                Region = Regions.Map[dc.Region],
+                Region = Regions.Map[Convert.ToByte(dc.Region.RowId)],
                 WorldIds = GetValidWorlds(worlds)
                     .Where(w => w.DataCenter.RowId == dc.RowId)
                     .Select(w => Convert.ToInt32(w.RowId))
