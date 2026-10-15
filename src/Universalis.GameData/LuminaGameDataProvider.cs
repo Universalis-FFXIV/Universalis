@@ -129,7 +129,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
             .Select(i => Convert.ToInt32(i.RowId))
             .ToList());
     }
-    
+
     /// <summary>
     /// Gets a read-only dictionary of the stack size limits for all marketable items.
     /// </summary>
@@ -165,7 +165,7 @@ internal class LuminaGameDataProvider : IGameDataProvider
                 Name = dc.Name.ToString(),
                 Region = Regions.Map[Convert.ToByte(dc.Region.RowId)],
                 WorldIds = GetValidWorlds(worlds)
-                    .Where(w => w.DataCenter.RowId == dc.RowId)
+                    .Where(w => GetLogicalDcRowId(w) == dc.RowId)
                     .Select(w => Convert.ToInt32(w.RowId))
                     .ToArray(),
             })
@@ -182,8 +182,11 @@ internal class LuminaGameDataProvider : IGameDataProvider
         // https://na.finalfantasyxiv.com/lodestone/topics/detail/93750e4b0d6d5a4faf6a00dee199082392f1a754
         var nonPublicButActualPublicWorlds = new uint[] { 408, 409, 410, 411 };
         return worlds
-            .Where(w => w.DataCenter.RowId > 0)
+            .Where(w => GetLogicalDcRowId(w) > 0)
             .Where(w => w.IsPublic || nonPublicButActualPublicWorlds.Contains(w.RowId))
             .Where(w => w.RowId != 25); // Chaos (world)
     }
+
+    // TODO: Revert to w.DataCenter.RowId once upstream Lumina.Excel definitions are regenerated.
+    private static uint GetLogicalDcRowId(LuminaWorld w) => w.Unknown0;
 }

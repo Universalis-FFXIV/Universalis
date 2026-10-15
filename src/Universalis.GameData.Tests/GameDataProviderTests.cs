@@ -12,7 +12,8 @@ public class GameDataProviderTests
 #endif
     public void Provider_Must_Load()
     {
-        ServiceUtils.CreateGameDataProvider(SqPack);
+        // The provider initializes lazily; we force a load here to actually test this.
+        ServiceUtils.CreateGameDataProvider(SqPack).AvailableWorldIds();
     }
 
     [InlineData("Anima", "Mana")]
