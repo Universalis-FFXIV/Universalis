@@ -19,6 +19,8 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public class SaleStore : ISaleStore, IDisposable
 {
+    private const int ConcurrencyLimit = 500;
+
     // Per-request budget for a sale read (semaphore wait + Scylla fetch).
     // Kept under Traefik's upstream responseHeaderTimeout so slow reads fail fast
     // and release the semaphore slot rather than holding it until Traefik times out
@@ -54,7 +56,7 @@ public class SaleStore : ISaleStore, IDisposable
         _logger = logger;
         _worldToDcRegion = worldToDcRegion;
 
-        _lock = new SemaphoreSlim(2200, 2200);
+        _lock = new SemaphoreSlim(ConcurrencyLimit, ConcurrencyLimit);
 
         // Doing database initialization in a constructor is a Bad Idea and
         // can lead to timeouts killing the application, so this just gets
@@ -331,8 +333,8 @@ public class SaleStore : ISaleStore, IDisposable
     {
         for (var date = from; date <= to; date = date.AddDays(1))
             foreach (var isQuantity in new[] { false, true })
-            foreach (var isHq in new[] { false, true })
-                yield return new TradeVolumeCacheKey(isHq, isQuantity, GetTradeVolumeCacheKey(worldIdDcRegion, itemId, isHq, isQuantity, date));
+                foreach (var isHq in new[] { false, true })
+                    yield return new TradeVolumeCacheKey(isHq, isQuantity, GetTradeVolumeCacheKey(worldIdDcRegion, itemId, isHq, isQuantity, date));
     }
 
     public async Task<RecentSale> GetMostRecentSaleInWorld(int worldId, int itemId, bool hq, CancellationToken cancellationToken = default)
