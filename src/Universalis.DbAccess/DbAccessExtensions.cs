@@ -74,7 +74,7 @@ public static class DbAccessExtensions
             .AddContactPoints(scyllaConnectionString.Split(','))
             .WithPoolingOptions(PoolingOptions.Create()
                 .SetMaxRequestsPerConnection(3000))
-            .WithSpeculativeExecutionPolicy(new ConstantSpeculativeExecutionPolicy(400, 3))
+            .WithSpeculativeExecutionPolicy(NoSpeculativeExecutionPolicy.Instance)
             .WithQueryTimeout(5000)
             .WithQueryOptions(new QueryOptions()
                 .SetDefaultIdempotence(true)
