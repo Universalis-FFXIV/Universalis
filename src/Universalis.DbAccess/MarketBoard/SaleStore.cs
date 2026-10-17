@@ -19,7 +19,7 @@ namespace Universalis.DbAccess.MarketBoard;
 
 public class SaleStore : ISaleStore, IDisposable
 {
-    private const int ConcurrencyLimit = 500;
+    private const int ConcurrencyLimit = 1100;
 
     // Per-request budget for a sale read (semaphore wait + Scylla fetch).
     // Kept under Traefik's upstream responseHeaderTimeout so slow reads fail fast
